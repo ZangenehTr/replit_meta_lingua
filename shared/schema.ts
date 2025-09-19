@@ -96,11 +96,11 @@ export const userProfiles = pgTable("user_profiles", {
   strengths: text("strengths").array().default([]), // memory, pattern_recognition, analytical, creative
   interests: text("interests").array().default([]), // business, travel, culture, technology, arts, sports
   bio: text("bio"),
-
+  
   // Learning goals and targets
   targetLanguage: text("target_language"), // "persian", "english", "arabic", "german", etc.
   currentProficiency: text("current_proficiency"), // "beginner", "intermediate", "advanced"
-
+  
   // Student-specific fields (moved to users table for compatibility)
   nationalId: text("national_id"),
   birthday: date("birthday"), // Changed from dateOfBirth for consistency
@@ -109,7 +109,7 @@ export const userProfiles = pgTable("user_profiles", {
   notes: text("notes"),
   currentLevel: text("current_level"), // Override for display level
   // Note: enrolledCourseId removed - using classEnrollments table for tracking student enrollments
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -216,17 +216,17 @@ export const courses = pgTable("courses", {
   thumbnail: text("thumbnail"),
   instructorId: integer("instructor_id").references(() => users.id),
   price: integer("price").default(0),
-
+  
   // Session-based structure
   totalSessions: integer("total_sessions").notNull(),
   sessionDuration: integer("session_duration").notNull(), // minutes per session (60, 90, 180)
-
+  
   // Course delivery and format
   deliveryMode: text("delivery_mode").notNull(), // "online", "in_person", "self_paced", "callern"
   classFormat: text("class_format").notNull(), // "group", "one_on_one", "callern_package" (not applicable for self_paced)
   maxStudents: integer("max_students"), // null for one-on-one, number for group classes
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"), // Course rating
-
+  
   // Scheduling (not applicable for self_paced)
   firstSessionDate: date("first_session_date"), // Start date of the course
   lastSessionDate: date("last_session_date"), // Calculated end date
@@ -235,20 +235,20 @@ export const courses = pgTable("courses", {
   endTime: text("end_time"), // "19:30"
   timeZone: text("time_zone").default("Asia/Tehran"), // Course timezone
   calendarType: text("calendar_type").default("gregorian"), // "gregorian" or "persian"
-
+  
   // Target language and proficiency (for matching students)
   targetLanguage: text("target_language").notNull(), // "persian", "english", "arabic", etc.
   targetLevel: text("target_level").array().notNull(), // ["beginner", "intermediate"] - levels this course is suitable for
-
+  
   // Recording settings (for online classes)
   autoRecord: boolean("auto_record").default(false),
   recordingAvailable: boolean("recording_available").default(false),
-
+  
   // Callern-specific fields for 24/7 access courses
   accessPeriodMonths: integer("access_period_months"), // For Callern courses: access period in months
   callernAvailable24h: boolean("callern_available_24h").default(true), // For Callern courses: 24/7 availability
   callernRoadmapId: integer("callern_roadmap_id").references(() => callernRoadmaps.id), // Link to Callern roadmap for progress tracking
-
+  
   category: text("category").notNull(),
   tags: text("tags").array(),
   prerequisites: text("prerequisites").array(),
@@ -296,25 +296,25 @@ export const classes = pgTable("classes", {
   courseId: integer("course_id").references(() => courses.id).notNull(),
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
   roomId: integer("room_id").references(() => rooms.id),
-
+  
   // Schedule information
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(), // Auto-calculated based on course duration and holidays
   weekdays: text("weekdays").array().notNull(), // ["monday", "wednesday", "friday"]
   startTime: text("start_time").notNull(), // "18:00"
   endTime: text("end_time").notNull(), // "19:30"
-
+  
   // Class-specific settings
   maxStudents: integer("max_students").notNull().default(20),
   currentEnrollment: integer("current_enrollment").default(0),
   deliveryMode: text("delivery_mode").notNull(), // "online", "in_person", "hybrid"
   status: text("status").default("scheduled"), // scheduled, in_progress, completed, cancelled
-
+  
   // Additional info
   notes: text("notes"),
   isRecurring: boolean("is_recurring").default(false),
   recurringPattern: text("recurring_pattern"), // weekly, biweekly, monthly
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -324,20 +324,20 @@ export const classEnrollments = pgTable("class_enrollments", {
   id: serial("id").primaryKey(),
   classId: integer("class_id").references(() => classes.id).notNull(),
   studentId: integer("student_id").references(() => users.id).notNull(),
-
+  
   // Enrollment details
   enrollmentDate: timestamp("enrollment_date").defaultNow(),
   enrollmentType: text("enrollment_type").default("admin"), // "self", "admin", "supervisor"
   enrolledBy: integer("enrolled_by").references(() => users.id), // Who enrolled the student
-
+  
   // Progress tracking
   attendedSessions: integer("attended_sessions").default(0),
   absences: integer("absences").default(0),
   completionStatus: text("completion_status").default("enrolled"), // enrolled, in_progress, completed, dropped
-
+  
   // Payment status (if applicable)
   paymentStatus: text("payment_status").default("pending"), // pending, paid, partial, waived
-
+  
   notes: text("notes"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -537,33 +537,33 @@ export const courseRoadmapProgress = pgTable("course_roadmap_progress", {
   studentId: integer("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   roadmapId: integer("roadmap_id").notNull().references(() => callernRoadmaps.id, { onDelete: 'cascade' }),
   stepId: integer("step_id").notNull().references(() => callernRoadmapSteps.id, { onDelete: 'cascade' }),
-
+  
   // Progress tracking
   status: varchar("status", { length: 20 }).notNull().default('not_started'), // not_started, in_progress, completed, skipped
   progressPercentage: integer("progress_percentage").default(0), // 0-100
-
+  
   // Session data
   sessionId: integer("session_id").references(() => sessions.id),
   teacherId: integer("teacher_id").references(() => users.id),
   mentorId: integer("mentor_id").references(() => users.id),
-
+  
   // Timestamps
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
-
+  
   // Feedback and evaluation
   teacherNotes: text("teacher_notes"),
   studentSelfAssessment: text("student_self_assessment"),
   aiEvaluationScore: decimal("ai_evaluation_score", { precision: 5, scale: 2 }), // AI-generated score 0-100
   aiRecommendations: jsonb("ai_recommendations"), // AI recommendations for improvement
-
+  
   // Homework integration
   homeworkAssigned: boolean("homework_assigned").default(false),
   homeworkCompleted: boolean("homework_completed").default(false),
   homeworkScore: decimal("homework_score", { precision: 5, scale: 2 }),
   aiHomeworkFeedback: jsonb("ai_homework_feedback"), // AI-generated homework corrections and feedback
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -845,31 +845,31 @@ export const systemConfig = pgTable("system_config", {
   kavenegarApiKey: text("kavenegar_api_key"),
   kavenegarSenderNumber: text("kavenegar_sender_number"),
   smsEnabled: boolean("sms_enabled").default(false),
-
+  
   // Payment Gateway Configuration (Shetab)
   shetabMerchantId: text("shetab_merchant_id"),
   shetabTerminalId: text("shetab_terminal_id"),
   shetabApiKey: text("shetab_api_key"),
   shetabGatewayUrl: text("shetab_gateway_url"),
   paymentEnabled: boolean("payment_enabled").default(false),
-
+  
   // Email Configuration
   smtpHost: text("smtp_host"),
   smtpPort: integer("smtp_port"),
   smtpUser: text("smtp_user"),
   smtpPassword: text("smtp_password"),
   emailEnabled: boolean("email_enabled").default(false),
-
+  
   // AI Configuration (Ollama)
   ollamaApiUrl: text("ollama_api_url").default("http://localhost:11434"),
   ollamaModel: text("ollama_model").default("llama3.2"),
   aiEnabled: boolean("ai_enabled").default(true),
-
+  
   // General Settings
   maintenanceMode: boolean("maintenance_mode").default(false),
   registrationEnabled: boolean("registration_enabled").default(true),
   maxUsersPerInstitute: integer("max_users_per_institute").default(1000),
-
+  
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
@@ -1175,16 +1175,16 @@ export const insertStudentReportSchema = createInsertSchema(studentReports);
 export const referralSettings = pgTable("referral_settings", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).unique().notNull(),
-
+  
   // Commission split settings (max 20% total)
   referrerPercentage: integer("referrer_percentage").default(15).notNull(), // 0-20, how much referrer gets
   referredPercentage: integer("referred_percentage").default(5).notNull(), // 0-20, how much referred user gets
-
+  
   // Statistics
   totalReferrals: integer("total_referrals").default(0).notNull(),
   totalEnrollments: integer("total_enrollments").default(0).notNull(),
   totalCommissionEarned: integer("total_commission_earned").default(0).notNull(), // in IRR
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -1195,13 +1195,13 @@ export const courseReferrals = pgTable("course_referrals", {
   referrerUserId: integer("referrer_user_id").references(() => users.id).notNull(),
   courseId: integer("course_id").references(() => courses.id).notNull(),
   referralCode: varchar("referral_code", { length: 20 }).unique().notNull(),
-
+  
   // Tracking data
   totalShares: integer("total_shares").default(0).notNull(), // SMS/WhatsApp shares
   totalClicks: integer("total_clicks").default(0).notNull(),
   totalEnrollments: integer("total_enrollments").default(0).notNull(),
   totalCommissionEarned: integer("total_commission_earned").default(0).notNull(), // in IRR
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -1212,24 +1212,24 @@ export const referralCommissions = pgTable("referral_commissions", {
   courseReferralId: integer("course_referral_id").references(() => courseReferrals.id).notNull(),
   referrerUserId: integer("referrer_user_id").references(() => users.id).notNull(),
   referredUserId: integer("referred_user_id").references(() => users.id),
-
+  
   // Commission details (max 20% of course fee)
   coursePrice: integer("course_price").notNull(), // Original course price
   totalCommissionRate: integer("total_commission_rate").default(20).notNull(), // Always 20%
   totalCommissionAmount: integer("total_commission_amount").notNull(), // 20% of course price
-
+  
   // Split information
   referrerAmount: integer("referrer_amount").notNull(), // Amount for referrer
   referredAmount: integer("referred_amount").default(0).notNull(), // Amount for referred user
-
+  
   // Status tracking
   status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, paid, cancelled
   paidAt: timestamp("paid_at"),
-
+  
   // Related transaction
   relatedPaymentId: integer("related_payment_id").references(() => payments.id),
   relatedEnrollmentId: integer("related_enrollment_id").references(() => enrollments.id),
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -1479,14 +1479,14 @@ export const leads = pgTable("leads", {
   nextFollowUpDate: timestamp("next_follow_up_date"),
   conversionDate: timestamp("conversion_date"),
   studentId: integer("student_id").references(() => users.id), // If converted
-
+  
   // NEW FIELDS FOR UNIFIED CALL CENTER WORKFLOW
   age: integer("age"), // Required age field
   gender: text("gender"), // male, female - required field
   nationalId: text("national_id"), // Iranian national ID
   nationalIdImage: text("national_id_image"), // National ID card image URL
   avatar: text("avatar"), // Applicant photo URL
-
+  
   // Course-specific fields
   courseTarget: text("course_target"), // IELTS, TOEFL, PTE, GRE, GE (General English)
   courseModule: text("course_module"), // Academic, General (for IELTS), Core (for PTE)
@@ -1496,7 +1496,7 @@ export const leads = pgTable("leads", {
   referralSource: text("referral_source"), // Detailed referral information
   timeLimit: integer("time_limit"), // Time constraint in months
   branch: text("branch"), // Preferred branch location
-
+  
   // Workflow timeline fields
   levelAssessmentStart: timestamp("level_assessment_start"),
   levelAssessmentEnd: timestamp("level_assessment_end"),
@@ -1505,18 +1505,18 @@ export const leads = pgTable("leads", {
   callCount: integer("call_count").default(0), // Number of attempts made
   lastAttemptAt: timestamp("last_attempt_at"), // When last call attempt was made
   nextRetryAt: timestamp("next_retry_at"), // When next retry is due based on progressive backoff
-
+  
   // Workflow status tracking
   workflowStatus: text("workflow_status").default(WORKFLOW_STATUS.CONTACT_DESK), // Uses canonical workflow status constants
-
+  
   // Withdrawal tracking fields
   withdrawalReason: text("withdrawal_reason"), // Reason for withdrawal
   withdrawalDate: timestamp("withdrawal_date"), // When withdrawal occurred
-
+  
   // SMS reminder settings
   smsReminderEnabled: boolean("sms_reminder_enabled").default(false), // Whether to send SMS reminders
   smsReminderSentAt: timestamp("sms_reminder_sent_at"), // When last SMS reminder was sent (for idempotency)
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -1630,31 +1630,31 @@ export const testQuestions = pgTable("test_questions", {
   questionImage: varchar("question_image", { length: 500 }), // for visual questions
   points: integer("points").default(1),
   order: integer("order").notNull(),
-
+  
   // For multiple choice and true/false
   options: jsonb("options"), // array of {id, text, isCorrect}
-
+  
   // For fill in blank
   blanksData: jsonb("blanks_data"), // array of {position, correctAnswer, acceptableAnswers}
-
+  
   // For matching
   matchingPairs: jsonb("matching_pairs"), // array of {left, right}
-
+  
   // For ordering
   orderingItems: jsonb("ordering_items"), // array in correct order
-
+  
   // For short answer and essay
   modelAnswer: text("model_answer"),
   gradingCriteria: jsonb("grading_criteria"), // rubric for essay questions
-
+  
   // For speaking
   recordingPrompt: text("recording_prompt"),
   maxRecordingDuration: integer("max_recording_duration"), // seconds
-
+  
   explanation: text("explanation"), // shown after answering
   skillCategory: varchar("skill_category", { length: 50 }), // grammar, vocabulary, reading, writing, listening, speaking
   difficulty: varchar("difficulty", { length: 20 }).default("medium"), // easy, medium, hard
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -1680,7 +1680,7 @@ export const testAnswers = pgTable("test_answers", {
   id: serial("id").primaryKey(),
   attemptId: integer("attempt_id").references(() => testAttempts.id).notNull(),
   questionId: integer("question_id").references(() => testQuestions.id).notNull(),
-
+  
   // Different answer types
   selectedOptionId: integer("selected_option_id"), // for multiple choice
   booleanAnswer: boolean("boolean_answer"), // for true/false
@@ -1688,13 +1688,13 @@ export const testAnswers = pgTable("test_answers", {
   matchingAnswer: jsonb("matching_answer"), // for matching questions
   orderingAnswer: jsonb("ordering_answer"), // for ordering questions
   recordingUrl: varchar("recording_url", { length: 500 }), // for speaking questions
-
+  
   isCorrect: boolean("is_correct"),
   pointsEarned: decimal("points_earned", { precision: 5, scale: 2 }),
   feedback: text("feedback"),
   gradedBy: integer("graded_by").references(() => users.id), // for manual grading
   gradedAt: timestamp("graded_at"),
-
+  
   answeredAt: timestamp("answered_at").defaultNow().notNull()
 });
 
@@ -1711,7 +1711,7 @@ export const games = pgTable("games", {
   minLevel: varchar("min_level", { length: 10 }).notNull(), // A1, A2, B1, B2, C1, C2
   maxLevel: varchar("max_level", { length: 10 }).notNull(),
   language: varchar("language", { length: 10 }).notNull(),
-
+  
   // Game mechanics
   gameMode: varchar("game_mode", { length: 50 }).notNull(), // single_player, multiplayer, competitive, collaborative
   duration: integer("duration"), // estimated minutes per session
@@ -1719,16 +1719,16 @@ export const games = pgTable("games", {
   bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default("1.0"),
   livesSystem: boolean("lives_system").default(false),
   timerEnabled: boolean("timer_enabled").default(false),
-
+  
   // Resources
   thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
   backgroundImage: varchar("background_image", { length: 500 }),
   soundEffects: jsonb("sound_effects"), // {correct: url, wrong: url, levelUp: url}
-
+  
   // Progression
   totalLevels: integer("total_levels").default(10),
   unlockRequirements: jsonb("unlock_requirements"), // {minXP: 100, prerequisiteGames: []}
-
+  
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -1741,25 +1741,25 @@ export const gameLevels = pgTable("game_levels", {
   levelNumber: integer("level_number").notNull(),
   levelName: varchar("level_name", { length: 100 }),
   languageLevel: varchar("language_level", { length: 10 }).notNull(), // A1, A2, etc.
-
+  
   // Level content
   contentType: varchar("content_type", { length: 50 }).notNull(), // words, sentences, paragraphs, dialogues
   contentData: jsonb("content_data").notNull(), // actual game content
-
+  
   // Difficulty settings
   difficulty: varchar("difficulty", { length: 20 }).default("medium"),
   speedMultiplier: decimal("speed_multiplier", { precision: 3, scale: 2 }).default("1.0"),
   itemCount: integer("item_count").default(10), // number of items in this level
-
+  
   // Rewards
   xpReward: integer("xp_reward").default(50),
   coinsReward: integer("coins_reward").default(10),
   badgeId: integer("badge_id").references(() => achievements.id),
-
+  
   // Progression
   passingScore: integer("passing_score").default(70), // percentage
   starsThresholds: jsonb("stars_thresholds"), // {1: 60, 2: 80, 3: 95}
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -1769,20 +1769,20 @@ export const userGameProgress = pgTable("user_game_progress", {
   userId: integer("user_id").references(() => users.id).notNull(),
   gameId: integer("game_id").references(() => games.id).notNull(),
   currentLevel: integer("current_level").default(1),
-
+  
   // Overall progress
   totalScore: integer("total_score").default(0),
   totalXpEarned: integer("total_xp_earned").default(0),
   totalCoinsEarned: integer("total_coins_earned").default(0),
   totalPlayTime: integer("total_play_time").default(0), // in seconds
   sessionsPlayed: integer("sessions_played").default(0),
-
+  
   // Performance metrics
   accuracy: decimal("accuracy", { precision: 5, scale: 2 }), // percentage
   averageSpeed: decimal("average_speed", { precision: 5, scale: 2 }), // items per minute
   longestStreak: integer("longest_streak").default(0),
   perfectLevels: integer("perfect_levels").default(0),
-
+  
   lastPlayedAt: timestamp("last_played_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -1794,28 +1794,28 @@ export const gameSessions = pgTable("game_sessions", {
   userId: integer("user_id").references(() => users.id).notNull(),
   gameId: integer("game_id").references(() => games.id).notNull(),
   levelId: integer("level_id").references(() => gameLevels.id),
-
+  
   // Session data
   startedAt: timestamp("started_at").defaultNow().notNull(),
   endedAt: timestamp("ended_at"),
   duration: integer("duration"), // in seconds
-
+  
   // Performance
   score: integer("score").default(0),
   correctAnswers: integer("correct_answers").default(0),
   wrongAnswers: integer("wrong_answers").default(0),
   accuracy: decimal("accuracy", { precision: 5, scale: 2 }),
   starsEarned: integer("stars_earned").default(0), // 0-3
-
+  
   // Rewards
   xpEarned: integer("xp_earned").default(0),
   coinsEarned: integer("coins_earned").default(0),
   newBadges: jsonb("new_badges"), // array of achievement IDs
-
+  
   // Game state
   gameState: jsonb("game_state"), // for resuming
   isCompleted: boolean("is_completed").default(false),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -1824,19 +1824,19 @@ export const gameLeaderboards = pgTable("game_leaderboards", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").references(() => games.id).notNull(),
   userId: integer("user_id").references(() => users.id).notNull(),
-
+  
   // Leaderboard types
   leaderboardType: varchar("leaderboard_type", { length: 50 }).notNull(), // daily, weekly, monthly, all_time
   period: varchar("period", { length: 20 }), // "2024-01", "2024-W05", etc.
-
+  
   // Scores
   score: integer("score").notNull(),
   rank: integer("rank"),
-
+  
   // Additional metrics
   gamesPlayed: integer("games_played").default(1),
   perfectGames: integer("perfect_games").default(0),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -1846,7 +1846,7 @@ export const gameAccessRules = pgTable("game_access_rules", {
   gameId: integer("game_id").references(() => games.id).notNull(),
   ruleName: varchar("rule_name", { length: 255 }).notNull(),
   ruleType: varchar("rule_type", { length: 50 }).notNull(), // 'level', 'age', 'course', 'manual', 'all'
-
+  
   // Rule criteria
   minLevel: varchar("min_level", { length: 10 }), // A1, A2, B1, B2, C1, C2
   maxLevel: varchar("max_level", { length: 10 }),
@@ -1854,12 +1854,12 @@ export const gameAccessRules = pgTable("game_access_rules", {
   maxAge: integer("max_age"),
   courseId: integer("course_id").references(() => courses.id),
   languages: jsonb("languages"), // array of language codes
-
+  
   // Additional settings
   isDefault: boolean("is_default").default(false), // Show to all students by default
   requiresUnlock: boolean("requires_unlock").default(false), // Must be unlocked through progress
   unlockCriteria: jsonb("unlock_criteria"), // {minGamesCompleted: 5, minLevel: 'B1', prerequisiteGames: [1,2,3]}
-
+  
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -1870,25 +1870,25 @@ export const studentGameAssignments = pgTable("student_game_assignments", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(),
   gameId: integer("game_id").references(() => games.id).notNull(),
-
+  
   // Assignment details
   assignedBy: integer("assigned_by").references(() => users.id).notNull(), // Admin or teacher who assigned
   assignmentType: varchar("assignment_type", { length: 50 }).notNull(), // 'required', 'optional', 'practice', 'homework'
-
+  
   // Access control
   isAccessible: boolean("is_accessible").default(true),
   accessStartDate: timestamp("access_start_date"),
   accessEndDate: timestamp("access_end_date"),
-
+  
   // Progress tracking
   targetScore: integer("target_score"),
   targetCompletionDate: date("target_completion_date"),
   isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
-
+  
   // Notes
   notes: text("notes"),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -1898,16 +1898,16 @@ export const courseGames = pgTable("course_games", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").references(() => courses.id).notNull(),
   gameId: integer("game_id").references(() => games.id).notNull(),
-
+  
   // Configuration
   isRequired: boolean("is_required").default(false),
   orderIndex: integer("order_index"), // Display order in course
   minScoreRequired: integer("min_score_required"), // Minimum score to consider complete
-
+  
   // Availability
   weekNumber: integer("week_number"), // Which week of the course this game is for
   moduleNumber: integer("module_number"), // Which module/unit this game belongs to
-
+  
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -1918,42 +1918,42 @@ export const gameQuestions = pgTable("game_questions", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").references(() => games.id).notNull(),
   levelId: integer("level_id").references(() => gameLevels.id),
-
+  
   // Question metadata
   questionType: varchar("question_type", { length: 50 }).notNull(), // multiple_choice, fill_blank, matching, ordering, translation
   difficulty: varchar("difficulty", { length: 20 }).notNull(), // easy, medium, hard, expert
   language: varchar("language", { length: 10 }).notNull(),
   skillFocus: varchar("skill_focus", { length: 50 }).notNull(), // vocabulary, grammar, pronunciation, comprehension
-
+  
   // Question content
   question: text("question").notNull(),
   questionAudio: varchar("question_audio", { length: 500 }), // for listening exercises
   questionImage: varchar("question_image", { length: 500 }), // for visual learning
-
+  
   // Answer options
   options: jsonb("options"), // Array of {id, text, audio, image}
   correctAnswer: jsonb("correct_answer").notNull(), // Can be string, array, or object
   alternativeAnswers: jsonb("alternative_answers"), // Acceptable alternatives
-
+  
   // Feedback
   explanation: text("explanation"),
   hint: text("hint"),
   teachingPoint: text("teaching_point"), // Grammar rule or vocabulary context
-
+  
   // Scoring
   basePoints: integer("base_points").default(10),
   timeLimit: integer("time_limit"), // seconds, null for no limit
   bonusPoints: integer("bonus_points").default(5), // for quick answers
-
+  
   // Usage tracking
   timesUsed: integer("times_used").default(0),
   correctRate: decimal("correct_rate", { precision: 5, scale: 2 }),
   averageTime: decimal("average_time", { precision: 5, scale: 2 }), // seconds
-
+  
   // AI enhancement
   aiGenerated: boolean("ai_generated").default(false),
   aiPrompt: text("ai_prompt"), // Prompt used to generate question
-
+  
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -1963,34 +1963,34 @@ export const gameQuestions = pgTable("game_questions", {
 export const gameDailyChallenges = pgTable("game_daily_challenges", {
   id: serial("id").primaryKey(),
   challengeDate: date("challenge_date").notNull().unique(),
-
+  
   // Challenge configuration
   challengeName: varchar("challenge_name", { length: 255 }).notNull(),
   description: text("description"),
   challengeType: varchar("challenge_type", { length: 50 }).notNull(), // score_based, time_based, accuracy_based, streak_based
-
+  
   // Target settings
   targetGameId: integer("target_game_id").references(() => games.id),
   targetScore: integer("target_score"),
   targetTime: integer("target_time"), // seconds
   targetAccuracy: decimal("target_accuracy", { precision: 5, scale: 2 }),
   targetStreak: integer("target_streak"),
-
+  
   // Difficulty and rewards
   difficulty: varchar("difficulty", { length: 20 }).notNull(), // easy, medium, hard
   xpReward: integer("xp_reward").default(100),
   coinsReward: integer("coins_reward").default(50),
   badgeId: integer("badge_id").references(() => achievements.id),
-
+  
   // Participation tracking
   totalParticipants: integer("total_participants").default(0),
   totalCompletions: integer("total_completions").default(0),
   averageScore: decimal("average_score", { precision: 10, scale: 2 }),
-
+  
   // Featured content
   featuredQuestions: jsonb("featured_questions"), // Array of question IDs
   bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default("1.5"),
-
+  
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
@@ -2000,26 +2000,26 @@ export const userDailyChallengeProgress = pgTable("user_daily_challenge_progress
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   challengeId: integer("challenge_id").references(() => gameDailyChallenges.id).notNull(),
-
+  
   // Progress tracking
   startedAt: timestamp("started_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
-
+  
   // Performance
   score: integer("score").default(0),
   timeSpent: integer("time_spent"), // seconds
   accuracy: decimal("accuracy", { precision: 5, scale: 2 }),
   streak: integer("streak").default(0),
-
+  
   // Completion status
   isCompleted: boolean("is_completed").default(false),
   completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default("0"),
-
+  
   // Rewards claimed
   xpClaimed: integer("xp_claimed").default(0),
   coinsClaimed: integer("coins_claimed").default(0),
   badgeClaimed: boolean("badge_claimed").default(false),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2029,21 +2029,21 @@ export const gameAnswerLogs = pgTable("game_answer_logs", {
   sessionId: integer("session_id").references(() => gameSessions.id).notNull(),
   questionId: integer("question_id").references(() => gameQuestions.id).notNull(),
   userId: integer("user_id").references(() => users.id).notNull(),
-
+  
   // Answer details
   userAnswer: jsonb("user_answer").notNull(),
   isCorrect: boolean("is_correct").notNull(),
   responseTime: integer("response_time").notNull(), // milliseconds
-
+  
   // Points and feedback
   pointsEarned: integer("points_earned").default(0),
   hintUsed: boolean("hint_used").default(false),
   attemptsCount: integer("attempts_count").default(1),
-
+  
   // AI assistance (if used)
   aiAssisted: boolean("ai_assisted").default(false),
   aiResponse: jsonb("ai_response"),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2078,29 +2078,29 @@ export const videoLessons = pgTable("video_lessons", {
   videoUrl: varchar("video_url", { length: 500 }).notNull(),
   thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
   duration: integer("duration").notNull(), // in seconds
-
+  
   // Content organization
   moduleId: integer("module_id"), // for grouping lessons
   orderIndex: integer("order_index").notNull(),
-
+  
   // Learning metadata
   language: varchar("language", { length: 10 }).notNull(),
   level: varchar("level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
   skillFocus: varchar("skill_focus", { length: 50 }), // speaking, listening, grammar, vocabulary
-
+  
   // Supplementary materials
   transcriptUrl: varchar("transcript_url", { length: 500 }),
   subtitlesUrl: varchar("subtitles_url", { length: 500 }),
   materialsUrl: varchar("materials_url", { length: 500 }), // PDF, exercises
-
+  
   // Access control
   isFree: boolean("is_free").default(false),
   isPublished: boolean("is_published").default(true),
-
+  
   // Analytics
   viewCount: integer("view_count").default(0),
   completionRate: decimal("completion_rate", { precision: 5, scale: 2 }).default("0"),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -2110,22 +2110,22 @@ export const videoProgress = pgTable("video_progress", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(), // Changed from userId to match API
   videoLessonId: integer("video_lesson_id").references(() => videoLessons.id).notNull(), // Changed from videoId to match API
-
+  
   // Progress tracking
   watchTime: integer("watch_time").default(0), // Current watch position in seconds
   totalDuration: integer("total_duration").default(0), // Total video duration
   completed: boolean("completed").default(false), // Changed from isCompleted to match API
-
+  
   // Engagement metrics
   totalWatchTime: integer("total_watch_time").default(0), // including replays
   pauseCount: integer("pause_count").default(0),
   rewindCount: integer("rewind_count").default(0),
   playbackSpeed: decimal("playback_speed", { precision: 3, scale: 2 }).default("1.0"),
-
+  
   // Learning tracking
   notesCount: integer("notes_count").default(0),
   bookmarksCount: integer("bookmarks_count").default(0),
-
+  
   lastWatchedAt: timestamp("last_watched_at"),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -2137,10 +2137,10 @@ export const videoNotes = pgTable("video_notes", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(), // Changed from userId to match API
   videoLessonId: integer("video_lesson_id").references(() => videoLessons.id).notNull(), // Changed from videoId to match API
-
+  
   timestamp: integer("timestamp").notNull(), // seconds in video
   content: text("content").notNull(), // Changed from noteText to match API
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -2150,10 +2150,10 @@ export const videoBookmarks = pgTable("video_bookmarks", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(), // Changed from userId to match API
   videoLessonId: integer("video_lesson_id").references(() => videoLessons.id).notNull(), // Changed from videoId to match API
-
+  
   timestamp: integer("timestamp").notNull(), // seconds in video
   title: varchar("title", { length: 100 }),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2175,18 +2175,18 @@ export const forumThreads = pgTable("forum_threads", {
   id: serial("id").primaryKey(),
   categoryId: integer("category_id").references(() => forumCategories.id).notNull(),
   authorId: integer("author_id").references(() => users.id).notNull(),
-
+  
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
-
+  
   isPinned: boolean("is_pinned").default(false),
   isLocked: boolean("is_locked").default(false),
-
+  
   viewCount: integer("view_count").default(0),
   replyCount: integer("reply_count").default(0),
   lastReplyAt: timestamp("last_reply_at"),
   lastReplyBy: integer("last_reply_by").references(() => users.id),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -2195,15 +2195,15 @@ export const forumPosts = pgTable("forum_posts", {
   id: serial("id").primaryKey(),
   threadId: integer("thread_id").references(() => forumThreads.id).notNull(),
   authorId: integer("author_id").references(() => users.id).notNull(),
-
+  
   content: text("content").notNull(),
-
+  
   isAnswer: boolean("is_answer").default(false), // for Q&A threads
   upvotes: integer("upvotes").default(0),
-
+  
   editedAt: timestamp("edited_at"),
   editedBy: integer("edited_by").references(() => users.id),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2212,22 +2212,22 @@ export const gradebookEntries = pgTable("gradebook_entries", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").references(() => courses.id).notNull(),
   studentId: integer("student_id").references(() => users.id).notNull(),
-
+  
   // Grade components
   assignmentGrades: jsonb("assignment_grades"), // {assignmentId: grade}
   testGrades: jsonb("test_grades"), // {testId: grade}
   participationGrade: decimal("participation_grade", { precision: 5, scale: 2 }),
   attendanceGrade: decimal("attendance_grade", { precision: 5, scale: 2 }),
-
+  
   // Overall grades
   currentGrade: decimal("current_grade", { precision: 5, scale: 2 }),
   projectedGrade: decimal("projected_grade", { precision: 5, scale: 2 }),
   letterGrade: varchar("letter_grade", { length: 5 }),
-
+  
   // Teacher feedback
   comments: text("comments"),
   lastUpdatedBy: integer("last_updated_by").references(() => users.id),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -2236,28 +2236,28 @@ export const gradebookEntries = pgTable("gradebook_entries", {
 export const contentLibrary = pgTable("content_library", {
   id: serial("id").primaryKey(),
   creatorId: integer("creator_id").references(() => users.id).notNull(),
-
+  
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   contentType: varchar("content_type", { length: 50 }).notNull(), // document, audio, image, worksheet, presentation
   fileUrl: varchar("file_url", { length: 500 }).notNull(),
   thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
-
+  
   // Metadata
   language: varchar("language", { length: 10 }).notNull(),
   level: varchar("level", { length: 20 }), // A1-C2
   skillArea: varchar("skill_area", { length: 50 }), // grammar, vocabulary, etc.
   tags: text("tags").array().default([]),
-
+  
   // Usage tracking
   downloadCount: integer("download_count").default(0),
   useCount: integer("use_count").default(0),
   rating: decimal("rating", { precision: 3, scale: 2 }),
-
+  
   // Sharing
   isPublic: boolean("is_public").default(false),
   licenseType: varchar("license_type", { length: 50 }), // CC-BY, proprietary, etc.
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -2268,31 +2268,31 @@ export const contentLibrary = pgTable("content_library", {
 export const aiProgressTracking = pgTable("ai_progress_tracking", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-
+  
   // Speaking Skills
   speakingAccuracy: decimal("speaking_accuracy", { precision: 5, scale: 2 }),
   speakingFluency: decimal("speaking_fluency", { precision: 5, scale: 2 }),
   pronunciation: decimal("pronunciation", { precision: 5, scale: 2 }),
   intonation: decimal("intonation", { precision: 5, scale: 2 }),
-
+  
   // Writing Skills
   writingAccuracy: decimal("writing_accuracy", { precision: 5, scale: 2 }),
   writingComplexity: decimal("writing_complexity", { precision: 5, scale: 2 }),
   writingCoherence: decimal("writing_coherence", { precision: 5, scale: 2 }),
-
+  
   // Vocabulary
   vocabularySize: integer("vocabulary_size"),
   vocabularyRetention: decimal("vocabulary_retention", { precision: 5, scale: 2 }),
   vocabularyUsage: decimal("vocabulary_usage", { precision: 5, scale: 2 }),
-
+  
   // Grammar
   grammarAccuracy: decimal("grammar_accuracy", { precision: 5, scale: 2 }),
   grammarComplexity: decimal("grammar_complexity", { precision: 5, scale: 2 }),
-
+  
   // Overall Progress
   overallLevel: varchar("overall_level", { length: 10 }), // A1-C2
   progressRate: decimal("progress_rate", { precision: 5, scale: 2 }), // percentage per month
-
+  
   lastAssessedAt: timestamp("last_assessed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -2303,21 +2303,21 @@ export const aiActivitySessions = pgTable("ai_activity_sessions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   activityType: varchar("activity_type", { length: 50 }).notNull(), // speaking_practice, writing_exercise, vocabulary_game, grammar_quiz
-
+  
   // Session details
   startedAt: timestamp("started_at").defaultNow().notNull(),
   endedAt: timestamp("ended_at"),
   duration: integer("duration"), // seconds
-
+  
   // AI Analysis
   aiModel: varchar("ai_model", { length: 50 }),
   analysisData: jsonb("analysis_data"), // detailed AI analysis results
-
+  
   // Performance metrics
   score: decimal("score", { precision: 5, scale: 2 }),
   mistakes: jsonb("mistakes"), // array of mistake objects
   improvements: jsonb("improvements"), // suggested improvements
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2327,21 +2327,21 @@ export const aiVocabularyTracking = pgTable("ai_vocabulary_tracking", {
   userId: integer("user_id").references(() => users.id).notNull(),
   word: varchar("word", { length: 100 }).notNull(),
   language: varchar("language", { length: 10 }).notNull(),
-
+  
   // Learning metrics
   timesEncountered: integer("times_encountered").default(1),
   timesUsedCorrectly: integer("times_used_correctly").default(0),
   timesUsedIncorrectly: integer("times_used_incorrectly").default(0),
-
+  
   // Retention data
   firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
   lastSeenAt: timestamp("last_seen_at"),
   lastUsedAt: timestamp("last_used_at"),
   masteryLevel: decimal("mastery_level", { precision: 3, scale: 2 }).default("0"), // 0-1
-
+  
   // Context
   contexts: jsonb("contexts"), // array of usage contexts
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2351,21 +2351,21 @@ export const aiGrammarTracking = pgTable("ai_grammar_tracking", {
   userId: integer("user_id").references(() => users.id).notNull(),
   patternType: varchar("pattern_type", { length: 100 }).notNull(), // tense, conditional, modal, etc.
   patternName: varchar("pattern_name", { length: 255 }).notNull(),
-
+  
   // Mastery metrics
   correctUsage: integer("correct_usage").default(0),
   incorrectUsage: integer("incorrect_usage").default(0),
   accuracy: decimal("accuracy", { precision: 5, scale: 2 }),
-
+  
   // Learning progress
   introduced: boolean("introduced").default(true),
   practiced: boolean("practiced").default(false),
   mastered: boolean("mastered").default(false),
-
+  
   // Examples and feedback
   exampleSentences: jsonb("example_sentences"),
   commonMistakes: jsonb("common_mistakes"),
-
+  
   lastPracticedAt: timestamp("last_practiced_at"),
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
@@ -2375,23 +2375,23 @@ export const aiPronunciationAnalysis = pgTable("ai_pronunciation_analysis", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   sessionId: integer("session_id").references(() => aiActivitySessions.id),
-
+  
   // Audio data
   audioUrl: varchar("audio_url", { length: 500 }).notNull(),
   transcription: text("transcription"),
   expectedText: text("expected_text"),
-
+  
   // Analysis results
   overallScore: decimal("overall_score", { precision: 5, scale: 2 }),
   clarity: decimal("clarity", { precision: 5, scale: 2 }),
   fluency: decimal("fluency", { precision: 5, scale: 2 }),
   nativelikeness: decimal("nativelikeness", { precision: 5, scale: 2 }),
-
+  
   // Detailed feedback
   phoneticAnalysis: jsonb("phonetic_analysis"), // phoneme-level analysis
   stressPatterns: jsonb("stress_patterns"),
   intonationAnalysis: jsonb("intonation_analysis"),
-
+  
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2579,7 +2579,7 @@ export type InsertStudentReport = z.infer<typeof insertStudentReportSchema>;
 // Admin Settings table
 export const adminSettings = pgTable("admin_settings", {
   id: serial("id").primaryKey(),
-
+  
   // Payment Gateway Settings (Shetab)
   shetabMerchantId: varchar("shetab_merchant_id", { length: 255 }),
   shetabTerminalId: varchar("shetab_terminal_id", { length: 255 }),
@@ -2587,12 +2587,12 @@ export const adminSettings = pgTable("admin_settings", {
   shetabSecretKey: text("shetab_secret_key"),
   shetabEnvironment: varchar("shetab_environment", { length: 20 }).default("sandbox"),
   shetabEnabled: boolean("shetab_enabled").default(false),
-
+  
   // SMS API Settings (Kavenegar)
   kavenegarApiKey: text("kavenegar_api_key"),
   kavenegarSender: varchar("kavenegar_sender", { length: 50 }),
   kavenegarEnabled: boolean("kavenegar_enabled").default(false),
-
+  
   // Placement Test SMS Automation Settings
   placementSmsEnabled: boolean("placement_sms_enabled").default(true),
   placementSmsReminderCooldownHours: integer("placement_sms_reminder_cooldown_hours").default(24),
@@ -2601,7 +2601,7 @@ export const adminSettings = pgTable("admin_settings", {
   placementSmsQuietHoursStart: varchar("placement_sms_quiet_hours_start", { length: 5 }).default("22:00"),
   placementSmsQuietHoursEnd: varchar("placement_sms_quiet_hours_end", { length: 5 }).default("08:00"),
   placementSmsTemplate: text("placement_sms_template").default("سلام {studentName} عزیز!\n\n{daysAgo} روز پیش تست تعیین سطح خود را در سطح {placementLevel} با موفقیت تکمیل کردید. 🎉\n\nبرای شروع مسیر یادگیری و بهره‌مندی از کلاس‌های تخصصی، زمان ثبت‌نام در دوره‌های آموزشی فرا رسیده است.\n\n📞 جهت مشاوره و ثبت‌نام: 021-1234\n🌐 Meta Lingua - همراه شما در مسیر یادگیری"),
-
+  
   // VoIP Settings (Isabel Line)
   voipServerAddress: varchar("voip_server_address", { length: 255 }),
   voipPort: integer("voip_port").default(5060),
@@ -2610,7 +2610,7 @@ export const adminSettings = pgTable("admin_settings", {
   voipEnabled: boolean("voip_enabled").default(false),
   callRecordingEnabled: boolean("call_recording_enabled").default(false),
   recordingStoragePath: varchar("recording_storage_path", { length: 500 }).default("/var/recordings"),
-
+  
   // Email Settings
   emailSmtpHost: varchar("email_smtp_host", { length: 255 }),
   emailSmtpPort: integer("email_smtp_port").default(587),
@@ -2618,38 +2618,38 @@ export const adminSettings = pgTable("admin_settings", {
   emailPassword: text("email_password"),
   emailFromAddress: varchar("email_from_address", { length: 255 }),
   emailEnabled: boolean("email_enabled").default(false),
-
+  
   // Database Settings
   databaseBackupEnabled: boolean("database_backup_enabled").default(true),
   databaseBackupFrequency: varchar("database_backup_frequency", { length: 20 }).default("daily"),
   databaseRetentionDays: integer("database_retention_days").default(30),
-
+  
   // Security Settings
   jwtSecretKey: text("jwt_secret_key"),
   sessionTimeout: integer("session_timeout").default(60), // minutes
   maxLoginAttempts: integer("max_login_attempts").default(5),
   passwordMinLength: integer("password_min_length").default(8),
   requireTwoFactor: boolean("require_two_factor").default(false),
-
+  
   // System Settings
   systemMaintenanceMode: boolean("system_maintenance_mode").default(false),
   systemDebugMode: boolean("system_debug_mode").default(false),
   systemLogLevel: varchar("system_log_level", { length: 20 }).default("info"),
   systemMaxUploadSize: integer("system_max_upload_size").default(10), // MB
-
+  
   // Notification Settings
   notificationEmailEnabled: boolean("notification_email_enabled").default(true),
   notificationSmsEnabled: boolean("notification_sms_enabled").default(true),
   notificationPushEnabled: boolean("notification_push_enabled").default(true),
-
+  
   // API Rate Limiting
   apiRateLimit: integer("api_rate_limit").default(100),
   apiRateLimitWindow: integer("api_rate_limit_window").default(60), // seconds
-
+  
   // File Storage
   fileStorageProvider: varchar("file_storage_provider", { length: 20 }).default("local"),
   fileStorageConfig: jsonb("file_storage_config"),
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -3302,19 +3302,19 @@ export const aiStudyPartners = pgTable("ai_study_partners", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull().unique(),
   conversationId: integer("conversation_id").references(() => chatConversations.id),
-
+  
   // Personalization settings
   learningStyle: varchar("learning_style", { length: 50 }).default("balanced"), // visual, auditory, kinesthetic, balanced
   preferredLanguage: varchar("preferred_language", { length: 10 }).default("en"),
   difficultyLevel: varchar("difficulty_level", { length: 20 }).default("intermediate"), // beginner, intermediate, advanced
   studyGoals: text("study_goals").array().default([]), // exam_prep, conversation, business, academic
-
+  
   // Current roadmap context
   activeRoadmapId: integer("active_roadmap_id"),
   currentExam: varchar("current_exam", { length: 20 }), // ielts_academic, toefl_ibt, pte_academic, etc.
   targetScore: text("target_score"),
   studyDeadline: timestamp("study_deadline"),
-
+  
   // AI behavior preferences
   personalityType: varchar("personality_type", { length: 30 }).default("supportive"), // supportive, challenging, casual, formal
   responseLength: varchar("response_length", { length: 20 }).default("medium"), // short, medium, detailed
@@ -3322,18 +3322,18 @@ export const aiStudyPartners = pgTable("ai_study_partners", {
   includePronunciation: boolean("include_pronunciation").default(false),
   includeGrammarTips: boolean("include_grammar_tips").default(true),
   includeVocabulary: boolean("include_vocabulary").default(true),
-
+  
   // Learning progress tracking
   totalConversations: integer("total_conversations").default(0),
   totalMessagesExchanged: integer("total_messages_exchanged").default(0),
   currentStreak: integer("current_streak").default(0), // days of consecutive use
   longestStreak: integer("longest_streak").default(0),
   lastInteractionAt: timestamp("last_interaction_at"),
-
+  
   // AI usage statistics
   totalTokensUsed: integer("total_tokens_used").default(0),
   averageResponseTime: integer("average_response_time"), // in milliseconds
-
+  
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -3348,25 +3348,25 @@ export const pushNotifications = pgTable("push_notifications", {
   targetAudience: varchar("target_audience", { length: 100 }).notNull(), // all, students, teachers, staff, specific_users
   targetUserIds: integer("target_user_ids").array().default([]), // specific user IDs if targeted
   channels: text("channels").array().notNull(), // web_push, in_app, sms, email
-
+  
   // Notification content
   icon: varchar("icon", { length: 255 }),
   image: varchar("image", { length: 255 }),
   actionUrl: varchar("action_url", { length: 500 }),
   actionText: varchar("action_text", { length: 100 }),
-
+  
   // Scheduling
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, scheduled, sent, failed
   scheduledAt: timestamp("scheduled_at"),
   sentAt: timestamp("sent_at"),
-
+  
   // Analytics
   deliveryStats: jsonb("delivery_stats"), // {sent: 0, delivered: 0, clicked: 0, failed: 0}
-
+  
   // Settings
   priority: varchar("priority", { length: 20 }).default("normal"), // low, normal, high
   ttl: integer("ttl").default(86400), // time to live in seconds
-
+  
   createdBy: integer("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -4138,9 +4138,9 @@ export type InsertClassGroupChat = z.infer<typeof insertClassGroupChatSchema>;
 export type SocializerSession = typeof socializerSessions.$inferSelect;
 export type InsertSocializerSession = z.infer<typeof insertSocializerSessionSchema>;
 
-// ========================
+// ============================================================================
 // EXAM-FOCUSED PERSONALIZED ROADMAP SYSTEM
-// ========================
+// ============================================================================
 
 // Exam Types and Enums
 export const ExamType = {
@@ -4194,23 +4194,23 @@ export const roadmapConfigs = pgTable("roadmap_configs", {
   id: serial("id").primaryKey(),
   sessionId: text("session_id").notNull(), // References MST session
   userId: integer("user_id").references(() => users.id).notNull(),
-
+  
   // Exam configuration
   exam: text("exam").notNull(), // ExamType
   targetScore: decimal("target_score", { precision: 4, scale: 1 }).notNull(), // e.g., 7.0 for IELTS
   examDate: date("exam_date"), // Target exam date
-
+  
   // Study preferences
   weeklyHours: integer("weekly_hours").notNull().default(10), // Available hours per week
   preferredPace: text("preferred_pace").notNull().default("regular"), // intensive, regular, relaxed
-
+  
   // Focus areas (skills/components to emphasize)
   focusAreas: text("focus_areas").array().default([]), // ['academic_writing', 'speaking_fluency', 'listening_comprehension']
-
+  
   // Learning preferences
   studyDays: text("study_days").array().default(['monday', 'wednesday', 'friday']), // Preferred study days
   sessionDuration: integer("session_duration").default(90), // Minutes per session
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -4220,32 +4220,32 @@ export const roadmapPlans = pgTable("roadmap_plans", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   configId: integer("config_id").references(() => roadmapConfigs.id).notNull(),
-
+  
   // Plan details
   exam: text("exam").notNull(), // ExamType
   currentLevel: text("current_level").notNull(), // Current CEFR level from MST
   targetScore: decimal("target_score", { precision: 4, scale: 1 }).notNull(),
   cefrTarget: text("cefr_target").notNull(), // Target CEFR level
-
+  
   // Time calculations
   requiredHours: integer("required_hours").notNull(), // Total estimated study hours
   weeksToExam: integer("weeks_to_exam"), // Weeks until exam date
   sessionsPerWeek: integer("sessions_per_week").notNull(),
   totalSessions: integer("total_sessions").notNull(),
-
+  
   // Progress tracking
   completedSessions: integer("completed_sessions").default(0),
   currentWeek: integer("current_week").default(1),
-
+  
   // Plan metadata
   planStatus: text("plan_status").default("active"), // active, paused, completed, outdated
   lastUpdated: timestamp("last_updated").defaultNow(),
-
+  
   // Generated plan data
   weeklyBreakdown: jsonb("weekly_breakdown"), // Week-by-week plan structure
   skillProgression: jsonb("skill_progression"), // How skills develop over time
   milestones: jsonb("milestones"), // Key checkpoints and assessments
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -4254,47 +4254,47 @@ export const roadmapPlans = pgTable("roadmap_plans", {
 export const roadmapSessions = pgTable("roadmap_sessions", {
   id: serial("id").primaryKey(),
   planId: integer("plan_id").references(() => roadmapPlans.id).notNull(),
-
+  
   // Session ordering and timing
   sessionIndex: integer("session_index").notNull(), // 1, 2, 3... within the plan
   weekNumber: integer("week_number").notNull(), // Which week this session belongs to
-
+  
   // Session content
   title: varchar("title", { length: 255 }).notNull(),
   sessionType: text("session_type").notNull(), // SessionType enum
   durationMinutes: integer("duration_minutes").default(90),
-
+  
   // Learning objectives and content
   learningGoals: text("learning_goals").array().default([]), // What students will achieve
   grammarTopics: text("grammar_topics").array().default([]), // Grammar points to cover
   vocabularyThemes: text("vocabulary_themes").array().default([]), // Vocabulary areas
   keyPhrases: text("key_phrases").array().default([]), // Important phrases/expressions
-
+  
   // Materials and resources
   flashcardSets: text("flashcard_sets").array().default([]), // Vocabulary/phrase sets
   homeworkTasks: text("homework_tasks").array().default([]), // Assignments
   practiceExercises: text("practice_exercises").array().default([]), // In-session activities
-
+  
   // Integration with existing system
   callernLessonId: integer("callern_lesson_id"), // Link to Callern lesson if applicable
   courseId: integer("course_id").references(() => courses.id), // Link to course if applicable
-
+  
   // Session structure
   warmUpActivities: text("warm_up_activities").array().default([]),
   mainActivities: text("main_activities").array().default([]),
   closingActivities: text("closing_activities").array().default([]),
-
+  
   // Assessment and feedback
   assessmentCriteria: text("assessment_criteria").array().default([]),
   expectedOutcomes: text("expected_outcomes").array().default([]),
-
+  
   // Completion tracking
   isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
   studentNotes: text("student_notes"),
   teacherFeedback: text("teacher_feedback"),
   sessionRating: integer("session_rating"), // 1-5 student rating
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -4375,7 +4375,7 @@ export function examScoreToCEFR(examType: ExamTypeValues, score: number): CEFRLe
       // Find the closest IELTS score
       const ieltsScore = Math.round(score * 2) / 2; // Round to nearest 0.5
       return IELTS_TO_CEFR_MAPPING[ieltsScore] || 'B1';
-
+      
     case ExamType.TOEFL_IBT:
       // Find TOEFL range
       if (score <= 31) return 'A1';
@@ -4384,7 +4384,7 @@ export function examScoreToCEFR(examType: ExamTypeValues, score: number): CEFRLe
       if (score <= 94) return 'B2';
       if (score <= 112) return 'C1';
       return 'C2';
-
+      
     case ExamType.PTE_ACADEMIC:
     case ExamType.PTE_CORE:
       // Find PTE range
@@ -4394,7 +4394,7 @@ export function examScoreToCEFR(examType: ExamTypeValues, score: number): CEFRLe
       if (score <= 64) return 'B2';
       if (score <= 78) return 'C1';
       return 'C2';
-
+      
     default:
       return 'B1'; // Default fallback
   }
@@ -4407,17 +4407,17 @@ export function calculateRequiredHours(currentLevel: CEFRLevelValues, targetLeve
   const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   const currentIndex = levels.indexOf(currentLevel);
   const targetIndex = levels.indexOf(targetLevel);
-
+  
   if (currentIndex >= targetIndex) {
     return 0; // Already at or above target level
   }
-
+  
   let totalHours = 0;
   for (let i = currentIndex; i < targetIndex; i++) {
     const currentLevelKey = levels[i] as keyof typeof BASE_HOURS_BY_LEVEL;
     totalHours += BASE_HOURS_BY_LEVEL[currentLevelKey] || 100;
   }
-
+  
   return totalHours;
 }
 
@@ -4440,20 +4440,20 @@ export function getMinimumScoreForCEFR(examType: ExamTypeValues, cefrLevel: CEFR
         'A1': 1.0, 'A2': 3.5, 'B1': 4.5, 'B2': 5.5, 'C1': 6.5, 'C2': 8.0
       };
       return ieltsMapping[cefrLevel] || 4.5;
-
+      
     case ExamType.TOEFL_IBT:
       const toeflMapping = {
         'A1': 0, 'A2': 32, 'B1': 42, 'B2': 72, 'C1': 95, 'C2': 113
       };
       return toeflMapping[cefrLevel] || 42;
-
+      
     case ExamType.PTE_ACADEMIC:
     case ExamType.PTE_CORE:
       const pteMapping = {
         'A1': 10, 'A2': 30, 'B1': 36, 'B2': 50, 'C1': 65, 'C2': 79
       };
       return pteMapping[cefrLevel] || 36;
-
+      
     default:
       return 0;
   }
