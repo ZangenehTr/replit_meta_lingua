@@ -111,6 +111,7 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
   { path: "/admin/white-label", icon: "Building2", label: t('common:navigation.whiteLabelManagement'), roles: ["Admin"] },
   { path: "/admin/sms-settings", icon: "Send", label: t('common:navigation.smsManagement'), roles: ["Admin", "Supervisor"] },
   { path: "/admin/campaign-management", icon: "Megaphone", label: t('common:navigation.campaignManagement'), roles: ["Admin", "Call Center Agent"] },
+  { path: "/admin/callcenter-access-control", icon: "Shield", label: t('common:navigation.callCenterAccessControl') || 'Call Center Access Control', roles: ["Admin"] },
   { path: "/admin/website-builder", icon: "Globe", label: t('common:navigation.websiteBuilder'), roles: ["Admin"] },
   ];
   

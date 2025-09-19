@@ -60,6 +60,7 @@ import LeadManagement from "@/pages/lead-management";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
 import UnifiedCallCenterWorkflow from "@/pages/callcenter/unified-workflow";
 import VoIPCenter from "@/pages/callcenter/voip-center";
+import CallCenterAccessControl from "@/pages/admin/callcenter-access-control";
 import TeacherDashboardNew from "@/pages/teacher/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
@@ -354,6 +355,11 @@ function Router() {
         <ProtectedRoute>
           <AdminTeacherManagement />
         </ProtectedRoute>
+      </Route>
+      <Route path="/admin/callcenter-access-control">
+        <RoleProtectedRoute allowedRoles={['admin']}>
+          <CallCenterAccessControl />
+        </RoleProtectedRoute>
       </Route>
       <Route path="/callcenter">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor']}>
