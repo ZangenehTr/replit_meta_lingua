@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,15 +52,31 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
   const [inputMessage, setInputMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  // Fetch real companion stats from API
-  const { data: companionStats } = useQuery({
-    queryKey: ['/api/ai/companion-stats'],
-    select: (data: any) => data || {
-      conversations: 0,
-      helpfulTips: 0,
-      encouragements: 0
-    }
+  const [companionStats, setCompanionStats] = useState({
+    conversations: 0,
+    helpfulTips: 0,
+    encouragements: 0
   });
+
+  // Fetch real companion stats from API
+  const { data: fetchedStats } = useQuery({
+    queryKey: ['/api/ai/companion-stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/ai/companion-stats', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!response.ok) return null;
+      return response.json();
+    },
+    select: (data: any) => data || companionStats
+  });
+
+  // Update local stats when fetched
+  useEffect(() => {
+    if (fetchedStats) {
+      setCompanionStats(fetchedStats);
+    }
+  }, [fetchedStats]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();

@@ -283,7 +283,8 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         senderName: `${userProfile?.firstName} ${userProfile?.lastName}` || "User",
         message,
         messageType: "text",
-        isRead: true
+        isRead: true,
+        sentAt: new Date()
       });
 
       // Generate AI response with personalized context
@@ -307,7 +308,8 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         isAiGenerated: true,
         aiContext: aiResponse.context,
         aiPromptTokens: aiResponse.promptTokens,
-        aiResponseTokens: aiResponse.responseTokens
+        aiResponseTokens: aiResponse.responseTokens,
+        sentAt: new Date()
       });
 
       // Update study partner statistics
