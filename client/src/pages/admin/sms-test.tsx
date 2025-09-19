@@ -156,7 +156,7 @@ export default function SMSTestPage() {
   };
 
   return (
-    <div>
+    <div className="container mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">SMS Service Testing</h1>
         <p className="text-muted-foreground">

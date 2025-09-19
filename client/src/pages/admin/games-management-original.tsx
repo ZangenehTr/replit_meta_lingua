@@ -472,7 +472,7 @@ export default function GamesManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
-      <div>
+      <div className="max-w-7xl mx-auto">
         {/* Header - Mobile First */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
           <div>
