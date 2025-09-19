@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
 import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { registerCallernAIRoutes } from "./callern-ai-routes";
@@ -21270,14 +21270,14 @@ Meta Lingua Academy`;
   
   app.get("/api/admin/role-permissions", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
-      // Get current role permissions from database
-      const currentPermissions = await db.select().from(rolePermissions);
+      // Get current role permissions from database - using raw SQL due to column name
+      const result = await db.execute(sql`SELECT role, subsystem_permissions FROM role_permissions`);
       
       // Convert to the expected format
       const permissions: any = {};
-      currentPermissions.forEach(perm => {
-        permissions[perm.role] = {
-          subsystems: perm.subsystemPermissions || []
+      result.rows.forEach((row: any) => {
+        permissions[row.role] = {
+          subsystems: row.subsystem_permissions || []
         };
       });
       
@@ -21295,15 +21295,15 @@ Meta Lingua Academy`;
     try {
       const permissions = req.body;
       
-      // Clear existing permissions and insert new ones
-      await db.delete(rolePermissions);
+      // Clear existing permissions and insert new ones - using raw SQL
+      await db.execute(sql`DELETE FROM role_permissions`);
       
       // Insert new permissions for each role
       for (const [role, roleData] of Object.entries(permissions as any)) {
-        await db.insert(rolePermissions).values({
-          role,
-          subsystemPermissions: roleData.subsystems
-        });
+        await db.execute(sql`
+          INSERT INTO role_permissions (role, subsystem_permissions) 
+          VALUES (${role}, ${JSON.stringify(roleData.subsystems)})
+        `);
       }
       
       res.json({ message: "Role permissions updated successfully" });
@@ -21315,15 +21315,15 @@ Meta Lingua Academy`;
 
   app.post("/api/admin/role-permissions/reset", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
-      // Clear existing permissions
-      await db.delete(rolePermissions);
+      // Clear existing permissions - using raw SQL
+      await db.execute(sql`DELETE FROM role_permissions`);
       
       // Insert default permissions
       for (const [role, roleData] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
-        await db.insert(rolePermissions).values({
-          role,
-          subsystemPermissions: roleData.subsystems
-        });
+        await db.execute(sql`
+          INSERT INTO role_permissions (role, subsystem_permissions) 
+          VALUES (${role}, ${JSON.stringify(roleData.subsystems)})
+        `);
       }
       
       res.json({ message: "Role permissions reset to defaults successfully" });

@@ -127,7 +127,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "progress", "wallet", "referrals"
     ]
   },
-  "Teacher": {
+  "Teacher/Tutor": {
     subsystems: [
       "teacher_dashboard", "callern_teacher", "teacher_classes", "teacher_video_courses",
       "teacher_schedule", "teacher_assignments", "teacher_students", "teacher_resources",
