@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import express from "express";
+import { DEFAULT_ROLE_PERMISSIONS } from '@shared/subsystem-permissions';
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -21260,6 +21261,75 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error fetching profile:', error);
       res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+  });
+
+  // ========================
+  // ROLE-BASED SUBSYSTEM PERMISSIONS API
+  // ========================
+  
+  app.get("/api/admin/role-permissions", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      // Get current role permissions from database
+      const currentPermissions = await db.select().from(rolePermissions);
+      
+      // Convert to the expected format
+      const permissions: any = {};
+      currentPermissions.forEach(perm => {
+        permissions[perm.role] = {
+          subsystems: perm.subsystemPermissions || []
+        };
+      });
+      
+      // Merge with defaults for any missing roles
+      const finalPermissions = { ...DEFAULT_ROLE_PERMISSIONS, ...permissions };
+      
+      res.json(finalPermissions);
+    } catch (error) {
+      console.error("Error fetching role permissions:", error);
+      res.status(500).json({ error: "Failed to fetch role permissions" });
+    }
+  });
+
+  app.post("/api/admin/role-permissions", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const permissions = req.body;
+      
+      // Clear existing permissions and insert new ones
+      await db.delete(rolePermissions);
+      
+      // Insert new permissions for each role
+      for (const [role, roleData] of Object.entries(permissions as any)) {
+        await db.insert(rolePermissions).values({
+          role,
+          subsystemPermissions: roleData.subsystems
+        });
+      }
+      
+      res.json({ message: "Role permissions updated successfully" });
+    } catch (error) {
+      console.error("Error saving role permissions:", error);
+      res.status(500).json({ error: "Failed to save role permissions" });
+    }
+  });
+
+  app.post("/api/admin/role-permissions/reset", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      // Clear existing permissions
+      await db.delete(rolePermissions);
+      
+      // Insert default permissions
+      for (const [role, roleData] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
+        await db.insert(rolePermissions).values({
+          role,
+          subsystemPermissions: roleData.subsystems
+        });
+      }
+      
+      res.json({ message: "Role permissions reset to defaults successfully" });
+    } catch (error) {
+      console.error("Error resetting role permissions:", error);
+      res.status(500).json({ error: "Failed to reset role permissions" });
     }
   });
 
