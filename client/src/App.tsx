@@ -360,14 +360,14 @@ function Router() {
           <UnifiedCallCenterWorkflow />
         </RoleProtectedRoute>
       </Route>
-      <Route path="/callcenter/unified-workflow">
+      <Route path="/callcenter/dashboard">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor']}>
           <UnifiedCallCenterWorkflow />
         </RoleProtectedRoute>
       </Route>
-      <Route path="/callcenter/dashboard">
-        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
-          <CallCenterDashboard />
+      <Route path="/callcenter/unified-workflow">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor']}>
+          <UnifiedCallCenterWorkflow />
         </RoleProtectedRoute>
       </Route>
       <Route path="/lead-management">
