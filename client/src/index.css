@@ -76,6 +76,28 @@ body.rtl p, body.rtl div, body.rtl span {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
 
+/* Admin Override - Force LTR for admin interface regardless of language */
+.admin-ltr,
+.admin-ltr *,
+.admin-ltr h1, .admin-ltr h2, .admin-ltr h3, .admin-ltr h4, .admin-ltr h5, .admin-ltr h6,
+.admin-ltr p, .admin-ltr div, .admin-ltr span, .admin-ltr label {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Admin specific layout fixes */
+.admin-ltr .justify-end {
+  justify-content: flex-end !important;
+}
+
+.admin-ltr .justify-start {
+  justify-content: flex-start !important;
+}
+
+.admin-ltr .text-right {
+  text-align: left !important;
+}
+
 .mst-container .flex {
   flex-direction: row !important;
 }

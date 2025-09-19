@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -209,17 +208,14 @@ export default function SubsystemPermissions() {
 
   if (isLoading) {
     return (
-      <AppLayout>
         <div className="flex items-center justify-center h-96">
           <RefreshCw className="w-8 h-8 animate-spin" />
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6 max-w-full" dir="ltr">
+      <div className="space-y-6 max-w-full admin-ltr">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="text-left">
@@ -358,6 +354,5 @@ export default function SubsystemPermissions() {
           </Button>
         </div>
       </div>
-    </AppLayout>
-  );
+    );
 }
