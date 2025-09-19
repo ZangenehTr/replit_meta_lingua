@@ -95,7 +95,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   </Button>
                 </SheetTrigger>
                 <SheetContent 
-                  side={direction === 'rtl' ? 'right' : 'left'} 
+                  side="left" 
                   className="w-72 p-0 max-w-[75vw] z-[100]" 
                   onPointerDownOutside={() => setMobileMenuOpen(false)}
                   onEscapeKeyDown={() => setMobileMenuOpen(false)}
@@ -183,33 +183,25 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-      {/* Main Layout with Sidebar */}
-      <div className="flex min-h-[calc(100vh-4rem)]" dir={direction}>
-        {/* Desktop Sidebar - hidden on mobile and for students */}
+      {/* Main Layout with Sidebar - Fixed to LTR layout */}
+      <div className="flex min-h-[calc(100vh-4rem)]" dir="ltr">
+        {/* Desktop Sidebar - always on the left side */}
         {user?.role?.toLowerCase() !== 'student' && (
-          <aside 
-            className={`hidden md:block md:w-64 flex-shrink-0 ${
-              direction === 'rtl' ? 'order-last' : 'order-first'
-            }`}
-          >
-            <div className={`fixed top-16 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 ${
-              direction === 'rtl' 
-                ? 'right-0 border-l border-border' 
-                : 'left-0 border-r border-border'
-            } bg-background`}>
+          <aside className="hidden md:block md:w-64 flex-shrink-0 order-first">
+            <div className="fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background">
               <Sidebar />
             </div>
           </aside>
         )}
         
-        {/* Main Content - properly spaced for sidebar and bottom nav */}
+        {/* Main Content - always positioned to the right of sidebar */}
         <main 
           className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 ${
             user?.role?.toLowerCase() !== 'student' 
-              ? `md:w-[calc(100%-16rem)] ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'}`
+              ? 'md:w-[calc(100%-16rem)] md:ml-64'
               : ''
           }`}
-          dir={direction} 
+          dir="ltr"
         >
           <div className="min-h-full p-4 sm:p-6 lg:p-8">
             {children}
