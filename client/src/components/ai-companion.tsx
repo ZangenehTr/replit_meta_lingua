@@ -23,12 +23,9 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import { globalLexiService } from "@/services/global-lexi-service";
 
-// Simple language detection for Lexi - SINGLE LANGUAGE DISPLAY
-const getCurrentLanguage = () => {
-  const saved = localStorage.getItem('meta-lingua-language');
-  return saved === 'fa' ? 'fa' : 'en';
-};
+// Use unified language system for consistent locale handling
 
 interface CompanionMessage {
   id: string;
@@ -45,9 +42,17 @@ interface CompanionProps {
   onToggle: () => void;
   studentLevel: 'beginner' | 'intermediate' | 'advanced';
   currentLesson?: string;
+  activityContext?: {
+    module: 'callern' | 'homework' | 'flashcards' | 'virtual-mall' | 'courses' | 'tests' | 'general';
+    activityType: string;
+    sessionId?: string;
+    courseId?: number;
+    lessonId?: number;
+    metadata?: any;
+  };
 }
 
-export default function AICompanion({ isVisible, onToggle, studentLevel, currentLesson }: CompanionProps) {
+export default function AICompanion({ isVisible, onToggle, studentLevel, currentLesson, activityContext }: CompanionProps) {
   const [messages, setMessages] = useState<CompanionMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
@@ -58,17 +63,10 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
     encouragements: 0
   });
 
-  // Fetch real companion stats from API
+  // Fetch Lexi companion stats from Global Lexi service
   const { data: fetchedStats } = useQuery({
-    queryKey: ['/api/ai/companion-stats'],
-    queryFn: async () => {
-      const response = await fetch('/api/ai/companion-stats', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-      });
-      if (!response.ok) return null;
-      return response.json();
-    },
-    select: (data: any) => data || companionStats
+    queryKey: ['/api/lexi/stats'],
+    queryFn: () => globalLexiService.getCompanionStats()
   });
 
   // Update local stats when fetched
@@ -80,10 +78,9 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const currentLanguage = getCurrentLanguage();
-
-  // Use comprehensive i18n system instead of hardcoded translations
-  const { t } = useLanguage();
+  
+  // Use unified language system for consistent locale handling
+  const { t, language: currentLanguage } = useLanguage();
 
   // PRD-compliant responses - SINGLE LANGUAGE ONLY
   const getPersonalizedResponse = (message: string, currentLang: string) => {
@@ -162,27 +159,37 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
     }
   };
 
-  // AI Companion Chat - Dynamic AI Integration
+  // Global Lexi Chat - Omnipresent AI Integration with activity tracking
   const sendToCompanion = useMutation({
     mutationFn: async (data: { message: string; context: any }) => {
-      const response = await fetch('/api/ai/companion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: data.message,
-          language: currentLanguage,
-          studentLevel: data.context.level,
-          currentLesson: data.context.lesson
-        })
+      const lexiContext = activityContext || {
+        module: 'general',
+        activityType: 'chat',
+        metadata: { lesson: data.context.lesson }
+      };
+      
+      // Track the activity first
+      await globalLexiService.trackActivity(lexiContext);
+      
+      // Get contextual response based on current activity
+      const response = await globalLexiService.getContextualResponse(
+        data.message, 
+        lexiContext,
+        data.context.level
+      );
+      
+      // Record the interaction for learning analytics
+      await globalLexiService.recordInteraction({
+        userId: 0, // Will be set by server
+        message: data.message,
+        response: response.content,
+        context: lexiContext,
+        emotion: response.emotion as any,
+        culturalTip: response.culturalTip,
+        pronunciation: response.pronunciation
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-      
-      return await response.json();
+      return response;
     },
     onSuccess: (response) => {
       const companionMessage: CompanionMessage = {
@@ -206,20 +213,21 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
     }
   });
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = (messageToSend?: string) => {
+    const message = messageToSend || inputMessage;
+    if (!message.trim()) return;
 
     const userMessage: CompanionMessage = {
       id: Date.now().toString() + '_user',
       type: 'user',
-      content: inputMessage,
+      content: message,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
     
     sendToCompanion.mutate({
-      message: inputMessage,
+      message,
       context: { level: studentLevel, lesson: currentLesson }
     });
 
@@ -298,8 +306,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
     };
     
     const message = actionMessages[currentLanguage]?.[action] || action;
-    setInputMessage(message);
-    handleSendMessage();
+    handleSendMessage(message);
   };
 
   if (!isVisible) {
@@ -307,6 +314,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
       <Button
         onClick={onToggle}
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg z-50"
+        data-testid="button-open-lexi"
       >
         <MessageCircle className="w-6 h-6 text-white" />
       </Button>
@@ -335,6 +343,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
               size="sm"
               onClick={onToggle}
               className="text-white hover:bg-white hover:bg-opacity-20"
+              data-testid="button-close-lexi"
             >
               ×
             </Button>
@@ -403,6 +412,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
                 size="sm"
                 onClick={() => handleQuickAction(action.key)}
                 className="flex-1 text-xs h-8"
+                data-testid={`button-quick-${action.key}`}
               >
                 {action.icon}
               </Button>
@@ -416,15 +426,17 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder={t('placeholder')}
               className="flex-1"
               dir={currentLanguage === 'fa' ? 'rtl' : 'ltr'}
+              data-testid="input-lexi-message"
             />
             <Button
-              onClick={handleSendMessage}
+              onClick={() => handleSendMessage()}
               disabled={!inputMessage.trim() || sendToCompanion.isPending}
               size="sm"
+              data-testid="button-send-lexi"
             >
               {t('send')}
             </Button>

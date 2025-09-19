@@ -19,6 +19,7 @@ import { LogOut, User, Settings, Home, Menu } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
 import MobileBottomNav from "./mobile-bottom-nav";
+import AICompanion from "@/components/ai-companion";
 import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
@@ -30,9 +31,69 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, logout } = useAuth();
   const { t } = useTranslation(['common']);
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [lexiVisible, setLexiVisible] = useState(false);
   const { direction } = useLanguage();
+
+  // Determine activity context based on current route for omnipresent Lexi
+  const getActivityContext = () => {
+    const path = location.toLowerCase();
+    
+    if (path.includes('callern')) {
+      return {
+        module: 'callern' as const,
+        activityType: path.includes('video') ? 'video_session' : 'callern_navigation',
+        metadata: { route: location }
+      };
+    }
+    
+    if (path.includes('homework')) {
+      return {
+        module: 'homework' as const,
+        activityType: 'homework_session',
+        metadata: { route: location }
+      };
+    }
+    
+    if (path.includes('flashcard') || path.includes('study')) {
+      return {
+        module: 'flashcards' as const,
+        activityType: 'flashcard_study',
+        metadata: { route: location }
+      };
+    }
+    
+    if (path.includes('virtual-mall')) {
+      return {
+        module: 'virtual-mall' as const,
+        activityType: 'mall_exploration',
+        metadata: { route: location }
+      };
+    }
+    
+    if (path.includes('course') || path.includes('lesson')) {
+      return {
+        module: 'courses' as const,
+        activityType: 'course_learning',
+        metadata: { route: location }
+      };
+    }
+    
+    if (path.includes('test') || path.includes('exam')) {
+      return {
+        module: 'tests' as const,
+        activityType: 'test_taking',
+        metadata: { route: location }
+      };
+    }
+    
+    return {
+      module: 'general' as const,
+      activityType: 'general_navigation',
+      metadata: { route: location }
+    };
+  };
 
   const handleLogout = () => {
     // Clear authentication data
@@ -214,6 +275,15 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Omnipresent Global Lexi - Available across all learning activities */}
+      <AICompanion
+        isVisible={lexiVisible}
+        onToggle={() => setLexiVisible(!lexiVisible)}
+        studentLevel="intermediate"
+        currentLesson="current-activity"
+        activityContext={getActivityContext()}
+      />
     </div>
   );
 }

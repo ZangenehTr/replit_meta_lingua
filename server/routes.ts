@@ -17,6 +17,7 @@ import callernRoadmapRoutes from "./routes/callern-roadmap-routes";
 import courseRoadmapRoutes from "./routes/course-roadmap-routes";
 import examRoadmapRoutes from "./routes/exam-roadmap-routes";
 import { createAiStudyPartnerRoutes } from "./routes/ai-study-partner-routes";
+import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
 import tttRoutes from "./ttt-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
 import mstRoutes from "./modules/mst/routes/mstRoutes";
@@ -20350,9 +20351,13 @@ Meta Lingua Academy`;
   // Register AI study partner routes
   app.use(createAiStudyPartnerRoutes(storage));
   
+  // Register Global Lexi routes
+  registerGlobalLexiRoutes(app, storage);
+  
   console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
   console.log('✅ Exam-focused roadmap routes registered successfully');
   console.log('✅ AI Study Partner routes registered successfully');
+  console.log('✅ Global Lexi routes registered successfully');
 
   // Import and register Sample Courses routes
   const { sampleCoursesRoutes } = await import('./routes/sample-courses-routes');
