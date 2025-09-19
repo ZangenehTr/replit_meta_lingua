@@ -68,21 +68,11 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Call Center Permissions - controls access to workflow stages and features
-export const callCenterPermissions = pgTable("call_center_permissions", {
+// Comprehensive Subsystem Permissions - controls access to all app subsystems and features
+export const rolePermissions = pgTable("role_permissions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull().unique(),
-  canAccessContactDesk: boolean("can_access_contact_desk").default(true),
-  canAccessNewIntake: boolean("can_access_new_intake").default(false),
-  canAccessNoResponse: boolean("can_access_no_response").default(false),
-  canAccessFollowUp: boolean("can_access_follow_up").default(false),
-  canAccessLevelAssessment: boolean("can_access_level_assessment").default(false),
-  canAccessWithdrawal: boolean("can_access_withdrawal").default(false),
-  canManageLeads: boolean("can_manage_leads").default(false),
-  canMakeCalls: boolean("can_make_calls").default(false),
-  canViewReports: boolean("can_view_reports").default(false),
-  canManageCampaigns: boolean("can_manage_campaigns").default(false),
-  accessLevel: text("access_level").default("read"), // read, write, admin
+  role: text("role").notNull().unique(),
+  subsystemPermissions: jsonb("subsystem_permissions").$type<string[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -190,15 +180,6 @@ export type MSTSession = typeof mstSessions.$inferSelect;
 export type MSTSkillState = typeof mstSkillStates.$inferSelect;
 export type MSTResponse = typeof mstResponses.$inferSelect;
 
-// Role Permissions
-export const rolePermissions = pgTable("role_permissions", {
-  id: serial("id").primaryKey(),
-  role: text("role").notNull(), // Admin, Teacher/Tutor, Student, Mentor, Supervisor, Call Center Agent, Accountant
-  resource: text("resource").notNull(), // users, courses, payments, reports, sessions, etc.
-  action: text("action").notNull(), // create, read, update, delete, manage
-  allowed: boolean("allowed").default(true),
-  createdAt: timestamp("created_at").defaultNow()
-});
 
 // User Sessions for authentication
 export const userSessions = pgTable("user_sessions", {
@@ -1127,7 +1108,6 @@ export const insertUserSchema = createInsertSchema(users);
 export const insertUserProfileSchema = createInsertSchema(userProfiles);
 export const insertRolePermissionSchema = createInsertSchema(rolePermissions);
 export const insertUserSessionSchema = createInsertSchema(userSessions);
-export const insertCallCenterPermissionsSchema = createInsertSchema(callCenterPermissions);
 // Holidays table for managing institute holidays (used for class end date calculation)
 export const holidays = pgTable("holidays", {
   id: serial("id").primaryKey(),
