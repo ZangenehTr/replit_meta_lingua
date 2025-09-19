@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { AppLayout } from "@/components/layout/app-layout";
 import { cn } from "@/lib/utils";
 import { 
   Users,
@@ -181,49 +182,48 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50", isRTL && "rtl")}>
-      {/* Professional Admin Header */}
-      <motion.header 
-        className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Avatar className="w-12 h-12 border-2 border-indigo-400 shadow-lg">
-                  <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
-                  <Shield className="h-3 w-3" />
+    <AppLayout>
+      <div className="bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-full -mx-4 -my-4 sm:-mx-6 sm:-my-6 lg:-mx-8 lg:-my-8 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        {/* Professional Admin Header */}
+        <motion.header 
+          className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm -mx-4 mb-4 sm:-mx-6 sm:mb-6 lg:-mx-8 lg:mb-8"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Avatar className="w-12 h-12 border-2 border-indigo-400 shadow-lg">
+                    <AvatarImage src={user?.avatar} />
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold">
+                      {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                    <Shield className="h-3 w-3" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-gray-600 text-xs font-medium">{greeting}</p>
+                  <h1 className="text-gray-900 font-bold text-base">{user?.firstName} {user?.lastName}</h1>
+                  <Badge variant="secondary" className="text-xs mt-1">
+                    {t('admin:systemAdmin', 'مدیر سیستم')}
+                  </Badge>
                 </div>
               </div>
-              <div>
-                <p className="text-gray-600 text-xs font-medium">{greeting}</p>
-                <h1 className="text-gray-900 font-bold text-base">{user?.firstName} {user?.lastName}</h1>
-                <Badge variant="secondary" className="text-xs mt-1">
-                  {t('admin:systemAdmin', 'مدیر سیستم')}
-                </Badge>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
-              </Button>
-              <Link href="/admin/settings">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
+                </Button>
                 <Button variant="ghost" size="icon">
                   <Settings className="h-5 w-5" />
                 </Button>
-              </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </motion.header>
+        </motion.header>
 
       {/* Main Dashboard Content */}
       <div className="pb-20 space-y-4">
@@ -660,8 +660,9 @@ export const AdminDashboard = () => {
         </motion.div>
       </div>
 
-      {/* Enhanced Mobile Bottom Navigation */}
-      <MobileBottomNav />
-    </div>
+        {/* Enhanced Mobile Bottom Navigation */}
+        <MobileBottomNav />
+      </div>
+    </AppLayout>
   );
 }
