@@ -27,7 +27,11 @@ import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
 import { motion } from "framer-motion";
 
-function ContactDesk() {
+interface ContactDeskProps {
+  onNavigateToNewIntake?: () => void;
+}
+
+function ContactDesk({ onNavigateToNewIntake }: ContactDeskProps) {
   const { t } = useTranslation(['callcenter', 'common']);
   const { isRTL } = useLanguage();
   const { toast } = useToast();
@@ -294,7 +298,11 @@ function ContactDesk() {
 
       {/* New Contact Button */}
       <div className="flex justify-center">
-        <Button size="lg" data-testid="button-new-contact">
+        <Button 
+          size="lg" 
+          onClick={onNavigateToNewIntake}
+          data-testid="button-new-contact"
+        >
           <UserPlus className="h-5 w-5 mr-2" />
           ثبت متقاضی جدید
         </Button>

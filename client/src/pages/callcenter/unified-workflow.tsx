@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +21,13 @@ import {
   MessageSquare
 } from "lucide-react";
 import { motion } from "framer-motion";
+
+// User interface for proper typing
+interface User {
+  id: number;
+  email: string;
+  role: string;
+}
 
 // Import workflow stage components (to be created)
 import ContactDesk from "./workflow-stages/contact-desk";
@@ -53,8 +60,8 @@ export default function UnifiedCallCenterWorkflow() {
   const { isRTL } = useLanguage();
   const [activeStage, setActiveStage] = useState<WorkflowStage>("contact_desk");
 
-  // Get current user information  
-  const { data: user } = useQuery({
+  // Get current user information with proper typing
+  const { data: user } = useQuery<User>({
     queryKey: ['/api/users/me']
   });
 
@@ -62,19 +69,21 @@ export default function UnifiedCallCenterWorkflow() {
   const hasStageAccess = (stage: WorkflowStage): boolean => {
     if (!user) return false;
     
+    const userRole = user.role;
+    
     switch (stage) {
       case "contact_desk":
         return true; // All call center roles can access contact desk
       case "new_intake":
-        return user.role === 'Admin' || user.role === 'Supervisor';
+        return userRole === 'Admin' || userRole === 'Supervisor';
       case "no_response":
-        return user.role === 'Admin' || user.role === 'Supervisor';
+        return userRole === 'Admin' || userRole === 'Supervisor';
       case "follow_up":
-        return user.role === 'Admin' || user.role === 'Supervisor' || user.role === 'Call Center Agent';
+        return userRole === 'Admin' || userRole === 'Supervisor' || userRole === 'Call Center Agent';
       case "level_assessment":
-        return user.role === 'Admin' || user.role === 'Supervisor' || user.role === 'Mentor';
+        return userRole === 'Admin' || userRole === 'Supervisor' || userRole === 'Mentor';
       case "withdrawal":
-        return user.role === 'Admin' || user.role === 'Supervisor';
+        return userRole === 'Admin' || userRole === 'Supervisor';
       default:
         return false;
     }
@@ -162,10 +171,12 @@ export default function UnifiedCallCenterWorkflow() {
   // Filter stages based on user permissions
   const availableStages = workflowStages.filter(stage => hasStageAccess(stage.key));
 
-  // If current active stage is not accessible, switch to first available
-  if (!hasStageAccess(activeStage) && availableStages.length > 0) {
-    setActiveStage(availableStages[0].key);
-  }
+  // Fix render-time state update - move to useEffect
+  useEffect(() => {
+    if (!hasStageAccess(activeStage) && availableStages.length > 0) {
+      setActiveStage(availableStages[0].key);
+    }
+  }, [user, activeStage, availableStages]);
 
   const renderStageContent = () => {
     // Guard content rendering - only show if user has access
@@ -184,7 +195,7 @@ export default function UnifiedCallCenterWorkflow() {
     }
     switch (activeStage) {
       case "contact_desk":
-        return <ContactDesk />;
+        return <ContactDesk onNavigateToNewIntake={() => setActiveStage("new_intake")} />;
       case "new_intake":
         return <NewIntake />;
       case "no_response": 
@@ -196,12 +207,12 @@ export default function UnifiedCallCenterWorkflow() {
       case "withdrawal":
         return <Withdrawal />;
       default:
-        return <ContactDesk />;
+        return <ContactDesk onNavigateToNewIntake={() => setActiveStage("new_intake")} />;
     }
   };
 
   return (
-      <div className="space-y-6 w-full admin-ltr">
+      <div className="space-y-6 w-full admin-ltr px-4 sm:px-6 md:ml-8 md:pl-8">
         {/* Header with Overall Stats */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">

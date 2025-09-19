@@ -215,7 +215,7 @@ export default function SubsystemPermissions() {
   }
 
   return (
-      <div className="space-y-6 w-full admin-ltr">
+      <div className="space-y-6 w-full admin-ltr px-4 sm:px-6 md:ml-8 md:pl-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="text-left">
