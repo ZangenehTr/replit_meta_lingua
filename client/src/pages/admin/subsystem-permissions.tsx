@@ -219,10 +219,10 @@ export default function SubsystemPermissions() {
 
   return (
     <AppLayout>
-      <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="space-y-6 max-w-full" dir="ltr">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="text-left">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {t('admin:subsystemPermissions.title', 'Subsystem Permissions')}
             </h1>
@@ -231,7 +231,7 @@ export default function SubsystemPermissions() {
             </p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 sm:flex-shrink-0">
             <Button 
               variant="outline" 
               onClick={() => resetDefaultsMutation.mutate()}
