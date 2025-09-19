@@ -398,33 +398,7 @@ app.use((req, res, next) => {
     res.json({ id: user.userId, email: user.email, role: user.role, firstName: "Student", lastName: "User" });
   });
 
-  // Basic auth endpoint
-  app.post('/api/auth/login', async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password required' });
-    }
-    if (email === 'student2@test.com' && password === 'password123') {
-      const token = jwt.sign(
-        { userId: 8470, email: email, role: 'Student' },
-        process.env.JWT_SECRET || 'default-secret',
-        { expiresIn: '24h' }
-      );
-      const refreshToken = jwt.sign(
-        { userId: 8470, type: 'refresh' },
-        process.env.JWT_SECRET || 'default-secret',
-        { expiresIn: '7d' }
-      );
-      res.json({ 
-        auth_token: token, 
-        refresh_token: refreshToken,
-        user_role: 'Student', 
-        user: { id: 8470, email, role: 'Student' } 
-      });
-    } else {
-      res.status(401).json({ message: 'Invalid credentials' });
-    }
-  });
+  // Login route handled by routes.js - removed conflicting hardcoded route
 
   // FRONTEND FIX: Add refresh token endpoint for frontend authentication persistence
   app.post('/api/auth/refresh', async (req, res) => {
