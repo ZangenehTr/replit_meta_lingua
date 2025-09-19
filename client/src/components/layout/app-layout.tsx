@@ -33,7 +33,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { t } = useTranslation(['common']);
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [lexiVisible, setLexiVisible] = useState(true);
+  const [lexiVisible, setLexiVisible] = useState(false);
   const { direction } = useLanguage();
 
   // Determine activity context based on current route for omnipresent Lexi
