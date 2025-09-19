@@ -82,6 +82,7 @@ import StudentVideoCourses from "@/pages/student/video-courses";
 import VideoCoursDetail from "@/pages/student/video-course-detail";
 import VideoPlayer from "@/pages/student/video-player";
 import StudentProfile from "@/pages/student/profile";
+import VirtualMall from "@/pages/student/virtual-mall";
 import CourseDetail from "@/pages/course-detail";
 import LevelAssessment from "@/pages/level-assessment";
 import MSTPage from "@/pages/mst";
@@ -479,6 +480,11 @@ function Router() {
       <Route path="/student/sessions">
         <ProtectedRoute>
           <SessionsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/virtual-mall">
+        <ProtectedRoute>
+          <VirtualMall />
         </ProtectedRoute>
       </Route>
       <Route path="/student/join-class">

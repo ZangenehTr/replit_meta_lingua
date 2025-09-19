@@ -21276,6 +21276,10 @@ Meta Lingua Academy`;
     });
   });
 
+  // Register Virtual Mall routes
+  const { registerVirtualMallRoutes } = await import('./virtual-mall-routes.js');
+  registerVirtualMallRoutes(app, authenticateToken, requireRole);
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server
