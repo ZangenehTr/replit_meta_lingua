@@ -1,0 +1,33 @@
+Hi, I’m building a language-learning platform called MetaLingua and I need your help creating an immersive, interactive virtual field trip using Three.js. The goal is to create a virtual shopping mall experience where learners can explore various shops, interact with AI characters, and practice language skills in a fun, engaging way. Here are the specific requirements for the project:
+
+1. Virtual Shopping Mall with Three.js
+
+5 shops: These shops should include a fashion store, an electronics store, a bookstore, a grocery store, and an accessories shop.
+
+Cafe-restaurant: The learner should also have the option to take a break at a cafe-restaurant area.
+
+The entire environment should be 3D and immersive to give the learner a sense of actually walking through the mall.
+
+2. AI Study Partner: Lexi
+
+The learner is greeted by Lexi, our AI study partner, when they enter the mall. Lexi should be present throughout the experience, guiding the learner, offering tips, and encouraging language practice.
+
+Interactive walking: The learner should be able to move around the mall and communicate with Lexi, receiving helpful prompts for conversation and learning.
+
+3. Shopgirl Interactions
+
+Interactive shopgirls: As the learner enters each shop, a shopgirl should approach them and start a conversation.
+
+Language assistance: If the learner struggles to understand or speaks in their native language, Lexi should translate the learner’s phrase to the shopgirl in English, and vice versa. Lexi should then provide the translation to the learner.
+
+Tracking expressions: Any phrases or expressions that the learner cannot express in English should be added to the flashcard deck for later review.
+
+4. Flashcards and Learning Progress
+
+Lexi should track the learner’s progress and store new vocabulary, phrases, or expressions in the flashcards deck that can be reviewed after the field trip.
+
+First Phase:
+
+Start with the shopping mall featuring the 5 shops and cafe-restaurant. The learner should be able to walk around, interact with Lexi and the shopgirls, and practice their English skills.
+
+Can you assist with building this virtual field trip experience using Three.js and integrating the interactive elements as described?
