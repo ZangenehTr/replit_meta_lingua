@@ -188,7 +188,7 @@ export const AdminDashboard = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -226,7 +226,7 @@ export const AdminDashboard = () => {
       </motion.header>
 
       {/* Main Dashboard Content */}
-      <div className="container mx-auto px-4 py-4 pb-20 space-y-4">
+      <div className="pb-20 space-y-4">
         {/* System Health Status Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
