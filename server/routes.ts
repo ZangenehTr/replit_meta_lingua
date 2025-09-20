@@ -3598,6 +3598,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Session attendance integration endpoints
+  app.post("/api/sessions/:sessionId/start-attendance", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const attendanceRecords = await storage.markSessionStartAttendance(parseInt(sessionId));
+      res.json(attendanceRecords);
+    } catch (error) {
+      console.error('Error starting session attendance:', error);
+      res.status(500).json({ error: 'Failed to initialize session attendance' });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/student/:studentId/arrival-departure", authenticateToken, requireRole(['Teacher', 'Admin', 'Student']), async (req: any, res) => {
+    try {
+      const { sessionId, studentId } = req.params;
+      const { eventType } = req.body; // 'arrival' | 'departure'
+      
+      if (!['arrival', 'departure'].includes(eventType)) {
+        return res.status(400).json({ error: 'Invalid event type' });
+      }
+      
+      const record = await storage.updateStudentArrivalDeparture(parseInt(studentId), parseInt(sessionId), eventType);
+      res.json(record);
+    } catch (error) {
+      console.error('Error updating student arrival/departure:', error);
+      res.status(500).json({ error: 'Failed to update attendance timing' });
+    }
+  });
+
+  app.get("/api/sessions/:sessionId/active-attendance", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const attendance = await storage.getActiveSessionAttendance(parseInt(sessionId));
+      res.json(attendance);
+    } catch (error) {
+      console.error('Error fetching active session attendance:', error);
+      res.status(500).json({ error: 'Failed to fetch session attendance' });
+    }
+  });
+
+  app.patch("/api/attendance/:attendanceId/notes", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { attendanceId } = req.params;
+      const { notes } = req.body;
+      
+      const updated = await storage.updateAttendanceRecord(parseInt(attendanceId), { notes });
+      
+      if (!updated) {
+        return res.status(404).json({ error: 'Attendance record not found' });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating attendance notes:', error);
+      res.status(500).json({ error: 'Failed to update attendance notes' });
+    }
+  });
+
   // Mentor Statistics API (replacing hardcoded mentor stats)
   app.get("/api/mentor/stats", authenticateToken, async (req: any, res) => {
     try {

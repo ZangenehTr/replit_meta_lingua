@@ -207,25 +207,23 @@ export class WebRTCService {
   }
 
   private async markAutoAttendance(status: 'present' | 'late'): Promise<void> {
-    if (!this.sessionId || this.attendanceTracked) return;
+    if (!this.sessionId || this.attendanceTracked || !this.callConfig?.studentId) return;
 
     try {
-      const response = await fetch(`/api/teacher/sessions/${this.sessionId}/attendance`, {
+      const response = await fetch(`/api/sessions/${this.sessionId}/student/${this.callConfig.studentId}/arrival-departure`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         },
         body: JSON.stringify({
-          studentId: this.callConfig?.studentId,
-          status,
-          notes: `Auto-marked via video call at ${new Date().toLocaleTimeString()}`
+          eventType: 'arrival'
         })
       });
 
       if (response.ok) {
         this.attendanceTracked = true;
-        console.log(`Auto-attendance marked as ${status}`);
+        console.log(`Auto-marked student arrival for session ${this.sessionId}`);
         
         this.onAttendanceUpdate?.({
           joinTime: this.callStartTime!,
@@ -234,6 +232,34 @@ export class WebRTCService {
       }
     } catch (error) {
       console.error('Failed to mark auto-attendance:', error);
+    }
+  }
+
+  private async markDeparture(): Promise<void> {
+    if (!this.sessionId || !this.attendanceTracked || !this.callConfig?.studentId) return;
+
+    try {
+      const response = await fetch(`/api/sessions/${this.sessionId}/student/${this.callConfig.studentId}/arrival-departure`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({
+          eventType: 'departure'
+        })
+      });
+
+      if (response.ok) {
+        console.log(`Auto-marked student departure for session ${this.sessionId}`);
+        
+        this.onAttendanceUpdate?.({
+          joinTime: this.callStartTime!,
+          status: 'left'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to mark departure:', error);
     }
   }
 
@@ -496,6 +522,9 @@ export class WebRTCService {
 
   public endCall(reason: string = 'User ended call') {
     console.log('Ending call:', reason);
+
+    // Mark departure if attendance was tracked
+    this.markDeparture();
 
     // Stop timers and quality monitoring
     this.stopCallTimer();

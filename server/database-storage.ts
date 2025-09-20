@@ -8875,6 +8875,146 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async markSessionStartAttendance(sessionId: number): Promise<any[]> {
+    try {
+      // Get session details
+      const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId));
+      if (!session) throw new Error('Session not found');
+
+      // Get enrolled students for this session
+      const enrolledStudents = await db.select({
+        studentId: enrollments.studentId,
+        studentName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`
+      })
+      .from(enrollments)
+      .leftJoin(users, eq(enrollments.studentId, users.id))
+      .where(eq(enrollments.courseId, session.courseId));
+
+      // Create attendance records for all enrolled students (default as absent)
+      const attendanceRecords = [];
+      for (const student of enrolledStudents) {
+        const existingRecord = await db.select()
+          .from(attendanceRecords)
+          .where(
+            and(
+              eq(attendanceRecords.studentId, student.studentId),
+              eq(attendanceRecords.sessionId, sessionId)
+            )
+          );
+
+        if (existingRecord.length === 0) {
+          const [newRecord] = await db
+            .insert(attendanceRecords)
+            .values({
+              studentId: student.studentId,
+              sessionId: sessionId,
+              date: sql`CURRENT_DATE`,
+              status: 'absent', // Default to absent, will be updated when students join
+              markedBy: session.teacherId
+            })
+            .returning();
+          
+          attendanceRecords.push({
+            ...newRecord,
+            studentName: student.studentName
+          });
+        }
+      }
+
+      return attendanceRecords;
+    } catch (error) {
+      console.error('Error marking session start attendance:', error);
+      throw new Error('Failed to initialize session attendance');
+    }
+  }
+
+  async updateStudentArrivalDeparture(studentId: number, sessionId: number, eventType: 'arrival' | 'departure'): Promise<any> {
+    try {
+      const [existingRecord] = await db
+        .select()
+        .from(attendanceRecords)
+        .where(
+          and(
+            eq(attendanceRecords.studentId, studentId),
+            eq(attendanceRecords.sessionId, sessionId)
+          )
+        );
+
+      if (!existingRecord) {
+        // Create new record if it doesn't exist
+        const [newRecord] = await db
+          .insert(attendanceRecords)
+          .values({
+            studentId,
+            sessionId,
+            date: sql`CURRENT_DATE`,
+            status: eventType === 'arrival' ? 'present' : 'absent',
+            checkInTime: eventType === 'arrival' ? new Date() : null,
+            checkOutTime: eventType === 'departure' ? new Date() : null
+          })
+          .returning();
+        
+        return newRecord;
+      } else {
+        // Update existing record
+        const updates: any = {};
+        
+        if (eventType === 'arrival') {
+          updates.checkInTime = new Date();
+          updates.status = 'present';
+          
+          // Check if student is late (compare with session start time)
+          const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId));
+          if (session && session.scheduledAt) {
+            const sessionStart = new Date(session.scheduledAt);
+            const arrivalTime = new Date();
+            const lateThresholdMinutes = 15; // Consider late after 15 minutes
+            
+            if (arrivalTime.getTime() > sessionStart.getTime() + (lateThresholdMinutes * 60 * 1000)) {
+              updates.status = 'late';
+            }
+          }
+        } else if (eventType === 'departure') {
+          updates.checkOutTime = new Date();
+        }
+
+        const [updated] = await db
+          .update(attendanceRecords)
+          .set(updates)
+          .where(eq(attendanceRecords.id, existingRecord.id))
+          .returning();
+        
+        return updated;
+      }
+    } catch (error) {
+      console.error('Error updating student arrival/departure:', error);
+      throw new Error('Failed to update attendance timing');
+    }
+  }
+
+  async getActiveSessionAttendance(sessionId: number): Promise<any[]> {
+    try {
+      const attendanceData = await db.select({
+        id: attendanceRecords.id,
+        studentId: attendanceRecords.studentId,
+        studentName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        status: attendanceRecords.status,
+        checkInTime: attendanceRecords.checkInTime,
+        checkOutTime: attendanceRecords.checkOutTime,
+        notes: attendanceRecords.notes
+      })
+      .from(attendanceRecords)
+      .leftJoin(users, eq(attendanceRecords.studentId, users.id))
+      .where(eq(attendanceRecords.sessionId, sessionId))
+      .orderBy(sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`);
+
+      return attendanceData;
+    } catch (error) {
+      console.error('Error fetching active session attendance:', error);
+      throw new Error('Failed to fetch session attendance');
+    }
+  }
+
   async calculateAttendanceBasedPayment(sessionId: number): Promise<any> {
     try {
       // Get session details
