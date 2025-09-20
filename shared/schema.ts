@@ -4522,41 +4522,49 @@ export const placementQuestions = pgTable("placement_questions", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
-// Placement Test Sessions - Individual test attempts
+// Placement Test Sessions - Individual test attempts (matches actual database structure)
 export const placementTestSessions = pgTable("placement_test_sessions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  testId: integer("test_id").references(() => placementTests.id).notNull(),
+  targetLanguage: varchar("target_language", { length: 10 }), // en, fa, ar, etc.
+  learningGoal: text("learning_goal"),
   
-  // Session details
+  // Session timing
   startedAt: timestamp("started_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
-  status: varchar("status", { length: 20 }).default('in_progress'), // in_progress, completed, abandoned, expired
+  totalDurationSeconds: integer("total_duration_seconds"),
   
-  // Scoring and results
-  totalQuestions: integer("total_questions").default(0),
-  answeredQuestions: integer("answered_questions").default(0),
-  correctAnswers: integer("correct_answers").default(0),
-  totalScore: decimal("total_score", { precision: 5, scale: 2 }).default("0"),
-  percentage: decimal("percentage", { precision: 5, scale: 2 }).default("0"),
+  // Session status and progress
+  status: varchar("status", { length: 20 }).default('in_progress'), // in_progress, completed, abandoned
+  currentSkill: varchar("current_skill", { length: 50 }),
+  currentQuestionIndex: integer("current_question_index").default(0),
   
-  // CEFR Level Assessment
-  overallCEFRLevel: varchar("overall_cefr_level", { length: 5 }), // A1, A2, B1, B2, C1, C2
+  // CEFR Level Results (matching database columns exactly)
+  overallCefrLevel: varchar("overall_cefr_level", { length: 5 }), // A1, A2, B1, B2, C1, C2
+  speakingLevel: varchar("speaking_level", { length: 5 }),
   listeningLevel: varchar("listening_level", { length: 5 }),
   readingLevel: varchar("reading_level", { length: 5 }),
-  speakingLevel: varchar("speaking_level", { length: 5 }),
   writingLevel: varchar("writing_level", { length: 5 }),
-  grammarLevel: varchar("grammar_level", { length: 5 }),
-  vocabularyLevel: varchar("vocabulary_level", { length: 5 }),
   
-  // Time tracking
-  timeSpent: integer("time_spent").default(0), // seconds
+  // Scores
+  overallScore: numeric("overall_score"),
+  speakingScore: numeric("speaking_score"),
+  listeningScore: numeric("listening_score"),
+  readingScore: numeric("reading_score"),
+  writingScore: numeric("writing_score"),
   
-  // Additional data
-  ipAddress: varchar("ip_address", { length: 45 }),
-  userAgent: text("user_agent"),
+  // Analysis Results
+  strengths: text("strengths").array(),
+  weaknesses: text("weaknesses").array(),
+  recommendations: text("recommendations").array(),
+  confidenceScore: numeric("confidence_score"),
   
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  // Related records
+  generatedRoadmapId: integer("generated_roadmap_id"),
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
 // Placement Results - Final placement recommendations
