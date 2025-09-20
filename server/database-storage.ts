@@ -116,16 +116,16 @@ import {
   roadmapConfigs, roadmapPlans, roadmapSessions,
   type RoadmapConfig, type InsertRoadmapConfig,
   type RoadmapPlan, type InsertRoadmapPlan,
-  type RoadmapSession, type InsertRoadmapSession
+  type RoadmapSession, type InsertRoadmapSession,
+  // Placement test tables and types
+  placementTests, placementQuestions, placementTestSessions, placementResults,
+  type PlacementTest, type InsertPlacementTest,
+  type PlacementQuestion, type InsertPlacementQuestion,
+  type PlacementTestSession, type InsertPlacementTestSession,
+  type PlacementResult, type InsertPlacementResult
 } from "@shared/schema";
 
-// Import placement test schema
-import {
-  placementTestSessions, placementTestQuestions, placementTestResponses,
-  type PlacementTestSession, type InsertPlacementTestSession,
-  type PlacementTestQuestion, type InsertPlacementTestQuestion,
-  type PlacementTestResponse, type InsertPlacementTestResponse
-} from "@shared/placement-test-schema";
+// Placement test tables imported from main schema above
 import { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
@@ -5276,6 +5276,13 @@ export class DatabaseStorage implements IStorage {
   // Get students who completed placement test but haven't enrolled/paid
   async getUnpaidStudentsAfterPlacementTest(daysSinceTest: number = 7): Promise<any[]> {
     try {
+      // TODO: This method is temporarily disabled until placement test tables are created in database
+      // The tables exist in schema but haven't been pushed to database yet
+      console.log(`getUnpaidStudentsAfterPlacementTest called with ${daysSinceTest} days - temporarily returning empty array`);
+      return [];
+      
+      // DISABLED TEMPORARILY - UNCOMMENT AFTER DATABASE PUSH
+      /*
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysSinceTest);
 
@@ -5329,6 +5336,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       return unpaidStudents;
+      */
     } catch (error) {
       console.error('Error getting unpaid students after placement test:', error);
       return [];

@@ -4460,6 +4460,151 @@ export function getMinimumScoreForCEFR(examType: ExamTypeValues, cefrLevel: CEFR
 }
 
 // ============================================================================
+// PLACEMENT TEST SYSTEM TABLES
+// ============================================================================
+
+// Placement Tests - Master test definitions
+export const placementTests = pgTable("placement_tests", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  language: varchar("language", { length: 10 }).notNull(), // en, fa, ar, etc.
+  targetLevel: varchar("target_level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
+  duration: integer("duration").notNull(), // minutes
+  
+  // Test configuration
+  totalQuestions: integer("total_questions").default(50),
+  passingScore: integer("passing_score").default(70), // percentage
+  
+  // Status and settings
+  isActive: boolean("is_active").default(true),
+  isPublished: boolean("is_published").default(false),
+  
+  // Iranian education system compliance
+  institutionalApproval: boolean("institutional_approval").default(false),
+  approvedByMinistryOfEducation: boolean("approved_by_ministry").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Placement Questions - Question bank for placement tests
+export const placementQuestions = pgTable("placement_questions", {
+  id: serial("id").primaryKey(),
+  testId: integer("test_id").references(() => placementTests.id).notNull(),
+  
+  // Question content
+  questionText: text("question_text").notNull(),
+  questionType: varchar("question_type", { length: 30 }).notNull(), // multiple_choice, fill_blank, essay, listening, speaking
+  
+  // Question options and answers
+  options: jsonb("options"), // For multiple choice questions
+  correctAnswer: jsonb("correct_answer"),
+  explanation: text("explanation"),
+  
+  // Question metadata
+  skillArea: varchar("skill_area", { length: 50 }), // grammar, vocabulary, reading, listening, speaking, writing
+  difficultyLevel: varchar("difficulty_level", { length: 20 }), // easy, medium, hard
+  cefrLevel: varchar("cefr_level", { length: 5 }), // A1, A2, B1, B2, C1, C2
+  
+  // Scoring
+  points: integer("points").default(1),
+  timeLimit: integer("time_limit"), // seconds per question
+  
+  // Media attachments
+  audioUrl: varchar("audio_url", { length: 500 }),
+  imageUrl: varchar("image_url", { length: 500 }),
+  
+  // Order and status
+  orderIndex: integer("order_index").notNull(),
+  isActive: boolean("is_active").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Placement Test Sessions - Individual test attempts
+export const placementTestSessions = pgTable("placement_test_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  testId: integer("test_id").references(() => placementTests.id).notNull(),
+  
+  // Session details
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  status: varchar("status", { length: 20 }).default('in_progress'), // in_progress, completed, abandoned, expired
+  
+  // Scoring and results
+  totalQuestions: integer("total_questions").default(0),
+  answeredQuestions: integer("answered_questions").default(0),
+  correctAnswers: integer("correct_answers").default(0),
+  totalScore: decimal("total_score", { precision: 5, scale: 2 }).default("0"),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }).default("0"),
+  
+  // CEFR Level Assessment
+  overallCEFRLevel: varchar("overall_cefr_level", { length: 5 }), // A1, A2, B1, B2, C1, C2
+  listeningLevel: varchar("listening_level", { length: 5 }),
+  readingLevel: varchar("reading_level", { length: 5 }),
+  speakingLevel: varchar("speaking_level", { length: 5 }),
+  writingLevel: varchar("writing_level", { length: 5 }),
+  grammarLevel: varchar("grammar_level", { length: 5 }),
+  vocabularyLevel: varchar("vocabulary_level", { length: 5 }),
+  
+  // Time tracking
+  timeSpent: integer("time_spent").default(0), // seconds
+  
+  // Additional data
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Placement Results - Final placement recommendations
+export const placementResults = pgTable("placement_results", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => placementTestSessions.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  
+  // Recommended placement
+  recommendedLevel: varchar("recommended_level", { length: 5 }).notNull(), // A1, A2, B1, B2, C1, C2
+  recommendedCourse: integer("recommended_course_id").references(() => courses.id),
+  
+  // Detailed breakdown
+  skillBreakdown: jsonb("skill_breakdown"), // Detailed scores per skill
+  strengths: text("strengths").array(),
+  weaknesses: text("weaknesses").array(),
+  recommendations: text("recommendations"),
+  
+  // Follow-up action status
+  hasEnrolled: boolean("has_enrolled").default(false),
+  enrollmentDate: timestamp("enrollment_date"),
+  followUpStatus: varchar("follow_up_status", { length: 30 }).default('pending'), // pending, contacted, enrolled, declined
+  
+  // Iranian compliance
+  parentNotified: boolean("parent_notified").default(false), // For under-18 students
+  instituteApproval: boolean("institute_approval").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schemas for placement test system
+export const insertPlacementTestSchema = createInsertSchema(placementTests);
+export const insertPlacementQuestionSchema = createInsertSchema(placementQuestions);
+export const insertPlacementTestSessionSchema = createInsertSchema(placementTestSessions);
+export const insertPlacementResultSchema = createInsertSchema(placementResults);
+
+// Types for placement test system
+export type PlacementTest = typeof placementTests.$inferSelect;
+export type InsertPlacementTest = z.infer<typeof insertPlacementTestSchema>;
+export type PlacementQuestion = typeof placementQuestions.$inferSelect;
+export type InsertPlacementQuestion = z.infer<typeof insertPlacementQuestionSchema>;
+export type PlacementTestSession = typeof placementTestSessions.$inferSelect;
+export type InsertPlacementTestSession = z.infer<typeof insertPlacementTestSessionSchema>;
+export type PlacementResult = typeof placementResults.$inferSelect;
+export type InsertPlacementResult = z.infer<typeof insertPlacementResultSchema>;
+
+// ============================================================================
 // ZOD SCHEMAS FOR EXAM-FOCUSED ROADMAP TABLES
 // ============================================================================
 
@@ -4490,5 +4635,4 @@ export type RoadmapPlanInsert = z.infer<typeof roadmapPlanInsertSchema>;
 export type RoadmapSession = typeof roadmapSessions.$inferSelect; 
 export type RoadmapSessionInsert = z.infer<typeof roadmapSessionInsertSchema>;
 
-// Export placement test schemas
-export * from './placement-test-schema';
+// Placement test schemas and types exported above
