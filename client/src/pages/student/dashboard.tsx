@@ -38,7 +38,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Coins,
-  MessageCircle
+  MessageCircle,
+  Mic,
+  Headphones,
+  PenTool,
+  Menu,
+  Home
 } from "lucide-react";
 import { Link } from "wouter";
 import { Progress } from "@/components/ui/progress";
@@ -220,259 +225,176 @@ export default function StudentDashboard() {
   const weeklyStudyProgress = stats ? (stats.studyTimeThisWeek / (stats.weeklyGoalHours * 60)) * 100 : 0;
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50", isRTL && "rtl")}>
-      {/* Professional Mobile Header */}
+    <div className={cn("min-h-screen bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500", isRTL && "rtl")}>
+      {/* Modern Clean Header */}
       <motion.header 
-        className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-purple-100 shadow-sm"
+        className="sticky top-0 z-40 bg-white/10 backdrop-blur-xl"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Avatar className="w-12 h-12 border-2 border-purple-400 shadow-lg">
-                  <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                {/* Level Badge */}
-                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
-                  {stats?.currentLevel}
-                </div>
-              </div>
-              <div>
-                <p className="text-gray-600 text-xs font-medium">{greeting}</p>
-                <h1 className="text-gray-900 font-bold text-base">
-                  {user?.firstName} {user?.lastName}
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary" className="text-xs px-2 py-0">
-                    {stats?.memberTier || 'Bronze'}
-                  </Badge>
-                  <span className="text-xs text-gray-500">
-                    Rank #{stats?.rank || 0} / {stats?.totalStudents || 0}
-                  </span>
-                </div>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="text-white">
+                <Menu className="h-6 w-6" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <h1 className="text-white font-bold text-xl">Meta Lingua</h1>
+                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-xs px-2 py-1">
+                  {stats?.memberTier || 'Gold'}
+                </Badge>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
+              <Button variant="ghost" size="icon" className="text-white">
+                <Calendar className="h-5 w-5" />
               </Button>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">{t('student:wallet', 'کیف پول')}</p>
-                <p className="text-sm font-bold text-green-600">
-                  {new Intl.NumberFormat(isRTL ? 'fa-IR' : 'en-US').format(stats?.walletBalance || 0)} 
-                  <span className="text-xs mr-1">{t('common:currency', 'تومان')}</span>
-                </p>
-              </div>
+              <Button variant="ghost" size="icon" className="relative text-white">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+              </Button>
             </div>
           </div>
         </div>
       </motion.header>
 
-      {/* Main Content - Mobile First */}
-      <div className="container mx-auto px-4 py-4 pb-20 space-y-4">
+      {/* Main Content - Clean White Cards */}
+      <div className="px-4 py-6 pb-24 space-y-6">
+        {/* User Greeting Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-14 h-14 border-3 border-white shadow-lg">
+                <AvatarImage src={user?.avatar} />
+                <AvatarFallback className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white font-bold text-lg">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Hey {user?.firstName}!
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Ready for today's lessons?
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* HIGHEST PRIORITY: Placement Test for New Learners */}
         {placementStatus && !placementStatus.hasCompletedPlacementTest && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-orange-300 shadow-xl">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
-                  <Target className="w-8 h-8 text-white" />
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Placement Test
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Discover your level
+                  </p>
                 </div>
-                <h3 className="font-bold text-xl text-gray-900 mb-2">
-                  {t('student:placementTestRequired')}
-                </h3>
-                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
-                  {t('student:placementTestDescription')}
-                </p>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900">Level Assessment</h4>
+                  <Badge className="bg-green-500 text-white text-xs font-bold px-2 py-1">
+                    FREE
+                  </Badge>
+                </div>
                 
-                {/* Weekly Limits Display */}
-                {placementStatus.weeklyLimits && (
-                  <div className="mb-4 p-3 bg-white/50 rounded-lg">
-                    <div className="text-xs text-gray-600 mb-1">Weekly Attempts</div>
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="text-sm font-medium">
-                        {placementStatus.weeklyLimits.attemptsUsed} / {placementStatus.weeklyLimits.maxAttempts}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        ({placementStatus.weeklyLimits.remainingAttempts} remaining)
-                      </div>
-                    </div>
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span>25 mins</span>
                   </div>
-                )}
-                
+                  <div className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    <span>50 questions</span>
+                  </div>
+                </div>
+
                 {placementStatus.weeklyLimits?.canTakeTest ? (
                   <Button 
-                    className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold px-6 py-3"
+                    className="w-full bg-gradient-to-r from-pink-500 to-blue-500 hover:from-pink-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl"
                     asChild
                   >
-                    <Link href="/mst" className="flex items-center gap-2">
-                      <Zap className="w-5 h-5" />
-                      {t('student:startPlacementTest')}
+                    <Link href="/mst">
+                      Start Test
                     </Link>
                   </Button>
                 ) : (
-                  <div className="text-center">
-                    <Button 
-                      className="bg-gray-400 text-white font-bold px-6 py-3"
-                      disabled
-                    >
-                      <Timer className="w-5 h-5 mr-2" />
-                      Weekly Limit Reached
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-2">
-                      You can take 3 placement tests per week. Try again next week.
-                    </p>
-                  </div>
+                  <Button 
+                    className="w-full bg-gray-400 text-white font-bold py-3 rounded-xl"
+                    disabled
+                  >
+                    Weekly Limit Reached
+                  </Button>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         )}
 
-        {/* Show placement results if completed */}
-        {placementStatus && placementStatus.hasCompletedPlacementTest && placementStatus.placementResults && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 shadow-xl">
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                    <CheckCircle2 className="w-8 h-8 text-white" />
-                  </div>
-                  <h4 className="font-bold text-xl text-gray-900 mb-2">
-                    {t('student:placementCompleted', 'Latest Placement Test Results')}
-                  </h4>
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <span className="text-2xl font-bold text-green-700">{placementStatus.placementResults.overallLevel}</span>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Overall Level
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Completed: {new Date(placementStatus.placementResults.completedAt).toLocaleDateString()}
-                  </p>
+        {/* My Classes Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                My Classes
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Upcoming registered sessions
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900">Today's Classes</span>
                 </div>
-
-                {/* Skills Breakdown */}
-                <div className="space-y-4 mb-6">
-                  <h5 className="font-semibold text-gray-900 text-center">Skills Breakdown</h5>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Mic className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm font-medium">Speaking</span>
-                      </div>
-                      <Badge variant="outline" className="font-bold">
-                        {placementStatus.placementResults.speakingLevel}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Headphones className="w-4 h-4 text-green-500" />
-                        <span className="text-sm font-medium">Listening</span>
-                      </div>
-                      <Badge variant="outline" className="font-bold">
-                        {placementStatus.placementResults.listeningLevel}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm font-medium">Reading</span>
-                      </div>
-                      <Badge variant="outline" className="font-bold">
-                        {placementStatus.placementResults.readingLevel}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <PenTool className="w-4 h-4 text-orange-500" />
-                        <span className="text-sm font-medium">Writing</span>
-                      </div>
-                      <Badge variant="outline" className="font-bold">
-                        {placementStatus.placementResults.writingLevel}
-                      </Badge>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-green-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
+                    2
+                  </Badge>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
                 </div>
+              </div>
 
-                {/* Strengths and Recommendations */}
-                {(placementStatus.placementResults.strengths?.length > 0 || placementStatus.placementResults.recommendations?.length > 0) && (
-                  <div className="space-y-4">
-                    {placementStatus.placementResults.strengths?.length > 0 && (
-                      <div>
-                        <h6 className="font-semibold text-sm text-green-700 mb-2 flex items-center gap-1">
-                          <Star className="w-4 h-4" />
-                          Your Strengths
-                        </h6>
-                        <div className="flex flex-wrap gap-1">
-                          {placementStatus.placementResults.strengths.slice(0, 3).map((strength, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs bg-green-100 text-green-800">
-                              {strength}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {placementStatus.placementResults.recommendations?.length > 0 && (
-                      <div>
-                        <h6 className="font-semibold text-sm text-blue-700 mb-2 flex items-center gap-1">
-                          <TrendingUp className="w-4 h-4" />
-                          Recommendations
-                        </h6>
-                        <div className="flex flex-wrap gap-1">
-                          {placementStatus.placementResults.recommendations.slice(0, 2).map((rec, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {rec}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Weekly Limits for Completed Users */}
-                {placementStatus.weeklyLimits && (
-                  <div className="mt-6 pt-4 border-t border-green-200">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Weekly Tests</span>
-                      <span className="font-medium">
-                        {placementStatus.weeklyLimits.attemptsUsed}/{placementStatus.weeklyLimits.maxAttempts} used
-                      </span>
-                    </div>
-                    {placementStatus.weeklyLimits.canTakeTest && (
-                      <Button 
-                        className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white"
-                        size="sm"
-                        asChild
-                      >
-                        <Link href="/mst" className="flex items-center justify-center gap-2">
-                          <Brain className="w-4 h-4" />
-                          Retake Placement Test
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900">More Classes</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
+                    3
+                  </Badge>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Socializer Availability System */}
         <motion.div
@@ -1026,8 +948,50 @@ export default function StudentDashboard() {
         </motion.div>
       </div>
 
-      {/* Enhanced Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      {/* Modern Bottom Navigation */}
+      <motion.div 
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/50"
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div className="flex items-center justify-around py-3 px-4">
+          <Link href="/student/dashboard">
+            <div className="flex flex-col items-center gap-1 py-2 px-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl">
+              <Home className="w-5 h-5 text-white" />
+              <span className="text-xs font-medium text-white">Home</span>
+            </div>
+          </Link>
+          
+          <Link href="/student/courses">
+            <div className="flex flex-col items-center gap-1 py-2 px-3">
+              <BookOpen className="w-5 h-5 text-gray-500" />
+              <span className="text-xs text-gray-500">Classes</span>
+            </div>
+          </Link>
+          
+          <Link href="/callern">
+            <div className="flex flex-col items-center gap-1 py-2 px-3">
+              <Video className="w-5 h-5 text-gray-500" />
+              <span className="text-xs text-gray-500">CallerN</span>
+            </div>
+          </Link>
+          
+          <Link href="/student/ai-conversation">
+            <div className="flex flex-col items-center gap-1 py-2 px-3">
+              <Brain className="w-5 h-5 text-gray-500" />
+              <span className="text-xs text-gray-500">Lexi</span>
+            </div>
+          </Link>
+          
+          <Link href="/student/messages">
+            <div className="flex flex-col items-center gap-1 py-2 px-3">
+              <MessageCircle className="w-5 h-5 text-gray-500" />
+              <span className="text-xs text-gray-500">Support</span>
+            </div>
+          </Link>
+        </div>
+      </motion.div>
 
       {/* First-time Profile Completion Modal */}
       <FirstTimeProfileModal
