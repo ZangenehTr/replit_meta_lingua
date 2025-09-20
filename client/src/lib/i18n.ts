@@ -231,6 +231,56 @@ export interface Translations {
   start: string;
   noCoursesAvailableAtMoment: string;
   
+  // Student Dashboard Keys
+  goodMorning: string;
+  goodAfternoon: string;
+  goodEvening: string;
+  placementTestRequired: string;
+  placementTestDescription: string;
+  startPlacementTest: string;
+  placementCompleted: string;
+  socializer: string;
+  socializerDesc: string;
+  aiMatching: string;
+  toggleAvailability: string;
+  socializerNote: string;
+  specialClasses: string;
+  specialClassesDesc: string;
+  featured: string;
+  spotsLeft: string;
+  businessEnglish: string;
+  nativeSpeaker: string;
+  enroll: string;
+  viewAllSpecial: string;
+  onlineTeachers: string;
+  onlineTeachersDesc: string;
+  startCallerN: string;
+  dayStreak: string;
+  weeklyProgress: string;
+  ofGoal: string;
+  today: string;
+  min: string;
+  thisWeek: string;
+  accuracy: string;
+  skillsProgress: string;
+  packages: string;
+  sessionsTitle: string;
+  achievements: string;
+  homework: string;
+  recentAchievements: string;
+  callernPackages: string;
+  activePackage: string;
+  remaining: string;
+  totalUsed: string;
+  thisMonth: string;
+  purchaseNewPackage: string;
+  conversationPractice: string;
+  tomorrow: string;
+  join: string;
+  dailyChallenge: string;
+  complete5Lessons: string;
+  reward: string;
+  
   // Course Management Keys
   advancedCourseBuilder: string;
   enrolledStudents: string;
@@ -404,11 +454,11 @@ export const translations: Record<Language, Translations> = {
     joinNow: "Join Now",
     learningStreak: "Learning Streak",
     availableCredits: "Available Credits",
-    pendingHomework: "Pending Homework",
+    noPendingHomework: "No Pending Homework",
     leaderboard: "Leaderboard",
     challenges: "Challenges",
     overview: "Overview",
-    creditsAndPayment: "Credits & Payment",
+    creditsPayment: "Credits & Payment",
     aiStudyAssistant: "AI Study Assistant",
     courseProgressAndEnrollment: "Course Progress & Enrollment",
     featuredTutors: "Featured Tutors",
@@ -493,6 +543,56 @@ export const translations: Record<Language, Translations> = {
     // Additional missing keys from screenshots
     start: "Start",
     noCoursesAvailableAtMoment: "No courses available at the moment",
+    
+    // Student Dashboard Keys
+    goodMorning: "Good Morning",
+    goodAfternoon: "Good Afternoon", 
+    goodEvening: "Good Evening",
+    placementTestRequired: "Placement Test Required",
+    placementTestDescription: "Take our assessment to determine your exact proficiency level",
+    startPlacementTest: "Start Placement Test",
+    placementCompleted: "Placement Test Complete",
+    socializer: "Socializer System",
+    socializerDesc: "Ready to join others' sessions",
+    aiMatching: "🤖 Smart Matching",
+    toggleAvailability: "Toggle Availability",
+    socializerNote: "When active, teachers can invite you to sessions as needed",
+    specialClasses: "Special Classes",
+    specialClassesDesc: "Featured by Educational Managers",
+    featured: "Featured Offer",
+    spotsLeft: "spots left",
+    businessEnglish: "Advanced Business English",
+    nativeSpeaker: "With Native Speaker • 8 Sessions",
+    enroll: "Enroll",
+    viewAllSpecial: "View All Special Classes",
+    onlineTeachers: "Online Teachers",
+    onlineTeachersDesc: "Available Teachers for CallerN",
+    startCallerN: "Start CallerN Session",
+    dayStreak: "Day Streak",
+    weeklyProgress: "Weekly Progress",
+    ofGoal: "of Goal",
+    today: "Today",
+    min: "min",
+    thisWeek: "This Week",
+    accuracy: "Accuracy",
+    skillsProgress: "Skills Progress",
+    packages: "Packages",
+    sessionsTitle: "Sessions",
+    achievements: "Achievements",
+    homework: "Homework",
+    recentAchievements: "Recent Achievements",
+    callernPackages: "CallerN Packages",
+    activePackage: "Active Package",
+    remaining: "Remaining",
+    totalUsed: "Total Used",
+    thisMonth: "This Month",
+    purchaseNewPackage: "Purchase New Package",
+    conversationPractice: "Conversation Practice",
+    tomorrow: "Tomorrow",
+    join: "Join",
+    dailyChallenge: "Daily Challenge",
+    complete5Lessons: "Complete 5 lessons today",
+    reward: "Reward",
     
     // Course Management Keys  
     advancedCourseBuilder: "Advanced course builder with multimedia content and assessment tools",
@@ -667,11 +767,11 @@ export const translations: Record<Language, Translations> = {
     joinNow: "هم‌اکنون بپیوندید",
     learningStreak: "روزهای مطالعه",
     availableCredits: "اعتبار موجود",
-    pendingHomework: "تکالیف در انتظار",
+    noPendingHomework: "تکالیف در انتظار وجود ندارد",
     leaderboard: "جدول امتیازات",
     challenges: "چالش‌ها",
     overview: "نمای کلی",
-    creditsAndPayment: "اعتبار و پرداخت",
+    creditsPayment: "اعتبار و پرداخت",
     aiStudyAssistant: "دستیار هوشمند مطالعه",
     courseProgressAndEnrollment: "پیشرفت دوره و ثبت‌نام",
     featuredTutors: "اساتید ویژه",
@@ -711,10 +811,62 @@ export const translations: Record<Language, Translations> = {
     
     // Missing dashboard translations
     discoverLanguageLevel: "سطح زبان خود را کشف کنید",
-    takeAssessment: "ارزیابی جامع ما را انجام دهید تا سطح دقیق مهارت خود را تعیین کنید",
+    takeAssessment: "آزمون جامع ما را برای تعیین سطح دقیق مهارت شما بگیرید",
     whatIsMyLevel: "سطح من چیست",
+    
+    // Additional missing keys from screenshots
     start: "شروع",
     noCoursesAvailableAtMoment: "در حال حاضر هیچ دوره‌ای موجود نیست",
+    
+    // Student Dashboard Keys
+    goodMorning: "صبح بخیر",
+    goodAfternoon: "عصر بخیر",
+    goodEvening: "شب بخیر",
+    placementTestRequired: "آزمون تعیین سطح الزامی",
+    placementTestDescription: "آزمون ما را برای تعیین سطح دقیق مهارت شما بگیرید",
+    startPlacementTest: "شروع آزمون تعیین سطح",
+    placementCompleted: "آزمون تعیین سطح تکمیل شد",
+    socializer: "سیستم اجتماعی‌سازی",
+    socializerDesc: "آماده پیوستن به جلسات دیگران",
+    aiMatching: "🤖 تطبیق هوشمند",
+    toggleAvailability: "تغییر وضعیت دسترسی",
+    socializerNote: "وقتی فعال باشید، معلمان در صورت نیاز شما را به جلسات دعوت می‌کنند",
+    specialClasses: "کلاس‌های ویژه",
+    specialClassesDesc: "پیشنهادی مدیران آموزشی",
+    featured: "پیشنهاد ویژه",
+    spotsLeft: "جا باقی",
+    businessEnglish: "انگلیسی تجاری پیشرفته",
+    nativeSpeaker: "با مدرس بومی • ۸ جلسه",
+    enroll: "ثبت‌نام",
+    viewAllSpecial: "مشاهده همه کلاس‌های ویژه",
+    onlineTeachers: "معلمان آنلاین",
+    onlineTeachersDesc: "معلمان در دسترس برای کالرن",
+    startCallerN: "شروع جلسه کالرن",
+    dayStreak: "روز متوالی",
+    weeklyProgress: "پیشرفت هفتگی",
+    ofGoal: "از هدف",
+    today: "امروز",
+    min: "دقیقه",
+    thisWeek: "این هفته",
+    accuracy: "دقت",
+    skillsProgress: "پیشرفت مهارت‌ها",
+    packages: "بسته‌ها",
+    sessionsTitle: "جلسات",
+    achievements: "دستاوردها",
+    homework: "تکالیف",
+    recentAchievements: "دستاوردهای اخیر",
+    callernPackages: "بسته‌های کالرن",
+    activePackage: "بسته فعال",
+    remaining: "باقی‌مانده",
+    totalUsed: "مجموع استفاده شده",
+    thisMonth: "این ماه",
+    purchaseNewPackage: "خرید بسته جدید",
+    conversationPractice: "تمرین مکالمه",
+    tomorrow: "فردا",
+    join: "ورود",
+    dailyChallenge: "چالش روزانه",
+    complete5Lessons: "تکمیل ۵ درس امروز",
+    reward: "جایزه",
     
     // Course Management Keys
     advancedCourseBuilder: "سازنده دوره پیشرفته با محتوای چندرسانه‌ای و ابزارهای ارزیابی",
@@ -889,11 +1041,11 @@ export const translations: Record<Language, Translations> = {
     joinNow: "انضم الآن",
     learningStreak: "سلسلة التعلم",
     availableCredits: "الرصيد المتاح",
-    pendingHomework: "الواجبات المعلقة",
+    noPendingHomework: "لا توجد واجبات معلقة",
     leaderboard: "لوحة المتصدرين",
     challenges: "التحديات",
     overview: "نظرة عامة",
-    creditsAndPayment: "الأرصدة والدفع",
+    creditsPayment: "الأرصدة والدفع",
     aiStudyAssistant: "مساعد الدراسة الذكي",
     courseProgressAndEnrollment: "تقدم الدورة والتسجيل",
     featuredTutors: "المدرسون المميزون",
@@ -927,6 +1079,56 @@ export const translations: Record<Language, Translations> = {
     totalStudents: "إجمالي الطلاب",
     completionRate: "معدل الإنجاز",
     adminDashboard: "لوحة تحكم الإدارة",
+    
+    // Student Dashboard Keys
+    goodMorning: "صباح الخير",
+    goodAfternoon: "مساء الخير", 
+    goodEvening: "مساء الخير",
+    placementTestRequired: "اختبار تحديد المستوى مطلوب",
+    placementTestDescription: "اختبارنا الشامل لتحديد مستوى إتقانك بدقة",
+    startPlacementTest: "ابدأ اختبار تحديد المستوى",
+    placementCompleted: "تم الانتهاء من اختبار تحديد المستوى",
+    socializer: "نظام التواصل الاجتماعي",
+    socializerDesc: "جاهز للانضمام إلى جلسات الآخرين",
+    aiMatching: "🤖 التطابق الذكي",
+    toggleAvailability: "تبديل الإتاحة",
+    socializerNote: "عند التفعيل، يمكن للمعلمين دعوتك للجلسات حسب الحاجة",
+    specialClasses: "فصول خاصة",
+    specialClassesDesc: "مميزة من المديرين التعليميين",
+    featured: "عرض مميز",
+    spotsLeft: "مكان متبقي",
+    businessEnglish: "الإنجليزية التجارية المتقدمة",
+    nativeSpeaker: "مع متحدث أصلي • 8 جلسات",
+    enroll: "التسجيل",
+    viewAllSpecial: "عرض جميع الفصول الخاصة",
+    onlineTeachers: "المعلمون عبر الإنترنت",
+    onlineTeachersDesc: "معلمون متاحون لـ CallerN",
+    startCallerN: "بدء جلسة CallerN",
+    dayStreak: "سلسلة يومية",
+    weeklyProgress: "التقدم الأسبوعي",
+    ofGoal: "من الهدف",
+    today: "اليوم",
+    min: "دقيقة",
+    thisWeek: "هذا الأسبوع",
+    accuracy: "الدقة",
+    skillsProgress: "تقدم المهارات",
+    packages: "الحزم",
+    sessionsTitle: "الجلسات",
+    achievements: "الإنجازات",
+    homework: "الواجبات المنزلية",
+    recentAchievements: "الإنجازات الأخيرة",
+    callernPackages: "حزم CallerN",
+    activePackage: "الحزمة النشطة",
+    remaining: "المتبقي",
+    totalUsed: "إجمالي المستخدم",
+    thisMonth: "هذا الشهر",
+    purchaseNewPackage: "شراء حزمة جديدة",
+    conversationPractice: "ممارسة المحادثة",
+    tomorrow: "غداً",
+    join: "انضم",
+    dailyChallenge: "التحدي اليومي",
+    complete5Lessons: "أكمل 5 دروس اليوم",
+    reward: "مكافأة",
   }
 };
 

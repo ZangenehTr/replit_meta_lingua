@@ -126,9 +126,9 @@ export default function StudentDashboard() {
   // Get appropriate greeting based on time
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting(t('student:goodMorning', 'صبح بخیر'));
-    else if (hour < 18) setGreeting(t('student:goodAfternoon', 'عصر بخیر'));
-    else setGreeting(t('student:goodEvening', 'شب بخیر'));
+    if (hour < 12) setGreeting(t('student:goodMorning'));
+    else if (hour < 18) setGreeting(t('student:goodAfternoon'));
+    else setGreeting(t('student:goodEvening'));
   }, [t]);
 
   // Check for first-time users and show profile completion modal
@@ -240,9 +240,9 @@ export default function StudentDashboard() {
                 <Menu className="h-6 w-6" />
               </Button>
               <div className="flex items-center gap-2">
-                <h1 className="text-white font-bold text-xl">Meta Lingua</h1>
+                <h1 className="text-white font-bold text-xl">{t('student:brand')}</h1>
                 <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-xs px-2 py-1">
-                  {stats?.memberTier || 'Gold'}
+                  {stats?.memberTier || t('student:memberTierFallback')}
                 </Badge>
               </div>
             </div>
@@ -277,10 +277,10 @@ export default function StudentDashboard() {
               </Avatar>
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Hey {user?.firstName}!
+                  {t('student:welcomeGreeting', { firstName: user?.firstName })}
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  Ready for today's lessons?
+                  {t('student:readyForLessons')}
                 </p>
               </div>
             </div>
@@ -298,10 +298,10 @@ export default function StudentDashboard() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Placement Test
+                    {t('student:placementTestRequired')}
                   </h3>
                   <p className="text-gray-600 text-sm mb-4">
-                    Discover your level
+                    {t('student:placementTestDescription')}
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
@@ -311,9 +311,9 @@ export default function StudentDashboard() {
 
               <div className="bg-gray-50 rounded-xl p-4 mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-gray-900">Level Assessment</h4>
+                  <h4 className="font-semibold text-gray-900">{t('student:levelAssessment')}</h4>
                   <Badge className="bg-green-500 text-white text-xs font-bold px-2 py-1">
-                    FREE
+                    {t('student:free')}
                   </Badge>
                 </div>
                 
@@ -334,7 +334,7 @@ export default function StudentDashboard() {
                     asChild
                   >
                     <Link href="/mst">
-                      Start Test
+                      {t('student:startPlacementTest')}
                     </Link>
                   </Button>
                 ) : (
@@ -342,7 +342,7 @@ export default function StudentDashboard() {
                     className="w-full bg-gray-400 text-white font-bold py-3 rounded-xl"
                     disabled
                   >
-                    Weekly Limit Reached
+                    {t('student:weeklyLimitReached')}
                   </Button>
                 )}
               </div>
@@ -359,10 +359,10 @@ export default function StudentDashboard() {
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
             <div className="mb-6">
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                My Classes
+                {t('student:myClasses')}
               </h3>
               <p className="text-gray-600 text-sm">
-                Upcoming registered sessions
+                {t('student:upcomingSessions')}
               </p>
             </div>
 
@@ -370,7 +370,7 @@ export default function StudentDashboard() {
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900">Today's Classes</span>
+                  <span className="font-medium text-gray-900">{t('student:todaysClasses')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-green-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
@@ -383,7 +383,7 @@ export default function StudentDashboard() {
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900">More Classes</span>
+                  <span className="font-medium text-gray-900">{t('student:moreClasses')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
@@ -411,15 +411,15 @@ export default function StudentDashboard() {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-gray-900">
-                      {t('student:socializer', 'معاشرت اجتماعی')}
+                      {t('student:socializer')}
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      {t('student:socializerDesc', 'آماده پیوستن به جلسات دیگران')}
+                      {t('student:socializerDesc')}
                     </p>
                   </div>
                 </div>
                 <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
-                  {t('student:aiMatching', '🤖 تطبیق هوشمند')}
+                  {t('student:aiMatching')}
                 </Badge>
               </div>
               <div className="grid grid-cols-1 gap-4">
@@ -430,11 +430,11 @@ export default function StudentDashboard() {
                   }}
                 >
                   <Heart className="w-4 h-4 mr-2" />
-                  {t('student:toggleAvailability', 'تغییر وضعیت دسترسی')}
+                  {t('student:toggleAvailability')}
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-3 text-center">
-                {t('student:socializerNote', 'وقتی فعال باشید، در صورت نیاز معلمان شما را به جلسات دعوت می‌کنند')}
+                {t('student:socializerNote')}
               </p>
             </CardContent>
           </Card>

@@ -373,5 +373,15 @@
   },
   "placementTestRequired": "تکمیل آزمون تعیین سطح",
   "placementTestDescription": "آزمون ۱۰ دقیقه‌ای ما را بگذرانید تا مسیر یادگیری شخصی‌سازی شده خود را ایجاد کنید و سطح شروع مناسب خود را پیدا کنید",
-  "startPlacementTest": "شروع آزمون تعیین سطح (۱۰ دقیقه)"
+  "startPlacementTest": "شروع آزمون تعیین سطح (۱۰ دقیقه)",
+  "levelAssessment": "ارزیابی سطح",
+  "myClasses": "کلاس‌های من",
+  "welcomeGreeting": "سلام {{firstName}}!",
+  "readyForLessons": "آماده برای درس‌های امروز؟",
+  "free": "رایگان",
+  "weeklyLimitReached": "محدودیت هفتگی رسیده",
+  "todaysClasses": "کلاس‌های امروز",
+  "moreClasses": "کلاس‌های بیشتر",
+  "brand": "متا لینگوا",
+  "memberTierFallback": "طلایی"
 }

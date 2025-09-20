@@ -302,10 +302,20 @@
   "placementTestRequired": "Complete Your Placement Test",
   "placementTestDescription": "Take our 10-minute placement test to create your personalized learning path and find your perfect starting level",
   "startPlacementTest": "Start Placement Test (10 min)",
+  "levelAssessment": "Level Assessment",
+  "myClasses": "My Classes",
   "socializer": "Social Learning",
   "socializerDesc": "Ready to join others' sessions",
   "aiMatching": "🤖 Smart Matching",
   "toggleAvailability": "Toggle Availability",
   "socializerNote": "When active, teachers may invite you to sessions when needed",
-  "sessionsTitle": "My Sessions"
+  "sessionsTitle": "My Sessions",
+  "welcomeGreeting": "Hey {{firstName}}!",
+  "readyForLessons": "Ready for today's lessons?",
+  "free": "FREE",
+  "weeklyLimitReached": "Weekly Limit Reached",
+  "todaysClasses": "Today's Classes",
+  "moreClasses": "More Classes",
+  "brand": "Meta Lingua",
+  "memberTierFallback": "Gold"
 }
