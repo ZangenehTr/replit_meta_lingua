@@ -46,6 +46,11 @@ export class WebRTCService {
   private callDuration = 0;
   private callTimer: NodeJS.Timeout | null = null;
   
+  // Attendance tracking properties
+  private callStartTime: Date | null = null;
+  private attendanceTracked = false;
+  private sessionId: number | null = null;
+  
   // Recording properties
   private recorder: RecordRTC | null = null;
   private isRecording = false;
@@ -75,6 +80,7 @@ export class WebRTCService {
   public onRecordingStatusChange: ((isRecording: boolean) => void) | null = null;
   public onQualityUpdate: ((metrics: QualityMetrics) => void) | null = null;
   public onBitrateAdjustment: ((newBitrate: number, reason: string) => void) | null = null;
+  public onAttendanceUpdate: ((data: { joinTime: Date; status: 'joined' | 'left' }) => void) | null = null;
 
   constructor() {
     this.initializeSocket();
@@ -147,12 +153,16 @@ export class WebRTCService {
     });
   }
 
-  public async initializeCall(config: CallConfig): Promise<void> {
+  public async initializeCall(config: CallConfig, sessionId?: number): Promise<void> {
     this.callConfig = config;
+    this.sessionId = sessionId || null;
     
     try {
       // Get user media
       await this.getUserMedia();
+      
+      // Start attendance tracking
+      this.startAttendanceTracking();
       
       // Join room
       this.socket?.emit('join-room', {
@@ -175,6 +185,55 @@ export class WebRTCService {
       console.error('Failed to initialize call:', error);
       this.onError?.(error as Error);
       throw error;
+    }
+  }
+
+  private startAttendanceTracking(): void {
+    this.callStartTime = new Date();
+    this.attendanceTracked = false;
+    
+    // Track that user joined the call
+    this.onAttendanceUpdate?.({
+      joinTime: this.callStartTime,
+      status: 'joined'
+    });
+
+    // Auto-mark attendance as present after 30 seconds of stable connection
+    setTimeout(() => {
+      if (this.peer && this.peer.connected && !this.attendanceTracked && this.sessionId) {
+        this.markAutoAttendance('present');
+      }
+    }, 30000); // 30 seconds
+  }
+
+  private async markAutoAttendance(status: 'present' | 'late'): Promise<void> {
+    if (!this.sessionId || this.attendanceTracked) return;
+
+    try {
+      const response = await fetch(`/api/teacher/sessions/${this.sessionId}/attendance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          studentId: this.callConfig?.studentId,
+          status,
+          notes: `Auto-marked via video call at ${new Date().toLocaleTimeString()}`
+        })
+      });
+
+      if (response.ok) {
+        this.attendanceTracked = true;
+        console.log(`Auto-attendance marked as ${status}`);
+        
+        this.onAttendanceUpdate?.({
+          joinTime: this.callStartTime!,
+          status: 'joined'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to mark auto-attendance:', error);
     }
   }
 
