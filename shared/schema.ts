@@ -4547,17 +4547,17 @@ export const placementTestSessions = pgTable("placement_test_sessions", {
   writingLevel: varchar("writing_level", { length: 5 }),
   
   // Scores
-  overallScore: numeric("overall_score"),
-  speakingScore: numeric("speaking_score"),
-  listeningScore: numeric("listening_score"),
-  readingScore: numeric("reading_score"),
-  writingScore: numeric("writing_score"),
+  overallScore: decimal("overall_score", { precision: 5, scale: 2 }),
+  speakingScore: decimal("speaking_score", { precision: 5, scale: 2 }),
+  listeningScore: decimal("listening_score", { precision: 5, scale: 2 }),
+  readingScore: decimal("reading_score", { precision: 5, scale: 2 }),
+  writingScore: decimal("writing_score", { precision: 5, scale: 2 }),
   
   // Analysis Results
   strengths: text("strengths").array(),
   weaknesses: text("weaknesses").array(),
   recommendations: text("recommendations").array(),
-  confidenceScore: numeric("confidence_score"),
+  confidenceScore: decimal("confidence_score", { precision: 5, scale: 2 }),
   
   // Related records
   generatedRoadmapId: integer("generated_roadmap_id"),

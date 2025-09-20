@@ -12244,7 +12244,23 @@ Return JSON format:
   // Teacher Dashboard Stats
   app.get("/api/teacher/dashboard-stats", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
     try {
-      const teacherId = req.user.role === 'Teacher/Tutor' ? req.user.id : req.query.teacherId;
+      // Ensure teacherId is properly parsed as a number
+      let teacherId: number;
+      
+      if (req.user.role === 'Teacher/Tutor') {
+        teacherId = req.user.id;
+      } else {
+        // For Admin users, get teacherId from query parameter
+        const queryTeacherId = req.query.teacherId;
+        if (!queryTeacherId) {
+          return res.status(400).json({ message: "Teacher ID is required for Admin users" });
+        }
+        teacherId = parseInt(queryTeacherId as string, 10);
+        if (isNaN(teacherId)) {
+          return res.status(400).json({ message: "Invalid teacher ID provided" });
+        }
+      }
+      
       const stats = await storage.getTeacherDashboardStats(teacherId);
       res.json(stats);
     } catch (error) {
