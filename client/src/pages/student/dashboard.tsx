@@ -396,6 +396,44 @@ export default function StudentDashboard() {
           </div>
         </motion.div>
 
+        {/* Ready to Mingle Section */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {t('student:readyToMingle')}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {t('student:connectWithBesties')}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 rounded-xl p-4 text-center">
+                <MessageCircle className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-blue-600 mb-1">24</div>
+                <div className="text-sm text-gray-600">{t('student:studyBuddies')}</div>
+              </div>
+              <div className="bg-orange-50 rounded-xl p-4 text-center">
+                <Trophy className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-orange-600 mb-1">8</div>
+                <div className="text-sm text-gray-600">{t('student:teamBattles')}</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Socializer Availability System */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -457,22 +495,22 @@ export default function StudentDashboard() {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-gray-900">
-                        {t('student:specialClasses', 'کلاس‌های ویژه')}
+                        {t('student:specialCourses')}
                       </h3>
                       <p className="text-gray-600 text-sm">
-                        {t('student:specialClassesDesc', 'پیشنهادی مدیران آموزشی')}
+                        {t('student:expertLedPrograms')}
                       </p>
                     </div>
                   </div>
                   <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                    {t('student:featured', 'پیشنهاد ویژه')}
+                    {t('student:advanced')}
                   </Badge>
                 </div>
                 <div className="bg-white rounded-lg p-4 border border-emerald-200 mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Badge className="text-xs bg-emerald-500 text-white">
-                        {t('student:featured', 'پیشنهاد ویژه')}
+                        {t('student:advanced')}
                       </Badge>
                       <Badge className="text-xs bg-orange-500 text-white">
                         25% {t('common:discount', 'تخفیف')}
@@ -481,19 +519,19 @@ export default function StudentDashboard() {
                     <span className="text-gray-500 text-xs">4 {t('student:spotsLeft', 'جا باقی')}</span>
                   </div>
                   <h4 className="font-bold text-gray-900 mb-1">
-                    {t('student:businessEnglish', 'انگلیسی تجاری پیشرفته')}
+                    {t('student:advancedBusinessEnglish')}
                   </h4>
                   <p className="text-gray-600 text-sm mb-3">
-                    {t('student:nativeSpeaker', 'با استاد بومی • 8 جلسه')}
+                    {t('student:nativeSpeakerSessions')}
                   </p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-900">750,000</span>
                       <span className="text-gray-400 text-sm line-through">1,000,000</span>
-                      <span className="text-gray-600 text-sm">{t('common:currency', 'تومان')}</span>
+                      <span className="text-gray-600 text-sm">{t('student:toman')}</span>
                     </div>
                     <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
-                      {t('student:enroll', 'ثبت نام')}
+                      {t('student:enroll')}
                     </Button>
                   </div>
                 </div>
@@ -520,16 +558,16 @@ export default function StudentDashboard() {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-gray-900">
-                        {t('student:onlineTeachers', 'استادان آنلاین')}
+                        {t('student:onlineTeachers')}
                       </h3>
                       <p className="text-gray-600 text-sm">
-                        {t('student:onlineTeachersDesc', 'استادان در دسترس برای CallerN')}
+                        {t('student:teachersAvailableCallern')}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-green-600 text-xs font-medium">3 آنلاین</span>
+                    <span className="text-green-600 text-xs font-medium">3 {t('student:online')}</span>
                   </div>
                 </div>
                 <div className="space-y-3 mb-4">
@@ -545,7 +583,7 @@ export default function StudentDashboard() {
                     </div>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-gray-500">Available</span>
+                      <span className="text-xs text-gray-500">{t('student:available')}</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-blue-200">
@@ -560,13 +598,13 @@ export default function StudentDashboard() {
                     </div>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-gray-500">Available</span>
+                      <span className="text-xs text-gray-500">{t('student:available')}</span>
                     </div>
                   </div>
                 </div>
                 <Button className="w-full bg-blue-500 hover:bg-blue-600">
                   <Video className="w-4 h-4 mr-2" />
-                  {t('student:startCallerN', 'شروع جلسه CallerN')}
+                  {t('student:startCallernSession')}
                 </Button>
               </CardContent>
             </Card>
@@ -782,50 +820,358 @@ export default function StudentDashboard() {
           </Card>
         </motion.div>
 
-        {/* Recent Achievements */}
+        {/* Enhanced Recent Achievements */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="shadow-xl">
-            <CardHeader className="pb-2">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  {t('student:recentAchievements')}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {t('student:learningProgress')}
+                </p>
+              </div>
+              <Link href="/student/achievements">
+                <Button variant="ghost" size="sm" className="text-xs">
+                  {t('student:viewAll')}
+                  <ChevronRight className="h-3 w-3 mr-1" />
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-green-50 rounded-xl p-4 text-center">
+                <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-green-600 mb-1">15</div>
+                <div className="text-sm text-gray-600">{t('student:dayStreak')}</div>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-4 text-center">
+                <Zap className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-purple-600 mb-1">+450</div>
+                <div className="text-sm text-gray-600">XP Earned</div>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-4 text-center">
+                <Clock className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-blue-600 mb-1">2.5h</div>
+                <div className="text-sm text-gray-600">Today's Time</div>
+              </div>
+              <div className="bg-orange-50 rounded-xl p-4 text-center">
+                <Activity className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-orange-600 mb-1">18.2h</div>
+                <div className="text-sm text-gray-600">Weekly Total</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Enhanced Skill Progress */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  {t('student:skillProgress')}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {t('student:proficiencyJourney')}
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Award className="h-4 w-4 text-yellow-500" />
-                  {t('student:recentAchievements', 'دستاوردهای اخیر')}
-                </CardTitle>
-                <Link href="/student/achievements">
-                  <Button variant="ghost" size="sm" className="text-xs">
-                    {t('common:viewAll', 'مشاهده همه')}
-                    <ChevronRight className="h-3 w-3 mr-1" />
-                  </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {stats?.recentAchievements?.map((achievement) => (
-                  <motion.div 
-                    key={achievement.id}
-                    className="flex items-center gap-3 p-2 bg-yellow-50 rounded-lg"
-                    whileHover={{ x: isRTL ? -5 : 5 }}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center shadow">
-                      {achievement.icon === 'flame' && <Flame className="h-5 w-5 text-white" />}
-                      {achievement.icon === 'trophy' && <Trophy className="h-5 w-5 text-white" />}
-                      {achievement.icon === 'zap' && <Zap className="h-5 w-5 text-white" />}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                    <Mic className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:speaking')}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-blue-500 text-white px-2 py-1">B2</Badge>
+                      <span className="text-sm text-gray-600">82%</span>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">{achievement.title}</p>
-                      <p className="text-xs text-gray-500">{new Date(achievement.date).toLocaleDateString(isRTL ? 'fa-IR' : 'en-US')}</p>
-                    </div>
-                    <Sparkles className="h-4 w-4 text-yellow-500" />
-                  </motion.div>
-                ))}
+                  </div>
+                </div>
+                <div className="flex-1 mx-4">
+                  <Progress value={82} className="h-2" />
+                </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                    <Headphones className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:listening')}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-blue-500 text-white px-2 py-1">B2</Badge>
+                      <span className="text-sm text-gray-600">78%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 mx-4">
+                  <Progress value={78} className="h-2" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:reading')}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-blue-500 text-white px-2 py-1">B1</Badge>
+                      <span className="text-sm text-gray-600">71%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 mx-4">
+                  <Progress value={71} className="h-2" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                    <PenTool className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:writing')}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-blue-500 text-white px-2 py-1">B1</Badge>
+                      <span className="text-sm text-gray-600">65%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 mx-4">
+                  <Progress value={65} className="h-2" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Quick Actions Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  {t('student:quickActions')}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {t('student:instantAccess')}
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:dailyTasks')}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-purple-500 text-white text-xs px-2 py-1">3</Badge>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                    <Mic className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:speakingPractice')}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-purple-500 text-white text-xs px-2 py-1">2</Badge>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center">
+                    <Video className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:liveSessions')}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-purple-500 text-white text-xs px-2 py-1">5</Badge>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:achievements')}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-purple-500 text-white text-xs px-2 py-1">12</Badge>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-pink-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{t('student:schedule')}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-purple-500 text-white text-xs px-2 py-1">8</Badge>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Active CallerN Class Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  {t('student:activeCallernClass')}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {t('student:currentSpeakingPackage')}
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
+              <div className="text-center mb-4">
+                <h4 className="font-bold text-lg text-gray-900 mb-2">
+                  {t('student:premiumCallernPackage')}
+                </h4>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">{t('student:remainingMinutes')}</p>
+                  <p className="text-2xl font-bold text-green-600">155 {t('student:minutes')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">{t('student:usedThisMonth')}</p>
+                  <p className="text-2xl font-bold text-gray-900">85 {t('student:minutes')}</p>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <Progress value={35} className="h-2 mb-2" />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>0</span>
+                  <span>240 {t('student:minutes')}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">{t('student:expires')}: Dec 25, 2024</p>
+                </div>
+                <Button size="sm" className="bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white">
+                  {t('student:renewPackage')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Daily Quest Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+        >
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  {t('student:dailyQuest')} 🎮
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {t('student:mainCharacterMoment')}
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-gray-900">{t('student:wordWarriorChallenge')}</h4>
+                  <PenTool className="w-4 h-4 text-gray-600" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Trophy className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm font-bold text-orange-600">+50 XP</span>
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-600 mb-4">
+                {t('student:masterFireTerms')}
+              </p>
+              
+              <div className="flex items-center justify-between mb-3">
+                <Badge className="bg-orange-500 text-white px-3 py-1">
+                  {t('student:gettingSpicy')} 🌶️
+                </Badge>
+                <div className="text-sm text-gray-600">
+                  14h 32m {t('student:left')} ⏰
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-900">{t('student:crushing')} 💪</span>
+                  <span className="text-sm text-gray-600">8/15</span>
+                </div>
+                <Progress value={53} className="h-3" />
+              </div>
+              
+              <Button className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white">
+                {t('student:keepGoing')} 🚀
+              </Button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Callern Packages */}
@@ -959,35 +1305,35 @@ export default function StudentDashboard() {
           <Link href="/student/dashboard">
             <div className="flex flex-col items-center gap-1 py-2 px-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl">
               <Home className="w-5 h-5 text-white" />
-              <span className="text-xs font-medium text-white">Home</span>
+              <span className="text-xs font-medium text-white">{t('student:home', 'Home')}</span>
             </div>
           </Link>
           
           <Link href="/student/courses">
             <div className="flex flex-col items-center gap-1 py-2 px-3">
               <BookOpen className="w-5 h-5 text-gray-500" />
-              <span className="text-xs text-gray-500">Classes</span>
+              <span className="text-xs text-gray-500">{t('student:classes')}</span>
             </div>
           </Link>
           
           <Link href="/callern">
             <div className="flex flex-col items-center gap-1 py-2 px-3">
               <Video className="w-5 h-5 text-gray-500" />
-              <span className="text-xs text-gray-500">CallerN</span>
+              <span className="text-xs text-gray-500">{t('student:callern')}</span>
             </div>
           </Link>
           
           <Link href="/student/ai-conversation">
             <div className="flex flex-col items-center gap-1 py-2 px-3">
               <Brain className="w-5 h-5 text-gray-500" />
-              <span className="text-xs text-gray-500">Lexi</span>
+              <span className="text-xs text-gray-500">{t('student:lexi')}</span>
             </div>
           </Link>
           
           <Link href="/student/messages">
             <div className="flex flex-col items-center gap-1 py-2 px-3">
               <MessageCircle className="w-5 h-5 text-gray-500" />
-              <span className="text-xs text-gray-500">Support</span>
+              <span className="text-xs text-gray-500">{t('student:support')}</span>
             </div>
           </Link>
         </div>
