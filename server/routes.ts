@@ -3492,6 +3492,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Teacher attendance marking endpoints
+  app.get("/api/teacher/sessions/:sessionId/attendance", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const attendance = await storage.getSessionAttendance(parseInt(sessionId));
+      res.json(attendance);
+    } catch (error) {
+      console.error('Error fetching session attendance:', error);
+      res.status(500).json({ error: 'Failed to fetch attendance data' });
+    }
+  });
+
+  app.post("/api/teacher/sessions/:sessionId/attendance", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { studentId, status, notes } = req.body;
+      const teacherId = req.user.id;
+      
+      const attendanceRecord = await storage.markAttendance(
+        parseInt(sessionId), 
+        studentId, 
+        status
+      );
+      
+      // Update the record with teacher ID and notes if provided
+      if (notes || teacherId) {
+        await storage.updateAttendanceRecord(attendanceRecord.id, {
+          markedBy: teacherId,
+          notes: notes || ''
+        });
+      }
+      
+      res.json(attendanceRecord);
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+      res.status(500).json({ error: 'Failed to mark attendance' });
+    }
+  });
+
+  app.get("/api/teacher/attendance-records", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const filters = req.query;
+      const records = await storage.getAttendanceRecords(filters);
+      res.json(records);
+    } catch (error) {
+      console.error('Error fetching attendance records:', error);
+      res.status(500).json({ error: 'Failed to fetch attendance records' });
+    }
+  });
+
   // Mentor Statistics API (replacing hardcoded mentor stats)
   app.get("/api/mentor/stats", authenticateToken, async (req: any, res) => {
     try {

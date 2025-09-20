@@ -3289,11 +3289,81 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAttendanceRecords(filters: any): Promise<any> {
-    return { records: [], total: 0, page: 1, limit: 10 };
+    try {
+      const { studentId, sessionId, status, startDate, endDate, page = 1, limit = 50 } = filters;
+      
+      let query = db.select({
+        id: attendanceRecords.id,
+        studentId: attendanceRecords.studentId,
+        sessionId: attendanceRecords.sessionId,
+        date: attendanceRecords.date,
+        status: attendanceRecords.status,
+        checkInTime: attendanceRecords.checkInTime,
+        checkOutTime: attendanceRecords.checkOutTime,
+        notes: attendanceRecords.notes,
+        markedBy: attendanceRecords.markedBy,
+        studentName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        sessionTitle: sessions.title
+      })
+      .from(attendanceRecords)
+      .leftJoin(users, eq(attendanceRecords.studentId, users.id))
+      .leftJoin(sessions, eq(attendanceRecords.sessionId, sessions.id));
+
+      // Apply filters
+      const conditions = [];
+      if (studentId) conditions.push(eq(attendanceRecords.studentId, studentId));
+      if (sessionId) conditions.push(eq(attendanceRecords.sessionId, sessionId));
+      if (status) conditions.push(eq(attendanceRecords.status, status));
+      if (startDate) conditions.push(sql`${attendanceRecords.date} >= ${startDate}`);
+      if (endDate) conditions.push(sql`${attendanceRecords.date} <= ${endDate}`);
+
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      const records = await query
+        .orderBy(desc(attendanceRecords.date))
+        .limit(limit)
+        .offset((page - 1) * limit);
+
+      // Count total records
+      const countQuery = db.select({ count: sql`count(*)` })
+        .from(attendanceRecords);
+      
+      if (conditions.length > 0) {
+        countQuery.where(and(...conditions));
+      }
+      
+      const [{ count }] = await countQuery;
+      
+      return {
+        records,
+        total: Number(count),
+        page,
+        limit
+      };
+    } catch (error) {
+      console.error('Error fetching attendance records:', error);
+      return { records: [], total: 0, page: 1, limit: 10 };
+    }
   }
 
-  async createAttendanceRecord(record: any): Promise<any> {
-    return { id: Date.now(), ...record };
+  async createAttendanceRecord(record: InsertAttendanceRecord): Promise<AttendanceRecord> {
+    try {
+      const [newRecord] = await db
+        .insert(attendanceRecords)
+        .values({
+          ...record,
+          date: record.date || sql`CURRENT_DATE`,
+          createdAt: new Date()
+        })
+        .returning();
+      
+      return newRecord;
+    } catch (error) {
+      console.error('Error creating attendance record:', error);
+      throw new Error('Failed to create attendance record');
+    }
   }
 
   // Moved to Phase 2 section with real database implementation
@@ -8764,7 +8834,8 @@ export class DatabaseStorage implements IStorage {
         studentId,
         status,
         checkInTime: status !== 'absent' ? new Date() : null,
-        notes: ""
+        notes: "",
+        date: sql`CURRENT_DATE`
       };
 
       if (existingRecord) {
@@ -8786,6 +8857,21 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error marking attendance:', error);
       throw new Error('Failed to mark attendance');
+    }
+  }
+
+  async updateAttendanceRecord(id: number, updates: Partial<AttendanceRecord>): Promise<AttendanceRecord | null> {
+    try {
+      const [updated] = await db
+        .update(attendanceRecords)
+        .set(updates)
+        .where(eq(attendanceRecords.id, id))
+        .returning();
+      
+      return updated || null;
+    } catch (error) {
+      console.error('Error updating attendance record:', error);
+      throw new Error('Failed to update attendance record');
     }
   }
 
