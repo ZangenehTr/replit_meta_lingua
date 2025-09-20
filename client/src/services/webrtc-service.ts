@@ -15,6 +15,26 @@ interface SignalData {
   data: any;
 }
 
+interface QualityMetrics {
+  bitrate: number;
+  packetsLost: number;
+  roundTripTime: number;
+  jitter: number;
+  connectionState: string;
+  bandwidth: number;
+  frameRate: number;
+  resolution: { width: number; height: number };
+  timestamp: number;
+}
+
+interface AdaptiveBitrateConfig {
+  enabled: boolean;
+  minBitrate: number;
+  maxBitrate: number;
+  targetBitrate: number;
+  adaptationInterval: number;
+}
+
 export class WebRTCService {
   private socket: Socket | null = null;
   private peer: SimplePeer.Instance | null = null;
@@ -31,6 +51,20 @@ export class WebRTCService {
   private isRecording = false;
   private recordedChunks: Blob[] = [];
   
+  // Quality monitoring properties
+  private qualityMetrics: QualityMetrics | null = null;
+  private qualityMonitoringInterval: NodeJS.Timeout | null = null;
+  private previousStats: Map<string, any> = new Map(); // Store previous stats for delta calculation
+  private adaptiveBitrateConfig: AdaptiveBitrateConfig = {
+    enabled: true,
+    minBitrate: 250000, // 250kbps
+    maxBitrate: 2500000, // 2.5Mbps
+    targetBitrate: 1000000, // 1Mbps
+    adaptationInterval: 2000 // 2 seconds
+  };
+  private lastBitrateAdjustment = 0;
+  private bitrateStable = 0; // Counter for stable conditions before increasing
+  
   // Event callbacks
   public onLocalStream: ((stream: MediaStream) => void) | null = null;
   public onRemoteStream: ((stream: MediaStream) => void) | null = null;
@@ -39,6 +73,8 @@ export class WebRTCService {
   public onDurationUpdate: ((seconds: number) => void) | null = null;
   public onError: ((error: Error) => void) | null = null;
   public onRecordingStatusChange: ((isRecording: boolean) => void) | null = null;
+  public onQualityUpdate: ((metrics: QualityMetrics) => void) | null = null;
+  public onBitrateAdjustment: ((newBitrate: number, reason: string) => void) | null = null;
 
   constructor() {
     this.initializeSocket();
@@ -252,6 +288,11 @@ export class WebRTCService {
     this.peer.on('connect', () => {
       console.log('Peer connected');
       this.onConnectionStateChange?.('connected');
+      
+      // Start quality monitoring automatically
+      if (!this.qualityMonitoringInterval) {
+        this.startQualityMonitoring();
+      }
     });
 
     this.peer.on('close', () => {
@@ -397,8 +438,9 @@ export class WebRTCService {
   public endCall(reason: string = 'User ended call') {
     console.log('Ending call:', reason);
 
-    // Stop timers
+    // Stop timers and quality monitoring
     this.stopCallTimer();
+    this.stopQualityMonitoring();
 
     // Update backend with final duration
     if (this.callConfig && this.callDuration > 0) {
@@ -425,6 +467,12 @@ export class WebRTCService {
       this.peer.destroy();
       this.peer = null;
     }
+
+    // Reset quality monitoring state
+    this.qualityMetrics = null;
+    this.previousStats.clear();
+    this.bitrateStable = 0;
+    this.lastBitrateAdjustment = 0;
 
     // Reset state
     this.callConfig = null;
@@ -615,6 +663,320 @@ export class WebRTCService {
 
   getRecordingStatus(): boolean {
     return this.isRecording;
+  }
+
+  // Quality monitoring methods
+  public startQualityMonitoring(): void {
+    if (this.qualityMonitoringInterval) {
+      clearInterval(this.qualityMonitoringInterval);
+    }
+
+    this.qualityMonitoringInterval = setInterval(() => {
+      this.collectQualityMetrics();
+    }, 1000); // Collect stats every second
+
+    console.log('Quality monitoring started');
+  }
+
+  public stopQualityMonitoring(): void {
+    if (this.qualityMonitoringInterval) {
+      clearInterval(this.qualityMonitoringInterval);
+      this.qualityMonitoringInterval = null;
+    }
+    console.log('Quality monitoring stopped');
+  }
+
+  private async collectQualityMetrics(): Promise<void> {
+    if (!this.peer) return;
+
+    try {
+      const peerConnection = (this.peer as any)._pc as RTCPeerConnection;
+      if (!peerConnection) return;
+
+      const stats = await peerConnection.getStats();
+      const metrics = this.parseWebRTCStats(stats);
+      
+      if (metrics) {
+        this.qualityMetrics = metrics;
+        this.onQualityUpdate?.(metrics);
+        
+        // Apply adaptive bitrate if enabled
+        if (this.adaptiveBitrateConfig.enabled) {
+          this.adjustBitrateBasedOnQuality(metrics);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to collect quality metrics:', error);
+    }
+  }
+
+  private parseWebRTCStats(stats: RTCStatsReport): QualityMetrics | null {
+    let bitrate = 0;
+    let packetsLostRatio = 0;
+    let roundTripTime = 0;
+    let jitter = 0;
+    let bandwidth = 0;
+    let frameRate = 0;
+    let resolution = { width: 0, height: 0 };
+    let connectionState = 'unknown';
+
+    const timestamp = Date.now();
+
+    for (const [id, report] of stats) {
+      // Use outbound-rtp for our sent video data
+      if (report.type === 'outbound-rtp' && report.mediaType === 'video') {
+        const previousReport = this.previousStats.get(id);
+        
+        if (previousReport && report.timestamp && previousReport.timestamp) {
+          // Calculate delta values for accurate bitrate
+          const deltaTime = report.timestamp - previousReport.timestamp;
+          const deltaBytes = (report.bytesSent || 0) - (previousReport.bytesSent || 0);
+          
+          if (deltaTime > 0) {
+            bitrate = (deltaBytes * 8) / (deltaTime / 1000); // bits per second
+          }
+        }
+        
+        frameRate = report.framesPerSecond || 0;
+        
+        // Store current report for next calculation
+        this.previousStats.set(id, {
+          timestamp: report.timestamp,
+          bytesSent: report.bytesSent,
+          packetsSent: report.packetsSent
+        });
+      }
+      
+      // Use remote-inbound-rtp for packet loss from remote perspective
+      if (report.type === 'remote-inbound-rtp' && report.mediaType === 'video') {
+        packetsLostRatio = report.fractionLost || 0; // This is already a ratio (0-1)
+        roundTripTime = report.roundTripTime || 0;
+        jitter = report.jitter || 0;
+      }
+      
+      // Get RTT from candidate pair as backup
+      if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+        if (roundTripTime === 0) {
+          roundTripTime = report.currentRoundTripTime || 0;
+        }
+        bandwidth = report.availableOutgoingBitrate || 0;
+      }
+      
+      // Get connection state
+      if (report.type === 'peer-connection') {
+        connectionState = report.connectionState || 'unknown';
+      }
+      
+      // Get video resolution from track stats
+      if (report.type === 'track' && report.kind === 'video') {
+        if (report.frameWidth && report.frameHeight) {
+          resolution = { width: report.frameWidth, height: report.frameHeight };
+        }
+      }
+    }
+
+    // Convert packet loss ratio to percentage for easier understanding
+    const packetsLostPercentage = packetsLostRatio * 100;
+
+    return {
+      bitrate: bitrate / 1000, // Convert to kbps for consistency
+      packetsLost: packetsLostPercentage, // Now represents percentage
+      roundTripTime: roundTripTime * 1000, // Convert to ms
+      jitter: jitter * 1000, // Convert to ms
+      connectionState,
+      bandwidth,
+      frameRate,
+      resolution,
+      timestamp
+    };
+  }
+
+  private async adjustBitrateBasedOnQuality(metrics: QualityMetrics): Promise<void> {
+    const now = Date.now();
+    
+    // Only adjust if enough time has passed since last adjustment
+    if (now - this.lastBitrateAdjustment < this.adaptiveBitrateConfig.adaptationInterval) {
+      return;
+    }
+
+    let newBitrate = this.adaptiveBitrateConfig.targetBitrate;
+    let reason = '';
+
+    // Adjust based on packet loss percentage (now correctly calculated)
+    if (metrics.packetsLost > 5) { // > 5% packet loss
+      newBitrate = Math.max(
+        this.adaptiveBitrateConfig.targetBitrate * 0.7,
+        this.adaptiveBitrateConfig.minBitrate
+      );
+      reason = `High packet loss: ${metrics.packetsLost.toFixed(1)}%`;
+      this.bitrateStable = 0; // Reset stability counter
+    }
+    // Adjust based on round trip time
+    else if (metrics.roundTripTime > 200) { // > 200ms
+      newBitrate = Math.max(
+        this.adaptiveBitrateConfig.targetBitrate * 0.8,
+        this.adaptiveBitrateConfig.minBitrate
+      );
+      reason = `High latency: ${metrics.roundTripTime.toFixed(0)}ms`;
+      this.bitrateStable = 0; // Reset stability counter
+    }
+    // Increase bitrate if connection is stable (with hysteresis)
+    else if (metrics.packetsLost < 1 && metrics.roundTripTime < 100) {
+      this.bitrateStable++;
+      // Only increase after stable for several intervals to avoid oscillation
+      if (this.bitrateStable >= 3) {
+        newBitrate = Math.min(
+          this.adaptiveBitrateConfig.targetBitrate * 1.1, // Smaller increase for stability
+          this.adaptiveBitrateConfig.maxBitrate
+        );
+        reason = 'Stable connection, increasing quality';
+        this.bitrateStable = 0; // Reset after adjustment
+      } else {
+        return; // Don't adjust yet, wait for more stability
+      }
+    } else {
+      // Neutral conditions, reset stability counter
+      this.bitrateStable = 0;
+    }
+
+    // Apply bitrate adjustment if changed significantly
+    if (Math.abs(newBitrate - this.adaptiveBitrateConfig.targetBitrate) > 50000) { // 50kbps threshold
+      await this.setBitrate(newBitrate);
+      this.adaptiveBitrateConfig.targetBitrate = newBitrate;
+      this.lastBitrateAdjustment = now;
+      this.onBitrateAdjustment?.(newBitrate, reason);
+      
+      console.log(`Bitrate adjusted to ${(newBitrate / 1000).toFixed(0)}kbps: ${reason}`);
+    }
+  }
+
+  private async setBitrate(targetBitrate: number): Promise<void> {
+    if (!this.peer) return;
+
+    try {
+      const peerConnection = (this.peer as any)._pc as RTCPeerConnection;
+      if (!peerConnection) return;
+
+      const senders = peerConnection.getSenders();
+      
+      for (const sender of senders) {
+        if (sender.track?.kind === 'video') {
+          const params = sender.getParameters();
+          
+          // Ensure encodings array exists (required for some browsers)
+          if (!params.encodings || params.encodings.length === 0) {
+            params.encodings = [{}];
+          }
+          
+          // Set bitrate limits
+          params.encodings[0].maxBitrate = targetBitrate;
+          
+          // Also set frame rate limits for very low bitrates
+          if (targetBitrate < 500000) { // < 500kbps
+            params.encodings[0].maxFramerate = 15;
+            params.encodings[0].scaleResolutionDownBy = 2;
+          } else if (targetBitrate < 1000000) { // < 1Mbps
+            params.encodings[0].maxFramerate = 24;
+            params.encodings[0].scaleResolutionDownBy = 1.5;
+          } else {
+            // High quality settings
+            params.encodings[0].maxFramerate = 30;
+            params.encodings[0].scaleResolutionDownBy = 1;
+          }
+          
+          await sender.setParameters(params);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to set bitrate, trying fallback method:', error);
+      
+      // Fallback: try to adjust video constraints
+      if (this.localStream) {
+        const videoTrack = this.localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          try {
+            const constraints: MediaTrackConstraints = {};
+            
+            if (targetBitrate < 500000) {
+              constraints.width = { ideal: 480 };
+              constraints.height = { ideal: 320 };
+              constraints.frameRate = { ideal: 15 };
+            } else if (targetBitrate < 1000000) {
+              constraints.width = { ideal: 640 };
+              constraints.height = { ideal: 480 };
+              constraints.frameRate = { ideal: 24 };
+            }
+            
+            if (Object.keys(constraints).length > 0) {
+              await videoTrack.applyConstraints(constraints);
+            }
+          } catch (constraintError) {
+            console.warn('Fallback constraint adjustment also failed:', constraintError);
+          }
+        }
+      }
+    }
+  }
+
+  // Public methods for quality management
+  public setAdaptiveBitrateConfig(config: Partial<AdaptiveBitrateConfig>): void {
+    this.adaptiveBitrateConfig = { ...this.adaptiveBitrateConfig, ...config };
+    console.log('Adaptive bitrate config updated:', this.adaptiveBitrateConfig);
+  }
+
+  public getCurrentQualityMetrics(): QualityMetrics | null {
+    return this.qualityMetrics;
+  }
+
+  public getConnectionQuality(): 'excellent' | 'good' | 'fair' | 'poor' | 'unknown' {
+    if (!this.qualityMetrics) return 'unknown';
+    
+    const { packetsLost, roundTripTime, bitrate } = this.qualityMetrics;
+    
+    if (packetsLost === 0 && roundTripTime < 50 && bitrate > 500) {
+      return 'excellent';
+    } else if (packetsLost < 5 && roundTripTime < 100 && bitrate > 250) {
+      return 'good';
+    } else if (packetsLost < 15 && roundTripTime < 200 && bitrate > 100) {
+      return 'fair';
+    } else if (packetsLost < 30 && roundTripTime < 500) {
+      return 'poor';
+    } else {
+      return 'poor';
+    }
+  }
+
+  public async forceQualityAdjustment(quality: 'low' | 'medium' | 'high'): Promise<void> {
+    const qualitySettings = {
+      low: { bitrate: 250000, width: 480, height: 320 },
+      medium: { bitrate: 750000, width: 720, height: 480 },
+      high: { bitrate: 1500000, width: 1280, height: 720 }
+    };
+
+    const settings = qualitySettings[quality];
+    await this.setBitrate(settings.bitrate);
+    
+    // Also adjust video resolution if possible
+    if (this.localStream) {
+      const videoTrack = this.localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        try {
+          await videoTrack.applyConstraints({
+            width: { ideal: settings.width },
+            height: { ideal: settings.height }
+          });
+        } catch (error) {
+          console.warn('Failed to adjust video resolution:', error);
+        }
+      }
+    }
+    
+    console.log(`Quality manually set to ${quality}`);
+  }
+
+  private handleError(error: Error) {
+    console.error('WebRTC Error:', error);
+    this.onError?.(error);
   }
 }
 
