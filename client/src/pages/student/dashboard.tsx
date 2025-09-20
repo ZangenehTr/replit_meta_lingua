@@ -350,53 +350,163 @@ export default function StudentDashboard() {
           </motion.div>
         )}
 
-        {/* My Classes Section */}
+        {/* My Classes - Accordion Menu */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {t('student:myClasses')}
-              </h3>
-              <p className="text-gray-600 text-sm">
-                {t('student:upcomingSessions')}
-              </p>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {t('student:myClasses')}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {t('student:activeCoursesAndSessions')}
+                  </p>
+                </div>
+              </div>
+              <Badge className="bg-blue-500 text-white px-3 py-1">
+                3 {t('student:active')}
+              </Badge>
             </div>
+            
+            <div className="space-y-3">
+              {/* Active Class 1 */}
+              <details className="group">
+                <summary className="flex items-center justify-between p-4 bg-blue-50 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                    <div>
+                      <span className="font-medium text-gray-900">{t('student:generalEnglishA2')}</span>
+                      <p className="text-xs text-gray-600">{t('student:nextSession')}: Today 14:00</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-blue-500 text-white text-xs">Live</Badge>
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
+                  </div>
+                </summary>
+                <div className="mt-3 p-4 bg-white rounded-lg border border-blue-200">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">{t('student:progress')}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-500 h-2 rounded-full" style={{width: '75%'}}></div>
+                        </div>
+                        <span className="text-xs font-bold text-blue-600">75%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">{t('student:attendance')}</p>
+                      <p className="text-sm font-bold text-gray-900">18/24 {t('student:sessions')}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
+                      {t('student:joinClass')}
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      {t('student:viewHomework')}
+                    </Button>
+                  </div>
+                </div>
+              </details>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900">{t('student:todaysClasses')}</span>
+              {/* Active Class 2 */}
+              <details className="group">
+                <summary className="flex items-center justify-between p-4 bg-green-50 rounded-xl cursor-pointer hover:bg-green-100 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div>
+                      <span className="font-medium text-gray-900">{t('student:conversationClass')}</span>
+                      <p className="text-xs text-gray-600">{t('student:nextSession')}: Tomorrow 16:30</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
+                      2
+                    </Badge>
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
+                  </div>
+                </summary>
+                <div className="mt-3 p-4 bg-white rounded-lg border border-green-200">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">{t('student:progress')}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-500 h-2 rounded-full" style={{width: '60%'}}></div>
+                        </div>
+                        <span className="text-xs font-bold text-green-600">60%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">{t('student:speakingTime')}</p>
+                      <p className="text-sm font-bold text-gray-900">45 {t('student:minutes')}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="bg-green-500 hover:green-600 text-white">
+                      {t('student:practiceNow')}
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      {t('student:viewRecordings')}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-green-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
-                    2
-                  </Badge>
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </div>
-              </div>
+              </details>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900">{t('student:moreClasses')}</span>
+              {/* More Classes Collapsed */}
+              <details className="group">
+                <summary className="flex items-center justify-between p-4 bg-purple-50 rounded-xl cursor-pointer hover:bg-purple-100 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    <div>
+                      <span className="font-medium text-gray-900">{t('student:moreClasses')}</span>
+                      <p className="text-xs text-gray-600">{t('student:viewAllEnrolledCourses')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-purple-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
+                      +3
+                    </Badge>
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
+                  </div>
+                </summary>
+                <div className="mt-3 p-4 bg-white rounded-lg border border-purple-200">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-900">{t('student:ieltsPreparation')}</span>
+                      <Badge variant="outline" className="text-xs">B2</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-900">{t('student:businessEnglish')}</span>
+                      <Badge variant="outline" className="text-xs">A2</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-900">{t('student:pronunciation')}</span>
+                      <Badge variant="outline" className="text-xs">B1</Badge>
+                    </div>
+                  </div>
+                  <Link href="/student/courses">
+                    <Button variant="outline" className="w-full mt-3" size="sm">
+                      {t('student:viewAllCourses')}
+                    </Button>
+                  </Link>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
-                    3
-                  </Badge>
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </div>
-              </div>
+              </details>
             </div>
           </div>
         </motion.div>
 
-        {/* Ready to Mingle Section */}
+        {/* Ready to Mingle Section with Toggle */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -416,6 +526,13 @@ export default function StudentDashboard() {
                     {t('student:connectWithBesties')}
                   </p>
                 </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">{t('student:available')}</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" defaultChecked />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
               </div>
             </div>
             
