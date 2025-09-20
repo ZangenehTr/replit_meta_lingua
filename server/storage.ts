@@ -929,6 +929,7 @@ export interface IStorage {
   createDepartment(department: any): Promise<any>;
   updateDepartment(id: number, updates: any): Promise<any>;
   deleteDepartment(id: number): Promise<boolean>;
+  isTeacherAssignedToDepartment(teacherId: number, departmentId: number): Promise<boolean>;
   
   // Custom Roles Management
   getCustomRoles(): Promise<any[]>;

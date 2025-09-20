@@ -10068,6 +10068,23 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async isTeacherAssignedToDepartment(teacherId: number, departmentId: number): Promise<boolean> {
+    try {
+      const assignment = await db.select()
+        .from(teacherAssignments)
+        .where(
+          and(
+            eq(teacherAssignments.teacherId, teacherId),
+            eq(teacherAssignments.departmentId, departmentId)
+          )
+        );
+      return assignment.length > 0;
+    } catch (error) {
+      console.error('Error checking teacher department assignment:', error);
+      return false;
+    }
+  }
+  
   // Custom Roles Management
   async getCustomRoles(): Promise<any[]> {
     try {

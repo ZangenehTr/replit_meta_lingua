@@ -68,6 +68,7 @@ import {
   insertRoomSchema,
   insertLeadSchema,
   insertCommunicationLogSchema,
+  insertDepartmentSchema,
   WORKFLOW_STATUS,
   type InsertMoodEntry,
   type InsertMoodRecommendation,
@@ -20985,6 +20986,146 @@ Meta Lingua Academy`;
         message: "Failed to fetch datasets",
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
+    }
+  });
+
+  // Department management routes
+  app.get("/api/departments", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const user = req.user;
+      let instituteId;
+      
+      // Supervisors can only see their institute's departments
+      if (user.role === 'Supervisor') {
+        instituteId = user.instituteId;
+      } else if (user.role === 'Admin') {
+        // Admin can optionally filter by institute via query param
+        if (req.query.instituteId) {
+          const parsedInstituteId = parseInt(req.query.instituteId);
+          if (isNaN(parsedInstituteId) || parsedInstituteId <= 0) {
+            return res.status(400).json({ error: 'Invalid instituteId parameter' });
+          }
+          instituteId = parsedInstituteId;
+        }
+      }
+      
+      const departments = await storage.getDepartments(instituteId);
+      res.json(departments);
+    } catch (error) {
+      console.error('Failed to get departments:', error);
+      res.status(500).json({ error: 'Failed to fetch departments' });
+    }
+  });
+
+  app.get("/api/departments/:id", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher']), async (req: any, res) => {
+    try {
+      const user = req.user;
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: 'Invalid department ID' });
+      }
+      
+      const department = await storage.getDepartmentById(id);
+      
+      if (!department) {
+        return res.status(404).json({ error: 'Department not found' });
+      }
+      
+      // Authorization check based on role
+      if (user.role === 'Supervisor' || user.role === 'Teacher') {
+        // Check if user belongs to the same institute as the department
+        if (department.instituteId !== user.instituteId) {
+          return res.status(403).json({ error: 'Access denied' });
+        }
+        
+        // For teachers, check if they're assigned to this department
+        if (user.role === 'Teacher') {
+          const isAssigned = department.headTeacherId === user.id || 
+                           await storage.isTeacherAssignedToDepartment(user.id, department.id);
+          if (!isAssigned) {
+            return res.status(403).json({ error: 'Access denied' });
+          }
+        }
+      }
+      
+      res.json(department);
+    } catch (error) {
+      console.error('Failed to get department:', error);
+      res.status(500).json({ error: 'Failed to fetch department' });
+    }
+  });
+
+  app.post("/api/departments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      // Validate request body using Zod schema
+      const createDepartmentSchema = insertDepartmentSchema.omit({ 
+        id: true, 
+        createdAt: true, 
+        updatedAt: true 
+      });
+      
+      const validationResult = createDepartmentSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Validation failed', 
+          details: validationResult.error.errors 
+        });
+      }
+      
+      const department = await storage.createDepartment(validationResult.data);
+      res.status(201).json(department);
+    } catch (error) {
+      console.error('Failed to create department:', error);
+      res.status(500).json({ error: 'Failed to create department' });
+    }
+  });
+
+  app.put("/api/departments/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: 'Invalid department ID' });
+      }
+      
+      // Validate request body for updates
+      const updateDepartmentSchema = insertDepartmentSchema
+        .omit({ id: true, createdAt: true, updatedAt: true })
+        .partial();
+        
+      const validationResult = updateDepartmentSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Validation failed', 
+          details: validationResult.error.errors 
+        });
+      }
+      
+      const department = await storage.updateDepartment(id, validationResult.data);
+      if (!department) {
+        return res.status(404).json({ error: 'Department not found' });
+      }
+      res.json(department);
+    } catch (error) {
+      console.error('Failed to update department:', error);
+      res.status(500).json({ error: 'Failed to update department' });
+    }
+  });
+
+  app.delete("/api/departments/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: 'Invalid department ID' });
+      }
+      
+      const success = await storage.deleteDepartment(id);
+      if (!success) {
+        return res.status(404).json({ error: 'Department not found' });
+      }
+      res.json({ message: 'Department deleted successfully' });
+    } catch (error) {
+      console.error('Failed to delete department:', error);
+      res.status(500).json({ error: 'Failed to delete department' });
     }
   });
 
