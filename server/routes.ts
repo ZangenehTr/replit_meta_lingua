@@ -3656,6 +3656,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Class type-specific attendance flow endpoints
+  app.get("/api/sessions/:sessionId/class-type-details", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const details = await storage.getSessionClassTypeDetails(parseInt(sessionId));
+      res.json(details);
+    } catch (error) {
+      console.error('Error fetching session class type details:', error);
+      res.status(500).json({ error: 'Failed to fetch session details' });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/physical-checkin", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { roomNumber, qrCode } = req.body;
+      
+      const checkInSession = await storage.createPhysicalCheckInSession(parseInt(sessionId), roomNumber, qrCode);
+      res.json(checkInSession);
+    } catch (error) {
+      console.error('Error creating physical check-in session:', error);
+      res.status(500).json({ error: 'Failed to create physical check-in session' });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/qr-checkin", authenticateToken, requireRole(['Student', 'Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { qrCode } = req.body;
+      const studentId = req.user.role === 'Student' ? req.user.id : req.body.studentId;
+      
+      if (!studentId) {
+        return res.status(400).json({ error: 'Student ID is required' });
+      }
+      
+      const checkInResult = await storage.processQRCheckIn(parseInt(sessionId), parseInt(studentId), qrCode);
+      res.json(checkInResult);
+    } catch (error) {
+      console.error('Error processing QR check-in:', error);
+      res.status(500).json({ error: 'Failed to process QR check-in' });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/bulk-attendance", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { attendanceData } = req.body; // Array of {studentId, status, notes}
+      
+      if (!Array.isArray(attendanceData)) {
+        return res.status(400).json({ error: 'attendanceData must be an array' });
+      }
+      
+      const results = [];
+      for (const record of attendanceData) {
+        try {
+          const result = await storage.markAttendance(parseInt(sessionId), record.studentId, record.status);
+          if (record.notes) {
+            await storage.updateAttendanceRecord(result.id, { notes: record.notes });
+          }
+          results.push({ ...result, notes: record.notes });
+        } catch (error) {
+          console.error(`Error marking attendance for student ${record.studentId}:`, error);
+          results.push({ 
+            studentId: record.studentId, 
+            error: 'Failed to mark attendance',
+            status: 'error'
+          });
+        }
+      }
+      
+      res.json({ results, message: 'Bulk attendance processing completed' });
+    } catch (error) {
+      console.error('Error processing bulk attendance:', error);
+      res.status(500).json({ error: 'Failed to process bulk attendance' });
+    }
+  });
+
   // Mentor Statistics API (replacing hardcoded mentor stats)
   app.get("/api/mentor/stats", authenticateToken, async (req: any, res) => {
     try {

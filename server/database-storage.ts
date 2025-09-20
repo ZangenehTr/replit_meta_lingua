@@ -9015,6 +9015,175 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getSessionClassTypeDetails(sessionId: number): Promise<any> {
+    try {
+      const [sessionDetails] = await db.select({
+        sessionId: sessions.id,
+        courseId: sessions.courseId,
+        deliveryMode: courses.deliveryMode,
+        classFormat: courses.classFormat,
+        maxStudents: courses.maxStudents,
+        sessionTitle: sessions.title,
+        scheduledAt: sessions.scheduledAt,
+        duration: sessions.duration,
+        teacherId: sessions.teacherId,
+        teacherName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`
+      })
+      .from(sessions)
+      .leftJoin(courses, eq(sessions.courseId, courses.id))
+      .leftJoin(users, eq(sessions.teacherId, users.id))
+      .where(eq(sessions.id, sessionId));
+
+      if (!sessionDetails) {
+        throw new Error('Session not found');
+      }
+
+      // Determine class type for attendance flow
+      const classType = this.determineClassType(sessionDetails);
+      
+      return {
+        ...sessionDetails,
+        classType,
+        attendanceFlow: this.getAttendanceFlowForClassType(classType)
+      };
+    } catch (error) {
+      console.error('Error fetching session class type details:', error);
+      throw new Error('Failed to fetch session details');
+    }
+  }
+
+  private determineClassType(sessionDetails: any): string {
+    // Determine class type based on delivery mode and format
+    if (sessionDetails.deliveryMode === 'online') {
+      if (sessionDetails.classFormat === 'one_on_one') {
+        return 'online_individual';
+      } else if (sessionDetails.classFormat === 'group') {
+        return 'online_group';
+      } else if (sessionDetails.classFormat === 'callern_package') {
+        return 'callern_session';
+      }
+    } else if (sessionDetails.deliveryMode === 'in_person') {
+      if (sessionDetails.classFormat === 'one_on_one') {
+        return 'in_person_individual';
+      } else if (sessionDetails.classFormat === 'group') {
+        return 'in_person_group';
+      }
+    } else if (sessionDetails.deliveryMode === 'hybrid') {
+      return 'hybrid_class';
+    }
+    
+    return 'default';
+  }
+
+  private getAttendanceFlowForClassType(classType: string): any {
+    const flows = {
+      'online_individual': {
+        autoTrack: true,
+        methods: ['webrtc_presence', 'manual_override'],
+        checkInRequired: false,
+        physicalCheckIn: false,
+        lateThresholdMinutes: 5,
+        description: 'Automatic tracking via video call + manual override'
+      },
+      'online_group': {
+        autoTrack: true,
+        methods: ['webrtc_presence', 'manual_marking'],
+        checkInRequired: false,
+        physicalCheckIn: false,
+        lateThresholdMinutes: 10,
+        description: 'Auto-track video participants + manual group marking'
+      },
+      'callern_session': {
+        autoTrack: true,
+        methods: ['webrtc_presence'],
+        checkInRequired: false,
+        physicalCheckIn: false,
+        lateThresholdMinutes: 0, // No late concept for on-demand
+        description: 'Automatic tracking for on-demand sessions'
+      },
+      'in_person_individual': {
+        autoTrack: false,
+        methods: ['manual_marking', 'qr_check_in'],
+        checkInRequired: true,
+        physicalCheckIn: true,
+        lateThresholdMinutes: 10,
+        description: 'Manual marking or QR code check-in'
+      },
+      'in_person_group': {
+        autoTrack: false,
+        methods: ['manual_bulk_marking', 'qr_check_in', 'roll_call'],
+        checkInRequired: true,
+        physicalCheckIn: true,
+        lateThresholdMinutes: 15,
+        description: 'Bulk manual marking, QR codes, or roll call'
+      },
+      'hybrid_class': {
+        autoTrack: true,
+        methods: ['webrtc_presence', 'manual_marking', 'qr_check_in'],
+        checkInRequired: false,
+        physicalCheckIn: 'mixed',
+        lateThresholdMinutes: 15,
+        description: 'Mixed auto-tracking and manual methods'
+      },
+      'default': {
+        autoTrack: false,
+        methods: ['manual_marking'],
+        checkInRequired: true,
+        physicalCheckIn: false,
+        lateThresholdMinutes: 10,
+        description: 'Standard manual attendance marking'
+      }
+    };
+
+    return flows[classType] || flows['default'];
+  }
+
+  async createPhysicalCheckInSession(sessionId: number, roomNumber?: string, qrCode?: string): Promise<any> {
+    try {
+      // Update session with physical check-in details
+      const [updated] = await db
+        .update(sessions)
+        .set({
+          notes: sql`COALESCE(notes, '') || ${`\nPhysical check-in enabled. Room: ${roomNumber || 'TBA'}, QR: ${qrCode || 'Generated'}`}`,
+          updatedAt: new Date()
+        })
+        .where(eq(sessions.id, sessionId))
+        .returning();
+
+      return {
+        sessionId,
+        roomNumber: roomNumber || 'TBA',
+        qrCode: qrCode || `CHECKIN_${sessionId}_${Date.now()}`,
+        checkInUrl: `/check-in/${sessionId}?code=${qrCode || `CHECKIN_${sessionId}_${Date.now()}`}`,
+        message: 'Physical check-in session created successfully'
+      };
+    } catch (error) {
+      console.error('Error creating physical check-in session:', error);
+      throw new Error('Failed to create physical check-in session');
+    }
+  }
+
+  async processQRCheckIn(sessionId: number, studentId: number, qrCode: string): Promise<any> {
+    try {
+      // Validate QR code (basic validation)
+      if (!qrCode.includes(`CHECKIN_${sessionId}`)) {
+        throw new Error('Invalid QR code for this session');
+      }
+
+      // Mark attendance as present
+      const attendanceRecord = await this.markAttendance(sessionId, studentId, 'present');
+      
+      return {
+        ...attendanceRecord,
+        checkInMethod: 'qr_code',
+        message: 'Successfully checked in via QR code'
+      };
+    } catch (error) {
+      console.error('Error processing QR check-in:', error);
+      throw new Error('Failed to process QR check-in');
+    }
+  }
+
   async calculateAttendanceBasedPayment(sessionId: number): Promise<any> {
     try {
       // Get session details
