@@ -1,0 +1,76 @@
+HIGH PRIORITY - Critical for 100% Functionality
+1. WebRTC Video Calling System (CALLERN)
+Real video/audio streaming implementation (currently just UI mockup)
+STUN/TURN server configuration for NAT traversal
+Call recording functionality (backend missing)
+Teacher matching algorithm for smart routing
+Quality monitoring and adaptive bitrate
+2. Replace Hardcoded/Mock Data
+Sample courses data in routes (still using mock data)
+Test data in various endpoints
+Teacher ratings (currently static values)
+Course thumbnails (using external URLs)
+Financial reports (static calculations)
+Revenue analytics (fake trends)
+3. Missing Core Features
+SMS integration for notifications (Kavenegar not fully implemented)
+Email system implementation (not functional)
+Wallet payment processing (not connected to real gateway)
+Session recording functionality
+Teacher dashboard stats (currently returning 500 errors)
+MEDIUM PRIORITY - Organizational & Management
+4. Phase 2 Tables (11 Unconnected Tables)
+institutes - Multi-institute support
+departments - Department organization
+branches - Branch management
+customRoles - Custom role definitions
+studentMentor - Mentor assignments
+studentCourseProgress - Detailed progress tracking
+parentGuardians - Parent/guardian management
+studentNotes - Teacher notes about students
+placementTests - Placement test definitions
+placementQuestions - Question bank
+placementResults - Test results and recommendations
+5. Mobile-First UI Redesign
+Touch-optimized components (44px minimum touch targets)
+Bottom navigation for all roles
+Mobile card layouts instead of desktop tables
+Multi-step mobile form wizards
+Performance optimizations for mobile
+6. Non-Functional Buttons/Features
+PDF export functionality (only CSV works)
+Bulk operations in admin panel
+Report generation system
+System backup functionality
+Data migration tools
+Schedule optimizer
+Performance analytics
+Achievement system
+Social features
+Study groups
+Referral system
+LOWER PRIORITY - Polish & Enhancement
+7. Code Quality Issues
+Remove duplicate API error handling
+Consolidate authentication checks
+Eliminate duplicate database queries
+Remove duplicate UI components
+Centralize validation logic
+8. Testing & Documentation
+Comprehensive unit tests for all services
+Integration tests for API endpoints
+E2E tests for critical user flows
+Load testing for WebSocket/WebRTC
+9. Advanced Features
+Real-time AI supervision in video calls
+Live vocabulary suggestions during calls
+Grammar correction in real-time
+Personal glossary building with SRS
+Quiz generation from call content
+IMMEDIATE ACTIONABLE ITEMS
+Fix teacher dashboard 500 errors
+Implement real WebRTC video calling
+Connect the 11 unconnected database tables
+Replace remaining mock data with real API calls
+Add proper SMS notifications with Kavenegar
+Implement wallet payment processing
