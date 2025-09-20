@@ -3425,25 +3425,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       
-      // Get student's enrolled classes and create group chats
-      const classGroups = [
-        {
-          id: 1,
-          title: 'English A2 Class',
-          lastMessage: 'Great progress in today\'s lesson!',
-          lastMessageAt: new Date().toISOString(),
-          unreadCount: 2,
-          participants: 15
-        },
-        {
-          id: 2,
-          title: 'Persian B1 Class', 
-          lastMessage: 'Don\'t forget tomorrow\'s assignment',
-          lastMessageAt: new Date(Date.now() - 86400000).toISOString(),
-          unreadCount: 0,
-          participants: 12
+      // Get student's enrolled courses and their group chats
+      const enrollments = await storage.getUserCourses(userId);
+      const classGroups = [];
+      
+      for (const enrollment of enrollments) {
+        // Get or create group chat for this course
+        const groupChat = await storage.getOrCreateCourseGroupChat(enrollment.id, userId);
+        
+        if (groupChat) {
+          // Get participant count
+          const participantCount = groupChat.participants ? groupChat.participants.length : 0;
+          
+          // Get last message info
+          const lastMessage = await storage.getLastChatMessage(groupChat.id);
+          
+          classGroups.push({
+            id: groupChat.id,
+            title: groupChat.title || `${enrollment.title} - Class Group`,
+            lastMessage: lastMessage?.message || 'Welcome to the class group!',
+            lastMessageAt: lastMessage?.sentAt || groupChat.createdAt,
+            unreadCount: groupChat.unreadCount || 0,
+            participants: participantCount,
+            courseId: enrollment.id,
+            type: 'group'
+          });
         }
-      ];
+      }
       
       res.json(classGroups);
     } catch (error) {

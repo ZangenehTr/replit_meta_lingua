@@ -7239,6 +7239,68 @@ export class DatabaseStorage implements IStorage {
     return updatedConversation;
   }
 
+  async getOrCreateCourseGroupChat(courseId: number, userId: number): Promise<ChatConversation | null> {
+    try {
+      // Get course details
+      const [course] = await db.select().from(courses).where(eq(courses.id, courseId));
+      if (!course) return null;
+      
+      // Check if group chat already exists for this course
+      const existingChats = await db.select().from(chatConversations)
+        .where(and(
+          eq(chatConversations.type, 'group'),
+          sql`${chatConversations.metadata}->>'courseId' = ${courseId.toString()}`
+        ));
+      
+      if (existingChats.length > 0) {
+        // Add user to existing chat if not already a participant
+        const chat = existingChats[0];
+        const currentParticipants = chat.participants || [];
+        
+        if (!currentParticipants.includes(userId.toString())) {
+          await db.update(chatConversations)
+            .set({
+              participants: [...currentParticipants, userId.toString()],
+              updatedAt: new Date()
+            })
+            .where(eq(chatConversations.id, chat.id));
+        }
+        
+        return chat;
+      } else {
+        // Create new group chat for the course
+        const [newChat] = await db.insert(chatConversations).values({
+          title: `${course.title} - Class Group`,
+          type: 'group',
+          participants: [userId.toString()],
+          metadata: { courseId: courseId },
+          isActive: true,
+          createdAt: new Date()
+        }).returning();
+        
+        return newChat;
+      }
+    } catch (error) {
+      console.error('Error getting/creating course group chat:', error);
+      return null;
+    }
+  }
+
+  async getLastChatMessage(conversationId: number): Promise<ChatMessage | null> {
+    try {
+      const [lastMessage] = await db.select()
+        .from(chatMessages)
+        .where(eq(chatMessages.conversationId, conversationId))
+        .orderBy(desc(chatMessages.sentAt))
+        .limit(1);
+      
+      return lastMessage || null;
+    } catch (error) {
+      console.error('Error fetching last chat message:', error);
+      return null;
+    }
+  }
+
   // Chat Messages
   async getChatMessages(conversationId: number, limit: number = 50): Promise<any[]> {
     try {

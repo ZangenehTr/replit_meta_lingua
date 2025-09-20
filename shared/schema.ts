@@ -3297,6 +3297,7 @@ export const chatConversations = pgTable("chat_conversations", {
   lastMessageAt: timestamp("last_message_at"),
   unreadCount: integer("unread_count").default(0),
   isActive: boolean("is_active").default(true),
+  metadata: jsonb("metadata"), // For course group chats and other context
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
