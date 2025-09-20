@@ -1058,6 +1058,28 @@ export const attendanceRecords = pgTable("attendance_records", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+export const teacherPaymentRecords = pgTable("teacher_payment_records", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  sessionId: integer("session_id").references(() => sessions.id),
+  attendanceRecordId: integer("attendance_record_id").references(() => attendanceRecords.id),
+  baseAmount: decimal("base_amount", { precision: 10, scale: 2 }).notNull(),
+  attendanceBonus: decimal("attendance_bonus", { precision: 10, scale: 2 }).default('0'),
+  attendancePenalty: decimal("attendance_penalty", { precision: 10, scale: 2 }).default('0'),
+  finalAmount: decimal("final_amount", { precision: 10, scale: 2 }).notNull(),
+  sessionDuration: integer("session_duration"), // in minutes
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
+  attendanceRate: decimal("attendance_rate", { precision: 5, scale: 2 }), // percentage of students present
+  paymentPeriod: text("payment_period").notNull(), // '2024-01', '2024-02', etc.
+  status: text("status").default("pending"), // pending, approved, paid, disputed
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  paidAt: timestamp("paid_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 export const studentNotes = pgTable("student_notes", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(),

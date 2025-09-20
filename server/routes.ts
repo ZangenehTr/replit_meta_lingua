@@ -3542,6 +3542,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Attendance-based payment calculation endpoints
+  app.post("/api/teacher/sessions/:sessionId/calculate-payment", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const paymentData = await storage.calculateAttendanceBasedPayment(parseInt(sessionId));
+      res.json(paymentData);
+    } catch (error) {
+      console.error('Error calculating attendance-based payment:', error);
+      res.status(500).json({ error: 'Failed to calculate payment' });
+    }
+  });
+
+  app.get("/api/teacher/payment-summary", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.role === 'Teacher' ? req.user.id : req.query.teacherId;
+      const period = req.query.period;
+      
+      if (!teacherId) {
+        return res.status(400).json({ error: 'Teacher ID is required' });
+      }
+      
+      const summary = await storage.getTeacherPaymentSummary(parseInt(teacherId), period);
+      res.json(summary);
+    } catch (error) {
+      console.error('Error fetching teacher payment summary:', error);
+      res.status(500).json({ error: 'Failed to fetch payment summary' });
+    }
+  });
+
+  app.post("/api/admin/approve-payment/:paymentId", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { paymentId } = req.params;
+      const adminId = req.user.id;
+      
+      const [updated] = await db
+        .update(teacherPaymentRecords)
+        .set({
+          status: 'approved',
+          approvedBy: adminId,
+          approvedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(teacherPaymentRecords.id, parseInt(paymentId)))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ error: 'Payment record not found' });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error('Error approving payment:', error);
+      res.status(500).json({ error: 'Failed to approve payment' });
+    }
+  });
+
   // Mentor Statistics API (replacing hardcoded mentor stats)
   app.get("/api/mentor/stats", authenticateToken, async (req: any, res) => {
     try {

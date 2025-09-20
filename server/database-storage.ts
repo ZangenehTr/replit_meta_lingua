@@ -8875,6 +8875,170 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async calculateAttendanceBasedPayment(sessionId: number): Promise<any> {
+    try {
+      // Get session details
+      const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId));
+      if (!session) throw new Error('Session not found');
+
+      // Get teacher details and hourly rate
+      const [teacher] = await db.select({
+        id: users.id,
+        name: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        hourlyRate: teacherCallernAvailability.hourlyRate
+      })
+      .from(users)
+      .leftJoin(teacherCallernAvailability, eq(users.id, teacherCallernAvailability.teacherId))
+      .where(eq(users.id, session.teacherId));
+
+      if (!teacher) throw new Error('Teacher not found');
+
+      // Get attendance records for this session
+      const attendanceData = await db.select({
+        id: attendanceRecords.id,
+        studentId: attendanceRecords.studentId,
+        status: attendanceRecords.status
+      })
+      .from(attendanceRecords)
+      .where(eq(attendanceRecords.sessionId, sessionId));
+
+      // Calculate attendance statistics
+      const totalStudents = attendanceData.length;
+      const presentStudents = attendanceData.filter(a => a.status === 'present').length;
+      const lateStudents = attendanceData.filter(a => a.status === 'late').length;
+      const absentStudents = attendanceData.filter(a => a.status === 'absent').length;
+      
+      const attendanceRate = totalStudents > 0 ? (presentStudents + (lateStudents * 0.8)) / totalStudents : 0;
+      
+      // Calculate payment amounts
+      const sessionDurationHours = session.duration / 60; // convert minutes to hours
+      const hourlyRate = Number(teacher.hourlyRate) || 50000; // default rate in IRR
+      const baseAmount = sessionDurationHours * hourlyRate;
+      
+      // Attendance-based adjustments
+      let attendanceBonus = 0;
+      let attendancePenalty = 0;
+      
+      if (attendanceRate >= 0.9) { // 90%+ attendance gets 10% bonus
+        attendanceBonus = baseAmount * 0.1;
+      } else if (attendanceRate < 0.7) { // Less than 70% attendance gets 15% penalty
+        attendancePenalty = baseAmount * 0.15;
+      }
+      
+      const finalAmount = baseAmount + attendanceBonus - attendancePenalty;
+      
+      // Check if payment record already exists
+      const [existingPayment] = await db.select()
+        .from(teacherPaymentRecords)
+        .where(eq(teacherPaymentRecords.sessionId, sessionId));
+
+      const paymentData = {
+        teacherId: session.teacherId,
+        sessionId: sessionId,
+        baseAmount: baseAmount.toString(),
+        attendanceBonus: attendanceBonus.toString(),
+        attendancePenalty: attendancePenalty.toString(),
+        finalAmount: finalAmount.toString(),
+        sessionDuration: session.duration,
+        hourlyRate: hourlyRate.toString(),
+        attendanceRate: (attendanceRate * 100).toFixed(2),
+        paymentPeriod: new Date().toISOString().slice(0, 7), // YYYY-MM format
+        status: 'pending'
+      };
+
+      if (existingPayment) {
+        // Update existing payment record
+        const [updated] = await db
+          .update(teacherPaymentRecords)
+          .set({ ...paymentData, updatedAt: new Date() })
+          .where(eq(teacherPaymentRecords.id, existingPayment.id))
+          .returning();
+        
+        return {
+          ...updated,
+          attendanceStats: {
+            totalStudents,
+            presentStudents,
+            lateStudents,
+            absentStudents,
+            attendanceRate: Number(updated.attendanceRate)
+          }
+        };
+      } else {
+        // Create new payment record
+        const [newPayment] = await db
+          .insert(teacherPaymentRecords)
+          .values(paymentData)
+          .returning();
+        
+        return {
+          ...newPayment,
+          attendanceStats: {
+            totalStudents,
+            presentStudents,
+            lateStudents,
+            absentStudents,
+            attendanceRate: Number(newPayment.attendanceRate)
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Error calculating attendance-based payment:', error);
+      throw new Error('Failed to calculate payment');
+    }
+  }
+
+  async getTeacherPaymentSummary(teacherId: number, period?: string): Promise<any> {
+    try {
+      let query = db.select({
+        id: teacherPaymentRecords.id,
+        sessionId: teacherPaymentRecords.sessionId,
+        baseAmount: teacherPaymentRecords.baseAmount,
+        attendanceBonus: teacherPaymentRecords.attendanceBonus,
+        attendancePenalty: teacherPaymentRecords.attendancePenalty,
+        finalAmount: teacherPaymentRecords.finalAmount,
+        attendanceRate: teacherPaymentRecords.attendanceRate,
+        paymentPeriod: teacherPaymentRecords.paymentPeriod,
+        status: teacherPaymentRecords.status,
+        sessionTitle: sessions.title,
+        sessionDate: sessions.scheduledAt
+      })
+      .from(teacherPaymentRecords)
+      .leftJoin(sessions, eq(teacherPaymentRecords.sessionId, sessions.id))
+      .where(eq(teacherPaymentRecords.teacherId, teacherId));
+
+      if (period) {
+        query = query.where(eq(teacherPaymentRecords.paymentPeriod, period));
+      }
+
+      const payments = await query.orderBy(desc(teacherPaymentRecords.createdAt));
+      
+      // Calculate totals
+      const totalBase = payments.reduce((sum, p) => sum + Number(p.baseAmount), 0);
+      const totalBonus = payments.reduce((sum, p) => sum + Number(p.attendanceBonus), 0);
+      const totalPenalty = payments.reduce((sum, p) => sum + Number(p.attendancePenalty), 0);
+      const totalFinal = payments.reduce((sum, p) => sum + Number(p.finalAmount), 0);
+      const averageAttendance = payments.length > 0 ? 
+        payments.reduce((sum, p) => sum + Number(p.attendanceRate), 0) / payments.length : 0;
+
+      return {
+        payments,
+        summary: {
+          totalBase,
+          totalBonus,
+          totalPenalty,
+          totalFinal,
+          averageAttendance: averageAttendance.toFixed(2),
+          totalSessions: payments.length,
+          period: period || 'all'
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching teacher payment summary:', error);
+      throw new Error('Failed to fetch payment summary');
+    }
+  }
+
   async getAbsenteeReport(teacherId: number): Promise<any[]> {
     try {
       // Get students who have been absent for 2+ consecutive sessions
