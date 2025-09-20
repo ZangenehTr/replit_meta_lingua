@@ -21,7 +21,9 @@ import {
   User,
   Hash,
   Bell,
-  BellOff
+  BellOff,
+  Video,
+  Phone
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +53,7 @@ interface Conversation {
   participants?: number;
   muted?: boolean;
   online?: boolean;
+  courseId?: number;
 }
 
 export default function StudentMessagesMobile() {
@@ -120,6 +123,38 @@ export default function StudentMessagesMobile() {
       });
     }
   });
+
+  // Create video room for group class
+  const createVideoRoom = useMutation({
+    mutationFn: async (courseId: number) => {
+      const response = await fetch(`/api/group-classes/${courseId}/video-room`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to create video room');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Navigate to video call page with room data
+      window.location.href = data.joinLink;
+    },
+    onError: () => {
+      toast({
+        title: t('common:error'),
+        description: 'Failed to start video call',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const handleStartVideoCall = () => {
+    if (selectedConversation?.courseId && selectedConversation.type === 'group') {
+      createVideoRoom.mutate(selectedConversation.courseId);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -376,6 +411,31 @@ export default function StudentMessagesMobile() {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Action Buttons for Group Classes */}
+          {selectedConversation?.type === 'group' && (
+            <div className="glass-card p-3 mb-2 flex items-center justify-center gap-3">
+              <button 
+                onClick={handleStartVideoCall}
+                disabled={createVideoRoom.isPending}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 transition-all duration-200 disabled:opacity-50"
+                data-testid="button-start-video-call"
+              >
+                <Video className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {createVideoRoom.isPending ? 'Starting...' : 'Start Video Class'}
+                </span>
+              </button>
+              
+              <button 
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+                data-testid="button-start-audio-call"
+              >
+                <Phone className="w-4 h-4" />
+                <span className="text-sm font-medium">Voice Call</span>
+              </button>
+            </div>
+          )}
 
           {/* Message Input */}
           <div className="glass-card p-3 flex items-center gap-2">

@@ -4,8 +4,8 @@
 // Fetch fresh TURN credentials from Metered.ca API
 export const getICEServers = async () => {
   try {
-    // API Key for the credential
-    const apiKey = 'f3d6e866f1744312d043ffc9271c35ce8914';
+    // API Key from environment variables for security
+    const apiKey = import.meta.env.VITE_METERED_API_KEY;
     
     // Fetch TURN Server Credentials from Metered.ca API
     const response = await fetch(

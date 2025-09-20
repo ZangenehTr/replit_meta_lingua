@@ -3460,6 +3460,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Group classes video room creation endpoint
+  app.post("/api/group-classes/:courseId/video-room", authenticateToken, requireRole(['Student', 'Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const { courseId } = req.params;
+      const userId = req.user.id;
+      
+      // Get or create group chat for the course
+      const groupChat = await storage.getOrCreateCourseGroupChat(parseInt(courseId), userId);
+      
+      if (!groupChat) {
+        return res.status(404).json({ error: 'Course not found or access denied' });
+      }
+      
+      // Generate unique room ID using course and timestamp
+      const roomId = `course-${courseId}-${Date.now()}`;
+      
+      // Create join link with room ID
+      const joinLink = `/callern-video-session?roomId=${roomId}&courseId=${courseId}&chatId=${groupChat.id}`;
+      
+      res.json({
+        roomId,
+        joinLink,
+        chatId: groupChat.id,
+        courseId: parseInt(courseId),
+        participants: groupChat.participants || []
+      });
+    } catch (error) {
+      console.error('Error creating group video room:', error);
+      res.status(500).json({ error: 'Failed to create video room' });
+    }
+  });
+
   // Mentor Statistics API (replacing hardcoded mentor stats)
   app.get("/api/mentor/stats", authenticateToken, async (req: any, res) => {
     try {
