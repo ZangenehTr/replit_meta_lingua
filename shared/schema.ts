@@ -2497,7 +2497,32 @@ export const insertMentorAssignmentSchema = createInsertSchema(mentorAssignments
 
 export const insertMentoringSessionSchema = createInsertSchema(mentoringSessions);
 
-// Insert schema for rooms
+// BRANCHES - Institute branch management
+export const branches = pgTable("branches", {
+  id: serial("id").primaryKey(),
+  instituteId: integer("institute_id").references(() => institutes.id).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  address: text("address").notNull(),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 100 }),
+  postalCode: varchar("postal_code", { length: 20 }),
+  country: varchar("country", { length: 100 }).notNull().default('Iran'),
+  phoneNumber: varchar("phone_number", { length: 20 }),
+  email: varchar("email", { length: 255 }),
+  managerName: varchar("manager_name", { length: 255 }),
+  managerPhoneNumber: varchar("manager_phone_number", { length: 20 }),
+  capacity: integer("capacity").default(100), // Maximum students
+  currentEnrollment: integer("current_enrollment").default(0),
+  facilities: text("facilities").array().default([]), // ['computer_lab', 'library', 'audio_visual']
+  operatingHours: jsonb("operating_hours"), // {'monday': '9:00-17:00', ...}
+  isActive: boolean("is_active").default(true),
+  establishedDate: date("established_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for branches and rooms
+export const insertBranchSchema = createInsertSchema(branches);
 export const insertRoomSchema = createInsertSchema(rooms);
 
 // Types
@@ -2702,6 +2727,8 @@ export type MentorAssignment = typeof mentorAssignments.$inferSelect;
 export type InsertMentorAssignment = z.infer<typeof insertMentorAssignmentSchema>;
 export type MentoringSession = typeof mentoringSessions.$inferSelect;
 export type InsertMentoringSession = z.infer<typeof insertMentoringSessionSchema>;
+export type Branch = typeof branches.$inferSelect;
+export type InsertBranch = z.infer<typeof insertBranchSchema>;
 
 // Import mood tables from separate schema file to avoid duplication
 export { 

@@ -21496,6 +21496,178 @@ Meta Lingua Academy`;
   });
 
   // ========================
+  // BRANCHES API - Institute branch management
+  // ========================
+
+  // Get all branches for an institute
+  app.get("/api/branches", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { branches } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const instituteId = req.query.instituteId ? parseInt(req.query.instituteId) : req.user.instituteId;
+      
+      const branchesData = await db
+        .select()
+        .from(branches)
+        .where(eq(branches.instituteId, instituteId))
+        .orderBy(branches.name);
+      
+      res.json(branchesData);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      res.status(500).json({ message: "Failed to fetch branches" });
+    }
+  });
+
+  // Get single branch by ID
+  app.get("/api/branches/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const branchId = parseInt(req.params.id);
+      const { branches } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const [branch] = await db
+        .select()
+        .from(branches)
+        .where(eq(branches.id, branchId));
+      
+      if (!branch) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+      
+      res.json(branch);
+    } catch (error) {
+      console.error('Error fetching branch:', error);
+      res.status(500).json({ message: "Failed to fetch branch" });
+    }
+  });
+
+  // Create new branch
+  app.post("/api/branches", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { branches, insertBranchSchema } = await import('@shared/schema');
+      
+      // Validate request data
+      const validatedData = insertBranchSchema.parse({
+        ...req.body,
+        instituteId: req.body.instituteId || req.user.instituteId,
+      });
+      
+      const [newBranch] = await db
+        .insert(branches)
+        .values(validatedData)
+        .returning();
+      
+      res.status(201).json(newBranch);
+    } catch (error) {
+      console.error('Error creating branch:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid branch data", errors: error.issues });
+      }
+      res.status(500).json({ message: "Failed to create branch" });
+    }
+  });
+
+  // Update branch
+  app.put("/api/branches/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const branchId = parseInt(req.params.id);
+      const { branches, insertBranchSchema } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      // Validate request data (excluding id and timestamps)
+      const validatedData = insertBranchSchema.omit({ 
+        id: true, 
+        createdAt: true, 
+        updatedAt: true 
+      }).parse(req.body);
+      
+      const [updatedBranch] = await db
+        .update(branches)
+        .set({ ...validatedData, updatedAt: new Date() })
+        .where(eq(branches.id, branchId))
+        .returning();
+      
+      if (!updatedBranch) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+      
+      res.json(updatedBranch);
+    } catch (error) {
+      console.error('Error updating branch:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid branch data", errors: error.issues });
+      }
+      res.status(500).json({ message: "Failed to update branch" });
+    }
+  });
+
+  // Delete branch
+  app.delete("/api/branches/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const branchId = parseInt(req.params.id);
+      const { branches } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const [deletedBranch] = await db
+        .delete(branches)
+        .where(eq(branches.id, branchId))
+        .returning();
+      
+      if (!deletedBranch) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+      
+      res.json({ message: "Branch deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting branch:', error);
+      res.status(500).json({ message: "Failed to delete branch" });
+    }
+  });
+
+  // Get branch statistics
+  app.get("/api/branches/:id/stats", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const branchId = parseInt(req.params.id);
+      const { branches, users, courses, enrollments } = await import('@shared/schema');
+      const { eq, and, count, sql } = await import('drizzle-orm');
+      
+      // Get branch info
+      const [branch] = await db
+        .select()
+        .from(branches)
+        .where(eq(branches.id, branchId));
+      
+      if (!branch) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+      
+      // Get basic statistics
+      // Note: This is a simplified implementation - in a real system, 
+      // you'd have branch_id columns in relevant tables
+      const stats = {
+        name: branch.name,
+        capacity: branch.capacity,
+        currentEnrollment: branch.currentEnrollment,
+        utilizationRate: branch.capacity > 0 ? (branch.currentEnrollment / branch.capacity * 100).toFixed(1) : 0,
+        facilities: branch.facilities,
+        isActive: branch.isActive,
+        managedBy: branch.managerName,
+        contactPhone: branch.phoneNumber,
+        contactEmail: branch.email,
+        operatingHours: branch.operatingHours,
+        establishedDate: branch.establishedDate
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching branch statistics:', error);
+      res.status(500).json({ message: "Failed to fetch branch statistics" });
+    }
+  });
+
+  // ========================
   // ERROR HANDLING - 404 for non-existent endpoints
   // ========================
   
