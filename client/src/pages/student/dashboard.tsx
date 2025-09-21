@@ -771,7 +771,7 @@ export default function StudentDashboard() {
                 {/* Teacher Card 1 */}
                 <div className="flex-shrink-0 w-72 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
                       S
                     </div>
                     <div className="flex-1">
@@ -794,7 +794,6 @@ export default function StudentDashboard() {
                     </div>
                     <div className="text-center">
                       <div className="text-sm font-bold text-gray-900">$25</div>
-                      <div className="text-xs text-gray-500">{t('student:perHour')}</div>
                     </div>
                   </div>
                   <Button size="sm" className="w-full bg-blue-500 hover:bg-blue-600">
@@ -806,7 +805,7 @@ export default function StudentDashboard() {
                 {/* Teacher Card 2 */}
                 <div className="flex-shrink-0 w-72 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
                       M
                     </div>
                     <div className="flex-1">
@@ -829,7 +828,6 @@ export default function StudentDashboard() {
                     </div>
                     <div className="text-center">
                       <div className="text-sm font-bold text-gray-900">$22</div>
-                      <div className="text-xs text-gray-500">{t('student:perHour')}</div>
                     </div>
                   </div>
                   <Button size="sm" className="w-full bg-green-500 hover:bg-green-600">
@@ -841,7 +839,7 @@ export default function StudentDashboard() {
                 {/* Teacher Card 3 - Partially Visible */}
                 <div className="flex-shrink-0 w-72 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-4 border border-pink-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                    <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
                       L
                     </div>
                     <div className="flex-1">
@@ -864,7 +862,6 @@ export default function StudentDashboard() {
                     </div>
                     <div className="text-center">
                       <div className="text-sm font-bold text-gray-900">$20</div>
-                      <div className="text-xs text-gray-500">{t('student:perHour')}</div>
                     </div>
                   </div>
                   <Button size="sm" className="w-full bg-pink-500 hover:bg-pink-600">
@@ -873,6 +870,17 @@ export default function StudentDashboard() {
                   </Button>
                 </div>
               </div>
+            </div>
+            
+            {/* View All Online Teachers Button */}
+            <div className="mt-4 text-center">
+              <Link href="/student/tutors">
+                <Button variant="outline" className="w-full max-w-sm">
+                  <Users className="w-4 h-4 mr-2" />
+                  {t('student:viewAllOnlineTeachers')}
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </div>
           </div>
         </motion.div>
