@@ -566,7 +566,7 @@ export default function StudentDashboard() {
           </div>
         </motion.div>
 
-        {/* Special Courses - Horizontal Carousel */}
+        {/* Classes Available for Registration - Horizontal Carousel */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -580,27 +580,42 @@ export default function StudentDashboard() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {t('student:specialCourses')}
+                    {t('student:classesAvailableForRegistration')}
                   </h3>
-                  <p className="text-gray-600 text-sm">
-                    {t('student:expertLedPrograms')}
-                  </p>
                 </div>
               </div>
-              <Badge className="bg-emerald-500 text-white px-3 py-1">
-                {t('student:advanced')}
-              </Badge>
+              <Link href="/student/courses">
+                <Button variant="outline" size="sm" className="text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+                  {t('student:viewAllClasses')}
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
             </div>
             
             {/* Horizontal Scrollable Cards */}
             <div className="overflow-x-auto">
               <div className="flex gap-4 pb-4" style={{width: 'max-content'}}>
                 {/* Course Card 1 */}
-                <div className="flex-shrink-0 w-80 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200">
+                <div className="flex-shrink-0 w-96 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-5 border border-emerald-200">
+                  {/* Teacher Info */}
+                  <Link href="/student/tutor/1">
+                    <div className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-white/50 rounded-lg p-2 -m-2 transition-colors">
+                      <Avatar className="w-12 h-12 border-2 border-emerald-200">
+                        <AvatarImage src="/api/placeholder/64/64" />
+                        <AvatarFallback className="bg-emerald-500 text-white font-semibold">SJ</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-sm">Sarah Johnson</p>
+                        <p className="text-gray-600 text-xs">Business English Expert</p>
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  {/* Class Info */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Badge className="text-xs bg-emerald-500 text-white">
-                        {t('student:advanced')}
+                      <Badge className="text-xs bg-blue-500 text-white">
+                        {t('student:online')}
                       </Badge>
                       <Badge className="text-xs bg-orange-500 text-white">
                         25% {t('student:discount')}
@@ -608,6 +623,7 @@ export default function StudentDashboard() {
                     </div>
                     <span className="text-gray-500 text-xs">4 {t('student:spotsLeft')}</span>
                   </div>
+                  
                   <h4 className="font-bold text-gray-900 mb-2">
                     {t('student:advancedBusinessEnglish')}
                   </h4>
@@ -627,11 +643,26 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Course Card 2 */}
-                <div className="flex-shrink-0 w-80 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                <div className="flex-shrink-0 w-96 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
+                  {/* Teacher Info */}
+                  <Link href="/student/tutor/2">
+                    <div className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-white/50 rounded-lg p-2 -m-2 transition-colors">
+                      <Avatar className="w-12 h-12 border-2 border-blue-200">
+                        <AvatarImage src="/api/placeholder/64/64" />
+                        <AvatarFallback className="bg-blue-500 text-white font-semibold">MC</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-sm">Mike Chen</p>
+                        <p className="text-gray-600 text-xs">IELTS Specialist</p>
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  {/* Class Info */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Badge className="text-xs bg-blue-500 text-white">
-                        {t('student:popular')}
+                      <Badge className="text-xs bg-purple-500 text-white">
+                        {t('student:inPerson')}
                       </Badge>
                       <Badge className="text-xs bg-red-500 text-white">
                         {t('student:limited')}
@@ -639,6 +670,7 @@ export default function StudentDashboard() {
                     </div>
                     <span className="text-gray-500 text-xs">2 {t('student:spotsLeft')}</span>
                   </div>
+                  
                   <h4 className="font-bold text-gray-900 mb-2">
                     {t('student:ieltsPreparation')}
                   </h4>
@@ -657,15 +689,34 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Course Card 3 - Partially Visible */}
-                <div className="flex-shrink-0 w-80 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                <div className="flex-shrink-0 w-96 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-200">
+                  {/* Teacher Info */}
+                  <Link href="/student/tutor/3">
+                    <div className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-white/50 rounded-lg p-2 -m-2 transition-colors">
+                      <Avatar className="w-12 h-12 border-2 border-purple-200">
+                        <AvatarImage src="/api/placeholder/64/64" />
+                        <AvatarFallback className="bg-purple-500 text-white font-semibold">LW</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-sm">Lisa Williams</p>
+                        <p className="text-gray-600 text-xs">Conversation Expert</p>
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  {/* Class Info */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-blue-500 text-white">
+                        {t('student:online')}
+                      </Badge>
                       <Badge className="text-xs bg-purple-500 text-white">
                         {t('student:premium')}
                       </Badge>
                     </div>
                     <span className="text-gray-500 text-xs">6 {t('student:spotsLeft')}</span>
                   </div>
+                  
                   <h4 className="font-bold text-gray-900 mb-2">
                     {t('student:conversationMastery')}
                   </h4>
