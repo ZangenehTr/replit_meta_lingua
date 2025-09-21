@@ -258,21 +258,17 @@ export interface Translations {
   dayStreak: string;
   weeklyProgress: string;
   ofGoal: string;
-  today: string;
   min: string;
   thisWeek: string;
   accuracy: string;
   skillsProgress: string;
   packages: string;
   sessionsTitle: string;
-  achievements: string;
-  homework: string;
   recentAchievements: string;
   callernPackages: string;
   activePackage: string;
   remaining: string;
   totalUsed: string;
-  thisMonth: string;
   purchaseNewPackage: string;
   conversationPractice: string;
   tomorrow: string;
@@ -459,7 +455,6 @@ export const translations: Record<Language, Translations> = {
     challenges: "Challenges",
     overview: "Overview",
     creditsPayment: "Credits & Payment",
-    aiStudyAssistant: "AI Study Assistant",
     courseProgressAndEnrollment: "Course Progress & Enrollment",
     featuredTutors: "Featured Tutors",
     welcomeBack: "Welcome back",
@@ -498,9 +493,7 @@ export const translations: Record<Language, Translations> = {
     
     // New Dashboard Keys
     viewAllTasks: "View All Tasks",
-    noPendingHomework: "No pending homework",
     greatJobStaying: "Great job staying on top of your tasks",
-    creditsPayment: "Credits & Payment",
     creditsAvailable: "Credits Available",
     buyMoreCredits: "Buy More Credits",
     securePaymentVia: "Secure payment via Shetab",
@@ -571,21 +564,17 @@ export const translations: Record<Language, Translations> = {
     dayStreak: "Day Streak",
     weeklyProgress: "Weekly Progress",
     ofGoal: "of Goal",
-    today: "Today",
     min: "min",
     thisWeek: "This Week",
     accuracy: "Accuracy",
     skillsProgress: "Skills Progress",
     packages: "Packages",
     sessionsTitle: "Sessions",
-    achievements: "Achievements",
-    homework: "Homework",
     recentAchievements: "Recent Achievements",
     callernPackages: "CallerN Packages",
     activePackage: "Active Package",
     remaining: "Remaining",
     totalUsed: "Total Used",
-    thisMonth: "This Month",
     purchaseNewPackage: "Purchase New Package",
     conversationPractice: "Conversation Practice",
     tomorrow: "Tomorrow",
@@ -772,7 +761,6 @@ export const translations: Record<Language, Translations> = {
     challenges: "چالش‌ها",
     overview: "نمای کلی",
     creditsPayment: "اعتبار و پرداخت",
-    aiStudyAssistant: "دستیار هوشمند مطالعه",
     courseProgressAndEnrollment: "پیشرفت دوره و ثبت‌نام",
     featuredTutors: "اساتید ویژه",
     welcomeBack: "خوش آمدید",
@@ -845,21 +833,17 @@ export const translations: Record<Language, Translations> = {
     dayStreak: "روز متوالی",
     weeklyProgress: "پیشرفت هفتگی",
     ofGoal: "از هدف",
-    today: "امروز",
     min: "دقیقه",
     thisWeek: "این هفته",
     accuracy: "دقت",
     skillsProgress: "پیشرفت مهارت‌ها",
     packages: "بسته‌ها",
     sessionsTitle: "جلسات",
-    achievements: "دستاوردها",
-    homework: "تکالیف",
     recentAchievements: "دستاوردهای اخیر",
     callernPackages: "بسته‌های کالرن",
     activePackage: "بسته فعال",
     remaining: "باقی‌مانده",
     totalUsed: "مجموع استفاده شده",
-    thisMonth: "این ماه",
     purchaseNewPackage: "خرید بسته جدید",
     conversationPractice: "تمرین مکالمه",
     tomorrow: "فردا",
@@ -1046,7 +1030,6 @@ export const translations: Record<Language, Translations> = {
     challenges: "التحديات",
     overview: "نظرة عامة",
     creditsPayment: "الأرصدة والدفع",
-    aiStudyAssistant: "مساعد الدراسة الذكي",
     courseProgressAndEnrollment: "تقدم الدورة والتسجيل",
     featuredTutors: "المدرسون المميزون",
     welcomeBack: "مرحباً بعودتك",
@@ -1107,21 +1090,17 @@ export const translations: Record<Language, Translations> = {
     dayStreak: "سلسلة يومية",
     weeklyProgress: "التقدم الأسبوعي",
     ofGoal: "من الهدف",
-    today: "اليوم",
     min: "دقيقة",
     thisWeek: "هذا الأسبوع",
     accuracy: "الدقة",
     skillsProgress: "تقدم المهارات",
     packages: "الحزم",
     sessionsTitle: "الجلسات",
-    achievements: "الإنجازات",
-    homework: "الواجبات المنزلية",
     recentAchievements: "الإنجازات الأخيرة",
     callernPackages: "حزم CallerN",
     activePackage: "الحزمة النشطة",
     remaining: "المتبقي",
     totalUsed: "إجمالي المستخدم",
-    thisMonth: "هذا الشهر",
     purchaseNewPackage: "شراء حزمة جديدة",
     conversationPractice: "ممارسة المحادثة",
     tomorrow: "غداً",
