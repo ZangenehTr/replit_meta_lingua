@@ -506,11 +506,12 @@ export default function StudentDashboard() {
           </div>
         </motion.div>
 
-        {/* Ready to Mingle Section with Toggle */}
+
+        {/* Social Learning Section with Toggle */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.15 }}
         >
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
@@ -520,22 +521,36 @@ export default function StudentDashboard() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {t('student:readyToMingle')}
+                    {t('student:socialLearning')}
                   </h3>
                   <p className="text-gray-600 text-sm">
-                    {t('student:connectWithBesties')}
+                    {t('student:socialLearningDesc')}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">{t('student:available')}</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" defaultChecked />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
             </div>
             
+            {/* Friends Counter Box */}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Heart className="w-6 h-6 text-purple-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{t('student:madeFriendsWith')}</p>
+                    <p className="text-xs text-gray-600">{t('student:studentsInvitedToClasses')}</p>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">12</div>
+                  <div className="text-xs text-gray-500">{t('student:students')}</div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-blue-50 rounded-xl p-4 text-center">
                 <MessageCircle className="w-8 h-8 text-blue-500 mx-auto mb-2" />
@@ -551,182 +566,265 @@ export default function StudentDashboard() {
           </div>
         </motion.div>
 
-        {/* Socializer Availability System */}
+        {/* Special Courses - Horizontal Carousel */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
         >
-          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900">
-                      {t('student:socializer')}
-                    </h3>
-                    <p className="text-gray-600 text-sm">
-                      {t('student:socializerDesc')}
-                    </p>
-                  </div>
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
+                  <Star className="w-6 h-6 text-white" />
                 </div>
-                <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
-                  {t('student:aiMatching')}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                <Button 
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                  onClick={() => {
-                    // Toggle socializer availability
-                  }}
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  {t('student:toggleAvailability')}
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-3 text-center">
-                {t('student:socializerNote')}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Special Classes & Online Teacher Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Special Classes - Admin Featured */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-300 shadow-xl h-full">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
-                      <Star className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">
-                        {t('student:specialCourses')}
-                      </h3>
-                      <p className="text-gray-600 text-sm">
-                        {t('student:expertLedPrograms')}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                    {t('student:advanced')}
-                  </Badge>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {t('student:specialCourses')}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {t('student:expertLedPrograms')}
+                  </p>
                 </div>
-                <div className="bg-white rounded-lg p-4 border border-emerald-200 mb-4">
-                  <div className="flex items-center justify-between mb-2">
+              </div>
+              <Badge className="bg-emerald-500 text-white px-3 py-1">
+                {t('student:advanced')}
+              </Badge>
+            </div>
+            
+            {/* Horizontal Scrollable Cards */}
+            <div className="overflow-x-auto">
+              <div className="flex gap-4 pb-4" style={{width: 'max-content'}}>
+                {/* Course Card 1 */}
+                <div className="flex-shrink-0 w-80 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Badge className="text-xs bg-emerald-500 text-white">
                         {t('student:advanced')}
                       </Badge>
                       <Badge className="text-xs bg-orange-500 text-white">
-                        25% {t('common:discount', 'تخفیف')}
+                        25% {t('student:discount')}
                       </Badge>
                     </div>
-                    <span className="text-gray-500 text-xs">4 {t('student:spotsLeft', 'جا باقی')}</span>
+                    <span className="text-gray-500 text-xs">4 {t('student:spotsLeft')}</span>
                   </div>
-                  <h4 className="font-bold text-gray-900 mb-1">
+                  <h4 className="font-bold text-gray-900 mb-2">
                     {t('student:advancedBusinessEnglish')}
                   </h4>
                   <p className="text-gray-600 text-sm mb-3">
                     {t('student:nativeSpeakerSessions')}
                   </p>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-900">750,000</span>
                       <span className="text-gray-400 text-sm line-through">1,000,000</span>
                       <span className="text-gray-600 text-sm">{t('student:toman')}</span>
                     </div>
-                    <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
-                      {t('student:enroll')}
-                    </Button>
                   </div>
+                  <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600">
+                    {t('student:enroll')}
+                  </Button>
                 </div>
-                <Button variant="outline" className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50">
-                  <Award className="w-4 h-4 mr-2" />
-                  {t('student:viewAllSpecial', 'مشاهده همه کلاس‌های ویژه')}
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          {/* Online Teacher Cards */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25 }}
-          >
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 shadow-xl h-full">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                      <Video className="w-5 h-5 text-white" />
+                {/* Course Card 2 */}
+                <div className="flex-shrink-0 w-80 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-blue-500 text-white">
+                        {t('student:popular')}
+                      </Badge>
+                      <Badge className="text-xs bg-red-500 text-white">
+                        {t('student:limited')}
+                      </Badge>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">
-                        {t('student:onlineTeachers')}
-                      </h3>
-                      <p className="text-gray-600 text-sm">
-                        {t('student:teachersAvailableCallern')}
-                      </p>
+                    <span className="text-gray-500 text-xs">2 {t('student:spotsLeft')}</span>
+                  </div>
+                  <h4 className="font-bold text-gray-900 mb-2">
+                    {t('student:ieltsPreparation')}
+                  </h4>
+                  <p className="text-gray-600 text-sm mb-3">
+                    {t('student:expertGuidance')}
+                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">900,000</span>
+                      <span className="text-gray-600 text-sm">{t('student:toman')}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-green-600 text-xs font-medium">3 {t('student:online')}</span>
-                  </div>
+                  <Button size="sm" className="w-full bg-blue-500 hover:bg-blue-600">
+                    {t('student:enroll')}
+                  </Button>
                 </div>
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-blue-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        S
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">Sarah Johnson</p>
-                        <p className="text-gray-500 text-xs">Native English • IELTS Expert</p>
-                      </div>
+
+                {/* Course Card 3 - Partially Visible */}
+                <div className="flex-shrink-0 w-80 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-purple-500 text-white">
+                        {t('student:premium')}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-gray-500">{t('student:available')}</span>
+                    <span className="text-gray-500 text-xs">6 {t('student:spotsLeft')}</span>
+                  </div>
+                  <h4 className="font-bold text-gray-900 mb-2">
+                    {t('student:conversationMastery')}
+                  </h4>
+                  <p className="text-gray-600 text-sm mb-3">
+                    {t('student:fluencyFocused')}
+                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">650,000</span>
+                      <span className="text-gray-600 text-sm">{t('student:toman')}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-blue-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                        M
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">Mike Chen</p>
-                        <p className="text-gray-500 text-xs">Business English • 5+ years</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-gray-500">{t('student:available')}</span>
-                    </div>
-                  </div>
+                  <Button size="sm" className="w-full bg-purple-500 hover:bg-purple-600">
+                    {t('student:enroll')}
+                  </Button>
                 </div>
-                <Button className="w-full bg-blue-500 hover:bg-blue-600">
-                  <Video className="w-4 h-4 mr-2" />
-                  {t('student:startCallernSession')}
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Online Teachers - Horizontal Carousel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                  <Video className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {t('student:onlineTeachers')}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {t('student:teachersAvailableCallern')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-green-600 text-xs font-medium">5 {t('student:online')}</span>
+              </div>
+            </div>
+            
+            {/* Horizontal Scrollable Teacher Cards */}
+            <div className="overflow-x-auto">
+              <div className="flex gap-4 pb-4" style={{width: 'max-content'}}>
+                {/* Teacher Card 1 */}
+                <div className="flex-shrink-0 w-72 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                      S
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900">Sarah Johnson</p>
+                      <p className="text-gray-600 text-sm">Native English • IELTS Expert</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs text-green-600">{t('student:available')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">4.9</div>
+                      <div className="text-xs text-gray-500">{t('student:rating')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">500+</div>
+                      <div className="text-xs text-gray-500">{t('student:sessions')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">$25</div>
+                      <div className="text-xs text-gray-500">{t('student:perHour')}</div>
+                    </div>
+                  </div>
+                  <Button size="sm" className="w-full bg-blue-500 hover:bg-blue-600">
+                    <Video className="w-4 h-4 mr-2" />
+                    {t('student:callNow')}
+                  </Button>
+                </div>
+
+                {/* Teacher Card 2 */}
+                <div className="flex-shrink-0 w-72 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                      M
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900">Mike Chen</p>
+                      <p className="text-gray-600 text-sm">Business English • 5+ years</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs text-green-600">{t('student:available')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">4.8</div>
+                      <div className="text-xs text-gray-500">{t('student:rating')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">300+</div>
+                      <div className="text-xs text-gray-500">{t('student:sessions')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">$22</div>
+                      <div className="text-xs text-gray-500">{t('student:perHour')}</div>
+                    </div>
+                  </div>
+                  <Button size="sm" className="w-full bg-green-500 hover:bg-green-600">
+                    <Video className="w-4 h-4 mr-2" />
+                    {t('student:callNow')}
+                  </Button>
+                </div>
+
+                {/* Teacher Card 3 - Partially Visible */}
+                <div className="flex-shrink-0 w-72 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-4 border border-pink-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                      L
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900">Lisa Williams</p>
+                      <p className="text-gray-600 text-sm">Conversation Expert • Speaking</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-xs text-green-600">{t('student:available')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">4.9</div>
+                      <div className="text-xs text-gray-500">{t('student:rating')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">450+</div>
+                      <div className="text-xs text-gray-500">{t('student:sessions')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-bold text-gray-900">$20</div>
+                      <div className="text-xs text-gray-500">{t('student:perHour')}</div>
+                    </div>
+                  </div>
+                  <Button size="sm" className="w-full bg-pink-500 hover:bg-pink-600">
+                    <Video className="w-4 h-4 mr-2" />
+                    {t('student:callNow')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Key Performance Indicators */}
         <motion.div 
