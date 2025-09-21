@@ -149,6 +149,10 @@
   "goodMorning": "Good Morning",
   "goodEvening": "Good Evening",
   "practice": "Practice",
+  "homework": "Homework",
+  "levelLabel": "Level {{level}}",
+  "ofTotalLessons": "of {{total}} lessons",
+  "weeklyGoalHours": "Goal: {{goal}}h",
   "upcomingSessions": "Upcoming Sessions",
   "searchMessages": "Search messages...",
   "noMessages": "No messages found",
@@ -417,5 +421,15 @@
   "classes": "Classes",
   "callern": "CallerN",
   "lexi": "Lexi",
-  "support": "Support"
+  "support": "Support",
+  "levelAssessment": "Level Assessment",
+  "smartLearningPath": "Create your personalized learning path after this smart assessment",
+  "placementTestDescription": "Take our 10-minute placement test to create your personalized learning path and find your perfect starting level",
+  "tenMinutes": "10 minutes",
+  "sevenQuestions": "7 questions",
+  "startPlacementTest": "Start",
+  "overview": "Overview",
+  "social": "Social",
+  "inPerson": "In-Person",
+  "online": "Online"
 }

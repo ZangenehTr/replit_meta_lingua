@@ -167,7 +167,7 @@ export default function StudentDashboardMobile() {
           icon={<Zap className="w-6 h-6 text-white" />}
           label={t('student:totalXP')}
           value={stats?.totalXP || 0}
-          subValue={`Level ${stats?.currentLevel || 1}`}
+          subValue={t('student:levelLabel', { level: stats?.currentLevel || 1 })}
           color="purple"
         />
         
@@ -175,7 +175,7 @@ export default function StudentDashboardMobile() {
           icon={<Trophy className="w-6 h-6 text-white" />}
           label={t('student:completed')}
           value={stats?.completedLessons || 0}
-          subValue={`of ${stats?.totalLessons || 0} lessons`}
+          subValue={t('student:ofTotalLessons', { completed: stats?.completedLessons || 0, total: stats?.totalLessons || 0 })}
           color="green"
         />
         
@@ -183,7 +183,7 @@ export default function StudentDashboardMobile() {
           icon={<Clock className="w-6 h-6 text-white" />}
           label={t('student:studyTime')}
           value={`${stats?.studyTimeThisWeek || 0}h`}
-          subValue={`Goal: ${stats?.weeklyGoalHours || 10}h`}
+          subValue={t('student:weeklyGoalHours', { goal: stats?.weeklyGoalHours || 10 })}
           color="blue"
         />
       </div>
@@ -231,16 +231,19 @@ export default function StudentDashboardMobile() {
                       <span>{t('student:sevenQuestions')}</span>
                     </div>
                   </div>
-                  <GlossyButton 
-                    variant="warning" 
-                    fullWidth 
-                    className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
-                  >
-                    <Link href="/mst" className="flex items-center justify-center gap-2 w-full">
-                      <Zap className="w-5 h-5" />
-                      {t('student:startPlacementTest')}
-                    </Link>
-                  </GlossyButton>
+                  <Link href="/mst" data-testid="link-start-placement-test">
+                    <GlossyButton 
+                      variant="warning" 
+                      fullWidth 
+                      asChild
+                      className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 flex items-center justify-center gap-2"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <Zap className="w-5 h-5" />
+                        {t('student:startPlacementTest')}
+                      </span>
+                    </GlossyButton>
+                  </Link>
                 </div>
               </GlossyCard>
             )}
@@ -470,19 +473,23 @@ export default function StudentDashboardMobile() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-3">
-              <GlossyButton variant="primary" fullWidth>
-                <Link href="/student/courses-mobile" className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  {t('student:browseCourses')}
-                </Link>
-              </GlossyButton>
+              <Link href="/student/courses-mobile" data-testid="link-browse-courses">
+                <GlossyButton variant="primary" fullWidth asChild className="flex items-center gap-2">
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    {t('student:browseCourses')}
+                  </span>
+                </GlossyButton>
+              </Link>
               
-              <GlossyButton variant="success" fullWidth>
-                <Link href="/callern-mobile" className="flex items-center gap-2">
-                  <Video className="w-5 h-5" />
-                  {t('student:startCallern')}
-                </Link>
-              </GlossyButton>
+              <Link href="/callern-mobile" data-testid="link-start-callern">
+                <GlossyButton variant="success" fullWidth asChild className="flex items-center gap-2">
+                  <span className="flex items-center gap-2">
+                    <Video className="w-5 h-5" />
+                    {t('student:startCallern')}
+                  </span>
+                </GlossyButton>
+              </Link>
             </div>
           </motion.div>
         )}
@@ -498,8 +505,8 @@ export default function StudentDashboardMobile() {
             {/* Header with navigation link */}
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-white font-bold text-lg">{t('student:myClasses')}</h3>
-              <Link href="/student/sessions">
-                <GlossyButton size="sm" variant="outline">
+              <Link href="/student/sessions" data-testid="link-view-full-class-history-mobile">
+                <GlossyButton size="sm" variant="outline" className="flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" />
                   {t('student:viewFullClassHistory')}
                 </GlossyButton>
@@ -525,13 +532,13 @@ export default function StudentDashboardMobile() {
                 <GlossyProgress value={75} showPercentage={true} />
                 
                 <div className="grid grid-cols-3 gap-2">
-                  <GlossyButton size="sm" variant="primary">
+                  <GlossyButton size="sm" variant="primary" data-testid="button-join-online-class-mobile">
                     {t('student:joinClassButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline">
+                  <GlossyButton size="sm" variant="outline" data-testid="button-view-online-homework-mobile">
                     {t('student:viewHomeworkButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline">
+                  <GlossyButton size="sm" variant="outline" data-testid="button-previous-session-videos-mobile">
                     {t('student:previousSessionVideos')}
                   </GlossyButton>
                 </div>
@@ -556,12 +563,13 @@ export default function StudentDashboardMobile() {
                 
                 <GlossyProgress value={60} showPercentage={true} />
                 
+                {/* Conditional Logic: In-Person Class Actions */}
                 <div className="grid grid-cols-2 gap-2">
-                  <GlossyButton size="sm" variant="primary">
-                    {t('student:practiceNow')}
+                  <GlossyButton size="sm" variant="primary" data-testid="button-practice-inperson-mobile">
+                    {t('student:practice')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline">
-                    {t('student:viewHomeworkButton')}
+                  <GlossyButton size="sm" variant="outline" data-testid="button-homework-inperson-mobile">
+                    {t('student:homework')}
                   </GlossyButton>
                 </div>
               </div>
@@ -586,13 +594,13 @@ export default function StudentDashboardMobile() {
                 <GlossyProgress value={67} showPercentage={true} />
                 
                 <div className="grid grid-cols-3 gap-2">
-                  <GlossyButton size="sm" variant="primary">
+                  <GlossyButton size="sm" variant="primary" data-testid="button-join-additional-class-mobile">
                     {t('student:joinClassButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline">
+                  <GlossyButton size="sm" variant="outline" data-testid="button-view-additional-homework-mobile">
                     {t('student:viewHomeworkButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline">
+                  <GlossyButton size="sm" variant="outline" data-testid="button-additional-session-videos-mobile">
                     {t('student:previousSessionVideos')}
                   </GlossyButton>
                 </div>

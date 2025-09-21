@@ -170,6 +170,10 @@
     "lessonNotFound": "درس پیدا نشد"
   },
   "practice": "تمرین",
+  "homework": "تکالیف",
+  "levelLabel": "سطح {{level}}",
+  "ofTotalLessons": "از {{total}} درس",
+  "weeklyGoalHours": "هدف: {{goal}} ساعت",
   "upcomingSessions": "جلسات پیش رو",
   "searchMessages": "جستجوی پیام‌ها",
   "noMessages": "پیامی وجود ندارد",
@@ -488,5 +492,11 @@
   "classes": "کلاس‌ها",
   "callern": "CallerN",
   "lexi": "لکسی",
-  "support": "پشتیبانی"
+  "support": "پشتیبانی",
+  "overview": "بررسی کلی",
+  "social": "اجتماعی",
+  "completed": "تکمیل شده",
+  "studyTime": "زمان مطالعه",
+  "inPerson": "حضوری",
+  "online": "آنلاین"
 }

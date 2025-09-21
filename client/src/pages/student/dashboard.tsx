@@ -101,6 +101,20 @@ interface PlacementTestStatus {
   message: string;
 }
 
+interface ClassSession {
+  id: string;
+  courseName: string;
+  deliveryMode: 'online' | 'in-person';
+  nextSession: string;
+  progress: number;
+  level: string;
+  badge: string;
+  sessions?: string;
+  attendance?: string;
+  speakingTime?: string;
+  minutes?: string;
+}
+
 export default function StudentDashboard() {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -236,7 +250,7 @@ export default function StudentDashboard() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-white">
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-menu">
                 <Menu className="h-6 w-6" />
               </Button>
               <div className="flex items-center gap-2">
@@ -247,10 +261,10 @@ export default function StudentDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-white">
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-calendar">
                 <Calendar className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="relative text-white">
+              <Button variant="ghost" size="icon" className="relative text-white" data-testid="button-notifications">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
               </Button>
@@ -335,7 +349,7 @@ export default function StudentDashboard() {
                     className="w-full bg-gradient-to-r from-pink-500 to-blue-500 hover:from-pink-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl"
                     asChild
                   >
-                    <Link href="/mst">
+                    <Link href="/mst" data-testid="link-start-placement-test">
                       {t('student:startPlacementTest')}
                     </Link>
                   </Button>
@@ -343,6 +357,7 @@ export default function StudentDashboard() {
                   <Button 
                     className="w-full bg-gray-400 text-white font-bold py-3 rounded-xl"
                     disabled
+                    data-testid="button-placement-test-disabled"
                   >
                     {t('student:weeklyLimitReached')}
                   </Button>
@@ -377,105 +392,145 @@ export default function StudentDashboard() {
                 <Badge className="bg-blue-500 text-white px-3 py-1">
                   3 {t('student:active')}
                 </Badge>
-                <Link href="/student/sessions">
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" asChild>
+                  <Link href="/student/sessions" data-testid="link-view-full-class-history">
                     <ChevronRight className="w-4 h-4" />
                     {t('student:viewFullClassHistory')}
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
             
             <div className="space-y-3">
-              {/* Active Class 1 - Online Class */}
-              <details className="group">
-                <summary className="flex items-center justify-between p-4 bg-blue-50 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                    <div>
-                      <span className="font-medium text-gray-900">{t('student:generalEnglishA2')}</span>
-                      <p className="text-xs text-gray-600">{t('student:nextSession')}: Today 14:00</p>
-                      <Badge className="bg-green-100 text-green-800 text-xs mt-1 inline-block">{t('student:online')}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </div>
-                </summary>
-                <div className="mt-3 p-4 bg-white rounded-lg border border-blue-200">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">{t('student:progress')}</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-500 h-2 rounded-full" style={{width: '75%'}}></div>
-                        </div>
-                        <span className="text-xs font-bold text-blue-600">75%</span>
+              {/* Render Active Classes with Conditional Logic */}
+              {[
+                {
+                  id: '1',
+                  courseName: t('student:generalEnglishA2'),
+                  deliveryMode: 'online' as const,
+                  nextSession: 'Today 14:00',
+                  progress: 75,
+                  level: 'A2',
+                  badge: t('student:online'),
+                  attendance: '18/24',
+                  sessions: t('student:sessions')
+                },
+                {
+                  id: '2',
+                  courseName: t('student:conversationClass'),
+                  deliveryMode: 'in-person' as const,
+                  nextSession: 'Tomorrow 16:30',
+                  progress: 60,
+                  level: 'B1',
+                  badge: t('student:inPerson'),
+                  speakingTime: '45',
+                  minutes: t('student:minutes')
+                }
+              ].map((classSession: ClassSession) => (
+                <details key={classSession.id} className="group">
+                  <summary className={cn(
+                    "flex items-center justify-between p-4 rounded-xl cursor-pointer transition-colors",
+                    classSession.deliveryMode === 'online' 
+                      ? "bg-blue-50 hover:bg-blue-100" 
+                      : "bg-green-50 hover:bg-green-100"
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-3 h-3 rounded-full",
+                        classSession.deliveryMode === 'online' 
+                          ? "bg-blue-500 animate-pulse" 
+                          : "bg-green-500"
+                      )}></div>
+                      <div>
+                        <span className="font-medium text-gray-900">{classSession.courseName}</span>
+                        <p className="text-xs text-gray-600">{t('student:nextSession')}: {classSession.nextSession}</p>
+                        <Badge className={cn(
+                          "text-xs mt-1 inline-block",
+                          classSession.deliveryMode === 'online'
+                            ? "bg-green-100 text-green-800"
+                            : "bg-blue-100 text-blue-800"
+                        )}>
+                          {classSession.badge}
+                        </Badge>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">{t('student:attendance')}</p>
-                      <p className="text-sm font-bold text-gray-900">18/24 {t('student:sessions')}</p>
+                    <div className="flex items-center gap-2">
+                      {classSession.deliveryMode === 'in-person' && (
+                        <Badge className="bg-green-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
+                          2
+                        </Badge>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
                     </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
-                      {t('student:joinClassButton')}
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      {t('student:viewHomeworkButton')}
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      {t('student:previousSessionVideos')}
-                    </Button>
-                  </div>
-                </div>
-              </details>
-
-              {/* Active Class 2 - In-Person Class */}
-              <details className="group">
-                <summary className="flex items-center justify-between p-4 bg-green-50 rounded-xl cursor-pointer hover:bg-green-100 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <div>
-                      <span className="font-medium text-gray-900">{t('student:conversationClass')}</span>
-                      <p className="text-xs text-gray-600">{t('student:nextSession')}: Tomorrow 16:30</p>
-                      <Badge className="bg-blue-100 text-blue-800 text-xs mt-1 inline-block">{t('student:inPerson')}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-green-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center p-0">
-                      2
-                    </Badge>
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </div>
-                </summary>
-                <div className="mt-3 p-4 bg-white rounded-lg border border-green-200">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">{t('student:progress')}</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-500 h-2 rounded-full" style={{width: '60%'}}></div>
+                  </summary>
+                  <div className={cn(
+                    "mt-3 p-4 bg-white rounded-lg border",
+                    classSession.deliveryMode === 'online' ? "border-blue-200" : "border-green-200"
+                  )}>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">{t('student:progress')}</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={cn(
+                                "h-2 rounded-full",
+                                classSession.deliveryMode === 'online' ? "bg-blue-500" : "bg-green-500"
+                              )} 
+                              style={{width: `${classSession.progress}%`}}
+                            ></div>
+                          </div>
+                          <span className={cn(
+                            "text-xs font-bold",
+                            classSession.deliveryMode === 'online' ? "text-blue-600" : "text-green-600"
+                          )}>
+                            {classSession.progress}%
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-green-600">60%</span>
+                      </div>
+                      <div>
+                        {classSession.deliveryMode === 'online' ? (
+                          <>
+                            <p className="text-xs text-gray-500 mb-1">{t('student:attendance')}</p>
+                            <p className="text-sm font-bold text-gray-900">{classSession.attendance} {classSession.sessions}</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs text-gray-500 mb-1">{t('student:speakingTime')}</p>
+                            <p className="text-sm font-bold text-gray-900">{classSession.speakingTime} {classSession.minutes}</p>
+                          </>
+                        )}
                       </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">{t('student:speakingTime')}</p>
-                      <p className="text-sm font-bold text-gray-900">45 {t('student:minutes')}</p>
-                    </div>
+                    
+                    {/* Conditional Logic: Delivery Mode-Based Action Buttons */}
+                    {classSession.deliveryMode === 'online' ? (
+                      /* Online Classes: 3 buttons (Join Class, View Homework, Previous Session Videos) */
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" data-testid="button-join-online-class">
+                          {t('student:joinClassButton')}
+                        </Button>
+                        <Button size="sm" variant="outline" data-testid="button-view-online-homework">
+                          {t('student:viewHomeworkButton')}
+                        </Button>
+                        <Button size="sm" variant="outline" data-testid="button-previous-session-videos">
+                          {t('student:previousSessionVideos')}
+                        </Button>
+                      </div>
+                    ) : (
+                      /* In-Person Classes: 2 buttons (Practice, Homework) */
+                      <div className="flex gap-2">
+                        <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" data-testid="button-practice-inperson-class">
+                          {t('student:practice')}
+                        </Button>
+                        <Button size="sm" variant="outline" data-testid="button-homework-inperson-class">
+                          {t('student:homework')}
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white">
-                      {t('student:practiceNow')}
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      {t('student:viewHomeworkButton')}
-                    </Button>
-                  </div>
-                </div>
-              </details>
+                </details>
+              ))}
 
               {/* More Classes Collapsed */}
               <details className="group">
@@ -509,11 +564,11 @@ export default function StudentDashboard() {
                       <Badge variant="outline" className="text-xs">B1</Badge>
                     </div>
                   </div>
-                  <Link href="/student/courses">
-                    <Button variant="outline" className="w-full mt-3" size="sm">
+                  <Button variant="outline" className="w-full mt-3" size="sm" asChild>
+                    <Link href="/student/courses" data-testid="link-view-all-courses">
                       {t('student:viewAllCourses')}
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </details>
             </div>
@@ -1306,7 +1361,7 @@ export default function StudentDashboard() {
                     <Video className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900">{t('student:liveSessions')}</div>
+                    <div className="font-medium text-gray-900">{t('student:sessions')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

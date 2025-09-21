@@ -154,6 +154,7 @@ interface GlossyButtonProps {
   fullWidth?: boolean;
   disabled?: boolean;
   className?: string;
+  asChild?: boolean;
 }
 
 export function GlossyButton({
@@ -163,7 +164,8 @@ export function GlossyButton({
   size = 'md',
   fullWidth = false,
   disabled = false,
-  className = ''
+  className = '',
+  asChild = false
 }: GlossyButtonProps) {
   const variantClasses = {
     primary: 'bg-gradient-to-r from-purple-500 to-pink-500',
@@ -179,12 +181,18 @@ export function GlossyButton({
     lg: 'px-6 py-3 text-lg min-h-[52px]'
   };
 
+  const Component = asChild ? motion.span : motion.button;
+  const componentProps = asChild ? {} : {
+    onClick,
+    disabled,
+    type: 'button' as const
+  };
+
   return (
-    <motion.button
+    <Component
       whileHover={{ scale: disabled ? 1 : 1.02 }}
       whileTap={{ scale: disabled ? 1 : 0.98 }}
-      onClick={onClick}
-      disabled={disabled}
+      {...componentProps}
       className={`
         glass-button touch-ripple
         ${variantClasses[variant]}
@@ -195,7 +203,7 @@ export function GlossyButton({
       `}
     >
       {children}
-    </motion.button>
+    </Component>
   );
 }
 
