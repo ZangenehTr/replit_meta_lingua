@@ -297,9 +297,12 @@ export default function StudentDashboard() {
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {t('student:placementTestRequired')}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    {t('student:levelAssessment')}
                   </h3>
+                  <p className="text-gray-600 text-sm mb-3">
+                    {t('student:smartLearningPath')}
+                  </p>
                   <p className="text-gray-600 text-sm mb-4">
                     {t('student:placementTestDescription')}
                   </p>
@@ -311,7 +314,6 @@ export default function StudentDashboard() {
 
               <div className="bg-gray-50 rounded-xl p-4 mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-gray-900">{t('student:levelAssessment')}</h4>
                   <Badge className="bg-green-500 text-white text-xs font-bold px-2 py-1">
                     {t('student:free')}
                   </Badge>
@@ -320,11 +322,11 @@ export default function StudentDashboard() {
                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span>25 mins</span>
+                    <span>{t('student:tenMinutes')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    <span>50 questions</span>
+                    <span>{t('student:sevenQuestions')}</span>
                   </div>
                 </div>
 
@@ -371,13 +373,21 @@ export default function StudentDashboard() {
                   </p>
                 </div>
               </div>
-              <Badge className="bg-blue-500 text-white px-3 py-1">
-                3 {t('student:active')}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-blue-500 text-white px-3 py-1">
+                  3 {t('student:active')}
+                </Badge>
+                <Link href="/student/sessions">
+                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    <ChevronRight className="w-4 h-4" />
+                    {t('student:viewFullClassHistory')}
+                  </Button>
+                </Link>
+              </div>
             </div>
             
             <div className="space-y-3">
-              {/* Active Class 1 */}
+              {/* Active Class 1 - Online Class */}
               <details className="group">
                 <summary className="flex items-center justify-between p-4 bg-blue-50 rounded-xl cursor-pointer hover:bg-blue-100 transition-colors">
                   <div className="flex items-center gap-3">
@@ -385,10 +395,10 @@ export default function StudentDashboard() {
                     <div>
                       <span className="font-medium text-gray-900">{t('student:generalEnglishA2')}</span>
                       <p className="text-xs text-gray-600">{t('student:nextSession')}: Today 14:00</p>
+                      <Badge className="bg-green-100 text-green-800 text-xs mt-1 inline-block">{t('student:online')}</Badge>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-500 text-white text-xs">Live</Badge>
                     <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
                   </div>
                 </summary>
@@ -408,18 +418,21 @@ export default function StudentDashboard() {
                       <p className="text-sm font-bold text-gray-900">18/24 {t('student:sessions')}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
-                      {t('student:joinClass')}
+                      {t('student:joinClassButton')}
                     </Button>
                     <Button size="sm" variant="outline">
-                      {t('student:viewHomework')}
+                      {t('student:viewHomeworkButton')}
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      {t('student:previousSessionVideos')}
                     </Button>
                   </div>
                 </div>
               </details>
 
-              {/* Active Class 2 */}
+              {/* Active Class 2 - In-Person Class */}
               <details className="group">
                 <summary className="flex items-center justify-between p-4 bg-green-50 rounded-xl cursor-pointer hover:bg-green-100 transition-colors">
                   <div className="flex items-center gap-3">
@@ -427,6 +440,7 @@ export default function StudentDashboard() {
                     <div>
                       <span className="font-medium text-gray-900">{t('student:conversationClass')}</span>
                       <p className="text-xs text-gray-600">{t('student:nextSession')}: Tomorrow 16:30</p>
+                      <Badge className="bg-blue-100 text-blue-800 text-xs mt-1 inline-block">{t('student:inPerson')}</Badge>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -453,11 +467,11 @@ export default function StudentDashboard() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" className="bg-green-500 hover:green-600 text-white">
+                    <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white">
                       {t('student:practiceNow')}
                     </Button>
                     <Button size="sm" variant="outline">
-                      {t('student:viewRecordings')}
+                      {t('student:viewHomeworkButton')}
                     </Button>
                   </div>
                 </div>

@@ -212,12 +212,25 @@ export default function StudentDashboardMobile() {
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
                     <Target className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-white font-bold text-lg mb-2">
-                    {t('student:placementTestRequired')}
+                  <h3 className="text-white font-bold text-xl mb-2">
+                    {t('student:levelAssessment')}
                   </h3>
-                  <p className="text-white/80 text-sm mb-4">
+                  <p className="text-white/80 text-sm mb-2">
+                    {t('student:smartLearningPath')}
+                  </p>
+                  <p className="text-white/80 text-sm mb-3">
                     {t('student:placementTestDescription')}
                   </p>
+                  <div className="flex items-center justify-center gap-4 text-white/70 text-xs mb-4">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{t('student:tenMinutes')}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Target className="w-3 h-3" />
+                      <span>{t('student:sevenQuestions')}</span>
+                    </div>
+                  </div>
                   <GlossyButton 
                     variant="warning" 
                     fullWidth 
@@ -482,31 +495,109 @@ export default function StudentDashboardMobile() {
             exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
-            {courses.map((course: any, index: number) => (
-              <GlossyCard key={index} interactive>
+            {/* Header with navigation link */}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-white font-bold text-lg">{t('student:myClasses')}</h3>
+              <Link href="/student/sessions">
+                <GlossyButton size="sm" variant="outline">
+                  <ChevronRight className="w-4 h-4" />
+                  {t('student:viewFullClassHistory')}
+                </GlossyButton>
+              </Link>
+            </div>
+
+            {/* Online Class Example */}
+            <GlossyCard>
+              <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="text-white font-bold">{course.name}</h4>
-                    <p className="text-white/60 text-sm mt-1">{course.description}</p>
-                    <div className="flex items-center gap-3 mt-3">
-                      <Badge variant="success" size="sm">
-                        {course.level}
+                    <h4 className="text-white font-bold">{t('student:generalEnglishA2')}</h4>
+                    <p className="text-white/60 text-sm mt-1">{t('student:nextSession')}: Today 14:00</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge className="bg-green-500/20 text-green-300 text-xs">
+                        {t('student:online')}
                       </Badge>
-                      <span className="text-white/50 text-sm">
-                        {course.completedLessons}/{course.totalLessons} lessons
-                      </span>
+                      <Badge variant="success" size="sm">A2</Badge>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-white/40" />
                 </div>
-                <div className="mt-3">
-                  <GlossyProgress
-                    value={(course.completedLessons / course.totalLessons) * 100}
-                    showPercentage={true}
-                  />
+                
+                <GlossyProgress value={75} showPercentage={true} />
+                
+                <div className="grid grid-cols-3 gap-2">
+                  <GlossyButton size="sm" variant="primary">
+                    {t('student:joinClassButton')}
+                  </GlossyButton>
+                  <GlossyButton size="sm" variant="outline">
+                    {t('student:viewHomeworkButton')}
+                  </GlossyButton>
+                  <GlossyButton size="sm" variant="outline">
+                    {t('student:previousSessionVideos')}
+                  </GlossyButton>
                 </div>
-              </GlossyCard>
-            ))}
+              </div>
+            </GlossyCard>
+
+            {/* In-Person Class Example */}
+            <GlossyCard>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-white font-bold">{t('student:conversationClass')}</h4>
+                    <p className="text-white/60 text-sm mt-1">{t('student:nextSession')}: Tomorrow 16:30</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge className="bg-blue-500/20 text-blue-300 text-xs">
+                        {t('student:inPerson')}
+                      </Badge>
+                      <Badge variant="success" size="sm">B1</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <GlossyProgress value={60} showPercentage={true} />
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <GlossyButton size="sm" variant="primary">
+                    {t('student:practiceNow')}
+                  </GlossyButton>
+                  <GlossyButton size="sm" variant="outline">
+                    {t('student:viewHomeworkButton')}
+                  </GlossyButton>
+                </div>
+              </div>
+            </GlossyCard>
+
+            {/* Additional Course */}
+            <GlossyCard>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-white font-bold">{t('student:ieltsPreparation')}</h4>
+                    <p className="text-white/60 text-sm mt-1">8/12 {t('student:sessions')} completed</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge className="bg-green-500/20 text-green-300 text-xs">
+                        {t('student:online')}
+                      </Badge>
+                      <Badge variant="success" size="sm">B2</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <GlossyProgress value={67} showPercentage={true} />
+                
+                <div className="grid grid-cols-3 gap-2">
+                  <GlossyButton size="sm" variant="primary">
+                    {t('student:joinClassButton')}
+                  </GlossyButton>
+                  <GlossyButton size="sm" variant="outline">
+                    {t('student:viewHomeworkButton')}
+                  </GlossyButton>
+                  <GlossyButton size="sm" variant="outline">
+                    {t('student:previousSessionVideos')}
+                  </GlossyButton>
+                </div>
+              </div>
+            </GlossyCard>
           </motion.div>
         )}
 
