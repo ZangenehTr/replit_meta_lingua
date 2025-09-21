@@ -1,6 +1,6 @@
 {
   "dashboard": {
-    "title": "داشبورد دانشجو",
+    "title": "داشبورد زبان آموز",
     "welcome": "به سامانه یادگیری خوش آمدید",
     "myCourses": "دوره‌های من",
     "progress": "پیشرفت من",
@@ -88,8 +88,8 @@
   "socialLearning": "یادگیری اجتماعی",
   "socialLearningDesc": "با همکلاسی‌ها ارتباط برقرار کرده و یاد بگیرید",
   "madeFriendsWith": "دوست شده با",
-  "studentsInvitedToClasses": "دانشجویان دعوت شده به کلاس‌های شما",
-  "students": "دانشجو",
+  "studentsInvitedToClasses": "زبان آموزان دعوت شده به کلاس‌های شما",
+  "students": "زبان آموز",
   "discount": "تخفیف",
   "spotsLeft": "جای باقی‌مانده",
   "popular": "محبوب",
@@ -123,7 +123,7 @@
     "noCoursesDescription": "شما هنوز در هیچ دوره ویدیویی ثبت‌نام نکرده‌اید",
     "browseCourses": "مشاهده دوره‌ها",
     "lessons": "درس",
-    "students": "دانشجو",
+    "students": "زبان آموز",
     "progress": "پیشرفت",
     "courseLessons": "درس‌های دوره",
     "free": "رایگان",

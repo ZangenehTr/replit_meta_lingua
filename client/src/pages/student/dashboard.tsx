@@ -600,7 +600,7 @@ export default function StudentDashboard() {
                   {/* Teacher Info */}
                   <Link href="/student/tutor/1">
                     <div className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-white/50 rounded-lg p-2 -m-2 transition-colors">
-                      <Avatar className="w-12 h-12 border-2 border-emerald-200">
+                      <Avatar className="w-24 h-24 border-2 border-emerald-200 rounded-lg">
                         <AvatarImage src="/api/placeholder/64/64" />
                         <AvatarFallback className="bg-emerald-500 text-white font-semibold">SJ</AvatarFallback>
                       </Avatar>
@@ -647,7 +647,7 @@ export default function StudentDashboard() {
                   {/* Teacher Info */}
                   <Link href="/student/tutor/2">
                     <div className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-white/50 rounded-lg p-2 -m-2 transition-colors">
-                      <Avatar className="w-12 h-12 border-2 border-blue-200">
+                      <Avatar className="w-24 h-24 border-2 border-blue-200 rounded-lg">
                         <AvatarImage src="/api/placeholder/64/64" />
                         <AvatarFallback className="bg-blue-500 text-white font-semibold">MC</AvatarFallback>
                       </Avatar>
@@ -693,7 +693,7 @@ export default function StudentDashboard() {
                   {/* Teacher Info */}
                   <Link href="/student/tutor/3">
                     <div className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-white/50 rounded-lg p-2 -m-2 transition-colors">
-                      <Avatar className="w-12 h-12 border-2 border-purple-200">
+                      <Avatar className="w-24 h-24 border-2 border-purple-200 rounded-lg">
                         <AvatarImage src="/api/placeholder/64/64" />
                         <AvatarFallback className="bg-purple-500 text-white font-semibold">LW</AvatarFallback>
                       </Avatar>
@@ -771,7 +771,7 @@ export default function StudentDashboard() {
                 {/* Teacher Card 1 */}
                 <div className="flex-shrink-0 w-72 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                    <div className="w-32 h-32 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
                       S
                     </div>
                     <div className="flex-1">
@@ -805,7 +805,7 @@ export default function StudentDashboard() {
                 {/* Teacher Card 2 */}
                 <div className="flex-shrink-0 w-72 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                    <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-purple-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
                       M
                     </div>
                     <div className="flex-1">
@@ -839,7 +839,7 @@ export default function StudentDashboard() {
                 {/* Teacher Card 3 - Partially Visible */}
                 <div className="flex-shrink-0 w-72 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-4 border border-pink-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                    <div className="w-32 h-32 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
                       L
                     </div>
                     <div className="flex-1">
