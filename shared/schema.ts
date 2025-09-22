@@ -5091,6 +5091,134 @@ export const taskGenerationRequests = pgTable("task_generation_requests", {
 });
 
 // ============================================================================
+// BOOK E-COMMERCE SYSTEM SCHEMA
+// ============================================================================
+
+// Book categories with hierarchical structure
+export const book_categories = pgTable("book_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  parent_id: integer("parent_id").references(() => book_categories.id), // Self-reference for hierarchy
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Books table with pricing and availability
+export const books = pgTable("books", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  author: text("author").notNull(),
+  isbn: text("isbn").unique(),
+  category_id: integer("category_id").references(() => book_categories.id).notNull(),
+  price_minor: integer("price_minor").notNull(), // Price in smallest currency unit (e.g., cents)
+  currency_code: text("currency_code").notNull().default("USD"), // ISO 4217 currency code
+  is_free: boolean("is_free").default(false),
+  pdf_file_path: text("pdf_file_path"), // Path to PDF file
+  hardcopy_available: boolean("hardcopy_available").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Book assets (additional files, images, etc.)
+export const book_assets = pgTable("book_assets", {
+  id: serial("id").primaryKey(),
+  book_id: integer("book_id").references(() => books.id).notNull(),
+  file_path: text("file_path").notNull(),
+  file_type: text("file_type").notNull(), // pdf, image, audio, video, etc.
+  file_size: integer("file_size"), // Size in bytes
+  upload_date: timestamp("upload_date").defaultNow()
+});
+
+// Dictionary lookups for language learning
+export const dictionary_lookups = pgTable("dictionary_lookups", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  word: text("word").notNull(),
+  language: text("language").notNull().default("en"),
+  definition: text("definition"),
+  lookup_date: timestamp("lookup_date").defaultNow()
+});
+
+// Shopping carts
+export const carts = pgTable("carts", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull().unique(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+// Cart items
+export const cart_items = pgTable("cart_items", {
+  id: serial("id").primaryKey(),
+  cart_id: integer("cart_id").references(() => carts.id).notNull(),
+  book_id: integer("book_id").references(() => books.id).notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  added_at: timestamp("added_at").defaultNow()
+});
+
+// Orders
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  total_amount_minor: integer("total_amount_minor").notNull(), // Total in smallest currency unit
+  currency_code: text("currency_code").notNull().default("USD"),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, cancelled, refunded
+  created_at: timestamp("created_at").defaultNow()
+});
+
+// Order items
+export const order_items = pgTable("order_items", {
+  id: serial("id").primaryKey(),
+  order_id: integer("order_id").references(() => orders.id).notNull(),
+  book_id: integer("book_id").references(() => books.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  price_minor: integer("price_minor").notNull() // Price at time of purchase
+});
+
+// User addresses for shipping
+export const user_addresses = pgTable("user_addresses", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  full_name: text("full_name").notNull(),
+  address_line1: text("address_line1").notNull(),
+  address_line2: text("address_line2"),
+  city: text("city").notNull(),
+  state: text("state"),
+  postal_code: text("postal_code").notNull(),
+  country: text("country").notNull().default("US"),
+  phone: text("phone"),
+  is_default: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Shipping orders
+export const shipping_orders = pgTable("shipping_orders", {
+  id: serial("id").primaryKey(),
+  order_id: integer("order_id").references(() => orders.id).notNull(),
+  address_id: integer("address_id").references(() => user_addresses.id).notNull(),
+  courier_service: text("courier_service"), // ups, fedex, dhl, usps, etc.
+  tracking_number: text("tracking_number"),
+  status: text("status").notNull().default("pending"), // pending, shipped, in_transit, delivered, failed
+  shipped_at: timestamp("shipped_at"),
+  delivered_at: timestamp("delivered_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Courier tracking updates
+export const courier_tracking = pgTable("courier_tracking", {
+  id: serial("id").primaryKey(),
+  shipping_order_id: integer("shipping_order_id").references(() => shipping_orders.id).notNull(),
+  status: text("status").notNull(),
+  location: text("location"),
+  update_date: timestamp("update_date").notNull(),
+  notes: text("notes")
+});
+
+// ============================================================================
 // UNIFIED SCHEMA INSERT SCHEMAS AND TYPES
 // ============================================================================
 
@@ -5130,3 +5258,439 @@ export type AdaptationEvent = typeof adaptationEvents.$inferSelect;
 export type AdaptationEventInsert = z.infer<typeof insertAdaptationEventSchema>;
 export type TaskGenerationRequest = typeof taskGenerationRequests.$inferSelect;
 export type TaskGenerationRequestInsert = z.infer<typeof insertTaskGenerationRequestSchema>;
+
+// ============================================================================
+// UNIVERSAL SEARCH SYSTEM
+// ============================================================================
+
+// Search History - tracks user search queries for personalization and analytics
+export const searchHistory = pgTable("search_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  query: text("query").notNull(),
+  searchType: text("search_type").default("universal"), // universal, books, courses, users, tests
+  filters: jsonb("filters").$type<{
+    categories?: string[];
+    languages?: string[];
+    levels?: string[];
+    priceRange?: { min: number; max: number };
+    dateRange?: { start: string; end: string };
+    contentTypes?: string[];
+  }>(),
+  resultsCount: integer("results_count").default(0),
+  clickedResultId: text("clicked_result_id"),
+  clickedResultType: text("clicked_result_type"), // book, course, user, test, etc.
+  sessionId: text("session_id"), // Track search sessions
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Search Analytics - aggregate search data and metrics
+export const searchAnalytics = pgTable("search_analytics", {
+  id: serial("id").primaryKey(),
+  query: text("query").notNull(),
+  normalizedQuery: text("normalized_query").notNull(), // Lowercase, trimmed for grouping
+  searchCount: integer("search_count").default(1),
+  totalResults: integer("total_results").default(0),
+  avgResultsCount: decimal("avg_results_count", { precision: 8, scale: 2 }).default("0.00"),
+  clickThroughRate: decimal("click_through_rate", { precision: 5, scale: 4 }).default("0.0000"), // CTR percentage
+  noResultsCount: integer("no_results_count").default(0),
+  popularResultTypes: text("popular_result_types").array().default([]), // Most clicked result types
+  avgResponseTime: integer("avg_response_time").default(0), // Average response time in ms
+  lastSearched: timestamp("last_searched").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Trending Searches - track trending and suggested search terms
+export const trendingSearches = pgTable("trending_searches", {
+  id: serial("id").primaryKey(),
+  query: text("query").notNull().unique(),
+  category: text("category").default("general"), // general, books, courses, academic, etc.
+  searchVolume: integer("search_volume").default(1),
+  trendScore: decimal("trend_score", { precision: 8, scale: 2 }).default("0.00"), // Algorithm-calculated trend score
+  growthRate: decimal("growth_rate", { precision: 5, scale: 2 }).default("0.00"), // Weekly growth rate %
+  isPromoted: boolean("is_promoted").default(false), // Manually promoted searches
+  language: text("language").default("en"), // en, fa, ar for multi-language support
+  relatedTerms: text("related_terms").array().default([]), // Related search suggestions
+  timeframe: text("timeframe").default("week"), // hour, day, week, month
+  expiresAt: timestamp("expires_at"), // When trend data expires
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Search Suggestions - AI-enhanced search suggestions and autocomplete
+export const searchSuggestions = pgTable("search_suggestions", {
+  id: serial("id").primaryKey(),
+  query: text("query").notNull(),
+  suggestion: text("suggestion").notNull(),
+  suggestionType: text("suggestion_type").notNull(), // autocomplete, intent, semantic, related
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).default("0.50"), // AI confidence score
+  usage_count: integer("usage_count").default(0),
+  language: text("language").default("en"),
+  contextTags: text("context_tags").array().default([]), // Context for better suggestions
+  aiGenerated: boolean("ai_generated").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Search Index - cached search results for performance
+export const searchIndex = pgTable("search_index", {
+  id: serial("id").primaryKey(),
+  entityType: text("entity_type").notNull(), // book, course, user, test, homework, etc.
+  entityId: integer("entity_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  content: text("content"), // Full searchable content
+  searchVector: text("search_vector"), // PostgreSQL tsvector for full-text search
+  metadata: jsonb("metadata"), // Additional searchable metadata
+  language: text("language").default("en"),
+  category: text("category"),
+  tags: text("tags").array().default([]),
+  relevanceScore: decimal("relevance_score", { precision: 5, scale: 2 }).default("0.00"),
+  isActive: boolean("is_active").default(true),
+  lastIndexed: timestamp("last_indexed").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ============================================================================
+// BOOK E-COMMERCE SYSTEM INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// Insert schemas for all book e-commerce tables
+export const insertBookCategorySchema = createInsertSchema(book_categories);
+export const insertBookSchema = createInsertSchema(books);
+export const insertBookAssetSchema = createInsertSchema(book_assets);
+export const insertDictionaryLookupSchema = createInsertSchema(dictionary_lookups);
+export const insertCartSchema = createInsertSchema(carts);
+export const insertCartItemSchema = createInsertSchema(cart_items);
+export const insertOrderSchema = createInsertSchema(orders);
+export const insertOrderItemSchema = createInsertSchema(order_items);
+export const insertUserAddressSchema = createInsertSchema(user_addresses);
+export const insertShippingOrderSchema = createInsertSchema(shipping_orders);
+export const insertCourierTrackingSchema = createInsertSchema(courier_tracking);
+
+// Type exports for all book e-commerce tables
+export type BookCategory = typeof book_categories.$inferSelect;
+export type BookCategoryInsert = z.infer<typeof insertBookCategorySchema>;
+export type Book = typeof books.$inferSelect;
+export type BookInsert = z.infer<typeof insertBookSchema>;
+export type BookAsset = typeof book_assets.$inferSelect;
+export type BookAssetInsert = z.infer<typeof insertBookAssetSchema>;
+export type DictionaryLookup = typeof dictionary_lookups.$inferSelect;
+export type DictionaryLookupInsert = z.infer<typeof insertDictionaryLookupSchema>;
+export type Cart = typeof carts.$inferSelect;
+export type CartInsert = z.infer<typeof insertCartSchema>;
+export type CartItem = typeof cart_items.$inferSelect;
+export type CartItemInsert = z.infer<typeof insertCartItemSchema>;
+export type Order = typeof orders.$inferSelect;
+export type OrderInsert = z.infer<typeof insertOrderSchema>;
+export type OrderItem = typeof order_items.$inferSelect;
+export type OrderItemInsert = z.infer<typeof insertOrderItemSchema>;
+export type UserAddress = typeof user_addresses.$inferSelect;
+export type UserAddressInsert = z.infer<typeof insertUserAddressSchema>;
+export type ShippingOrder = typeof shipping_orders.$inferSelect;
+export type ShippingOrderInsert = z.infer<typeof insertShippingOrderSchema>;
+export type CourierTracking = typeof courier_tracking.$inferSelect;
+export type CourierTrackingInsert = z.infer<typeof insertCourierTrackingSchema>;
+
+// ============================================================================
+// UNIVERSAL SEARCH SYSTEM INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// Insert schemas for all search-related tables
+export const insertSearchHistorySchema = createInsertSchema(searchHistory);
+export const insertSearchAnalyticsSchema = createInsertSchema(searchAnalytics);
+export const insertTrendingSearchesSchema = createInsertSchema(trendingSearches);
+export const insertSearchSuggestionsSchema = createInsertSchema(searchSuggestions);
+export const insertSearchIndexSchema = createInsertSchema(searchIndex);
+
+// Type exports for all search-related tables
+export type SearchHistory = typeof searchHistory.$inferSelect;
+export type SearchHistoryInsert = z.infer<typeof insertSearchHistorySchema>;
+export type SearchAnalytics = typeof searchAnalytics.$inferSelect;
+export type SearchAnalyticsInsert = z.infer<typeof insertSearchAnalyticsSchema>;
+export type TrendingSearches = typeof trendingSearches.$inferSelect;
+export type TrendingSearchesInsert = z.infer<typeof insertTrendingSearchesSchema>;
+export type SearchSuggestions = typeof searchSuggestions.$inferSelect;
+export type SearchSuggestionsInsert = z.infer<typeof insertSearchSuggestionsSchema>;
+export type SearchIndex = typeof searchIndex.$inferSelect;
+export type SearchIndexInsert = z.infer<typeof insertSearchIndexSchema>;
+
+// Search result types for frontend
+export type SearchResultItem = {
+  id: string;
+  type: 'book' | 'course' | 'user' | 'test' | 'homework' | 'session' | 'roadmap' | 'dictionary';
+  title: string;
+  description?: string;
+  url: string;
+  imageUrl?: string;
+  metadata: {
+    author?: string;
+    instructor?: string;
+    language?: string;
+    level?: string;
+    category?: string;
+    rating?: number;
+    price?: number;
+    tags?: string[];
+    [key: string]: any;
+  };
+  relevanceScore?: number;
+  highlights?: {
+    title?: string;
+    description?: string;
+    content?: string;
+  };
+};
+
+export type SearchFilters = {
+  categories?: string[];
+  languages?: string[];
+  levels?: string[];
+  contentTypes?: string[];
+  priceRange?: { min: number; max: number };
+  dateRange?: { start: string; end: string };
+  ratings?: number[];
+  instructors?: string[];
+};
+
+export type SearchResponse = {
+  query: string;
+  results: SearchResultItem[];
+  totalResults: number;
+  facets: {
+    categories: { name: string; count: number }[];
+    languages: { name: string; count: number }[];
+    levels: { name: string; count: number }[];
+    contentTypes: { name: string; count: number }[];
+  };
+  suggestions?: string[];
+  responseTime: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+};
+
+// ============================================================================
+// LEXI AI TEACHING ASSISTANT SCHEMA
+// ============================================================================
+
+// Lexi conversations - tracks chat sessions with the AI assistant
+export const lexiConversations = pgTable("lexi_conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  videoLessonId: integer("video_lesson_id"), // Reference to video lesson if applicable
+  sessionType: text("session_type").notNull(), // "video_learning", "general_chat", "vocabulary", "grammar", "pronunciation"
+  language: text("language").notNull().default("en"), // Conversation language
+  contextData: jsonb("context_data"), // Video timestamp, lesson content, etc.
+  title: text("title"), // Auto-generated or user-set conversation title
+  status: text("status").notNull().default("active"), // active, completed, archived
+  totalMessages: integer("total_messages").default(0),
+  learningGoals: text("learning_goals").array().default([]), // What user wants to learn
+  proficiencyLevel: text("proficiency_level"), // User's level for this conversation
+  culturalContext: text("cultural_context"), // Cultural background for context-aware responses
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  lastMessageAt: timestamp("last_message_at").defaultNow()
+});
+
+// Lexi messages - individual chat messages in conversations
+export const lexiMessages = pgTable("lexi_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => lexiConversations.id).notNull(),
+  role: text("role").notNull(), // "user", "assistant", "system"
+  content: text("content").notNull(),
+  messageType: text("message_type").notNull().default("text"), // text, audio, image, vocabulary_card, grammar_explanation, quiz
+  metadata: jsonb("metadata"), // Audio transcription, pronunciation scores, etc.
+  videoTimestamp: decimal("video_timestamp", { precision: 10, scale: 3 }), // Video time when message sent
+  isBookmarked: boolean("is_bookmarked").default(false),
+  reactions: text("reactions").array().default([]), // User reactions: helpful, confusing, etc.
+  relatedConcepts: text("related_concepts").array().default([]), // Vocabulary, grammar concepts mentioned
+  difficulty: text("difficulty"), // easy, medium, hard - for content personalization
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Video content analysis by Lexi - AI analysis of video content for context
+export const lexiVideoAnalysis = pgTable("lexi_video_analysis", {
+  id: serial("id").primaryKey(),
+  videoLessonId: integer("video_lesson_id").notNull(), // Foreign key to video lessons
+  courseId: integer("course_id").references(() => courses.id),
+  analysisType: text("analysis_type").notNull(), // "content_summary", "vocabulary_extraction", "grammar_points", "cultural_context"
+  language: text("language").notNull(),
+  content: jsonb("content").notNull(), // Analysis results
+  keyVocabulary: text("key_vocabulary").array().default([]), // Important words/phrases
+  grammarConcepts: text("grammar_concepts").array().default([]), // Grammar topics covered
+  culturalNotes: text("cultural_notes").array().default([]), // Cultural context
+  difficultyLevel: text("difficulty_level"), // Auto-assessed difficulty
+  topicTags: text("topic_tags").array().default([]), // Content categorization
+  transcription: text("transcription"), // Auto-generated video transcript
+  subtitles: jsonb("subtitles"), // Timestamped subtitles with translations
+  analysisQuality: decimal("analysis_quality", { precision: 3, scale: 2 }), // 0.00-1.00 confidence score
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// User learning interactions with Lexi - tracks all learning activities
+export const lexiLearningInteractions = pgTable("lexi_learning_interactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  conversationId: integer("conversation_id").references(() => lexiConversations.id),
+  interactionType: text("interaction_type").notNull(), // "vocabulary_lookup", "grammar_question", "pronunciation_practice", "quiz_attempt", "explanation_request"
+  content: text("content").notNull(), // The word, phrase, or concept
+  context: text("context"), // Where this interaction happened (video timestamp, lesson context)
+  userResponse: text("user_response"), // User's attempt or response
+  lexiResponse: text("lexi_response"), // Lexi's explanation or feedback
+  isCorrect: boolean("is_correct"), // For quiz/practice attempts
+  difficulty: text("difficulty"), // easy, medium, hard
+  timeSpent: integer("time_spent"), // Seconds spent on this interaction
+  improvements: text("improvements").array().default([]), // Suggested improvements
+  mastery_level: decimal("mastery_level", { precision: 3, scale: 2 }), // 0.00-1.00 estimated mastery
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Voice interactions with Lexi - specific to voice/pronunciation features
+export const lexiVoiceInteractions = pgTable("lexi_voice_interactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  conversationId: integer("conversation_id").references(() => lexiConversations.id),
+  audioUrl: text("audio_url"), // Stored user audio
+  transcription: text("transcription"), // Speech-to-text result
+  targetText: text("target_text"), // What user was trying to say
+  pronunciation_score: decimal("pronunciation_score", { precision: 5, scale: 2 }), // 0.00-100.00
+  fluency_score: decimal("fluency_score", { precision: 5, scale: 2 }), // 0.00-100.00
+  accuracy_feedback: jsonb("accuracy_feedback"), // Detailed pronunciation feedback
+  suggested_practice: text("suggested_practice").array().default([]), // Pronunciation tips
+  language: text("language").notNull(),
+  difficulty_level: text("difficulty_level"),
+  duration: integer("duration"), // Audio duration in seconds
+  retryCount: integer("retry_count").default(0), // How many times user retried
+  isImproved: boolean("is_improved").default(false), // Did user improve on retry?
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Lexi personalized recommendations - AI-generated learning suggestions
+export const lexiRecommendations = pgTable("lexi_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  recommendationType: text("recommendation_type").notNull(), // "next_lesson", "practice_activity", "vocabulary_review", "grammar_focus", "cultural_tip"
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  content: jsonb("content").notNull(), // Detailed recommendation data
+  priority: integer("priority").default(50), // 1-100, higher = more important
+  difficulty: text("difficulty"), // easy, medium, hard
+  estimatedTime: integer("estimated_time"), // Minutes to complete
+  relatedConcepts: text("related_concepts").array().default([]), // Connected learning topics
+  prerequisites: text("prerequisites").array().default([]), // What user should know first
+  targetSkills: text("target_skills").array().default([]), // Skills this will improve
+  successMetrics: jsonb("success_metrics"), // How to measure success
+  isCompleted: boolean("is_completed").default(false),
+  userRating: integer("user_rating"), // 1-5 stars user feedback
+  completedAt: timestamp("completed_at"),
+  expiresAt: timestamp("expires_at"), // Recommendations can expire
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Lexi learning analytics - aggregate learning data and insights
+export const lexiLearningAnalytics = pgTable("lexi_learning_analytics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  analyticsDate: date("analytics_date").notNull(), // Daily analytics snapshot
+  totalInteractions: integer("total_interactions").default(0),
+  conversationsStarted: integer("conversations_started").default(0),
+  messagesExchanged: integer("messages_exchanged").default(0),
+  vocabularyLearned: integer("vocabulary_learned").default(0),
+  grammarConceptsExplored: integer("grammar_concepts_explored").default(0),
+  pronunciationAttempts: integer("pronunciation_attempts").default(0),
+  quizzesCompleted: integer("quizzes_completed").default(0),
+  averagePronunciationScore: decimal("average_pronunciation_score", { precision: 5, scale: 2 }),
+  averageResponseTime: decimal("average_response_time", { precision: 8, scale: 2 }), // Average seconds per interaction
+  preferredLanguage: text("preferred_language"),
+  mostActiveTimeSlot: text("most_active_time_slot"), // morning, afternoon, evening, night
+  learningStreak: integer("learning_streak").default(0), // Consecutive days of activity
+  masteryGrowth: decimal("mastery_growth", { precision: 5, scale: 2 }), // Overall learning progress
+  engagementScore: decimal("engagement_score", { precision: 5, scale: 2 }), // 0.00-100.00 engagement level
+  strugglingAreas: text("struggling_areas").array().default([]), // Areas needing improvement
+  strengths: text("strengths").array().default([]), // User's strong areas
+  nextRecommendations: text("next_recommendations").array().default([]), // Auto-generated suggestions
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Quiz data generated by Lexi from video content
+export const lexiQuizzes = pgTable("lexi_quizzes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  videoLessonId: integer("video_lesson_id"), // Source video if quiz generated from video
+  conversationId: integer("conversation_id").references(() => lexiConversations.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  quizType: text("quiz_type").notNull(), // "vocabulary", "grammar", "comprehension", "pronunciation", "cultural"
+  language: text("language").notNull(),
+  difficulty: text("difficulty").notNull(), // easy, medium, hard
+  questions: jsonb("questions").notNull(), // Array of quiz questions with answers
+  timeLimit: integer("time_limit"), // Seconds, null for untimed
+  maxAttempts: integer("max_attempts").default(3),
+  passingScore: integer("passing_score").default(70), // Percentage needed to pass
+  currentAttempts: integer("current_attempts").default(0),
+  bestScore: integer("best_score"),
+  isCompleted: boolean("is_completed").default(false),
+  lastAttemptAt: timestamp("last_attempt_at"),
+  totalTimeSpent: integer("total_time_spent").default(0), // Total seconds across all attempts
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// User's quiz attempts and results
+export const lexiQuizAttempts = pgTable("lexi_quiz_attempts", {
+  id: serial("id").primaryKey(),
+  quizId: integer("quiz_id").references(() => lexiQuizzes.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  attemptNumber: integer("attempt_number").notNull(),
+  answers: jsonb("answers").notNull(), // User's answers to all questions
+  score: integer("score").notNull(), // Percentage score 0-100
+  timeSpent: integer("time_spent"), // Seconds taken to complete
+  isPassed: boolean("is_passed").notNull(),
+  feedback: jsonb("feedback"), // Detailed feedback per question
+  improvementAreas: text("improvement_areas").array().default([]), // What to work on
+  strengths: text("strengths").array().default([]), // What user did well
+  nextSteps: text("next_steps").array().default([]), // Recommended next actions
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// ============================================================================
+// LEXI SCHEMA INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// Insert schemas for Lexi tables
+export const insertLexiConversationSchema = createInsertSchema(lexiConversations);
+export const insertLexiMessageSchema = createInsertSchema(lexiMessages);
+export const insertLexiVideoAnalysisSchema = createInsertSchema(lexiVideoAnalysis);
+export const insertLexiLearningInteractionSchema = createInsertSchema(lexiLearningInteractions);
+export const insertLexiVoiceInteractionSchema = createInsertSchema(lexiVoiceInteractions);
+export const insertLexiRecommendationSchema = createInsertSchema(lexiRecommendations);
+export const insertLexiLearningAnalyticsSchema = createInsertSchema(lexiLearningAnalytics);
+export const insertLexiQuizSchema = createInsertSchema(lexiQuizzes);
+export const insertLexiQuizAttemptSchema = createInsertSchema(lexiQuizAttempts);
+
+// Type exports for Lexi tables
+export type LexiConversation = typeof lexiConversations.$inferSelect;
+export type LexiConversationInsert = z.infer<typeof insertLexiConversationSchema>;
+export type LexiMessage = typeof lexiMessages.$inferSelect;
+export type LexiMessageInsert = z.infer<typeof insertLexiMessageSchema>;
+export type LexiVideoAnalysis = typeof lexiVideoAnalysis.$inferSelect;
+export type LexiVideoAnalysisInsert = z.infer<typeof insertLexiVideoAnalysisSchema>;
+export type LexiLearningInteraction = typeof lexiLearningInteractions.$inferSelect;
+export type LexiLearningInteractionInsert = z.infer<typeof insertLexiLearningInteractionSchema>;
+export type LexiVoiceInteraction = typeof lexiVoiceInteractions.$inferSelect;
+export type LexiVoiceInteractionInsert = z.infer<typeof insertLexiVoiceInteractionSchema>;
+export type LexiRecommendation = typeof lexiRecommendations.$inferSelect;
+export type LexiRecommendationInsert = z.infer<typeof insertLexiRecommendationSchema>;
+export type LexiLearningAnalytics = typeof lexiLearningAnalytics.$inferSelect;
+export type LexiLearningAnalyticsInsert = z.infer<typeof insertLexiLearningAnalyticsSchema>;
+export type LexiQuiz = typeof lexiQuizzes.$inferSelect;
+export type LexiQuizInsert = z.infer<typeof insertLexiQuizSchema>;
+export type LexiQuizAttempt = typeof lexiQuizAttempts.$inferSelect;
+export type LexiQuizAttemptInsert = z.infer<typeof insertLexiQuizAttemptSchema>;

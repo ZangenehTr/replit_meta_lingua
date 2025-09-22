@@ -2,6 +2,7 @@ import { Bell, Globe, Moon, Sun, User, LogOut, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UniversalSearchBar } from "@/components/search/UniversalSearchBar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +58,16 @@ export function Navigation() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Universal Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <UniversalSearchBar
+              variant="compact"
+              placeholder={t('common:search.placeholder')}
+              className="w-full"
+              data-testid="navigation-search-bar"
+            />
           </div>
 
           {/* User Actions */}

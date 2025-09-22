@@ -33,6 +33,9 @@ import {
   chatConversations, chatMessages, aiStudyPartners,
   // MST tables
   mstSessions, mstSkillStates, mstResponses,
+  // Book e-commerce tables
+  book_categories, books, book_assets, dictionary_lookups, carts, cart_items,
+  orders, order_items, user_addresses, shipping_orders, courier_tracking,
 } from "@shared/schema";
 // Unified testing system tables
 import {
@@ -103,7 +106,14 @@ import {
   type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
   type AiStudyPartner, type InsertAiStudyPartner,
   // MST types
-  type MSTSession, type MSTSkillState, type MSTResponse
+  type MSTSession, type MSTSkillState, type MSTResponse,
+  // Book e-commerce types
+  type BookCategory, type BookCategoryInsert, type Book, type BookInsert,
+  type BookAsset, type BookAssetInsert, type DictionaryLookup, type DictionaryLookupInsert,
+  type Cart, type CartInsert, type CartItem, type CartItemInsert,
+  type Order, type OrderInsert, type OrderItem, type OrderItemInsert,
+  type UserAddress, type UserAddressInsert, type ShippingOrder, type ShippingOrderInsert,
+  type CourierTracking, type CourierTrackingInsert
 } from "@shared/schema";
 // Unified testing system types
 import {
@@ -1095,6 +1105,90 @@ export interface IStorage {
   // Chat message management
   getChatMessages(conversationId: number, options?: { limit?: number; offset?: number }): Promise<ChatMessage[]>;
   createChatMessage(data: InsertChatMessage): Promise<ChatMessage>;
+
+  // ============================================================================
+  // BOOK E-COMMERCE SYSTEM STORAGE METHODS
+  // ============================================================================
+
+  // Book categories management
+  getBookCategories(): Promise<BookCategory[]>;
+  getBookCategory(id: number): Promise<BookCategory | undefined>;
+  getBookCategoriesByParent(parentId: number | null): Promise<BookCategory[]>;
+  createBookCategory(data: BookCategoryInsert): Promise<BookCategory>;
+  updateBookCategory(id: number, updates: Partial<BookCategory>): Promise<BookCategory | undefined>;
+  deleteBookCategory(id: number): Promise<void>;
+
+  // Books management
+  getBooks(filters?: { categoryId?: number; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]>;
+  getBook(id: number): Promise<Book | undefined>;
+  getBookByISBN(isbn: string): Promise<Book | undefined>;
+  getBooksByCategory(categoryId: number): Promise<Book[]>;
+  getFreeBooks(): Promise<Book[]>;
+  searchBooks(query: string): Promise<Book[]>;
+  createBook(data: BookInsert): Promise<Book>;
+  updateBook(id: number, updates: Partial<Book>): Promise<Book | undefined>;
+  deleteBook(id: number): Promise<void>;
+
+  // Book assets management
+  getBookAssets(bookId: number): Promise<BookAsset[]>;
+  getBookAsset(id: number): Promise<BookAsset | undefined>;
+  createBookAsset(data: BookAssetInsert): Promise<BookAsset>;
+  updateBookAsset(id: number, updates: Partial<BookAsset>): Promise<BookAsset | undefined>;
+  deleteBookAsset(id: number): Promise<void>;
+
+  // Dictionary lookups management
+  getDictionaryLookups(userId: number, language?: string): Promise<DictionaryLookup[]>;
+  getDictionaryLookup(id: number): Promise<DictionaryLookup | undefined>;
+  createDictionaryLookup(data: DictionaryLookupInsert): Promise<DictionaryLookup>;
+  deleteDictionaryLookup(id: number): Promise<void>;
+
+  // Cart management
+  getUserCart(userId: number): Promise<Cart | undefined>;
+  createCart(data: CartInsert): Promise<Cart>;
+  updateCart(id: number, updates: Partial<Cart>): Promise<Cart | undefined>;
+  clearCart(userId: number): Promise<void>;
+
+  // Cart items management
+  getCartItems(cartId: number): Promise<(CartItem & { book: Book })[]>;
+  getCartItem(id: number): Promise<CartItem | undefined>;
+  addToCart(cartId: number, bookId: number, quantity?: number): Promise<CartItem>;
+  updateCartItem(id: number, quantity: number): Promise<CartItem | undefined>;
+  removeFromCart(id: number): Promise<void>;
+
+  // Orders management
+  getOrders(userId?: number, status?: string): Promise<(Order & { items: (OrderItem & { book: Book })[] })[]>;
+  getOrder(id: number): Promise<(Order & { items: (OrderItem & { book: Book })[] }) | undefined>;
+  getUserOrders(userId: number): Promise<Order[]>;
+  createOrder(data: OrderInsert): Promise<Order>;
+  updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
+  cancelOrder(id: number): Promise<Order | undefined>;
+
+  // Order items management
+  getOrderItems(orderId: number): Promise<(OrderItem & { book: Book })[]>;
+  createOrderItem(data: OrderItemInsert): Promise<OrderItem>;
+  updateOrderItem(id: number, updates: Partial<OrderItem>): Promise<OrderItem | undefined>;
+
+  // User addresses management
+  getUserAddresses(userId: number): Promise<UserAddress[]>;
+  getUserAddress(id: number): Promise<UserAddress | undefined>;
+  getDefaultUserAddress(userId: number): Promise<UserAddress | undefined>;
+  createUserAddress(data: UserAddressInsert): Promise<UserAddress>;
+  updateUserAddress(id: number, updates: Partial<UserAddress>): Promise<UserAddress | undefined>;
+  setDefaultAddress(userId: number, addressId: number): Promise<void>;
+  deleteUserAddress(id: number): Promise<void>;
+
+  // Shipping orders management
+  getShippingOrders(status?: string): Promise<(ShippingOrder & { order: Order; address: UserAddress })[]>;
+  getShippingOrder(id: number): Promise<(ShippingOrder & { order: Order; address: UserAddress }) | undefined>;
+  getShippingOrderByOrderId(orderId: number): Promise<ShippingOrder | undefined>;
+  createShippingOrder(data: ShippingOrderInsert): Promise<ShippingOrder>;
+  updateShippingOrder(id: number, updates: Partial<ShippingOrder>): Promise<ShippingOrder | undefined>;
+  updateShippingStatus(id: number, status: string, trackingNumber?: string): Promise<ShippingOrder | undefined>;
+
+  // Courier tracking management
+  getCourierTracking(shippingOrderId: number): Promise<CourierTracking[]>;
+  createCourierTracking(data: CourierTrackingInsert): Promise<CourierTracking>;
+  getLatestTrackingUpdate(shippingOrderId: number): Promise<CourierTracking | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -7009,6 +7103,447 @@ export class MemStorage implements IStorage {
   async createChatMessage(data: InsertChatMessage): Promise<ChatMessage> {
     // For MemStorage, this is a placeholder
     throw new Error("Chat messages require database storage");
+  }
+
+  // ============================================================================
+  // BOOK E-COMMERCE SYSTEM STORAGE IMPLEMENTATIONS
+  // ============================================================================
+
+  // Book categories management
+  async getBookCategories(): Promise<BookCategory[]> {
+    return await this.db.select().from(book_categories);
+  }
+
+  async getBookCategory(id: number): Promise<BookCategory | undefined> {
+    const result = await this.db.select().from(book_categories).where(eq(book_categories.id, id));
+    return result[0];
+  }
+
+  async getBookCategoriesByParent(parentId: number | null): Promise<BookCategory[]> {
+    if (parentId === null) {
+      return await this.db.select().from(book_categories).where(isNull(book_categories.parent_id));
+    }
+    return await this.db.select().from(book_categories).where(eq(book_categories.parent_id, parentId));
+  }
+
+  async createBookCategory(data: BookCategoryInsert): Promise<BookCategory> {
+    const result = await this.db.insert(book_categories).values(data).returning();
+    return result[0];
+  }
+
+  async updateBookCategory(id: number, updates: Partial<BookCategory>): Promise<BookCategory | undefined> {
+    const result = await this.db.update(book_categories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(book_categories.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteBookCategory(id: number): Promise<void> {
+    await this.db.delete(book_categories).where(eq(book_categories.id, id));
+  }
+
+  // Books management
+  async getBooks(filters?: { categoryId?: number; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]> {
+    let query = this.db.select().from(books);
+    
+    if (filters?.categoryId) {
+      query = query.where(eq(books.category_id, filters.categoryId));
+    }
+    if (filters?.isFree !== undefined) {
+      query = query.where(eq(books.is_free, filters.isFree));
+    }
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    if (filters?.offset) {
+      query = query.offset(filters.offset);
+    }
+
+    return await query;
+  }
+
+  async getBook(id: number): Promise<Book | undefined> {
+    const result = await this.db.select().from(books).where(eq(books.id, id));
+    return result[0];
+  }
+
+  async getBookByISBN(isbn: string): Promise<Book | undefined> {
+    const result = await this.db.select().from(books).where(eq(books.isbn, isbn));
+    return result[0];
+  }
+
+  async getBooksByCategory(categoryId: number): Promise<Book[]> {
+    return await this.db.select().from(books).where(eq(books.category_id, categoryId));
+  }
+
+  async getFreeBooks(): Promise<Book[]> {
+    return await this.db.select().from(books).where(eq(books.is_free, true));
+  }
+
+  async searchBooks(query: string): Promise<Book[]> {
+    return await this.db.select().from(books)
+      .where(or(
+        sql`${books.title} ILIKE ${`%${query}%`}`,
+        sql`${books.author} ILIKE ${`%${query}%`}`,
+        sql`${books.description} ILIKE ${`%${query}%`}`
+      ));
+  }
+
+  async createBook(data: BookInsert): Promise<Book> {
+    const result = await this.db.insert(books).values(data).returning();
+    return result[0];
+  }
+
+  async updateBook(id: number, updates: Partial<Book>): Promise<Book | undefined> {
+    const result = await this.db.update(books)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(books.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteBook(id: number): Promise<void> {
+    await this.db.delete(books).where(eq(books.id, id));
+  }
+
+  // Book assets management
+  async getBookAssets(bookId: number): Promise<BookAsset[]> {
+    return await this.db.select().from(book_assets).where(eq(book_assets.book_id, bookId));
+  }
+
+  async getBookAsset(id: number): Promise<BookAsset | undefined> {
+    const result = await this.db.select().from(book_assets).where(eq(book_assets.id, id));
+    return result[0];
+  }
+
+  async createBookAsset(data: BookAssetInsert): Promise<BookAsset> {
+    const result = await this.db.insert(book_assets).values(data).returning();
+    return result[0];
+  }
+
+  async updateBookAsset(id: number, updates: Partial<BookAsset>): Promise<BookAsset | undefined> {
+    const result = await this.db.update(book_assets)
+      .set(updates)
+      .where(eq(book_assets.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteBookAsset(id: number): Promise<void> {
+    await this.db.delete(book_assets).where(eq(book_assets.id, id));
+  }
+
+  // Dictionary lookups management
+  async getDictionaryLookups(userId: number, language?: string): Promise<DictionaryLookup[]> {
+    let query = this.db.select().from(dictionary_lookups).where(eq(dictionary_lookups.user_id, userId));
+    
+    if (language) {
+      query = query.where(and(eq(dictionary_lookups.user_id, userId), eq(dictionary_lookups.language, language)));
+    }
+
+    return await query.orderBy(desc(dictionary_lookups.lookup_date));
+  }
+
+  async getDictionaryLookup(id: number): Promise<DictionaryLookup | undefined> {
+    const result = await this.db.select().from(dictionary_lookups).where(eq(dictionary_lookups.id, id));
+    return result[0];
+  }
+
+  async createDictionaryLookup(data: DictionaryLookupInsert): Promise<DictionaryLookup> {
+    const result = await this.db.insert(dictionary_lookups).values(data).returning();
+    return result[0];
+  }
+
+  async deleteDictionaryLookup(id: number): Promise<void> {
+    await this.db.delete(dictionary_lookups).where(eq(dictionary_lookups.id, id));
+  }
+
+  // Cart management
+  async getUserCart(userId: number): Promise<Cart | undefined> {
+    const result = await this.db.select().from(carts).where(eq(carts.user_id, userId));
+    return result[0];
+  }
+
+  async createCart(data: CartInsert): Promise<Cart> {
+    const result = await this.db.insert(carts).values(data).returning();
+    return result[0];
+  }
+
+  async updateCart(id: number, updates: Partial<Cart>): Promise<Cart | undefined> {
+    const result = await this.db.update(carts)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(carts.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async clearCart(userId: number): Promise<void> {
+    const cart = await this.getUserCart(userId);
+    if (cart) {
+      await this.db.delete(cart_items).where(eq(cart_items.cart_id, cart.id));
+    }
+  }
+
+  // Cart items management
+  async getCartItems(cartId: number): Promise<(CartItem & { book: Book })[]> {
+    return await this.db.select({
+      ...cart_items,
+      book: books
+    })
+    .from(cart_items)
+    .innerJoin(books, eq(cart_items.book_id, books.id))
+    .where(eq(cart_items.cart_id, cartId));
+  }
+
+  async getCartItem(id: number): Promise<CartItem | undefined> {
+    const result = await this.db.select().from(cart_items).where(eq(cart_items.id, id));
+    return result[0];
+  }
+
+  async addToCart(cartId: number, bookId: number, quantity: number = 1): Promise<CartItem> {
+    // Check if item already exists in cart
+    const existingItem = await this.db.select().from(cart_items)
+      .where(and(eq(cart_items.cart_id, cartId), eq(cart_items.book_id, bookId)));
+    
+    if (existingItem.length > 0) {
+      // Update quantity
+      const result = await this.db.update(cart_items)
+        .set({ quantity: existingItem[0].quantity + quantity })
+        .where(eq(cart_items.id, existingItem[0].id))
+        .returning();
+      return result[0];
+    } else {
+      // Create new item
+      const result = await this.db.insert(cart_items)
+        .values({ cart_id: cartId, book_id: bookId, quantity })
+        .returning();
+      return result[0];
+    }
+  }
+
+  async updateCartItem(id: number, quantity: number): Promise<CartItem | undefined> {
+    const result = await this.db.update(cart_items)
+      .set({ quantity })
+      .where(eq(cart_items.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async removeFromCart(id: number): Promise<void> {
+    await this.db.delete(cart_items).where(eq(cart_items.id, id));
+  }
+
+  // Orders management
+  async getOrders(userId?: number, status?: string): Promise<(Order & { items: (OrderItem & { book: Book })[] })[]> {
+    let query = this.db.select().from(orders);
+    
+    if (userId) {
+      query = query.where(eq(orders.user_id, userId));
+    }
+    if (status) {
+      query = query.where(eq(orders.status, status));
+    }
+
+    const ordersResult = await query.orderBy(desc(orders.created_at));
+    
+    // Get order items for each order
+    const ordersWithItems = await Promise.all(
+      ordersResult.map(async (order) => {
+        const items = await this.getOrderItems(order.id);
+        return { ...order, items };
+      })
+    );
+
+    return ordersWithItems;
+  }
+
+  async getOrder(id: number): Promise<(Order & { items: (OrderItem & { book: Book })[] }) | undefined> {
+    const result = await this.db.select().from(orders).where(eq(orders.id, id));
+    if (!result[0]) return undefined;
+
+    const items = await this.getOrderItems(id);
+    return { ...result[0], items };
+  }
+
+  async getUserOrders(userId: number): Promise<Order[]> {
+    return await this.db.select().from(orders)
+      .where(eq(orders.user_id, userId))
+      .orderBy(desc(orders.created_at));
+  }
+
+  async createOrder(data: OrderInsert): Promise<Order> {
+    const result = await this.db.insert(orders).values(data).returning();
+    return result[0];
+  }
+
+  async updateOrderStatus(id: number, status: string): Promise<Order | undefined> {
+    const result = await this.db.update(orders)
+      .set({ status })
+      .where(eq(orders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async cancelOrder(id: number): Promise<Order | undefined> {
+    return await this.updateOrderStatus(id, 'cancelled');
+  }
+
+  // Order items management
+  async getOrderItems(orderId: number): Promise<(OrderItem & { book: Book })[]> {
+    return await this.db.select({
+      ...order_items,
+      book: books
+    })
+    .from(order_items)
+    .innerJoin(books, eq(order_items.book_id, books.id))
+    .where(eq(order_items.order_id, orderId));
+  }
+
+  async createOrderItem(data: OrderItemInsert): Promise<OrderItem> {
+    const result = await this.db.insert(order_items).values(data).returning();
+    return result[0];
+  }
+
+  async updateOrderItem(id: number, updates: Partial<OrderItem>): Promise<OrderItem | undefined> {
+    const result = await this.db.update(order_items)
+      .set(updates)
+      .where(eq(order_items.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // User addresses management
+  async getUserAddresses(userId: number): Promise<UserAddress[]> {
+    return await this.db.select().from(user_addresses)
+      .where(eq(user_addresses.user_id, userId))
+      .orderBy(desc(user_addresses.is_default), desc(user_addresses.createdAt));
+  }
+
+  async getUserAddress(id: number): Promise<UserAddress | undefined> {
+    const result = await this.db.select().from(user_addresses).where(eq(user_addresses.id, id));
+    return result[0];
+  }
+
+  async getDefaultUserAddress(userId: number): Promise<UserAddress | undefined> {
+    const result = await this.db.select().from(user_addresses)
+      .where(and(eq(user_addresses.user_id, userId), eq(user_addresses.is_default, true)));
+    return result[0];
+  }
+
+  async createUserAddress(data: UserAddressInsert): Promise<UserAddress> {
+    const result = await this.db.insert(user_addresses).values(data).returning();
+    return result[0];
+  }
+
+  async updateUserAddress(id: number, updates: Partial<UserAddress>): Promise<UserAddress | undefined> {
+    const result = await this.db.update(user_addresses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(user_addresses.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async setDefaultAddress(userId: number, addressId: number): Promise<void> {
+    // First, unset all default addresses for the user
+    await this.db.update(user_addresses)
+      .set({ is_default: false })
+      .where(eq(user_addresses.user_id, userId));
+    
+    // Then set the specified address as default
+    await this.db.update(user_addresses)
+      .set({ is_default: true })
+      .where(eq(user_addresses.id, addressId));
+  }
+
+  async deleteUserAddress(id: number): Promise<void> {
+    await this.db.delete(user_addresses).where(eq(user_addresses.id, id));
+  }
+
+  // Shipping orders management
+  async getShippingOrders(status?: string): Promise<(ShippingOrder & { order: Order; address: UserAddress })[]> {
+    let query = this.db.select({
+      ...shipping_orders,
+      order: orders,
+      address: user_addresses
+    })
+    .from(shipping_orders)
+    .innerJoin(orders, eq(shipping_orders.order_id, orders.id))
+    .innerJoin(user_addresses, eq(shipping_orders.address_id, user_addresses.id));
+
+    if (status) {
+      query = query.where(eq(shipping_orders.status, status));
+    }
+
+    return await query.orderBy(desc(shipping_orders.createdAt));
+  }
+
+  async getShippingOrder(id: number): Promise<(ShippingOrder & { order: Order; address: UserAddress }) | undefined> {
+    const result = await this.db.select({
+      ...shipping_orders,
+      order: orders,
+      address: user_addresses
+    })
+    .from(shipping_orders)
+    .innerJoin(orders, eq(shipping_orders.order_id, orders.id))
+    .innerJoin(user_addresses, eq(shipping_orders.address_id, user_addresses.id))
+    .where(eq(shipping_orders.id, id));
+    
+    return result[0];
+  }
+
+  async getShippingOrderByOrderId(orderId: number): Promise<ShippingOrder | undefined> {
+    const result = await this.db.select().from(shipping_orders)
+      .where(eq(shipping_orders.order_id, orderId));
+    return result[0];
+  }
+
+  async createShippingOrder(data: ShippingOrderInsert): Promise<ShippingOrder> {
+    const result = await this.db.insert(shipping_orders).values(data).returning();
+    return result[0];
+  }
+
+  async updateShippingOrder(id: number, updates: Partial<ShippingOrder>): Promise<ShippingOrder | undefined> {
+    const result = await this.db.update(shipping_orders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(shipping_orders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateShippingStatus(id: number, status: string, trackingNumber?: string): Promise<ShippingOrder | undefined> {
+    const updates: Partial<ShippingOrder> = { status };
+    if (trackingNumber) {
+      updates.tracking_number = trackingNumber;
+    }
+    if (status === 'shipped' && !updates.shipped_at) {
+      updates.shipped_at = new Date();
+    }
+    if (status === 'delivered') {
+      updates.delivered_at = new Date();
+    }
+
+    return await this.updateShippingOrder(id, updates);
+  }
+
+  // Courier tracking management
+  async getCourierTracking(shippingOrderId: number): Promise<CourierTracking[]> {
+    return await this.db.select().from(courier_tracking)
+      .where(eq(courier_tracking.shipping_order_id, shippingOrderId))
+      .orderBy(desc(courier_tracking.update_date));
+  }
+
+  async createCourierTracking(data: CourierTrackingInsert): Promise<CourierTracking> {
+    const result = await this.db.insert(courier_tracking).values(data).returning();
+    return result[0];
+  }
+
+  async getLatestTrackingUpdate(shippingOrderId: number): Promise<CourierTracking | undefined> {
+    const result = await this.db.select().from(courier_tracking)
+      .where(eq(courier_tracking.shipping_order_id, shippingOrderId))
+      .orderBy(desc(courier_tracking.update_date))
+      .limit(1);
+    return result[0];
   }
 }
 

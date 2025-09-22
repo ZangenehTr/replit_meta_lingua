@@ -119,7 +119,16 @@ import {
   type PlacementTest, type InsertPlacementTest,
   type PlacementQuestion, type InsertPlacementQuestion,
   type PlacementTestSession, type InsertPlacementTestSession,
-  type PlacementResult, type InsertPlacementResult
+  type PlacementResult, type InsertPlacementResult,
+  // Book e-commerce tables and types
+  book_categories, books, book_assets, dictionary_lookups, carts, cart_items,
+  orders, order_items, user_addresses, shipping_orders, courier_tracking,
+  type BookCategory, type BookCategoryInsert, type Book, type BookInsert,
+  type BookAsset, type BookAssetInsert, type DictionaryLookup, type DictionaryLookupInsert,
+  type Cart, type CartInsert, type CartItem, type CartItemInsert,
+  type Order, type OrderInsert, type OrderItem, type OrderItemInsert,
+  type UserAddress, type UserAddressInsert, type ShippingOrder, type ShippingOrderInsert,
+  type CourierTracking, type CourierTrackingInsert
 } from "@shared/schema";
 
 // Placement test tables imported from main schema above
@@ -258,17 +267,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Role permissions
-  async checkUserPermission(role: string, resource: string, action: string): Promise<boolean> {
+  async checkUserPermission(role: string, subsystem: string): Promise<boolean> {
     const [permission] = await db
       .select()
       .from(rolePermissions)
-      .where(and(
-        eq(rolePermissions.role, role),
-        eq(rolePermissions.resource, resource),
-        eq(rolePermissions.action, action),
-        eq(rolePermissions.allowed, true)
-      ));
-    return !!permission;
+      .where(eq(rolePermissions.role, role));
+    
+    if (!permission?.subsystemPermissions) return false;
+    return permission.subsystemPermissions.includes(subsystem);
   }
 
   async getRolePermissions(role: string): Promise<RolePermission[]> {
@@ -442,8 +448,7 @@ export class DatabaseStorage implements IStorage {
         if (!currentParticipants.includes(studentId.toString())) {
           await db.update(chatConversations)
             .set({
-              participants: [...currentParticipants, studentId.toString()],
-              updatedAt: new Date()
+              participants: [...currentParticipants, studentId.toString()]
             })
             .where(eq(chatConversations.id, chatId));
           
@@ -519,7 +524,10 @@ export class DatabaseStorage implements IStorage {
     const [availability] = await db.insert(teacherCallernAvailability).values({
       teacherId: availabilityData.teacherId,
       isOnline: availabilityData.isOnline || false,
-      availableHours: availabilityData.availableHours || [],
+      morningSlot: availabilityData.morningSlot || false,
+      afternoonSlot: availabilityData.afternoonSlot || false,
+      eveningSlot: availabilityData.eveningSlot || false,
+      nightSlot: availabilityData.nightSlot || false,
       hourlyRate: availabilityData.hourlyRate
     }).returning();
     return availability;
@@ -533,7 +541,10 @@ export class DatabaseStorage implements IStorage {
         isOnline: teacherCallernAvailability.isOnline,
         lastActiveAt: teacherCallernAvailability.lastActiveAt,
         hourlyRate: teacherCallernAvailability.hourlyRate,
-        availableHours: teacherCallernAvailability.availableHours,
+        morningSlot: teacherCallernAvailability.morningSlot,
+        afternoonSlot: teacherCallernAvailability.afternoonSlot,
+        eveningSlot: teacherCallernAvailability.eveningSlot,
+        nightSlot: teacherCallernAvailability.nightSlot,
         teacherName: users.firstName,
         teacherLastName: users.lastName,
         teacherEmail: users.email
@@ -14504,5 +14515,252 @@ export class DatabaseStorage implements IStorage {
       console.error('❌ Error getting lead by phone:', error);
       return undefined;
     }
+  }
+
+  // ============================================================================
+  // BOOK E-COMMERCE SYSTEM METHOD STUBS
+  // ============================================================================
+
+  // Book categories management
+  async getBookCategories(): Promise<BookCategory[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getBookCategory(id: number): Promise<BookCategory | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getBookCategoriesByParent(parentId: number | null): Promise<BookCategory[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createBookCategory(data: BookCategoryInsert): Promise<BookCategory> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateBookCategory(id: number, updates: Partial<BookCategory>): Promise<BookCategory | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async deleteBookCategory(id: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Books management
+  async getBooks(filters?: { categoryId?: number; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getBook(id: number): Promise<Book | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getBookByISBN(isbn: string): Promise<Book | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getBooksByCategory(categoryId: number): Promise<Book[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getFreeBooks(): Promise<Book[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async searchBooks(query: string): Promise<Book[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createBook(data: BookInsert): Promise<Book> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateBook(id: number, updates: Partial<Book>): Promise<Book | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async deleteBook(id: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Book assets management
+  async getBookAssets(bookId: number): Promise<BookAsset[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getBookAsset(id: number): Promise<BookAsset | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createBookAsset(data: BookAssetInsert): Promise<BookAsset> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateBookAsset(id: number, updates: Partial<BookAsset>): Promise<BookAsset | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async deleteBookAsset(id: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Dictionary lookups management
+  async getDictionaryLookups(userId: number, language?: string): Promise<DictionaryLookup[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getDictionaryLookup(id: number): Promise<DictionaryLookup | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createDictionaryLookup(data: DictionaryLookupInsert): Promise<DictionaryLookup> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async deleteDictionaryLookup(id: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Cart management
+  async getUserCart(userId: number): Promise<Cart | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createCart(data: CartInsert): Promise<Cart> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateCart(id: number, updates: Partial<Cart>): Promise<Cart | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async clearCart(userId: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Cart items management
+  async getCartItems(cartId: number): Promise<(CartItem & { book: Book })[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getCartItem(id: number): Promise<CartItem | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async addToCart(cartId: number, bookId: number, quantity?: number): Promise<CartItem> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateCartItem(id: number, quantity: number): Promise<CartItem | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async removeFromCart(id: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Orders management
+  async getOrders(userId?: number, status?: string): Promise<(Order & { items: (OrderItem & { book: Book })[] })[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getOrder(id: number): Promise<(Order & { items: (OrderItem & { book: Book })[] }) | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getUserOrders(userId: number): Promise<Order[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createOrder(data: OrderInsert): Promise<Order> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateOrderStatus(id: number, status: string): Promise<Order | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async cancelOrder(id: number): Promise<Order | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Order items management
+  async getOrderItems(orderId: number): Promise<(OrderItem & { book: Book })[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createOrderItem(data: OrderItemInsert): Promise<OrderItem> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateOrderItem(id: number, updates: Partial<OrderItem>): Promise<OrderItem | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // User addresses management
+  async getUserAddresses(userId: number): Promise<UserAddress[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getUserAddress(id: number): Promise<UserAddress | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getDefaultUserAddress(userId: number): Promise<UserAddress | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createUserAddress(data: UserAddressInsert): Promise<UserAddress> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateUserAddress(id: number, updates: Partial<UserAddress>): Promise<UserAddress | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async setDefaultAddress(userId: number, addressId: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async deleteUserAddress(id: number): Promise<void> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Shipping orders management
+  async getShippingOrders(status?: string): Promise<(ShippingOrder & { order: Order; address: UserAddress })[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getShippingOrder(id: number): Promise<(ShippingOrder & { order: Order; address: UserAddress }) | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getShippingOrderByOrderId(orderId: number): Promise<ShippingOrder | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createShippingOrder(data: ShippingOrderInsert): Promise<ShippingOrder> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateShippingOrder(id: number, updates: Partial<ShippingOrder>): Promise<ShippingOrder | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async updateShippingStatus(id: number, status: string, trackingNumber?: string): Promise<ShippingOrder | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // Courier tracking management
+  async getCourierTracking(shippingOrderId: number): Promise<CourierTracking[]> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async createCourierTracking(data: CourierTrackingInsert): Promise<CourierTracking> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  async getLatestTrackingUpdate(shippingOrderId: number): Promise<CourierTracking | undefined> {
+    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
   }
 }

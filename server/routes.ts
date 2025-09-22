@@ -18,6 +18,8 @@ import courseRoadmapRoutes from "./routes/course-roadmap-routes";
 import examRoadmapRoutes from "./routes/exam-roadmap-routes";
 import { createAiStudyPartnerRoutes } from "./routes/ai-study-partner-routes";
 import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
+import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
+import searchRoutes from "./routes/search-routes";
 import tttRoutes from "./ttt-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
 import mstRoutes from "./modules/mst/routes/mstRoutes";
@@ -20653,6 +20655,9 @@ Meta Lingua Academy`;
   // Register Global Lexi routes
   registerGlobalLexiRoutes(app, storage);
   
+  // Register Book E-commerce routes
+  setupBookEcommerceRoutes(app);
+  
   console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
   console.log('✅ Exam-focused roadmap routes registered successfully');
   console.log('✅ AI Study Partner routes registered successfully');
@@ -21985,6 +21990,10 @@ Meta Lingua Academy`;
   // ========================
   // ERROR HANDLING - 404 for non-existent endpoints
   // ========================
+  
+  // Register Universal Search System routes
+  app.use('/api/search', searchRoutes);
+  console.log('✅ Universal Search System routes registered (Multi-entity search, AI-enhanced results, Analytics)');
   
   // Catch-all route for API endpoints that don't exist
   app.use('/api/*', (req, res) => {

@@ -18,6 +18,7 @@ import Auth from "@/pages/auth";
 import SimpleAuth from "@/pages/simple-auth";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
+import SearchResults from "@/pages/SearchResults";
 import UnifiedDashboard from "@/pages/unified-dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -84,6 +85,7 @@ import VideoCoursDetail from "@/pages/student/video-course-detail";
 import VideoPlayer from "@/pages/student/video-player";
 import StudentProfile from "@/pages/student/profile";
 import VirtualMall from "@/pages/student/virtual-mall";
+import BookReader from "@/pages/BookReader";
 import CourseDetail from "@/pages/course-detail";
 import LevelAssessment from "@/pages/level-assessment";
 import MSTPage from "@/pages/mst";
@@ -210,6 +212,11 @@ function Router() {
       <Route path="/profile">
         <ProtectedRoute>
           <ProfileRedirect />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/search">
+        <ProtectedRoute>
+          <SearchResults />
         </ProtectedRoute>
       </Route>
       <Route path="/pronunciation-practice">
@@ -498,6 +505,16 @@ function Router() {
           <SessionsPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/books/:bookId/read">
+        <ProtectedRoute>
+          <BookReader />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/orders/:orderId/books/:bookId/read">
+        <ProtectedRoute>
+          <BookReader />
+        </ProtectedRoute>
+      </Route>
       <Route path="/homework">
         <ProtectedRoute>
           <HomeworkPage />
@@ -755,9 +772,24 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/callern/video/:callId">
-        <ProtectedRoute>
-          <CallernVideoCall />
-        </ProtectedRoute>
+        {(params: { callId: string }) => {
+          const CallernVideoCallWrapper = () => {
+            const { user } = useAuth();
+            return (
+              <CallernVideoCall
+                roomId={params.callId}
+                userId={user?.id || 0}
+                role={(user?.role === 'teacher' ? 'teacher' : 'student') as 'teacher' | 'student'}
+                onCallEnd={() => window.history.back()}
+              />
+            );
+          };
+          return (
+            <ProtectedRoute>
+              <CallernVideoCallWrapper />
+            </ProtectedRoute>
+          );
+        }}
       </Route>
       <Route path="/admin/room-management">
         <ProtectedRoute>
