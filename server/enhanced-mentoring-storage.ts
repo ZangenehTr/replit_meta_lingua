@@ -38,7 +38,7 @@ import type {
 
 import type { UnifiedTestSession, UnifiedResponse } from '@shared/unified-testing-schema';
 import { MentoringAnalyticsEngine } from '@shared/mentoring-analytics-engine';
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 
 // ============================================================================
 // STORAGE CONFIGURATION
@@ -192,7 +192,7 @@ export interface AnalyticsPerformanceMetrics {
 };
 
 export interface ProgressSnapshotOptions {
-  dates: Date[];
+  dates?: Date[];
   includeMetadata?: boolean;
   aggregateBySkill?: boolean;
 }
@@ -215,8 +215,8 @@ export interface IEnhancedMentoringStorage {
   deleteStudentProgress(id: number): Promise<boolean>;
   
   // Progress analytics and aggregation
-  getStudentProgressMetrics(studentId: number, dateFrom?: Date, dateTo?: Date): Promise<StudentProgressMetrics>;
-  getProgressTrends(studentId: number, timeframeDays: number): Promise<PerformanceTrendAnalysis>;
+  getStudentProgressMetrics(studentId: number, options?: { dateFrom?: Date; dateTo?: Date; includeAnalytics?: boolean }): Promise<EnhancedStudentProgressMetrics>;
+  getProgressTrends(studentId: number, timeframe: 'week' | 'month' | 'quarter'): Promise<PerformanceTrendAnalysis>;
   getBulkStudentProgress(studentIds: number[], options?: ProgressQueryOptions): Promise<Map<number, EnhancedStudentProgress[]>>;
   
   // Progress snapshots for historical tracking
@@ -502,7 +502,7 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
   private analyticsIdCounter = 1;
   
   // Enhanced LRU-based caching system
-  private metricsCache: LRU<string, any>;
+  private metricsCache: LRUCache<string, any>;
   private cacheStats: CacheStatistics;
   private performanceMetrics = new Map<string, AnalyticsPerformanceMetrics[]>();
   
@@ -510,7 +510,7 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
     console.log('Enhanced Mentoring Memory Storage initialized');
     
     // Initialize enhanced caching system
-    this.metricsCache = new LRU({
+    this.metricsCache = new LRUCache({
       max: STORAGE_CONFIG.CACHE_MAX_SIZE,
       ttl: STORAGE_CONFIG.ANALYTICS_CACHE_TTL, // Default TTL
       allowStale: false,
