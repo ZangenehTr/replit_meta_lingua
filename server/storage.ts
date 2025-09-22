@@ -1,10 +1,10 @@
 import { 
   users, courses, enrollments, sessions, messages, homework, 
-  payments, notifications, instituteBranding, leads, invoices,
+  payments, notifications, leads, invoices,
   communicationLogs, achievements, userAchievements,
   userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
   moodEntries, moodRecommendations, learningAdaptations, attendanceRecords, rooms,
-  studentQuestionnaires, questionnaireResponses, userProfiles, rolePermissions, userSessions,
+  studentQuestionnaires, userProfiles, rolePermissions, userSessions,
   passwordResetTokens,
   sessionPackages, walletTransactions, coursePayments, mentorAssignments, mentoringSessions,
   classes, holidays,
@@ -93,7 +93,6 @@ import {
   type SupervisionObservation, type InsertSupervisionObservation,
   type TeacherObservationResponse, type InsertTeacherObservationResponse,
   // Exam roadmap types
-  type RoadmapPlan, type InsertRoadmapPlan, type RoadmapSession, type InsertRoadmapSession,
   roadmapPlans, roadmapSessions,
   // Chat and AI study partner types
   type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,

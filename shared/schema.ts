@@ -821,22 +821,6 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-// Institute branding settings
-export const instituteBranding = pgTable("institute_branding", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  logo: text("logo"),
-  primaryColor: text("primary_color").default("#3B82F6"),
-  secondaryColor: text("secondary_color").default("#10B981"),
-  accentColor: text("accent_color").default("#8B5CF6"),
-  backgroundColor: text("background_color").default("#FFFFFF"),
-  textColor: text("text_color").default("#1F2937"),
-  favicon: text("favicon"),
-  loginBackgroundImage: text("login_background_image"),
-  fontFamily: text("font_family").default("Inter"),
-  borderRadius: text("border_radius").default("0.5rem"),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
 
 
 // Custom Roles and Permissions System
@@ -1123,7 +1107,6 @@ export const insertSessionPackageSchema = createInsertSchema(sessionPackages);
 export const insertWalletTransactionSchema = createInsertSchema(walletTransactions);
 export const insertCoursePaymentSchema = createInsertSchema(coursePayments);
 export const insertNotificationSchema = createInsertSchema(notifications);
-export const insertBrandingSchema = createInsertSchema(instituteBranding);
 export const insertCustomRoleSchema = createInsertSchema(customRoles);
 export const insertAchievementSchema = createInsertSchema(achievements);
 export const insertUserAchievementSchema = createInsertSchema(userAchievements);
@@ -2547,8 +2530,6 @@ export type CoursePayment = typeof coursePayments.$inferSelect;
 export type InsertCoursePayment = z.infer<typeof insertCoursePaymentSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
-export type InstituteBranding = typeof instituteBranding.$inferSelect;
-export type InsertBranding = z.infer<typeof insertBrandingSchema>;
 export type Achievement = typeof achievements.$inferSelect;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type UserAchievement = typeof userAchievements.$inferSelect;
@@ -2665,7 +2646,11 @@ export const adminSettings = pgTable("admin_settings", {
 });
 
 // Admin settings schema
-export const insertAdminSettingsSchema = createInsertSchema(adminSettings).omit({
+export const insertAdminSettingsSchema = createInsertSchema(adminSettings, {
+  id: z.number().optional(),
+  createdAt: z.date().optional(), 
+  updatedAt: z.date().optional()
+}).omit({
   id: true,
   createdAt: true,
   updatedAt: true
@@ -3108,20 +3093,6 @@ export const studentQuestionnaires = pgTable("student_questionnaires", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Student questionnaire responses
-export const questionnaireResponses = pgTable("questionnaire_responses", {
-  id: serial("id").primaryKey(),
-  questionnaireId: integer("questionnaire_id").references(() => studentQuestionnaires.id).notNull(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  teacherId: integer("teacher_id").references(() => users.id).notNull(),
-  sessionId: integer("session_id").references(() => sessions.id).notNull(),
-  responses: jsonb("responses").$type<Array<{
-    questionId: string;
-    answer: string | number;
-  }>>().notNull(),
-  averageRating: decimal("average_rating", { precision: 3, scale: 2 }),
-  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
-});
 
 // Supervision observation forms (aligned with existing database schema)
 export const supervisionObservations = pgTable("supervision_observations", {
@@ -3199,10 +3170,6 @@ export const insertStudentQuestionnaireSchema = createInsertSchema(studentQuesti
   updatedAt: true
 });
 
-export const insertQuestionnaireResponseSchema = createInsertSchema(questionnaireResponses).omit({
-  id: true,
-  submittedAt: true
-});
 
 export const insertSupervisionObservationSchema = createInsertSchema(supervisionObservations).omit({
   id: true,
@@ -3236,8 +3203,6 @@ export type TeacherRetentionData = typeof teacherRetentionData.$inferSelect;
 export type InsertTeacherRetentionData = z.infer<typeof insertTeacherRetentionDataSchema>;
 export type StudentQuestionnaire = typeof studentQuestionnaires.$inferSelect;
 export type InsertStudentQuestionnaire = z.infer<typeof insertStudentQuestionnaireSchema>;
-export type QuestionnaireResponse = typeof questionnaireResponses.$inferSelect;
-export type InsertQuestionnaireResponse = z.infer<typeof insertQuestionnaireResponseSchema>;
 export type SupervisionObservation = typeof supervisionObservations.$inferSelect;
 export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObservationSchema>;
 

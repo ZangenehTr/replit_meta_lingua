@@ -13,7 +13,7 @@ import {
 } from './business-logic-utils';
 import { 
   users, userProfiles, userSessions, rolePermissions, courses, enrollments,
-  sessions, messages, homework, payments, notifications, instituteBranding,
+  sessions, messages, homework, payments, notifications,
   achievements, userAchievements, userStats, dailyGoals, adminSettings,
   walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
   skillAssessments, learningActivities, progressSnapshots, leads,
@@ -27,7 +27,7 @@ import {
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
   type Session, type InsertSession, type Message, type InsertMessage,
   type Homework, type InsertHomework, type Payment, type InsertPayment,
-  type Notification, type InsertNotification, type InstituteBranding, type InsertBranding,
+  type Notification, type InsertNotification,
   type Achievement, type InsertAchievement, type UserAchievement, type InsertUserAchievement,
   type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal,
   type AdminSettings, type InsertAdminSettings, type WalletTransaction, type InsertWalletTransaction,
@@ -71,13 +71,13 @@ import {
   type AiVocabularyTracking, type InsertAiVocabularyTracking, type AiGrammarTracking, type InsertAiGrammarTracking,
   type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis,
   // Quality Assurance types
-  liveClassSessions, teacherRetentionData, studentQuestionnaires, questionnaireResponses, supervisionObservations, scheduledObservations,
+  liveClassSessions, teacherRetentionData, studentQuestionnaires, supervisionObservations, scheduledObservations,
   type LiveClassSession, type InsertLiveClassSession, type TeacherRetentionData, type InsertTeacherRetentionData,
   // Chat and AI study partner types  
   chatConversations, chatMessages, aiStudyPartners,
   type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
   type AiStudyPartner, type InsertAiStudyPartner,
-  type StudentQuestionnaire, type InsertStudentQuestionnaire, type QuestionnaireResponse, type InsertQuestionnaireResponse,
+  type StudentQuestionnaire, type InsertStudentQuestionnaire,
   type SupervisionObservation, type InsertSupervisionObservation, type ScheduledObservation, type InsertScheduledObservation,
   // Communication system types
   supportTickets, supportTicketMessages, pushNotifications, notificationDeliveryLogs,
@@ -114,9 +114,6 @@ import {
   type LevelAssessmentResult, type InsertLevelAssessmentResult,
   // Exam roadmap tables and types
   roadmapConfigs, roadmapPlans, roadmapSessions,
-  type RoadmapConfig, type InsertRoadmapConfig,
-  type RoadmapPlan, type InsertRoadmapPlan,
-  type RoadmapSession, type InsertRoadmapSession,
   // Placement test tables and types
   placementTests, placementQuestions, placementTestSessions, placementResults,
   type PlacementTest, type InsertPlacementTest,
