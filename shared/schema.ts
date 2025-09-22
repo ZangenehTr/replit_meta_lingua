@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, varchar, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, varchar, date, time } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -231,8 +231,8 @@ export const courses = pgTable("courses", {
   firstSessionDate: date("first_session_date"), // Start date of the course
   lastSessionDate: date("last_session_date"), // Calculated end date
   weekdays: text("weekdays").array(), // ["monday", "wednesday", "friday"]
-  startTime: text("start_time"), // "18:00"
-  endTime: text("end_time"), // "19:30"
+  startTime: time("start_time"), // "18:00"
+  endTime: time("end_time"), // "19:30"
   timeZone: text("time_zone").default("Asia/Tehran"), // Course timezone
   calendarType: text("calendar_type").default("gregorian"), // "gregorian" or "persian"
   
@@ -301,8 +301,8 @@ export const classes = pgTable("classes", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(), // Auto-calculated based on course duration and holidays
   weekdays: text("weekdays").array().notNull(), // ["monday", "wednesday", "friday"]
-  startTime: text("start_time").notNull(), // "18:00"
-  endTime: text("end_time").notNull(), // "19:30"
+  startTime: time("start_time").notNull(), // "18:00"
+  endTime: time("end_time").notNull(), // "19:30"
   
   // Class-specific settings
   maxStudents: integer("max_students").notNull().default(20),
@@ -352,8 +352,8 @@ export const courseSessions = pgTable("course_sessions", {
   title: text("title").notNull(),
   description: text("description"),
   scheduledDate: date("scheduled_date").notNull(),
-  startTime: text("start_time").notNull(), // "18:00"
-  endTime: text("end_time").notNull(), // "19:30"
+  startTime: time("start_time").notNull(), // "18:00"
+  endTime: time("end_time").notNull(), // "19:30"
   durationMinutes: integer("duration_minutes").notNull(), // 90
   status: text("status").default("scheduled"), // scheduled, completed, cancelled, rescheduled
   actualStartTime: timestamp("actual_start_time"),
@@ -3441,8 +3441,8 @@ export const teacherAvailability = pgTable("teacher_availability", {
   id: serial("id").primaryKey(),
   teacherId: integer("teacher_id").notNull().references(() => users.id),
   dayOfWeek: text("day_of_week").notNull(), // Monday, Tuesday, etc.
-  startTime: text("start_time").notNull(), // HH:MM format
-  endTime: text("end_time").notNull(), // HH:MM format
+  startTime: time("start_time").notNull(), // HH:MM format
+  endTime: time("end_time").notNull(), // HH:MM format
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
