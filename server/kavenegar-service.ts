@@ -32,7 +32,7 @@ export class KavenegarService {
     if (!this.apiKey) {
       console.warn('KAVENEGAR_API_KEY not provided - SMS service will not function');
     } else {
-      console.log('Kavenegar API Key configured:', this.apiKey.substring(0, 8) + '...');
+      console.log('✅ Kavenegar API Key configured successfully');
     }
   }
 
