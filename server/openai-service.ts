@@ -183,3 +183,65 @@ Return JSON with:
     throw new Error('Failed to generate pronunciation guide');
   }
 }
+
+/**
+ * OpenAI Service object for AI mentoring system compatibility
+ */
+export const openaiService = {
+  async generateResponse(request: {
+    model?: string;
+    prompt: string;
+    systemPrompt?: string;
+    temperature?: number;
+    maxTokens?: number;
+  }): Promise<{ success: boolean; content?: string; error?: string }> {
+    try {
+      if (!process.env.OPENAI_API_KEY) {
+        return {
+          success: false,
+          error: 'OpenAI API key not configured'
+        };
+      }
+
+      const response = await openai.chat.completions.create({
+        model: request.model || 'gpt-4o-mini',
+        messages: [
+          ...(request.systemPrompt ? [{ role: 'system' as const, content: request.systemPrompt }] : []),
+          { role: 'user' as const, content: request.prompt }
+        ],
+        temperature: request.temperature || 0.7,
+        max_tokens: request.maxTokens || 1000
+      });
+
+      return {
+        success: true,
+        content: response.choices[0]?.message?.content || ''
+      };
+    } catch (error: any) {
+      console.error('OpenAI generation error:', error);
+      return {
+        success: false,
+        error: error.message || 'OpenAI generation failed'
+      };
+    }
+  },
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      if (!process.env.OPENAI_API_KEY) {
+        return false;
+      }
+      
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: 'test' }],
+        max_tokens: 5
+      });
+      
+      return !!response.choices[0]?.message?.content;
+    } catch (error) {
+      console.error('OpenAI health check failed:', error);
+      return false;
+    }
+  }
+};

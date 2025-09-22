@@ -21985,6 +21985,11 @@ Meta Lingua Academy`;
   app.use('/api/unified-testing', unifiedTestingRoutes);
   console.log('✅ Unified Testing System routes registered (Questions, Templates, Sessions, Analytics)');
 
+  // Register Enhanced Mentoring System routes
+  const { default: enhancedMentoringRoutes } = await import('./enhanced-mentoring-routes');
+  app.use('/api/enhanced-mentoring', enhancedMentoringRoutes);
+  console.log('✅ Enhanced Mentoring System routes registered (Progress Tracking, AI Recommendations, Learning Paths, Analytics)');
+
   // ========================
   // ERROR HANDLING - 404 for non-existent endpoints
   // ========================
