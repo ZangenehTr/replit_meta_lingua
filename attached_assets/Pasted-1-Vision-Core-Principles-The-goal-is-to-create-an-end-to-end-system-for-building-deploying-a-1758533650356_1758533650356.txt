@@ -1,0 +1,135 @@
+1. Vision & Core Principles 🎯
+The goal is to create an end-to-end system for building, deploying, and analyzing exams for a wide range of standardized tests (IELTS, TOEFL, GRE, PTE, GMAT). The system will support two creation workflows (manual and AI-automated) and provide a powerful, role-based analytics dashboard to turn performance data into actionable insights for students, teachers, and administrators.
+
+This engine will be built on five core principles:
+
+Modularity: New question types and analytics modules can be added easily.
+
+Admin Experience (No-Code): An intuitive, visual interface for building questions and tests.
+
+Learner Experience (Realism & Beauty): A clean, interactive, and faithful simulation of the real exam.
+
+Role-Based Access Control: System access is strictly enforced. Teachers are not authorized to create questions but will have access to their students' analytics.
+
+Data-Driven Insights: Raw scores are transformed into clear, visual reports that highlight strengths, weaknesses, and performance trends for every user role.
+
+2. Core System Architecture 🏗️
+The architecture consists of four main components:
+
+A. The Question Bank: A central, secure repository for all individual questions.
+
+B. The Test Assembly Module: Allows Admins/Supervisors to combine questions into reusable test templates.
+
+C. The AI Generation Subsystem: Leverages existing AI to automate question creation from source materials.
+
+D. The Analytics & Reporting Engine: A crucial component that processes all test results and presents them through a role-based dashboard.
+
+3. Question Creation & Test Assembly Workflows 🔄
+The system must provide two distinct routes for creating content.
+
+Route 1: Manual Creation & Assembly
+This workflow provides granular control for creating official mid-term and final exams.
+
+Step 1: Individual Question Creation: An Admin or Supervisor uses the "Question Builder" to select a question type and fill in a dynamic form to create a new question, which is saved to the Question Bank.
+
+Step 2: Test Assembly: The Admin/Supervisor uses the "Test Assembly Module" to search the Question Bank, select a combination of questions, arrange them into sections with specific rules, and save the result as a reusable test template.
+
+Route 2: AI-Automated Generation
+This workflow is for rapidly creating practice sets based on class materials.
+
+Step 1: Material Upload & Instruction Prompt: An Admin or Supervisor uploads materials (PDFs, audio) to the "AI Test Generator" and provides a structured prompt defining the desired test format.
+
+Step 2: AI Processing & Question Generation: The AI subsystem analyzes the materials and generates the requested questions, enforcing structural rules (e.g., one reading passage for multiple questions).
+
+Step 3: Review and Save: The generated questions are presented for review and can be edited before being saved to the Question Bank and assembled into a test.
+
+4. Detailed Specifications for Key Question Types ✍️
+This section defines the implementation details for each question type.
+
+IELTS, GRE, & TOEFL Types
+IELTS: Map/Diagram Labeling: Admin uploads an image and draws interactive answer boxes on it. Learner types answers directly into the boxes on the image. Scoring is per item and ignores capitalization.
+
+IELTS: Multiple Choice (Multiple Answers): Admin sets a question requiring 2 or 3 correct choices and sets the total points (e.g., 2). Scoring is per item (1 point per correct selection).
+
+GRE: Text Completion (Multiple Blanks): Admin writes a passage with [blank1], [blank2], etc., and provides options for each blank. Scoring is partial credit (1 point per correct blank).
+
+GRE: Sentence Equivalence: Admin provides a sentence with one blank and six word choices, marking two as correct. Scoring is "all or nothing"—both must be selected to earn 1 point.
+
+TOEFL: Coherence Insertion / GRE: Sentence Select: Admin provides a passage and a target sentence. The admin then marks the correct insertion point (between paragraphs) or the correct sentence to be selected within the passage. Scoring is "exact match" for 1 point.
+
+PTE (Pearson Test of English) Types
+PTE: Read Aloud / Repeat Sentence: Admin provides text and timers for preparation/recording. The learner's recorded audio is analyzed by an AI speech model for content, fluency, and pronunciation.
+
+PTE: Describe Image: Admin uploads an image. The learner records their description. Scoring is done by an AI speech model that evaluates content against key features of the image.
+
+PTE: Fill in the Blanks (Reading & Writing): Admin provides a passage with blanks and a list of correct and distractor words. The learner drags and drops words from a word bank into the blanks. Scoring is per item (1 point per correct word).
+
+GMAT (Graduate Management Admission Test) Types
+GMAT: Data Sufficiency: Admin provides a question and two statements. The learner chooses from the 5 standard, fixed GMAT options to determine if the statements are sufficient. Scoring is "exact match."
+
+GMAT: Sentence Correction: Admin provides a sentence with an underlined portion and five replacement options (option A is always the original). The learner chooses the best option. Scoring is "exact match."
+
+GMAT: Two-Part Analysis: Admin provides a problem with a two-part solution. The learner makes a selection in two separate columns of a table. Scoring is "all or nothing"—both selections must be correct to earn 1 point.
+
+5. Post-Exam Analytics & Reporting Dashboard 📊
+After any exam is completed, the system will process the results and make them available in a dedicated Analytics Dashboard. Access and data visibility are strictly determined by user role.
+
+A. For Students & Mentors
+Access Level: Students see only their own results. Mentors see the results of their assigned mentees.
+
+Purpose: To provide clear, actionable feedback for self-improvement.
+
+Dashboard Features:
+
+Overall Performance: Total score, percentile rank, breakdown by section.
+
+Performance by Question Type: A bar chart showing accuracy for each question type (e.g., "Multiple Choice: 80%", "Map Labeling: 45%").
+
+Performance by Skill/Subject Area: A radar chart or table showing performance on tagged topics.
+
+Answer Review: A detailed review of every question with explanations.
+
+B. For Teachers
+Access Level: Can see individual and aggregate results for all students in the classes they teach.
+
+Purpose: To identify class-wide trends and tailor instruction.
+
+Dashboard Features:
+
+Class Overview: Aggregate class score, score distribution, and performance by section.
+
+Aggregate Performance by Question Type: A class-wide chart showing which question types the entire class struggled with most.
+
+Aggregate Performance by Subject Area: A report identifying common conceptual gaps.
+
+Student Drill-Down: Ability to view the detailed report for any individual student in their class.
+
+C. For Supervisors & Admins
+Access Level: Full access to all data across all teachers, classes, and students.
+
+Purpose: To evaluate teacher performance, curriculum effectiveness, and overall institutional progress.
+
+Dashboard Features:
+
+Teacher Performance Comparison: A dashboard to compare class averages between different teachers.
+
+Teacher-Specific Skill Analysis: An aggregate report on a teacher's students' strengths and weaknesses to answer questions like, "Are Teacher A's students consistently weaker in 'Sentence Correction' questions compared to the average?"
+
+Curriculum & Question Bank Analysis: Reports that analyze the performance of individual questions across all students to identify flawed or poorly balanced questions.
+
+Global Search & Filtering: The ability to filter all analytics by date range, course, exam type, and teacher to generate custom reports.
+
+6. Global Answer Evaluation Engine ⚙️
+A centralized evaluateAnswer() function must be created to handle scoring nuances consistently across all relevant question types.
+
+Functionality: It will take the user_answer, the correct_answer, and a rules object as input.
+
+Rules to Implement:
+
+ignore_capitalization: Converts both user and correct answers to lowercase before comparing (for IELTS Listening/Reading).
+
+acceptable_variations: An array of strings that are all considered correct (e.g., ["car", "back car"]).
+
+ignore_punctuation: Strips common punctuation before comparison.
+
+allow_numeric_equivalence: Considers "two" and "2" to be the same.
