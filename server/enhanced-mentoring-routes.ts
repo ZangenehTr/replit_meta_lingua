@@ -1761,7 +1761,7 @@ enhancedMentoringRouter.post('/learning-paths/:id/adapt',
 enhancedMentoringRouter.post('/ai/guidance',
   authenticateToken,
   requireRole(['mentor', 'admin', 'teacher', 'supervisor']),
-  aiRateLimit,
+  analyticsAIRateLimit,
   validateBody(aiGuidanceRequestSchema),
   async (req: Request, res: Response) => {
     try {
@@ -1846,7 +1846,7 @@ const progressReportSchema = z.object({
 enhancedMentoringRouter.post('/ai/progress-report',
   authenticateToken,
   requireRole(['mentor', 'admin', 'teacher', 'supervisor']),
-  aiRateLimit,
+  analyticsAIRateLimit,
   validateBody(progressReportSchema),
   async (req: Request, res: Response) => {
     try {
@@ -2442,7 +2442,7 @@ enhancedMentoringRouter.get('/students-at-risk',
 enhancedMentoringRouter.post('/analyze-test-results',
   authenticateToken,
   requireRole(['mentor', 'admin', 'teacher', 'supervisor']),
-  aiRateLimit,
+  analyticsAIRateLimit,
   validateBody(testAnalysisSchema),
   async (req: Request, res: Response) => {
     try {

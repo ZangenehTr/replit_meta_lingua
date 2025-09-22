@@ -382,16 +382,8 @@ const requireRole = (roles: string[]) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV,
-      version: '1.0.0'
-    });
-  });
+  // Health check endpoint is now handled by the comprehensive health monitoring service
+  // Previously defined here, now handled by healthRouter at /api/health
 
   // Serve static audio and photo files
   app.use('/uploads/audio', express.static('uploads/audio'));

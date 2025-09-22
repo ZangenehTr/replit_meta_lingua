@@ -794,13 +794,7 @@ export class TemplateManager {
   }
 }
 
-// Export template instances and manager
-export {
-  FarsiInsightTemplate,
-  EnglishInsightTemplate,
-  ArabicInsightTemplate,
-  TemplateManager
-};
+// Template instances and manager are already exported when defined
 
 // Export types for TypeScript compliance
 export type {

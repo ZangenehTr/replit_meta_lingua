@@ -5,6 +5,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { healthRouter } from './health-monitoring.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -480,6 +481,10 @@ app.use((req, res, next) => {
   app.set('unifiedTestingStorage', mapBasedStorage);
   console.log('✅ Map-based unified testing storage injected (NO database dependencies)');
 
+  // Register health monitoring endpoints
+  app.use('/api', healthRouter);
+  console.log('✅ Health monitoring endpoints registered');
+  
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
