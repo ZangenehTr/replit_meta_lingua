@@ -2436,6 +2436,7 @@ export const mentorAssignments = pgTable("mentor_assignments", {
   id: serial("id").primaryKey(),
   mentorId: integer("mentor_id").references(() => users.id).notNull(),
   studentId: integer("student_id").references(() => users.id).notNull(),
+  enrollmentId: integer("enrollment_id").references(() => userTrackEnrollments.id), // Link to track enrollment for auto-mentoring
   status: text("status").default("active"), // active, completed, paused, terminated
   assignedDate: timestamp("assigned_date").defaultNow().notNull(),
   completedDate: timestamp("completed_date"),
@@ -4622,3 +4623,502 @@ export type RoadmapSession = typeof roadmapSessions.$inferSelect;
 export type RoadmapSessionInsert = z.infer<typeof roadmapSessionInsertSchema>;
 
 // Placement test schemas and types exported above
+
+// ============================================================================
+// UNIFIED TASK-BASED LEARNING TRACKS SCHEMA
+// ============================================================================
+
+// Learning Tracks - Consolidated main container for all roadmap systems
+export const learningTracks = pgTable("learning_tracks", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  targetLanguage: text("target_language").notNull(), // persian, english, arabic, german, etc.
+  targetLevel: text("target_level").notNull(), // A1, A2, B1, B2, C1, C2
+  trackType: text("track_type").notNull(), // callern, course, self_paced, exam_prep, conversation
+  deliveryMode: text("delivery_mode").notNull(), // online, in_person, hybrid, callern, self_paced
+  
+  // Track metadata
+  estimatedWeeks: integer("estimated_weeks").notNull(),
+  weeklyHours: integer("weekly_hours").notNull(),
+  totalExpectedMinutes: integer("total_expected_minutes").notNull(), // Total time investment
+  difficulty: text("difficulty").default("intermediate"), // beginner, intermediate, advanced
+  prerequisites: text("prerequisites").array().default([]),
+  
+  // Visual and branding
+  thumbnailUrl: text("thumbnail_url"),
+  iconName: text("icon_name"),
+  accentColor: text("accent_color"), // Hex color for UI theming
+  
+  // Pricing and access
+  price: decimal("price", { precision: 10, scale: 2 }).default("0.00"),
+  currency: text("currency").default("IRR"),
+  accessPeriodMonths: integer("access_period_months"), // For time-limited access
+  
+  // Configuration
+  isActive: boolean("is_active").default(true),
+  isFeatured: boolean("is_featured").default(false),
+  allowSelfEnrollment: boolean("allow_self_enrollment").default(true),
+  requiresApproval: boolean("requires_approval").default(false),
+  
+  // Legacy compatibility - links to existing systems
+  legacyCourseId: integer("legacy_course_id").references(() => courses.id), // Link to existing course
+  legacyCallernPackageId: integer("legacy_callern_package_id").references(() => callernPackages.id), // Link to Callern package
+  
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Track Sub-levels - Fine-grained level divisions (A1.1, A1.2, etc.)
+export const trackSublevels = pgTable("track_sublevels", {
+  id: serial("id").primaryKey(),
+  trackId: integer("track_id").references(() => learningTracks.id).notNull(),
+  sublevelCode: text("sublevel_code").notNull(), // A1.1, A1.2, B1.1, etc.
+  title: text("title").notNull(),
+  description: text("description"),
+  orderIndex: integer("order_index").notNull(), // Sequential ordering within track
+  
+  // Time allocations per skill
+  listeningMinutes: integer("listening_minutes").default(0),
+  readingMinutes: integer("reading_minutes").default(0),
+  speakingMinutes: integer("speaking_minutes").default(0),
+  writingMinutes: integer("writing_minutes").default(0),
+  grammarMinutes: integer("grammar_minutes").default(0),
+  vocabularyMinutes: integer("vocabulary_minutes").default(0),
+  
+  // Learning objectives and outcomes
+  learningObjectives: text("learning_objectives").array().default([]),
+  canDoStatements: text("can_do_statements").array().default([]), // CEFR can-do descriptors
+  keyVocabulary: text("key_vocabulary").array().default([]),
+  grammarPoints: text("grammar_points").array().default([]),
+  
+  // Prerequisites and dependencies
+  prerequisiteSublevelIds: integer("prerequisite_sublevel_ids").array().default([]),
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Track Sessions - Individual sessions within sublevels with exam support
+export const trackSessions = pgTable("track_sessions", {
+  id: serial("id").primaryKey(),
+  sublevelId: integer("sublevel_id").references(() => trackSublevels.id).notNull(),
+  sessionNumber: integer("session_number").notNull(), // 1, 2, 3... within sublevel
+  globalSessionNumber: integer("global_session_number").notNull(), // Overall session number in track (for exam scheduling)
+  title: text("title").notNull(),
+  description: text("description"),
+  
+  // Session type and configuration
+  sessionType: text("session_type").default("regular"), // regular, review, exam, practice
+  isExam: boolean("is_exam").default(false),
+  examType: text("exam_type"), // midterm, final, quiz, placement
+  
+  // Time allocation
+  estimatedMinutes: integer("estimated_minutes").notNull().default(60),
+  
+  // Learning materials and resources
+  materials: jsonb("materials").$type<{type: string, url: string, title: string}[]>().default([]),
+  teacherGuidelines: text("teacher_guidelines"), // For live sessions
+  aiPrompts: jsonb("ai_prompts").$type<{context: string, instructions: string}[]>().default([]), // For AI-powered sessions
+  
+  // Prerequisites and dependencies
+  prerequisiteSessionIds: integer("prerequisite_session_ids").array().default([]),
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Track Tasks - Individual tasks with skill-based time allocations
+export const trackTasks = pgTable("track_tasks", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => trackSessions.id).notNull(),
+  taskNumber: integer("task_number").notNull(), // Sequential within session
+  title: text("title").notNull(),
+  description: text("description"),
+  instructions: text("instructions"),
+  
+  // Task type and skill focus
+  taskType: text("task_type").notNull(), // reading_comprehension, listening_exercise, speaking_practice, writing_task, grammar_drill, vocabulary_quiz, conversation, role_play, presentation
+  primarySkill: text("primary_skill").notNull(), // listening, reading, speaking, writing
+  secondarySkills: text("secondary_skills").array().default([]), // Additional skills practiced
+  
+  // Time allocations per skill (in minutes)
+  listeningMinutes: integer("listening_minutes").default(0),
+  readingMinutes: integer("reading_minutes").default(0),
+  speakingMinutes: integer("speaking_minutes").default(0),
+  writingMinutes: integer("writing_minutes").default(0),
+  totalExpectedMinutes: integer("total_expected_minutes").notNull(),
+  
+  // Difficulty and assessment
+  difficultyLevel: integer("difficulty_level").default(3), // 1-5 scale
+  maxScore: integer("max_score").default(100),
+  passingScore: integer("passing_score").default(60),
+  
+  // Content and materials
+  content: jsonb("content").$type<{text?: string, audio?: string, images?: string[], options?: string[]}>(), // Task content
+  correctAnswers: jsonb("correct_answers"), // Expected answers for auto-grading
+  rubric: jsonb("rubric").$type<{criterion: string, points: number, description: string}[]>(), // Grading rubric
+  
+  // Anti-plagiarism and variation support
+  antiPlagHash: text("anti_plag_hash"), // Hash for plagiarism detection
+  variationGroupId: text("variation_group_id"), // For grouping task variations
+  generationPrompt: text("generation_prompt"), // AI prompt for generating variations
+  
+  // Prerequisites and adaptive features
+  prerequisiteTaskIds: integer("prerequisite_task_ids").array().default([]),
+  adaptiveRules: jsonb("adaptive_rules").$type<{condition: string, action: string}[]>(), // Rules for AI adaptation
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// User Track Enrollments - Student enrollment and progress tracking
+export const userTrackEnrollments = pgTable("user_track_enrollments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  trackId: integer("track_id").references(() => learningTracks.id).notNull(),
+  
+  // Enrollment details
+  enrollmentDate: timestamp("enrollment_date").defaultNow(),
+  enrollmentType: text("enrollment_type").default("self"), // self, admin, mentor, system
+  enrolledBy: integer("enrolled_by").references(() => users.id),
+  
+  // Progress tracking
+  currentSublevelId: integer("current_sublevel_id").references(() => trackSublevels.id),
+  currentSessionId: integer("current_session_id").references(() => trackSessions.id),
+  currentTaskId: integer("current_task_id").references(() => trackTasks.id),
+  
+  // Time and completion tracking
+  totalTimeSpentMinutes: integer("total_time_spent_minutes").default(0),
+  completedSessions: integer("completed_sessions").default(0),
+  completedTasks: integer("completed_tasks").default(0),
+  overallProgress: decimal("overall_progress", { precision: 5, scale: 2 }).default("0.00"), // 0.00-100.00
+  
+  // Performance metrics
+  averageScore: decimal("average_score", { precision: 5, scale: 2 }).default("0.00"),
+  bestScore: decimal("best_score", { precision: 5, scale: 2 }).default("0.00"),
+  weakestSkill: text("weakest_skill"), // Based on performance analysis
+  strongestSkill: text("strongest_skill"),
+  
+  // Status and completion
+  status: text("status").default("active"), // active, paused, completed, dropped, expired
+  completedAt: timestamp("completed_at"),
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+  
+  // Access and subscription
+  accessExpiresAt: timestamp("access_expires_at"), // For time-limited tracks
+  subscriptionStatus: text("subscription_status").default("active"), // active, expired, cancelled
+  
+  // Personalization and AI
+  adaptationProfileId: integer("adaptation_profile_id").references(() => adaptationProfiles.id), // Link to AI adaptation profile
+  personalizedPath: boolean("personalized_path").default(false), // Whether AI has customized the path
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// User Task Progress - Detailed task completion with time and scores
+export const userTaskProgress = pgTable("user_task_progress", {
+  id: serial("id").primaryKey(),
+  enrollmentId: integer("enrollment_id").references(() => userTrackEnrollments.id).notNull(),
+  taskId: integer("task_id").references(() => trackTasks.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Denormalized for faster queries
+  
+  // Attempt tracking
+  attemptNumber: integer("attempt_number").default(1),
+  maxAttempts: integer("max_attempts").default(3),
+  
+  // Time tracking (in minutes)
+  listeningTimeSpent: integer("listening_time_spent").default(0),
+  readingTimeSpent: integer("reading_time_spent").default(0),
+  speakingTimeSpent: integer("speaking_time_spent").default(0),
+  writingTimeSpent: integer("writing_time_spent").default(0),
+  totalTimeSpent: integer("total_time_spent").default(0),
+  
+  // Performance tracking
+  score: decimal("score", { precision: 5, scale: 2 }), // Achieved score
+  maxPossibleScore: integer("max_possible_score").default(100),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }), // score/maxPossibleScore * 100
+  skillScores: jsonb("skill_scores").$type<{listening?: number, reading?: number, speaking?: number, writing?: number}>(), // Individual skill scores
+  
+  // Response data
+  userResponse: jsonb("user_response"), // User's submitted answers/responses
+  feedback: text("feedback"), // Teacher or AI feedback
+  teacherComments: text("teacher_comments"), // Human teacher comments
+  aiAnalysis: jsonb("ai_analysis").$type<{strengths: string[], weaknesses: string[], suggestions: string[]}>(), // AI-generated analysis
+  
+  // Status and completion
+  status: text("status").default("not_started"), // not_started, in_progress, completed, skipped, failed
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  submittedAt: timestamp("submitted_at"),
+  
+  // Adaptive features
+  wasAdapted: boolean("was_adapted").default(false), // Whether task was adapted by AI
+  adaptationReason: text("adaptation_reason"), // Why task was adapted
+  originalTaskId: integer("original_task_id").references(() => trackTasks.id), // Original task if this was adapted
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// User Sublevel Progress - Aggregated progress for charts and overviews
+export const userSublevelProgress = pgTable("user_sublevel_progress", {
+  id: serial("id").primaryKey(),
+  enrollmentId: integer("enrollment_id").references(() => userTrackEnrollments.id).notNull(),
+  sublevelId: integer("sublevel_id").references(() => trackSublevels.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Denormalized for faster queries
+  
+  // Progress metrics
+  completedSessions: integer("completed_sessions").default(0),
+  totalSessions: integer("total_sessions").notNull(),
+  completedTasks: integer("completed_tasks").default(0),
+  totalTasks: integer("total_tasks").notNull(),
+  progressPercentage: decimal("progress_percentage", { precision: 5, scale: 2 }).default("0.00"),
+  
+  // Time tracking (aggregated from tasks)
+  totalTimeSpentMinutes: integer("total_time_spent_minutes").default(0),
+  listeningTimeSpent: integer("listening_time_spent").default(0),
+  readingTimeSpent: integer("reading_time_spent").default(0),
+  speakingTimeSpent: integer("speaking_time_spent").default(0),
+  writingTimeSpent: integer("writing_time_spent").default(0),
+  
+  // Performance metrics (aggregated)
+  averageScore: decimal("average_score", { precision: 5, scale: 2 }).default("0.00"),
+  bestScore: decimal("best_score", { precision: 5, scale: 2 }).default("0.00"),
+  skillAverages: jsonb("skill_averages").$type<{listening: number, reading: number, speaking: number, writing: number}>(),
+  
+  // Status tracking
+  status: text("status").default("not_started"), // not_started, in_progress, completed
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  
+  // Milestone tracking
+  firstTaskCompletedAt: timestamp("first_task_completed_at"),
+  lastTaskCompletedAt: timestamp("last_task_completed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Track Assessment Rules - Exam and assessment configuration
+export const trackAssessmentRules = pgTable("track_assessment_rules", {
+  id: serial("id").primaryKey(),
+  trackId: integer("track_id").references(() => learningTracks.id).notNull(),
+  
+  // Assessment configuration
+  assessmentType: text("assessment_type").notNull(), // midterm, final, quiz, checkpoint
+  triggerType: text("trigger_type").notNull(), // session_number, percentage_complete, time_based, manual
+  triggerValue: text("trigger_value").notNull(), // "8", "50%", "4_weeks", etc.
+  
+  // Session targeting
+  targetSessionNumbers: integer("target_session_numbers").array().default([]), // [8, 15] for exams at specific sessions
+  sublevelIds: integer("sublevel_ids").array().default([]), // Specific sublevels to assess
+  
+  // Assessment configuration
+  title: text("title").notNull(),
+  description: text("description"),
+  instructions: text("instructions"),
+  duration: integer("duration").notNull(), // Duration in minutes
+  passingScore: integer("passing_score").default(60),
+  maxAttempts: integer("max_attempts").default(1),
+  
+  // Skills to assess
+  skillsToAssess: text("skills_to_assess").array().notNull(), // [listening, reading, speaking, writing]
+  skillWeights: jsonb("skill_weights").$type<{listening?: number, reading?: number, speaking?: number, writing?: number}>(), // Relative weights
+  
+  // Adaptive behavior
+  isAdaptive: boolean("is_adaptive").default(false), // Whether assessment adapts to student level
+  adaptationRules: jsonb("adaptation_rules").$type<{condition: string, action: string}[]>(),
+  
+  // Consequences and actions
+  onPass: jsonb("on_pass").$type<{unlock_sublevels?: number[], award_credits?: number, certificate?: string}>(),
+  onFail: jsonb("on_fail").$type<{retry_sessions?: number[], remedial_tasks?: number[], tutor_notification?: boolean}>(),
+  
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Adaptation Profiles - AI personalization profiles for each enrollment
+export const adaptationProfiles = pgTable("adaptation_profiles", {
+  id: serial("id").primaryKey(),
+  enrollmentId: integer("enrollment_id").references(() => userTrackEnrollments.id).notNull().unique(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Denormalized for faster access
+  
+  // Learning style analysis
+  learningStyle: text("learning_style"), // visual, auditory, kinesthetic, reading_writing
+  preferredPace: text("preferred_pace").default("medium"), // slow, medium, fast
+  attentionSpan: integer("attention_span").default(30), // Estimated attention span in minutes
+  optimalSessionLength: integer("optimal_session_length").default(60), // Recommended session length
+  
+  // Skill analysis
+  strongestSkill: text("strongest_skill"), // listening, reading, speaking, writing
+  weakestSkill: text("weakest_skill"),
+  skillGaps: jsonb("skill_gaps").$type<{skill: string, level: number, priority: number}[]>(), // Identified gaps
+  skillPreferences: jsonb("skill_preferences").$type<{listening: number, reading: number, speaking: number, writing: number}>(), // 1-5 preference scale
+  
+  // Performance patterns
+  averageAccuracy: decimal("average_accuracy", { precision: 5, scale: 2 }).default("0.00"),
+  consistencyScore: decimal("consistency_score", { precision: 5, scale: 2 }).default("0.00"), // How consistent performance is
+  improvementRate: decimal("improvement_rate", { precision: 5, scale: 2 }).default("0.00"), // Rate of improvement over time
+  strugglingAreas: text("struggling_areas").array().default([]), // Areas where student struggles
+  masteredConcepts: text("mastered_concepts").array().default([]), // Well-understood concepts
+  
+  // Behavioral patterns
+  engagementLevel: text("engagement_level").default("medium"), // low, medium, high
+  motivationFactors: text("motivation_factors").array().default([]), // What motivates the student
+  commonMistakes: jsonb("common_mistakes").$type<{error: string, frequency: number, context: string}[]>(),
+  responsePatterns: jsonb("response_patterns").$type<{pattern: string, frequency: number}>(),
+  
+  // Adaptive recommendations
+  recommendedTaskTypes: text("recommended_task_types").array().default([]), // Task types that work well
+  avoidTaskTypes: text("avoid_task_types").array().default([]), // Task types to avoid
+  difficultyAdjustment: decimal("difficulty_adjustment", { precision: 3, scale: 2 }).default("0.00"), // -1.00 to +1.00 difficulty modifier
+  
+  // AI confidence and reliability
+  profileConfidence: decimal("profile_confidence", { precision: 3, scale: 2 }).default("0.00"), // 0.00-1.00 AI confidence in profile
+  lastAnalysis: timestamp("last_analysis").defaultNow(),
+  analysisFrequency: integer("analysis_frequency").default(7), // Days between profile updates
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Adaptation Events - AI adaptation history and triggered changes
+export const adaptationEvents = pgTable("adaptation_events", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profile_id").references(() => adaptationProfiles.id).notNull(),
+  enrollmentId: integer("enrollment_id").references(() => userTrackEnrollments.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Denormalized for faster queries
+  
+  // Event details
+  eventType: text("event_type").notNull(), // task_adapted, difficulty_adjusted, sequence_modified, remedial_assigned, skip_recommended
+  triggerReason: text("trigger_reason").notNull(), // performance_drop, mastery_detected, engagement_low, time_exceeded
+  
+  // Context and target
+  targetType: text("target_type"), // task, session, sublevel, track
+  targetId: integer("target_id"), // ID of the adapted target
+  originalValue: jsonb("original_value"), // Original state before adaptation
+  adaptedValue: jsonb("adapted_value"), // New state after adaptation
+  
+  // Change details
+  changeDescription: text("change_description").notNull(),
+  adaptationStrength: decimal("adaptation_strength", { precision: 3, scale: 2 }).default("1.00"), // How strong the adaptation was (0.1-2.0)
+  expectedImpact: text("expected_impact"), // Expected impact on learning
+  
+  // Performance context (data that triggered the adaptation)
+  triggerData: jsonb("trigger_data").$type<{scores?: number[], times?: number[], errors?: string[], performance_trend?: string}>(),
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).default("0.50"), // AI confidence in the adaptation decision
+  
+  // Results and effectiveness
+  wasEffective: boolean("was_effective"), // Whether the adaptation was effective (evaluated later)
+  effectivenessScore: decimal("effectiveness_score", { precision: 3, scale: 2 }), // 0.00-1.00 effectiveness rating
+  studentFeedback: text("student_feedback"), // Optional student feedback on the adaptation
+  
+  // Timing
+  implementedAt: timestamp("implemented_at").defaultNow(),
+  evaluatedAt: timestamp("evaluated_at"), // When effectiveness was evaluated
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Task Generation Requests - One-button generation tracking with anti-plagiarism
+export const taskGenerationRequests = pgTable("task_generation_requests", {
+  id: serial("id").primaryKey(),
+  requestedBy: integer("requested_by").references(() => users.id).notNull(),
+  trackId: integer("track_id").references(() => learningTracks.id),
+  sublevelId: integer("sublevel_id").references(() => trackSublevels.id),
+  sessionId: integer("session_id").references(() => trackSessions.id),
+  
+  // Generation parameters
+  generationType: text("generation_type").notNull(), // single_task, session_tasks, sublevel_content, assessment, variations
+  taskType: text("task_type"), // reading_comprehension, listening_exercise, etc.
+  skill: text("skill"), // listening, reading, speaking, writing
+  difficultyLevel: integer("difficulty_level").default(3), // 1-5
+  quantity: integer("quantity").default(1), // Number of tasks to generate
+  
+  // Content requirements
+  topic: text("topic"), // Topic/theme for the tasks
+  learningObjectives: text("learning_objectives").array().default([]),
+  constraints: jsonb("constraints").$type<{max_time?: number, vocabulary_level?: string, grammar_focus?: string[]}>(),
+  customPrompt: text("custom_prompt"), // Additional instructions
+  
+  // Anti-plagiarism and variation management
+  variationGroupId: text("variation_group_id"), // Groups related variations together
+  baseTaskId: integer("base_task_id").references(() => trackTasks.id), // If generating variations of existing task
+  similarityThreshold: decimal("similarity_threshold", { precision: 3, scale: 2 }).default("0.70"), // Maximum similarity to existing content
+  antiPlagChecks: text("anti_plag_checks").array().default([]), // Types of plagiarism checks to perform
+  
+  // Generation results
+  status: text("status").default("pending"), // pending, processing, completed, failed, cancelled
+  generatedTaskIds: integer("generated_task_ids").array().default([]), // IDs of generated tasks
+  failureReason: text("failure_reason"), // Error details if generation failed
+  qualityScore: decimal("quality_score", { precision: 3, scale: 2 }), // AI assessment of generated content quality
+  
+  // Processing metadata
+  aiModel: text("ai_model"), // AI model used for generation
+  promptTokens: integer("prompt_tokens"), // Tokens used in prompt
+  completionTokens: integer("completion_tokens"), // Tokens in generated content
+  processingTime: integer("processing_time"), // Time taken in seconds
+  
+  // Review and approval
+  requiresReview: boolean("requires_review").default(true),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewStatus: text("review_status").default("pending"), // pending, approved, rejected, needs_revision
+  reviewComments: text("review_comments"),
+  reviewedAt: timestamp("reviewed_at"),
+  
+  requestedAt: timestamp("requested_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ============================================================================
+// UNIFIED SCHEMA INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// Insert schemas for all unified track tables
+export const insertLearningTrackSchema = createInsertSchema(learningTracks);
+export const insertTrackSublevelSchema = createInsertSchema(trackSublevels);
+export const insertTrackSessionSchema = createInsertSchema(trackSessions);
+export const insertTrackTaskSchema = createInsertSchema(trackTasks);
+export const insertUserTrackEnrollmentSchema = createInsertSchema(userTrackEnrollments);
+export const insertUserTaskProgressSchema = createInsertSchema(userTaskProgress);
+export const insertUserSublevelProgressSchema = createInsertSchema(userSublevelProgress);
+export const insertTrackAssessmentRuleSchema = createInsertSchema(trackAssessmentRules);
+export const insertAdaptationProfileSchema = createInsertSchema(adaptationProfiles);
+export const insertAdaptationEventSchema = createInsertSchema(adaptationEvents);
+export const insertTaskGenerationRequestSchema = createInsertSchema(taskGenerationRequests);
+
+// Type exports for all unified track tables
+export type LearningTrack = typeof learningTracks.$inferSelect;
+export type LearningTrackInsert = z.infer<typeof insertLearningTrackSchema>;
+export type TrackSublevel = typeof trackSublevels.$inferSelect;
+export type TrackSublevelInsert = z.infer<typeof insertTrackSublevelSchema>;
+export type TrackSession = typeof trackSessions.$inferSelect;
+export type TrackSessionInsert = z.infer<typeof insertTrackSessionSchema>;
+export type TrackTask = typeof trackTasks.$inferSelect;
+export type TrackTaskInsert = z.infer<typeof insertTrackTaskSchema>;
+export type UserTrackEnrollment = typeof userTrackEnrollments.$inferSelect;
+export type UserTrackEnrollmentInsert = z.infer<typeof insertUserTrackEnrollmentSchema>;
+export type UserTaskProgress = typeof userTaskProgress.$inferSelect;
+export type UserTaskProgressInsert = z.infer<typeof insertUserTaskProgressSchema>;
+export type UserSublevelProgress = typeof userSublevelProgress.$inferSelect;
+export type UserSublevelProgressInsert = z.infer<typeof insertUserSublevelProgressSchema>;
+export type TrackAssessmentRule = typeof trackAssessmentRules.$inferSelect;
+export type TrackAssessmentRuleInsert = z.infer<typeof insertTrackAssessmentRuleSchema>;
+export type AdaptationProfile = typeof adaptationProfiles.$inferSelect;
+export type AdaptationProfileInsert = z.infer<typeof insertAdaptationProfileSchema>;
+export type AdaptationEvent = typeof adaptationEvents.$inferSelect;
+export type AdaptationEventInsert = z.infer<typeof insertAdaptationEventSchema>;
+export type TaskGenerationRequest = typeof taskGenerationRequests.$inferSelect;
+export type TaskGenerationRequestInsert = z.infer<typeof insertTaskGenerationRequestSchema>;
