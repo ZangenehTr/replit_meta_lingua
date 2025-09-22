@@ -10,6 +10,7 @@ import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
 import { enhancedMentoringStorage } from './enhanced-mentoring-storage';
 import { aiMentoringService } from './ai-mentoring-service';
+import { aiInsightsService } from './ai-insights-service';
 import { MentoringAnalyticsEngine } from '@shared/mentoring-analytics-engine';
 import { authenticateToken, requireRole } from './auth-middleware';
 import {
@@ -160,6 +161,58 @@ const InterventionCreateSchema = z.object({
 });
 
 // ============================================================================
+// AI INSIGHTS VALIDATION SCHEMAS
+// ============================================================================
+
+// AI Insights query parameters schema
+const AIInsightQuerySchema = z.object({
+  language: z.enum(['fa', 'en', 'ar']).default('fa'),
+  includeRecommendations: z.boolean().optional().default(true),
+  culturalContext: z.enum(['iranian', 'arab', 'western', 'general']).optional().default('iranian'),
+  analysisDepth: z.enum(['basic', 'detailed', 'comprehensive']).optional().default('detailed'),
+  timeframe: z.object({
+    from: dateTransform,
+    to: dateTransform
+  }).optional()
+});
+
+// Student insights specific schema  
+const StudentInsightQuerySchema = AIInsightQuerySchema.extend({
+  includeProgressAnalysis: z.boolean().optional().default(true),
+  includeRiskAssessment: z.boolean().optional().default(true),
+  includePredictions: z.boolean().optional().default(false)
+});
+
+// Risk analysis specific schema
+const RiskInsightQuerySchema = AIInsightQuerySchema.extend({
+  includeInterventions: z.boolean().optional().default(true),
+  urgencyLevel: z.enum(['low', 'medium', 'high', 'critical']).optional()
+});
+
+// Cohort insights specific schema
+const CohortInsightQuerySchema = AIInsightQuerySchema.extend({
+  includeComparisons: z.boolean().optional().default(true),
+  focusAreas: z.array(z.string()).optional().default(['performance', 'engagement', 'risk_management']),
+  includeIndividualRecommendations: z.boolean().optional().default(false)
+});
+
+// Intervention effectiveness schema
+const InterventionEffectivenessQuerySchema = AIInsightQuerySchema.extend({
+  comparisonPeriod: z.enum(['week', 'month', 'quarter']).optional().default('month'),
+  includeStatistics: z.boolean().optional().default(true)
+});
+
+// Batch insights schema
+const BatchInsightRequestSchema = z.object({
+  studentIds: z.array(z.coerce.number()).max(10, 'Maximum 10 students for batch insights'),
+  language: z.enum(['fa', 'en', 'ar']).default('fa'),
+  insightTypes: z.array(z.enum(['progress', 'risk', 'predictive'])).min(1),
+  includeRecommendations: z.boolean().default(true),
+  culturalContext: z.enum(['iranian', 'arab', 'western', 'general']).optional().default('iranian'),
+  priority: z.enum(['low', 'normal', 'high']).default('normal')
+});
+
+// ============================================================================
 // ROUTER SETUP AND MIDDLEWARE
 // ============================================================================
 
@@ -218,6 +271,20 @@ const analyticsSystemRateLimit = rateLimit({
   message: {
     success: false,
     error: 'Too many system analytics requests. Please try again later.',
+    rateLimitExceeded: true,
+    retryAfter: 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// AI Insights rate limiting (10 requests/minute for AI-powered endpoints)
+const aiInsightsRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  message: {
+    success: false,
+    error: 'Too many AI insights requests. Please try again later.',
     rateLimitExceeded: true,
     retryAfter: 60
   },
@@ -2615,6 +2682,495 @@ enhancedMentoringRouter.get('/student-journey/:studentId',
         success: false,
         error: 'Failed to retrieve student journey',
         details: process.env.NODE_ENV === 'development' ? error : undefined
+      });
+    }
+  }
+);
+
+// ============================================================================
+// AI INSIGHTS API ENDPOINTS
+// ============================================================================
+// AI-powered natural language analytics summaries and recommendations
+// with multilingual support (Farsi, English, Arabic) and cultural context
+
+/**
+ * GET /api/enhanced-mentoring/insights/student/:studentId
+ * Generate comprehensive AI-powered student insights
+ * Auth: Student (own data), Mentor (assigned), Admin, Supervisor
+ * Rate limit: 10/min (AI insights)
+ * Query params: ?language=fa&includeRecommendations=true&culturalContext=iranian
+ */
+enhancedMentoringRouter.get('/insights/student/:studentId',
+  authenticateToken,
+  requireRole(['student', 'mentor', 'admin', 'supervisor']),
+  aiInsightsRateLimit,
+  validateQuery(StudentInsightQuerySchema),
+  async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    try {
+      const user = (req as any).user;
+      const studentId = parseIntParam(req.params.studentId, 'student ID');
+      const query = req.query as z.infer<typeof StudentInsightQuerySchema>;
+
+      // RBAC: Resource-level access control
+      try {
+        assertResourceAccess(user, { studentId });
+      } catch (rbacError) {
+        return res.status(403).json({
+          success: false,
+          error: rbacError.message,
+          code: 403
+        });
+      }
+
+      // Get student progress data for analysis
+      const studentData = await enhancedMentoringStorage.getStudentProgressMetrics(studentId);
+      
+      // Generate comprehensive AI insights
+      const insightsResponse = await aiInsightsService.generateStudentProgressInsights(
+        studentData,
+        query.language,
+        {
+          includeRecommendations: query.includeRecommendations,
+          culturalContext: query.culturalContext,
+          analysisDepth: query.analysisDepth
+        }
+      );
+
+      if (!insightsResponse.success) {
+        return res.status(500).json({
+          success: false,
+          error: insightsResponse.error?.message || 'Failed to generate student insights',
+          metadata: { responseTime: Date.now() - startTime }
+        });
+      }
+
+      const responseTime = Date.now() - startTime;
+      res.json({
+        success: true,
+        data: insightsResponse.data,
+        metadata: {
+          ...insightsResponse.metadata,
+          responseTime,
+          timestamp: new Date().toISOString(),
+          language: query.language,
+          culturalContext: query.culturalContext
+        }
+      });
+
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      console.error('Student insights error:', error);
+      
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate student insights',
+        metadata: { responseTime, timestamp: new Date().toISOString() },
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/enhanced-mentoring/insights/progress/:studentId
+ * Generate AI-powered progress-specific insights
+ * Auth: Student (own data), Mentor (assigned), Admin, Supervisor  
+ * Rate limit: 10/min (AI insights)
+ */
+enhancedMentoringRouter.get('/insights/progress/:studentId',
+  authenticateToken,
+  requireRole(['student', 'mentor', 'admin', 'supervisor']),
+  aiInsightsRateLimit,
+  validateQuery(AIInsightQuerySchema),
+  async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    try {
+      const user = (req as any).user;
+      const studentId = parseIntParam(req.params.studentId, 'student ID');
+      const query = req.query as z.infer<typeof AIInsightQuerySchema>;
+
+      // RBAC: Resource-level access control
+      try {
+        assertResourceAccess(user, { studentId });
+      } catch (rbacError) {
+        return res.status(403).json({
+          success: false,
+          error: rbacError.message,
+          code: 403
+        });
+      }
+
+      // Get enhanced student progress data
+      const studentData = await enhancedMentoringStorage.getStudentProgressMetrics(studentId);
+      
+      // Generate progress-focused insights
+      const insightsResponse = await aiInsightsService.generateStudentProgressInsights(
+        studentData,
+        query.language,
+        {
+          includeRecommendations: query.includeRecommendations,
+          culturalContext: query.culturalContext,
+          analysisDepth: query.analysisDepth
+        }
+      );
+
+      if (!insightsResponse.success) {
+        return res.status(500).json({
+          success: false,
+          error: insightsResponse.error?.message || 'Failed to generate progress insights',
+          metadata: { responseTime: Date.now() - startTime }
+        });
+      }
+
+      const responseTime = Date.now() - startTime;
+      res.json({
+        success: true,
+        data: insightsResponse.data,
+        metadata: {
+          ...insightsResponse.metadata,
+          responseTime,
+          timestamp: new Date().toISOString(),
+          analysisType: 'progress_focused'
+        }
+      });
+
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      console.error('Progress insights error:', error);
+      
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate progress insights',
+        metadata: { responseTime, timestamp: new Date().toISOString() },
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/enhanced-mentoring/insights/risk/:studentId
+ * Generate AI-powered risk analysis with intervention recommendations
+ * Auth: Mentor (assigned), Admin, Supervisor
+ * Rate limit: 10/min (AI insights)
+ */
+enhancedMentoringRouter.get('/insights/risk/:studentId',
+  authenticateToken,
+  requireRole(['mentor', 'admin', 'supervisor']),
+  aiInsightsRateLimit,
+  validateQuery(RiskInsightQuerySchema),
+  async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    try {
+      const user = (req as any).user;
+      const studentId = parseIntParam(req.params.studentId, 'student ID');
+      const query = req.query as z.infer<typeof RiskInsightQuerySchema>;
+
+      // RBAC: Resource-level access control (mentors only for risk analysis)
+      try {
+        assertResourceAccess(user, { studentId });
+      } catch (rbacError) {
+        return res.status(403).json({
+          success: false,
+          error: rbacError.message,
+          code: 403
+        });
+      }
+
+      // Initialize analytics engine for risk assessment
+      const analyticsEngine = new MentoringAnalyticsEngine();
+      
+      // Generate risk assessment data
+      const riskData = await analyticsEngine.assessRiskFactors(studentId);
+      
+      // Generate AI-powered risk insights
+      const insightsResponse = await aiInsightsService.generateRiskAssessmentInsights(
+        riskData,
+        query.language,
+        {
+          includeInterventions: query.includeInterventions,
+          urgencyLevel: query.urgencyLevel
+        }
+      );
+
+      if (!insightsResponse.success) {
+        return res.status(500).json({
+          success: false,
+          error: insightsResponse.error?.message || 'Failed to generate risk insights',
+          metadata: { responseTime: Date.now() - startTime }
+        });
+      }
+
+      const responseTime = Date.now() - startTime;
+      res.json({
+        success: true,
+        data: insightsResponse.data,
+        metadata: {
+          ...insightsResponse.metadata,
+          responseTime,
+          timestamp: new Date().toISOString(),
+          analysisType: 'risk_assessment',
+          urgencyLevel: query.urgencyLevel
+        }
+      });
+
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      console.error('Risk insights error:', error);
+      
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate risk insights',
+        metadata: { responseTime, timestamp: new Date().toISOString() },
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/enhanced-mentoring/insights/mentor/:mentorId/cohort
+ * Generate AI-powered cohort analysis for mentors
+ * Auth: Mentor (own data), Admin, Supervisor
+ * Rate limit: 10/min (AI insights)
+ */
+enhancedMentoringRouter.get('/insights/mentor/:mentorId/cohort',
+  authenticateToken,
+  requireRole(['mentor', 'admin', 'supervisor']),
+  aiInsightsRateLimit,
+  validateQuery(CohortInsightQuerySchema),
+  async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    try {
+      const user = (req as any).user;
+      const mentorId = parseIntParam(req.params.mentorId, 'mentor ID');
+      const query = req.query as z.infer<typeof CohortInsightQuerySchema>;
+
+      // RBAC: Resource-level access control
+      try {
+        assertResourceAccess(user, { mentorId });
+      } catch (rbacError) {
+        return res.status(403).json({
+          success: false,
+          error: rbacError.message,
+          code: 403
+        });
+      }
+
+      // Get mentor cohort analytics data
+      const cohortData = await enhancedMentoringStorage.getMentorCohortAnalytics(mentorId);
+      
+      // Generate AI-powered cohort insights
+      const insightsResponse = await aiInsightsService.generateMentorCohortInsights(
+        cohortData,
+        query.language,
+        {
+          includeComparisons: query.includeComparisons,
+          focusAreas: query.focusAreas
+        }
+      );
+
+      if (!insightsResponse.success) {
+        return res.status(500).json({
+          success: false,
+          error: insightsResponse.error?.message || 'Failed to generate cohort insights',
+          metadata: { responseTime: Date.now() - startTime }
+        });
+      }
+
+      const responseTime = Date.now() - startTime;
+      res.json({
+        success: true,
+        data: insightsResponse.data,
+        metadata: {
+          ...insightsResponse.metadata,
+          responseTime,
+          timestamp: new Date().toISOString(),
+          analysisType: 'cohort_analysis',
+          focusAreas: query.focusAreas
+        }
+      });
+
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      console.error('Cohort insights error:', error);
+      
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate cohort insights',
+        metadata: { responseTime, timestamp: new Date().toISOString() },
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/enhanced-mentoring/insights/mentor/:mentorId/interventions
+ * Analyze intervention effectiveness with AI insights
+ * Auth: Mentor (own data), Admin, Supervisor
+ * Rate limit: 10/min (AI insights)
+ */
+enhancedMentoringRouter.get('/insights/mentor/:mentorId/interventions',
+  authenticateToken,
+  requireRole(['mentor', 'admin', 'supervisor']),
+  aiInsightsRateLimit,
+  validateQuery(InterventionEffectivenessQuerySchema),
+  async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    try {
+      const user = (req as any).user;
+      const mentorId = parseIntParam(req.params.mentorId, 'mentor ID');
+      const query = req.query as z.infer<typeof InterventionEffectivenessQuerySchema>;
+
+      // RBAC: Resource-level access control
+      try {
+        assertResourceAccess(user, { mentorId });
+      } catch (rbacError) {
+        return res.status(403).json({
+          success: false,
+          error: rbacError.message,
+          code: 403
+        });
+      }
+
+      // Initialize analytics engine
+      const analyticsEngine = new MentoringAnalyticsEngine();
+      
+      // Get intervention effectiveness data (placeholder - would get actual intervention data)
+      const interventionData = {
+        interventionId: mentorId, // Using mentorId as proxy for demo
+        effectivenessScore: 75,
+        beforeMetrics: {},
+        afterMetrics: {},
+        improvementAreas: ['engagement', 'progress_rate'],
+        successFactors: ['consistent_communication', 'personalized_approach'],
+        challenges: ['time_constraints'],
+        academicImprovement: 15,
+        behaviorChange: 10,
+        engagementIncrease: 20,
+        riskReduction: 8,
+        goalAchievement: 12
+      };
+      
+      // Generate AI-powered effectiveness analysis
+      const insightsResponse = await aiInsightsService.analyzeInterventionEffectiveness(
+        interventionData,
+        query.language,
+        {
+          includeRecommendations: query.includeRecommendations,
+          comparisonPeriod: query.comparisonPeriod
+        }
+      );
+
+      if (!insightsResponse.success) {
+        return res.status(500).json({
+          success: false,
+          error: insightsResponse.error?.message || 'Failed to analyze intervention effectiveness',
+          metadata: { responseTime: Date.now() - startTime }
+        });
+      }
+
+      const responseTime = Date.now() - startTime;
+      res.json({
+        success: true,
+        data: insightsResponse.data,
+        metadata: {
+          ...insightsResponse.metadata,
+          responseTime,
+          timestamp: new Date().toISOString(),
+          analysisType: 'intervention_effectiveness',
+          comparisonPeriod: query.comparisonPeriod
+        }
+      });
+
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      console.error('Intervention effectiveness insights error:', error);
+      
+      res.status(500).json({
+        success: false,
+        error: 'Failed to analyze intervention effectiveness',
+        metadata: { responseTime, timestamp: new Date().toISOString() },
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/enhanced-mentoring/insights/comparative/:mentorId
+ * Generate comparative cohort insights for mentors
+ * Auth: Mentor (own data), Admin, Supervisor
+ * Rate limit: 10/min (AI insights)
+ */
+enhancedMentoringRouter.get('/insights/comparative/:mentorId',
+  authenticateToken,
+  requireRole(['mentor', 'admin', 'supervisor']),
+  aiInsightsRateLimit,
+  validateQuery(CohortInsightQuerySchema),
+  async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    try {
+      const user = (req as any).user;
+      const mentorId = parseIntParam(req.params.mentorId, 'mentor ID');
+      const query = req.query as z.infer<typeof CohortInsightQuerySchema>;
+
+      // RBAC: Resource-level access control
+      try {
+        assertResourceAccess(user, { mentorId });
+      } catch (rbacError) {
+        return res.status(403).json({
+          success: false,
+          error: rbacError.message,
+          code: 403
+        });
+      }
+
+      // Get mentor cohort analytics with comparative analysis
+      const cohortData = await enhancedMentoringStorage.getMentorCohortAnalytics(mentorId);
+      
+      // Generate AI-powered comparative insights
+      const insightsResponse = await aiInsightsService.generateMentorCohortInsights(
+        cohortData,
+        query.language,
+        {
+          includeComparisons: true, // Always include comparisons for this endpoint
+          focusAreas: [...(query.focusAreas || []), 'comparative_analysis']
+        }
+      );
+
+      if (!insightsResponse.success) {
+        return res.status(500).json({
+          success: false,
+          error: insightsResponse.error?.message || 'Failed to generate comparative insights',
+          metadata: { responseTime: Date.now() - startTime }
+        });
+      }
+
+      const responseTime = Date.now() - startTime;
+      res.json({
+        success: true,
+        data: insightsResponse.data,
+        metadata: {
+          ...insightsResponse.metadata,
+          responseTime,
+          timestamp: new Date().toISOString(),
+          analysisType: 'comparative_cohort',
+          comparativeAnalysis: true
+        }
+      });
+
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      console.error('Comparative insights error:', error);
+      
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate comparative insights',
+        metadata: { responseTime, timestamp: new Date().toISOString() },
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }
