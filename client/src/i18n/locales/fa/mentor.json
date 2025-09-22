@@ -1,41 +1,146 @@
 {
   "dashboard": {
     "title": "داشبورد مربی",
-    "welcome": "به پنل مربی‌گری خوش آمدید",
-    "totalMentees": "کل دانشجویان تحت نظارت",
-    "activeMentees": "دانشجویان فعال",
-    "totalSessions": "کل جلسات",
-    "averageRating": "میانگین امتیاز",
-    "goalsAchieved": "اهداف محقق شده",
-    "monthlyEarnings": "درآمد ماهانه",
-    "responseRate": "نرخ پاسخ‌دهی",
-    "completionRate": "نرخ تکمیل"
-  },
-  "mentees": {
-    "title": "دانشجویان تحت نظارت",
-    "assignedStudents": "دانشجویان تخصیص یافته",
-    "progress": "پیشرفت",
-    "sessions": "جلسات",
+    "welcome": "خوش آمدید",
+    "mentor": "مربی",
+    "welcomeMessage": "راهنمایی، الهام بخشیدن و حمایت از شاگردان در مسیر یادگیری!",
+    "overview": "نمای کلی",
+    "students": "دانش‌آموزان",
+    "assignments": "تکالیف",
+    "progress": "پیگیری پیشرفت",
     "communication": "ارتباطات",
-    "viewProgress": "مشاهده پیشرفت",
+    "assessments": "ارزیابی‌ها",
+    "reports": "گزارش‌ها",
+    "studentOverview": "نمای کلی دانش‌آموزان",
+    "totalStudents": "کل دانش‌آموزان",
+    "averageProgress": "میانگین پیشرفت",
+    "atRiskStudents": "دانش‌آموزان در معرض خطر",
+    "interventionsActive": "مداخلات فعال",
+    "thisWeek": "این هفته",
+    "thisMonth": "این ماه",
+    "thisQuarter": "این فصل",
+    "successRate": "نرخ موفقیت",
+    "progressTrends": "روند پیشرفت",
+    "velocityDistribution": "توزیع سرعت یادگیری",
+    "velocityDescription": "توزیع سرعت یادگیری دانش‌آموزان در گروه شما",
+    "riskAssessment": "ارزیابی خطر",
+    "riskFactors": "عوامل خطر",
+    "quickActions": "اعمال سریع",
     "scheduleSession": "برنامه‌ریزی جلسه",
-    "sendMessage": "ارسال پیام"
+    "createIntervention": "ایجاد مداخله",
+    "sendMessage": "ارسال پیام",
+    "viewReports": "مشاهده گزارش‌ها",
+    "aiInsights": "بینش‌های هوش مصنوعی",
+    "aiInsightsDescription": "تحلیل‌ها و توصیه‌های مبتنی بر هوش مصنوعی برای دانش‌آموزان شما",
+    "studentInsights": "بینش‌های دانش‌آموز",
+    "cohortInsights": "بینش‌های گروه",
+    "interventionInsights": "بینش‌های مداخله",
+    "strengths": "نقاط قوت",
+    "improvementAreas": "زمینه‌های بهبود",
+    "recommendations": "توصیه‌ها",
+    "expectedOutcome": "نتیجه مورد انتظار",
+    "selectStudent": "دانش‌آموزی را انتخاب کنید",
+    "selectStudentForTrends": "برای مشاهده روند پیشرفت، دانش‌آموزی را انتخاب کنید",
+    "selectStudentForRisk": "برای مشاهده ارزیابی خطر، دانش‌آموزی را انتخاب کنید",
+    "selectStudentForInsights": "برای مشاهده بینش‌های هوش مصنوعی، دانش‌آموزی را انتخاب کنید",
+    "searchStudents": "جستجوی دانش‌آموزان...",
+    "loadingTrends": "در حال بارگیری روند پیشرفت...",
+    "loadingRisk": "در حال بارگیری ارزیابی خطر...",
+    "loadingInsights": "در حال بارگیری بینش‌ها...",
+    "noInsightsAvailable": "بینشی برای این دانش‌آموز در دسترس نیست",
+    "noCohortInsightsAvailable": "بینش گروهی در دسترس نیست",
+    "completionRate": "نرخ تکمیل",
+    "engagementLevel": "سطح مشارکت",
+    "riskLevel": "سطح خطر",
+    "performanceDistribution": "توزیع عملکرد",
+    "interventionSummary": "نمای کلی از فعالیت‌های مداخله اخیر و اثربخشی آن‌ها",
+    "recentInterventions": "مداخلات اخیر",
+    "effective": "مؤثر",
+    "lastUpdated": "آخرین به‌روزرسانی",
+    "settings": "تنظیمات",
+    "help": "راهنما",
+    "interventionCreated": "مداخله با موفقیت ایجاد شد",
+    "interventionError": "ایجاد مداخله با شکست مواجه شد",
+    "retry": "تلاش مجدد",
+    "error": {
+      "title": "خطا در بارگیری داشبورد",
+      "message": "قادر به بارگیری داده‌های داشبورد نیستیم. لطفاً دوباره تلاش کنید."
+    },
+    "trend": {
+      "improving": "در حال بهبود",
+      "stable": "پایدار",
+      "declining": "در حال کاهش"
+    },
+    "riskLevel": {
+      "minimal": "حداقل",
+      "low": "پایین",
+      "moderate": "متوسط",
+      "high": "بالا",
+      "critical": "بحرانی"
+    },
+    "priority": {
+      "high": "اولویت بالا",
+      "medium": "اولویت متوسط",
+      "low": "اولویت پایین"
+    },
+    "performance": {
+      "excellent": "عالی",
+      "good": "خوب",
+      "satisfactory": "قابل قبول",
+      "needsImprovement": "نیاز به بهبود",
+      "critical": "بحرانی"
+    },
+    "riskFactor": {
+      "attendance": "حضور و غیاب",
+      "engagement": "مشارکت",
+      "performance": "عملکرد تحصیلی",
+      "motivation": "سطح انگیزه",
+      "social": "ادغام اجتماعی",
+      "technical": "مهارت‌های فنی"
+    }
   },
-  "sessions": {
-    "title": "جلسات مربی‌گری",
-    "upcoming": "آینده",
+  "stats": {
+    "totalMentees": "کل دانش‌آموزان تحت نظارت",
+    "activeStudents": "دانش‌آموزان فعال",
+    "averageProgress": "میانگین پیشرفت",
+    "thisMonth": "این ماه",
+    "completedAssignments": "تکالیف تکمیل شده",
+    "pendingReviews": "بررسی‌های در انتظار",
+    "totalSessions": "کل جلسات",
+    "monthlyRating": "امتیاز ماهانه"
+  },
+  "students": {
+    "title": "دانش‌آموزان من",
+    "noStudents": "هیچ دانش‌آموزی تخصیص داده نشده",
+    "progress": "پیشرفت",
+    "lastActivity": "آخرین فعالیت",
+    "viewProfile": "مشاهده پروفایل",
+    "sendMessage": "ارسال پیام",
+    "scheduleCall": "برنامه‌ریزی تماس"
+  },
+  "assignments": {
+    "title": "تکالیف دانش‌آموزان",
+    "create": "ایجاد تکلیف",
+    "pending": "در انتظار",
     "completed": "تکمیل شده",
-    "scheduled": "برنامه‌ریزی شده",
-    "duration": "مدت زمان",
-    "notes": "یادداشت‌ها",
-    "goals": "اهداف"
+    "overdue": "معوقه",
+    "dueDate": "تاریخ سررسید",
+    "review": "بررسی",
+    "feedback": "بازخورد"
   },
-  "progress": {
-    "title": "رهگیری پیشرفت",
-    "overallProgress": "پیشرفت کلی",
-    "skillAssessment": "ارزیابی مهارت‌ها",
-    "learningGoals": "اهداف یادگیری",
-    "milestones": "مراحل مهم",
-    "achievements": "دستاوردها"
+  "assessments": {
+    "title": "ارزیابی‌های پیشرفت",
+    "conductAssessment": "انجام ارزیابی",
+    "viewResults": "مشاهده نتایج",
+    "generateReport": "تولید گزارش",
+    "skillLevel": "سطح مهارت",
+    "recommendations": "توصیه‌ها"
+  },
+  "guideStudentJourneys": "راهنمایی و حمایت از مسیر یادگیری دانش‌آموزان",
+  "mentees": {
+    "totalMentees": "کل دانش‌آموزان تحت نظارت",
+    "activeMentees": "دانش‌آموزان فعال",
+    "currentProgress": "پیشرفت فعلی",
+    "viewProfile": "مشاهده پروفایل"
   }
 }

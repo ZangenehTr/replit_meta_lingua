@@ -1,41 +1,147 @@
 {
   "dashboard": {
     "title": "لوحة المرشد",
-    "welcome": "مرحباً بك في لوحة الإرشاد",
-    "totalMentees": "إجمالي الطلاب المرشدين",
-    "activeMentees": "الطلاب النشطون",
-    "totalSessions": "إجمالي الجلسات",
-    "averageRating": "متوسط التقييم",
-    "goalsAchieved": "الأهداف المحققة",
-    "monthlyEarnings": "الأرباح الشهرية",
-    "responseRate": "معدل الاستجابة",
-    "completionRate": "معدل الإكمال"
-  },
-  "mentees": {
-    "title": "الطلاب المرشدون",
-    "assignedStudents": "الطلاب المعينون",
-    "progress": "التقدم",
-    "sessions": "الجلسات",
+    "welcome": "مرحباً بك",
+    "mentor": "مرشد",
+    "welcomeMessage": "وجه وألهم وادعم الطلاب في رحلة التعلم!",
+    "overview": "نظرة عامة",
+    "students": "الطلاب",
+    "assignments": "المهام",
+    "progress": "تتبع التقدم",
     "communication": "التواصل",
-    "viewProgress": "عرض التقدم",
+    "assessments": "التقييمات",
+    "reports": "التقارير",
+    "studentOverview": "نظرة عامة على الطلاب",
+    "totalStudents": "إجمالي الطلاب",
+    "averageProgress": "متوسط التقدم",
+    "atRiskStudents": "الطلاب المعرضون للخطر",
+    "interventionsActive": "التدخلات النشطة",
+    "thisWeek": "هذا الأسبوع",
+    "thisMonth": "هذا الشهر",
+    "thisQuarter": "هذا الربع",
+    "successRate": "معدل النجاح",
+    "progressTrends": "اتجاهات التقدم",
+    "velocityDistribution": "توزيع سرعة التعلم",
+    "velocityDescription": "توزيع سرعات التعلم للطلاب في مجموعتك",
+    "riskAssessment": "تقييم المخاطر",
+    "riskFactors": "عوامل الخطر",
+    "quickActions": "إجراءات سريعة",
     "scheduleSession": "جدولة جلسة",
-    "sendMessage": "إرسال رسالة"
+    "createIntervention": "إنشاء تدخل",
+    "sendMessage": "إرسال رسالة",
+    "viewReports": "عرض التقارير",
+    "aiInsights": "رؤى الذكاء الاصطناعي",
+    "aiInsightsDescription": "تحليلات وتوصيات مدعومة بالذكاء الاصطناعي لطلابك",
+    "studentInsights": "رؤى الطلاب",
+    "cohortInsights": "رؤى المجموعة",
+    "interventionInsights": "رؤى التدخل",
+    "strengths": "نقاط القوة",
+    "improvementAreas": "مجالات التحسين",
+    "recommendations": "التوصيات",
+    "expectedOutcome": "النتيجة المتوقعة",
+    "selectStudent": "اختر طالباً",
+    "selectStudentForTrends": "اختر طالباً لعرض اتجاهات التقدم",
+    "selectStudentForRisk": "اختر طالباً لعرض تقييم المخاطر",
+    "selectStudentForInsights": "اختر طالباً لعرض رؤى الذكاء الاصطناعي",
+    "searchStudents": "البحث عن الطلاب...",
+    "loadingTrends": "جاري تحميل اتجاهات التقدم...",
+    "loadingRisk": "جاري تحميل تقييم المخاطر...",
+    "loadingInsights": "جاري تحميل الرؤى...",
+    "noInsightsAvailable": "لا توجد رؤى متاحة لهذا الطالب",
+    "noCohortInsightsAvailable": "لا توجد رؤى للمجموعة متاحة",
+    "completionRate": "معدل الإنجاز",
+    "engagementLevel": "مستوى المشاركة",
+    "riskLevel": "مستوى الخطر",
+    "performanceDistribution": "توزيع الأداء",
+    "interventionSummary": "نظرة عامة على أنشطة التدخل الأخيرة وفعاليتها",
+    "recentInterventions": "التدخلات الأخيرة",
+    "effective": "فعال",
+    "lastUpdated": "آخر تحديث",
+    "settings": "الإعدادات",
+    "help": "المساعدة",
+    "interventionCreated": "تم إنشاء التدخل بنجاح",
+    "interventionError": "فشل في إنشاء التدخل",
+    "retry": "إعادة المحاولة",
+    "error": {
+      "title": "خطأ في تحميل البيانات",
+      "message": "يرجى المحاولة مرة أخرى.",
+      "retry": "إعادة المحاولة"
+    },
+    "trend": {
+      "improving": "في تحسن",
+      "stable": "مستقر",
+      "declining": "في تراجع"
+    },
+    "riskLevel": {
+      "minimal": "أدنى",
+      "low": "منخفض",
+      "moderate": "متوسط",
+      "high": "عالي",
+      "critical": "حرج"
+    },
+    "priority": {
+      "high": "أولوية عالية",
+      "medium": "أولوية متوسطة",
+      "low": "أولوية منخفضة"
+    },
+    "performance": {
+      "excellent": "ممتاز",
+      "good": "جيد",
+      "satisfactory": "مقبول",
+      "needsImprovement": "يحتاج تحسين",
+      "critical": "حرج"
+    },
+    "riskFactor": {
+      "attendance": "الحضور",
+      "engagement": "المشاركة",
+      "performance": "الأداء الأكاديمي",
+      "motivation": "مستوى التحفيز",
+      "social": "التكامل الاجتماعي",
+      "technical": "المهارات التقنية"
+    }
   },
-  "sessions": {
-    "title": "جلسات الإرشاد",
-    "upcoming": "القادمة",
+  "stats": {
+    "totalMentees": "إجمالي الطلاب المُرشَدين",
+    "activeStudents": "الطلاب النشطون",
+    "averageProgress": "متوسط التقدم",
+    "thisMonth": "هذا الشهر",
+    "completedAssignments": "المهام المكتملة",
+    "pendingReviews": "المراجعات المعلقة",
+    "totalSessions": "إجمالي الجلسات",
+    "monthlyRating": "التقييم الشهري"
+  },
+  "students": {
+    "title": "طلابي",
+    "noStudents": "لم يتم تخصيص طلاب",
+    "progress": "التقدم",
+    "lastActivity": "آخر نشاط",
+    "viewProfile": "عرض الملف الشخصي",
+    "sendMessage": "إرسال رسالة",
+    "scheduleCall": "جدولة مكالمة"
+  },
+  "assignments": {
+    "title": "مهام الطلاب",
+    "create": "إنشاء مهمة",
+    "pending": "معلقة",
     "completed": "مكتملة",
-    "scheduled": "مجدولة",
-    "duration": "المدة",
-    "notes": "الملاحظات",
-    "goals": "الأهداف"
+    "overdue": "متأخرة",
+    "dueDate": "تاريخ الاستحقاق",
+    "review": "مراجعة",
+    "feedback": "ملاحظات"
   },
-  "progress": {
-    "title": "تتبع التقدم",
-    "overallProgress": "التقدم العام",
-    "skillAssessment": "تقييم المهارات",
-    "learningGoals": "أهداف التعلم",
-    "milestones": "المعالم",
-    "achievements": "الإنجازات"
+  "assessments": {
+    "title": "تقييمات التقدم",
+    "conductAssessment": "إجراء تقييم",
+    "viewResults": "عرض النتائج",
+    "generateReport": "إنشاء تقرير",
+    "skillLevel": "مستوى المهارة",
+    "recommendations": "التوصيات"
+  },
+  "guideStudentJourneys": "توجيه ودعم رحلات تعلم الطلاب",
+  "mentees": {
+    "totalMentees": "إجمالي الطلاب المُرشَدين",
+    "activeMentees": "الطلاب النشطون",
+    "currentProgress": "التقدم الحالي",
+    "viewProfile": "عرض الملف الشخصي"
   }
 }

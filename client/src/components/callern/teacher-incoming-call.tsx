@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/hooks/use-socket';
 import { VideoCall } from './VideoCallFinal';
 import { ringtoneService } from '@/services/ringtone-service';
-import { getTeacherRingtonePreferences } from './teacher-ringtone-settings';
+import { getTeacherRingtonePreferences } from '@/utils/ringtone-preferences';
 import { useTranslation } from 'react-i18next';
 
 interface IncomingCallData {
