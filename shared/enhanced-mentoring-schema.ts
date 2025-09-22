@@ -76,8 +76,8 @@ export type RiskLevel = typeof RISK_LEVELS[keyof typeof RISK_LEVELS];
 // Enhanced student progress with detailed analytics and AI insights
 export const enhancedStudentProgress = pgTable("enhanced_student_progress", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  mentorId: integer("mentor_id").references(() => users.id),
+  studentId: integer("student_id").notNull(),
+  mentorId: integer("mentor_id"),
   trackingDate: date("tracking_date").notNull(),
   
   // Progress Metrics
@@ -148,8 +148,8 @@ export const enhancedStudentProgress = pgTable("enhanced_student_progress", {
 // Adaptive learning paths that adjust based on student performance
 export const adaptiveLearningPaths = pgTable("adaptive_learning_paths", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  mentorId: integer("mentor_id").references(() => users.id),
+  studentId: integer("student_id").notNull(),
+  mentorId: integer("mentor_id"),
   
   // Path Configuration
   pathName: text("path_name").notNull(),
@@ -245,8 +245,8 @@ export const adaptiveLearningPaths = pgTable("adaptive_learning_paths", {
 // AI-generated recommendations for mentors and students
 export const aiMentoringRecommendations = pgTable("ai_mentoring_recommendations", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  mentorId: integer("mentor_id").references(() => users.id),
+  studentId: integer("student_id").notNull(),
+  mentorId: integer("mentor_id"),
   
   // Recommendation Classification
   recommendationType: text("recommendation_type").notNull(), // academic, motivational, behavioral, technical
@@ -315,8 +315,8 @@ export const aiMentoringRecommendations = pgTable("ai_mentoring_recommendations"
 // Comprehensive intervention tracking with effectiveness metrics
 export const mentoringInterventions = pgTable("mentoring_interventions", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  mentorId: integer("mentor_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").notNull(),
+  mentorId: integer("mentor_id").notNull(),
   triggeredBy: integer("triggered_by").references(() => aiMentoringRecommendations.id), // Optional AI recommendation link
   
   // Intervention Classification
@@ -400,9 +400,9 @@ export const mentoringInterventions = pgTable("mentoring_interventions", {
 // Enhanced communication tracking for mentor-student interactions
 export const mentoringCommunications = pgTable("mentoring_communications", {
   id: serial("id").primaryKey(),
-  mentorId: integer("mentor_id").references(() => users.id).notNull(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  assignmentId: integer("assignment_id").references(() => mentorAssignments.id),
+  mentorId: integer("mentor_id").notNull(),
+  studentId: integer("student_id").notNull(),
+  assignmentId: integer("assignment_id"),
   relatedInterventionId: integer("related_intervention_id").references(() => mentoringInterventions.id),
   
   // Communication Details
@@ -471,7 +471,7 @@ export const mentoringCommunications = pgTable("mentoring_communications", {
 
 export const mentorSchedule = pgTable("mentor_schedule", {
   id: serial("id").primaryKey(),
-  mentorId: integer("mentor_id").references(() => users.id).notNull(),
+  mentorId: integer("mentor_id").notNull(),
   
   // Schedule Configuration
   dayOfWeek: text("day_of_week").notNull(), // monday, tuesday, etc.
