@@ -31,6 +31,12 @@ if (fs.existsSync(envPath)) {
       process.exit(1);
     }
     console.log('✅ Production environment variables validated');
+  } else {
+    // Development fallback for JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      process.env.JWT_SECRET = 'dev-fallback-secret-key-change-in-production';
+      console.log('⚠️  Using development fallback for JWT_SECRET');
+    }
   }
 }
 
@@ -467,6 +473,12 @@ app.use((req, res, next) => {
       });
     }
   });
+
+  // Import and inject Map-based unified testing storage (NO database dependencies)
+  const { getUnifiedTestingStorage } = await import("./unified-testing-storage-factory");
+  const mapBasedStorage = getUnifiedTestingStorage();
+  app.set('unifiedTestingStorage', mapBasedStorage);
+  console.log('✅ Map-based unified testing storage injected (NO database dependencies)');
 
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');

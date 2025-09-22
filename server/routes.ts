@@ -69,6 +69,15 @@ import {
   insertLeadSchema,
   insertCommunicationLogSchema,
   insertDepartmentSchema,
+  peerMatchingRequests,
+  insertPeerMatchingRequestSchema,
+  peerSocializerParticipants,
+  insertPeerSocializerParticipantSchema,
+  peerSocializerGroups,
+  insertPeerSocializerGroupSchema,
+  classEnrollments,
+  insertClassEnrollmentSchema,
+  specialClasses,
   WORKFLOW_STATUS,
   type InsertMoodEntry,
   type InsertMoodRecommendation,
@@ -2867,7 +2876,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       const { language, proficiencyLevel, interests, preferredGender } = req.body;
-      const { peerMatchingRequests, insertPeerMatchingRequestSchema } = await import('@shared/schema');
+      // Using static imports from top of file
       
       // Validate request data
       const validatedData = insertPeerMatchingRequestSchema.parse({
@@ -2907,7 +2916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       const groupId = parseInt(req.params.groupId);
-      const { peerSocializerGroups, peerSocializerParticipants, insertPeerSocializerParticipantSchema } = await import('@shared/schema');
+      // Using static imports from top of file
       const { eq, and, sql } = await import('drizzle-orm');
       
       // Check if group exists and has space
@@ -3008,7 +3017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Gender-based peer matching algorithm
   async function performPeerMatching(requestingUserId: number) {
     try {
-      const { users, peerMatchingRequests, peerSocializerGroups, insertPeerSocializerGroupSchema } = await import('@shared/schema');
+      const { users } = await import('@shared/schema');  // Using mostly static imports from top of file
       const { eq, and, ne, inArray, sql, isNull } = await import('drizzle-orm');
       
       // Get requesting user info
@@ -3249,7 +3258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       const specialClassId = parseInt(req.params.specialClassId);
-      const { specialClasses, courses, classEnrollments, insertClassEnrollmentSchema } = await import('@shared/schema');
+      const { courses } = await import('@shared/schema');  // Using static imports from top of file
       const { eq, and, sql } = await import('drizzle-orm');
       
       // Get special class details
@@ -21426,12 +21435,35 @@ Meta Lingua Academy`;
     }
   });
 
-  // Register placement test routes
-  const placementTestRoutes = await import('./routes/placement-test-routes');
-  app.use('/api/placement-test', placementTestRoutes.createPlacementTestRoutes(storage, ollamaService));
+  // DEPRECATED: Legacy placement test routes - redirect to unified testing system
+  const deprecatedPlacementMiddleware = (req: any, res: any, next: any) => {
+    console.log(`⚠️  DEPRECATED: Legacy placement test route accessed: ${req.method} ${req.path}`);
+    res.status(410).json({
+      error: 'DEPRECATED: This endpoint has been replaced by the unified testing system',
+      message: 'Please use /api/unified-testing endpoints instead',
+      redirectTo: '/api/unified-testing',
+      deprecatedPath: req.path,
+      supportedUntil: '2025-12-31'
+    });
+  };
+  
+  // DEPRECATED: Legacy MST routes - redirect to unified testing system
+  const deprecatedMSTMiddleware = (req: any, res: any, next: any) => {
+    console.log(`⚠️  DEPRECATED: Legacy MST route accessed: ${req.method} ${req.path}`);
+    res.status(410).json({
+      error: 'DEPRECATED: This endpoint has been replaced by the unified testing system',
+      message: 'Please use /api/unified-testing endpoints instead',
+      redirectTo: '/api/unified-testing',
+      deprecatedPath: req.path,
+      supportedUntil: '2025-12-31'
+    });
+  };
 
-  // Register MST routes
-  app.use('/api/mst', mstRoutes);
+  // Apply deprecation middleware to legacy routes
+  app.use('/api/placement-test', deprecatedPlacementMiddleware);
+  app.use('/api/mst', deprecatedMSTMiddleware);
+  
+  console.log('✅ Legacy testing routes deprecated - redirecting to unified testing system');
 
   // Direct endpoint for IELTS quality comparison
   app.get('/ielts_quality_comparison.html', (req, res) => {
@@ -21947,6 +21979,11 @@ Meta Lingua Academy`;
       res.status(500).json({ message: "Failed to fetch branch statistics" });
     }
   });
+
+  // Register Unified Testing System routes
+  const { default: unifiedTestingRoutes } = await import('./unified-testing-routes');
+  app.use('/api/unified-testing', unifiedTestingRoutes);
+  console.log('✅ Unified Testing System routes registered (Questions, Templates, Sessions, Analytics)');
 
   // ========================
   // ERROR HANDLING - 404 for non-existent endpoints

@@ -2585,6 +2585,14 @@ export const adminSettings = pgTable("admin_settings", {
   kavenegarSender: varchar("kavenegar_sender", { length: 50 }),
   kavenegarEnabled: boolean("kavenegar_enabled").default(false),
   
+  // SMS Templates
+  otpSmsTemplate: text("otp_sms_template").default("کد تأیید شما: {{code}}"),
+  passwordResetSmsTemplate: text("password_reset_sms_template").default("کد بازیابی رمز عبور: {{code}}"),
+  studentCreationSmsTemplate: text("student_creation_sms_template").default("خوش آمدید! اطلاعات ورود شما: {{credentials}}"),
+  enrollmentSmsTemplate: text("enrollment_sms_template").default("ثبت‌نام شما در {{course}} تأیید شد"),
+  sessionReminderSmsTemplate: text("session_reminder_sms_template").default("یادآوری: جلسه {{session}} در {{time}} شروع می‌شود"),
+  paymentReceivedSmsTemplate: text("payment_received_sms_template").default("پرداخت {{amount}} تومان با موفقیت انجام شد"),
+  
   // Placement Test SMS Automation Settings
   placementSmsEnabled: boolean("placement_sms_enabled").default(true),
   placementSmsReminderCooldownHours: integer("placement_sms_reminder_cooldown_hours").default(24),

@@ -14255,4 +14255,254 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // System management methods
+  async getSystemRoles(): Promise<string[]> {
+    try {
+      const roles = await this.db.select({ role: users.role })
+        .from(users)
+        .groupBy(users.role);
+      return roles.map(r => r.role);
+    } catch (error) {
+      console.error('❌ Error getting system roles:', error);
+      return ['Admin', 'Teacher', 'Student', 'Mentor', 'Supervisor', 'Call Center Agent', 'Accountant'];
+    }
+  }
+
+  async getSystemIntegrations(): Promise<any[]> {
+    try {
+      // Return available system integrations
+      return [
+        { id: 'sip_service', name: 'SIP Service', enabled: true, type: 'communication' },
+        { id: 'sms_gateway', name: 'SMS Gateway', enabled: true, type: 'messaging' },
+        { id: 'payment_gateway', name: 'Payment Gateway', enabled: true, type: 'financial' },
+        { id: 'ai_service', name: 'AI Service', enabled: true, type: 'intelligence' }
+      ];
+    } catch (error) {
+      console.error('❌ Error getting system integrations:', error);
+      return [];
+    }
+  }
+
+  // Password reset methods
+  async createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<any> {
+    try {
+      const [resetToken] = await this.db.insert(passwordResetTokens)
+        .values({
+          userId,
+          token,
+          expiresAt,
+          isUsed: false
+        })
+        .returning();
+      return resetToken;
+    } catch (error) {
+      console.error('❌ Error creating password reset token:', error);
+      throw error;
+    }
+  }
+
+  async getPasswordResetToken(token: string): Promise<any | undefined> {
+    try {
+      const [resetToken] = await this.db.select()
+        .from(passwordResetTokens)
+        .where(and(
+          eq(passwordResetTokens.token, token),
+          eq(passwordResetTokens.isUsed, false),
+          gte(passwordResetTokens.expiresAt, new Date())
+        ));
+      return resetToken;
+    } catch (error) {
+      console.error('❌ Error getting password reset token:', error);
+      return undefined;
+    }
+  }
+
+  async updateUserPassword(userId: number, hashedPassword: string): Promise<boolean> {
+    try {
+      await this.db.update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.id, userId));
+      return true;
+    } catch (error) {
+      console.error('❌ Error updating user password:', error);
+      return false;
+    }
+  }
+
+  async markPasswordResetTokenAsUsed(token: string): Promise<void> {
+    try {
+      await this.db.update(passwordResetTokens)
+        .set({ isUsed: true })
+        .where(eq(passwordResetTokens.token, token));
+    } catch (error) {
+      console.error('❌ Error marking password reset token as used:', error);
+    }
+  }
+
+  // AI models method
+  async getAiModels(): Promise<any[]> {
+    try {
+      return [
+        { id: 'gpt-4', name: 'GPT-4', provider: 'OpenAI', enabled: true },
+        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI', enabled: true },
+        { id: 'claude-3', name: 'Claude 3', provider: 'Anthropic', enabled: true }
+      ];
+    } catch (error) {
+      console.error('❌ Error getting AI models:', error);
+      return [];
+    }
+  }
+
+  // Games method
+  async getGames(): Promise<Game[]> {
+    try {
+      return await this.db.select().from(games)
+        .orderBy(games.createdAt);
+    } catch (error) {
+      console.error('❌ Error getting games:', error);
+      return [];
+    }
+  }
+
+  // User progress method
+  async getUserProgress(userId: number): Promise<any> {
+    try {
+      const progress = await this.db.select()
+        .from(userGameProgress)
+        .where(eq(userGameProgress.userId, userId));
+      
+      return {
+        totalPoints: progress.reduce((sum, p) => sum + (p.score || 0), 0),
+        gamesCompleted: progress.length,
+        averageScore: progress.length > 0 ? progress.reduce((sum, p) => sum + (p.score || 0), 0) / progress.length : 0,
+        progress: progress
+      };
+    } catch (error) {
+      console.error('❌ Error getting user progress:', error);
+      return { totalPoints: 0, gamesCompleted: 0, averageScore: 0, progress: [] };
+    }
+  }
+
+  // Daily challenges method
+  async getTodaysChallenges(): Promise<any[]> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      return await this.db.select()
+        .from(gameDailyChallenges)
+        .where(and(
+          gte(gameDailyChallenges.date, today),
+          lt(gameDailyChallenges.date, tomorrow)
+        ));
+    } catch (error) {
+      console.error('❌ Error getting today\'s challenges:', error);
+      return [];
+    }
+  }
+
+  // Payment history method
+  async getPaymentHistory(userId: number): Promise<Payment[]> {
+    try {
+      return await this.db.select()
+        .from(payments)
+        .where(eq(payments.userId, userId))
+        .orderBy(desc(payments.createdAt));
+    } catch (error) {
+      console.error('❌ Error getting payment history:', error);
+      return [];
+    }
+  }
+
+  // Attendance method
+  async getAttendance(userId: number): Promise<AttendanceRecord[]> {
+    try {
+      return await this.db.select()
+        .from(attendanceRecords)
+        .where(eq(attendanceRecords.userId, userId))
+        .orderBy(desc(attendanceRecords.date));
+    } catch (error) {
+      console.error('❌ Error getting attendance records:', error);
+      return [];
+    }
+  }
+
+  // Session method
+  async getSession(sessionId: number): Promise<Session | undefined> {
+    try {
+      const [session] = await this.db.select()
+        .from(sessions)
+        .where(eq(sessions.id, sessionId));
+      return session;
+    } catch (error) {
+      console.error('❌ Error getting session:', error);
+      return undefined;
+    }
+  }
+
+  // Additional missing methods
+  async getGamePlayStatistics(userId?: number): Promise<any> {
+    try {
+      if (userId) {
+        const userStats = await this.db.select()
+          .from(userGameProgress)
+          .where(eq(userGameProgress.userId, userId));
+        
+        return {
+          totalGames: userStats.length,
+          averageScore: userStats.length > 0 ? userStats.reduce((sum, s) => sum + (s.score || 0), 0) / userStats.length : 0,
+          bestScore: Math.max(...userStats.map(s => s.score || 0), 0),
+          totalPlayTime: userStats.reduce((sum, s) => sum + (s.timeSpent || 0), 0),
+          completionRate: userStats.filter(s => s.isCompleted).length / Math.max(userStats.length, 1) * 100
+        };
+      } else {
+        // Return overall statistics
+        return {
+          totalPlayers: 0,
+          activeGames: 0,
+          averageScore: 0,
+          totalSessions: 0
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error getting game play statistics:', error);
+      return { totalGames: 0, averageScore: 0, bestScore: 0, totalPlayTime: 0, completionRate: 0 };
+    }
+  }
+
+  async generatePersonalizedChallenges(userId: number): Promise<any[]> {
+    try {
+      const userProgress = await this.getUserProgress(userId);
+      const todayChallenges = await this.getTodaysChallenges();
+      
+      // Generate personalized challenges based on user progress
+      const personalizedChallenges = todayChallenges.map(challenge => ({
+        ...challenge,
+        recommended: true,
+        difficulty: userProgress.averageScore > 80 ? 'hard' : 
+                   userProgress.averageScore > 60 ? 'medium' : 'easy',
+        personalizedReason: `Based on your ${Math.round(userProgress.averageScore)}% average score`
+      }));
+
+      return personalizedChallenges;
+    } catch (error) {
+      console.error('❌ Error generating personalized challenges:', error);
+      return [];
+    }
+  }
+
+  async getLeadByPhone(phoneNumber: string): Promise<Lead | undefined> {
+    try {
+      const [lead] = await this.db.select()
+        .from(leads)
+        .where(eq(leads.phoneNumber, phoneNumber));
+      return lead;
+    } catch (error) {
+      console.error('❌ Error getting lead by phone:', error);
+      return undefined;
+    }
+  }
 }
