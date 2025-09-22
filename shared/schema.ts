@@ -838,40 +838,6 @@ export const instituteBranding = pgTable("institute_branding", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// System Configuration for Technical Dependencies
-export const systemConfig = pgTable("system_config", {
-  id: serial("id").primaryKey(),
-  // SMS API Configuration (Kavenegar)
-  kavenegarApiKey: text("kavenegar_api_key"),
-  kavenegarSenderNumber: text("kavenegar_sender_number"),
-  smsEnabled: boolean("sms_enabled").default(false),
-  
-  // Payment Gateway Configuration (Shetab)
-  shetabMerchantId: text("shetab_merchant_id"),
-  shetabTerminalId: text("shetab_terminal_id"),
-  shetabApiKey: text("shetab_api_key"),
-  shetabGatewayUrl: text("shetab_gateway_url"),
-  paymentEnabled: boolean("payment_enabled").default(false),
-  
-  // Email Configuration
-  smtpHost: text("smtp_host"),
-  smtpPort: integer("smtp_port"),
-  smtpUser: text("smtp_user"),
-  smtpPassword: text("smtp_password"),
-  emailEnabled: boolean("email_enabled").default(false),
-  
-  // AI Configuration (Ollama)
-  ollamaApiUrl: text("ollama_api_url").default("http://localhost:11434"),
-  ollamaModel: text("ollama_model").default("llama3.2"),
-  aiEnabled: boolean("ai_enabled").default(true),
-  
-  // General Settings
-  maintenanceMode: boolean("maintenance_mode").default(false),
-  registrationEnabled: boolean("registration_enabled").default(true),
-  maxUsersPerInstitute: integer("max_users_per_institute").default(1000),
-  
-  updatedAt: timestamp("updated_at").defaultNow()
-});
 
 // Custom Roles and Permissions System
 export const customRoles = pgTable("custom_roles", {
@@ -1158,7 +1124,6 @@ export const insertWalletTransactionSchema = createInsertSchema(walletTransactio
 export const insertCoursePaymentSchema = createInsertSchema(coursePayments);
 export const insertNotificationSchema = createInsertSchema(notifications);
 export const insertBrandingSchema = createInsertSchema(instituteBranding);
-export const insertSystemConfigSchema = createInsertSchema(systemConfig);
 export const insertCustomRoleSchema = createInsertSchema(customRoles);
 export const insertAchievementSchema = createInsertSchema(achievements);
 export const insertUserAchievementSchema = createInsertSchema(userAchievements);
@@ -2596,8 +2561,6 @@ export type LevelAssessmentQuestion = typeof levelAssessmentQuestions.$inferSele
 export type InsertLevelAssessmentQuestion = z.infer<typeof insertLevelAssessmentQuestionSchema>;
 export type LevelAssessmentResult = typeof levelAssessmentResults.$inferSelect;
 export type InsertLevelAssessmentResult = z.infer<typeof insertLevelAssessmentResultSchema>;
-export type SystemConfig = typeof systemConfig.$inferSelect;
-export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
 export type CustomRole = typeof customRoles.$inferSelect;
 export type InsertCustomRole = z.infer<typeof insertCustomRoleSchema>;
 

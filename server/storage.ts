@@ -25,7 +25,7 @@ import {
   supervisionObservations, teacherObservationResponses,
   // Additional tables
   teacherAvailability, paymentTransactions, teacherEvaluations, classObservations, systemMetrics,
-  courseSessions, levelAssessmentQuestions, levelAssessmentResults, systemConfig, customRoles,
+  courseSessions, levelAssessmentQuestions, levelAssessmentResults, customRoles,
   institutes, departments, studentGroups, studentGroupMembers, teacherAssignments,
   studentNotes, parentGuardians, studentReports, referralSettings, courseReferrals,
   referralCommissions, adminSettings, aiTrainingData, aiKnowledgeBase,
@@ -4764,11 +4764,9 @@ export class MemStorage implements IStorage {
 
   async getAutomationRules(): Promise<any[]> {
     try {
-      // Using systemConfig table for automation rules storage
-      const result = await this.db.select().from(systemConfig)
-        .where(eq(systemConfig.configKey, 'automation_rules'))
-        .orderBy(desc(systemConfig.createdAt));
-      return result;
+      // Return empty rules since systemConfig was removed
+      // TODO: Implement automation rules storage in adminSettings if needed
+      return [];
     } catch (error) {
       console.error('Error getting automation rules:', error);
       return [];
@@ -4777,15 +4775,9 @@ export class MemStorage implements IStorage {
 
   async createAutomationRule(rule: any): Promise<any> {
     try {
-      const result = await this.db.insert(systemConfig)
-        .values({
-          configKey: 'automation_rules',
-          configValue: JSON.stringify(rule),
-          description: rule.description || 'Automation rule',
-          createdAt: new Date()
-        })
-        .returning();
-      return result[0];
+      // TODO: Implement automation rule creation in adminSettings if needed
+      console.log('Automation rule creation requested but not implemented:', rule);
+      return { success: false, message: 'Automation rules storage not implemented' };
     } catch (error) {
       console.error('Error creating automation rule:', error);
       throw error;

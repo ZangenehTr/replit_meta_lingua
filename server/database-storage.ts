@@ -11959,46 +11959,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // System Tables (3 tables)
-  
-  // 12. System Config - Global settings
-  async getSystemConfig(key: string): Promise<any> {
-    try {
-      const [config] = await db.select().from(systemConfig)
-        .where(eq(systemConfig.key, key))
-        .limit(1);
-      return config?.value || null;
-    } catch (error) {
-      console.error('Error fetching system config:', error);
-      return null;
-    }
-  }
-
-  async setSystemConfig(key: string, value: any): Promise<any> {
-    try {
-      const existing = await db.select().from(systemConfig)
-        .where(eq(systemConfig.key, key))
-        .limit(1);
-      
-      if (existing.length > 0) {
-        const [updated] = await db.update(systemConfig)
-          .set({ value: value, updatedAt: new Date() })
-          .where(eq(systemConfig.key, key))
-          .returning();
-        return updated;
-      } else {
-        const [created] = await db.insert(systemConfig).values({
-          key: key,
-          value: value,
-          category: 'general'
-        }).returning();
-        return created;
-      }
-    } catch (error) {
-      console.error('Error setting system config:', error);
-      throw error;
-    }
-  }
+  // System Tables (2 tables)
 
   // 13. System Metrics - Performance tracking
   async recordSystemMetric(data: any): Promise<any> {
