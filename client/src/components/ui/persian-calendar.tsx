@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useI18n } from '@/hooks/use-i18n';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { 
   ChevronLeft, 
@@ -84,7 +84,9 @@ export function PersianCalendar({
   selectedDate,
   className
 }: PersianCalendarProps) {
-  const { language, direction } = useI18n();
+  const { i18n } = useTranslation();
+  const language = i18n.language;
+  const direction = i18n.dir();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarType, setCalendarType] = useState<'gregorian' | 'jalali'>(() => {
     // Auto-switch based on language if mode is auto

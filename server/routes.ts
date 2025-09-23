@@ -8576,10 +8576,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all student sessions (with optional filtering)
+  // Get all student sessions (with optional filtering and calendar data)
   app.get("/api/student/sessions", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      // Mock sessions data for now - will be replaced with real database calls
+      const { includeCalendar = 'false' } = req.query;
+      const includeCalendarData = includeCalendar === 'true';
+      
+      // Enhanced sessions data with calendar integration
       const sessions = [
         {
           id: 1,
@@ -8587,15 +8590,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           courseName: "Business English A2", 
           tutorFirstName: "Sarah",
           tutorLastName: "Johnson",
-          sessionDate: "2025-09-20",
+          tutorAvatar: null,
+          sessionDate: "2025-09-25", // Changed to a date that might have holidays
           startTime: "14:00",
           endTime: "15:00", 
           duration: 60,
           type: "group",
           status: "upcoming",
           canJoin: false,
+          participants: 8,
+          maxParticipants: 12,
+          location: "Online",
+          sessionUrl: null,
+          description: "Practice business conversation skills and vocabulary",
           language: "English",
-          level: "A2"
+          level: "A2",
+          examType: null,
+          ...(includeCalendarData && {
+            holidays: [],
+            culturalEvents: [],
+            calendarContext: {
+              persianDate: "۱۴۰۳/۰۷/۰۴",
+              gregorianDate: "Wednesday, Sep 25, 2025",
+              culturalSignificance: null
+            }
+          })
         },
         {
           id: 2,
@@ -8603,6 +8622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           courseName: "IELTS Preparation",
           tutorFirstName: "Michael", 
           tutorLastName: "Brown",
+          tutorAvatar: null,
           sessionDate: "2025-09-22",
           startTime: "10:00",
           endTime: "11:00",
@@ -8610,10 +8630,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: "individual", 
           status: "upcoming",
           canJoin: false,
+          participants: 1,
+          maxParticipants: 1,
+          location: "Room 202",
+          sessionUrl: null,
+          description: "IELTS speaking test preparation with mock interviews",
           language: "English",
-          level: "B2"
+          level: "B2",
+          examType: "midterm",
+          ...(includeCalendarData && {
+            holidays: [],
+            culturalEvents: [],
+            calendarContext: {
+              persianDate: "۱۴۰۳/۰۷/۰۱",
+              gregorianDate: "Sunday, Sep 22, 2025", 
+              culturalSignificance: null
+            }
+          })
+        },
+        {
+          id: 3,
+          title: "Persian Grammar Advanced",
+          courseName: "Persian Language C1",
+          tutorFirstName: "فریبا",
+          tutorLastName: "احمدی",
+          tutorAvatar: null,
+          sessionDate: "2025-03-21", // Nowruz - Persian New Year
+          startTime: "16:00",
+          endTime: "17:30",
+          duration: 90,
+          type: "group",
+          status: "upcoming", 
+          canJoin: false,
+          participants: 6,
+          maxParticipants: 10,
+          location: "Online",
+          sessionUrl: null,
+          description: "Advanced Persian grammar structures and literary analysis",
+          language: "Persian",
+          level: "C1",
+          examType: "final",
+          ...(includeCalendarData && {
+            holidays: [
+              {
+                id: 1,
+                name: "Nowruz",
+                namePersian: "نوروز",
+                nameArabic: null,
+                type: "cultural", 
+                description: "Persian New Year celebration",
+                descriptionPersian: "جشن سال نو ایرانی",
+                isOfficialHoliday: true,
+                color: "#10B981"
+              }
+            ],
+            culturalEvents: [
+              {
+                id: 1,
+                eventName: "Spring Equinox",
+                eventNamePersian: "آغاز بهار",
+                eventType: "seasonal",
+                description: "Beginning of spring season",
+                importance: "high",
+                color: "#F59E0B"
+              }
+            ],
+            calendarContext: {
+              persianDate: "۱۴۰۴/۰۱/۰۱",
+              gregorianDate: "Friday, March 21, 2025",
+              culturalSignificance: "نوروز - سال نو ایرانی"
+            }
+          })
         }
       ];
+      
       res.json(sessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -8629,6 +8719,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching upcoming sessions:', error);
       res.status(500).json({ message: "Failed to get upcoming sessions" });
+    }
+  });
+
+  // Calendar-specific API endpoints
+  
+  // Get holidays for a date range
+  app.get("/api/calendar/holidays-for-range", authenticateToken, async (req: any, res) => {
+    try {
+      const { start, end } = req.query;
+      
+      if (!start || !end) {
+        return res.status(400).json({ error: "Start and end dates are required" });
+      }
+
+      // Mock holiday data - would integrate with database
+      const holidays = [
+        {
+          id: 1,
+          holidayName: "Nowruz",
+          holidayNamePersian: "نوروز",
+          holidayType: "cultural",
+          persianDate: "1404/01/01",
+          gregorianDate: "2025-03-21",
+          isOfficialHoliday: true,
+          description: "Persian New Year celebration",
+          descriptionPersian: "جشن سال نو ایرانی",
+          color: "#10B981"
+        },
+        {
+          id: 2,
+          holidayName: "Yalda Night",
+          holidayNamePersian: "شب یلدا",
+          holidayType: "cultural",
+          persianDate: "1403/09/30",
+          gregorianDate: "2024-12-21",
+          isOfficialHoliday: false,
+          description: "Longest night of the year celebration",
+          descriptionPersian: "جشن طولانی‌ترین شب سال",
+          color: "#8B5CF6"
+        }
+      ];
+
+      // Filter holidays within date range
+      const filteredHolidays = holidays.filter(holiday => {
+        const holidayDate = new Date(holiday.gregorianDate);
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        return holidayDate >= startDate && holidayDate <= endDate;
+      });
+
+      res.json(filteredHolidays);
+    } catch (error) {
+      console.error('Error fetching holidays:', error);
+      res.status(500).json({ error: "Failed to fetch holidays" });
+    }
+  });
+
+  // Get cultural events for a date range
+  app.get("/api/calendar/events-for-range", authenticateToken, async (req: any, res) => {
+    try {
+      const { start, end } = req.query;
+      
+      if (!start || !end) {
+        return res.status(400).json({ error: "Start and end dates are required" });
+      }
+
+      // Mock cultural events - would integrate with database
+      const events = [
+        {
+          id: 1,
+          eventName: "Spring Equinox",
+          eventNamePersian: "آغاز بهار",
+          eventType: "seasonal",
+          persianDate: "1404/01/01",
+          gregorianDate: "2025-03-21",
+          description: "Beginning of spring season",
+          importance: "high",
+          color: "#F59E0B"
+        },
+        {
+          id: 2,
+          eventName: "Ramadan Begins",
+          eventNamePersian: "آغاز ماه رمضان",
+          eventNameArabic: "بداية شهر رمضان",
+          eventType: "religious",
+          gregorianDate: "2025-02-28",
+          description: "Beginning of the holy month of Ramadan",
+          importance: "high",
+          color: "#06B6D4"
+        }
+      ];
+
+      const filteredEvents = events.filter(event => {
+        const eventDate = new Date(event.gregorianDate);
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        return eventDate >= startDate && eventDate <= endDate;
+      });
+
+      res.json(filteredEvents);
+    } catch (error) {
+      console.error('Error fetching cultural events:', error);
+      res.status(500).json({ error: "Failed to fetch cultural events" });
+    }
+  });
+
+  // Get calendar month names and weekdays
+  app.get("/api/calendar/month-names", authenticateToken, async (req: any, res) => {
+    try {
+      const persianMonths = [
+        "فروردین", "اردیبهشت", "خرداد", "تیر", 
+        "مرداد", "شهریور", "مهر", "آبان", 
+        "آذر", "دی", "بهمن", "اسفند"
+      ];
+      
+      const persianWeekdays = [
+        "شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", 
+        "چهارشنبه", "پنج‌شنبه", "جمعه"
+      ];
+
+      res.json({
+        months: persianMonths,
+        weekdays: persianWeekdays
+      });
+    } catch (error) {
+      console.error('Error fetching calendar names:', error);
+      res.status(500).json({ error: "Failed to fetch calendar names" });
     }
   });
 

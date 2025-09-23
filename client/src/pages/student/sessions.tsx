@@ -20,12 +20,48 @@ import {
   X,
   Info,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Sidebar,
+  CalendarDays,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { HolidayIndicator } from "@/components/ui/holiday-indicator";
+import { ExamTypeIndicator } from "@/components/ui/exam-type-indicator";
+import { EnhancedDateDisplay } from "@/components/ui/enhanced-date-display";
+import { SessionCalendarSidebar } from "@/components/ui/session-calendar-sidebar";
+
+interface Holiday {
+  id: number;
+  name: string;
+  namePersian: string;
+  nameArabic?: string;
+  type: string;
+  description: string;
+  descriptionPersian?: string;
+  isOfficialHoliday: boolean;
+  color: string;
+}
+
+interface CulturalEvent {
+  id: number;
+  eventName: string;
+  eventNamePersian: string;
+  eventType: string;
+  description: string;
+  importance: string;
+  color: string;
+}
+
+interface CalendarContext {
+  persianDate: string;
+  gregorianDate: string;
+  culturalSignificance?: string;
+}
 
 interface Session {
   id: number;
@@ -48,6 +84,10 @@ interface Session {
   description?: string;
   language: string;
   level: string;
+  examType?: 'midterm' | 'final' | null;
+  holidays?: Holiday[];
+  culturalEvents?: CulturalEvent[];
+  calendarContext?: CalendarContext;
 }
 
 export default function StudentSessions() {
@@ -60,12 +100,14 @@ export default function StudentSessions() {
   const [filterStatus, setFilterStatus] = useState<string>('upcoming');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showCalendarSidebar, setShowCalendarSidebar] = useState(false);
+  const [filteredSessionIds, setFilteredSessionIds] = useState<number[]>([]);
 
-  // Fetch sessions
+  // Fetch sessions with calendar data
   const { data: sessions = [], isLoading } = useQuery<Session[]>({
-    queryKey: ['/api/student/sessions'],
+    queryKey: ['/api/student/sessions', { includeCalendar: true }],
     queryFn: async () => {
-      const response = await fetch('/api/student/sessions', {
+      const response = await fetch('/api/student/sessions?includeCalendar=true', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -112,8 +154,19 @@ export default function StudentSessions() {
                          `${session.tutorFirstName} ${session.tutorLastName}`.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || session.type === filterType;
     const matchesStatus = filterStatus === 'all' || session.status === filterStatus;
-    return matchesSearch && matchesType && matchesStatus;
+    const matchesCalendarFilter = filteredSessionIds.length === 0 || filteredSessionIds.includes(session.id);
+    return matchesSearch && matchesType && matchesStatus && matchesCalendarFilter;
   });
+
+  // Handle calendar date selection
+  const handleCalendarDateSelect = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  // Handle calendar session filtering
+  const handleCalendarSessionFilter = (sessionIds: number[]) => {
+    setFilteredSessionIds(sessionIds);
+  };
 
   // Group sessions by date
   const groupedSessions = filteredSessions.reduce((groups, session) => {
@@ -166,9 +219,13 @@ export default function StudentSessions() {
             <div className="flex gap-2">
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-full bg-white/10 backdrop-blur"
+                className={`p-2 rounded-full backdrop-blur transition-all ${
+                  showCalendarSidebar ? 'bg-white text-purple-600' : 'bg-white/10 text-white'
+                }`}
+                onClick={() => setShowCalendarSidebar(!showCalendarSidebar)}
+                data-testid="toggle-calendar-sidebar"
               >
-                <Calendar className="w-5 h-5 text-white" />
+                {showCalendarSidebar ? <EyeOff className="w-5 h-5" /> : <CalendarDays className="w-5 h-5" />}
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -211,8 +268,32 @@ export default function StudentSessions() {
           </div>
         </motion.header>
 
+        {/* Calendar Sidebar */}
+        <AnimatePresence>
+          {showCalendarSidebar && (
+            <motion.div
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed left-4 top-20 z-40 max-h-[calc(100vh-6rem)] overflow-y-auto"
+            >
+              <SessionCalendarSidebar
+                sessions={sessions}
+                selectedDate={selectedDate}
+                onDateSelect={handleCalendarDateSelect}
+                onSessionFilter={handleCalendarSessionFilter}
+                compact={true}
+                className="shadow-xl"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Main Content */}
-        <div className="mobile-content">
+        <div className={`mobile-content transition-all duration-300 ${
+          showCalendarSidebar ? 'ml-96' : 'ml-0'
+        }`}>
           {isLoading ? (
             // Loading Skeleton
             <div className="space-y-4">
@@ -270,13 +351,20 @@ export default function StudentSessions() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: groupIndex * 0.1 }}
                     >
-                      <h2 className="text-white/90 font-semibold text-sm mb-3 px-2">
-                        {new Date(date).toLocaleDateString(undefined, { 
-                          weekday: 'long', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </h2>
+                      <div className="mb-3 px-2">
+                        <EnhancedDateDisplay
+                          date={date}
+                          showBoth={true}
+                          compact={false}
+                          primary="auto"
+                          className="text-white/90"
+                          calendarContext={{
+                            persianDate: dateSessions[0]?.calendarContext?.persianDate || '',
+                            gregorianDate: dateSessions[0]?.calendarContext?.gregorianDate || '',
+                            culturalSignificance: dateSessions[0]?.calendarContext?.culturalSignificance
+                          }}
+                        />
+                      </div>
                       
                       <div className="space-y-3">
                         {dateSessions.map((session, index) => (
@@ -288,26 +376,44 @@ export default function StudentSessions() {
                             transition={{ duration: 0.3, delay: index * 0.05 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setSelectedSession(session)}
+                            data-testid={`session-card-${session.id}`}
                           >
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                   <div className={`w-2 h-2 rounded-full ${getStatusColor(session.status)}`} />
                                   <h3 className="text-white font-semibold text-lg">{session.title}</h3>
+                                  
+                                  {/* Exam Type Indicator */}
+                                  {session.examType && (
+                                    <ExamTypeIndicator examType={session.examType} compact={true} />
+                                  )}
                                 </div>
                                 <p className="text-white/60 text-sm">{session.courseName}</p>
+                                
+                                {/* Holiday Indicator */}
+                                {session.holidays && session.holidays.length > 0 && (
+                                  <div className="mt-2">
+                                    <HolidayIndicator 
+                                      holidays={session.holidays} 
+                                      compact={true} 
+                                    />
+                                  </div>
+                                )}
                               </div>
-                              {session.type === 'group' ? (
-                                <Badge className="bg-white/20 text-white border-white/30">
-                                  <Users className="w-3 h-3 mr-1" />
-                                  {t('student:group', 'Group')}
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-white/20 text-white border-white/30">
-                                  <User className="w-3 h-3 mr-1" />
-                                  {t('student:individual', '1-on-1')}
-                                </Badge>
-                              )}
+                              <div className="flex flex-col gap-2 items-end">
+                                {session.type === 'group' ? (
+                                  <Badge className="bg-white/20 text-white border-white/30">
+                                    <Users className="w-3 h-3 mr-1" />
+                                    {t('student:group', 'Group')}
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-white/20 text-white border-white/30">
+                                    <User className="w-3 h-3 mr-1" />
+                                    {t('student:individual', '1-on-1')}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
 
                             <div className="flex items-center gap-3 text-white/70 text-sm mb-3">
@@ -404,22 +510,34 @@ export default function StudentSessions() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">{t('student:date', 'Date')}</p>
-                    <p className="font-medium">
-                      {new Date(selectedSession.sessionDate).toLocaleDateString(undefined, {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 mb-2">{t('student:sessionDateTime', 'Date & Time')}</p>
+                    <EnhancedDateDisplay
+                      date={selectedSession.sessionDate}
+                      time={selectedSession.startTime}
+                      showBoth={true}
+                      compact={false}
+                      primary="auto"
+                      calendarContext={selectedSession.calendarContext}
+                    />
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">{t('student:time', 'Time')}</p>
-                    <p className="font-medium">
-                      {formatTime(selectedSession.startTime)} - {formatTime(selectedSession.endTime)}
-                    </p>
+                  
+                  {/* Holiday and Exam Indicators in Modal */}
+                  <div className="flex gap-2 flex-wrap">
+                    {selectedSession.holidays && selectedSession.holidays.length > 0 && (
+                      <HolidayIndicator 
+                        holidays={selectedSession.holidays} 
+                        compact={false}
+                      />
+                    )}
+                    
+                    {selectedSession.examType && (
+                      <ExamTypeIndicator 
+                        examType={selectedSession.examType} 
+                        compact={false}
+                      />
+                    )}
                   </div>
                 </div>
 

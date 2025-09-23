@@ -3,13 +3,37 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
 import { MobileCard } from '@/components/mobile/MobileCard';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Clock, Video, Users, MapPin, Play, ChevronRight, Filter } from 'lucide-react';
+import { Calendar, Clock, Video, Users, MapPin, Play, ChevronRight, Filter, CalendarDays, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { HolidayIndicator } from '@/components/ui/holiday-indicator';
+import { ExamTypeIndicator } from '@/components/ui/exam-type-indicator';
+import { EnhancedDateDisplay } from '@/components/ui/enhanced-date-display';
+import { SessionCalendarSidebar } from '@/components/ui/session-calendar-sidebar';
 import '@/styles/mobile-app.css';
+
+interface Holiday {
+  id: number;
+  name: string;
+  type: string;
+  color?: string;
+  icon?: string;
+}
+
+interface CulturalEvent {
+  id: number;
+  name: string;
+  significance?: string;
+}
+
+interface CalendarContext {
+  persianDate: string;
+  gregorianDate: string;
+  culturalSignificance?: string;
+}
 
 interface Session {
   id: number;
@@ -25,17 +49,28 @@ interface Session {
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   participants?: number;
   maxParticipants?: number;
+  // Enhanced calendar fields
+  holidays?: Holiday[];
+  culturalEvents?: CulturalEvent[];
+  examType?: 'midterm' | 'final' | null;
+  calendarContext?: CalendarContext;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
 }
 
 export default function StudentSessionsMobile() {
   const { t } = useTranslation();
   const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'completed'>('upcoming');
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [filteredSessionIds, setFilteredSessionIds] = useState<number[]>([]);
 
-  // Fetch sessions
+  // Fetch sessions with calendar data
   const { data: sessions = [], isLoading } = useQuery<Session[]>({
     queryKey: ['/api/student/sessions', filterType],
     queryFn: async () => {
-      const response = await fetch(`/api/student/sessions?filter=${filterType}`, {
+      const response = await fetch(`/api/student/sessions?filter=${filterType}&includeCalendar=true`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -43,6 +78,24 @@ export default function StudentSessionsMobile() {
       if (!response.ok) throw new Error('Failed to fetch sessions');
       return response.json();
     }
+  });
+
+  // Calendar handlers
+  const handleCalendarDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    setShowCalendarModal(false);
+  };
+
+  const handleCalendarSessionFilter = (sessionIds: number[]) => {
+    setFilteredSessionIds(sessionIds);
+  };
+
+  // Filter sessions
+  const filteredSessions = sessions.filter(session => {
+    if (filteredSessionIds.length > 0) {
+      return filteredSessionIds.includes(session.id);
+    }
+    return true;
   });
 
   // Join session mutation
@@ -94,12 +147,32 @@ export default function StudentSessionsMobile() {
     });
   };
 
+  const formatTime = (time: string) => {
+    return new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <MobileLayout
       title={t('student:sessions')}
       showBack={false}
       gradient="cool"
     >
+      {/* Header Controls */}
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-white font-bold text-xl">{t('student:sessions', 'Sessions')}</h1>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          className="p-2 rounded-full bg-white/10 backdrop-blur"
+          onClick={() => setShowCalendarModal(true)}
+          data-testid="toggle-calendar-modal"
+        >
+          <CalendarDays className="w-5 h-5 text-white" />
+        </motion.button>
+      </div>
+
       {/* Filter Tabs */}
       <motion.div 
         className="flex gap-2 mb-6"
@@ -184,29 +257,45 @@ export default function StudentSessionsMobile() {
                     </span>
                   </div>
 
-                  {/* Session Details */}
-                  <div className="flex flex-wrap gap-4 mb-3">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-white/50" />
-                      <span className="text-white/70 text-sm">
-                        {formatDate(session.date)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-white/50" />
-                      <span className="text-white/70 text-sm">
-                        {session.time} ({session.duration} {t('common:minutes')})
-                      </span>
-                    </div>
-                    {session.location && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-white/50" />
-                        <span className="text-white/70 text-sm">
-                          {session.location}
-                        </span>
-                      </div>
+                  {/* Enhanced Date Display */}
+                  <div className="mb-3">
+                    <EnhancedDateDisplay
+                      date={session.sessionDate || session.date}
+                      time={session.startTime || session.time}
+                      showBoth={true}
+                      compact={true}
+                      primary="auto"
+                      calendarContext={session.calendarContext}
+                      className="text-white/70 text-sm"
+                    />
+                  </div>
+
+                  {/* Holiday and Exam Indicators */}
+                  <div className="flex gap-2 flex-wrap mb-3">
+                    {session.holidays && session.holidays.length > 0 && (
+                      <HolidayIndicator 
+                        holidays={session.holidays} 
+                        compact={true}
+                      />
+                    )}
+                    
+                    {session.examType && (
+                      <ExamTypeIndicator 
+                        examType={session.examType} 
+                        compact={true}
+                      />
                     )}
                   </div>
+
+                  {/* Additional Session Details */}
+                  {session.location && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="w-4 h-4 text-white/50" />
+                      <span className="text-white/70 text-sm">
+                        {session.location}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Action Button */}
                   {session.status === 'upcoming' && (
@@ -251,6 +340,54 @@ export default function StudentSessionsMobile() {
           ))}
         </div>
       )}
+
+      {/* Calendar Modal */}
+      <AnimatePresence>
+        {showCalendarModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowCalendarModal(false)}
+          >
+            <motion.div
+              className="bg-white rounded-t-3xl w-full max-h-[80vh] overflow-y-auto"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {t('student:calendar', 'Calendar')}
+                </h2>
+                <button
+                  onClick={() => setShowCalendarModal(false)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                  data-testid="close-calendar-modal"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Calendar Content */}
+              <div className="p-4">
+                <SessionCalendarSidebar
+                  sessions={sessions}
+                  selectedDate={selectedDate}
+                  onDateSelect={handleCalendarDateSelect}
+                  onSessionFilter={handleCalendarSessionFilter}
+                  compact={false}
+                  className="bg-transparent border-0 shadow-none"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </MobileLayout>
   );
 }
