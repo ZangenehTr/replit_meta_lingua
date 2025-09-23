@@ -35,7 +35,9 @@ import {
   Calculator,
   FileText,
   Building2,
-  Shield
+  Shield,
+  BookOpen,
+  Award
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -43,6 +45,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { CurriculumAssignment } from "@/components/accountant/curriculum-assignment";
 
 interface AccountantStats {
   totalRevenue: number;
@@ -356,12 +359,49 @@ function AccountantDashboard() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">{t('accountant:overview')}</TabsTrigger>
             <TabsTrigger value="payments">{t('accountant:payments')}</TabsTrigger>
             <TabsTrigger value="revenue">{t('accountant:revenue')}</TabsTrigger>
+            <TabsTrigger value="curriculum">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                مدیریت سطوح
+              </div>
+            </TabsTrigger>
             <TabsTrigger value="reports">{t('accountant:reports')}</TabsTrigger>
           </TabsList>
+
+          {/* Tab Contents */}
+          <div className="mt-6">
+            <TabsContent value="overview">
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Overview content will be displayed here.</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="payments">
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Payments content will be displayed here.</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="revenue">
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Revenue content will be displayed here.</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="curriculum">
+              <CurriculumAssignment />
+            </TabsContent>
+
+            <TabsContent value="reports">
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Reports content will be displayed here.</p>
+              </div>
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     </AppLayout>
