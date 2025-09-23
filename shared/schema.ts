@@ -2649,11 +2649,7 @@ export const adminSettings = pgTable("admin_settings", {
 });
 
 // Admin settings schema
-export const insertAdminSettingsSchema = createInsertSchema(adminSettings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertAdminSettingsSchema = createInsertSchema(adminSettings).omit(['id', 'createdAt', 'updatedAt']);
 
 // Referral System Types
 export type ReferralSettings = typeof referralSettings.$inferSelect;
@@ -2716,140 +2712,57 @@ export {
 } from "./mood-schema";
 
 // Testing subsystem insert schemas
-export const insertTestSchema = createInsertSchema(tests).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTestSchema = createInsertSchema(tests).omit(['id', 'createdAt', 'updatedAt']);
 
 
 
-export const insertTestQuestionSchema = createInsertSchema(testQuestions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTestQuestionSchema = createInsertSchema(testQuestions).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertTestAttemptSchema = createInsertSchema(testAttempts).omit({
-  id: true,
-  createdAt: true
-});
+export const insertTestAttemptSchema = createInsertSchema(testAttempts).omit(['id', 'createdAt']);
 
-export const insertTestAnswerSchema = createInsertSchema(testAnswers).omit({
-  id: true,
-  answeredAt: true
-});
+export const insertTestAnswerSchema = createInsertSchema(testAnswers).omit(['id', 'answeredAt']);
 
 // Gamification insert schemas
-export const insertGameSchema = createInsertSchema(games).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertGameSchema = createInsertSchema(games).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertGameLevelSchema = createInsertSchema(gameLevels).omit({
-  id: true,
-  createdAt: true
-});
+export const insertGameLevelSchema = createInsertSchema(gameLevels).omit(['id', 'createdAt']);
 
-export const insertUserGameProgressSchema = createInsertSchema(userGameProgress).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertUserGameProgressSchema = createInsertSchema(userGameProgress).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertGameSessionSchema = createInsertSchema(gameSessions).omit({
-  id: true,
-  startedAt: true,
-  createdAt: true
-});
+export const insertGameSessionSchema = createInsertSchema(gameSessions).omit(['id', 'startedAt', 'createdAt']);
 
-export const insertGameLeaderboardSchema = createInsertSchema(gameLeaderboards).omit({
-  id: true,
-  createdAt: true
-});
+export const insertGameLeaderboardSchema = createInsertSchema(gameLeaderboards).omit(['id', 'createdAt']);
 
 // Video learning insert schemas
-export const insertVideoLessonSchema = createInsertSchema(videoLessons).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertVideoLessonSchema = createInsertSchema(videoLessons).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertVideoProgressSchema = createInsertSchema(videoProgress).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertVideoProgressSchema = createInsertSchema(videoProgress).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertVideoNoteSchema = createInsertSchema(videoNotes).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertVideoNoteSchema = createInsertSchema(videoNotes).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertVideoBookmarkSchema = createInsertSchema(videoBookmarks).omit({
-  id: true,
-  createdAt: true
-});
+export const insertVideoBookmarkSchema = createInsertSchema(videoBookmarks).omit(['id', 'createdAt']);
 
 // LMS insert schemas
-export const insertForumCategorySchema = createInsertSchema(forumCategories).omit({
-  id: true,
-  createdAt: true
-});
+export const insertForumCategorySchema = createInsertSchema(forumCategories).omit(['id', 'createdAt']);
 
-export const insertForumThreadSchema = createInsertSchema(forumThreads).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertForumThreadSchema = createInsertSchema(forumThreads).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertForumPostSchema = createInsertSchema(forumPosts).omit({
-  id: true,
-  createdAt: true
-});
+export const insertForumPostSchema = createInsertSchema(forumPosts).omit(['id', 'createdAt']);
 
-export const insertGradebookEntrySchema = createInsertSchema(gradebookEntries).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertGradebookEntrySchema = createInsertSchema(gradebookEntries).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertContentLibrarySchema = createInsertSchema(contentLibrary).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertContentLibrarySchema = createInsertSchema(contentLibrary).omit(['id', 'createdAt', 'updatedAt']);
 
 // AI tracking insert schemas
-export const insertAiProgressTrackingSchema = createInsertSchema(aiProgressTracking).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertAiProgressTrackingSchema = createInsertSchema(aiProgressTracking).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertAiActivitySessionSchema = createInsertSchema(aiActivitySessions).omit({
-  id: true,
-  startedAt: true,
-  createdAt: true
-});
+export const insertAiActivitySessionSchema = createInsertSchema(aiActivitySessions).omit(['id', 'startedAt', 'createdAt']);
 
-export const insertAiVocabularyTrackingSchema = createInsertSchema(aiVocabularyTracking).omit({
-  id: true,
-  firstSeenAt: true,
-  createdAt: true
-});
+export const insertAiVocabularyTrackingSchema = createInsertSchema(aiVocabularyTracking).omit(['id', 'firstSeenAt', 'createdAt']);
 
-export const insertAiGrammarTrackingSchema = createInsertSchema(aiGrammarTracking).omit({
-  id: true,
-  createdAt: true
-});
+export const insertAiGrammarTrackingSchema = createInsertSchema(aiGrammarTracking).omit(['id', 'createdAt']);
 
-export const insertAiPronunciationAnalysisSchema = createInsertSchema(aiPronunciationAnalysis).omit({
-  id: true,
-  createdAt: true
-});
+export const insertAiPronunciationAnalysisSchema = createInsertSchema(aiPronunciationAnalysis).omit(['id', 'createdAt']);
 
 // Types for new subsystem tables
 export type Test = typeof tests.$inferSelect;
@@ -2917,88 +2830,35 @@ export type MoodCategory = typeof MOOD_CATEGORIES[number];
 export type RecommendationType = typeof RECOMMENDATION_TYPES[number];
 
 // Callern system insert schemas
-export const insertCallernPackageSchema = createInsertSchema(callernPackages).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertCallernPackageSchema = createInsertSchema(callernPackages).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertStudentCallernPackageSchema = createInsertSchema(studentCallernPackages).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertStudentCallernPackageSchema = createInsertSchema(studentCallernPackages).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertTeacherCallernAuthorizationSchema = createInsertSchema(teacherCallernAuthorization).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTeacherCallernAuthorizationSchema = createInsertSchema(teacherCallernAuthorization).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertTeacherCallernAvailabilitySchema = createInsertSchema(teacherCallernAvailability).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTeacherCallernAvailabilitySchema = createInsertSchema(teacherCallernAvailability).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertCallernCallHistorySchema = createInsertSchema(callernCallHistory).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertCallernCallHistorySchema = createInsertSchema(callernCallHistory).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertSuggestedTermSchema = createInsertSchema(suggestedTerms).omit({
-  id: true,
-  createdAt: true
-});
+export const insertSuggestedTermSchema = createInsertSchema(suggestedTerms).omit(['id', 'createdAt']);
 
-export const insertRewriteSuggestionSchema = createInsertSchema(rewriteSuggestions).omit({
-  id: true,
-  createdAt: true
-});
+export const insertRewriteSuggestionSchema = createInsertSchema(rewriteSuggestions).omit(['id', 'createdAt']);
 
-export const insertGlossaryItemSchema = createInsertSchema(glossaryItems).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertGlossaryItemSchema = createInsertSchema(glossaryItems).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertQuizResultSchema = createInsertSchema(quizResults).omit({
-  id: true,
-  attemptedAt: true
-});
+export const insertQuizResultSchema = createInsertSchema(quizResults).omit(['id', 'attemptedAt']);
 
-export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
-  id: true,
-  createdAt: true
-});
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit(['id', 'createdAt']);
 
-export const insertEmailLogSchema = createInsertSchema(emailLogs).omit({
-  id: true,
-  createdAt: true
-});
+export const insertEmailLogSchema = createInsertSchema(emailLogs).omit(['id', 'createdAt']);
 
-export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
-  id: true,
-  createdAt: true
-});
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit(['id', 'createdAt']);
 
-export const insertStudentPreferencesSchema = createInsertSchema(studentPreferences).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertStudentPreferencesSchema = createInsertSchema(studentPreferences).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertCallernSyllabusTopicSchema = createInsertSchema(callernSyllabusTopics).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertCallernSyllabusTopicSchema = createInsertSchema(callernSyllabusTopics).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertStudentCallernProgressSchema = createInsertSchema(studentCallernProgress).omit({
-  id: true,
-  createdAt: true
-});
+export const insertStudentCallernProgressSchema = createInsertSchema(studentCallernProgress).omit(['id', 'createdAt']);
 
 // Callern system types
 export type CallernPackage = typeof callernPackages.$inferSelect;
@@ -3151,49 +3011,18 @@ export const scheduledObservations = pgTable("scheduled_observations", {
 });
 
 // Insert schemas for quality assurance
-export const insertLiveClassSessionSchema = createInsertSchema(liveClassSessions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertLiveClassSessionSchema = createInsertSchema(liveClassSessions).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertTeacherRetentionDataSchema = createInsertSchema(teacherRetentionData).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTeacherRetentionDataSchema = createInsertSchema(teacherRetentionData).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertStudentQuestionnaireSchema = createInsertSchema(studentQuestionnaires).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertStudentQuestionnaireSchema = createInsertSchema(studentQuestionnaires).omit(['id', 'createdAt', 'updatedAt']);
 
 
-export const insertSupervisionObservationSchema = createInsertSchema(supervisionObservations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  teacherAcknowledged: true,
-  teacherAcknowledgedAt: true,
-  followUpCompleted: true,
-  followUpCompletedAt: true
-});
+export const insertSupervisionObservationSchema = createInsertSchema(supervisionObservations).omit(['id', 'createdAt', 'updatedAt', 'teacherAcknowledged', 'teacherAcknowledgedAt', 'followUpCompleted', 'followUpCompletedAt']);
 
-export const insertTeacherObservationResponseSchema = createInsertSchema(teacherObservationResponses).omit({
-  id: true,
-  submittedAt: true,
-  supervisorReviewed: true,
-  supervisorReviewedAt: true
-});
+export const insertTeacherObservationResponseSchema = createInsertSchema(teacherObservationResponses).omit(['id', 'submittedAt', 'supervisorReviewed', 'supervisorReviewedAt']);
 
-export const insertScheduledObservationSchema = createInsertSchema(scheduledObservations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  teacherNotified: true,
-  notificationSentAt: true
-});
+export const insertScheduledObservationSchema = createInsertSchema(scheduledObservations).omit(['id', 'createdAt', 'updatedAt', 'teacherNotified', 'notificationSentAt']);
 
 // Types for quality assurance
 export type LiveClassSession = typeof liveClassSessions.$inferSelect;
@@ -3363,44 +3192,19 @@ export const notificationDeliveryLogs = pgTable("notification_delivery_logs", {
 });
 
 // Insert schemas for communication system
-export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertSupportTicketMessageSchema = createInsertSchema(supportTicketMessages).omit({
-  id: true,
-  sentAt: true
-});
+export const insertSupportTicketMessageSchema = createInsertSchema(supportTicketMessages).omit(['id', 'sentAt']);
 
-export const insertChatConversationSchema = createInsertSchema(chatConversations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertChatConversationSchema = createInsertSchema(chatConversations).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
-  id: true,
-  sentAt: true
-});
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit(['id', 'sentAt']);
 
-export const insertAiStudyPartnerSchema = createInsertSchema(aiStudyPartners).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertAiStudyPartnerSchema = createInsertSchema(aiStudyPartners).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertPushNotificationSchema = createInsertSchema(pushNotifications).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertPushNotificationSchema = createInsertSchema(pushNotifications).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertNotificationDeliveryLogSchema = createInsertSchema(notificationDeliveryLogs).omit({
-  id: true,
-  createdAt: true
-});
+export const insertNotificationDeliveryLogSchema = createInsertSchema(notificationDeliveryLogs).omit(['id', 'createdAt']);
 
 // Communication system types
 export type SupportTicket = typeof supportTickets.$inferSelect;
@@ -3468,31 +3272,19 @@ export const teacherAvailabilityPeriods = pgTable("teacher_availability_periods"
 });
 
 // Teacher Availability Schema (Legacy)
-export const insertTeacherAvailabilitySchema = createInsertSchema(teacherAvailability).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTeacherAvailabilitySchema = createInsertSchema(teacherAvailability).omit(['id', 'createdAt', 'updatedAt']);
 
 export type TeacherAvailability = typeof teacherAvailability.$inferSelect;
 export type InsertTeacherAvailability = z.infer<typeof insertTeacherAvailabilitySchema>;
 
 // Enhanced Teacher Availability Periods Schema
-export const insertTeacherAvailabilityPeriodSchema = createInsertSchema(teacherAvailabilityPeriods).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTeacherAvailabilityPeriodSchema = createInsertSchema(teacherAvailabilityPeriods).omit(['id', 'createdAt', 'updatedAt']);
 
 export type TeacherAvailabilityPeriod = typeof teacherAvailabilityPeriods.$inferSelect;
 export type InsertTeacherAvailabilityPeriod = z.infer<typeof insertTeacherAvailabilityPeriodSchema>;
 
 // AI Call Insights Schema
-export const insertAICallInsightSchema = createInsertSchema(aiCallInsights).omit({
-  id: true,
-  processedAt: true,
-  createdAt: true
-});
+export const insertAICallInsightSchema = createInsertSchema(aiCallInsights).omit(['id', 'processedAt', 'createdAt']);
 
 export type AICallInsight = typeof aiCallInsights.$inferSelect;
 export type InsertAICallInsight = z.infer<typeof insertAICallInsightSchema>;
@@ -3594,33 +3386,15 @@ export const callernScoringEvents = pgTable("callern_scoring_events", {
 });
 
 // Insert schemas for scoring
-export const insertCallernPresenceSchema = createInsertSchema(callernPresence).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertCallernPresenceSchema = createInsertSchema(callernPresence).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertCallernSpeechSegmentSchema = createInsertSchema(callernSpeechSegments).omit({
-  id: true,
-  createdAt: true
-});
+export const insertCallernSpeechSegmentSchema = createInsertSchema(callernSpeechSegments).omit(['id', 'createdAt']);
 
-export const insertCallernScoresStudentSchema = createInsertSchema(callernScoresStudent).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertCallernScoresStudentSchema = createInsertSchema(callernScoresStudent).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertCallernScoresTeacherSchema = createInsertSchema(callernScoresTeacher).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertCallernScoresTeacherSchema = createInsertSchema(callernScoresTeacher).omit(['id', 'createdAt', 'updatedAt']);
 
-export const insertCallernScoringEventSchema = createInsertSchema(callernScoringEvents).omit({
-  id: true,
-  createdAt: true
-});
+export const insertCallernScoringEventSchema = createInsertSchema(callernScoringEvents).omit(['id', 'createdAt']);
 
 // Scoring types
 export type CallernPresence = typeof callernPresence.$inferSelect;
