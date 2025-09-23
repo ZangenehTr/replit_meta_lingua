@@ -320,7 +320,37 @@
     "overallProgress": "التقدم العام",
     "xpEarned": "نقاط الخبرة المكتسبة",
     "avgGrade": "متوسط الدرجة",
-    "upcoming": "القادم"
+    "upcoming": "القادم",
+    "homeworkSubmitted": "تم إرسال الواجب",
+    "homeworkSubmittedDesc": "تم إرسال واجبك بنجاح",
+    "homeworkSubmitError": "فشل في إرسال الواجب. يرجى المحاولة مرة أخرى.",
+    "dueToday": "مستحق اليوم",
+    "dueTomorrow": "مستحق غداً",
+    "dueInDays": "مستحق خلال {{days}} أيام",
+    "overdue": "متأخر",
+    "total": "المجموع",
+    "filterByDifficulty": "تصفية حسب الصعوبة",
+    "files": "ملفات",
+    "grade": "الدرجة",
+    "feedbackAvailable": "التعليقات متاحة",
+    "startHomework": "بدء الواجب",
+    "continueHomework": "متابعة الواجب",
+    "awaitingGrade": "في انتظار الدرجة",
+    "lateSubmission": "إرسال متأخر",
+    "description": "الوصف",
+    "estimatedTime": "الوقت المقدر",
+    "xpReward": "مكافأة نقاط الخبرة",
+    "dueDate": "تاريخ الاستحقاق",
+    "maxGrade": "أقصى درجة",
+    "points": "نقاط",
+    "yourGrade": "درجتك",
+    "teacherFeedback": "تعليقات المعلم",
+    "submitYourWork": "أرسل عملك",
+    "uploadFile": "رفع ملف",
+    "submitting": "جاري الإرسال...",
+    "submitHomework": "إرسال الواجب",
+    "submittedFiles": "الملفات المرسلة",
+    "checkBackLater": "تحقق لاحقاً من المهام الجديدة"
   },
   "messages": {
     "title": "الرسائل",
@@ -407,5 +437,18 @@
       "yourRoadmap": "خريطة طريقك",
       "viewFullRoadmap": "عرض خريطة الطريق الكاملة"
     }
+  },
+  "difficulty": {
+    "easy": "سهل",
+    "medium": "متوسط",
+    "hard": "صعب"
+  },
+  "status": {
+    "pending": "في الانتظار",
+    "in_progress": "قيد التقدم",
+    "submitted": "مُرسل",
+    "graded": "مُقيّم",
+    "late": "متأخر",
+    "excused": "معذور"
   }
 }

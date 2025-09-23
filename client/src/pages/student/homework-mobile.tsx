@@ -76,7 +76,7 @@ interface HomeworkStats {
 
 export default function StudentHomeworkMobile() {
   const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'fa';
+  const isRTL = ['fa', 'ar'].includes(i18n.language);
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
   const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -255,64 +255,226 @@ export default function StudentHomeworkMobile() {
 
       {/* Main Content - Clean White Cards */}
       <div className="px-4 py-6 pb-24 space-y-6">
-        {/* Progress Card */}
+        {/* Enhanced Progress Card */}
         <motion.div
-          className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg mb-6"
+          className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/50 mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
         >
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-gray-900 text-lg font-bold">{t('student:overallProgress')}</h3>
-            <span className="text-gray-900 text-2xl font-bold">{completionPercentage}%</span>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-gray-900 text-lg font-bold">{t('student:homework.overallProgress')}</h3>
+            <div className="relative w-16 h-16">
+              {/* Circular Progress */}
+              <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidth="4" fill="none" />
+                <circle 
+                  cx="32" 
+                  cy="32" 
+                  r="28" 
+                  stroke="url(#progressGradient)" 
+                  strokeWidth="4" 
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 28}`}
+                  strokeDashoffset={`${2 * Math.PI * 28 * (1 - completionPercentage / 100)}`}
+                  className="transition-all duration-1000 ease-out"
+                  strokeLinecap="round"
+                />
+                <defs>
+                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4" />
+                    <stop offset="100%" stopColor="#3b82f6" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-gray-900">{completionPercentage}%</span>
+              </div>
+            </div>
           </div>
-          <Progress value={completionPercentage} className="h-3 mb-4" />
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-gray-900 text-lg font-bold">{stats?.submitted || 0}</p>
-              <p className="text-gray-600 text-sm">{t('student:submitted')}</p>
+          
+          {/* Enhanced Progress Bar */}
+          <div className="relative mb-6">
+            <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full shadow-sm"
+                initial={{ width: 0 }}
+                animate={{ width: `${completionPercentage}%` }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+              />
             </div>
-            <div>
-              <p className="text-gray-900 text-lg font-bold">{stats?.graded || 0}</p>
-              <p className="text-gray-600 text-sm">{t('student:graded')}</p>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0%</span>
+              <span>100%</span>
             </div>
-            <div>
-              <p className="text-gray-900 text-lg font-bold">{stats?.pending || 0}</p>
-              <p className="text-gray-600 text-sm">{t('student:pending')}</p>
-            </div>
+          </div>
+          
+          {/* Enhanced Stats Grid */}
+          <div className="grid grid-cols-3 gap-4">
+            <motion.div 
+              className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200/50"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <CheckCircle className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-green-700 text-lg font-bold">{stats?.submitted || 0}</p>
+              <p className="text-green-600 text-xs font-medium">{t('student:homework.submitted')}</p>
+            </motion.div>
+            
+            <motion.div 
+              className="text-center p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200/50"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <Trophy className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-blue-700 text-lg font-bold">{stats?.graded || 0}</p>
+              <p className="text-blue-600 text-xs font-medium">{t('student:homework.graded')}</p>
+            </motion.div>
+            
+            <motion.div 
+              className="text-center p-3 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200/50"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
+                <Clock className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-orange-700 text-lg font-bold">{stats?.pending || 0}</p>
+              <p className="text-orange-600 text-xs font-medium">{t('student:homework.pending')}</p>
+            </motion.div>
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
+        {/* Enhanced Stats Grid */}
         <motion.div
           className="grid grid-cols-3 gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
-            <Zap className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-            <p className="text-gray-900 text-xl font-bold">
+          {/* XP Card */}
+          <motion.div 
+            className="bg-gradient-to-br from-yellow-50 to-amber-50 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-yellow-200/50 text-center group"
+            whileHover={{ scale: 1.05, rotateY: 5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="relative mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-shadow">
+                <Zap className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              </div>
+              {stats?.totalXpEarned && stats.totalXpEarned > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-white font-bold">+</span>
+                </div>
+              )}
+            </div>
+            <motion.p 
+              className="text-yellow-700 text-xl font-bold mb-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
+            >
               {stats?.totalXpEarned || 0}
-            </p>
-            <p className="text-gray-600 text-xs">{t('student:xpEarned')}</p>
-          </div>
+            </motion.p>
+            <p className="text-yellow-600 text-xs font-medium">{t('student:homework.xpEarned')}</p>
+            {/* XP Progress Animation */}
+            <div className="mt-2 h-1 bg-yellow-200 rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: "75%" }}
+                transition={{ duration: 1, delay: 0.6 }}
+              />
+            </div>
+          </motion.div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
-            <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="text-gray-900 text-xl font-bold">
+          {/* Grade Card */}
+          <motion.div 
+            className="bg-gradient-to-br from-green-50 to-emerald-50 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-green-200/50 text-center group"
+            whileHover={{ scale: 1.05, rotateY: -5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="relative mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-shadow">
+                <TrendingUp className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              </div>
+              {/* Achievement Badge */}
+              {stats?.averageGrade && stats.averageGrade >= 80 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gold-500 rounded-full flex items-center justify-center">
+                  <Star className="w-2 h-2 text-white fill-current" />
+                </div>
+              )}
+            </div>
+            <motion.p 
+              className="text-green-700 text-xl font-bold mb-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: "spring" }}
+            >
               {stats?.averageGrade ? Math.round(stats.averageGrade) : 0}%
-            </p>
-            <p className="text-gray-600 text-xs">{t('student:avgGrade')}</p>
-          </div>
+            </motion.p>
+            <p className="text-green-600 text-xs font-medium">{t('student:homework.avgGrade')}</p>
+            {/* Grade Progress Circle */}
+            <div className="mt-2 relative w-8 h-8 mx-auto">
+              <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="12" stroke="#dcfce7" strokeWidth="2" fill="none" />
+                <circle 
+                  cx="16" 
+                  cy="16" 
+                  r="12" 
+                  stroke="#22c55e" 
+                  strokeWidth="2" 
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 12}`}
+                  strokeDashoffset={`${2 * Math.PI * 12 * (1 - (stats?.averageGrade || 0) / 100)}`}
+                  className="transition-all duration-1000"
+                />
+              </svg>
+            </div>
+          </motion.div>
 
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
-            <AlertCircle className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-            <p className="text-gray-900 text-xl font-bold">
+          {/* Upcoming Card */}
+          <motion.div 
+            className="bg-gradient-to-br from-orange-50 to-red-50 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-orange-200/50 text-center group"
+            whileHover={{ scale: 1.05, rotateY: 5 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="relative mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-shadow">
+                <AlertCircle className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              </div>
+              {/* Urgent Indicator */}
+              {stats?.upcomingDeadlines && stats.upcomingDeadlines.length > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse" />
+              )}
+            </div>
+            <motion.p 
+              className="text-orange-700 text-xl font-bold mb-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.6, type: "spring" }}
+            >
               {stats?.upcomingDeadlines?.length || 0}
-            </p>
-            <p className="text-gray-600 text-xs">{t('student:upcoming')}</p>
-          </div>
+            </motion.p>
+            <p className="text-orange-600 text-xs font-medium">{t('student:upcoming')}</p>
+            {/* Urgency Indicator */}
+            {stats?.upcomingDeadlines && stats.upcomingDeadlines.length > 0 && (
+              <div className="mt-2 flex justify-center space-x-1">
+                {Array.from({ length: Math.min(3, stats.upcomingDeadlines.length) }, (_, i) => (
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
         </motion.div>
 
         {/* Filter Section */}
@@ -324,10 +486,10 @@ export default function StudentHomeworkMobile() {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-gray-900">
-              {t('student:homework')}
+              {t('student:homework.title')}
             </h3>
             <Badge className="bg-blue-500 text-white px-3 py-1">
-              {filteredHomework.length} {t('student:total')}
+              {filteredHomework.length} {t('student:homework.total')}
             </Badge>
           </div>
           
@@ -432,8 +594,8 @@ export default function StudentHomeworkMobile() {
           transition={{ delay: 0.4 }}
         >
           <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">{t('student:noHomework')}</p>
-          <p className="text-gray-500 text-sm">{t('student:checkBackLater')}</p>
+          <p className="text-gray-600 mb-2">{t('student:homework.noHomework')}</p>
+          <p className="text-gray-500 text-sm">{t('student:homework.checkBackLater')}</p>
         </motion.div>
       ) : (
         <div className="space-y-4">
@@ -451,23 +613,33 @@ export default function StudentHomeworkMobile() {
               >
                 <div 
                   className={cn(
-                    "bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg relative overflow-hidden cursor-pointer transition-all hover:shadow-xl",
-                    isOverdue && 'border-2 border-red-500/50'
+                    "bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg relative overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:bg-white/98 transform-gpu",
+                    isOverdue && 'border-2 border-red-500/50 shadow-red-100',
+                    isUrgent && !isOverdue && 'border-2 border-orange-400/50 shadow-orange-100'
                   )}
                   onClick={() => setSelectedHomework(item)}
                   data-testid={`homework-card-${item.id}`}
                 >
-                  {/* Status Bar */}
-                  <div className={`absolute top-0 left-0 w-1 h-full ${getStatusColor(item.status)}`} />
+                  {/* Enhanced Status Bar with Gradient */}
+                  <div className={`absolute top-0 left-0 w-1.5 h-full ${getStatusColor(item.status)} shadow-lg`} />
+                  {/* Background Gradient Overlay */}
+                  <div className={`absolute inset-0 opacity-5 ${getStatusColor(item.status)} rounded-2xl`} />
                   
                   <div className="pl-4">
                     {/* Header with Icon */}
                     <div className="flex items-start gap-3 mb-3">
                       <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center text-white",
-                        getStatusColor(item.status)
+                        "w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg transform transition-transform hover:scale-110",
+                        getStatusColor(item.status),
+                        "bg-gradient-to-br from-white/20 to-transparent backdrop-blur-sm"
                       )}>
-                        {getStatusIcon(item.status)}
+                        <div className="relative">
+                          {getStatusIcon(item.status)}
+                          {/* Pulsing effect for pending items */}
+                          {item.status === 'pending' && (
+                            <div className="absolute inset-0 rounded-full bg-white/30 animate-ping" />
+                          )}
+                        </div>
                       </div>
                       <div className="flex-1">
                         <h3 className="text-gray-900 font-bold text-lg line-clamp-2 mb-1">
@@ -477,7 +649,25 @@ export default function StudentHomeworkMobile() {
                           {item.courseTitle} • {item.teacherName}
                         </p>
                       </div>
-                      <Badge className={cn(getDifficultyColor(item.difficulty))}>
+                      <Badge className={cn(
+                        getDifficultyColor(item.difficulty),
+                        "shadow-md border-0 font-semibold transition-transform hover:scale-105",
+                        "flex items-center gap-1"
+                      )}>
+                        {/* Difficulty Stars */}
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 3 }, (_, i) => (
+                            <Star 
+                              key={i} 
+                              className={cn(
+                                "w-3 h-3",
+                                i < (item.difficulty === 'easy' ? 1 : item.difficulty === 'medium' ? 2 : 3)
+                                  ? "fill-current"
+                                  : "opacity-30"
+                              )} 
+                            />
+                          ))}
+                        </div>
                         {t(`student:difficulty.${item.difficulty}`)}
                       </Badge>
                     </div>
@@ -522,18 +712,47 @@ export default function StudentHomeworkMobile() {
                       )}
                     </div>
 
-                    {/* Status-based Actions */}
+                    {/* Enhanced Status-based Actions */}
                     {item.status === 'graded' && (
-                      <div className="bg-green-50 rounded-xl p-4">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200/50 shadow-sm">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Trophy className="w-5 h-5 text-green-600" />
-                            <span className="text-green-700 text-sm font-semibold">
-                              {t('student:grade')}: {item.grade}/{item.maxGrade}
-                            </span>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                              <Trophy className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <span className="text-green-700 text-sm font-semibold block">
+                                {t('student:grade')}: {item.grade}/{item.maxGrade}
+                              </span>
+                              {/* Grade Percentage Circle */}
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="w-6 h-6 relative">
+                                  <svg className="w-6 h-6 transform -rotate-90" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+                                    <circle 
+                                      cx="12" 
+                                      cy="12" 
+                                      r="10" 
+                                      stroke="#10b981" 
+                                      strokeWidth="2" 
+                                      fill="none"
+                                      strokeDasharray={`${2 * Math.PI * 10}`}
+                                      strokeDashoffset={`${2 * Math.PI * 10 * (1 - (item.grade / item.maxGrade))}`}
+                                      className="transition-all duration-500"
+                                    />
+                                  </svg>
+                                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-green-600">
+                                    {Math.round((item.grade / item.maxGrade) * 100)}%
+                                  </span>
+                                </div>
+                                <span className="text-green-600 text-xs font-medium">
+                                  {Math.round((item.grade / item.maxGrade) * 100)}% Score
+                                </span>
+                              </div>
+                            </div>
                           </div>
                           {item.feedback && (
-                            <Badge className="bg-green-100 text-green-700 border-0">
+                            <Badge className="bg-green-100 text-green-700 border-0 shadow-sm hover:shadow-md transition-shadow">
                               <MessageSquare className="w-3 h-3 mr-1" />
                               {t('student:feedbackAvailable')}
                             </Badge>
@@ -544,49 +763,68 @@ export default function StudentHomeworkMobile() {
 
                     {item.status === 'pending' && (
                       <Button
-                        className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 rounded-xl"
+                        className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 group"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedHomework(item);
                         }}
                         data-testid={`button-start-homework-${item.id}`}
                       >
-                        <Upload className="w-4 h-4 mr-2" />
+                        <Upload className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
                         {t('student:startHomework')}
-                        <ChevronRight className="w-4 h-4 ml-2" />
+                        <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     )}
 
                     {item.status === 'in_progress' && (
                       <Button
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl"
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 group"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedHomework(item);
                         }}
                         data-testid={`button-continue-homework-${item.id}`}
                       >
-                        <Send className="w-4 h-4 mr-2" />
+                        <Send className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
                         {t('student:continueHomework')}
-                        <ChevronRight className="w-4 h-4 ml-2" />
+                        <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     )}
 
                     {item.status === 'submitted' && (
-                      <div className="text-center py-3 bg-purple-50 rounded-xl">
-                        <span className="text-purple-700 text-sm font-medium flex items-center justify-center gap-2">
-                          <CheckCircle className="w-4 h-4" />
-                          {t('student:awaitingGrade')}
-                        </span>
+                      <div className="text-center py-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-200/50 shadow-sm">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                            <CheckCircle className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="text-purple-700 text-sm font-semibold">
+                            {t('student:awaitingGrade')}
+                          </span>
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="flex space-x-1">
+                            {Array.from({ length: 3 }, (_, i) => (
+                              <div
+                                key={i}
+                                className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"
+                                style={{ animationDelay: `${i * 0.2}s` }}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     {item.status === 'late' && (
-                      <div className="text-center py-3 bg-red-50 rounded-xl">
-                        <span className="text-red-700 text-sm font-medium flex items-center justify-center gap-2">
-                          <AlertTriangle className="w-4 h-4" />
-                          {t('student:lateSubmission')}
-                        </span>
+                      <div className="text-center py-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border border-red-200/50 shadow-sm">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                            <AlertTriangle className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="text-red-700 text-sm font-semibold">
+                            {t('student:lateSubmission')}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>

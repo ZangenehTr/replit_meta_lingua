@@ -116,7 +116,37 @@
     "overallProgress": "Overall Progress",
     "xpEarned": "XP Earned",
     "avgGrade": "Avg Grade",
-    "upcoming": "Upcoming"
+    "upcoming": "Upcoming",
+    "homeworkSubmitted": "Homework Submitted",
+    "homeworkSubmittedDesc": "Your homework has been submitted successfully",
+    "homeworkSubmitError": "Failed to submit homework. Please try again.",
+    "dueToday": "Due Today",
+    "dueTomorrow": "Due Tomorrow",
+    "dueInDays": "Due in {{days}} days",
+    "overdue": "Overdue",
+    "total": "Total",
+    "filterByDifficulty": "Filter by Difficulty",
+    "files": "files",
+    "grade": "Grade",
+    "feedbackAvailable": "Feedback Available",
+    "startHomework": "Start Homework",
+    "continueHomework": "Continue Homework",
+    "awaitingGrade": "Awaiting Grade",
+    "lateSubmission": "Late Submission",
+    "description": "Description",
+    "estimatedTime": "Estimated Time",
+    "xpReward": "XP Reward",
+    "dueDate": "Due Date",
+    "maxGrade": "Max Grade",
+    "points": "points",
+    "yourGrade": "Your Grade",
+    "teacherFeedback": "Teacher Feedback",
+    "submitYourWork": "Submit Your Work",
+    "uploadFile": "Upload File",
+    "submitting": "Submitting...",
+    "submitHomework": "Submit Homework",
+    "submittedFiles": "Submitted Files",
+    "checkBackLater": "Check back later for new assignments"
   },
   "messages": {
     "title": "Messages",
@@ -431,5 +461,18 @@
   "overview": "Overview",
   "social": "Social",
   "inPerson": "In-Person",
-  "online": "Online"
+  "online": "Online",
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "status": {
+    "pending": "Pending",
+    "in_progress": "In Progress",
+    "submitted": "Submitted",
+    "graded": "Graded",
+    "late": "Late",
+    "excused": "Excused"
+  }
 }

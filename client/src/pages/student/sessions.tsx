@@ -117,7 +117,8 @@ interface Session {
 
 export default function StudentSessions() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = ['fa', 'ar'].includes(i18n.language);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');

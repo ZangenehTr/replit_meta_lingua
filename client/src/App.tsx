@@ -660,6 +660,11 @@ function Router() {
           <VideoPlayer />
         </ProtectedRoute>
       </Route>
+      <Route path="/student/video-player/:sessionId">
+        <ProtectedRoute>
+          <VideoPlayer />
+        </ProtectedRoute>
+      </Route>
       <Route path="/student/games">
         <ProtectedRoute>
           <GamificationSystem />

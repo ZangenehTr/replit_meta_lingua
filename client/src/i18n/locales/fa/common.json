@@ -52,6 +52,16 @@
   "home": "خانه",
   "profile": "پروفایل",
   "viewAll": "مشاهده همه",
+  "student": {
+    "navigation": {
+      "home": "خانه",
+      "courses": "دوره‌ها",
+      "callern": "کالرن",
+      "homework": "تکالیف",
+      "messages": "پیام‌ها",
+      "profile": "پروفایل"
+    }
+  },
   "progress": "پیشرفت",
   "reward": "جایزه",
   "ofGoal": "از هدف",
@@ -158,6 +168,7 @@
       "home": "خانه",
       "courses": "دوره‌ها",
       "callern": "کالرن",
+      "homework": "تکالیف",
       "messages": "پیام‌ها",
       "profile": "پروفایل"
     }

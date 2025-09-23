@@ -84,7 +84,8 @@ interface Session {
 }
 
 export default function StudentSessionsMobile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = ['fa', 'ar'].includes(i18n.language);
   const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'completed'>('upcoming');
   const [videoFilter, setVideoFilter] = useState<string>('all'); // 'all', 'with-recording', 'without-recording', 'completed-with-recording'
   const [showCalendarModal, setShowCalendarModal] = useState(false);
