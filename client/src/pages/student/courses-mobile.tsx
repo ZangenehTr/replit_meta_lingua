@@ -58,10 +58,43 @@ interface Course {
   schedule: string;
 }
 
+interface CurriculumLevel {
+  id: number;
+  code: string;
+  name: string;
+  orderIndex: number;
+  cefrBand?: string;
+  curriculum: {
+    id: number;
+    name: string;
+    key: string;
+  };
+}
+
+interface StudentCurriculumProgress {
+  currentLevel: CurriculumLevel;
+  progressPercentage: number;
+  status: string;
+}
+
 export default function StudentCoursesMobile() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'fa';
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // Fetch student's curriculum level and progress
+  const { data: curriculumProgress } = useQuery<StudentCurriculumProgress>({
+    queryKey: ['/api/curriculum/student-level'],
+    queryFn: async () => {
+      const response = await fetch('/api/curriculum/student-level', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch curriculum level');
+      return response.json();
+    }
+  });
 
   // Fetch courses
   const { data: courses = [], isLoading } = useQuery<Course[]>({
@@ -198,6 +231,47 @@ export default function StudentCoursesMobile() {
             <p className="text-gray-600 text-xs">{t('student:avgProgress')}</p>
           </div>
         </motion.div>
+
+        {/* Current Level Display */}
+        {curriculumProgress && (
+          <motion.div
+            className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Target className="w-8 h-8 text-blue-500" />
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    سطح شما: {curriculumProgress.currentLevel.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {curriculumProgress.currentLevel.curriculum.name}
+                  </p>
+                </div>
+              </div>
+              <Badge className="bg-blue-500 text-white px-3 py-1">
+                {curriculumProgress.currentLevel.cefrBand || curriculumProgress.currentLevel.code}
+              </Badge>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-600">پیشرفت برنامه درسی</span>
+                <span className="text-gray-900 font-medium">
+                  {curriculumProgress.progressPercentage}%
+                </span>
+              </div>
+              <Progress value={curriculumProgress.progressPercentage} className="h-3" />
+            </div>
+            
+            <p className="text-gray-600 text-sm">
+              دوره‌های مناسب برای سطح شما در ادامه نمایش داده می‌شوند
+            </p>
+          </motion.div>
+        )}
 
         {/* Filter Tabs */}
         <motion.div

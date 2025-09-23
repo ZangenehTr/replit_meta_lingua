@@ -2,7 +2,7 @@
   "dashboard": {
     "title": "داشبورد زبان آموز",
     "welcome": "به سامانه یادگیری خوش آمدید",
-    "myCourses": "کلاس‌های من",
+    "myCourses": "دوره‌های من",
     "progress": "پیشرفت من",
     "assignments": "تکالیف من",
     "schedule": "برنامه من",
@@ -15,7 +15,7 @@
     "weeklyGoalHours": "هدف ساعات هفتگی"
   },
   "courses": {
-    "title": "کلاس‌های من",
+    "title": "دوره‌های من",
     "enrolled": "ثبت‌نام شده",
     "inProgress": "در حال انجام",
     "completed": "تکمیل شده",
