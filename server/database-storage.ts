@@ -8359,20 +8359,28 @@ export class DatabaseStorage implements IStorage {
           dueDate: homework.dueDate,
           status: homework.status,
           courseId: homework.courseId,
-          tutorId: homework.tutorId,
-          maxScore: homework.maxScore,
+          teacherId: homework.teacherId,
+          maxGrade: homework.maxGrade,
           submittedAt: homework.submittedAt,
           feedback: homework.feedback,
-          score: homework.score,
+          grade: homework.grade,
           attachments: homework.attachments,
+          submissionUrl: homework.submissionUrl,
+          submissionFiles: homework.submissionFiles,
+          difficulty: homework.difficulty,
+          estimatedTime: homework.estimatedTime,
+          xpReward: homework.xpReward,
+          allowLateSubmission: homework.allowLateSubmission,
+          latePenaltyPercent: homework.latePenaltyPercent,
+          assignedAt: homework.assignedAt,
           courseName: courses.title,
           courseLevel: courses.level,
-          tutorFirstName: users.firstName,
-          tutorLastName: users.lastName
+          teacherFirstName: users.firstName,
+          teacherLastName: users.lastName
         })
         .from(homework)
         .leftJoin(courses, eq(homework.courseId, courses.id))
-        .leftJoin(users, eq(homework.tutorId, users.id))
+        .leftJoin(users, eq(homework.teacherId, users.id))
         .where(eq(homework.studentId, userId))
         .orderBy(desc(homework.dueDate));
 
@@ -8382,9 +8390,9 @@ export class DatabaseStorage implements IStorage {
           title: hw.courseName || 'Unknown Course',
           level: hw.courseLevel || 'Unknown'
         },
-        tutor: {
-          firstName: hw.tutorFirstName || 'Unknown',
-          lastName: hw.tutorLastName || 'Tutor'
+        teacher: {
+          firstName: hw.teacherFirstName || 'Unknown',
+          lastName: hw.teacherLastName || 'Teacher'
         }
       }));
     } catch (error) {

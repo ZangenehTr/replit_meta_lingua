@@ -21368,7 +21368,7 @@ Meta Lingua Academy`;
       
       const { homework, courses, users } = await import("@shared/schema");
       
-      // Get homework for the student - only select existing columns
+      // Get homework for the student - select updated schema columns
       const homeworkList = await db
         .select({
           id: homework.id,
@@ -21381,9 +21381,19 @@ Meta Lingua Academy`;
           dueDate: homework.dueDate,
           status: homework.status,
           submission: homework.submission,
+          submissionUrl: homework.submissionUrl,
+          submissionFiles: homework.submissionFiles,
           grade: homework.grade,
+          maxGrade: homework.maxGrade,
           feedback: homework.feedback,
-          assignedAt: homework.assignedAt
+          difficulty: homework.difficulty,
+          estimatedTime: homework.estimatedTime,
+          xpReward: homework.xpReward,
+          allowLateSubmission: homework.allowLateSubmission,
+          latePenaltyPercent: homework.latePenaltyPercent,
+          assignedAt: homework.assignedAt,
+          submittedAt: homework.submittedAt,
+          attachments: homework.attachments
         })
         .from(homework)
         .where(eq(homework.studentId, studentId));
@@ -21411,7 +21421,7 @@ Meta Lingua Academy`;
         ? homeworkList.filter(hw => hw.status === status)
         : homeworkList;
       
-      // Format the response with default values for missing fields
+      // Format the response using actual data from schema
       const formattedHomework = filteredHomework.map(hw => {
         const teacher = teacherMap.get(hw.teacherId);
         const course = courseMap.get(hw.courseId);
@@ -21420,25 +21430,25 @@ Meta Lingua Academy`;
           id: hw.id,
           title: hw.title,
           description: hw.description,
-          instructions: hw.description, // Use description as instructions
+          instructions: hw.instructions || hw.description,
           courseTitle: course?.title || 'General',
-          className: 'Class A', // Default class name
+          className: 'Class A', // TODO: Add class relationship
           teacherName: teacher ? `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() : 'Teacher',
           assignedDate: hw.assignedAt,
           dueDate: hw.dueDate,
           status: hw.status || 'pending',
           grade: hw.grade,
-          maxGrade: 100, // Default max grade
+          maxGrade: hw.maxGrade || 100,
           feedback: hw.feedback,
-          attachments: [], // Default empty attachments
-          submissionUrl: hw.submission,
-          submissionFiles: [],
-          difficulty: 'medium', // Default difficulty
-          estimatedTime: 30, // Default 30 minutes
-          xpReward: 50, // Default XP reward
-          submittedAt: null,
-          allowLateSubmission: true,
-          latePenaltyPercent: 10
+          attachments: hw.attachments || [],
+          submissionUrl: hw.submissionUrl || hw.submission, // Fallback to old submission field
+          submissionFiles: hw.submissionFiles || [],
+          difficulty: hw.difficulty || 'medium',
+          estimatedTime: hw.estimatedTime || 30,
+          xpReward: hw.xpReward || 50,
+          submittedAt: hw.submittedAt,
+          allowLateSubmission: hw.allowLateSubmission ?? true,
+          latePenaltyPercent: hw.latePenaltyPercent || 10
         };
       });
       
@@ -21688,25 +21698,40 @@ Meta Lingua Academy`;
       
       const { homework } = await import("@shared/schema");
       
+      // Select only the columns we need for stats calculation
       const allHomework = await db
-        .select()
+        .select({
+          id: homework.id,
+          status: homework.status,
+          grade: homework.grade,
+          dueDate: homework.dueDate,
+          xpReward: homework.xpReward
+        })
         .from(homework)
         .where(eq(homework.studentId, studentId));
+      
+      const gradedHomework = allHomework.filter(h => h.status === 'graded' && h.grade !== null);
+      const averageGrade = gradedHomework.length > 0 
+        ? gradedHomework.reduce((acc, h) => acc + (h.grade || 0), 0) / gradedHomework.length 
+        : 0;
+        
+      const totalXpEarned = gradedHomework.reduce((acc, h) => acc + (h.xpReward || 0), 0);
       
       const stats = {
         total: allHomework.length,
         pending: allHomework.filter(h => h.status === 'pending').length,
         submitted: allHomework.filter(h => h.status === 'submitted' || h.status === 'late').length,
-        graded: allHomework.filter(h => h.status === 'graded').length,
-        averageGrade: allHomework
-          .filter(h => h.status === 'graded' && h.grade !== null)
-          .reduce((acc, h) => acc + (h.grade || 0), 0) / 
-          (allHomework.filter(h => h.status === 'graded').length || 1),
-        totalXpEarned: 0, // XP calculation disabled until column exists
+        graded: gradedHomework.length,
+        averageGrade: Math.round(averageGrade * 100) / 100,
+        totalXpEarned,
         upcomingDeadlines: allHomework
           .filter(h => h.status === 'pending' && h.dueDate && new Date(h.dueDate) > new Date())
           .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
           .slice(0, 3)
+          .map(h => ({
+            id: h.id,
+            dueDate: h.dueDate
+          }))
       };
       
       res.json(stats);
