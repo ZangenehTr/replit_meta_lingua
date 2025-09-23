@@ -38,7 +38,7 @@ export function MobileBottomNav() {
     {
       path: '/student/courses',
       icon: <BookOpen className="h-5 w-5" />,
-      label: t('common:courses.title')
+      label: t('navigation.courses')
     },
     {
       path: '/callern',
