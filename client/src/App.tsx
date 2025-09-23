@@ -131,6 +131,17 @@ import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
 import RoadmapDesigner from "@/pages/admin/roadmap-designer";
+import MSTTestBuilder from "@/pages/admin/mst-test-builder";
+import EcommerceManagement from "@/pages/admin/ecommerce";
+import ShoppingCartSettings from "@/pages/admin/shopping-cart";
+import CalendarSettings from "@/pages/admin/calendar-settings";
+import CurrencySettings from "@/pages/admin/currency-settings";
+import CourseRoadmaps from "@/pages/admin/course-roadmaps";
+import RoadmapTemplates from "@/pages/admin/roadmap-templates";
+import RoadmapInstances from "@/pages/admin/roadmap-instances";
+import AIStudyPartner from "@/pages/admin/ai-study-partner";
+import EnhancedAnalytics from "@/pages/admin/enhanced-analytics";
+import TTSSystem from "@/pages/admin/tts-system";
 import RoadmapPage from "@/pages/roadmap";
 import CallernSystem from "@/pages/callern";
 import CallernEnhancements from "@/pages/callern-enhancements";
@@ -248,132 +259,189 @@ function Router() {
         <Redirect to="/dashboard" />
       </Route>
       <Route path="/admin/students">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminStudents />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/courses">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminCourses />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/video-courses">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminVideoCourses />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/financial">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminFinancial />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/system">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminSystem />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/iranian-compliance">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <IranianComplianceSettings />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/leads">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminLeadsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/campaigns">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminCampaignsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/prospects">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminProspectsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/calls">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminCallsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/settings">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminSettings />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/financial-reports">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <FinancialReportsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/ai-management">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AIServicesManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/ai-services">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AIServicesManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/ai-training">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AiTrainingDashboard />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/games-management">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <GamesManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/game-access-control">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <GameAccessControl />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       
       {/* Enterprise Features */}
       <Route path="/admin/teacher-payments">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminTeacherPaymentsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/white-label">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <WhiteLabelPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/sms-settings">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <SMSSettingsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/sms-test">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <SMSTestPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/campaign-management">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <CampaignManagementPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/website-builder">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <WebsiteBuilderPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
+      </Route>
+      
+      {/* New Admin Features */}
+      <Route path="/admin/mst-test-builder">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <MSTTestBuilder />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/ecommerce">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <EcommerceManagement />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/shopping-cart">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <ShoppingCartSettings />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/calendar-settings">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <CalendarSettings />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/currency-settings">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <CurrencySettings />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/course-roadmaps">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <CourseRoadmaps />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/roadmap-templates">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <RoadmapTemplates />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/roadmap-instances">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <RoadmapInstances />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/ai-study-partner">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AIStudyPartner />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/enhanced-analytics">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <EnhancedAnalytics />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/tts-system">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <TTSSystem />
+        </RoleProtectedRoute>
       </Route>
 
       <Route path="/admin/teachers">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminTeacherManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/teacher-management">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminTeacherManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/subsystem-permissions">
         <RoleProtectedRoute allowedRoles={['admin']}>
@@ -768,14 +836,14 @@ function Router() {
 
       {/* Admin Routes */}
       <Route path="/admin/classes">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminClassesPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/callern-management">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <CallernManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
 
       <Route path="/callern-session/:packageId/:studentId/:teacherId">
@@ -804,44 +872,44 @@ function Router() {
         }}
       </Route>
       <Route path="/admin/room-management">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <RoomManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/mentor-matching">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <MentorMatchingPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/user-management">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <UserManagement />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/teacher-student-matching">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <TeacherStudentMatchingPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/reports">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminReportsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/communications">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminCommunicationsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/supervision">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminSupervisionPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/roadmap-designer">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["admin"]}>
           <RoadmapDesigner />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
 
       <Route path="/roadmap">

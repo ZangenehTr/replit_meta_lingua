@@ -1,6 +1,8 @@
 // Role-based navigation system according to PRD specifications
 // PRD User Roles: Admin, Teacher/Tutor, Mentor, Student, Supervisor, Call Center Agent, Accountant
 
+import { generateDynamicNavigation, NavigationItem as DynamicNavItem } from '@shared/subsystem-permissions';
+
 export interface NavigationItem {
   path: string;
   icon: any;
@@ -142,59 +144,64 @@ export const getMentorNavigation = (t: any): NavigationItem[] => [
   { path: "/mentor/progress", icon: "TrendingUp", label: t('common:navigation.progressTracking'), roles: ["Mentor"] },
 ];
 
-// Get navigation based on user role
+// Convert dynamic navigation items to component-compatible format
+const convertDynamicToNavigation = (dynamicItems: DynamicNavItem[], t: any): NavigationItem[] => {
+  return dynamicItems.map(item => ({
+    path: item.path,
+    icon: item.icon,
+    label: item.nameEn || item.label || 'Navigation Item',
+    roles: item.roles
+  }));
+};
+
+// Get navigation based on user role using dynamic generation
 export const getNavigationForRole = (role: string, t: any): NavigationItem[] => {
   // Normalize role to handle both lowercase and capitalized versions
   const normalizedRole = role.toLowerCase();
   
-  // Debug logging to see what role is being processed
-  console.log('Processing navigation for role:', role, 'normalized:', normalizedRole);
+  // Map normalized roles to exact role names used in permissions
+  const roleMapping: Record<string, string> = {
+    "student": "Student",
+    "teacher/tutor": "Teacher/Tutor", 
+    "teacher": "Teacher/Tutor",
+    "tutor": "Teacher/Tutor",
+    "mentor": "Mentor",
+    "admin": "Admin",
+    "supervisor": "Supervisor",
+    "call center agent": "Call Center Agent",
+    "callcenter": "Call Center Agent",
+    "call center": "Call Center Agent",
+    "accountant": "Accountant"
+  };
+
+  const mappedRole = roleMapping[normalizedRole] || "Student";
   
-  switch (normalizedRole) {
-    case "student":
-      return getStudentNavigation(t);
-    case "teacher/tutor":
-    case "teacher":
-    case "tutor":
-      return getTeacherNavigation(t);
-    case "mentor":
-      return getMentorNavigation(t);
-    case "admin":
-      const adminNav = [
-        // Dashboard - Primary navigation item for Admin (unified dashboard)
-        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
-        ...getInstituteManagementNavigation(t),
-        ...getCallCenterNavigation(t, "admin")
-      ];
-      console.log('Admin navigation items:', adminNav.map(item => ({ path: item.path, label: item.label })));
-      return adminNav;
-    case "supervisor":
-      return [
-        // Dashboard - Primary navigation item for Supervisor (unified dashboard)
-        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
-        ...getInstituteManagementNavigation(t),
-        ...getCallCenterNavigation(t, "supervisor")
-      ];
-    case "call center agent":
-    case "callcenter":
-    case "call center":
-      return [
-        // Dashboard - Primary navigation item for Call Center Agent (unified dashboard)
-        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Call Center Agent"] },
-        ...getCallCenterNavigation(t, "callcenter")
-      ];
-    case "accountant":
-      return [
-        // Dashboard - Primary navigation item for Accountant (unified dashboard)
-        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Accountant"] },
-        ...getInstituteManagementNavigation(t).filter(item => 
-          item.roles.includes("Accountant") || item.roles.includes("Admin")
-        )
-      ];
-    default:
-      console.warn(`Unknown role in navigation: ${role}, falling back to student navigation`);
-      return getStudentNavigation(t);
+  // Debug logging to see what role is being processed
+  console.log('Processing navigation for role:', role, 'normalized:', normalizedRole, 'mapped:', mappedRole);
+  
+  // Generate dynamic navigation based on SUBSYSTEM_TREE and role permissions
+  const dynamicItems = generateDynamicNavigation(mappedRole, t);
+  const navigationItems = convertDynamicToNavigation(dynamicItems, t);
+  
+  // Add dashboard as the first item for all roles except students
+  if (normalizedRole !== "student") {
+    const dashboardItem = {
+      path: "/dashboard",
+      icon: "Home", 
+      label: t ? t('common:navigation.dashboard') : 'Dashboard',
+      roles: [mappedRole]
+    };
+    
+    // Remove any existing dashboard item and add it at the beginning
+    const filteredItems = navigationItems.filter(item => item.path !== "/dashboard");
+    navigationItems.splice(0, 0, dashboardItem);
+    return [dashboardItem, ...filteredItems];
   }
+  
+  console.log(`Generated ${navigationItems.length} navigation items for role ${mappedRole}:`, 
+    navigationItems.map(item => ({ path: item.path, label: item.label })));
+  
+  return navigationItems;
 };
 
 // Check if user has access to a specific route

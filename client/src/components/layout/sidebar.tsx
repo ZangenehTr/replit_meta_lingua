@@ -27,7 +27,25 @@ import {
   MessageCircle,
   Globe,
   Bot,
-  Map
+  Map,
+  ShoppingCart,
+  Book,
+  ShoppingBag,
+  Route,
+  File,
+  MapPin,
+  Volume2,
+  Box,
+  Plug,
+  CalendarDays,
+  Coins,
+  Gamepad2,
+  Play,
+  UserCog,
+  Share2,
+  UserCheck,
+  Workflow,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,10 +83,32 @@ const iconMap = {
   Globe,
   Bot,
   Map,
-  Gamepad2: Home, // Using Home as fallback for Gamepad2
-  Play: Video, // Using Video as fallback for Play
-  UserCog: Users, // Using Users as fallback for UserCog
-  Share2: TrendingUp // Using TrendingUp as fallback for Share2
+  Gamepad2,
+  Play,
+  UserCog,
+  Share2,
+  UserCheck,
+  Workflow,
+  Shield,
+  // New subsystem icons
+  ShoppingCart,
+  Book,
+  ShoppingBag,
+  Route,
+  File,
+  MapPin,
+  Volume2,
+  Box,
+  Plug,
+  CalendarDays,
+  Coins,
+  // Additional icon mappings for variations
+  VideoIcon: Video,
+  FileDownload: FileText,
+  Layers: Box,
+  Settings2: Settings,
+  PlusCircle: UserPlus,
+  Database: Building2
 };
 
 interface SidebarProps {

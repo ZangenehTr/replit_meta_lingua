@@ -89,6 +89,27 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "sms_management", name: "مدیریت SMS", nameEn: "SMS Management", icon: "Send" },
       { id: "campaign_management", name: "مدیریت کمپین", nameEn: "Campaign Management", icon: "Megaphone" },
       { id: "website_builder", name: "ساخت وب‌سایت", nameEn: "Website Builder", icon: "Globe" },
+      
+      // Missing subsystems found in backend routes
+      { id: "mst_test_builder", name: "سازنده آزمون MST", nameEn: "MST Test Builder", icon: "FileText" },
+      { id: "placement_test", name: "آزمون تعیین سطح", nameEn: "Placement Test", icon: "ClipboardCheck" },
+      { id: "linguaquest", name: "لینگوا کوئست", nameEn: "LinguaQuest", icon: "Map" },
+      { id: "ecommerce_system", name: "سیستم فروشگاه", nameEn: "E-commerce System", icon: "ShoppingCart" },
+      { id: "book_ecommerce", name: "فروشگاه کتاب", nameEn: "Book E-commerce", icon: "Book" },
+      { id: "shopping_cart", name: "سبد خرید", nameEn: "Shopping Cart", icon: "ShoppingBag" },
+      { id: "course_roadmaps", name: "نقشه راه دوره‌ها", nameEn: "Course Roadmaps", icon: "Route" },
+      { id: "roadmap_templates", name: "قالب‌های نقشه راه", nameEn: "Roadmap Templates", icon: "File" },
+      { id: "roadmap_instances", name: "نمونه‌های نقشه راه", nameEn: "Roadmap Instances", icon: "MapPin" },
+      { id: "callern_roadmaps", name: "نقشه راه Callern", nameEn: "Callern Roadmaps", icon: "Video" },
+      { id: "exam_roadmaps", name: "نقشه راه آزمون", nameEn: "Exam Roadmaps", icon: "GraduationCap" },
+      { id: "ai_study_partner", name: "همکار مطالعه AI", nameEn: "AI Study Partner", icon: "Bot" },
+      { id: "enhanced_analytics", name: "تحلیل‌های پیشرفته", nameEn: "Enhanced Analytics", icon: "TrendingUp" },
+      { id: "tts_system", name: "سیستم TTS", nameEn: "Text-to-Speech System", icon: "Volume2" },
+      { id: "tts_pipeline", name: "خط تولید TTS", nameEn: "TTS Pipeline", icon: "Workflow" },
+      { id: "3d_content_tools", name: "ابزارهای محتوای سه‌بعدی", nameEn: "3D Content Tools", icon: "Box" },
+      { id: "third_party_integrations", name: "یکپارچگی‌های شخص ثالث", nameEn: "Third Party Integrations", icon: "Plug" },
+      { id: "calendar_settings", name: "تنظیمات تقویم", nameEn: "Calendar Settings", icon: "CalendarDays" },
+      { id: "currency_settings", name: "تنظیمات ارز", nameEn: "Currency Settings", icon: "Coins" },
     ]
   },
   {
@@ -178,7 +199,13 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "schedule_review", "teacher_payment_management", "white_label", "sms_management",
       "campaign_management", "website_builder",
       "unified_workflow", "lead_management", "call_logs", "prospects", "call_campaigns",
-      "mentor_dashboard", "mentee_management", "mentoring_sessions", "mentoring_progress"
+      "mentor_dashboard", "mentee_management", "mentoring_sessions", "mentoring_progress",
+      // New subsystems found in backend routes
+      "mst_test_builder", "placement_test", "linguaquest", "ecommerce_system", "book_ecommerce",
+      "shopping_cart", "course_roadmaps", "roadmap_templates", "roadmap_instances", 
+      "callern_roadmaps", "exam_roadmaps", "ai_study_partner", "enhanced_analytics",
+      "tts_system", "tts_pipeline", "3d_content_tools", "third_party_integrations",
+      "calendar_settings", "currency_settings"
     ]
   }
 };
@@ -216,4 +243,149 @@ export const findSubsystemById = (id: string): SubsystemPermission | null => {
   };
   
   return search(SUBSYSTEM_TREE);
+};
+
+// Dynamic navigation generator interface
+export interface NavigationItem {
+  path: string;
+  icon: string;
+  label: string;
+  nameEn: string;
+  roles: string[];
+  badge?: number;
+}
+
+// Subsystem ID to route path mapping
+export const SUBSYSTEM_ROUTES: Record<string, string> = {
+  // Student Platform
+  "student_dashboard": "/dashboard",
+  "courses": "/courses", 
+  "video_courses": "/video-courses",
+  "callern_student": "/callern",
+  "games": "/games",
+  "tutors": "/tutors",
+  "sessions": "/sessions",
+  "tests": "/tests",
+  "homework": "/homework", 
+  "messages": "/messages",
+  "progress": "/progress",
+  "wallet": "/wallet",
+  "referrals": "/referrals",
+
+  // Teacher Platform
+  "teacher_dashboard": "/dashboard",
+  "callern_teacher": "/teacher/callern",
+  "teacher_classes": "/teacher/classes",
+  "teacher_video_courses": "/admin/video-courses",
+  "teacher_schedule": "/teacher/schedule",
+  "teacher_assignments": "/teacher/assignments",
+  "teacher_students": "/teacher/students",
+  "teacher_resources": "/teacher/resources",
+  "teacher_reports": "/teacher/reports",
+  "teacher_payments": "/teacher/payments",
+
+  // Institute Management
+  "sis": "/admin/students",
+  "user_management": "/admin/user-management",
+  "course_management": "/admin/courses",
+  "video_course_management": "/admin/video-courses",
+  "class_scheduling": "/admin/classes",
+  "games_management": "/admin/games-management",
+  "game_access_control": "/admin/game-access-control",
+  "callern_management": "/admin/callern-management",
+  "roadmap_designer": "/admin/roadmap-designer",
+  "room_management": "/admin/room-management",
+  "mentor_matching": "/admin/mentor-matching",
+  "teacher_matching": "/admin/teacher-student-matching",
+  "staff_management": "/admin/teachers",
+  "financial_management": "/admin/financial",
+  "reports_analytics": "/admin/reports",
+  "iranian_compliance": "/admin/iranian-compliance",
+  "ai_services": "/admin/ai-services",
+  "ai_training": "/admin/ai-training",
+  "communication_center": "/admin/communications",
+  "quality_assurance": "/admin/supervision",
+  "schedule_review": "/supervisor/schedule-review",
+  "teacher_payment_management": "/admin/teacher-payments",
+  "white_label": "/admin/white-label",
+  "sms_management": "/admin/sms-settings",
+  "campaign_management": "/admin/campaign-management",
+  "website_builder": "/admin/website-builder",
+
+  // New Missing Subsystems
+  "mst_test_builder": "/admin/mst-test-builder",
+  "placement_test": "/admin/placement-test",
+  "linguaquest": "/admin/linguaquest",
+  "ecommerce_system": "/admin/ecommerce",
+  "book_ecommerce": "/admin/book-ecommerce",
+  "shopping_cart": "/admin/shopping-cart",
+  "course_roadmaps": "/admin/course-roadmaps",
+  "roadmap_templates": "/admin/roadmap-templates", 
+  "roadmap_instances": "/admin/roadmap-instances",
+  "callern_roadmaps": "/admin/callern-roadmaps",
+  "exam_roadmaps": "/admin/exam-roadmaps",
+  "ai_study_partner": "/admin/ai-study-partner",
+  "enhanced_analytics": "/admin/enhanced-analytics",
+  "tts_system": "/admin/tts-system",
+  "tts_pipeline": "/admin/tts-pipeline",
+  "3d_content_tools": "/admin/3d-content-tools",
+  "third_party_integrations": "/admin/third-party-integrations", 
+  "calendar_settings": "/admin/calendar-settings",
+  "currency_settings": "/admin/currency-settings",
+
+  // Call Center
+  "unified_workflow": "/callcenter/unified-workflow",
+  "lead_management": "/admin/leads",
+  "call_logs": "/admin/calls",
+  "prospects": "/admin/prospects", 
+  "call_campaigns": "/admin/campaigns",
+
+  // Mentor Platform
+  "mentor_dashboard": "/dashboard",
+  "mentee_management": "/mentor/students",
+  "mentoring_sessions": "/mentor/sessions",
+  "mentoring_progress": "/mentor/progress"
+};
+
+// Generate navigation items dynamically from SUBSYSTEM_TREE based on user role
+export const generateDynamicNavigation = (userRole: string, t?: any): NavigationItem[] => {
+  const userPermissions = DEFAULT_ROLE_PERMISSIONS[userRole];
+  if (!userPermissions) {
+    console.warn(`No permissions found for role: ${userRole}`);
+    return [];
+  }
+
+  const allowedSubsystems = userPermissions.subsystems;
+  const navigationItems: NavigationItem[] = [];
+
+  // Collect all leaf subsystems (those without children) from SUBSYSTEM_TREE
+  const collectLeafSubsystems = (subsystems: SubsystemPermission[]) => {
+    subsystems.forEach(subsystem => {
+      if (subsystem.children) {
+        collectLeafSubsystems(subsystem.children);
+      } else {
+        // Only include if user has permission and route mapping exists
+        if (allowedSubsystems.includes(subsystem.id) && SUBSYSTEM_ROUTES[subsystem.id]) {
+          navigationItems.push({
+            path: SUBSYSTEM_ROUTES[subsystem.id],
+            icon: subsystem.icon || "Home",
+            label: subsystem.name,
+            nameEn: subsystem.nameEn,
+            roles: [userRole]
+          });
+        }
+      }
+    });
+  };
+
+  collectLeafSubsystems(SUBSYSTEM_TREE);
+
+  // Sort navigation items by nameEn for consistency
+  return navigationItems.sort((a, b) => a.nameEn.localeCompare(b.nameEn));
+};
+
+// Get role-specific filtered subsystems
+export const getRoleSubsystems = (userRole: string): string[] => {
+  const userPermissions = DEFAULT_ROLE_PERMISSIONS[userRole];
+  return userPermissions ? userPermissions.subsystems : [];
 };
