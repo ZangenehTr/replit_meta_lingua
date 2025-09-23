@@ -22007,6 +22007,16 @@ Meta Lingua Academy`;
   app.use('/api/enhanced-mentoring', enhancedMentoringRoutes);
   console.log('✅ Enhanced Mentoring System routes registered (Progress Tracking, AI Recommendations, Learning Paths, Analytics)');
 
+  // Register Enhanced Analytics routes (Phase 3)
+  const { enhancedAnalyticsRouter } = await import('./routes/enhanced-analytics-routes');
+  app.use('/api/enhanced-analytics', enhancedAnalyticsRouter);
+  console.log('✅ Enhanced Analytics System routes registered (AI Problem Detection, Learning Recommendations, Skill Correlations)');
+
+  // Register 3D Content Tools routes (Phase 4)
+  const { threeDContentToolsRouter } = await import('./routes/3d-content-tools-routes');
+  app.use('/api/3d-tools', threeDContentToolsRouter);
+  console.log('✅ 3D Content Creation Tools routes registered (Lesson Builder, Templates, Mobile Optimization)');
+
   // ========================
   // ERROR HANDLING - 404 for non-existent endpoints
   // ========================

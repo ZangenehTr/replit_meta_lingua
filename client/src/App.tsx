@@ -91,6 +91,7 @@ import LevelAssessment from "@/pages/level-assessment";
 import MSTPage from "@/pages/mst";
 import GamesPage from "@/pages/games";
 import GamePlayer from "@/pages/game-player";
+import MetaLinguaComplete from "@/pages/meta-lingua-complete";
 
 // Teacher pages
 import TeacherClassesPage from "@/pages/teacher/classes";
@@ -193,6 +194,9 @@ function Router() {
       {/* LinguaQuest Free Learning Platform Routes */}
       <Route path="/linguaquest" component={LinguaQuestHome} />
       <Route path="/linguaquest/lesson/:lessonId" component={LinguaQuestLesson} />
+      
+      {/* Meta Lingua Complete Implementation Testing */}
+      <Route path="/meta-lingua-complete" component={MetaLinguaComplete} />
       
       <Route path="/auth" component={Auth} />
       <Route path="/simple-auth" component={SimpleAuth} />

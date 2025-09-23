@@ -1,12 +1,9 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Text, Box, Sphere, Plane } from "@react-three/drei";
-import * as THREE from "three";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Mic, Volume2, RotateCcw, Check, X } from "lucide-react";
+import { Mic, Volume2, RotateCcw, Check, X, Sparkles } from "lucide-react";
 
 interface LessonData {
   id: number;
@@ -25,7 +22,7 @@ interface LessonData {
 
 interface InteractionPoint {
   id: string;
-  position: [number, number, number];
+  position: { x: number; y: number }; // 2D position for grid layout
   word: string;
   translation: string;
   audioUrl?: string;
@@ -41,73 +38,74 @@ interface Three3DLessonProps {
 }
 
 /**
- * 3D Interactive Vocabulary Scene Component
+ * 2D Interactive Vocabulary Scene Component
  */
 function VocabularyScene({ lesson, interactionPoints, onPointClick }: {
   lesson: LessonData;
   interactionPoints: InteractionPoint[];
   onPointClick: (pointId: string) => void;
 }) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += 0.01; // Gentle rotation
-    }
-  });
-
   return (
-    <group ref={groupRef}>
-      {/* Environment setup */}
-      <ambientLight intensity={0.6} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} />
-
+    <div className="relative w-full h-full bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-600 overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="w-full h-full" style={{
+          backgroundImage: 'radial-gradient(circle, #3b82f6 1px, transparent 1px)',
+          backgroundSize: '20px 20px'
+        }} />
+      </div>
+      
       {/* Interactive vocabulary objects */}
-      {interactionPoints.map((point, index) => (
-        <VocabularyObject
-          key={point.id}
-          position={point.position}
-          word={point.word}
-          translation={point.translation}
-          isCompleted={point.isCompleted}
-          onClick={() => onPointClick(point.id)}
-          delay={index * 0.2}
-        />
-      ))}
-
-      {/* Floor plane */}
-      <Plane 
-        args={[20, 20]} 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        position={[0, -3, 0]}
-        receiveShadow
-      >
-        <meshStandardMaterial color="#f0f8ff" opacity={0.7} transparent />
-      </Plane>
-    </group>
+      <div className="relative z-10 w-full h-full p-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          {interactionPoints.map((point, index) => (
+            <VocabularyObject
+              key={point.id}
+              word={point.word}
+              translation={point.translation}
+              isCompleted={point.isCompleted}
+              onClick={() => onPointClick(point.id)}
+              delay={index * 0.2}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Floating particles effect */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-blue-300 rounded-full opacity-30 animate-bounce"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
 /**
- * Individual vocabulary object in 3D space
+ * Individual vocabulary object in 2D space
  */
 function VocabularyObject({ 
-  position, 
   word, 
   translation, 
   isCompleted, 
   onClick, 
   delay = 0 
 }: {
-  position: [number, number, number];
   word: string;
   translation: string;
   isCompleted: boolean;
   onClick: () => void;
   delay?: number;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [visible, setVisible] = useState(false);
 
@@ -116,90 +114,69 @@ function VocabularyObject({
     return () => clearTimeout(timer);
   }, [delay]);
 
-  useFrame((state) => {
-    if (meshRef.current && visible) {
-      const scale = hovered ? 1.2 : 1;
-      meshRef.current.scale.lerp({ x: scale, y: scale, z: scale } as any, 0.1);
-      
-      if (!isCompleted) {
-        meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
-      }
-    }
-  });
-
   if (!visible) return null;
 
   return (
-    <group position={position}>
-      <Box
-        ref={meshRef}
-        args={[1.5, 1.5, 1.5]}
-        onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial 
-          color={isCompleted ? "#4ade80" : hovered ? "#60a5fa" : "#3b82f6"}
-          emissive={hovered ? "#1e40af" : "#000000"}
-          emissiveIntensity={hovered ? 0.2 : 0}
-        />
-      </Box>
-      
-      {/* Word text */}
-      <Text
-        position={[0, 2, 0]}
-        fontSize={0.5}
-        color={isCompleted ? "#16a34a" : "#1f2937"}
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/inter-bold.woff"
-      >
-        {word}
-      </Text>
-      
-      {/* Translation text */}
-      <Text
-        position={[0, -2, 0]}
-        fontSize={0.3}
-        color="#6b7280"
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/inter-regular.woff"
-      >
-        {translation}
-      </Text>
-
-      {/* Completion indicator */}
-      {isCompleted && (
-        <Sphere args={[0.2]} position={[1, 1, 1]}>
-          <meshBasicMaterial color="#22c55e" />
-        </Sphere>
-      )}
-    </group>
+    <Card 
+      className={`relative cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+        isCompleted 
+          ? 'bg-gradient-to-br from-green-100 to-green-200 border-green-300 shadow-green-200/50' 
+          : hovered 
+            ? 'bg-gradient-to-br from-blue-100 to-blue-200 border-blue-300 shadow-blue-200/50'
+            : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 hover:shadow-lg'
+      } ${
+        !isCompleted ? 'animate-pulse' : ''
+      } shadow-lg hover:shadow-xl`}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      data-testid={`vocab-card-${word.toLowerCase()}`}
+    >
+      <CardContent className="p-4 text-center relative">
+        {/* Completion indicator */}
+        {isCompleted && (
+          <div className="absolute top-2 right-2">
+            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+              <Check className="w-4 h-4 text-white" />
+            </div>
+          </div>
+        )}
+        
+        {/* Sparkle effect for interactive elements */}
+        {!isCompleted && (
+          <div className="absolute top-2 left-2">
+            <Sparkles className={`w-4 h-4 ${hovered ? 'text-blue-500' : 'text-gray-400'} transition-colors`} />
+          </div>
+        )}
+        
+        {/* Word */}
+        <h3 className={`text-lg font-bold mb-2 transition-colors ${
+          isCompleted 
+            ? 'text-green-800' 
+            : hovered 
+              ? 'text-blue-800'
+              : 'text-gray-800'
+        }`}>
+          {word}
+        </h3>
+        
+        {/* Translation */}
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          {translation}
+        </p>
+        
+        {/* Interactive hint */}
+        <div className={`mt-2 text-xs transition-opacity ${
+          hovered ? 'opacity-100' : 'opacity-50'
+        }`}>
+          {isCompleted ? '✅ Completed!' : '👆 Click to practice'}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-/**
- * Camera controller for mobile optimization
- */
-function MobileOptimizedCamera({ isMobile }: { isMobile: boolean }) {
-  const { camera } = useThree();
-
-  useEffect(() => {
-    if (isMobile) {
-      camera.position.set(0, 5, 8);
-      camera.fov = 75;
-    } else {
-      camera.position.set(0, 8, 12);
-      camera.fov = 60;
-    }
-    camera.updateProjectionMatrix();
-  }, [camera, isMobile]);
-
-  return null;
-}
+// Mobile optimization is now handled through responsive CSS classes
 
 /**
  * Main 3D Lesson Component
@@ -222,11 +199,10 @@ export function Three3DLesson({
     if (lesson.vocabularyWords) {
       const points: InteractionPoint[] = lesson.vocabularyWords.map((word, index) => ({
         id: `vocab_${index}`,
-        position: [
-          (index % 3 - 1) * 4, // X: -4, 0, 4
-          Math.floor(index / 3) * 2, // Y: stacked
-          (Math.floor(index / 3) % 2) * 2 - 1 // Z: alternating
-        ] as [number, number, number],
+        position: {
+          x: index % 4, // Grid column (0-3)
+          y: Math.floor(index / 4) // Grid row
+        },
         word: word,
         translation: `Translation of ${word}`, // Would come from lesson data
         isCompleted: false
@@ -282,34 +258,13 @@ export function Three3DLesson({
 
   return (
     <div className="h-full w-full relative bg-gradient-to-b from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* 3D Canvas */}
-      <div className="h-2/3 w-full">
-        <Canvas 
-          shadows 
-          camera={{ position: [0, 8, 12], fov: 60 }}
-          gl={{ antialias: true, alpha: true }}
-          dpr={isMobile ? 1 : 2}
-        >
-          <MobileOptimizedCamera isMobile={isMobile} />
-          
-          <VocabularyScene 
-            lesson={lesson}
-            interactionPoints={interactionPoints}
-            onPointClick={handlePointClick}
-          />
-          
-          <OrbitControls 
-            enableZoom={!isMobile}
-            enablePan={false}
-            maxPolarAngle={Math.PI / 2}
-            minDistance={isMobile ? 8 : 5}
-            maxDistance={isMobile ? 15 : 20}
-            touches={{
-              ONE: isMobile ? THREE.TOUCH.ROTATE : THREE.TOUCH.ROTATE,
-              TWO: isMobile ? THREE.TOUCH.DOLLY_PAN : THREE.TOUCH.DOLLY_PAN
-            }}
-          />
-        </Canvas>
+      {/* 2D Interactive Learning Area */}
+      <div className="h-2/3 w-full overflow-auto">
+        <VocabularyScene 
+          lesson={lesson}
+          interactionPoints={interactionPoints}
+          onPointClick={handlePointClick}
+        />
       </div>
 
       {/* Control Panel */}
@@ -361,7 +316,7 @@ export function Three3DLesson({
                   </div>
                 ) : (
                   <p className="text-gray-500 dark:text-gray-400">
-                    Tap or click on the 3D objects above to learn vocabulary words.
+                    Tap or click on the vocabulary cards above to start learning!
                   </p>
                 )}
               </CardContent>
@@ -411,7 +366,7 @@ export function Three3DLesson({
       {/* Mobile help overlay */}
       {isMobile && (
         <div className="absolute top-4 right-4 bg-black bg-opacity-60 text-white p-2 rounded-lg text-xs">
-          📱 Drag to rotate • Pinch to zoom
+          📱 Tap cards to practice • Scroll to see more
         </div>
       )}
     </div>
