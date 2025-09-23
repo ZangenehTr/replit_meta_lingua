@@ -29,6 +29,7 @@ import { toast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { LevelBasedCourseDiscovery } from '@/components/dashboard/level-based-course-discovery';
+import { StudentLevelBanner } from '@/components/dashboard/StudentLevelBanner';
 
 interface Course {
   id: number;
@@ -81,6 +82,7 @@ export default function StudentCoursesMobile() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'fa';
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [levelFilter, setLevelFilter] = useState<string>('all'); // 'all' or 'currentLevel'
 
   // Fetch student's curriculum level and progress
   const { data: curriculumProgress } = useQuery<StudentCurriculumProgress>({
@@ -98,10 +100,11 @@ export default function StudentCoursesMobile() {
 
   // Fetch courses
   const { data: courses = [], isLoading } = useQuery<Course[]>({
-    queryKey: ['/api/student/courses', filterStatus],
+    queryKey: ['/api/student/courses', filterStatus, levelFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filterStatus !== 'all') params.append('status', filterStatus);
+      if (levelFilter !== 'all') params.append('levelFilter', levelFilter);
       
       const response = await fetch(`/api/student/courses?${params}`, {
         headers: {
@@ -232,44 +235,72 @@ export default function StudentCoursesMobile() {
           </div>
         </motion.div>
 
-        {/* Current Level Display */}
-        {curriculumProgress && (
+        {/* Student Level Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <StudentLevelBanner
+            currentLevel={curriculumProgress?.currentLevel}
+            progressPercentage={curriculumProgress?.progressPercentage || 0}
+            nextLevel={curriculumProgress?.nextLevel}
+            status={curriculumProgress?.status || 'unassigned'}
+            variant="default"
+            className="mb-6"
+            data-testid="student-level-banner-courses"
+          />
+        </motion.div>
+
+        {/* Level Filter Toggle */}
+        {curriculumProgress?.currentLevel && (
           <motion.div
-            className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+            className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+            transition={{ delay: 0.18 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Target className="w-8 h-8 text-blue-500" />
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    سطح شما: {curriculumProgress.currentLevel.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    {curriculumProgress.currentLevel.curriculum.name}
-                  </p>
-                </div>
+            <div className="flex items-center justify-center">
+              <div className="flex bg-gray-100 rounded-full p-1 w-full max-w-md">
+                <button
+                  onClick={() => setLevelFilter('currentLevel')}
+                  className={cn(
+                    "flex-1 py-2 px-4 rounded-full transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2",
+                    levelFilter === 'currentLevel'
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  )}
+                  data-testid="button-current-level-filter"
+                >
+                  <Target className="w-4 h-4" />
+                  <span>دوره‌های سطح شما</span>
+                </button>
+                
+                <button
+                  onClick={() => setLevelFilter('all')}
+                  className={cn(
+                    "flex-1 py-2 px-4 rounded-full transition-all duration-200 text-sm font-medium",
+                    levelFilter === 'all'
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  )}
+                  data-testid="button-all-courses-filter"
+                >
+                  نمایش همه دوره‌ها
+                </button>
               </div>
-              <Badge className="bg-blue-500 text-white px-3 py-1">
-                {curriculumProgress.currentLevel.cefrBand || curriculumProgress.currentLevel.code}
-              </Badge>
             </div>
             
-            <div className="mb-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-600">پیشرفت برنامه درسی</span>
-                <span className="text-gray-900 font-medium">
-                  {curriculumProgress.progressPercentage}%
-                </span>
-              </div>
-              <Progress value={curriculumProgress.progressPercentage} className="h-3" />
-            </div>
-            
-            <p className="text-gray-600 text-sm">
-              دوره‌های مناسب برای سطح شما در ادامه نمایش داده می‌شوند
-            </p>
+            {levelFilter === 'currentLevel' && (
+              <motion.p 
+                className="text-center text-gray-600 text-xs mt-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                data-testid="text-level-filter-description"
+              >
+                نمایش دوره‌های مناسب برای {curriculumProgress.currentLevel.name}
+              </motion.p>
+            )}
           </motion.div>
         )}
 

@@ -40,6 +40,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { Link } from "wouter";
+import { StudentLevelBanner } from "@/components/dashboard/StudentLevelBanner";
 
 interface StudentStats {
   totalLessons: number;
@@ -133,6 +134,20 @@ export default function StudentDashboardMobile() {
         }
       });
       if (!response.ok) throw new Error('Failed to fetch placement status');
+      return response.json();
+    }
+  });
+
+  // Fetch student's curriculum level and progress
+  const { data: curriculumProgress } = useQuery({
+    queryKey: ['/api/curriculum/student-level'],
+    queryFn: async () => {
+      const response = await fetch('/api/curriculum/student-level', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch curriculum level');
       return response.json();
     }
   });
@@ -281,6 +296,18 @@ export default function StudentDashboardMobile() {
                   </div>
                 </div>
               </GlossyCard>
+            )}
+
+            {/* Student Level Banner - Show curriculum progress */}
+            {curriculumProgress && (
+              <StudentLevelBanner
+                currentLevel={curriculumProgress.currentLevel}
+                progressPercentage={curriculumProgress.progressPercentage}
+                nextLevel={curriculumProgress.nextLevel}
+                status={curriculumProgress.status}
+                variant="detailed"
+                data-testid="student-level-banner"
+              />
             )}
             
             {/* Peer Socializer System - Iranian Gender-Based Matching */}

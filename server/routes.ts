@@ -5,8 +5,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users } from "@shared/schema";
-import { eq, sql } from "drizzle-orm";
+import { users, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses } from "@shared/schema";
+import { eq, sql, and, desc } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { registerCallernAIRoutes } from "./callern-ai-routes";
@@ -2524,30 +2524,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
 
   // Get student's current curriculum level and progress
-  app.get('/api/curriculum/student-level', authenticateToken, requireRole(['Student']), async (req: any, res) => {
+  app.get('/api/curriculum/student-level', authenticateToken, requireRole(['student']), async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const profile = await storage.getUserProfile(userId);
       
-      if (!profile) {
-        return res.status(404).json({ message: 'User profile not found' });
+      // Get student's active curriculum progress with level and curriculum details
+      const [progress] = await db.select({
+        id: studentCurriculumProgress.id,
+        studentId: studentCurriculumProgress.studentId,
+        curriculumId: studentCurriculumProgress.curriculumId,
+        currentLevelId: studentCurriculumProgress.currentLevelId,
+        status: studentCurriculumProgress.status,
+        progressPercentage: studentCurriculumProgress.progressPercentage,
+        enrolledAt: studentCurriculumProgress.enrolledAt,
+        lastActivityAt: studentCurriculumProgress.lastActivityAt,
+        
+        // Current level details
+        currentLevel: {
+          id: curriculumLevels.id,
+          code: curriculumLevels.code,
+          name: curriculumLevels.name,
+          orderIndex: curriculumLevels.orderIndex,
+          cefrBand: curriculumLevels.cefrBand,
+          prerequisites: curriculumLevels.prerequisites,
+          description: curriculumLevels.description,
+          estimatedWeeks: curriculumLevels.estimatedWeeks,
+          
+          // Nested curriculum details
+          curriculum: {
+            id: curriculums.id,
+            name: curriculums.name,
+            key: curriculums.key,
+            language: curriculums.language,
+            description: curriculums.description
+          }
+        }
+      })
+      .from(studentCurriculumProgress)
+      .innerJoin(curriculumLevels, eq(studentCurriculumProgress.currentLevelId, curriculumLevels.id))
+      .innerJoin(curriculums, eq(curriculumLevels.curriculumId, curriculums.id))
+      .where(and(
+        eq(studentCurriculumProgress.studentId, userId),
+        eq(studentCurriculumProgress.status, 'active')
+      ))
+      .orderBy(desc(studentCurriculumProgress.updatedAt))
+      .limit(1);
+
+      if (!progress) {
+        // If no active curriculum progress, return null - student needs level assignment
+        return res.json({
+          currentLevel: null,
+          progressPercentage: 0,
+          status: 'unassigned',
+          message: 'Student has not been assigned a curriculum level yet'
+        });
       }
 
-      // Get student's curriculum progress
-      const curriculumProgress = await db.select()
-        .from(studentCurriculumProgress)
-        .where(eq(studentCurriculumProgress.studentId, userId))
-        .orderBy(desc(studentCurriculumProgress.updatedAt));
-
-      // Get available curricula
-      const curricula = await db.select().from(curriculums).where(eq(curriculums.isActive, true));
+      // Find next level for progression display
+      const [nextLevel] = await db.select({
+        id: curriculumLevels.id,
+        code: curriculumLevels.code,
+        name: curriculumLevels.name,
+        orderIndex: curriculumLevels.orderIndex,
+        cefrBand: curriculumLevels.cefrBand
+      })
+      .from(curriculumLevels)
+      .where(and(
+        eq(curriculumLevels.curriculumId, progress.curriculumId),
+        eq(curriculumLevels.orderIndex, progress.currentLevel.orderIndex + 1),
+        eq(curriculumLevels.isActive, true)
+      ))
+      .limit(1);
 
       res.json({
-        currentProficiency: profile.currentProficiency,
-        currentLevel: profile.currentLevel,
-        targetLanguage: profile.targetLanguage,
-        curriculumProgress,
-        availableCurricula: curricula
+        currentLevel: progress.currentLevel,
+        progressPercentage: progress.progressPercentage,
+        status: progress.status,
+        nextLevel: nextLevel || null,
+        enrolledAt: progress.enrolledAt,
+        lastActivityAt: progress.lastActivityAt
       });
     } catch (error) {
       console.error('Error fetching student curriculum level:', error);
@@ -2556,7 +2611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Assign curriculum level to student (Admin/Teacher/Accountant)
-  app.post('/api/curriculum/assign-level', authenticateToken, requireRole(['Admin', 'Teacher', 'Accountant']), async (req: any, res) => {
+  app.post('/api/curriculum/assign-level', authenticateToken, requireRole(['admin', 'teacher', 'accountant']), async (req: any, res) => {
     try {
       const { studentId, curriculumId, curriculumLevelId } = req.body;
       
@@ -2585,14 +2640,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.insert(studentCurriculumProgress).values({
         studentId,
         curriculumId,
-        curriculumLevelId,
+        currentLevelId: curriculumLevelId,
         status: 'active',
         progressPercentage: 0,
         assignedBy: req.user.id
       }).onConflictDoUpdate({
         target: [studentCurriculumProgress.studentId, studentCurriculumProgress.curriculumId],
         set: {
-          curriculumLevelId,
+          currentLevelId: curriculumLevelId,
           status: 'active',
           assignedBy: req.user.id,
           updatedAt: new Date()
@@ -2601,8 +2656,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update user profile with new level
       await storage.updateUserProfile(studentId, {
-        currentLevel: level.levelCode,
-        currentProficiency: level.difficultyLevel
+        currentLevel: level.code,
+        currentProficiency: level.cefrBand || 'beginner'
       });
 
       res.json({ 
@@ -2616,7 +2671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get level-based course recommendations
-  app.get('/api/curriculum/level-courses', authenticateToken, requireRole(['Student']), async (req: any, res) => {
+  app.get('/api/curriculum/level-courses', authenticateToken, requireRole(['student']), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const profile = await storage.getUserProfile(userId);
@@ -8972,10 +9027,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // STUDENT API ENDPOINTS
   // ============================================
 
-  // Get student courses
-  app.get("/api/student/courses", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+  // Get student courses with optional level-based filtering
+  app.get("/api/student/courses", authenticateToken, requireRole(['student', 'admin']), async (req: any, res) => {
     try {
-      const courses = await storage.getUserCourses(req.user.id);
+      const { levelFilter } = req.query;
+      const userId = req.user.id;
+      
+      // If levelFilter is 'currentLevel', filter by student's current curriculum level
+      if (levelFilter === 'currentLevel') {
+        // Get student's current curriculum progress
+        const [progress] = await db.select({
+          curriculumId: studentCurriculumProgress.curriculumId,
+          currentLevelId: studentCurriculumProgress.currentLevelId
+        })
+        .from(studentCurriculumProgress)
+        .where(and(
+          eq(studentCurriculumProgress.studentId, userId),
+          eq(studentCurriculumProgress.status, 'active')
+        ))
+        .orderBy(desc(studentCurriculumProgress.updatedAt))
+        .limit(1);
+
+        if (!progress || !progress.currentLevelId) {
+          // Student has no assigned curriculum level, return empty array
+          return res.json([]);
+        }
+
+        // Get courses for the student's current curriculum level
+        const levelCourses = await db.select({
+          course: courses,
+          isRequired: curriculumLevelCourses.isRequired,
+          orderIndex: curriculumLevelCourses.orderIndex
+        })
+        .from(curriculumLevelCourses)
+        .innerJoin(courses, eq(curriculumLevelCourses.courseId, courses.id))
+        .where(eq(curriculumLevelCourses.levelId, progress.currentLevelId))
+        .orderBy(curriculumLevelCourses.orderIndex);
+
+        // Transform to match expected format
+        const filteredCourses = levelCourses.map(item => ({
+          ...item.course,
+          isRequired: item.isRequired,
+          orderIndex: item.orderIndex
+        }));
+
+        return res.json(filteredCourses);
+      }
+
+      // Default behavior - get all user courses
+      const courses = await storage.getUserCourses(userId);
       res.json(courses);
     } catch (error) {
       console.error('Error fetching student courses:', error);
@@ -8984,7 +9084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get student assignments
-  app.get("/api/student/assignments", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+  app.get("/api/student/assignments", authenticateToken, requireRole(['student', 'admin']), async (req: any, res) => {
     try {
       const assignments = await storage.getStudentAssignments(req.user.id);
       // Ensure we always return an array
@@ -8997,7 +9097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get student goals
-  app.get("/api/student/goals", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+  app.get("/api/student/goals", authenticateToken, requireRole(['student', 'admin']), async (req: any, res) => {
     try {
       const goals = await storage.getStudentGoals(req.user.id);
       res.json(goals || []);
@@ -9008,7 +9108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get student homework
-  app.get("/api/students/homework", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+  app.get("/api/students/homework", authenticateToken, requireRole(['student', 'admin']), async (req: any, res) => {
     try {
       const homework = await storage.getStudentHomework(req.user.id);
       res.json(homework);
@@ -22796,11 +22896,45 @@ Meta Lingua Academy`;
     }
   });
 
-  // Student courses - Enhanced with teacher photos
+  // Student courses - Enhanced with teacher photos and curriculum level filtering
   app.get("/api/student/courses", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      const { status } = req.query;
-      const courses = await storage.getUserCourses(req.user.id);
+      const { status, levelFilter } = req.query;
+      const userId = req.user.id;
+      
+      let courses = await storage.getUserCourses(userId);
+      
+      // If level filtering is requested, get student's curriculum level and filter courses
+      if (levelFilter === 'currentLevel') {
+        try {
+          // Get student's active curriculum progress
+          const [progress] = await db.select()
+            .from(studentCurriculumProgress)
+            .innerJoin(curriculumLevels, eq(studentCurriculumProgress.currentLevelId, curriculumLevels.id))
+            .where(and(
+              eq(studentCurriculumProgress.studentId, userId),
+              eq(studentCurriculumProgress.status, 'active')
+            ))
+            .limit(1);
+          
+          if (progress) {
+            // Get course IDs that are appropriate for the student's current curriculum level
+            const levelCourses = await db.select({
+              courseId: curriculumLevelCourses.courseId
+            })
+            .from(curriculumLevelCourses)
+            .where(eq(curriculumLevelCourses.levelId, progress.student_curriculum_progress.currentLevelId));
+            
+            const levelCourseIds = levelCourses.map(lc => lc.courseId);
+            
+            // Filter courses to only include level-appropriate ones
+            courses = courses.filter(course => levelCourseIds.includes(course.id));
+          }
+        } catch (levelError) {
+          console.error('Error filtering by curriculum level:', levelError);
+          // Continue with all courses if level filtering fails
+        }
+      }
       
       // Transform course data to match frontend expectations
       const transformedCourses = courses.map(course => ({
@@ -22830,7 +22964,8 @@ Meta Lingua Academy`;
         type: course.classFormat === 'one_on_one' ? 'individual' : 'group',
         schedule: course.weekdays && course.startTime ? 
           `${course.weekdays.join(', ')} at ${course.startTime}` : 
-          'Schedule TBA'
+          'Schedule TBA',
+        isLevelAppropriate: levelFilter === 'currentLevel' // Mark courses as level-appropriate when filtered
       }));
       
       // Filter by status if requested
