@@ -9,7 +9,6 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import { apiRequest } from '@/lib/queryClient';
 import {
@@ -175,7 +174,7 @@ export default function StudentVideoCourses() {
             />
           </div>
         </div>
-        <MobileBottomNav />
+
       </div>
     );
   }
@@ -321,7 +320,7 @@ export default function StudentVideoCourses() {
             </Card>
           </div>
         </div>
-        <MobileBottomNav />
+
       </div>
     );
   }
@@ -449,7 +448,6 @@ export default function StudentVideoCourses() {
           )}
         </div>
       </div>
-      <MobileBottomNav />
     </div>
   );
 }

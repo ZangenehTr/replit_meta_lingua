@@ -65,9 +65,9 @@ export default function StudentProfileMobile() {
 
   // Fetch profile data
   const { data: profile, isLoading } = useQuery<ProfileData>({
-    queryKey: ['/api/student/profile'],
+    queryKey: ['/api/profile'],
     queryFn: async () => {
-      const response = await fetch('/api/student/profile', {
+      const response = await fetch('/api/profile', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -80,7 +80,7 @@ export default function StudentProfileMobile() {
   // Update profile mutation
   const updateProfile = useMutation({
     mutationFn: async (data: Partial<ProfileData>) => {
-      const response = await fetch('/api/student/profile', {
+      const response = await fetch('/api/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export default function StudentProfileMobile() {
         title: t('student:profileUpdated'),
         description: t('student:profileUpdatedDesc'),
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
       setIsEditing(false);
     }
   });
@@ -104,13 +104,13 @@ export default function StudentProfileMobile() {
   // Update settings mutation
   const updateSettings = useMutation({
     mutationFn: async (settings: any) => {
-      const response = await fetch('/api/student/settings', {
+      const response = await fetch('/api/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify(settings)
+        body: JSON.stringify({ settings })
       });
       if (!response.ok) throw new Error('Failed to update settings');
       return response.json();
@@ -120,7 +120,7 @@ export default function StudentProfileMobile() {
         title: t('student:settingsUpdated'),
         description: t('student:settingsUpdatedDesc'),
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
     }
   });
 
@@ -141,7 +141,7 @@ export default function StudentProfileMobile() {
 
   if (isLoading) {
     return (
-      <MobileLayout title={t('student:profile')} showBack={false} gradient="profile">
+      <MobileLayout title={t('student:profile')} showBack={false} gradient="primary">
         <div className="space-y-4">
           <div className="glass-card p-6 animate-pulse">
             <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-4" />
@@ -157,11 +157,20 @@ export default function StudentProfileMobile() {
     <MobileLayout
       title={t('student:profile')}
       showBack={false}
-      gradient="profile"
-      headerAction={
+      gradient="primary"
+    >
+      {/* Profile Header */}
+      <motion.div
+        className="glass-card p-6 mb-6 text-center relative"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Edit Button */}
         <button 
-          className="p-2 rounded-full glass-button"
+          className="absolute top-4 right-4 p-2 rounded-full glass-button"
           onClick={() => setIsEditing(!isEditing)}
+          data-testid={isEditing ? "button-save-profile" : "button-edit-profile"}
         >
           {isEditing ? (
             <Check className="w-5 h-5 text-white" />
@@ -169,15 +178,6 @@ export default function StudentProfileMobile() {
             <Edit className="w-5 h-5 text-white" />
           )}
         </button>
-      }
-    >
-      {/* Profile Header */}
-      <motion.div
-        className="glass-card p-6 mb-6 text-center"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
         <div className="relative inline-block mb-4">
           <Avatar className="w-24 h-24 border-4 border-white/20">
             <AvatarImage src={profile?.avatar} />

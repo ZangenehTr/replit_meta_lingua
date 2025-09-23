@@ -57,10 +57,10 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
       
     case 'student':
       return [
-        { route: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
-        { route: "/courses", icon: BookOpen, label: t('common:navigation.courses') },
-        { route: "/assignments", icon: ClipboardList, label: t('common:navigation.assignments') },
-        { route: "/progress", icon: TrendingUp, label: t('common:navigation.progress') }
+        { route: "/dashboard", icon: Home, label: t('common:student.navigation.home') },
+        { route: "/student/courses", icon: BookOpen, label: t('common:student.navigation.courses') },
+        { route: "/student/homework", icon: ClipboardList, label: t('common:student.navigation.homework') },
+        { route: "/student/profile", icon: UserCheck, label: t('common:student.navigation.profile') }
       ];
       
     case 'call center agent':

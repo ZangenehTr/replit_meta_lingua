@@ -33,27 +33,22 @@ export function MobileBottomNav() {
     {
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
-      label: t('navigation.home')
+      label: t('common:navigation.dashboard')
     },
     {
       path: '/student/courses',
       icon: <BookOpen className="h-5 w-5" />,
-      label: t('navigation.courses')
+      label: t('common:navigation.courses')
     },
     {
-      path: '/callern',
-      icon: <Video className="h-5 w-5" />,
-      label: t('navigation.callern')
-    },
-    {
-      path: '/student/ai-study-partner',
-      icon: <Bot className="h-5 w-5" />,
-      label: t('navigation.aiPartner')
+      path: '/student/homework',
+      icon: <MessageSquare className="h-5 w-5" />,
+      label: t('common:navigation.homework')
     },
     {
       path: '/student/profile',
       icon: <User className="h-5 w-5" />,
-      label: t('navigation.profile')
+      label: t('common:navigation.profile')
     }
   ];
 

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
-import { MobileLayout } from '@/components/mobile/MobileLayout';
-import { MobileCard } from '@/components/mobile/MobileCard';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -19,19 +17,23 @@ import {
   Award,
   Play,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Menu,
+  Bell
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import '@/styles/mobile-app.css';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 interface Course {
   id: number;
   title: string;
   description: string;
   instructor: string;
+  instructorPhoto?: string;
   language: string;
   level: 'beginner' | 'intermediate' | 'advanced';
   duration: number; // weeks
@@ -55,7 +57,8 @@ interface Course {
 }
 
 export default function StudentCoursesMobile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'fa';
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   // Fetch courses
@@ -129,146 +132,218 @@ export default function StudentCoursesMobile() {
   const completedCourses = courses.filter(c => c.status === 'completed');
 
   return (
-    <MobileLayout
-      title={t('student:courses')}
-      showBack={false}
-      gradient="warm"
-    >
-      {/* Stats Overview */}
-      <motion.div
-        className="grid grid-cols-3 gap-3 mb-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+    <div className={cn("min-h-screen bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500", isRTL && "rtl")}>
+      {/* Modern Clean Header */}
+      <motion.header 
+        className="sticky top-0 z-40 bg-white/10 backdrop-blur-xl"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
       >
-        <div className="glass-card p-3 text-center">
-          <BookOpen className="w-6 h-6 text-blue-400 mx-auto mb-1" />
-          <p className="text-white text-xl font-bold">
-            {activeCourses.length}
-          </p>
-          <p className="text-white/60 text-xs">{t('student:active')}</p>
-        </div>
-        <div className="glass-card p-3 text-center">
-          <CheckCircle className="w-6 h-6 text-green-400 mx-auto mb-1" />
-          <p className="text-white text-xl font-bold">
-            {completedCourses.length}
-          </p>
-          <p className="text-white/60 text-xs">{t('student:completed')}</p>
-        </div>
-        <div className="glass-card p-3 text-center">
-          <TrendingUp className="w-6 h-6 text-purple-400 mx-auto mb-1" />
-          <p className="text-white text-xl font-bold">
-            {Math.round(
-              courses.reduce((acc, c) => acc + c.progress, 0) / Math.max(courses.length, 1)
-            )}%
-          </p>
-          <p className="text-white/60 text-xs">{t('student:avgProgress')}</p>
-        </div>
-      </motion.div>
-
-      {/* Filter Tabs */}
-      <motion.div 
-        className="flex gap-2 mb-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        {['all', 'active', 'upcoming', 'completed'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`
-              flex-1 py-2 px-3 rounded-xl transition-all duration-200
-              ${filterStatus === status 
-                ? 'bg-white/30 text-white font-medium' 
-                : 'bg-white/10 text-white/70'}
-              tap-scale
-            `}
-          >
-            {t(`student:courses.${status}`)}
-          </button>
-        ))}
-      </motion.div>
-
-      {/* Courses List */}
-      {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="glass-card p-4 animate-pulse">
-              <div className="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-white/20 rounded w-1/2"></div>
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-menu">
+                <Menu className="h-6 w-6" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <h1 className="text-white font-bold text-xl">{t('student:courses')}</h1>
+              </div>
             </div>
-          ))}
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-calendar">
+                <Calendar className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="relative text-white" data-testid="button-notifications">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+              </Button>
+            </div>
+          </div>
         </div>
-      ) : courses.length === 0 ? (
-        <MobileCard className="text-center py-12">
-          <BookOpen className="w-16 h-16 text-white/50 mx-auto mb-4" />
-          <p className="text-white/70">{t('student:noCourses')}</p>
-        </MobileCard>
-      ) : (
-        <div className="space-y-4">
-          {courses.map((course, index) => (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <MobileCard className="relative overflow-hidden">
-                {/* Status Indicator */}
-                <div className={`absolute top-0 left-0 w-1 h-full ${getStatusColor(course.status)}`} />
-                
-                <div className="pl-4">
+      </motion.header>
+
+      {/* Main Content - Clean White Cards */}
+      <div className="px-4 py-6 pb-24 space-y-6">
+        {/* Stats Overview */}
+        <motion.div
+          className="grid grid-cols-3 gap-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
+            <BookOpen className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+            <p className="text-gray-900 text-xl font-bold">
+              {activeCourses.length}
+            </p>
+            <p className="text-gray-600 text-xs">{t('student:active')}</p>
+          </div>
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
+            <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+            <p className="text-gray-900 text-xl font-bold">
+              {completedCourses.length}
+            </p>
+            <p className="text-gray-600 text-xs">{t('student:completed')}</p>
+          </div>
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
+            <TrendingUp className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+            <p className="text-gray-900 text-xl font-bold">
+              {Math.round(
+                courses.reduce((acc, c) => acc + c.progress, 0) / Math.max(courses.length, 1)
+              )}%
+            </p>
+            <p className="text-gray-600 text-xs">{t('student:avgProgress')}</p>
+          </div>
+        </motion.div>
+
+        {/* Filter Tabs */}
+        <motion.div
+          className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">
+              {t('student:myCourses')}
+            </h3>
+            <Badge className="bg-blue-500 text-white px-3 py-1">
+              {courses.length} {t('student:total')}
+            </Badge>
+          </div>
+          
+          <div className="flex gap-2">
+            {['all', 'active', 'upcoming', 'completed'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={cn(
+                  "flex-1 py-2 px-3 rounded-xl transition-all duration-200 text-sm font-medium",
+                  filterStatus === status 
+                    ? 'bg-blue-500 text-white shadow-md' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                )}
+                data-testid={`filter-${status}`}
+              >
+                {t(`student:courses.${status}`)}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Courses List */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div className="h-2 bg-gray-200 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        ) : courses.length === 0 ? (
+          <motion.div 
+            className="bg-white/95 backdrop-blur-sm rounded-2xl p-12 shadow-lg text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">{t('student:noCourses')}</p>
+          </motion.div>
+        ) : (
+          <div className="space-y-4">
+            {courses.map((course, index) => (
+              <motion.div
+                key={course.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+              >
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                  {/* Status Indicator */}
+                  <div className={cn(
+                    "absolute top-0 left-0 w-1 h-full",
+                    course.status === 'active' && "bg-green-500",
+                    course.status === 'upcoming' && "bg-blue-500", 
+                    course.status === 'completed' && "bg-gray-500",
+                    course.status === 'paused' && "bg-yellow-500"
+                  )} />
+                  
+                  <div className="pl-4">
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg">
-                        {course.title}
-                      </h3>
-                      <p className="text-white/60 text-sm">
-                        {course.instructor}
-                      </p>
+                    <div className="flex items-center gap-3 flex-1">
+                      {/* Teacher Avatar */}
+                      <Avatar className="h-14 w-14 border-3 border-white shadow-lg" data-testid={`avatar-teacher-${course.id}`}>
+                        <AvatarImage 
+                          src={course.instructorPhoto} 
+                          alt={course.instructor}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white font-bold text-lg">
+                          {course.instructor.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      {/* Course Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-gray-900 font-bold text-lg truncate">
+                          {course.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm truncate">
+                          {course.instructor}
+                        </p>
+                      </div>
                     </div>
-                    <Badge className={`${getLevelColor(course.level)} border-0`}>
+                    
+                    <Badge className={cn(
+                      "border-0 shrink-0",
+                      course.level === 'beginner' && "bg-green-100 text-green-700",
+                      course.level === 'intermediate' && "bg-yellow-100 text-yellow-700", 
+                      course.level === 'advanced' && "bg-red-100 text-red-700"
+                    )}>
                       {t(`student:level.${course.level}`)}
                     </Badge>
                   </div>
 
                   {/* Course Info */}
-                  <div className="flex flex-wrap gap-3 mb-3">
+                  <div className="flex flex-wrap gap-4 mb-4">
                     <div className="flex items-center gap-1">
                       {course.type === 'group' ? (
                         <>
-                          <Users className="w-4 h-4 text-white/50" />
-                          <span className="text-white/60 text-xs">
+                          <Users className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
                             {course.enrolledStudents}/{course.maxStudents}
                           </span>
                         </>
                       ) : (
                         <>
-                          <User className="w-4 h-4 text-white/50" />
-                          <span className="text-white/60 text-xs">
+                          <User className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
                             {t('student:individual')}
                           </span>
                         </>
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4 text-white/50" />
-                      <span className="text-white/60 text-xs">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 text-sm">
                         {course.duration} {t('student:weeks')}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4 text-white/50" />
-                      <span className="text-white/60 text-xs">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 text-sm">
                         {course.sessionsPerWeek}x/{t('student:week')}
                       </span>
                     </div>
                     {course.rating && (
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-white/60 text-xs">
+                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <span className="text-gray-600 text-sm">
                           {course.rating.toFixed(1)}
                         </span>
                       </div>
@@ -277,38 +352,38 @@ export default function StudentCoursesMobile() {
 
                   {/* Progress */}
                   {course.status === 'active' && (
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-white/60">
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-600">
                           {t('student:progress')}
                         </span>
-                        <span className="text-white/80">
+                        <span className="text-gray-900 font-medium">
                           {course.completedSessions}/{course.totalSessions} {t('student:sessions')}
                         </span>
                       </div>
-                      <Progress value={course.progress} className="h-2" />
+                      <Progress value={course.progress} className="h-3" />
                     </div>
                   )}
 
                   {/* Next Session */}
                   {course.nextSession && course.status === 'active' && (
-                    <div className="glass-card p-3 mb-3">
-                      <p className="text-white/60 text-xs mb-1">
+                    <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                      <p className="text-gray-600 text-xs mb-1">
                         {t('student:nextSession')}
                       </p>
-                      <p className="text-white font-medium text-sm mb-1">
+                      <p className="text-gray-900 font-medium text-sm mb-2">
                         {course.nextSession.topic}
                       </p>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-white/50" />
-                          <span className="text-white/70 text-xs">
+                          <Calendar className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
                             {formatDate(course.nextSession.date)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-white/50" />
-                          <span className="text-white/70 text-xs">
+                          <Clock className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
                             {course.nextSession.time}
                           </span>
                         </div>
@@ -318,68 +393,71 @@ export default function StudentCoursesMobile() {
 
                   {/* Action Button */}
                   {course.status === 'active' && (
-                    <motion.button
-                      className="w-full py-2 bg-white/20 rounded-lg text-white font-medium flex items-center justify-center gap-2"
-                      whileTap={{ scale: 0.98 }}
+                    <Button 
+                      className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 rounded-xl"
                       onClick={() => continueCourse.mutate(course.id)}
+                      data-testid={`button-continue-course-${course.id}`}
                     >
-                      <Play className="w-4 h-4" />
+                      <Play className="w-4 h-4 mr-2" />
                       {t('student:continueLearning')}
-                      <ChevronRight className="w-4 h-4" />
-                    </motion.button>
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
                   )}
 
                   {course.status === 'upcoming' && (
-                    <div className="text-center py-2 bg-blue-500/20 rounded-lg">
-                      <span className="text-blue-300 text-sm">
+                    <div className="text-center py-3 bg-blue-50 rounded-xl">
+                      <span className="text-blue-600 text-sm font-medium">
                         {t('student:startsOn')} {formatDate(course.startDate)}
                       </span>
                     </div>
                   )}
 
                   {course.status === 'completed' && (
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
                       <div className="flex items-center gap-2">
-                        <Award className="w-4 h-4 text-yellow-400" />
-                        <span className="text-white/70 text-sm">
+                        <Award className="w-5 h-5 text-green-600" />
+                        <span className="text-green-700 text-sm font-medium">
                           {t('student:courseCompleted')}
                         </span>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-100">
                         {t('student:viewCertificate')}
                       </Button>
                     </div>
                   )}
 
                   {course.status === 'paused' && (
-                    <div className="flex items-center justify-center py-2 bg-yellow-500/20 rounded-lg">
-                      <AlertCircle className="w-4 h-4 text-yellow-300 mr-2" />
-                      <span className="text-yellow-300 text-sm">
+                    <div className="flex items-center justify-center py-3 bg-yellow-50 rounded-xl">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+                      <span className="text-yellow-700 text-sm font-medium">
                         {t('student:coursePaused')}
                       </span>
                     </div>
                   )}
+                  </div>
                 </div>
-              </MobileCard>
-            </motion.div>
-          ))}
-        </div>
-      )}
+              </motion.div>
+            ))}
+          </div>
+        )}
 
-      {/* Explore More Button */}
-      <motion.button
-        className="w-full glass-card p-4 mt-6 mb-20 flex items-center justify-between"
-        whileTap={{ scale: 0.98 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.3 }}
-      >
-        <div className="flex items-center gap-3">
-          <Target className="w-6 h-6 text-purple-400" />
-          <span className="text-white font-medium">{t('student:exploreMoreCourses')}</span>
-        </div>
-        <ChevronRight className="w-5 h-5 text-white/50" />
-      </motion.button>
-    </MobileLayout>
+        {/* Explore More Button */}
+        <motion.div
+          className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg mt-6 mb-24"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+        >
+          <Button 
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3"
+            data-testid="button-explore-more-courses"
+          >
+            <Target className="w-6 h-6" />
+            <span className="text-lg">{t('student:exploreMoreCourses')}</span>
+            <ChevronRight className="w-6 h-6" />
+          </Button>
+        </motion.div>
+      </div>
+    </div>
   );
 }

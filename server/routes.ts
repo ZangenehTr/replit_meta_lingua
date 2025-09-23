@@ -21663,31 +21663,49 @@ Meta Lingua Academy`;
     }
   });
 
-  // Student courses - FIXED VERSION
+  // Student courses - Enhanced with teacher photos
   app.get("/api/student/courses", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      const courses = [
-        {
-          id: 1,
-          name: 'Business English A2',
-          description: 'Professional English for business contexts',
-          level: 'A2',
-          completedLessons: 8,
-          totalLessons: 20,
-          progress: 40
-        },
-        {
-          id: 2, 
-          name: 'IELTS Speaking B2',
-          description: 'IELTS speaking preparation course',
-          level: 'B2',
-          completedLessons: 5,
-          totalLessons: 15,
-          progress: 33
-        }
-      ];
+      const { status } = req.query;
+      const courses = await storage.getUserCourses(req.user.id);
       
-      res.json(courses);
+      // Transform course data to match frontend expectations
+      const transformedCourses = courses.map(course => ({
+        id: course.id,
+        title: course.title || course.courseCode || 'Unnamed Course',
+        description: course.description || 'Course description not available',
+        instructor: course.instructorName || 'Instructor TBA',
+        instructorPhoto: course.instructorPhoto,
+        language: course.language || 'en',
+        level: course.level || 'beginner',
+        duration: Math.ceil((course.totalSessions || 10) / 4), // Convert sessions to weeks (approx)
+        sessionsPerWeek: 2, // Default assumption
+        totalSessions: course.totalSessions || 10,
+        completedSessions: Math.floor(((course.progress || 0) / 100) * (course.totalSessions || 10)),
+        progress: course.progress || 0,
+        startDate: course.firstSessionDate || new Date().toISOString().split('T')[0],
+        endDate: course.lastSessionDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        nextSession: course.progress < 100 ? {
+          date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          time: course.startTime || '10:00',
+          topic: 'Next lesson'
+        } : undefined,
+        status: course.progress >= 100 ? 'completed' : course.progress > 0 ? 'active' : 'upcoming',
+        enrolledStudents: course.maxStudents ? Math.floor((course.maxStudents || 10) * 0.7) : 5,
+        maxStudents: course.maxStudents || 10,
+        rating: course.rating ? parseFloat(course.rating.toString()) : undefined,
+        type: course.classFormat === 'one_on_one' ? 'individual' : 'group',
+        schedule: course.weekdays && course.startTime ? 
+          `${course.weekdays.join(', ')} at ${course.startTime}` : 
+          'Schedule TBA'
+      }));
+      
+      // Filter by status if requested
+      const filteredCourses = status && status !== 'all' 
+        ? transformedCourses.filter(course => course.status === status)
+        : transformedCourses;
+      
+      res.json(filteredCourses);
     } catch (error) {
       console.error('Error fetching courses:', error);
       res.status(500).json({ error: 'Failed to fetch courses' });

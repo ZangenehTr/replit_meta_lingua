@@ -524,14 +524,14 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/callern">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['Admin', 'Supervisor', 'Call Center Agent', 'Mentor', 'Teacher']}>
           <CallernSystem />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/callern-enhancements">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['Admin', 'Supervisor', 'Call Center Agent', 'Mentor', 'Teacher']}>
           <CallernEnhancements />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/games">
         <ProtectedRoute>
@@ -773,9 +773,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/teacher/callern">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['Admin', 'Supervisor', 'Call_Center_Agent', 'Mentor', 'Teacher']}>
           <TeacherCallernSystem />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
 
       {/* Supervisor Routes */}
@@ -847,9 +847,9 @@ function Router() {
       </Route>
 
       <Route path="/callern-session/:packageId/:studentId/:teacherId">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['Admin', 'Supervisor', 'Call Center Agent', 'Mentor', 'Teacher']}>
           <CallernVideoSession />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/callern/video/:callId">
         {(params: { callId: string }) => {
@@ -865,9 +865,9 @@ function Router() {
             );
           };
           return (
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['Admin', 'Supervisor', 'Call_Center_Agent', 'Mentor', 'Teacher']}>
               <CallernVideoCallWrapper />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           );
         }}
       </Route>

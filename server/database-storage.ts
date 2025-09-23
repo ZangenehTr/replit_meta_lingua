@@ -303,7 +303,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(courses).where(eq(courses.deliveryMode, mode));
   }
 
-  async getUserCourses(userId: number): Promise<(Course & { progress: number })[]> {
+  async getUserCourses(userId: number): Promise<(Course & { progress: number; instructorName?: string; instructorPhoto?: string })[]> {
     try {
       // First check if the user has any enrollments to avoid complex join failures
       const userEnrollments = await db
@@ -315,21 +315,66 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
-      // Get courses with fallback handling for missing columns
+      // Get courses with instructor information via join
       const courseIds = userEnrollments.map(enrollment => enrollment.courseId);
-      const userCourses = await db
-        .select()
+      const userCoursesWithInstructor = await db
+        .select({
+          // Course fields
+          id: courses.id,
+          courseCode: courses.courseCode,
+          title: courses.title,
+          description: courses.description,
+          language: courses.language,
+          level: courses.level,
+          thumbnail: courses.thumbnail,
+          instructorId: courses.instructorId,
+          price: courses.price,
+          totalSessions: courses.totalSessions,
+          sessionDuration: courses.sessionDuration,
+          deliveryMode: courses.deliveryMode,
+          classFormat: courses.classFormat,
+          maxStudents: courses.maxStudents,
+          rating: courses.rating,
+          firstSessionDate: courses.firstSessionDate,
+          lastSessionDate: courses.lastSessionDate,
+          weekdays: courses.weekdays,
+          startTime: courses.startTime,
+          endTime: courses.endTime,
+          timeZone: courses.timeZone,
+          calendarType: courses.calendarType,
+          targetLanguage: courses.targetLanguage,
+          targetLevel: courses.targetLevel,
+          autoRecord: courses.autoRecord,
+          recordingAvailable: courses.recordingAvailable,
+          accessPeriodMonths: courses.accessPeriodMonths,
+          callernAvailable24h: courses.callernAvailable24h,
+          callernRoadmapId: courses.callernRoadmapId,
+          category: courses.category,
+          tags: courses.tags,
+          prerequisites: courses.prerequisites,
+          learningObjectives: courses.learningObjectives,
+          difficulty: courses.difficulty,
+          certificateTemplate: courses.certificateTemplate,
+          isActive: courses.isActive,
+          isFeatured: courses.isFeatured,
+          createdAt: courses.createdAt,
+          updatedAt: courses.updatedAt,
+          // Instructor fields
+          instructorName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          instructorPhoto: users.profileImage
+        })
         .from(courses)
+        .leftJoin(users, eq(courses.instructorId, users.id))
         .where(sql`${courses.id} IN (${sql.join(courseIds, sql`, `)})`);
 
-      // Map courses with progress from enrollments
-      return userCourses.map(course => {
+      // Map courses with progress from enrollments and instructor info
+      return userCoursesWithInstructor.map(course => {
         const enrollment = userEnrollments.find(e => e.courseId === course.id);
         return {
           ...course,
           progress: enrollment?.progress || 0
         };
-      }) as (Course & { progress: number })[];
+      }) as (Course & { progress: number; instructorName?: string; instructorPhoto?: string })[];
     } catch (error) {
       console.error('Error fetching user courses:', error);
       return [];

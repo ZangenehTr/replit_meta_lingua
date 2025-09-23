@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { 
   Calendar,
   Clock,
@@ -509,8 +508,6 @@ export default function StudentSessions() {
         )}
       </AnimatePresence>
 
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
     </div>
   );
 }

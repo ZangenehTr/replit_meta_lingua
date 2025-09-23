@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
-import { MobileLayout } from '@/components/mobile/MobileLayout';
-import { MobileCard } from '@/components/mobile/MobileCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -28,12 +26,17 @@ import {
   Paperclip,
   MessageSquare,
   Award,
-  Zap
+  Zap,
+  Menu,
+  Bell
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 import '@/styles/mobile-app.css';
 
 interface Homework {
@@ -72,7 +75,8 @@ interface HomeworkStats {
 }
 
 export default function StudentHomeworkMobile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'fa';
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all');
   const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -155,6 +159,18 @@ export default function StudentHomeworkMobile() {
     }
   };
 
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-orange-100 text-orange-700 border-0';
+      case 'in_progress': return 'bg-blue-100 text-blue-700 border-0';
+      case 'submitted': return 'bg-purple-100 text-purple-700 border-0';
+      case 'graded': return 'bg-green-100 text-green-700 border-0';
+      case 'late': return 'bg-red-100 text-red-700 border-0';
+      case 'excused': return 'bg-gray-100 text-gray-700 border-0';
+      default: return 'bg-gray-100 text-gray-700 border-0';
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return <AlertCircle className="w-4 h-4" />;
@@ -169,10 +185,10 @@ export default function StudentHomeworkMobile() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'text-green-400 bg-green-500/20';
-      case 'medium': return 'text-yellow-400 bg-yellow-500/20';
-      case 'hard': return 'text-red-400 bg-red-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
+      case 'easy': return 'bg-green-100 text-green-700 border-0';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-0';
+      case 'hard': return 'bg-red-100 text-red-700 border-0';
+      default: return 'bg-gray-100 text-gray-700 border-0';
     }
   };
 
@@ -206,117 +222,156 @@ export default function StudentHomeworkMobile() {
   const completionPercentage = stats ? Math.round(((stats.submitted + stats.graded) / stats.total) * 100) : 0;
 
   return (
-    <MobileLayout
-      title={t('student:homework')}
-      showBack={false}
-      gradient="warm"
-    >
-      {/* Header Stats with Progress */}
-      <motion.div 
-        className="mb-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+    <div className={cn("min-h-screen bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500", isRTL && "rtl")}>
+      {/* Modern Clean Header */}
+      <motion.header 
+        className="sticky top-0 z-40 bg-white/10 backdrop-blur-xl"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
       >
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-menu">
+                <Menu className="h-6 w-6" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <h1 className="text-white font-bold text-xl">{t('student:homework')}</h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-calendar">
+                <Calendar className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="relative text-white" data-testid="button-notifications">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Main Content - Clean White Cards */}
+      <div className="px-4 py-6 pb-24 space-y-6">
         {/* Progress Card */}
-        <MobileCard className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-white/80 text-sm font-medium">{t('student:overallProgress')}</h3>
-            <span className="text-white text-lg font-bold">{completionPercentage}%</span>
+        <motion.div
+          className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-gray-900 text-lg font-bold">{t('student:overallProgress')}</h3>
+            <span className="text-gray-900 text-2xl font-bold">{completionPercentage}%</span>
           </div>
-          <Progress value={completionPercentage} className="h-2 mb-3" />
-          <div className="flex justify-between text-xs text-white/60">
-            <span>{stats?.submitted || 0} {t('student:submitted')}</span>
-            <span>{stats?.graded || 0} {t('student:graded')}</span>
-            <span>{stats?.pending || 0} {t('student:pending')}</span>
+          <Progress value={completionPercentage} className="h-3 mb-4" />
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-gray-900 text-lg font-bold">{stats?.submitted || 0}</p>
+              <p className="text-gray-600 text-sm">{t('student:submitted')}</p>
+            </div>
+            <div>
+              <p className="text-gray-900 text-lg font-bold">{stats?.graded || 0}</p>
+              <p className="text-gray-600 text-sm">{t('student:graded')}</p>
+            </div>
+            <div>
+              <p className="text-gray-900 text-lg font-bold">{stats?.pending || 0}</p>
+              <p className="text-gray-600 text-sm">{t('student:pending')}</p>
+            </div>
           </div>
-        </MobileCard>
+        </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          <motion.div 
-            className="glass-card p-3 text-center relative overflow-hidden"
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-full -mr-10 -mt-10" />
-            <Zap className="w-5 h-5 text-yellow-400 mx-auto mb-1 relative z-10" />
-            <p className="text-white text-lg font-bold relative z-10">
+        <motion.div
+          className="grid grid-cols-3 gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
+            <Zap className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+            <p className="text-gray-900 text-xl font-bold">
               {stats?.totalXpEarned || 0}
             </p>
-            <p className="text-white/60 text-xs relative z-10">{t('student:xpEarned')}</p>
-          </motion.div>
+            <p className="text-gray-600 text-xs">{t('student:xpEarned')}</p>
+          </div>
 
-          <motion.div 
-            className="glass-card p-3 text-center relative overflow-hidden"
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full -mr-10 -mt-10" />
-            <TrendingUp className="w-5 h-5 text-green-400 mx-auto mb-1 relative z-10" />
-            <p className="text-white text-lg font-bold relative z-10">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
+            <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
+            <p className="text-gray-900 text-xl font-bold">
               {stats?.averageGrade ? Math.round(stats.averageGrade) : 0}%
             </p>
-            <p className="text-white/60 text-xs relative z-10">{t('student:avgGrade')}</p>
-          </motion.div>
+            <p className="text-gray-600 text-xs">{t('student:avgGrade')}</p>
+          </div>
 
-          <motion.div 
-            className="glass-card p-3 text-center relative overflow-hidden"
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full -mr-10 -mt-10" />
-            <AlertCircle className="w-5 h-5 text-orange-400 mx-auto mb-1 relative z-10" />
-            <p className="text-white text-lg font-bold relative z-10">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
+            <AlertCircle className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+            <p className="text-gray-900 text-xl font-bold">
               {stats?.upcomingDeadlines?.length || 0}
             </p>
-            <p className="text-white/60 text-xs relative z-10">{t('student:upcoming')}</p>
-          </motion.div>
-        </div>
-      </motion.div>
+            <p className="text-gray-600 text-xs">{t('student:upcoming')}</p>
+          </div>
+        </motion.div>
 
-      {/* Filter Section */}
-      <motion.div 
-        className="mb-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        {/* Status Tabs */}
-        <div className="flex gap-2 mb-3">
-          {['all', 'pending', 'submitted', 'graded'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status as any)}
-              className={`
-                flex-1 py-2 px-3 rounded-xl transition-all duration-200
-                ${filterStatus === status 
-                  ? 'bg-white/30 text-white font-medium shadow-lg' 
-                  : 'bg-white/10 text-white/70 hover:bg-white/15'}
-                tap-scale
-              `}
-            >
-              {t(`student:homework.${status}`)}
-            </button>
-          ))}
-        </div>
+        {/* Filter Section */}
+        <motion.div
+          className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">
+              {t('student:homework')}
+            </h3>
+            <Badge className="bg-blue-500 text-white px-3 py-1">
+              {filteredHomework.length} {t('student:total')}
+            </Badge>
+          </div>
+          
+          {/* Status Tabs */}
+          <div className="flex gap-2 mb-4">
+            {['all', 'pending', 'submitted', 'graded'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status as any)}
+                className={cn(
+                  "flex-1 py-2 px-3 rounded-xl transition-all duration-200 text-sm font-medium",
+                  filterStatus === status 
+                    ? 'bg-blue-500 text-white shadow-md' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                )}
+                data-testid={`filter-${status}`}
+              >
+                {t(`student:homework.${status}`)}
+              </button>
+            ))}
+          </div>
 
-        {/* Additional Filters */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg text-white/70 text-sm"
-          >
-            <Filter className="w-4 h-4" />
-            {t('common:filters')}
-          </button>
-          {selectedDifficulty && (
+          {/* Additional Filters */}
+          <div className="flex gap-2">
             <button
-              onClick={() => setSelectedDifficulty(null)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-white/20 rounded-lg text-white text-sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg text-gray-600 text-sm hover:bg-gray-200"
+              data-testid="button-show-filters"
             >
-              {t(`student:difficulty.${selectedDifficulty}`)}
-              <X className="w-3 h-3" />
+              <Filter className="w-4 h-4" />
+              {t('common:filters')}
             </button>
-          )}
-        </div>
+            {selectedDifficulty && (
+              <button
+                onClick={() => setSelectedDifficulty(null)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 rounded-lg text-blue-600 text-sm"
+                data-testid="button-clear-difficulty-filter"
+              >
+                {t(`student:difficulty.${selectedDifficulty}`)}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </motion.div>
 
         {/* Filter Dropdown */}
         <AnimatePresence>
@@ -327,8 +382,8 @@ export default function StudentHomeworkMobile() {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="mt-3 p-3 glass-card space-y-2">
-                <p className="text-white/60 text-xs mb-2">{t('student:filterByDifficulty')}</p>
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg space-y-3">
+                <p className="text-gray-600 text-sm mb-2">{t('student:filterByDifficulty')}</p>
                 <div className="flex gap-2">
                   {['easy', 'medium', 'hard'].map((diff) => (
                     <button
@@ -337,10 +392,11 @@ export default function StudentHomeworkMobile() {
                         setSelectedDifficulty(diff);
                         setShowFilters(false);
                       }}
-                      className={`
-                        flex-1 py-1.5 px-3 rounded-lg text-sm
-                        ${getDifficultyColor(diff)}
-                      `}
+                      className={cn(
+                        "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors",
+                        getDifficultyColor(diff)
+                      )}
+                      data-testid={`filter-difficulty-${diff}`}
                     >
                       {t(`student:difficulty.${diff}`)}
                     </button>
@@ -350,29 +406,35 @@ export default function StudentHomeworkMobile() {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
       {/* Homework List */}
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="glass-card p-4 animate-pulse">
+            <div key={i} className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg animate-pulse">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-lg"></div>
+                <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
                 <div className="flex-1">
-                  <div className="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-white/20 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-2 bg-gray-200 rounded w-full"></div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : filteredHomework.length === 0 ? (
-        <MobileCard className="text-center py-12">
-          <BookOpen className="w-16 h-16 text-white/30 mx-auto mb-4" />
-          <p className="text-white/70 mb-2">{t('student:noHomework')}</p>
-          <p className="text-white/50 text-sm">{t('student:checkBackLater')}</p>
-        </MobileCard>
+        <motion.div 
+          className="bg-white/95 backdrop-blur-sm rounded-2xl p-12 shadow-lg text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 mb-2">{t('student:noHomework')}</p>
+          <p className="text-gray-500 text-sm">{t('student:checkBackLater')}</p>
+        </motion.div>
       ) : (
         <div className="space-y-4">
           {filteredHomework.map((item, index) => {
@@ -383,13 +445,17 @@ export default function StudentHomeworkMobile() {
             return (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
               >
-                <MobileCard 
-                  className={`relative overflow-hidden ${isOverdue ? 'border border-red-500/30' : ''}`}
+                <div 
+                  className={cn(
+                    "bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg relative overflow-hidden cursor-pointer transition-all hover:shadow-xl",
+                    isOverdue && 'border-2 border-red-500/50'
+                  )}
                   onClick={() => setSelectedHomework(item)}
+                  data-testid={`homework-card-${item.id}`}
                 >
                   {/* Status Bar */}
                   <div className={`absolute top-0 left-0 w-1 h-full ${getStatusColor(item.status)}`} />
@@ -397,56 +463,59 @@ export default function StudentHomeworkMobile() {
                   <div className="pl-4">
                     {/* Header with Icon */}
                     <div className="flex items-start gap-3 mb-3">
-                      <div className={`
-                        w-10 h-10 rounded-lg flex items-center justify-center
-                        ${getStatusColor(item.status)} bg-opacity-20
-                      `}>
+                      <div className={cn(
+                        "w-12 h-12 rounded-xl flex items-center justify-center text-white",
+                        getStatusColor(item.status)
+                      )}>
                         {getStatusIcon(item.status)}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-base line-clamp-2 mb-1">
+                        <h3 className="text-gray-900 font-bold text-lg line-clamp-2 mb-1">
                           {item.title}
                         </h3>
-                        <p className="text-white/50 text-xs">
+                        <p className="text-gray-600 text-sm">
                           {item.courseTitle} • {item.teacherName}
                         </p>
                       </div>
-                      <Badge className={`${getDifficultyColor(item.difficulty)} border-0`}>
+                      <Badge className={cn(getDifficultyColor(item.difficulty))}>
                         {t(`student:difficulty.${item.difficulty}`)}
                       </Badge>
                     </div>
 
                     {/* Description */}
                     {item.description && (
-                      <p className="text-white/60 text-sm mb-3 line-clamp-2">
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                         {item.description}
                       </p>
                     )}
 
                     {/* Info Grid */}
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-white/40" />
-                        <span className="text-white/60 text-xs">
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600 text-sm">
                           {item.estimatedTime} {t('common:minutes')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Award className="w-3.5 h-3.5 text-white/40" />
-                        <span className="text-white/60 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Award className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600 text-sm">
                           {item.xpReward} XP
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-white/40" />
-                        <span className={`text-xs ${isUrgent ? 'text-orange-400 font-medium' : 'text-white/60'}`}>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        <span className={cn(
+                          "text-sm",
+                          isUrgent ? 'text-orange-600 font-medium' : 'text-gray-600'
+                        )}>
                           {dueInfo.text}
                         </span>
                       </div>
                       {item.attachments && item.attachments.length > 0 && (
-                        <div className="flex items-center gap-1.5">
-                          <Paperclip className="w-3.5 h-3.5 text-white/40" />
-                          <span className="text-white/60 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Paperclip className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-600 text-sm">
                             {item.attachments.length} {t('student:files')}
                           </span>
                         </div>
@@ -455,16 +524,16 @@ export default function StudentHomeworkMobile() {
 
                     {/* Status-based Actions */}
                     {item.status === 'graded' && (
-                      <div className="bg-green-500/10 rounded-lg p-3">
+                      <div className="bg-green-50 rounded-xl p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Trophy className="w-4 h-4 text-green-400" />
-                            <span className="text-white text-sm font-semibold">
+                            <Trophy className="w-5 h-5 text-green-600" />
+                            <span className="text-green-700 text-sm font-semibold">
                               {t('student:grade')}: {item.grade}/{item.maxGrade}
                             </span>
                           </div>
                           {item.feedback && (
-                            <Badge className="bg-green-500/20 text-green-300 border-0">
+                            <Badge className="bg-green-100 text-green-700 border-0">
                               <MessageSquare className="w-3 h-3 mr-1" />
                               {t('student:feedbackAvailable')}
                             </Badge>
@@ -474,37 +543,38 @@ export default function StudentHomeworkMobile() {
                     )}
 
                     {item.status === 'pending' && (
-                      <motion.button
-                        className="w-full py-2.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg text-white font-medium flex items-center justify-center gap-2 hover:from-purple-500/30 hover:to-pink-500/30 transition-all"
-                        whileTap={{ scale: 0.98 }}
+                      <Button
+                        className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 rounded-xl"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedHomework(item);
                         }}
+                        data-testid={`button-start-homework-${item.id}`}
                       >
-                        <Upload className="w-4 h-4" />
+                        <Upload className="w-4 h-4 mr-2" />
                         {t('student:startHomework')}
-                        <ChevronRight className="w-4 h-4" />
-                      </motion.button>
+                        <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
                     )}
 
                     {item.status === 'in_progress' && (
-                      <motion.button
-                        className="w-full py-2.5 bg-blue-500/20 rounded-lg text-blue-300 font-medium flex items-center justify-center gap-2"
-                        whileTap={{ scale: 0.98 }}
+                      <Button
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedHomework(item);
                         }}
+                        data-testid={`button-continue-homework-${item.id}`}
                       >
-                        <Send className="w-4 h-4" />
+                        <Send className="w-4 h-4 mr-2" />
                         {t('student:continueHomework')}
-                      </motion.button>
+                        <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
                     )}
 
                     {item.status === 'submitted' && (
-                      <div className="text-center py-2.5 bg-purple-500/20 rounded-lg">
-                        <span className="text-purple-300 text-sm font-medium flex items-center justify-center gap-2">
+                      <div className="text-center py-3 bg-purple-50 rounded-xl">
+                        <span className="text-purple-700 text-sm font-medium flex items-center justify-center gap-2">
                           <CheckCircle className="w-4 h-4" />
                           {t('student:awaitingGrade')}
                         </span>
@@ -512,15 +582,15 @@ export default function StudentHomeworkMobile() {
                     )}
 
                     {item.status === 'late' && (
-                      <div className="text-center py-2.5 bg-red-500/20 rounded-lg">
-                        <span className="text-red-300 text-sm font-medium flex items-center justify-center gap-2">
+                      <div className="text-center py-3 bg-red-50 rounded-xl">
+                        <span className="text-red-700 text-sm font-medium flex items-center justify-center gap-2">
                           <AlertTriangle className="w-4 h-4" />
                           {t('student:lateSubmission')}
                         </span>
                       </div>
                     )}
                   </div>
-                </MobileCard>
+                </div>
               </motion.div>
             );
           })}
@@ -538,7 +608,7 @@ export default function StudentHomeworkMobile() {
             onClick={() => setSelectedHomework(null)}
           >
             <motion.div
-              className="w-full bg-gradient-to-b from-purple-900/95 to-pink-900/95 rounded-t-3xl max-h-[90vh] overflow-hidden"
+              className="w-full bg-white/95 backdrop-blur-sm rounded-t-3xl max-h-[90vh] overflow-hidden shadow-2xl"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -546,33 +616,34 @@ export default function StudentHomeworkMobile() {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="p-6 pb-4 border-b border-white/10">
-                <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-4" />
+              <div className="p-6 pb-4 border-b border-gray-200">
+                <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
                 
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <h2 className="text-white text-xl font-bold mb-1">
+                    <h2 className="text-gray-900 text-xl font-bold mb-1">
                       {selectedHomework.title}
                     </h2>
-                    <p className="text-white/60 text-sm">
+                    <p className="text-gray-600 text-sm">
                       {selectedHomework.courseTitle} • {selectedHomework.teacherName}
                     </p>
                   </div>
                   <button
                     onClick={() => setSelectedHomework(null)}
-                    className="p-2 bg-white/10 rounded-lg"
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    data-testid="button-close-homework-modal"
                   >
-                    <X className="w-4 h-4 text-white/70" />
+                    <X className="w-4 h-4 text-gray-600" />
                   </button>
                 </div>
 
                 {/* Status and Difficulty */}
                 <div className="flex gap-2">
-                  <Badge className={`${getStatusColor(selectedHomework.status)} text-white border-0`}>
+                  <Badge className={cn(getStatusBadgeStyle(selectedHomework.status))}>
                     {getStatusIcon(selectedHomework.status)}
                     <span className="ml-1">{t(`student:status.${selectedHomework.status}`)}</span>
                   </Badge>
-                  <Badge className={`${getDifficultyColor(selectedHomework.difficulty)} border-0`}>
+                  <Badge className={cn(getDifficultyColor(selectedHomework.difficulty))}>
                     {t(`student:difficulty.${selectedHomework.difficulty}`)}
                   </Badge>
                 </div>
@@ -582,8 +653,8 @@ export default function StudentHomeworkMobile() {
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
                 {/* Description */}
                 <div className="mb-6">
-                  <h3 className="text-white font-semibold mb-2">{t('student:description')}</h3>
-                  <p className="text-white/70 text-sm">
+                  <h3 className="text-gray-900 font-bold mb-3">{t('student:description')}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
                     {selectedHomework.description}
                   </p>
                 </div>
@@ -591,48 +662,48 @@ export default function StudentHomeworkMobile() {
                 {/* Instructions */}
                 {selectedHomework.instructions && (
                   <div className="mb-6">
-                    <h3 className="text-white font-semibold mb-2">{t('student:instructions')}</h3>
-                    <p className="text-white/70 text-sm whitespace-pre-wrap">
+                    <h3 className="text-gray-900 font-bold mb-3">{t('student:instructions')}</h3>
+                    <p className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">
                       {selectedHomework.instructions}
                     </p>
                   </div>
                 )}
 
                 {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="glass-card p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="w-4 h-4 text-white/50" />
-                      <span className="text-white/60 text-xs">{t('student:estimatedTime')}</span>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 text-sm">{t('student:estimatedTime')}</span>
                     </div>
-                    <p className="text-white font-medium">
+                    <p className="text-gray-900 font-bold">
                       {selectedHomework.estimatedTime} {t('common:minutes')}
                     </p>
                   </div>
-                  <div className="glass-card p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Award className="w-4 h-4 text-white/50" />
-                      <span className="text-white/60 text-xs">{t('student:xpReward')}</span>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Award className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 text-sm">{t('student:xpReward')}</span>
                     </div>
-                    <p className="text-white font-medium">
+                    <p className="text-gray-900 font-bold">
                       {selectedHomework.xpReward} XP
                     </p>
                   </div>
-                  <div className="glass-card p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="w-4 h-4 text-white/50" />
-                      <span className="text-white/60 text-xs">{t('student:dueDate')}</span>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 text-sm">{t('student:dueDate')}</span>
                     </div>
-                    <p className="text-white font-medium text-sm">
+                    <p className="text-gray-900 font-bold text-sm">
                       {new Date(selectedHomework.dueDate).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="glass-card p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Target className="w-4 h-4 text-white/50" />
-                      <span className="text-white/60 text-xs">{t('student:maxGrade')}</span>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600 text-sm">{t('student:maxGrade')}</span>
                     </div>
-                    <p className="text-white font-medium">
+                    <p className="text-gray-900 font-bold">
                       {selectedHomework.maxGrade} {t('student:points')}
                     </p>
                   </div>
@@ -641,12 +712,12 @@ export default function StudentHomeworkMobile() {
                 {/* Grade and Feedback (if graded) */}
                 {selectedHomework.status === 'graded' && (
                   <div className="mb-6">
-                    <div className="bg-green-500/10 rounded-lg p-4 mb-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-white/70 text-sm">{t('student:yourGrade')}</span>
+                    <div className="bg-green-50 rounded-xl p-4 mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-green-700 text-sm font-medium">{t('student:yourGrade')}</span>
                         <div className="flex items-center gap-2">
-                          <Trophy className="w-5 h-5 text-yellow-400" />
-                          <span className="text-white text-xl font-bold">
+                          <Trophy className="w-5 h-5 text-yellow-500" />
+                          <span className="text-green-800 text-xl font-bold">
                             {selectedHomework.grade}/{selectedHomework.maxGrade}
                           </span>
                         </div>
@@ -658,12 +729,12 @@ export default function StudentHomeworkMobile() {
                     </div>
                     
                     {selectedHomework.feedback && (
-                      <div className="glass-card p-4">
-                        <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
+                      <div className="bg-blue-50 rounded-xl p-4">
+                        <h3 className="text-blue-800 font-bold mb-3 flex items-center gap-2">
                           <MessageSquare className="w-4 h-4" />
                           {t('student:teacherFeedback')}
                         </h3>
-                        <p className="text-white/70 text-sm">
+                        <p className="text-blue-700 text-sm leading-relaxed">
                           {selectedHomework.feedback}
                         </p>
                       </div>
@@ -674,22 +745,23 @@ export default function StudentHomeworkMobile() {
                 {/* Attachments */}
                 {selectedHomework.attachments && selectedHomework.attachments.length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-white font-semibold mb-2">{t('student:attachments')}</h3>
-                    <div className="space-y-2">
+                    <h3 className="text-gray-900 font-bold mb-3">{t('student:attachments')}</h3>
+                    <div className="space-y-3">
                       {selectedHomework.attachments.map((file, idx) => (
                         <button
                           key={idx}
-                          className="w-full glass-card p-3 flex items-center gap-3 hover:bg-white/10 transition-colors"
+                          className="w-full bg-gray-50 hover:bg-gray-100 transition-colors rounded-xl p-4 flex items-center gap-3"
                           onClick={() => {
                             // Download file
                             window.open(`/api/homework/${selectedHomework.id}/attachment/${file}`, '_blank');
                           }}
+                          data-testid={`button-download-attachment-${idx}`}
                         >
-                          <FileText className="w-5 h-5 text-white/70" />
-                          <span className="text-white/80 text-sm flex-1 text-left">
+                          <FileText className="w-5 h-5 text-gray-600" />
+                          <span className="text-gray-700 text-sm flex-1 text-left font-medium">
                             {file}
                           </span>
-                          <Download className="w-4 h-4 text-white/50" />
+                          <Download className="w-4 h-4 text-gray-500" />
                         </button>
                       ))}
                     </div>
@@ -698,16 +770,17 @@ export default function StudentHomeworkMobile() {
 
                 {/* Submission Section (if pending or in_progress) */}
                 {(selectedHomework.status === 'pending' || selectedHomework.status === 'in_progress') && (
-                  <div className="space-y-3">
-                    <h3 className="text-white font-semibold">{t('student:submitYourWork')}</h3>
+                  <div className="space-y-4">
+                    <h3 className="text-gray-900 font-bold">{t('student:submitYourWork')}</h3>
                     
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full glass-card p-4 border-2 border-dashed border-white/30 flex flex-col items-center gap-2 hover:bg-white/10 transition-colors"
+                      className="w-full bg-gray-50 hover:bg-gray-100 transition-colors rounded-xl p-6 border-2 border-dashed border-gray-300 flex flex-col items-center gap-3"
+                      data-testid="button-upload-file"
                     >
-                      <Upload className="w-8 h-8 text-white/50" />
-                      <span className="text-white/70 text-sm">{t('student:uploadFile')}</span>
-                      <span className="text-white/50 text-xs">
+                      <Upload className="w-8 h-8 text-gray-500" />
+                      <span className="text-gray-700 text-sm font-medium">{t('student:uploadFile')}</span>
+                      <span className="text-gray-500 text-xs">
                         PDF, DOC, DOCX, TXT, JPG, PNG
                       </span>
                     </button>
@@ -729,7 +802,7 @@ export default function StudentHomeworkMobile() {
                     />
 
                     <Button
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 rounded-xl"
                       onClick={() => {
                         submitHomework.mutate({ 
                           id: selectedHomework.id,
@@ -737,6 +810,7 @@ export default function StudentHomeworkMobile() {
                         });
                       }}
                       disabled={submitHomework.isPending}
+                      data-testid="button-submit-homework"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       {submitHomework.isPending ? t('student:submitting') : t('student:submitHomework')}
@@ -747,15 +821,16 @@ export default function StudentHomeworkMobile() {
                 {/* Submitted Files */}
                 {selectedHomework.submissionFiles && selectedHomework.submissionFiles.length > 0 && (
                   <div className="mt-6">
-                    <h3 className="text-white font-semibold mb-2">{t('student:submittedFiles')}</h3>
-                    <div className="space-y-2">
+                    <h3 className="text-gray-900 font-bold mb-3">{t('student:submittedFiles')}</h3>
+                    <div className="space-y-3">
                       {selectedHomework.submissionFiles.map((file, idx) => (
                         <div
                           key={idx}
-                          className="glass-card p-3 flex items-center gap-3"
+                          className="bg-green-50 rounded-xl p-4 flex items-center gap-3"
+                          data-testid={`submitted-file-${idx}`}
                         >
-                          <CheckCircle className="w-5 h-5 text-green-400" />
-                          <span className="text-white/80 text-sm flex-1">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <span className="text-green-700 text-sm flex-1 font-medium">
                             {file}
                           </span>
                         </div>
@@ -768,6 +843,6 @@ export default function StudentHomeworkMobile() {
           </motion.div>
         )}
       </AnimatePresence>
-    </MobileLayout>
+    </div>
   );
 }

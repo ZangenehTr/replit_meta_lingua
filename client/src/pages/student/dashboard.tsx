@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProfileCompletion } from "@/hooks/use-profile-completion";
 import { FirstTimeProfileModal } from "@/components/profile/FirstTimeProfileModal";
-import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Trophy, 
