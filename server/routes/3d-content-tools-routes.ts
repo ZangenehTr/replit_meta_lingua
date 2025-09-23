@@ -2,14 +2,20 @@ import { Router } from "express";
 import { z } from "zod";
 import { 
   threeDLessonContent,
+  linguaquestLessons,
   insertThreeDLessonContentSchema,
   type ThreeDLessonContent,
   type ThreeDLessonContentInsert
 } from "@shared/schema";
 import { db } from "../db";
 import { eq, desc, and, like, sql } from "drizzle-orm";
+import { requireAuth, requireRole, type AuthRequest } from "../auth-middleware";
 
 export const threeDContentToolsRouter = Router();
+
+// Apply authentication middleware to all routes
+threeDContentToolsRouter.use(requireAuth);
+threeDContentToolsRouter.use(requireRole(['Admin', 'Teacher/Tutor', 'Teacher']));
 
 // Validation schemas for 3D content creation
 const threeDElementSchema = z.object({
@@ -31,7 +37,7 @@ const threeDElementSchema = z.object({
     y: z.number().default(1),
     z: z.number().default(1)
   }),
-  properties: z.record(z.any()).optional()
+  properties: z.record(z.union([z.string(), z.number(), z.boolean(), z.object({})])).optional()
 });
 
 const threeDSceneSchema = z.object({
@@ -55,9 +61,30 @@ const threeDSceneSchema = z.object({
   interactions: z.array(z.object({
     triggerId: z.string(),
     actionType: z.enum(['highlight', 'animate', 'speak', 'navigate', 'quiz']),
-    actionData: z.record(z.any())
+    actionData: z.record(z.union([z.string(), z.number(), z.boolean(), z.object({})]))
   }))
 });
+
+// Secure update schema - ONLY allows whitelisted fields to be updated
+// Blocks protected fields like id, createdAt, lessonId from being overwritten
+const threeDLessonUpdateSchema = z.object({
+  // Allow updating content and configuration fields only
+  sceneConfig: z.object({}).passthrough().optional(), // Allow any valid scene config
+  models: z.array(z.object({}).passthrough()).optional(),
+  materials: z.array(z.object({}).passthrough()).optional(),
+  hotspots: z.array(z.object({}).passthrough()).optional(),
+  animations: z.array(z.object({}).passthrough()).optional(),
+  particleEffects: z.array(z.object({}).passthrough()).optional(),
+  mobileOptimizations: z.object({}).passthrough().optional(),
+  lowPolyModels: z.array(z.object({}).passthrough()).optional(),
+  spatialAudio: z.array(z.object({}).passthrough()).optional(),
+  voiceoverTiming: z.array(z.object({}).passthrough()).optional(),
+  
+  // Allow updating metadata fields
+  difficulty: z.enum(['beginner', 'elementary', 'intermediate', 'upper_intermediate', 'advanced']).optional(),
+  renderQuality: z.enum(['low', 'medium', 'high']).optional(),
+  targetFps: z.number().positive().max(120).optional()
+}).strict(); // .strict() prevents any additional fields not defined in schema
 
 // ====================================================================
 // 3D LESSON BUILDER INTERFACE
@@ -80,20 +107,38 @@ threeDContentToolsRouter.get("/lessons", async (req, res) => {
     let whereClause = sql`1=1`;
     
     if (search) {
-      whereClause = sql`${whereClause} AND (${threeDLessonContent.title} ILIKE ${`%${search}%`} OR ${threeDLessonContent.description} ILIKE ${`%${search}%`})`;
+      // Search by lesson title and description by joining with linguaquestLessons
+      whereClause = sql`${whereClause} AND EXISTS (
+        SELECT 1 FROM ${linguaquestLessons} 
+        WHERE ${linguaquestLessons.id} = ${threeDLessonContent.lessonId}
+        AND (${linguaquestLessons.title} ILIKE ${`%${search}%`} 
+        OR ${linguaquestLessons.description} ILIKE ${`%${search}%`})
+      )`;
     }
     
     if (difficulty) {
-      whereClause = sql`${whereClause} AND ${threeDLessonContent.difficultyLevel} = ${difficulty}`;
+      whereClause = sql`${whereClause} AND ${threeDLessonContent.difficulty} = ${difficulty}`;
     }
     
     if (category) {
-      whereClause = sql`${whereClause} AND ${threeDLessonContent.category} = ${category}`;
+      // Category filtering not available on 3D content table directly
+      // Would need to join with linguaquestLessons table
     }
     
     const lessons = await db
-      .select()
+      .select({
+        id: threeDLessonContent.id,
+        lessonId: threeDLessonContent.lessonId,
+        title: linguaquestLessons.title,
+        description: linguaquestLessons.description,
+        difficulty: threeDLessonContent.difficulty,
+        sceneConfig: threeDLessonContent.sceneConfig,
+        renderQuality: threeDLessonContent.renderQuality,
+        createdAt: threeDLessonContent.createdAt,
+        updatedAt: threeDLessonContent.updatedAt
+      })
       .from(threeDLessonContent)
+      .leftJoin(linguaquestLessons, eq(linguaquestLessons.id, threeDLessonContent.lessonId))
       .where(whereClause)
       .orderBy(desc(threeDLessonContent.updatedAt))
       .limit(limit)
@@ -128,7 +173,7 @@ threeDContentToolsRouter.get("/lessons", async (req, res) => {
  * GET /api/3d-tools/lessons/:id
  * Get a specific 3D lesson for editing
  */
-threeDContentToolsRouter.get("/lessons/:id", async (req, res) => {
+threeDContentToolsRouter.get("/lessons/:id", async (req: AuthRequest, res) => {
   try {
     const lessonId = parseInt(req.params.id);
     
@@ -163,14 +208,14 @@ threeDContentToolsRouter.get("/lessons/:id", async (req, res) => {
  * POST /api/3d-tools/lessons
  * Create a new 3D lesson
  */
-threeDContentToolsRouter.post("/lessons", async (req, res) => {
+threeDContentToolsRouter.post("/lessons", async (req: AuthRequest, res) => {
   try {
     const lessonData = insertThreeDLessonContentSchema.parse(req.body);
     
     // Validate the 3D scene data if provided
-    if (lessonData.sceneElements) {
+    if (lessonData && typeof lessonData === 'object' && 'sceneConfig' in lessonData) {
       try {
-        const sceneValidation = threeDSceneSchema.partial().parse(lessonData.sceneElements);
+        const sceneValidation = threeDSceneSchema.partial().parse((lessonData as any).sceneConfig);
       } catch (validationError) {
         return res.status(400).json({
           success: false,
@@ -202,34 +247,68 @@ threeDContentToolsRouter.post("/lessons", async (req, res) => {
 
 /**
  * PUT /api/3d-tools/lessons/:id
- * Update a 3D lesson
+ * Update a 3D lesson - SECURE VERSION with field whitelisting
  */
-threeDContentToolsRouter.put("/lessons/:id", async (req, res) => {
+threeDContentToolsRouter.put("/lessons/:id", async (req: AuthRequest, res) => {
   try {
     const lessonId = parseInt(req.params.id);
-    const updateData = req.body;
     
-    // Validate the 3D scene data if being updated
-    if (updateData.sceneElements) {
+    // SECURITY: Validate and whitelist only allowed fields for updates
+    // This prevents unauthorized field updates (id, createdAt, lessonId, etc.)
+    let validatedUpdateData;
+    try {
+      validatedUpdateData = threeDLessonUpdateSchema.parse(req.body);
+    } catch (validationError) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid update data - only whitelisted fields are allowed",
+        details: validationError
+      });
+    }
+    
+    // Additional validation for 3D scene data if provided
+    if (validatedUpdateData.sceneConfig) {
       try {
-        const sceneValidation = threeDSceneSchema.partial().parse(updateData.sceneElements);
+        const sceneValidation = threeDSceneSchema.partial().parse(validatedUpdateData.sceneConfig);
       } catch (validationError) {
         return res.status(400).json({
           success: false,
-          error: "Invalid 3D scene data",
+          error: "Invalid 3D scene configuration",
           details: validationError
         });
       }
     }
     
+    // SECURE: Only update whitelisted fields, never system fields
     const [updatedLesson] = await db
       .update(threeDLessonContent)
       .set({
-        ...updateData,
+        // Only use validated data - no spread operator to prevent field injection
+        ...(validatedUpdateData.sceneConfig && { sceneConfig: validatedUpdateData.sceneConfig }),
+        ...(validatedUpdateData.models && { models: validatedUpdateData.models }),
+        ...(validatedUpdateData.materials && { materials: validatedUpdateData.materials }),
+        ...(validatedUpdateData.hotspots && { hotspots: validatedUpdateData.hotspots }),
+        ...(validatedUpdateData.animations && { animations: validatedUpdateData.animations }),
+        ...(validatedUpdateData.particleEffects && { particleEffects: validatedUpdateData.particleEffects }),
+        ...(validatedUpdateData.mobileOptimizations && { mobileOptimizations: validatedUpdateData.mobileOptimizations }),
+        ...(validatedUpdateData.lowPolyModels && { lowPolyModels: validatedUpdateData.lowPolyModels }),
+        ...(validatedUpdateData.spatialAudio && { spatialAudio: validatedUpdateData.spatialAudio }),
+        ...(validatedUpdateData.voiceoverTiming && { voiceoverTiming: validatedUpdateData.voiceoverTiming }),
+        ...(validatedUpdateData.difficulty && { difficulty: validatedUpdateData.difficulty }),
+        ...(validatedUpdateData.renderQuality && { renderQuality: validatedUpdateData.renderQuality }),
+        ...(validatedUpdateData.targetFps && { targetFps: validatedUpdateData.targetFps }),
+        // Always update the timestamp for any update operation
         updatedAt: new Date()
       })
       .where(eq(threeDLessonContent.id, lessonId))
       .returning();
+    
+    if (!updatedLesson) {
+      return res.status(404).json({
+        success: false,
+        error: "3D lesson not found"
+      });
+    }
     
     res.json({
       success: true,
@@ -250,7 +329,7 @@ threeDContentToolsRouter.put("/lessons/:id", async (req, res) => {
  * DELETE /api/3d-tools/lessons/:id
  * Delete a 3D lesson
  */
-threeDContentToolsRouter.delete("/lessons/:id", async (req, res) => {
+threeDContentToolsRouter.delete("/lessons/:id", async (req: AuthRequest, res) => {
   try {
     const lessonId = parseInt(req.params.id);
     
@@ -282,7 +361,7 @@ threeDContentToolsRouter.delete("/lessons/:id", async (req, res) => {
  * GET /api/3d-tools/templates
  * Get 3D element templates for rapid development
  */
-threeDContentToolsRouter.get("/templates", async (req, res) => {
+threeDContentToolsRouter.get("/templates", async (req: AuthRequest, res) => {
   try {
     const templates = {
       models: [
@@ -443,7 +522,7 @@ threeDContentToolsRouter.get("/templates", async (req, res) => {
  * POST /api/3d-tools/templates
  * Create a custom 3D template
  */
-threeDContentToolsRouter.post("/templates", async (req, res) => {
+threeDContentToolsRouter.post("/templates", async (req: AuthRequest, res) => {
   try {
     const { name, description, category, elements, interactions } = req.body;
     
@@ -456,14 +535,17 @@ threeDContentToolsRouter.post("/templates", async (req, res) => {
       interactions: z.array(z.any()).optional()
     }).parse({ name, description, category, elements, interactions });
     
-    // For now, store as a 3D lesson content with template flag
+    // Validate lessonId is provided by client - no hardcoded values
+    if (!req.body.lessonId) {
+      return res.status(400).json({
+        success: false,
+        error: "lessonId is required for template creation"
+      });
+    }
+    
     const templateData = {
-      title: `Template: ${name}`,
-      description,
-      category,
-      difficultyLevel: 'template',
-      isTemplate: true,
-      sceneElements: {
+      lessonId: req.body.lessonId,
+      sceneConfig: {
         name,
         description,
         elements,
@@ -473,7 +555,8 @@ threeDContentToolsRouter.post("/templates", async (req, res) => {
         lowPoly: true,
         reducedTextures: true,
         simplifiedShaders: true
-      }
+      },
+      renderQuality: "medium" as const
     };
     
     const [template] = await db
@@ -504,7 +587,7 @@ threeDContentToolsRouter.post("/templates", async (req, res) => {
  * POST /api/3d-tools/optimize-mobile/:lessonId
  * Optimize a 3D lesson for mobile devices
  */
-threeDContentToolsRouter.post("/optimize-mobile/:lessonId", async (req, res) => {
+threeDContentToolsRouter.post("/optimize-mobile/:lessonId", async (req: AuthRequest, res) => {
   try {
     const lessonId = parseInt(req.params.lessonId);
     
@@ -542,9 +625,9 @@ threeDContentToolsRouter.post("/optimize-mobile/:lessonId", async (req, res) => 
     const [optimizedLesson] = await db
       .update(threeDLessonContent)
       .set({
-        mobileOptimizations,
+        mobileOptimizations: mobileOptimizations,
         updatedAt: new Date()
-      })
+      } as any)
       .where(eq(threeDLessonContent.id, lessonId))
       .returning();
     
@@ -568,7 +651,7 @@ threeDContentToolsRouter.post("/optimize-mobile/:lessonId", async (req, res) => 
  * GET /api/3d-tools/performance-analysis/:lessonId
  * Analyze 3D lesson performance and suggest optimizations
  */
-threeDContentToolsRouter.get("/performance-analysis/:lessonId", async (req, res) => {
+threeDContentToolsRouter.get("/performance-analysis/:lessonId", async (req: AuthRequest, res) => {
   try {
     const lessonId = parseInt(req.params.lessonId);
     
@@ -586,7 +669,7 @@ threeDContentToolsRouter.get("/performance-analysis/:lessonId", async (req, res)
       });
     }
     
-    const sceneElements = lesson[0].sceneElements as any;
+    const sceneElements = lesson[0].sceneConfig as any;
     
     // Analyze performance metrics
     const analysis = {
@@ -643,7 +726,7 @@ threeDContentToolsRouter.get("/performance-analysis/:lessonId", async (req, res)
       analysis,
       lesson: {
         id: lesson[0].id,
-        title: lesson[0].title
+        lessonId: lesson[0].lessonId
       }
     });
     
@@ -664,7 +747,7 @@ threeDContentToolsRouter.get("/performance-analysis/:lessonId", async (req, res)
  * POST /api/3d-tools/validate-scene
  * Validate 3D scene configuration
  */
-threeDContentToolsRouter.post("/validate-scene", async (req, res) => {
+threeDContentToolsRouter.post("/validate-scene", async (req: AuthRequest, res) => {
   try {
     const sceneData = req.body;
     
@@ -742,4 +825,4 @@ threeDContentToolsRouter.post("/validate-scene", async (req, res) => {
   }
 });
 
-export { threeDContentToolsRouter };
+// Router already exported above

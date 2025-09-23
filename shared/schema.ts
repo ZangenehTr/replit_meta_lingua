@@ -5979,7 +5979,8 @@ export const threeDLessonContent = pgTable("3d_lesson_content", {
   spatialAudio: jsonb("spatial_audio").default([]), // 3D audio positioning
   voiceoverTiming: jsonb("voiceover_timing").default([]), // Sync with TTS
   
-  // Performance Settings
+  // Performance Settings  
+  difficulty: text("difficulty").default("intermediate"), // beginner, elementary, intermediate, upper_intermediate, advanced
   renderQuality: text("render_quality").default("medium"), // low, medium, high
   targetFps: integer("target_fps").default(30),
   

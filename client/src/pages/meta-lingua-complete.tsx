@@ -42,12 +42,51 @@ interface LearningProblem {
   confidence: number;
 }
 
+interface AnalyticsResponse {
+  success: boolean;
+  problems?: LearningProblem[];
+  correlations?: SkillCorrelation[];
+  insights?: AnalyticsInsight[];
+}
+
+interface SkillCorrelation {
+  skill1: string;
+  skill2: string;
+  correlationStrength: number;
+}
+
+interface AnalyticsInsight {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+}
+
+interface ThreeDLessonsResponse {
+  success: boolean;
+  lessons?: ThreeDLesson[];
+}
+
+interface ThreeDTemplatesResponse {
+  success: boolean;
+  templates?: {
+    models?: TemplateModel[];
+  };
+}
+
+interface TemplateModel {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+}
+
 interface ThreeDLesson {
   id: number;
   title: string;
   description: string;
   category: string;
-  difficultyLevel: string;
+  difficulty: string;
   isTemplate?: boolean;
 }
 
@@ -72,7 +111,15 @@ export default function MetaLinguaComplete() {
   });
 
   const createGuestProgressMutation = useMutation({
-    mutationFn: async (progressData: any) => {
+    mutationFn: async (progressData: {
+      lessonId: number;
+      skillCategory: string;
+      progressData: {
+        completed: boolean;
+        score: number;
+        timeSpent: number;
+      };
+    }) => {
       const response = await fetch('/api/linguaquest/guest-progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,8 +198,8 @@ export default function MetaLinguaComplete() {
       title: `Interactive Lesson ${Date.now()}`,
       description: "Sample 3D lesson with interactive elements",
       category: "conversation",
-      difficultyLevel: "beginner",
-      sceneElements: {
+      difficulty: "beginner",
+      sceneConfig: {
         name: "Basic Scene",
         description: "Simple interactive scene",
         elements: [
@@ -424,7 +471,7 @@ export default function MetaLinguaComplete() {
                   <p>Loading problems...</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {learningProblems?.problems?.slice(0, 4).map((problem: LearningProblem, index: number) => (
+                    {(learningProblems as AnalyticsResponse)?.problems?.slice(0, 4).map((problem: LearningProblem, index: number) => (
                       <div key={index} className="p-3 border rounded-lg">
                         <div className="flex justify-between items-start mb-2">
                           <Badge variant={problem.severity === 'high' ? 'destructive' : 'secondary'}>
@@ -452,7 +499,7 @@ export default function MetaLinguaComplete() {
                   <p>Loading correlations...</p>
                 ) : (
                   <div className="space-y-2">
-                    {skillCorrelations?.correlations?.slice(0, 3).map((correlation: any, index: number) => (
+                    {(skillCorrelations as AnalyticsResponse)?.correlations?.slice(0, 3).map((correlation: SkillCorrelation, index: number) => (
                       <div key={index} className="p-3 bg-muted rounded-lg">
                         <div className="flex justify-between items-center">
                           <span className="font-medium">
@@ -483,7 +530,7 @@ export default function MetaLinguaComplete() {
                   <p>Loading insights...</p>
                 ) : (
                   <div className="space-y-2">
-                    {analyticsInsights?.insights?.slice(0, 3).map((insight: any, index: number) => (
+                    {(analyticsInsights as AnalyticsResponse)?.insights?.slice(0, 3).map((insight: AnalyticsInsight, index: number) => (
                       <div key={index} className="p-3 border rounded-lg">
                         <div className="flex justify-between items-start mb-1">
                           <h5 className="font-medium">{insight.title}</h5>
@@ -536,11 +583,11 @@ export default function MetaLinguaComplete() {
                   <p>Loading lessons...</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {threeDLessons?.lessons?.slice(0, 6).map((lesson: ThreeDLesson) => (
+                    {(threeDLessons as ThreeDLessonsResponse)?.lessons?.slice(0, 6).map((lesson: ThreeDLesson) => (
                       <div key={lesson.id} className="p-3 border rounded-lg">
                         <div className="flex justify-between items-start mb-2">
                           <Badge variant={lesson.isTemplate ? 'secondary' : 'default'}>
-                            {lesson.isTemplate ? 'Template' : lesson.difficultyLevel}
+                            {lesson.isTemplate ? 'Template' : lesson.difficulty}
                           </Badge>
                           <span className="text-xs text-muted-foreground">{lesson.category}</span>
                         </div>
@@ -561,7 +608,7 @@ export default function MetaLinguaComplete() {
                   <p>Loading templates...</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {threeDTemplates?.templates?.models?.map((template: any, index: number) => (
+                    {(threeDTemplates as ThreeDTemplatesResponse)?.templates?.models?.map((template: TemplateModel, index: number) => (
                       <div key={index} className="p-3 bg-muted rounded-lg">
                         <h5 className="font-medium">{template.name}</h5>
                         <p className="text-sm text-muted-foreground">{template.description}</p>

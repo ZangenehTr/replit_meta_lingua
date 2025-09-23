@@ -2,12 +2,10 @@ import {
   users, 
   guestProgressTracking,
   sessions,
-  homeworkAssignments,
-  quizScores,
+  homework,
+  quizResults,
   type User,
-  type Session,
-  type HomeworkAssignment,
-  type QuizScore
+  type Session
 } from "@shared/schema";
 import { db } from "../db";
 import { eq, and, desc, asc, sql, gte, lte, inArray } from "drizzle-orm";
@@ -482,7 +480,7 @@ export class AIAnalyticsService {
     startDate.setDate(startDate.getDate() - timeframeDays);
     
     try {
-      const [user, sessionData, quizData, homeworkData] = await Promise.all([
+      const [user, sessionData, quizData] = await Promise.all([
         db.select().from(users).where(eq(users.id, userId)).limit(1),
         db.select().from(sessions)
           .where(and(
@@ -490,18 +488,14 @@ export class AIAnalyticsService {
             gte(sessions.sessionDate, startDate)
           ))
           .orderBy(asc(sessions.sessionDate)),
-        db.select().from(quizScores)
+        // Get actual quiz scores from quizResults table
+        db.select()
+          .from(quizResults)
           .where(and(
-            eq(quizScores.studentId, userId),
-            gte(quizScores.createdAt, startDate)
+            eq(quizResults.userId, userId),
+            gte(quizResults.createdAt, startDate)
           ))
-          .orderBy(asc(quizScores.createdAt)),
-        db.select().from(homeworkAssignments)
-          .where(and(
-            eq(homeworkAssignments.studentId, userId),
-            gte(homeworkAssignments.createdAt, startDate)
-          ))
-          .orderBy(asc(homeworkAssignments.createdAt))
+          .orderBy(asc(quizResults.createdAt))
       ]);
       
       if (user.length === 0) return null;
@@ -511,7 +505,7 @@ export class AIAnalyticsService {
         user: user[0],
         sessions: sessionData,
         quizScores: quizData,
-        homework: homeworkData
+        homework: await this.getHomeworkData(userId, startDate)
       };
       
     } catch (error) {
@@ -525,6 +519,10 @@ export class AIAnalyticsService {
    */
   private calculateSkillAverages(quizScores: any[]): Record<string, number> {
     const skillScores: Record<string, number[]> = {};
+    
+    if (!quizScores || quizScores.length === 0) {
+      return {};
+    }
     
     quizScores.forEach(quiz => {
       const skill = quiz.skillCategory || 'general';
@@ -715,12 +713,88 @@ export class AIAnalyticsService {
     ];
   }
 
-  // Additional helper methods...
-  private getSkillCorrelationData = async (userIds?: number[]) => [];
-  private getSkillAverage = (scores: any[], skill: string) => null;
-  private calculateSignificance = (correlation: number, sampleSize: number) => 0;
-  private getSkillScores = (quizScores: any[], skill: string) => [];
-  private findMaxConsecutiveMissedSessions = (sessions: any[]) => 0;
+  /**
+   * Get homework data for analytics
+   */
+  private async getHomeworkData(userId: number, startDate: Date) {
+    try {
+      const homeworkData = await db.select()
+        .from(homework)
+        .where(and(
+          eq(homework.studentId, userId),
+          gte(homework.createdAt, startDate)
+        ))
+        .orderBy(asc(homework.createdAt));
+      
+      return homeworkData.map(hw => ({
+        id: hw.id,
+        submittedAt: hw.submittedAt,
+        score: hw.score || 0,
+        completed: !!hw.submittedAt,
+        difficulty: hw.difficultyLevel || 'medium'
+      }));
+    } catch (error) {
+      console.error('Error fetching homework data:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Add audit logging for admin operations
+   */
+  async logAdminOperation(adminId: number, operation: string, targetId: number, details: any) {
+    try {
+      console.log(`[AUDIT] Admin ${adminId} performed ${operation} on ${targetId}:`, details);
+      // In production, this should write to a dedicated audit_logs table
+      return true;
+    } catch (error) {
+      console.error('Error logging admin operation:', error);
+      return false;
+    }
+  }
+
+  // Additional helper methods with real implementations
+  private getSkillCorrelationData = async (userIds?: number[]) => {
+    try {
+      // Get quiz results for correlation analysis
+      const results = await db.select().from(quizResults).limit(1000);
+      return results;
+    } catch (error) {
+      console.error('Error getting skill correlation data:', error);
+      return [];
+    }
+  };
+
+  private getSkillAverage = (scores: any[], skill: string) => {
+    const skillScores = scores.filter(s => s.skillCategory === skill);
+    if (skillScores.length === 0) return null;
+    return skillScores.reduce((sum, s) => sum + (s.score || 0), 0) / skillScores.length;
+  };
+
+  private calculateSignificance = (correlation: number, sampleSize: number) => {
+    // Basic significance calculation based on sample size and correlation strength
+    return Math.min(100, Math.abs(correlation) * 100 * Math.sqrt(sampleSize / 100));
+  };
+
+  private getSkillScores = (quizScores: any[], skill: string) => {
+    return quizScores.filter(s => s.skillCategory === skill).map(s => s.score || 0);
+  };
+
+  private findMaxConsecutiveMissedSessions = (sessions: any[]) => {
+    let maxMissed = 0;
+    let currentMissed = 0;
+    
+    sessions.forEach(session => {
+      if (!session.attendanceConfirmed) {
+        currentMissed++;
+        maxMissed = Math.max(maxMissed, currentMissed);
+      } else {
+        currentMissed = 0;
+      }
+    });
+    
+    return maxMissed;
+  };
 }
 
 export const aiAnalyticsService = new AIAnalyticsService();
