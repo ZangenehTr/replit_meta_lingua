@@ -372,7 +372,72 @@ export const sessions = pgTable("sessions", {
   status: text("status").default("scheduled"), // scheduled, in_progress, completed, cancelled
   sessionUrl: text("session_url"), // LiveKit room URL
   notes: text("notes"),
+  
+  // Video recording fields
+  hasRecording: boolean("has_recording").default(false),
+  recordingUrl: text("recording_url"),
+  recordingDuration: integer("recording_duration"), // seconds
+  thumbnailUrl: text("thumbnail_url"),
+  recordingFileSize: integer("recording_file_size"), // bytes
+  recordingQuality: text("recording_quality"), // 'HD', 'SD', 'FHD'
+  recordingUploadDate: timestamp("recording_upload_date"),
+  recordingStatus: text("recording_status").default("none"), // none, processing, ready, error
+  
   createdAt: timestamp("created_at").defaultNow()
+});
+
+// Session Video Progress Tracking
+export const sessionVideoProgress = pgTable("session_video_progress", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => sessions.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  
+  // Progress tracking
+  progressSeconds: integer("progress_seconds").default(0), // Current watch position
+  totalDuration: integer("total_duration").default(0), // Total video duration
+  completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default("0"),
+  completed: boolean("completed").default(false),
+  
+  // Engagement metrics
+  totalWatchTime: integer("total_watch_time").default(0), // including replays
+  pauseCount: integer("pause_count").default(0),
+  rewindCount: integer("rewind_count").default(0),
+  playbackSpeed: decimal("playback_speed", { precision: 3, scale: 2 }).default("1.0"),
+  
+  // Learning tracking
+  notesCount: integer("notes_count").default(0),
+  bookmarksCount: integer("bookmarks_count").default(0),
+  
+  lastWatchedAt: timestamp("last_watched_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Session Video Notes
+export const sessionVideoNotes = pgTable("session_video_notes", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => sessions.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  
+  timestamp: integer("timestamp").notNull(), // seconds in video
+  content: text("content").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Session Video Bookmarks
+export const sessionVideoBookmarks = pgTable("session_video_bookmarks", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => sessions.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  
+  timestamp: integer("timestamp").notNull(), // seconds in video
+  title: text("title").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Messages between users
@@ -1100,6 +1165,9 @@ export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
 export const insertHolidaySchema = createInsertSchema(holidays);
 export const insertEnrollmentSchema = createInsertSchema(enrollments);
 export const insertSessionSchema = createInsertSchema(sessions);
+export const insertSessionVideoProgressSchema = createInsertSchema(sessionVideoProgress);
+export const insertSessionVideoNotesSchema = createInsertSchema(sessionVideoNotes);
+export const insertSessionVideoBookmarksSchema = createInsertSchema(sessionVideoBookmarks);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertHomeworkSchema = createInsertSchema(homework);
 export const insertPaymentSchema = createInsertSchema(payments);
@@ -2518,6 +2586,12 @@ export type Enrollment = typeof enrollments.$inferSelect;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
 export type Session = typeof sessions.$inferSelect;
 export type InsertSession = z.infer<typeof insertSessionSchema>;
+export type SessionVideoProgress = typeof sessionVideoProgress.$inferSelect;
+export type InsertSessionVideoProgress = z.infer<typeof insertSessionVideoProgressSchema>;
+export type SessionVideoNote = typeof sessionVideoNotes.$inferSelect;
+export type InsertSessionVideoNote = z.infer<typeof insertSessionVideoNotesSchema>;
+export type SessionVideoBookmark = typeof sessionVideoBookmarks.$inferSelect;
+export type InsertSessionVideoBookmark = z.infer<typeof insertSessionVideoBookmarksSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Homework = typeof homework.$inferSelect;

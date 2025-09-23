@@ -34,6 +34,7 @@ import { HolidayIndicator } from "@/components/ui/holiday-indicator";
 import { ExamTypeIndicator } from "@/components/ui/exam-type-indicator";
 import { EnhancedDateDisplay } from "@/components/ui/enhanced-date-display";
 import { SessionCalendarSidebar } from "@/components/ui/session-calendar-sidebar";
+import { VideoSessionCard } from "@/components/sessions/VideoSessionCard";
 
 interface Holiday {
   id: number;
@@ -88,6 +89,30 @@ interface Session {
   holidays?: Holiday[];
   culturalEvents?: CulturalEvent[];
   calendarContext?: CalendarContext;
+  // Video recording fields
+  hasRecording?: boolean;
+  recordingUrl?: string;
+  recordingDuration?: number;
+  thumbnailUrl?: string;
+  recordingFileSize?: number;
+  recordingQuality?: 'HD' | 'SD' | 'FHD';
+  recordingUploadDate?: string;
+  recordingStatus?: 'none' | 'processing' | 'ready' | 'error';
+  recordingMetadata?: {
+    duration: number;
+    fileSize: string;
+    uploadDate: string;
+    quality: 'HD' | 'SD' | 'FHD';
+    thumbnailUrl: string;
+    videoUrl: string;
+    viewingProgress?: number; // 0-100%
+  };
+  viewingHistory?: {
+    lastWatched: string;
+    completionPercentage: number;
+    bookmarks: Array<{ timestamp: number; title: string }>;
+    notes: Array<{ timestamp: number; content: string }>;
+  };
 }
 
 export default function StudentSessions() {
@@ -98,16 +123,22 @@ export default function StudentSessions() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('upcoming');
+  const [videoFilter, setVideoFilter] = useState<string>('all'); // 'all', 'with-recording', 'without-recording', 'completed-with-recording'
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCalendarSidebar, setShowCalendarSidebar] = useState(false);
   const [filteredSessionIds, setFilteredSessionIds] = useState<number[]>([]);
 
-  // Fetch sessions with calendar data
+  // Fetch sessions with calendar and video data
   const { data: sessions = [], isLoading } = useQuery<Session[]>({
-    queryKey: ['/api/student/sessions', { includeCalendar: true }],
+    queryKey: ['/api/student/sessions', { includeCalendar: true, includeVideo: true, filter: videoFilter }],
     queryFn: async () => {
-      const response = await fetch('/api/student/sessions?includeCalendar=true', {
+      const params = new URLSearchParams({
+        includeCalendar: 'true',
+        includeVideo: 'true',
+        ...(videoFilter !== 'all' && { filter: videoFilter })
+      });
+      const response = await fetch(`/api/student/sessions?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -146,6 +177,50 @@ export default function StudentSessions() {
       });
     }
   });
+
+  // Video progress tracking mutation
+  const videoProgressMutation = useMutation({
+    mutationFn: async ({ sessionId, progressSeconds, totalDuration, completed }: {
+      sessionId: number;
+      progressSeconds: number;
+      totalDuration: number;
+      completed: boolean;
+    }) => {
+      const response = await fetch(`/api/sessions/${sessionId}/video/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ progressSeconds, totalDuration, completed })
+      });
+      if (!response.ok) throw new Error('Failed to update video progress');
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate sessions cache to update progress
+      queryClient.invalidateQueries({ queryKey: ['/api/student/sessions'] });
+    }
+  });
+
+  // Video playback handler
+  const handleVideoPlay = (sessionId: number) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session?.hasRecording && session.recordingUrl) {
+      // Navigate to video player page with session context
+      window.open(`/student/video-player?sessionId=${sessionId}`, '_blank');
+      
+      toast({
+        title: t('student:openingVideo', 'Opening Video'),
+        description: t('student:videoStarting', 'The session video is opening'),
+      });
+    }
+  };
+
+  // Session join handler
+  const handleJoinSession = (sessionId: number) => {
+    joinSessionMutation.mutate(sessionId);
+  };
 
   // Filter sessions
   const filteredSessions = sessions.filter(session => {
@@ -249,7 +324,7 @@ export default function StudentSessions() {
             />
           </div>
 
-          {/* Filter Pills */}
+          {/* Status Filter Pills */}
           <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
             {['all', 'upcoming', 'ongoing', 'completed'].map((status) => (
               <motion.button
@@ -263,6 +338,30 @@ export default function StudentSessions() {
                 }`}
               >
                 {t(`student:status.${status}`, status.charAt(0).toUpperCase() + status.slice(1))}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Video Filter Pills */}
+          <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
+            {[
+              { key: 'all', label: 'All Sessions', icon: Calendar },
+              { key: 'with-recording', label: 'With Video', icon: Video },
+              { key: 'without-recording', label: 'No Video', icon: X },
+              { key: 'completed-with-recording', label: 'Recorded', icon: Play }
+            ].map(({ key, label, icon: Icon }) => (
+              <motion.button
+                key={key}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setVideoFilter(key)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  videoFilter === key 
+                    ? 'bg-purple-500 text-white' 
+                    : 'bg-white/10 text-white/60 backdrop-blur'
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                {t(`student:videoFilter.${key}`, label)}
               </motion.button>
             ))}
           </div>
@@ -368,96 +467,13 @@ export default function StudentSessions() {
                       
                       <div className="space-y-3">
                         {dateSessions.map((session, index) => (
-                          <motion.div
+                          <VideoSessionCard
                             key={session.id}
-                            className="glass-card p-4 cursor-pointer"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setSelectedSession(session)}
-                            data-testid={`session-card-${session.id}`}
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className={`w-2 h-2 rounded-full ${getStatusColor(session.status)}`} />
-                                  <h3 className="text-white font-semibold text-lg">{session.title}</h3>
-                                  
-                                  {/* Exam Type Indicator */}
-                                  {session.examType && (
-                                    <ExamTypeIndicator examType={session.examType} compact={true} />
-                                  )}
-                                </div>
-                                <p className="text-white/60 text-sm">{session.courseName}</p>
-                                
-                                {/* Holiday Indicator */}
-                                {session.holidays && session.holidays.length > 0 && (
-                                  <div className="mt-2">
-                                    <HolidayIndicator 
-                                      holidays={session.holidays} 
-                                      compact={true} 
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex flex-col gap-2 items-end">
-                                {session.type === 'group' ? (
-                                  <Badge className="bg-white/20 text-white border-white/30">
-                                    <Users className="w-3 h-3 mr-1" />
-                                    {t('student:group', 'Group')}
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-white/20 text-white border-white/30">
-                                    <User className="w-3 h-3 mr-1" />
-                                    {t('student:individual', '1-on-1')}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 text-white/70 text-sm mb-3">
-                              <div className="flex items-center gap-1">
-                                <User className="w-4 h-4" />
-                                <span>{session.tutorFirstName} {session.tutorLastName}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
-                                <span>{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
-                                  {session.language}
-                                </Badge>
-                                <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
-                                  {session.level}
-                                </Badge>
-                              </div>
-                              
-                              {session.status === 'ongoing' && session.canJoin && (
-                                <motion.button
-                                  className="px-3 py-1 bg-green-500/80 backdrop-blur rounded-lg text-white text-sm font-medium flex items-center gap-1"
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    joinSessionMutation.mutate(session.id);
-                                  }}
-                                >
-                                  <Play className="w-3 h-3" />
-                                  {t('student:joinNow', 'Join Now')}
-                                </motion.button>
-                              )}
-                              
-                              {session.status === 'upcoming' && session.canJoin && (
-                                <span className="text-white/50 text-xs">
-                                  {t('student:startsIn', 'Starts in')} {session.duration} {t('student:minutes', 'min')}
-                                </span>
-                              )}
-                            </div>
-                          </motion.div>
+                            session={session}
+                            onSessionClick={setSelectedSession}
+                            onVideoPlay={handleVideoPlay}
+                            onJoinSession={handleJoinSession}
+                          />
                         ))}
                       </div>
                     </motion.div>

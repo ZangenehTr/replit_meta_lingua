@@ -8579,10 +8579,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all student sessions (with optional filtering and calendar data)
   app.get("/api/student/sessions", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { includeCalendar = 'false' } = req.query;
+      const { includeCalendar = 'false', includeVideo = 'true', filter } = req.query;
       const includeCalendarData = includeCalendar === 'true';
+      const includeVideoData = includeVideo === 'true';
       
-      // Enhanced sessions data with calendar integration
+      // Enhanced sessions data with calendar and video integration
       const sessions = [
         {
           id: 1,
@@ -8591,7 +8592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tutorFirstName: "Sarah",
           tutorLastName: "Johnson",
           tutorAvatar: null,
-          sessionDate: "2025-09-25", // Changed to a date that might have holidays
+          sessionDate: "2025-09-25",
           startTime: "14:00",
           endTime: "15:00", 
           duration: 60,
@@ -8606,6 +8607,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           language: "English",
           level: "A2",
           examType: null,
+          // Video recording fields
+          hasRecording: false,
+          recordingUrl: null,
+          recordingDuration: null,
+          thumbnailUrl: null,
+          recordingFileSize: null,
+          recordingQuality: null,
+          recordingUploadDate: null,
+          recordingStatus: "none",
+          ...(includeVideoData && {
+            recordingMetadata: null,
+            viewingHistory: null
+          }),
           ...(includeCalendarData && {
             holidays: [],
             culturalEvents: [],
@@ -8638,6 +8652,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           language: "English",
           level: "B2",
           examType: "midterm",
+          // Video recording fields
+          hasRecording: false,
+          recordingUrl: null,
+          recordingDuration: null,
+          thumbnailUrl: null,
+          recordingFileSize: null,
+          recordingQuality: null,
+          recordingUploadDate: null,
+          recordingStatus: "none",
+          ...(includeVideoData && {
+            recordingMetadata: null,
+            viewingHistory: null
+          }),
           ...(includeCalendarData && {
             holidays: [],
             culturalEvents: [],
@@ -8670,6 +8697,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           language: "Persian",
           level: "C1",
           examType: "final",
+          // Video recording fields
+          hasRecording: false,
+          recordingUrl: null,
+          recordingDuration: null,
+          thumbnailUrl: null,
+          recordingFileSize: null,
+          recordingQuality: null,
+          recordingUploadDate: null,
+          recordingStatus: "none",
+          ...(includeVideoData && {
+            recordingMetadata: null,
+            viewingHistory: null
+          }),
           ...(includeCalendarData && {
             holidays: [
               {
@@ -8701,10 +8741,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
               culturalSignificance: "نوروز - سال نو ایرانی"
             }
           })
+        },
+        {
+          id: 4,
+          title: "Business English Presentation Skills",
+          courseName: "Business English B1",
+          tutorFirstName: "David",
+          tutorLastName: "Wilson",
+          tutorAvatar: null,
+          sessionDate: "2025-09-15",
+          startTime: "09:00",
+          endTime: "10:30",
+          duration: 90,
+          type: "individual",
+          status: "completed",
+          canJoin: false,
+          participants: 1,
+          maxParticipants: 1,
+          location: "Online",
+          sessionUrl: null,
+          description: "Advanced presentation techniques for business contexts",
+          language: "English",
+          level: "B1",
+          examType: null,
+          // Video recording fields - with actual recording data
+          hasRecording: true,
+          recordingUrl: "/api/videos/stream/session-4",
+          recordingDuration: 5340, // 89 minutes in seconds
+          thumbnailUrl: "/api/videos/thumbnails/session-4.jpg",
+          recordingFileSize: 1250000000, // ~1.25GB in bytes
+          recordingQuality: "HD",
+          recordingUploadDate: "2025-09-15T10:45:00Z",
+          recordingStatus: "ready",
+          ...(includeVideoData && {
+            recordingMetadata: {
+              duration: 5340,
+              fileSize: "1.25 GB",
+              uploadDate: "2025-09-15T10:45:00Z",
+              quality: "HD",
+              thumbnailUrl: "/api/videos/thumbnails/session-4.jpg",
+              videoUrl: "/api/videos/stream/session-4",
+              viewingProgress: 65 // 65% watched
+            },
+            viewingHistory: {
+              lastWatched: "2025-09-16T14:30:00Z",
+              completionPercentage: 65,
+              bookmarks: [
+                { timestamp: 1200, title: "Slide transitions discussion" },
+                { timestamp: 2800, title: "Q&A techniques" }
+              ],
+              notes: [
+                { timestamp: 850, content: "Remember to use pause and emphasis" },
+                { timestamp: 3200, content: "Practice the closing statement" }
+              ]
+            }
+          }),
+          ...(includeCalendarData && {
+            holidays: [],
+            culturalEvents: [],
+            calendarContext: {
+              persianDate: "۱۴۰۳/۰۶/۲۵",
+              gregorianDate: "Sunday, Sep 15, 2025",
+              culturalSignificance: null
+            }
+          })
         }
       ];
+
+      // Apply video filtering if requested
+      let filteredSessions = sessions;
+      if (filter) {
+        switch (filter) {
+          case 'with-recording':
+            filteredSessions = sessions.filter(s => s.hasRecording);
+            break;
+          case 'without-recording':
+            filteredSessions = sessions.filter(s => !s.hasRecording);
+            break;
+          case 'completed-with-recording':
+            filteredSessions = sessions.filter(s => s.status === 'completed' && s.hasRecording);
+            break;
+        }
+      }
       
-      res.json(sessions);
+      res.json(filteredSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
       res.status(500).json({ message: "Failed to get sessions" });
@@ -8719,6 +8839,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching upcoming sessions:', error);
       res.status(500).json({ message: "Failed to get upcoming sessions" });
+    }
+  });
+
+  // Session Video Progress API
+  app.get("/api/sessions/:sessionId/video/progress", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = req.user.id;
+      
+      // Mock progress data - would fetch from sessionVideoProgress table
+      const progress = {
+        sessionId: parseInt(sessionId),
+        userId,
+        progressSeconds: 2100, // 35 minutes watched
+        totalDuration: 5340, // 89 minutes total
+        completionPercentage: 39.33,
+        completed: false,
+        lastWatchedAt: "2025-09-16T14:30:00Z"
+      };
+      
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching session video progress:', error);
+      res.status(500).json({ message: "Failed to get video progress" });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/video/progress", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { progressSeconds, totalDuration, completed } = req.body;
+      const userId = req.user.id;
+      
+      // Would update sessionVideoProgress table
+      const progress = {
+        sessionId: parseInt(sessionId),
+        userId,
+        progressSeconds,
+        totalDuration,
+        completionPercentage: Math.round((progressSeconds / totalDuration) * 100),
+        completed,
+        lastWatchedAt: new Date().toISOString()
+      };
+      
+      res.json(progress);
+    } catch (error) {
+      console.error('Error updating session video progress:', error);
+      res.status(500).json({ message: "Failed to update video progress" });
+    }
+  });
+
+  // Session Video Notes API
+  app.get("/api/sessions/:sessionId/video/notes", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = req.user.id;
+      
+      // Mock notes data - would fetch from sessionVideoNotes table
+      const notes = [
+        {
+          id: 1,
+          sessionId: parseInt(sessionId),
+          userId,
+          timestamp: 850,
+          content: "Remember to use pause and emphasis",
+          createdAt: "2025-09-15T09:14:10Z",
+          updatedAt: "2025-09-15T09:14:10Z"
+        },
+        {
+          id: 2,
+          sessionId: parseInt(sessionId),
+          userId,
+          timestamp: 3200,
+          content: "Practice the closing statement",
+          createdAt: "2025-09-15T09:53:20Z",
+          updatedAt: "2025-09-15T09:53:20Z"
+        }
+      ];
+      
+      res.json(notes);
+    } catch (error) {
+      console.error('Error fetching session video notes:', error);
+      res.status(500).json({ message: "Failed to get video notes" });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/video/notes", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { timestamp, content } = req.body;
+      const userId = req.user.id;
+      
+      // Would insert into sessionVideoNotes table
+      const note = {
+        id: Date.now(), // Mock ID
+        sessionId: parseInt(sessionId),
+        userId,
+        timestamp,
+        content,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      res.json(note);
+    } catch (error) {
+      console.error('Error creating session video note:', error);
+      res.status(500).json({ message: "Failed to create video note" });
+    }
+  });
+
+  // Session Video Bookmarks API
+  app.get("/api/sessions/:sessionId/video/bookmarks", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = req.user.id;
+      
+      // Mock bookmarks data - would fetch from sessionVideoBookmarks table
+      const bookmarks = [
+        {
+          id: 1,
+          sessionId: parseInt(sessionId),
+          userId,
+          timestamp: 1200,
+          title: "Slide transitions discussion",
+          createdAt: "2025-09-15T09:20:00Z",
+          updatedAt: "2025-09-15T09:20:00Z"
+        },
+        {
+          id: 2,
+          sessionId: parseInt(sessionId),
+          userId,
+          timestamp: 2800,
+          title: "Q&A techniques",
+          createdAt: "2025-09-15T09:46:40Z",
+          updatedAt: "2025-09-15T09:46:40Z"
+        }
+      ];
+      
+      res.json(bookmarks);
+    } catch (error) {
+      console.error('Error fetching session video bookmarks:', error);
+      res.status(500).json({ message: "Failed to get video bookmarks" });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/video/bookmarks", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { timestamp, title } = req.body;
+      const userId = req.user.id;
+      
+      // Would insert into sessionVideoBookmarks table
+      const bookmark = {
+        id: Date.now(), // Mock ID
+        sessionId: parseInt(sessionId),
+        userId,
+        timestamp,
+        title,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      res.json(bookmark);
+    } catch (error) {
+      console.error('Error creating session video bookmark:', error);
+      res.status(500).json({ message: "Failed to create video bookmark" });
+    }
+  });
+
+  // Session Video Streaming API
+  app.get("/api/videos/stream/session-:sessionId", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      // Mock video streaming - would serve actual video file
+      res.status(200).json({
+        message: "Video streaming endpoint",
+        sessionId: parseInt(sessionId),
+        streamUrl: `/api/videos/stream/session-${sessionId}`,
+        note: "In production, this would stream the actual video file with proper headers for video playback"
+      });
+    } catch (error) {
+      console.error('Error streaming session video:', error);
+      res.status(500).json({ message: "Failed to stream video" });
+    }
+  });
+
+  app.get("/api/videos/thumbnails/session-:sessionId.jpg", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      // Mock thumbnail serving - would serve actual thumbnail image
+      res.status(200).json({
+        message: "Video thumbnail endpoint",
+        sessionId: parseInt(sessionId),
+        thumbnailUrl: `/api/videos/thumbnails/session-${sessionId}.jpg`,
+        note: "In production, this would serve the actual thumbnail image file"
+      });
+    } catch (error) {
+      console.error('Error serving session video thumbnail:', error);
+      res.status(500).json({ message: "Failed to serve thumbnail" });
     }
   });
 

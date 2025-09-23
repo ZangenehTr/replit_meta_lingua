@@ -5,7 +5,7 @@ import { MobileLayout } from '@/components/mobile/MobileLayout';
 import { MobileCard } from '@/components/mobile/MobileCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Clock, Video, Users, MapPin, Play, ChevronRight, Filter, CalendarDays, X } from 'lucide-react';
+import { Calendar, Clock, Video, Users, MapPin, Play, ChevronRight, Filter, CalendarDays, X, PlayCircle, Download, Bookmark, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
@@ -57,20 +57,50 @@ interface Session {
   sessionDate: string;
   startTime: string;
   endTime: string;
+  // Video recording fields
+  hasRecording?: boolean;
+  recordingUrl?: string;
+  recordingDuration?: number;
+  thumbnailUrl?: string;
+  recordingFileSize?: number;
+  recordingQuality?: 'HD' | 'SD' | 'FHD';
+  recordingUploadDate?: string;
+  recordingStatus?: 'none' | 'processing' | 'ready' | 'error';
+  recordingMetadata?: {
+    duration: number;
+    fileSize: string;
+    uploadDate: string;
+    quality: 'HD' | 'SD' | 'FHD';
+    thumbnailUrl: string;
+    videoUrl: string;
+    viewingProgress?: number; // 0-100%
+  };
+  viewingHistory?: {
+    lastWatched: string;
+    completionPercentage: number;
+    bookmarks: Array<{ timestamp: number; title: string }>;
+    notes: Array<{ timestamp: number; content: string }>;
+  };
 }
 
 export default function StudentSessionsMobile() {
   const { t } = useTranslation();
   const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'completed'>('upcoming');
+  const [videoFilter, setVideoFilter] = useState<string>('all'); // 'all', 'with-recording', 'without-recording', 'completed-with-recording'
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [filteredSessionIds, setFilteredSessionIds] = useState<number[]>([]);
 
-  // Fetch sessions with calendar data
+  // Fetch sessions with calendar and video data
   const { data: sessions = [], isLoading } = useQuery<Session[]>({
-    queryKey: ['/api/student/sessions', filterType],
+    queryKey: ['/api/student/sessions', filterType, videoFilter],
     queryFn: async () => {
-      const response = await fetch(`/api/student/sessions?filter=${filterType}&includeCalendar=true`, {
+      const params = new URLSearchParams({
+        includeCalendar: 'true',
+        includeVideo: 'true',
+        ...(videoFilter !== 'all' && { filter: videoFilter })
+      });
+      const response = await fetch(`/api/student/sessions?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -128,6 +158,30 @@ export default function StudentSessionsMobile() {
     }
   });
 
+  // Video playback handler for mobile
+  const handleVideoPlay = (sessionId: number) => {
+    const session = sessions.find(s => s.id === sessionId);
+    if (session?.hasRecording && session.recordingUrl) {
+      // Navigate to video player page optimized for mobile
+      window.open(`/student/video-player?sessionId=${sessionId}&mobile=true`, '_blank');
+      
+      toast({
+        title: t('student:openingVideo', 'Opening Video'),
+        description: t('student:videoStarting', 'The session video is opening'),
+      });
+    }
+  };
+
+  // Format duration for mobile display
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming': return 'bg-blue-500';
@@ -173,9 +227,9 @@ export default function StudentSessionsMobile() {
         </motion.button>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Status Filter Tabs */}
       <motion.div 
-        className="flex gap-2 mb-6"
+        className="flex gap-2 mb-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -194,6 +248,35 @@ export default function StudentSessionsMobile() {
           >
             {t(`student:sessions.${type}`)}
           </button>
+        ))}
+      </motion.div>
+
+      {/* Video Filter Pills for Mobile */}
+      <motion.div 
+        className="flex gap-2 mb-6 overflow-x-auto pb-2"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        {[
+          { key: 'all', label: 'All', icon: Calendar },
+          { key: 'with-recording', label: 'Video', icon: Video },
+          { key: 'without-recording', label: 'No Video', icon: X },
+          { key: 'completed-with-recording', label: 'Recorded', icon: PlayCircle }
+        ].map(({ key, label, icon: Icon }) => (
+          <motion.button
+            key={key}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setVideoFilter(key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+              videoFilter === key 
+                ? 'bg-purple-500 text-white' 
+                : 'bg-white/10 text-white/60 backdrop-blur'
+            }`}
+          >
+            <Icon className="w-3 h-3" />
+            {label}
+          </motion.button>
         ))}
       </motion.div>
 
