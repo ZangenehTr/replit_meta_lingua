@@ -138,6 +138,10 @@ import { VideoCall as CallernVideoCall } from "@/components/callern/VideoCallFin
 import GamificationSystem from "@/pages/games";
 import AIPracticePage from "@/pages/ai-practice";
 
+// LinguaQuest Free Learning Platform
+import { LinguaQuestHome } from "@/pages/linguaquest/LinguaQuestHome";
+import { LinguaQuestLesson } from "@/pages/linguaquest/LinguaQuestLesson";
+
 // Language provider removed - using useLanguage hook directly
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
@@ -186,6 +190,10 @@ function ProfileRedirect() {
 function Router() {
   return (
     <Switch>
+      {/* LinguaQuest Free Learning Platform Routes */}
+      <Route path="/linguaquest" component={LinguaQuestHome} />
+      <Route path="/linguaquest/lesson/:lessonId" component={LinguaQuestLesson} />
+      
       <Route path="/auth" component={Auth} />
       <Route path="/simple-auth" component={SimpleAuth} />
       <Route path="/forgot-password" component={ForgotPassword} />

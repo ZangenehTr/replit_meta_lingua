@@ -105,7 +105,7 @@ router.get('/', async (req, res) => {
     
     // Get user info from request (if authenticated)
     const userId = (req as any).user?.id;
-    const sessionId = req.sessionID || req.headers['x-session-id'] as string;
+    const sessionId = (req as any).sessionID || req.headers['x-session-id'] as string;
 
     const results = await searchService.search(q, filters, {
       page,

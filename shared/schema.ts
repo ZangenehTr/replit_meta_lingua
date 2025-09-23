@@ -5826,3 +5826,252 @@ export type CalendarEventsIranian = typeof calendarEventsIranian.$inferSelect;
 export type CalendarEventsIranianInsert = z.infer<typeof insertCalendarEventsIranianSchema>;
 export type HolidayCalendarPersian = typeof holidayCalendarPersian.$inferSelect;
 export type HolidayCalendarPersianInsert = z.infer<typeof insertHolidayCalendarPersianSchema>;
+
+// ============================================================================
+// LINGUAQUEST FREE LEARNING SYSTEM SCHEMA
+// ============================================================================
+
+// LinguaQuest lesson difficulty and type constants
+export const LINGUAQUEST_DIFFICULTY = {
+  BEGINNER: "beginner",
+  ELEMENTARY: "elementary", 
+  INTERMEDIATE: "intermediate",
+  UPPER_INTERMEDIATE: "upper_intermediate",
+  ADVANCED: "advanced"
+} as const;
+
+export const LINGUAQUEST_LESSON_TYPE = {
+  VOCABULARY: "vocabulary",
+  GRAMMAR: "grammar", 
+  CONVERSATION: "conversation",
+  LISTENING: "listening",
+  PRONUNCIATION: "pronunciation"
+} as const;
+
+export const LINGUAQUEST_SCENE_TYPE = {
+  VOCABULARY_3D: "vocabulary_3d",
+  GRAMMAR_BUILDER: "grammar_builder",
+  CONVERSATION_ROOM: "conversation_room",
+  PRONUNCIATION_LAB: "pronunciation_lab",
+  LISTENING_ENVIRONMENT: "listening_environment"
+} as const;
+
+export type LinguaQuestDifficulty = typeof LINGUAQUEST_DIFFICULTY[keyof typeof LINGUAQUEST_DIFFICULTY];
+export type LinguaQuestLessonType = typeof LINGUAQUEST_LESSON_TYPE[keyof typeof LINGUAQUEST_LESSON_TYPE];
+export type LinguaQuestSceneType = typeof LINGUAQUEST_SCENE_TYPE[keyof typeof LINGUAQUEST_SCENE_TYPE];
+
+// LinguaQuest 3D Interactive Lessons
+export const linguaquestLessons = pgTable("linguaquest_lessons", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  language: text("language").notNull(), // en, fa, ar, de, etc.
+  difficulty: text("difficulty").notNull(), // beginner, elementary, intermediate, upper_intermediate, advanced
+  lessonType: text("lesson_type").notNull(), // vocabulary, grammar, conversation, listening, pronunciation
+  sceneType: text("scene_type").notNull(), // vocabulary_3d, grammar_builder, conversation_room, etc.
+  
+  // 3D Content references
+  sceneData: jsonb("scene_data"), // 3D scene configuration, models, positions
+  interactionConfig: jsonb("interaction_config"), // Touch controls, mobile gestures, interaction points
+  
+  // Lesson progression
+  estimatedDurationMinutes: integer("estimated_duration_minutes").default(10),
+  xpReward: integer("xp_reward").default(50),
+  completionRequirements: jsonb("completion_requirements"), // Criteria for completion
+  
+  // Content
+  vocabularyWords: text("vocabulary_words").array().default([]),
+  grammarTopics: text("grammar_topics").array().default([]),
+  exampleSentences: text("example_sentences").array().default([]),
+  audioFiles: text("audio_files").array().default([]), // URLs to TTS-generated audio
+  
+  // Meta data
+  tags: text("tags").array().default([]),
+  prerequisites: integer("prerequisites").array().default([]), // Other lesson IDs required
+  isActive: boolean("is_active").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Guest Progress Tracking (Anonymous Users)
+export const guestProgressTracking = pgTable("guest_progress_tracking", {
+  id: serial("id").primaryKey(),
+  sessionToken: text("session_token").notNull().unique(), // Anonymous session identifier
+  fingerprintHash: text("fingerprint_hash"), // Device fingerprint for correlation
+  
+  // Progress data
+  completedLessons: integer("completed_lessons").array().default([]), // Lesson IDs completed
+  currentStreak: integer("current_streak").default(0),
+  totalXp: integer("total_xp").default(0),
+  currentLevel: integer("current_level").default(1),
+  
+  // Learning analytics
+  strongSkills: text("strong_skills").array().default([]),
+  weakSkills: text("weak_skills").array().default([]),
+  preferredDifficulty: text("preferred_difficulty").default("beginner"),
+  learningPath: text("learning_path").array().default([]), // Adaptive learning sequence
+  
+  // Session data
+  totalStudyTimeMinutes: integer("total_study_time_minutes").default(0),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  deviceInfo: jsonb("device_info"), // Browser, OS, screen size for mobile optimization
+  
+  // Conversion tracking
+  hasSeenUpgradePrompt: boolean("has_seen_upgrade_prompt").default(false),
+  upgradePromptCount: integer("upgrade_prompt_count").default(0),
+  lastUpgradePromptAt: timestamp("last_upgrade_prompt_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Voice Exercises for Guest Users
+export const voiceExercisesGuest = pgTable("voice_exercises_guest", {
+  id: serial("id").primaryKey(),
+  sessionToken: text("session_token").notNull(), // Links to guest session
+  lessonId: integer("lesson_id").references(() => linguaquestLessons.id),
+  
+  // Exercise content
+  exerciseType: text("exercise_type").notNull(), // pronunciation, conversation, listening_repeat
+  promptText: text("prompt_text").notNull(), // Text to be spoken
+  targetLanguage: text("target_language").notNull(),
+  difficultyLevel: text("difficulty_level").notNull(),
+  
+  // Voice data
+  audioRecordingUrl: text("audio_recording_url"), // Guest's voice recording
+  referenceTtsUrl: text("reference_tts_url"), // Perfect pronunciation reference
+  pronunciationScore: integer("pronunciation_score"), // 0-100 accuracy score
+  
+  // Analysis results
+  speechAnalysis: jsonb("speech_analysis"), // Pronunciation accuracy, timing, intonation
+  feedback: text("feedback"), // AI-generated feedback
+  suggestedImprovements: text("suggested_improvements").array().default([]),
+  
+  // Attempt tracking
+  attemptNumber: integer("attempt_number").default(1),
+  maxAttempts: integer("max_attempts").default(3),
+  completedAt: timestamp("completed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// 3D Lesson Content and Assets
+export const threeDLessonContent = pgTable("3d_lesson_content", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => linguaquestLessons.id).notNull(),
+  
+  // 3D Scene Configuration
+  sceneConfig: jsonb("scene_config").notNull(), // Camera, lighting, environment setup
+  models: jsonb("models").default([]), // 3D model assets, positions, animations
+  materials: jsonb("materials").default([]), // Textures, shaders, material properties
+  
+  // Interactive Elements
+  hotspots: jsonb("hotspots").default([]), // Clickable/touchable interaction points
+  animations: jsonb("animations").default([]), // Scripted animations and transitions
+  particleEffects: jsonb("particle_effects").default([]), // Visual effects for feedback
+  
+  // Mobile Optimization
+  mobileOptimizations: jsonb("mobile_optimizations"), // LOD, simplified materials, touch controls
+  lowPolyModels: jsonb("low_poly_models").default([]), // Performance-optimized 3D models
+  
+  // Audio Integration
+  spatialAudio: jsonb("spatial_audio").default([]), // 3D audio positioning
+  voiceoverTiming: jsonb("voiceover_timing").default([]), // Sync with TTS
+  
+  // Performance Settings
+  renderQuality: text("render_quality").default("medium"), // low, medium, high
+  targetFps: integer("target_fps").default(30),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Freemium Conversion Tracking
+export const freemiumConversionTracking = pgTable("freemium_conversion_tracking", {
+  id: serial("id").primaryKey(),
+  sessionToken: text("session_token"), // Guest session token
+  userId: integer("user_id").references(() => users.id), // If user converts/registers
+  
+  // Conversion funnel stages
+  funnelStage: text("funnel_stage").notNull(), // discovery, engagement, consideration, trial, conversion
+  conversionEvent: text("conversion_event").notNull(), // lesson_completed, upgrade_viewed, signup_clicked, payment_completed
+  eventData: jsonb("event_data"), // Additional context about the event
+  
+  // User journey tracking
+  lessonsCompletedBeforePrompt: integer("lessons_completed_before_prompt").default(0),
+  totalSessionTimeMinutes: integer("total_session_time_minutes").default(0),
+  deviceType: text("device_type"), // mobile, tablet, desktop
+  trafficSource: text("traffic_source"), // organic, social, paid, referral
+  
+  // Conversion details
+  upgradePromptType: text("upgrade_prompt_type"), // completion_modal, progress_barrier, feature_preview
+  upgradePromptPosition: text("upgrade_prompt_position"), // lesson_end, mid_session, navigation
+  conversionDecision: text("conversion_decision"), // converted, dismissed, postponed
+  
+  // A/B Testing
+  testVariant: text("test_variant"), // A, B, control - for conversion optimization
+  cohort: text("cohort"), // User group for analytics
+  
+  // Revenue tracking
+  planSelected: text("plan_selected"), // If converted, which Meta Lingua plan
+  revenueGenerated: integer("revenue_generated").default(0), // IRR value
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Visitor Achievements (Gamification for Guests)
+export const visitorAchievements = pgTable("visitor_achievements", {
+  id: serial("id").primaryKey(),
+  sessionToken: text("session_token").notNull(), // Guest session identifier
+  
+  // Achievement details
+  achievementType: text("achievement_type").notNull(), // first_lesson, streak_3, vocabulary_master, etc.
+  achievementTitle: text("achievement_title").notNull(),
+  achievementDescription: text("achievement_description").notNull(),
+  iconUrl: text("icon_url"),
+  badgeColor: text("badge_color").default("#gold"),
+  
+  // Progress tracking
+  progress: integer("progress").default(0), // Current progress towards achievement
+  targetValue: integer("target_value").notNull(), // Target value to unlock achievement
+  isUnlocked: boolean("is_unlocked").default(false),
+  
+  // Gamification
+  xpReward: integer("xp_reward").default(100),
+  category: text("category"), // learning, social, engagement, mastery
+  difficulty: text("difficulty").default("easy"), // easy, medium, hard, legendary
+  
+  // Motivation
+  motivationalMessage: text("motivational_message"),
+  nextAchievement: text("next_achievement"), // Suggests next achievement to work towards
+  
+  unlockedAt: timestamp("unlocked_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// ============================================================================
+// LINGUAQUEST INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// Insert schemas for LinguaQuest tables
+export const insertLinguaquestLessonSchema = createInsertSchema(linguaquestLessons).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertGuestProgressTrackingSchema = createInsertSchema(guestProgressTracking).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertVoiceExercisesGuestSchema = createInsertSchema(voiceExercisesGuest).omit({ id: true, createdAt: true });
+export const insertThreeDLessonContentSchema = createInsertSchema(threeDLessonContent).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertFreemiumConversionTrackingSchema = createInsertSchema(freemiumConversionTracking).omit({ id: true, createdAt: true });
+export const insertVisitorAchievementSchema = createInsertSchema(visitorAchievements).omit({ id: true, createdAt: true, unlockedAt: true });
+
+// Type exports for LinguaQuest tables
+export type LinguaquestLesson = typeof linguaquestLessons.$inferSelect;
+export type LinguaquestLessonInsert = z.infer<typeof insertLinguaquestLessonSchema>;
+export type GuestProgressTracking = typeof guestProgressTracking.$inferSelect;
+export type GuestProgressTrackingInsert = z.infer<typeof insertGuestProgressTrackingSchema>;
+export type VoiceExercisesGuest = typeof voiceExercisesGuest.$inferSelect;
+export type VoiceExercisesGuestInsert = z.infer<typeof insertVoiceExercisesGuestSchema>;
+export type ThreeDLessonContent = typeof threeDLessonContent.$inferSelect;
+export type ThreeDLessonContentInsert = z.infer<typeof insertThreeDLessonContentSchema>;
+export type FreemiumConversionTracking = typeof freemiumConversionTracking.$inferSelect;
+export type FreemiumConversionTrackingInsert = z.infer<typeof insertFreemiumConversionTrackingSchema>;
+export type VisitorAchievement = typeof visitorAchievements.$inferSelect;
+export type VisitorAchievementInsert = z.infer<typeof insertVisitorAchievementSchema>;

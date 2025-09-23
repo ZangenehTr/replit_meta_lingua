@@ -19,6 +19,7 @@ import examRoadmapRoutes from "./routes/exam-roadmap-routes";
 import { createAiStudyPartnerRoutes } from "./routes/ai-study-partner-routes";
 import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
 import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
+import { registerLinguaQuestRoutes } from "./routes/linguaquest-routes";
 import searchRoutes from "./routes/search-routes";
 import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes";
 import tttRoutes from "./ttt-routes";
@@ -20670,6 +20671,9 @@ Meta Lingua Academy`;
   
   // Register Global Lexi routes
   registerGlobalLexiRoutes(app, storage);
+
+  // LinguaQuest Free Learning Platform Routes
+  registerLinguaQuestRoutes(app);
   
   // Register Book E-commerce routes
   setupBookEcommerceRoutes(app);
