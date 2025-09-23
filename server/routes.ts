@@ -80,6 +80,7 @@ import {
   classEnrollments,
   insertClassEnrollmentSchema,
   specialClasses,
+  teacherPaymentRecords,
   WORKFLOW_STATUS,
   type InsertMoodEntry,
   type InsertMoodRecommendation,
@@ -898,7 +899,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Username: ${username}`);
       console.log(`Password: ${settings.voipPassword ? '[CONFIGURED]' : '[NOT SET]'}`);
       
-      const diagnostics = {
+      const diagnostics: {
+        server: string;
+        port: number;
+        username: string;
+        tests: {
+          tcpConnectivity?: any;
+          alternativeSipPort?: any;
+          httpApiPort?: any;
+          voipServiceConnection?: any;
+        };
+      } = {
         server: serverAddress,
         port: port,
         username: username,

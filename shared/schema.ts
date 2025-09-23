@@ -2655,11 +2655,7 @@ export const adminSettings = pgTable("admin_settings", {
 });
 
 // Admin settings schema
-export const insertAdminSettingsSchema = createInsertSchema(adminSettings, {
-  id: z.number().optional(),
-  createdAt: z.date().optional(), 
-  updatedAt: z.date().optional()
-}).omit({
+export const insertAdminSettingsSchema = createInsertSchema(adminSettings).omit({
   id: true,
   createdAt: true,
   updatedAt: true

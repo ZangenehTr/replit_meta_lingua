@@ -591,7 +591,7 @@ export function setupBookEcommerceRoutes(app: Express) {
         data: {
           id: updatedItem!.id,
           quantity: updatedItem!.quantity,
-          updated_at: updatedItem!.updated_at
+          added_at: updatedItem!.added_at
         }
       });
     } catch (error: any) {
@@ -730,7 +730,7 @@ export function setupBookEcommerceRoutes(app: Express) {
           order_id: order.id,
           book_id: cartItem.book_id,
           quantity: cartItem.quantity,
-          unitPrice: cartItem.book.price
+          price_minor: cartItem.book.price_minor
         });
       }
 
@@ -852,7 +852,7 @@ export function setupBookEcommerceRoutes(app: Express) {
           payment_status: order.status,
           total_amount: order.total_amount_minor,
           payment_method: order.status,
-          notes: order.notes,
+          // notes: order.notes, // Property doesn't exist on order object
           items: order.items.map(item => ({
             id: item.id,
             book: {
@@ -928,7 +928,7 @@ export function setupBookEcommerceRoutes(app: Express) {
 
       // Get book assets
       const bookAssets = await storage.getBookAssets(bookId);
-      const pdfAsset = bookAssets.find(asset => asset.assetType === 'pdf');
+      const pdfAsset = bookAssets.find(asset => asset.file_type === 'pdf');
       
       if (!pdfAsset) {
         return res.status(404).json({
@@ -938,7 +938,7 @@ export function setupBookEcommerceRoutes(app: Express) {
       }
 
       // Check if file exists
-      if (!fs.existsSync(pdfAsset.filePath)) {
+      if (!fs.existsSync(pdfAsset.file_path)) {
         return res.status(404).json({
           success: false,
           message: 'PDF file not found on server'
@@ -947,11 +947,11 @@ export function setupBookEcommerceRoutes(app: Express) {
 
       // Set headers for file download
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${pdfAsset.fileName}"`);
-      res.setHeader('Content-Length', pdfAsset.fileSize || 0);
+      res.setHeader('Content-Disposition', `attachment; filename="${path.basename(pdfAsset.file_path)}"`);
+      res.setHeader('Content-Length', pdfAsset.file_size || 0);
 
       // Stream the file
-      const fileStream = fs.createReadStream(pdfAsset.filePath);
+      const fileStream = fs.createReadStream(pdfAsset.file_path);
       fileStream.pipe(res);
     } catch (error) {
       console.error('Error downloading PDF:', error);
@@ -976,7 +976,6 @@ export function setupBookEcommerceRoutes(app: Express) {
         success: true,
         data: addresses.map(address => ({
           id: address.id,
-          label: address.label,
           full_name: address.full_name,
           phone: address.phone,
           address_line_1: address.address_line1,
@@ -1014,7 +1013,7 @@ export function setupBookEcommerceRoutes(app: Express) {
         addressLine1: req.body.address_line_1,
         addressLine2: req.body.address_line_2,
         postalCode: req.body.postal_code,
-        isDefault: req.body.is_default || false
+        is_default: req.body.is_default || false
       });
 
       const address = await storage.createUserAddress({
@@ -1076,7 +1075,7 @@ export function setupBookEcommerceRoutes(app: Express) {
       const userId = req.user.id;
       const existingAddress = await storage.getUserAddress(addressId);
       
-      if (!existingAddress || existingAddress.userId !== userId) {
+      if (!existingAddress || existingAddress.user_id !== userId) {
         return res.status(404).json({
           success: false,
           message: 'Address not found'
@@ -1094,13 +1093,13 @@ export function setupBookEcommerceRoutes(app: Express) {
         addressLine1: req.body.address_line_1,
         addressLine2: req.body.address_line_2,
         postalCode: req.body.postal_code,
-        isDefault: req.body.is_default
+        is_default: req.body.is_default
       });
 
       const updatedAddress = await storage.updateUserAddress(addressId, updateData);
 
       // If this is set as default, update other addresses
-      if (updateData.isDefault) {
+      if (updateData.is_default) {
         await storage.setDefaultAddress(userId, addressId);
       }
 
@@ -1109,7 +1108,6 @@ export function setupBookEcommerceRoutes(app: Express) {
         message: 'Address updated successfully',
         data: {
           id: updatedAddress!.id,
-          label: updatedAddress!.label,
           full_name: updatedAddress!.full_name,
           phone: updatedAddress!.phone,
           address_line_1: updatedAddress!.address_line1,
