@@ -2,6 +2,9 @@
   "home": "Home",
   "yesterday": "Yesterday",
   "profile": "Profile",
+  "courses": {
+    "title": "Courses"
+  },
   "viewAll": "View All",
   "all": "All",
   "student": {

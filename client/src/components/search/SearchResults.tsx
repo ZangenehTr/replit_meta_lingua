@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -86,7 +86,7 @@ export function SearchResults({
   onFiltersChange,
   className 
 }: SearchResultsProps) {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['common', 'courses']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -105,8 +105,9 @@ export function SearchResults({
     isFetchingNextPage,
     isLoading,
     isError
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<SearchResponse>({
     queryKey: ['/api/search', query, filters, sortBy],
+    initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       const params = new URLSearchParams({
         q: query,
@@ -133,7 +134,7 @@ export function SearchResults({
       }
       return response.json() as Promise<SearchResponse>;
     },
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage: SearchResponse) => {
       return lastPage.hasMore ? lastPage.page + 1 : undefined;
     },
     enabled: !!query,
@@ -375,7 +376,7 @@ interface SearchResultCardProps {
 }
 
 function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-testid': testId }: SearchResultCardProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'courses']);
   const Icon = CONTENT_TYPE_ICONS[result.type];
 
   const handleClick = () => {

@@ -52,6 +52,30 @@ interface SearchSuggestion {
   type?: 'recent' | 'trending' | 'suggestion';
 }
 
+interface TrendingItem {
+  query: string;
+  volume?: number;
+}
+
+interface TrendingData {
+  trending: TrendingItem[];
+}
+
+interface RecentSearchItem {
+  query: string;
+  resultsCount: number;
+}
+
+interface RecentSearchData {
+  history: RecentSearchItem[];
+}
+
+interface SuggestionItem {
+  suggestion: string;
+}
+
+type SuggestionResponse = (string | SuggestionItem)[];
+
 interface SearchFilters {
   categories?: string[];
   languages?: string[];
@@ -100,7 +124,7 @@ export function UniversalSearchBar({
   className,
   variant = 'default'
 }: UniversalSearchBarProps) {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['common', 'courses']);
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   
@@ -114,26 +138,26 @@ export function UniversalSearchBar({
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Get search suggestions
-  const { data: suggestions = [] } = useQuery({
+  const { data: suggestions = [] } = useQuery<SuggestionResponse>({
     queryKey: ['/api/search/suggestions', query],
     enabled: query.length >= 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Get recent searches for logged-in users
-  const { data: recentSearches = [] } = useQuery({
+  const { data: recentSearches } = useQuery<RecentSearchData>({
     queryKey: ['/api/search/history'],
     enabled: !!user && query.length === 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Get trending searches
-  const { data: trendingData } = useQuery({
+  const { data: trendingData } = useQuery<TrendingData>({
     queryKey: ['/api/search/trending'],
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
 
-  const trending = trendingData?.trending || [];
+  const trending: TrendingItem[] = trendingData?.trending || [];
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -516,7 +540,7 @@ interface SearchFiltersPanelProps {
 }
 
 function SearchFiltersPanel({ filters, onFilterChange, onClearFilters }: SearchFiltersPanelProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'courses']);
 
   const contentTypes = Object.keys(CONTENT_TYPE_LABELS) as (keyof typeof CONTENT_TYPE_LABELS)[];
   const languages = ['en', 'fa', 'ar', 'de', 'es', 'fr'];

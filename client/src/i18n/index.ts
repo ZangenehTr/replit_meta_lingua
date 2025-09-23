@@ -142,7 +142,16 @@ i18n
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern', 'coursePlayer'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern', 'coursePlayer', 'courses'],
   });
+
+// Add runtime diagnostics for debugging missing keys
+i18n.on('missingKey', (lng, ns, key) => {
+  console.warn(`[i18n missing] lng=${lng} ns=${ns} key=${key}`);
+  // Enhanced diagnostics with stack trace and route context
+  console.warn('Current route:', window.location.pathname);
+  console.warn('Stack trace:');
+  console.warn(new Error().stack);
+});
 
 export default i18n;

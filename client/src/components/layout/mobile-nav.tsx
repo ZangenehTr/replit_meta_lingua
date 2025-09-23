@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { 
   Home, 
@@ -20,22 +21,23 @@ import {
   Settings
 } from "lucide-react";
 
-const navigationItems = [
-  { path: "/dashboard", icon: Home, label: "Dashboard" },
-  { path: "/courses", icon: BookOpen, label: "My Courses" },
-  { path: "/tutors", icon: Users, label: "Find Tutors" },
-  { path: "/sessions", icon: Video, label: "Live Sessions" },
-  { path: "/homework", icon: ClipboardList, label: "Homework", badge: 2 },
-  { path: "/messages", icon: MessageSquare, label: "Messages", badge: 5 },
-  { path: "/progress", icon: TrendingUp, label: "Progress" },
-  { path: "/payment", icon: CreditCard, label: "Payment & Credits" },
-];
-
 export function MobileNav() {
   const { logout } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation(['common', 'student']);
   const [location] = useLocation();
   const [open, setOpen] = useState(false);
+
+  const navigationItems = [
+    { path: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
+    { path: "/courses", icon: BookOpen, label: t('common:courses.title') },
+    { path: "/tutors", icon: Users, label: t('common:navigation.findTutors') },
+    { path: "/sessions", icon: Video, label: t('common:navigation.liveSessions') },
+    { path: "/homework", icon: ClipboardList, label: t('common:navigation.homework'), badge: 2 },
+    { path: "/messages", icon: MessageSquare, label: t('common:navigation.messages'), badge: 5 },
+    { path: "/progress", icon: TrendingUp, label: t('common:navigation.progress') },
+    { path: "/payment", icon: CreditCard, label: t('common:navigation.paymentCredits') },
+  ];
 
   const languages = [
     { code: 'en' as const, name: 'English', flag: '🇺🇸' },

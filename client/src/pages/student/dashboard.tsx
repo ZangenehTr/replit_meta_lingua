@@ -117,7 +117,7 @@ interface ClassSession {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['student', 'common']);
   const isRTL = i18n.language === 'fa';
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -1132,7 +1132,7 @@ export default function StudentDashboard() {
                     whileTap={{ scale: 0.95 }}
                   >
                     <BookOpen className="h-6 w-6 text-green-500 mb-1" />
-                    <span className="text-xs text-gray-600 text-center">{t('student:courses.title', 'دوره‌ها')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('common:courses.title', 'دوره‌ها')}</span>
                   </motion.div>
                 </Link>
                 

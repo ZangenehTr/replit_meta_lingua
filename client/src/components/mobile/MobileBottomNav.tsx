@@ -21,7 +21,7 @@ interface NavItem {
 
 export function MobileBottomNav() {
   const [location, navigate] = useLocation();
-  const { t } = useTranslation('student');
+  const { t } = useTranslation(['student', 'common']);
   const { user } = useAuth();
 
   // Only show mobile navigation for students
@@ -38,7 +38,7 @@ export function MobileBottomNav() {
     {
       path: '/student/courses',
       icon: <BookOpen className="h-5 w-5" />,
-      label: t('navigation.courses')
+      label: t('common:courses.title')
     },
     {
       path: '/callern',

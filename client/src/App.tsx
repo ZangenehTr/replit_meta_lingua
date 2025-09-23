@@ -160,7 +160,7 @@ import { LinguaQuestLesson } from "@/pages/linguaquest/LinguaQuestLesson";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading, error } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'courses']);
 
   // Show loading state only for initial load
   if (isLoading && !error) {

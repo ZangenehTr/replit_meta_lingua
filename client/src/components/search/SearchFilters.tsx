@@ -119,7 +119,7 @@ export function SearchFilters({
   className,
   showClearAll = true
 }: SearchFiltersProps) {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['common', 'courses']);
   
   const [expandedSections, setExpandedSections] = useState({
     contentTypes: true,

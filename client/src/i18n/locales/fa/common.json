@@ -2,6 +2,9 @@
   "loading": "در حال بارگذاری...",
   "view": "مشاهده",
   "edit": "ویرایش",
+  "courses": {
+    "title": "دوره‌ها"
+  },
   "delete": "حذف",
   "save": "ذخیره",
   "cancel": "انصراف",
@@ -66,10 +69,6 @@
   "tomorrow": "فردا",
   "dailyChallenge": "چالش روزانه",
   "complete5Lessons": "۵ درس را تکمیل کن",
-  "courses": {
-    "title": "دوره‌ها"
-  },
-  "title": "دوره‌ها",
   "time": {
     "minutes": "دقیقه"
   },
