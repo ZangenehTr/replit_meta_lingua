@@ -35,7 +35,7 @@ export const LEAD_STATUS = {
 // Type for lead status
 export type LeadStatus = typeof LEAD_STATUS[keyof typeof LEAD_STATUS];
 
-// Users table with roles and authentication
+// Users table with roles and authentication (PII fields moved to user_profiles)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -44,14 +44,8 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("Student"), // Admin, Teacher/Tutor, Mentor, Student, Supervisor, Call Center Agent, Accountant
   phoneNumber: text("phone_number"),
-  nationalId: text("national_id"), // Student identification
-  birthday: date("birthday"), // Birth date for age calculation
   gender: text("gender"), // male, female - required for peer matching
-  guardianName: text("guardian_name"), // For minor students
-  guardianPhone: text("guardian_phone"), // Guardian contact
-  notes: text("notes"), // Additional notes
   profileImage: text("profile_image"), // Profile picture URL
-  level: text("level"), // Current proficiency level
   status: text("status").default("active"), // Account status
   avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
@@ -77,14 +71,27 @@ export const rolePermissions = pgTable("role_permissions", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// User Profiles with Cultural Background and Learning Preferences
+// User Profiles - Canonical source for all PII and language data
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull().unique(),
-  culturalBackground: text("cultural_background"), // iranian, arabic, western, east_asian, south_asian, african, latin_american, other
+  
+  // Personal Information (canonical source)
+  nationalId: text("national_id"),
+  birthday: date("birthday"), // Birth date for age calculation
+  guardianName: text("guardian_name"), // For minor students
+  guardianPhone: text("guardian_phone"), // Guardian contact
+  notes: text("notes"), // Additional notes
+  
+  // Language Learning Profile (canonical source)
   nativeLanguage: text("native_language").notNull().default("en"),
   targetLanguages: text("target_languages").array().default([]), // Languages user wants to learn
-  proficiencyLevel: text("proficiency_level").default("beginner"), // beginner, elementary, intermediate, upper_intermediate, advanced, proficient
+  currentProficiency: text("current_proficiency").default("beginner"), // "beginner", "intermediate", "advanced"
+  targetLanguage: text("target_language"), // Primary target language
+  currentLevel: text("current_level"), // Display level for UI
+  
+  // Cultural and Learning Preferences
+  culturalBackground: text("cultural_background"), // iranian, arabic, western, east_asian, south_asian, african, latin_american, other
   learningGoals: text("learning_goals").array().default([]),
   learningStyle: text("learning_style"), // visual, auditory, kinesthetic, reading_writing
   timezone: text("timezone").default("UTC"),
@@ -96,19 +103,6 @@ export const userProfiles = pgTable("user_profiles", {
   strengths: text("strengths").array().default([]), // memory, pattern_recognition, analytical, creative
   interests: text("interests").array().default([]), // business, travel, culture, technology, arts, sports
   bio: text("bio"),
-  
-  // Learning goals and targets
-  targetLanguage: text("target_language"), // "persian", "english", "arabic", "german", etc.
-  currentProficiency: text("current_proficiency"), // "beginner", "intermediate", "advanced"
-  
-  // Student-specific fields (moved to users table for compatibility)
-  nationalId: text("national_id"),
-  birthday: date("birthday"), // Changed from dateOfBirth for consistency
-  guardianName: text("guardian_name"),
-  guardianPhone: text("guardian_phone"),
-  notes: text("notes"),
-  currentLevel: text("current_level"), // Override for display level
-  // Note: enrolledCourseId removed - using classEnrollments table for tracking student enrollments
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -3441,7 +3435,9 @@ export const aiCallInsights = pgTable("ai_call_insights", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-// Teacher Availability Table (Legacy - kept for backward compatibility)
+// Teacher Availability Table (DEPRECATED - use teacherAvailabilityPeriods)
+// This table is kept only for compatibility views during migration
+// DO NOT use directly - all new code should use teacherAvailabilityPeriods
 export const teacherAvailability = pgTable("teacher_availability", {
   id: serial("id").primaryKey(),
   teacherId: integer("teacher_id").notNull().references(() => users.id),
@@ -3453,7 +3449,8 @@ export const teacherAvailability = pgTable("teacher_availability", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Enhanced Teacher Availability Periods Table
+// Teacher Availability Periods - CANONICAL SOURCE for teacher availability
+// This is the single source of truth for all teacher availability data
 export const teacherAvailabilityPeriods = pgTable("teacher_availability_periods", {
   id: serial("id").primaryKey(),
   teacherId: integer("teacher_id").notNull().references(() => users.id),
@@ -4030,6 +4027,61 @@ export const insertPeerSocializerSettingsSchema = createInsertSchema(peerSociali
   updatedAt: true
 });
 
+// Missing insert schemas for tables identified in consolidation
+export const insertCallernRoadmapSchema = createInsertSchema(callernRoadmaps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCallernRoadmapStepSchema = createInsertSchema(callernRoadmapSteps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCourseGameSchema = createInsertSchema(courseGames).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCourseRoadmapProgressSchema = createInsertSchema(courseRoadmapProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCourseSessionSchema = createInsertSchema(courseSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertGameAccessRuleSchema = createInsertSchema(gameAccessRules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertStudentGameAssignmentSchema = createInsertSchema(studentGameAssignments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertStudentRoadmapProgressSchema = createInsertSchema(studentRoadmapProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTeacherPaymentRecordSchema = createInsertSchema(teacherPaymentRecords).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // ========================
 // TYPE EXPORTS
 // ========================
@@ -4058,9 +4110,9 @@ export type InsertSessionRatings = z.infer<typeof insertSessionRatingsSchema>;
 export type SrsCard = typeof srsCard.$inferSelect;
 export type InsertSrsCard = z.infer<typeof insertSrsCardSchema>;
 
-// Course Roadmap Progress types (existing)
+// Course Roadmap Progress types (fixed)
 export type CourseRoadmapProgress = typeof courseRoadmapProgress.$inferSelect;
-export type InsertCourseRoadmapProgress = typeof courseRoadmapProgress.$inferInsert;
+export type InsertCourseRoadmapProgress = z.infer<typeof insertCourseRoadmapProgressSchema>;
 
 // Special Classes System Types
 export type SpecialClass = typeof specialClasses.$inferSelect;
@@ -6250,3 +6302,207 @@ export type PerformancePattern = typeof performancePatterns.$inferSelect;
 export type PerformancePatternInsert = z.infer<typeof insertPerformancePatternSchema>;
 export type AnalyticsInsight = typeof analyticsInsights.$inferSelect;
 export type AnalyticsInsightInsert = z.infer<typeof insertAnalyticsInsightSchema>;
+
+// ============================================================================
+// PHASE A: DATABASE SCHEMA CONSOLIDATION VIEWS
+// ============================================================================
+
+// Unified Packages View - Combining sessionPackages and callernPackages
+// This provides a single interface for all package types with type discriminator
+// Use this view for all new API queries instead of individual tables
+export const packagesUnifiedView = {
+  id: serial("id").primaryKey(),
+  packageType: text("package_type").notNull(), // 'session' | 'callern'
+  packageName: text("package_name").notNull(),
+  studentId: integer("student_id"), // null for callern packages (template)
+  totalUnits: integer("total_units").notNull(), // sessions or hours
+  unitType: text("unit_type").notNull(), // 'sessions' | 'hours'
+  unitDuration: integer("unit_duration"), // minutes per session (for session packages)
+  usedUnits: integer("used_units").default(0),
+  remainingUnits: integer("remaining_units"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").default('active'), // active, completed, expired
+  description: text("description"),
+  packageTypeCategory: text("package_type_category"), // e.g., 'ielts_speaking', 'general_conversation'
+  targetLevel: text("target_level"),
+  isActive: boolean("is_active").default(true),
+  purchasedAt: timestamp("purchased_at"),
+  expiresAt: timestamp("expires_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+} as const;
+
+// Type definitions for unified packages view
+export type UnifiedPackage = {
+  id: number;
+  packageType: 'session' | 'callern';
+  packageName: string;
+  studentId?: number;
+  totalUnits: number;
+  unitType: 'sessions' | 'hours';
+  unitDuration?: number;
+  usedUnits: number;
+  remainingUnits: number;
+  price: string;
+  status: string;
+  description?: string;
+  packageTypeCategory?: string;
+  targetLevel?: string;
+  isActive: boolean;
+  purchasedAt?: Date;
+  expiresAt?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+// Compatibility View Definitions (To be created as database views during migration)
+// These ensure zero downtime during the consolidation transition
+
+export const compatibilityViews = {
+  // User data compatibility view - provides legacy user fields from user_profiles
+  users_with_profile_data: `
+    CREATE OR REPLACE VIEW users_with_profile_data AS
+    SELECT 
+      u.*,
+      up.national_id,
+      up.birthday,
+      up.guardian_name,
+      up.guardian_phone,
+      up.notes,
+      up.native_language,
+      up.target_languages,
+      up.current_proficiency,
+      up.current_level
+    FROM users u
+    LEFT JOIN user_profiles up ON u.id = up.user_id;
+  `,
+
+  // Legacy user fields compatibility view
+  users_legacy_compat: `
+    CREATE OR REPLACE VIEW users_legacy_compat AS
+    SELECT 
+      u.id,
+      u.email,
+      u.password,
+      u.first_name,
+      u.last_name,
+      u.role,
+      u.phone_number,
+      COALESCE(up.national_id, '') as national_id,
+      up.birthday,
+      u.gender,
+      COALESCE(up.guardian_name, '') as guardian_name,
+      COALESCE(up.guardian_phone, '') as guardian_phone,
+      COALESCE(up.notes, '') as notes,
+      u.profile_image,
+      COALESCE(up.current_level, u.status) as level,
+      u.status,
+      u.avatar,
+      u.is_active,
+      u.is_available_to_socialize,
+      u.socializer_level,
+      u.socializer_skills,
+      u.preferences,
+      u.wallet_balance,
+      u.total_credits,
+      u.member_tier,
+      u.streak_days,
+      u.total_lessons,
+      u.created_at,
+      u.updated_at
+    FROM users u
+    LEFT JOIN user_profiles up ON u.id = up.user_id;
+  `,
+
+  // Teacher availability compatibility view - emulates legacy table from periods
+  teacher_availability_compat: `
+    CREATE OR REPLACE VIEW teacher_availability_compat AS
+    SELECT 
+      tap.id,
+      tap.teacher_id,
+      tap.day_of_week,
+      CASE 
+        WHEN tap.time_division = 'morning' THEN '08:00'::time
+        WHEN tap.time_division = 'afternoon' THEN '14:00'::time  
+        WHEN tap.time_division = 'evening' THEN '18:00'::time
+        ELSE '08:00'::time
+      END as start_time,
+      CASE 
+        WHEN tap.time_division = 'morning' THEN '12:00'::time
+        WHEN tap.time_division = 'afternoon' THEN '18:00'::time
+        WHEN tap.time_division = 'evening' THEN '22:00'::time
+        ELSE '22:00'::time
+      END as end_time,
+      tap.is_active,
+      tap.created_at,
+      tap.updated_at
+    FROM teacher_availability_periods tap
+    WHERE tap.is_active = true
+      AND tap.period_start_date <= CURRENT_DATE
+      AND tap.period_end_date >= CURRENT_DATE;
+  `,
+
+  // Unified packages view - combines session and callern packages
+  packages_unified: `
+    CREATE OR REPLACE VIEW packages_unified AS
+    SELECT 
+      sp.id,
+      'session'::text as package_type,
+      sp.package_name,
+      sp.student_id,
+      sp.total_sessions as total_units,
+      'sessions'::text as unit_type,
+      sp.session_duration as unit_duration,
+      sp.used_sessions as used_units,
+      sp.remaining_sessions as remaining_units,
+      sp.price,
+      sp.status,
+      NULL::text as description,
+      NULL::text as package_type_category,
+      NULL::text as target_level,
+      CASE WHEN sp.status = 'active' THEN true ELSE false END as is_active,
+      sp.purchased_at,
+      sp.expires_at,
+      sp.notes,
+      sp.created_at,
+      sp.updated_at
+    FROM session_packages sp
+    
+    UNION ALL
+    
+    SELECT 
+      cp.id,
+      'callern'::text as package_type,
+      cp.package_name,
+      NULL::integer as student_id,
+      cp.total_hours as total_units,
+      'hours'::text as unit_type,
+      NULL::integer as unit_duration,
+      0 as used_units,
+      cp.total_hours as remaining_units,
+      cp.price,
+      CASE WHEN cp.is_active THEN 'active'::varchar ELSE 'inactive'::varchar END as status,
+      cp.description,
+      cp.package_type as package_type_category,
+      cp.target_level,
+      cp.is_active,
+      NULL::timestamp as purchased_at,
+      NULL::timestamp as expires_at,
+      NULL::text as notes,
+      cp.created_at,
+      cp.updated_at
+    FROM callern_packages cp;
+  `
+} as const;
+
+// Migration utility type for tracking compatibility
+export type CompatibilityViewStatus = {
+  viewName: string;
+  isActive: boolean;
+  createdAt: Date;
+  lastUpdated: Date;
+  affectedTables: string[];
+  migrationPhase: 'A1' | 'A2' | 'A3';
+};
