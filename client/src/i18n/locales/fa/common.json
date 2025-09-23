@@ -50,6 +50,26 @@
   "profile": "پروفایل",
   "viewAll": "مشاهده همه",
   "progress": "پیشرفت",
+  "reward": "جایزه",
+  "ofGoal": "از هدف",
+  "min": "دقیقه",
+  "accuracy": "دقت",
+  "skillsProgress": "پیشرفت مهارت‌ها",
+  "packages": "بسته‌ها",
+  "callernPackages": "بسته‌های کالرن",
+  "activePackage": "بسته فعال",
+  "remaining": "باقی‌مانده",
+  "totalUsed": "کل استفاده شده",
+  "thisMonth": "این ماه",
+  "purchaseNewPackage": "خرید بسته جدید",
+  "conversationPractice": "تمرین مکالمه",
+  "tomorrow": "فردا",
+  "dailyChallenge": "چالش روزانه",
+  "complete5Lessons": "۵ درس را تکمیل کن",
+  "courses": {
+    "title": "دوره‌ها"
+  },
+  "title": "دوره‌ها",
   "time": {
     "minutes": "دقیقه"
   },

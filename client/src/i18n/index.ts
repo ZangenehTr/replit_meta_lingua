@@ -78,6 +78,14 @@ i18n
     returnEmptyString: false,
     load: 'languageOnly',
     
+    // Prevent raw keys from showing - return fallback text or key without namespace
+    parseMissingKeyHandler: (key: string) => {
+      console.warn(`Missing translation key: ${key}`);
+      // Return the last part of the key (after the last dot) as a fallback
+      const keyParts = key.split('.');
+      return keyParts[keyParts.length - 1];
+    },
+    
     interpolation: {
       escapeValue: false, // React already escapes values
     },

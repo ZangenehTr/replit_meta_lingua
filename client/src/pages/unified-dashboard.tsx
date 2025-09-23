@@ -30,7 +30,7 @@ import AccountantDashboard from "@/pages/accountant/dashboard";
 export default function UnifiedDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation(['common', 'admin', 'student']);
-  const { language, changeLanguage, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const [isMobile, setIsMobile] = useState(false);
 
   // Add debug logging
