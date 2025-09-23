@@ -21363,7 +21363,7 @@ Meta Lingua Academy`;
   // Get homework for a student
   app.get("/api/student/homework", authenticateToken, async (req: any, res) => {
     try {
-      const studentId = req.user.userId;
+      const studentId = req.user.id;
       const { status } = req.query;
       
       const { homework, courses, users } = await import("@shared/schema");
@@ -21462,7 +21462,7 @@ Meta Lingua Academy`;
   // Submit homework
   app.post("/api/student/homework/:id/submit", authenticateToken, upload.single('file'), async (req: any, res) => {
     try {
-      const studentId = req.user.userId;
+      const studentId = req.user.id;
       const homeworkId = parseInt(req.params.id);
       const { submission } = req.body;
       const file = req.file;
@@ -21694,7 +21694,7 @@ Meta Lingua Academy`;
   // Get homework statistics for student dashboard
   app.get("/api/student/homework/stats", authenticateToken, async (req: any, res) => {
     try {
-      const studentId = req.user.userId;
+      const studentId = req.user.id;
       
       const { homework } = await import("@shared/schema");
       

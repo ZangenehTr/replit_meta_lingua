@@ -559,5 +559,15 @@
   "conversationPractice": "تمرین مکالمه",
   "tomorrow": "فردا",
   "dailyChallenge": "چالش روزانه",
-  "complete5Lessons": "۵ درس را تکمیل کن"
+  "complete5Lessons": "۵ درس را تکمیل کن",
+  "videoFilter": {
+    "without-recording": "بدون ضبط",
+    "completed-with-recording": "تکمیل شده با ضبط"
+  },
+  "group": "گروهی",
+  "individual": "انفرادی", 
+  "startsIn": "شروع در",
+  "midtermExam": "امتحان میان ترم",
+  "finalExam": "امتحان پایان ترم",
+  "officialHoliday": "تعطیل رسمی"
 }

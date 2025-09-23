@@ -474,5 +474,15 @@
     "graded": "Graded",
     "late": "Late",
     "excused": "Excused"
-  }
+  },
+  "videoFilter": {
+    "without-recording": "Without Recording",
+    "completed-with-recording": "Completed with Recording"
+  },
+  "group": "Group",
+  "individual": "Individual", 
+  "startsIn": "Starts in",
+  "midtermExam": "Midterm Exam",
+  "finalExam": "Final Exam",
+  "officialHoliday": "Official Holiday"
 }

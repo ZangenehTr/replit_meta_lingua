@@ -450,5 +450,15 @@
     "graded": "مُقيّم",
     "late": "متأخر",
     "excused": "معذور"
-  }
+  },
+  "videoFilter": {
+    "without-recording": "بدون تسجيل",
+    "completed-with-recording": "مكتمل مع التسجيل"
+  },
+  "group": "مجموعة",
+  "individual": "فردي", 
+  "startsIn": "يبدأ في",
+  "midtermExam": "امتحان منتصف الفصل",
+  "finalExam": "الامتحان النهائي",
+  "officialHoliday": "عطلة رسمية"
 }
