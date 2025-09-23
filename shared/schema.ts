@@ -5657,6 +5657,122 @@ export const lexiQuizAttempts = pgTable("lexi_quiz_attempts", {
 });
 
 // ============================================================================
+// IRANIAN/ARABIC CALENDAR AND THIRD-PARTY API INTEGRATION
+// ============================================================================
+
+// Third-party APIs management for centralized API integration
+export const thirdPartyApis = pgTable("third_party_apis", {
+  id: serial("id").primaryKey(),
+  apiName: text("api_name").notNull().unique(), // keybit, kavenegar, sms_gateway, etc.
+  displayName: text("display_name").notNull(), // User-friendly name
+  description: text("description"), // API description
+  baseUrl: text("base_url").notNull(), // API base URL
+  apiKey: text("api_key"), // Encrypted API key
+  apiSecret: text("api_secret"), // Encrypted API secret if needed
+  isEnabled: boolean("is_enabled").default(true), // Can be disabled
+  isHealthy: boolean("is_healthy").default(true), // Health status
+  lastHealthCheck: timestamp("last_health_check"), // Last health check time
+  healthCheckUrl: text("health_check_url"), // Endpoint for health checks
+  rateLimit: integer("rate_limit"), // Requests per minute limit
+  usageCount: integer("usage_count").default(0), // Total API calls made
+  usageCountMonth: integer("usage_count_month").default(0), // Current month usage
+  lastUsedAt: timestamp("last_used_at"), // Last API call timestamp
+  errorCount: integer("error_count").default(0), // Total errors
+  lastErrorAt: timestamp("last_error_at"), // Last error timestamp
+  lastErrorMessage: text("last_error_message"), // Last error details
+  configuration: jsonb("configuration"), // API-specific configuration
+  testEndpoint: text("test_endpoint"), // Endpoint for testing connectivity
+  costPerRequest: decimal("cost_per_request", { precision: 10, scale: 4 }), // Cost per API call
+  monthlyBudget: decimal("monthly_budget", { precision: 10, scale: 2 }), // Monthly budget limit
+  currentMonthlyCost: decimal("current_monthly_cost", { precision: 10, scale: 2 }).default("0.00"), // Current month cost
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Iranian calendar settings and preferences
+export const iranianCalendarSettings = pgTable("iranian_calendar_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id), // null for global settings
+  settingKey: text("setting_key").notNull(), // calendar_type, language_preference, etc.
+  settingValue: text("setting_value").notNull(), // jalali, gregorian, auto, etc.
+  isGlobal: boolean("is_global").default(false), // Global vs user-specific
+  calendarType: text("calendar_type").default("auto"), // jalali, gregorian, auto
+  languageBasedSwitching: boolean("language_based_switching").default(true), // Auto-switch based on language
+  defaultLanguage: text("default_language").default("en"), // Default language for calendar
+  persianWeekStart: text("persian_week_start").default("saturday"), // Week start day for Persian calendar
+  showLunarCalendar: boolean("show_lunar_calendar").default(false), // Show Islamic lunar dates
+  showEvents: boolean("show_events").default(true), // Show Iranian cultural events
+  showHolidays: boolean("show_holidays").default(true), // Show Iranian holidays
+  dateFormat: text("date_format").default("yyyy/mm/dd"), // Date display format
+  timeFormat: text("time_format").default("24h"), // 12h or 24h
+  timezone: text("timezone").default("Asia/Tehran"), // Default timezone
+  notifications: jsonb("notifications"), // Notification settings for events/holidays
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Iranian/Persian calendar events and cultural occasions
+export const calendarEventsIranian = pgTable("calendar_events_iranian", {
+  id: serial("id").primaryKey(),
+  eventName: text("event_name").notNull(), // Event name in English
+  eventNamePersian: text("event_name_persian").notNull(), // Event name in Persian
+  eventNameArabic: text("event_name_arabic"), // Event name in Arabic if applicable
+  eventType: text("event_type").notNull(), // cultural, educational, national, religious, seasonal
+  description: text("description"), // Event description
+  descriptionPersian: text("description_persian"), // Description in Persian
+  descriptionArabic: text("description_arabic"), // Description in Arabic
+  persianDate: text("persian_date").notNull(), // Persian date (e.g., "1403/01/01")
+  gregorianDate: date("gregorian_date"), // Corresponding Gregorian date
+  isRecurring: boolean("is_recurring").default(true), // Annual recurring event
+  duration: integer("duration").default(1), // Duration in days
+  importance: text("importance").default("medium"), // low, medium, high, critical
+  color: text("color").default("#3b82f6"), // Display color for calendar
+  isPublicHoliday: boolean("is_public_holiday").default(false), // Official public holiday
+  isEducationalEvent: boolean("is_educational_event").default(false), // Educational relevance
+  relatedCourses: text("related_courses").array().default([]), // Related course types
+  targetLanguages: text("target_languages").array().default(["fa", "ar"]), // Relevant languages
+  celebrationTraditions: text("celebration_traditions").array().default([]), // How it's celebrated
+  historicalSignificance: text("historical_significance"), // Historical context
+  educationalContent: jsonb("educational_content"), // Learning materials
+  isActive: boolean("is_active").default(true), // Can be disabled
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Persian holiday calendar with detailed information
+export const holidayCalendarPersian = pgTable("holiday_calendar_persian", {
+  id: serial("id").primaryKey(),
+  holidayName: text("holiday_name").notNull(), // Holiday name in English
+  holidayNamePersian: text("holiday_name_persian").notNull(), // Holiday name in Persian
+  holidayNameArabic: text("holiday_name_arabic"), // Holiday name in Arabic
+  holidayType: text("holiday_type").notNull(), // national, religious, cultural, seasonal
+  persianDate: text("persian_date").notNull(), // Persian date (e.g., "1403/01/01")
+  gregorianDate: date("gregorian_date"), // Corresponding Gregorian date for current year
+  isOfficialHoliday: boolean("is_official_holiday").default(true), // Government recognized
+  isBankHoliday: boolean("is_bank_holiday").default(true), // Banks closed
+  isSchoolHoliday: boolean("is_school_holiday").default(true), // Schools closed
+  duration: integer("duration").default(1), // Duration in days
+  significance: text("significance"), // Why this holiday is important
+  traditions: text("traditions").array().default([]), // Traditional activities
+  foods: text("foods").array().default([]), // Traditional foods
+  greetings: text("greetings").array().default([]), // Traditional greetings
+  symbols: text("symbols").array().default([]), // Associated symbols
+  colors: text("colors").array().default([]), // Traditional colors
+  historicalOrigin: text("historical_origin"), // Historical background
+  modernObservance: text("modern_observance"), // How it's observed today
+  regionalVariations: text("regional_variations").array().default([]), // Regional differences
+  relatedHolidays: text("related_holidays").array().default([]), // Connected holidays
+  educationalValue: text("educational_value"), // Learning opportunities
+  businessImpact: text("business_impact"), // Impact on business operations
+  travelConsiderations: text("travel_considerations"), // Travel impact
+  isActive: boolean("is_active").default(true), // Can be disabled
+  displayPriority: integer("display_priority").default(50), // Display order priority
+  notificationDays: integer("notification_days").default(1), // Days before to notify
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ============================================================================
 // LEXI SCHEMA INSERT SCHEMAS AND TYPES
 // ============================================================================
 
@@ -5690,3 +5806,23 @@ export type LexiQuiz = typeof lexiQuizzes.$inferSelect;
 export type LexiQuizInsert = z.infer<typeof insertLexiQuizSchema>;
 export type LexiQuizAttempt = typeof lexiQuizAttempts.$inferSelect;
 export type LexiQuizAttemptInsert = z.infer<typeof insertLexiQuizAttemptSchema>;
+
+// ============================================================================
+// IRANIAN/ARABIC CALENDAR SCHEMA INSERT SCHEMAS AND TYPES  
+// ============================================================================
+
+// Insert schemas for calendar and third-party API tables
+export const insertThirdPartyApiSchema = createInsertSchema(thirdPartyApis).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertIranianCalendarSettingsSchema = createInsertSchema(iranianCalendarSettings).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCalendarEventsIranianSchema = createInsertSchema(calendarEventsIranian).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertHolidayCalendarPersianSchema = createInsertSchema(holidayCalendarPersian).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Type exports for calendar and third-party API tables  
+export type ThirdPartyApi = typeof thirdPartyApis.$inferSelect;
+export type ThirdPartyApiInsert = z.infer<typeof insertThirdPartyApiSchema>;
+export type IranianCalendarSettings = typeof iranianCalendarSettings.$inferSelect;
+export type IranianCalendarSettingsInsert = z.infer<typeof insertIranianCalendarSettingsSchema>;
+export type CalendarEventsIranian = typeof calendarEventsIranian.$inferSelect;
+export type CalendarEventsIranianInsert = z.infer<typeof insertCalendarEventsIranianSchema>;
+export type HolidayCalendarPersian = typeof holidayCalendarPersian.$inferSelect;
+export type HolidayCalendarPersianInsert = z.infer<typeof insertHolidayCalendarPersianSchema>;

@@ -20,6 +20,7 @@ import { createAiStudyPartnerRoutes } from "./routes/ai-study-partner-routes";
 import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
 import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
 import searchRoutes from "./routes/search-routes";
+import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes";
 import tttRoutes from "./ttt-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
 import mstRoutes from "./modules/mst/routes/mstRoutes";
@@ -20647,6 +20648,10 @@ Meta Lingua Academy`;
   // Setup Course-Roadmap Integration routes
   app.use('/api', courseRoadmapRoutes);
   console.log('✅ Course-Roadmap integration routes registered (Progress tracking, AI homework, Mentorship)');
+
+  // Setup Third-Party Integration routes (keybit.ir calendar, Kavenegar SMS, etc.)
+  app.use('/api', thirdPartyIntegrationRoutes);
+  console.log('✅ Third-Party Integration routes registered (keybit.ir Calendar, API Management, Persian Calendar)');
 
   // Import and register new CallerN Roadmap Template & Instance routes
   const { roadmapTemplateRoutes } = await import('./routes/roadmap-template-routes');
