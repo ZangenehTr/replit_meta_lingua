@@ -182,4 +182,4 @@ export function isValidCourseCode(courseCode: string): boolean {
 }
 
 // Export types
-export type { CourseCodeParams };
+// CourseCodeParams already exported as interface above

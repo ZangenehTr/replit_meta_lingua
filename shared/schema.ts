@@ -1518,15 +1518,15 @@ export const aiDatasetItems = pgTable("ai_dataset_items", {
 });
 
 // Referral system insert schemas - MOVED TO END OF FILE TO AVOID FORWARD REFERENCE ERRORS
-// export const insertReferralSettingsSchema = createInsertSchema(referralSettings);
-// export const insertCourseReferralSchema = createInsertSchema(courseReferrals);
-// export const insertReferralCommissionSchema = createInsertSchema(referralCommissions);
-// export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData);
+export const insertReferralSettingsSchema = createInsertSchema(referralSettings);
+export const insertCourseReferralSchema = createInsertSchema(courseReferrals);
+export const insertReferralCommissionSchema = createInsertSchema(referralCommissions);
+export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData);
 // AI Model Management schemas - MOVED TO END OF FILE
-// export const insertAiModelSchema = createInsertSchema(aiModels);
-// export const insertAiTrainingJobSchema = createInsertSchema(aiTrainingJobs);
-// export const insertAiTrainingDatasetSchema = createInsertSchema(aiTrainingDatasets);
-// export const insertAiDatasetItemSchema = createInsertSchema(aiDatasetItems);
+export const insertAiModelSchema = createInsertSchema(aiModels);
+export const insertAiTrainingJobSchema = createInsertSchema(aiTrainingJobs);
+export const insertAiTrainingDatasetSchema = createInsertSchema(aiTrainingDatasets);
+export const insertAiDatasetItemSchema = createInsertSchema(aiDatasetItems);
 
 // AI Training types
 export type InsertAiModel = z.infer<typeof insertAiModelSchema>;
@@ -1539,10 +1539,10 @@ export type AiTrainingDataset = typeof aiTrainingDatasets.$inferSelect;
 export type AiDatasetItem = typeof aiDatasetItems.$inferSelect;
 
 // Skill tracking insert schemas - MOVED TO END OF FILE TO AVOID FORWARD REFERENCE ERRORS
-// export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments);
-// export const insertLearningActivitySchema = createInsertSchema(learningActivities);
-// export const insertProgressSnapshotSchema = createInsertSchema(progressSnapshots);
-// export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase);
+export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments);
+export const insertLearningActivitySchema = createInsertSchema(learningActivities);
+export const insertProgressSnapshotSchema = createInsertSchema(progressSnapshots);
+export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase);
 
 // All insert schemas moved to end of file after table definitions
 
