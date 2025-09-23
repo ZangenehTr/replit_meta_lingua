@@ -255,6 +255,65 @@ export const courses = pgTable("courses", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// ============================================================================
+// CURRICULUM SYSTEM TABLES
+// ============================================================================
+
+// Main curriculum tracks (IELTS and Conversation)
+export const curriculums = pgTable("curriculums", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(), // 'ielts' or 'conversation'
+  name: text("name").notNull(), // "IELTS Preparation" or "General Conversation"
+  language: text("language").notNull(), // "persian", "english", etc.
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  orderIndex: integer("order_index").default(0), // For display ordering
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Curriculum levels (Flash IELTS 1, A1.1, A1.2, etc.)
+export const curriculumLevels = pgTable("curriculum_levels", {
+  id: serial("id").primaryKey(),
+  curriculumId: integer("curriculum_id").references(() => curriculums.id).notNull(),
+  code: text("code").notNull(), // "F1", "F2", "PRO" for IELTS; "A11", "A12", "A21", etc. for Conversation
+  name: text("name").notNull(), // "Flash IELTS 1 (Preliminary)", "A1.1", etc.
+  orderIndex: integer("order_index").notNull(), // Sequential ordering within curriculum
+  cefrBand: text("cefr_band"), // "A1", "A2", "B1", "B2", "C1", "C2" for conversation levels
+  prerequisites: text("prerequisites").array().default([]), // Array of prerequisite level codes
+  description: text("description"),
+  estimatedWeeks: integer("estimated_weeks"), // Expected duration
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Links courses to curriculum levels (many-to-many relationship)
+export const curriculumLevelCourses = pgTable("curriculum_level_courses", {
+  id: serial("id").primaryKey(),
+  levelId: integer("level_id").references(() => curriculumLevels.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  isRequired: boolean("is_required").default(true), // Whether this course is required for level completion
+  orderIndex: integer("order_index").default(0), // Order within the level
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Student progress through curriculum levels
+export const studentCurriculumProgress = pgTable("student_curriculum_progress", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  curriculumId: integer("curriculum_id").references(() => curriculums.id).notNull(),
+  currentLevelId: integer("current_level_id").references(() => curriculumLevels.id),
+  status: text("status").notNull().default("active"), // "active", "completed", "suspended"
+  progressPercentage: integer("progress_percentage").default(0), // 0-100
+  enrolledAt: timestamp("enrolled_at").defaultNow(),
+  lastActivityAt: timestamp("last_activity_at"),
+  completedAt: timestamp("completed_at"),
+  nextLevelUnlockedAt: timestamp("next_level_unlocked_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Course enrollments
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
@@ -1458,23 +1517,16 @@ export const aiDatasetItems = pgTable("ai_dataset_items", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-// Referral system insert schemas
-export const insertReferralSettingsSchema = createInsertSchema(referralSettings);
-
-export const insertCourseReferralSchema = createInsertSchema(courseReferrals);
-
-export const insertReferralCommissionSchema = createInsertSchema(referralCommissions);
-
-export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData);
-
-// AI Model Management schemas
-export const insertAiModelSchema = createInsertSchema(aiModels);
-
-export const insertAiTrainingJobSchema = createInsertSchema(aiTrainingJobs);
-
-export const insertAiTrainingDatasetSchema = createInsertSchema(aiTrainingDatasets);
-
-export const insertAiDatasetItemSchema = createInsertSchema(aiDatasetItems);
+// Referral system insert schemas - MOVED TO END OF FILE TO AVOID FORWARD REFERENCE ERRORS
+// export const insertReferralSettingsSchema = createInsertSchema(referralSettings);
+// export const insertCourseReferralSchema = createInsertSchema(courseReferrals);
+// export const insertReferralCommissionSchema = createInsertSchema(referralCommissions);
+// export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData);
+// AI Model Management schemas - MOVED TO END OF FILE
+// export const insertAiModelSchema = createInsertSchema(aiModels);
+// export const insertAiTrainingJobSchema = createInsertSchema(aiTrainingJobs);
+// export const insertAiTrainingDatasetSchema = createInsertSchema(aiTrainingDatasets);
+// export const insertAiDatasetItemSchema = createInsertSchema(aiDatasetItems);
 
 // AI Training types
 export type InsertAiModel = z.infer<typeof insertAiModelSchema>;
@@ -1486,14 +1538,11 @@ export type AiTrainingJob = typeof aiTrainingJobs.$inferSelect;
 export type AiTrainingDataset = typeof aiTrainingDatasets.$inferSelect;
 export type AiDatasetItem = typeof aiDatasetItems.$inferSelect;
 
-// Skill tracking insert schemas
-export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments);
-
-export const insertLearningActivitySchema = createInsertSchema(learningActivities);
-
-export const insertProgressSnapshotSchema = createInsertSchema(progressSnapshots);
-
-export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase);
+// Skill tracking insert schemas - MOVED TO END OF FILE TO AVOID FORWARD REFERENCE ERRORS
+// export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments);
+// export const insertLearningActivitySchema = createInsertSchema(learningActivities);
+// export const insertProgressSnapshotSchema = createInsertSchema(progressSnapshots);
+// export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase);
 
 // All insert schemas moved to end of file after table definitions
 
@@ -6244,3 +6293,22 @@ export type CompatibilityViewStatus = {
   affectedTables: string[];
   migrationPhase: 'A1' | 'A2' | 'A3';
 };
+
+// ============================================================================
+// CURRICULUM SYSTEM INSERT SCHEMAS
+// ============================================================================
+
+export const insertCurriculumSchema = createInsertSchema(curriculums).omit(['id', 'createdAt', 'updatedAt']);
+export const insertCurriculumLevelSchema = createInsertSchema(curriculumLevels).omit(['id', 'createdAt', 'updatedAt']);
+export const insertCurriculumLevelCourseSchema = createInsertSchema(curriculumLevelCourses).omit(['id', 'createdAt']);
+export const insertStudentCurriculumProgressSchema = createInsertSchema(studentCurriculumProgress).omit(['id', 'createdAt', 'updatedAt']);
+
+// Curriculum Types
+export type Curriculum = typeof curriculums.$inferSelect;
+export type InsertCurriculum = z.infer<typeof insertCurriculumSchema>;
+export type CurriculumLevel = typeof curriculumLevels.$inferSelect;
+export type InsertCurriculumLevel = z.infer<typeof insertCurriculumLevelSchema>;
+export type CurriculumLevelCourse = typeof curriculumLevelCourses.$inferSelect;
+export type InsertCurriculumLevelCourse = z.infer<typeof insertCurriculumLevelCourseSchema>;
+export type StudentCurriculumProgress = typeof studentCurriculumProgress.$inferSelect;
+export type InsertStudentCurriculumProgress = z.infer<typeof insertStudentCurriculumProgressSchema>;
