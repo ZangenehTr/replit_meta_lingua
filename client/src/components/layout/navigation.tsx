@@ -1,4 +1,4 @@
-import { Bell, Globe, Moon, Sun, User, LogOut, TrendingUp } from "lucide-react";
+import { Bell, Globe, Moon, Sun, User, LogOut, TrendingUp, Check, X, AlertCircle, Info } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,15 +23,154 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "./mobile-nav";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
+import { io, Socket } from "socket.io-client";
+
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'system';
+  category: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  targetRole?: string;
+  actionUrl?: string;
+  metadata?: any;
+  isRead: boolean;
+  isDismissed: boolean;
+  expiresAt?: string;
+  createdAt: string;
+}
 
 export function Navigation() {
   const { t } = useTranslation(['common']);
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
+  const queryClient = useQueryClient();
+
+  // Fetch unread notification count
+  const { data: notificationData, isLoading: isLoadingCount } = useQuery({
+    queryKey: ['/api/notifications/count'],
+    enabled: !!user,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Fetch recent unread notifications for dropdown
+  const { data: notifications = [], isLoading: isLoadingNotifications } = useQuery({
+    queryKey: ['/api/notifications/unread'],
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
+
+  const notificationCount = notificationData?.count || 0;
+
+  // Mutations for notification actions
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/notifications/${id}/read`, { method: 'PATCH' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    },
+  });
+
+  const dismissMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/notifications/${id}/dismiss`, { method: 'PATCH' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    },
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => apiRequest('/api/notifications/mark-all-read', { method: 'PATCH' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    },
+  });
+
+  // Real-time updates via Socket.io
+  useEffect(() => {
+    if (!user) return;
+
+    const socket: Socket = io(window.location.origin, {
+      autoConnect: true,
+    });
+
+    // Join user-specific room
+    socket.emit('authenticate', { 
+      userId: user.id, 
+      role: user.role 
+    });
+
+    // Listen for real-time notification updates
+    socket.on('new-notification', () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    });
+
+    socket.on('notification-read', () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    });
+
+    socket.on('all-notifications-read', () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user, queryClient]);
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage as 'en' | 'fa' | 'ar');
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.isRead) {
+      markAsReadMutation.mutate(notification.id);
+    }
+    
+    if (notification.actionUrl) {
+      window.location.href = notification.actionUrl;
+    }
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case 'high':
+        return <AlertCircle className="h-4 w-4 text-orange-500" />;
+      case 'normal':
+        return <Info className="h-4 w-4 text-blue-500" />;
+      case 'low':
+        return <Info className="h-4 w-4 text-gray-500" />;
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'success':
+        return 'text-green-600 dark:text-green-400';
+      case 'warning':
+        return 'text-yellow-600 dark:text-yellow-400';
+      case 'error':
+        return 'text-red-600 dark:text-red-400';
+      case 'system':
+        return 'text-purple-600 dark:text-purple-400';
+      default:
+        return 'text-blue-600 dark:text-blue-400';
+    }
   };
 
   if (!user) return null;
@@ -94,13 +233,137 @@ export function Navigation() {
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
-            {/* Notifications - Hidden on small screens */}
-            <Button variant="ghost" size="sm" className="relative hidden sm:flex">
-              <Bell className="h-4 w-4" />
-              <Badge className="absolute -top-1 -right-1 w-5 h-5 text-xs flex items-center justify-center p-0">
-                3
-              </Badge>
-            </Button>
+            {/* Dynamic Notifications - Hidden on small screens */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="relative hidden sm:flex"
+                  data-testid="notification-bell-button"
+                  disabled={isLoadingCount}
+                >
+                  <Bell className="h-4 w-4" />
+                  {notificationCount > 0 && (
+                    <Badge 
+                      className="absolute -top-1 -right-1 w-5 h-5 text-xs flex items-center justify-center p-0"
+                      data-testid="notification-count-badge"
+                    >
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80 max-h-96" align="end">
+                <div className="flex items-center justify-between p-3">
+                  <h3 className="font-semibold text-sm">
+                    {t('common:notifications.title', 'Notifications')}
+                  </h3>
+                  {notifications.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => markAllAsReadMutation.mutate()}
+                      disabled={markAllAsReadMutation.isPending}
+                      className="h-auto p-1 text-xs"
+                      data-testid="mark-all-read-button"
+                    >
+                      {t('common:notifications.markAllRead', 'Mark all as read')}
+                    </Button>
+                  )}
+                </div>
+                <Separator />
+                <ScrollArea className="h-80">
+                  {isLoadingNotifications ? (
+                    <div className="flex items-center justify-center p-4">
+                      <div className="animate-pulse text-sm text-muted-foreground">
+                        {t('common:notifications.loading', 'Loading notifications...')}
+                      </div>
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-8 text-center">
+                      <Bell className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                      <p className="text-sm text-muted-foreground">
+                        {t('common:notifications.empty', 'No new notifications')}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t('common:notifications.emptyDescription', 'You\'re all caught up!')}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {notifications.map((notification: Notification) => (
+                        <div
+                          key={notification.id}
+                          className={`group p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
+                            !notification.isRead ? 'bg-blue-50 dark:bg-blue-950/30' : ''
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                          data-testid={`notification-item-${notification.id}`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 mt-1">
+                              {getPriorityIcon(notification.priority)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className={`text-sm font-medium truncate ${getTypeColor(notification.type)}`}>
+                                  {notification.title}
+                                </p>
+                                <div className="flex items-center space-x-1 ml-2">
+                                  {!notification.isRead && (
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      dismissMutation.mutate(notification.id);
+                                    }}
+                                    disabled={dismissMutation.isPending}
+                                    className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                                    data-testid={`dismiss-notification-${notification.id}`}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {notification.category} • {notification.priority}
+                                </span>
+                                <time className="text-xs text-muted-foreground">
+                                  {new Date(notification.createdAt).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </time>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+                {notifications.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="p-2">
+                      <Link href="/notifications">
+                        <Button variant="ghost" className="w-full justify-center text-sm" data-testid="view-all-notifications">
+                          {t('common:notifications.viewAll', 'View all notifications')}
+                        </Button>
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User Menu */}
             <DropdownMenu>

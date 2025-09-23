@@ -86,6 +86,10 @@ export class CallernWebSocketServer {
         const { userId, role, enableCallern } = data;
         console.log('Authentication received:', { userId, role, enableCallern, socketId: socket.id });
         
+        // Join user-specific room for notifications
+        socket.join(`user-${userId}`);
+        console.log(`User ${userId} joined notification room: user-${userId}`);
+        
         // Convert role to lowercase for comparison
         const roleLower = role.toLowerCase();
         

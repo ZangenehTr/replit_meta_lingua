@@ -804,14 +804,21 @@ export const coursePayments = pgTable("course_payments", {
   completedAt: timestamp("completed_at")
 });
 
-// Notifications
+// Enhanced Notifications for Role-Based System
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   title: text("title").notNull(),
   message: text("message").notNull(),
-  type: text("type").notNull(), // info, success, warning, error
+  type: text("type").notNull(), // info, success, warning, error, system
+  category: text("category").notNull(), // academic, financial, system, social, administrative
+  priority: text("priority").notNull().default("normal"), // low, normal, high, urgent
+  targetRole: text("target_role"), // Admin, Teacher, Student, Mentor, Supervisor, Call Center Agent, Accountant
+  actionUrl: text("action_url"), // URL to redirect when notification is clicked
+  metadata: jsonb("metadata"), // Additional context data specific to notification type
   isRead: boolean("is_read").default(false),
+  isDismissed: boolean("is_dismissed").default(false),
+  expiresAt: timestamp("expires_at"), // Optional expiration for time-sensitive notifications
   createdAt: timestamp("created_at").defaultNow()
 });
 

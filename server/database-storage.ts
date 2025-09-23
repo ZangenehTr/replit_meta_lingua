@@ -1682,9 +1682,49 @@ export class DatabaseStorage implements IStorage {
     return updatedPayment;
   }
 
-  // Notifications
-  async getUserNotifications(userId: number): Promise<Notification[]> {
-    return await db.select().from(notifications).where(eq(notifications.userId, userId));
+  // Enhanced Notifications with Role-Based Support
+  async getUserNotifications(
+    userId: number, 
+    options?: {
+      limit?: number;
+      offset?: number;
+      category?: string;
+      priority?: string;
+      includeRead?: boolean;
+      includeDismissed?: boolean;
+    }
+  ): Promise<Notification[]> {
+    let query = db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId));
+
+    // Apply filters based on options
+    const conditions = [eq(notifications.userId, userId)];
+    
+    if (options?.category) {
+      conditions.push(eq(notifications.category, options.category));
+    }
+    
+    if (options?.priority) {
+      conditions.push(eq(notifications.priority, options.priority));
+    }
+    
+    if (!options?.includeRead) {
+      conditions.push(eq(notifications.isRead, false));
+    }
+    
+    if (!options?.includeDismissed) {
+      conditions.push(eq(notifications.isDismissed, false));
+    }
+
+    return await db
+      .select()
+      .from(notifications)
+      .where(and(...conditions))
+      .orderBy(desc(notifications.createdAt))
+      .limit(options?.limit || 50)
+      .offset(options?.offset || 0);
   }
 
   async getUnreadNotifications(userId: number): Promise<Notification[]> {
@@ -1693,8 +1733,40 @@ export class DatabaseStorage implements IStorage {
       .from(notifications)
       .where(and(
         eq(notifications.userId, userId),
-        eq(notifications.isRead, false)
+        eq(notifications.isRead, false),
+        eq(notifications.isDismissed, false)
+      ))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const [result] = await db
+      .select({ count: sql`count(*)` })
+      .from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false),
+        eq(notifications.isDismissed, false),
+        or(
+          isNull(notifications.expiresAt),
+          gte(notifications.expiresAt, new Date())
+        )
       ));
+    
+    return Number(result.count) || 0;
+  }
+
+  async getRoleNotifications(role: string, limit: number = 10): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(and(
+        eq(notifications.targetRole, role),
+        eq(notifications.isRead, false),
+        eq(notifications.isDismissed, false)
+      ))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
   }
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
@@ -1709,6 +1781,55 @@ export class DatabaseStorage implements IStorage {
       .where(eq(notifications.id, id))
       .returning();
     return updatedNotification;
+  }
+
+  async markNotificationAsDismissed(id: number): Promise<Notification | undefined> {
+    const [updatedNotification] = await db
+      .update(notifications)
+      .set({ isDismissed: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    return updatedNotification;
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      ));
+  }
+
+  async deleteNotification(id: number): Promise<boolean> {
+    const result = await db
+      .delete(notifications)
+      .where(eq(notifications.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getNotificationsByPriority(userId: number, priority: string): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.priority, priority),
+        eq(notifications.isRead, false),
+        eq(notifications.isDismissed, false)
+      ))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async cleanupExpiredNotifications(): Promise<number> {
+    const result = await db
+      .delete(notifications)
+      .where(and(
+        isNotNull(notifications.expiresAt),
+        lt(notifications.expiresAt, new Date())
+      ));
+    return result.rowCount;
   }
 
   // Branding

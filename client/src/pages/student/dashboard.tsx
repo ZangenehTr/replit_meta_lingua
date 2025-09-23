@@ -44,7 +44,7 @@ import {
   Menu,
   Home
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -110,8 +110,6 @@ interface ClassSession {
   badge: string;
   sessions?: string;
   attendance?: string;
-  speakingTime?: string;
-  minutes?: string;
 }
 
 export default function StudentDashboard() {
@@ -121,6 +119,7 @@ export default function StudentDashboard() {
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [, setLocation] = useLocation();
   
   // Profile completion check for first-time users
   const { 
@@ -166,6 +165,34 @@ export default function StudentDashboard() {
     setShowProfileModal(false);
     // Mark in localStorage that user has seen the modal (for this session)
     localStorage.setItem('profile_modal_shown', 'true');
+  };
+
+  // Navigation handlers for class action buttons
+  const handleJoinClass = (classSession: ClassSession) => {
+    // Navigate to video call interface with session ID
+    // For online classes, redirect to callern video session
+    const callId = `session-${classSession.id}-${Date.now()}`;
+    setLocation(`/callern/video/${callId}`);
+  };
+
+  const handleViewHomework = (classSession: ClassSession) => {
+    // Navigate to homework page with class filter
+    setLocation(`/student/homework?classId=${classSession.id}&courseName=${encodeURIComponent(classSession.courseName)}`);
+  };
+
+  const handlePreviousSessionVideos = (classSession: ClassSession) => {
+    // Navigate to sessions page with class filter for recordings
+    setLocation(`/student/sessions?classId=${classSession.id}&courseName=${encodeURIComponent(classSession.courseName)}&filter=recordings`);
+  };
+
+  const handlePracticeActivity = (classSession: ClassSession) => {
+    // Navigate to practice activities for in-person classes
+    setLocation(`/student/games?classId=${classSession.id}&type=practice`);
+  };
+
+  const handleClassHomework = (classSession: ClassSession) => {
+    // Navigate to homework page for in-person classes
+    setLocation(`/student/homework?classId=${classSession.id}&courseName=${encodeURIComponent(classSession.courseName)}&type=inperson`);
   };
 
   // Fetch placement test status - HIGHEST PRIORITY for new learners
@@ -422,8 +449,8 @@ export default function StudentDashboard() {
                   progress: 60,
                   level: 'B1',
                   badge: t('student:inPerson'),
-                  speakingTime: '45',
-                  minutes: t('student:minutes')
+                  attendance: '12/20',
+                  sessions: t('student:sessions')
                 }
               ].map((classSession: ClassSession) => (
                 <details key={classSession.id} className="group">
@@ -488,17 +515,8 @@ export default function StudentDashboard() {
                         </div>
                       </div>
                       <div>
-                        {classSession.deliveryMode === 'online' ? (
-                          <>
-                            <p className="text-xs text-gray-500 mb-1">{t('student:attendance')}</p>
-                            <p className="text-sm font-bold text-gray-900">{classSession.attendance} {classSession.sessions}</p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-xs text-gray-500 mb-1">{t('student:speakingTime')}</p>
-                            <p className="text-sm font-bold text-gray-900">{classSession.speakingTime} {classSession.minutes}</p>
-                          </>
-                        )}
+                        <p className="text-xs text-gray-500 mb-1">{t('student:attendance')}</p>
+                        <p className="text-sm font-bold text-gray-900">{classSession.attendance} {classSession.sessions}</p>
                       </div>
                     </div>
                     
@@ -506,24 +524,57 @@ export default function StudentDashboard() {
                     {classSession.deliveryMode === 'online' ? (
                       /* Online Classes: 3 buttons (Join Class, View Homework, Previous Session Videos) */
                       <div className="grid grid-cols-3 gap-2">
-                        <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" data-testid="button-join-online-class">
+                        <Button 
+                          size="sm" 
+                          className="bg-blue-500 hover:bg-blue-600 text-white" 
+                          data-testid="button-join-online-class"
+                          onClick={() => handleJoinClass(classSession)}
+                        >
                           {t('student:joinClassButton')}
                         </Button>
-                        <Button size="sm" variant="outline" data-testid="button-view-online-homework">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          data-testid="button-view-online-homework"
+                          onClick={() => handleViewHomework(classSession)}
+                        >
                           {t('student:viewHomeworkButton')}
                         </Button>
-                        <Button size="sm" variant="outline" data-testid="button-previous-session-videos">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          data-testid="button-previous-session-videos"
+                          onClick={() => handlePreviousSessionVideos(classSession)}
+                        >
                           {t('student:previousSessionVideos')}
                         </Button>
                       </div>
                     ) : (
-                      /* In-Person Classes: 2 buttons (Practice, Homework) */
-                      <div className="flex gap-2">
-                        <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" data-testid="button-practice-inperson-class">
-                          {t('student:practice')}
+                      /* In-Person Classes: 3 buttons (Join Class, View Homework, Previous Session Videos) */
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button 
+                          size="sm" 
+                          className="bg-green-500 hover:bg-green-600 text-white" 
+                          data-testid="button-join-inperson-class"
+                          onClick={() => handleJoinClass(classSession)}
+                        >
+                          {t('student:joinClassButton')}
                         </Button>
-                        <Button size="sm" variant="outline" data-testid="button-homework-inperson-class">
-                          {t('student:homework')}
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          data-testid="button-view-inperson-homework"
+                          onClick={() => handleViewHomework(classSession)}
+                        >
+                          {t('student:viewHomeworkButton')}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          data-testid="button-previous-session-videos-inperson"
+                          onClick={() => handlePreviousSessionVideos(classSession)}
+                        >
+                          {t('student:previousSessionVideos')}
                         </Button>
                       </div>
                     )}

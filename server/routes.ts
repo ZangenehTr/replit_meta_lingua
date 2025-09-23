@@ -5404,10 +5404,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Notifications endpoints
+  // Enhanced Role-Based Notifications endpoints
   app.get("/api/notifications", authenticateToken, async (req: any, res) => {
-    const notifications = await storage.getUserNotifications(req.user.id);
-    res.json(notifications);
+    try {
+      const { category, priority, includeRead, includeDismissed, limit, offset } = req.query;
+      
+      const options = {
+        category: category as string,
+        priority: priority as string,
+        includeRead: includeRead === 'true',
+        includeDismissed: includeDismissed === 'true',
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined
+      };
+
+      const notifications = await storage.getUserNotifications(req.user.id, options);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.get("/api/notifications/count", authenticateToken, async (req: any, res) => {
+    try {
+      const count = await storage.getUnreadNotificationCount(req.user.id);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+      res.status(500).json({ message: 'Failed to fetch notification count' });
+    }
+  });
+
+  app.get("/api/notifications/unread", authenticateToken, async (req: any, res) => {
+    try {
+      const notifications = await storage.getUnreadNotifications(req.user.id);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch unread notifications' });
+    }
+  });
+
+  app.post("/api/notifications", authenticateToken, async (req: any, res) => {
+    try {
+      const notification = await storage.createNotification({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      // Emit real-time notification
+      if (global.io) {
+        global.io.to(`user-${req.user.id}`).emit('new-notification', notification);
+      }
+      
+      res.status(201).json(notification);
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      res.status(500).json({ message: 'Failed to create notification' });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", authenticateToken, async (req: any, res) => {
+    try {
+      const notification = await storage.markNotificationAsRead(parseInt(req.params.id));
+      if (!notification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      
+      // Emit real-time update
+      if (global.io) {
+        global.io.to(`user-${req.user.id}`).emit('notification-read', { id: parseInt(req.params.id) });
+      }
+      
+      res.json(notification);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ message: 'Failed to mark notification as read' });
+    }
+  });
+
+  app.patch("/api/notifications/:id/dismiss", authenticateToken, async (req: any, res) => {
+    try {
+      const notification = await storage.markNotificationAsDismissed(parseInt(req.params.id));
+      if (!notification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      
+      // Emit real-time update
+      if (global.io) {
+        global.io.to(`user-${req.user.id}`).emit('notification-dismissed', { id: parseInt(req.params.id) });
+      }
+      
+      res.json(notification);
+    } catch (error) {
+      console.error('Error dismissing notification:', error);
+      res.status(500).json({ message: 'Failed to dismiss notification' });
+    }
+  });
+
+  app.patch("/api/notifications/mark-all-read", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.markAllNotificationsAsRead(req.user.id);
+      
+      // Emit real-time update
+      if (global.io) {
+        global.io.to(`user-${req.user.id}`).emit('all-notifications-read');
+      }
+      
+      res.json({ message: 'All notifications marked as read' });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({ message: 'Failed to mark all notifications as read' });
+    }
+  });
+
+  app.delete("/api/notifications/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const success = await storage.deleteNotification(parseInt(req.params.id));
+      if (!success) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      
+      // Emit real-time update
+      if (global.io) {
+        global.io.to(`user-${req.user.id}`).emit('notification-deleted', { id: parseInt(req.params.id) });
+      }
+      
+      res.json({ message: 'Notification deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      res.status(500).json({ message: 'Failed to delete notification' });
+    }
   });
 
   app.post("/api/notifications/sms", authenticateToken, async (req: any, res) => {
