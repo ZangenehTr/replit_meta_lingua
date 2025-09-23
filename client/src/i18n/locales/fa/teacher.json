@@ -69,11 +69,11 @@
     "results": "نتایج"
   },
   "videoCourses": {
-    "title": "دوره‌های ویدئویی",
-    "createCourse": "ایجاد دوره",
-    "manageCourses": "مدیریت دوره‌ها",
+    "title": "کلاس‌های ویدئویی",
+    "createCourse": "ایجاد کلاس",
+    "manageCourses": "مدیریت کلاس‌ها",
     "uploadVideo": "بارگذاری ویدئو",
-    "courseContent": "محتوای دوره",
+    "courseContent": "محتوای کلاس",
     "studentProgress": "پیشرفت دانشجویان"
   },
   "payments": {

@@ -2519,6 +2519,448 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // CURRICULUM LEVEL MANAGEMENT APIS
+  // ============================================================================
+
+  // Get student's current curriculum level and progress
+  app.get('/api/curriculum/student-level', authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const profile = await storage.getUserProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: 'User profile not found' });
+      }
+
+      // Get student's curriculum progress
+      const curriculumProgress = await db.select()
+        .from(studentCurriculumProgress)
+        .where(eq(studentCurriculumProgress.studentId, userId))
+        .orderBy(desc(studentCurriculumProgress.updatedAt));
+
+      // Get available curricula
+      const curricula = await db.select().from(curriculums).where(eq(curriculums.isActive, true));
+
+      res.json({
+        currentProficiency: profile.currentProficiency,
+        currentLevel: profile.currentLevel,
+        targetLanguage: profile.targetLanguage,
+        curriculumProgress,
+        availableCurricula: curricula
+      });
+    } catch (error) {
+      console.error('Error fetching student curriculum level:', error);
+      res.status(500).json({ message: 'Failed to fetch curriculum level' });
+    }
+  });
+
+  // Assign curriculum level to student (Admin/Teacher/Accountant)
+  app.post('/api/curriculum/assign-level', authenticateToken, requireRole(['Admin', 'Teacher', 'Accountant']), async (req: any, res) => {
+    try {
+      const { studentId, curriculumId, curriculumLevelId } = req.body;
+      
+      if (!studentId || !curriculumId || !curriculumLevelId) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      // Verify student exists
+      const student = await storage.getUser(studentId);
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
+
+      // Verify curriculum and level exist
+      const [curriculum] = await db.select().from(curriculums).where(eq(curriculums.id, curriculumId));
+      if (!curriculum) {
+        return res.status(404).json({ message: 'Curriculum not found' });
+      }
+
+      const [level] = await db.select().from(curriculumLevels).where(eq(curriculumLevels.id, curriculumLevelId));
+      if (!level) {
+        return res.status(404).json({ message: 'Curriculum level not found' });
+      }
+
+      // Create or update student curriculum progress
+      await db.insert(studentCurriculumProgress).values({
+        studentId,
+        curriculumId,
+        curriculumLevelId,
+        status: 'active',
+        progressPercentage: 0,
+        assignedBy: req.user.id
+      }).onConflictDoUpdate({
+        target: [studentCurriculumProgress.studentId, studentCurriculumProgress.curriculumId],
+        set: {
+          curriculumLevelId,
+          status: 'active',
+          assignedBy: req.user.id,
+          updatedAt: new Date()
+        }
+      });
+
+      // Update user profile with new level
+      await storage.updateUserProfile(studentId, {
+        currentLevel: level.levelCode,
+        currentProficiency: level.difficultyLevel
+      });
+
+      res.json({ 
+        message: 'Curriculum level assigned successfully',
+        curriculumLevel: level
+      });
+    } catch (error) {
+      console.error('Error assigning curriculum level:', error);
+      res.status(500).json({ message: 'Failed to assign curriculum level' });
+    }
+  });
+
+  // Get level-based course recommendations
+  app.get('/api/curriculum/level-courses', authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const profile = await storage.getUserProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: 'User profile not found' });
+      }
+
+      // Get student's current curriculum progress
+      const [progress] = await db.select()
+        .from(studentCurriculumProgress)
+        .where(and(
+          eq(studentCurriculumProgress.studentId, userId),
+          eq(studentCurriculumProgress.status, 'active')
+        ))
+        .orderBy(desc(studentCurriculumProgress.updatedAt));
+
+      let availableCourses = [];
+      
+      if (progress) {
+        // Get courses for student's current curriculum level
+        availableCourses = await db.select({
+          courseId: curriculumLevelCourses.courseId,
+          course: courses,
+          isRequired: curriculumLevelCourses.isRequired,
+          sequenceOrder: curriculumLevelCourses.sequenceOrder
+        })
+        .from(curriculumLevelCourses)
+        .innerJoin(courses, eq(curriculumLevelCourses.courseId, courses.id))
+        .where(eq(curriculumLevelCourses.curriculumLevelId, progress.curriculumLevelId))
+        .orderBy(curriculumLevelCourses.sequenceOrder);
+      } else {
+        // Fallback: get courses based on proficiency level
+        availableCourses = await db.select()
+          .from(courses)
+          .where(and(
+            eq(courses.isActive, true),
+            eq(courses.level, profile.currentProficiency || 'beginner')
+          ))
+          .orderBy(courses.createdAt);
+      }
+
+      res.json({ 
+        studentLevel: profile.currentLevel,
+        availableCourses,
+        hasActiveProgress: !!progress
+      });
+    } catch (error) {
+      console.error('Error fetching level-based courses:', error);
+      res.status(500).json({ message: 'Failed to fetch level-based courses' });
+    }
+  });
+
+  // Get all curriculum levels for admin management
+  app.get('/api/admin/curriculum-levels', authenticateToken, requireRole(['Admin', 'Teacher', 'Accountant']), async (req: any, res) => {
+    try {
+      const curricula = await db.select({
+        curriculum: curriculums,
+        levels: sql<any[]>`
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', ${curriculumLevels.id},
+              'levelCode', ${curriculumLevels.levelCode},
+              'levelName', ${curriculumLevels.levelName},
+              'difficultyLevel', ${curriculumLevels.difficultyLevel},
+              'sequenceOrder', ${curriculumLevels.sequenceOrder},
+              'totalLessons', ${curriculumLevels.totalLessons}
+            ) ORDER BY ${curriculumLevels.sequenceOrder}
+          )
+        `
+      })
+      .from(curriculums)
+      .leftJoin(curriculumLevels, eq(curriculums.id, curriculumLevels.curriculumId))
+      .where(eq(curriculums.isActive, true))
+      .groupBy(curriculums.id);
+
+      res.json(curricula);
+    } catch (error) {
+      console.error('Error fetching curriculum levels:', error);
+      res.status(500).json({ message: 'Failed to fetch curriculum levels' });
+    }
+  });
+
+  // Enhanced course enrollment with level-based filtering and payment integration
+  app.post('/api/curriculum/enroll-course', authenticateToken, async (req: any, res) => {
+    try {
+      const { courseId, paymentMethod } = req.body;
+      const userId = req.user.id;
+
+      // Get course details
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      // Get user profile for level verification
+      const profile = await storage.getUserProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ message: 'User profile not found' });
+      }
+
+      // Check if student's level is appropriate for this course
+      const [progress] = await db.select()
+        .from(studentCurriculumProgress)
+        .where(and(
+          eq(studentCurriculumProgress.studentId, userId),
+          eq(studentCurriculumProgress.status, 'active')
+        ));
+
+      let isEligible = false;
+      
+      if (progress) {
+        // Check if course is available for student's curriculum level
+        const [levelCourse] = await db.select()
+          .from(curriculumLevelCourses)
+          .where(and(
+            eq(curriculumLevelCourses.curriculumLevelId, progress.curriculumLevelId),
+            eq(curriculumLevelCourses.courseId, courseId)
+          ));
+        isEligible = !!levelCourse;
+      } else {
+        // Fallback: check if course matches student's proficiency level
+        isEligible = course.level === (profile.currentProficiency || 'beginner');
+      }
+
+      if (!isEligible) {
+        return res.status(403).json({ 
+          message: 'This course is not available for your current level',
+          recommendedAction: 'Please contact an advisor for level assessment'
+        });
+      }
+
+      // Check if already enrolled
+      const existingEnrollment = await db.select()
+        .from(enrollments)
+        .where(and(
+          eq(enrollments.userId, userId),
+          eq(enrollments.courseId, courseId)
+        ));
+
+      if (existingEnrollment.length > 0) {
+        return res.status(400).json({ message: 'Already enrolled in this course' });
+      }
+
+      // Handle payment based on method
+      if (paymentMethod === 'wallet') {
+        // Use wallet payment
+        const user = await storage.getUser(userId);
+        if (!user || user.walletBalance < course.price) {
+          return res.status(400).json({ 
+            message: 'Insufficient wallet balance',
+            required: course.price,
+            current: user?.walletBalance || 0
+          });
+        }
+
+        // Deduct from wallet
+        await db.update(users)
+          .set({ 
+            walletBalance: sql`${users.walletBalance} - ${course.price}`,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userId));
+
+        // Create payment record
+        await storage.createPayment({
+          userId,
+          amount: course.price,
+          currency: 'IRR',
+          status: 'completed',
+          method: 'wallet',
+          description: `Course enrollment: ${course.title}`
+        });
+      } else if (paymentMethod === 'online') {
+        // For now, simulate online payment success
+        // In real implementation, integrate with payment gateway
+        await storage.createPayment({
+          userId,
+          amount: course.price,
+          currency: 'IRR',
+          status: 'completed',
+          method: 'online',
+          description: `Course enrollment: ${course.title}`
+        });
+      }
+
+      // Enroll student in course
+      await storage.enrollInCourse({
+        userId,
+        courseId,
+        progress: 0
+      });
+
+      res.json({
+        message: 'Successfully enrolled in course',
+        course: {
+          id: course.id,
+          title: course.title,
+          level: course.level
+        }
+      });
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+      res.status(500).json({ message: 'Failed to enroll in course' });
+    }
+  });
+
+  // Accountant: Register walk-in student with manual level assignment
+  app.post('/api/accountant/register-student', authenticateToken, requireRole(['Accountant', 'Admin']), async (req: any, res) => {
+    try {
+      const {
+        firstName,
+        lastName,
+        email,
+        phone,
+        nationalId,
+        curriculumId,
+        curriculumLevelId,
+        courseIds,
+        paymentAmount,
+        paymentMethod = 'cash'
+      } = req.body;
+
+      if (!firstName || !lastName || !phone) {
+        return res.status(400).json({ message: 'Required fields missing' });
+      }
+
+      // Generate student ID
+      const studentId = await storage.generateStudentId();
+
+      // Create user account
+      const newUser = await storage.createUser({
+        firstName,
+        lastName,
+        email: email || `${studentId}@walkin.local`,
+        phone,
+        role: 'Student',
+        status: 'active',
+        studentId
+      });
+
+      // Create user profile
+      await storage.createUserProfile({
+        userId: newUser.id,
+        nationalId,
+        nativeLanguage: 'fa',
+        targetLanguage: 'en'
+      });
+
+      // Assign curriculum level if provided
+      if (curriculumId && curriculumLevelId) {
+        const [level] = await db.select().from(curriculumLevels).where(eq(curriculumLevels.id, curriculumLevelId));
+        
+        await db.insert(studentCurriculumProgress).values({
+          studentId: newUser.id,
+          curriculumId,
+          curriculumLevelId,
+          status: 'active',
+          progressPercentage: 0,
+          assignedBy: req.user.id
+        });
+
+        if (level) {
+          await storage.updateUserProfile(newUser.id, {
+            currentLevel: level.levelCode,
+            currentProficiency: level.difficultyLevel
+          });
+        }
+      }
+
+      // Enroll in courses if provided
+      if (courseIds && courseIds.length > 0) {
+        for (const courseId of courseIds) {
+          await storage.enrollInCourse({
+            userId: newUser.id,
+            courseId,
+            progress: 0
+          });
+        }
+      }
+
+      // Record payment
+      if (paymentAmount > 0) {
+        await storage.createPayment({
+          userId: newUser.id,
+          amount: paymentAmount,
+          currency: 'IRR',
+          status: 'completed',
+          method: paymentMethod,
+          description: 'Walk-in registration payment',
+          adminUserId: req.user.id
+        });
+      }
+
+      res.json({
+        message: 'Student registered successfully',
+        student: {
+          id: newUser.id,
+          studentId,
+          firstName,
+          lastName,
+          phone,
+          enrolledCourses: courseIds || []
+        }
+      });
+    } catch (error) {
+      console.error('Error registering walk-in student:', error);
+      res.status(500).json({ message: 'Failed to register student' });
+    }
+  });
+
+  // Get students for curriculum level assignment (Accountant/Admin view)
+  app.get('/api/admin/students-for-level-assignment', authenticateToken, requireRole(['Admin', 'Teacher', 'Accountant']), async (req: any, res) => {
+    try {
+      const students = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phone: users.phone,
+        studentId: users.studentId,
+        currentLevel: userProfiles.currentLevel,
+        currentProficiency: userProfiles.currentProficiency,
+        hasActiveProgress: sql<boolean>`
+          EXISTS(
+            SELECT 1 FROM ${studentCurriculumProgress} 
+            WHERE ${studentCurriculumProgress.studentId} = ${users.id} 
+            AND ${studentCurriculumProgress.status} = 'active'
+          )
+        `
+      })
+      .from(users)
+      .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
+      .where(eq(users.role, 'Student'))
+      .orderBy(desc(users.createdAt))
+      .limit(100);
+
+      res.json(students);
+    } catch (error) {
+      console.error('Error fetching students for level assignment:', error);
+      res.status(500).json({ message: 'Failed to fetch students' });
+    }
+  });
+
   // Teacher Payment Stats API (replacing hardcoded header statistics)
   app.get("/api/admin/teacher-payments/stats", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {

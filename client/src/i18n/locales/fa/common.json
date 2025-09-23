@@ -3,7 +3,7 @@
   "view": "مشاهده",
   "edit": "ویرایش",
   "courses": {
-    "title": "دوره‌ها"
+    "title": "کلاس‌ها"
   },
   "delete": "حذف",
   "save": "ذخیره",
@@ -55,7 +55,7 @@
   "student": {
     "navigation": {
       "home": "خانه",
-      "courses": "دوره‌ها",
+      "courses": "کلاس‌ها",
       "callern": "کالرن",
       "homework": "تکالیف",
       "messages": "پیام‌ها",
@@ -116,7 +116,7 @@
     "compliance": "انطباق",
     "studentInformationSystem": "سیستم اطلاعات دانشجو",
     "userManagement": "مدیریت کاربر",
-    "courseManagement": "مدیریت دوره",
+    "courseManagement": "مدیریت کلاس",
     "classScheduling": "برنامه‌ریزی کلاس",
     "gamesManagement": "مدیریت بازی‌ها",
     "gameAccessControl": "کنترل دسترسی بازی‌ها",
@@ -135,7 +135,7 @@
     "qualityAssurance": "تضمین کیفیت",
     "scheduleReview": "بررسی برنامه",
     "teacherPayments": "پرداخت‌های مدرس",
-    "videoCourses": "دوره‌های ویدیویی",
+    "videoCourses": "کلاس‌های ویدیویی",
     "callernVideoCalls": "تماس‌های ویدیویی کالرن",
     "gamificationGames": "بازی‌سازی و بازی‌ها",
     "findTutors": "یافتن مربیان",
@@ -160,13 +160,13 @@
     "homework": "تکالیف",
     "messages": "پیام‌ها",
     "myDashboard": "داشبورد من",
-    "myCourses": "دوره‌های من",
+    "myCourses": "کلاس‌های من",
     "paymentCredits": "پرداخت و اعتبارات"
   },
   "student": {
     "navigation": {
       "home": "خانه",
-      "courses": "دوره‌ها",
+      "courses": "کلاس‌ها",
       "callern": "کالرن",
       "homework": "تکالیف",
       "messages": "پیام‌ها",
@@ -201,7 +201,7 @@
     "weekendSessions": "جلسات آخر هفته",
     "onlineCapacity": "ظرفیت آنلاین",
     "criticalOverduePayments": "پرداخت‌های معوقه بحرانی",
-    "course": "دوره",
+    "course": "کلاس",
     "daysOverdue": "روزهای تأخیر",
     "amountDue": "مبلغ بدهی",
     "studentName": "نام دانشجو",
@@ -221,7 +221,7 @@
     "highestRetentionRates": "بالاترین نرخ حفظ",
     "performanceImprovementNeeded": "نیاز به بهبود عملکرد",
     "lowestStudentScores": "کمترین نمرات دانشجویان",
-    "courseCompletionAnalytics": "تحلیل تکمیل دوره‌ها",
+    "courseCompletionAnalytics": "تحلیل تکمیل کلاس‌ها",
     "onTimeCompletion": "تکمیل به موقع",
     "avgCompletion": "میانگین تکمیل",
     "studentRetentionAnalysis": "تحلیل نگهداری دانشجویان",
@@ -425,7 +425,7 @@
   },
   "placeholders": {
     "sessionTitle": "مثال: گرامر فارسی - جملات شرطی",
-    "selectCourse": "انتخاب دوره",
+    "selectCourse": "انتخاب کلاس",
     "sessionDescription": "توضیح مختصری از آنچه در این جلسه پوشش داده خواهد شد",
     "selectDuration": "مدت زمان",
     "dayPlaceholder": "روز",
@@ -571,7 +571,7 @@
     "enterAmount": "مبلغ را وارد کنید",
     "enterAmountIRR": "مبلغ را به ریال وارد کنید",
     "enterCredits": "تعداد امتیازات را وارد کنید",
-    "selectCourse": "دوره را انتخاب کنید",
+    "selectCourse": "کلاس را انتخاب کنید",
     "selectDate": "تاریخ را انتخاب کنید",
     "selectDuration": "مدت زمان را انتخاب کنید",
     "selectLevel": "انتخاب سطح",
@@ -586,8 +586,8 @@
   },
   "classScheduling": {
     "scheduleNewClass": "برنامه‌ریزی کلاس جدید",
-    "course": "دوره",
-    "selectCourseToSchedule": "انتخاب دوره برای برنامه‌ریزی",
+    "course": "کلاس",
+    "selectCourseToSchedule": "انتخاب کلاس برای برنامه‌ریزی",
     "room": "اتاق",
     "selectRoom": "انتخاب اتاق",
     "availableTeachers": "مدرسان موجود",
