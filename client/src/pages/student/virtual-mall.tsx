@@ -19,12 +19,16 @@ import {
   Map,
   Star,
   Trophy,
-  Target
+  Target,
+  BookOpen,
+  Plus,
+  Eye,
+  Search
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import * as THREE from 'three';
 
 interface Shop {
@@ -57,6 +61,9 @@ interface InteractionData {
   expressions: string[];
   difficulty: 'easy' | 'medium' | 'hard';
 }
+
+// Use shared types from schema
+import type { Book as CourseBook } from '@shared/schema';
 
 const SHOPS: Shop[] = [
   {
@@ -157,9 +164,67 @@ export default function VirtualMall() {
   const [visitedShops, setVisitedShops] = useState<Set<string>>(new Set());
   const [collectedVocabulary, setCollectedVocabulary] = useState<string[]>([]);
   const [sessionProgress, setSessionProgress] = useState(0);
+  const [showCoursebooks, setShowCoursebooks] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Coursebook | null>(null);
 
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  // Fetch coursebooks for bookstore using shared query client
+  const { data: coursebooks, isLoading: coursebooksLoading, error: coursebooksError } = useQuery<{success: boolean; data: CourseBook[]}>({
+    queryKey: ['/api/books'],
+    enabled: showCoursebooks
+  });
+
+  // Add to cart mutation
+  const addToCartMutation = useMutation({
+    mutationFn: async (data: { book_id: number; quantity: number }) => {
+      return apiRequest('/api/cart/items', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    },
+    onSuccess: (response, variables) => {
+      const bookTitle = coursebooks?.data?.find(book => book.id === variables.book_id)?.title || 'Book';
+      
+      // Invalidate cart queries to refresh cart data
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+      
+      // Show success toast
+      toast({
+        title: "Added to Cart",
+        description: `"${bookTitle}" has been added to your cart!`,
+        variant: "default"
+      });
+
+      // Add Emma success message
+      const emmaMessage: LexiMessage = {
+        id: Date.now().toString(),
+        type: 'shopgirl',
+        speaker: 'Emma', 
+        content: `Perfect! I've successfully added "${bookTitle}" to your cart. You can continue browsing or proceed to checkout when you're ready!`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, emmaMessage]);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add book to cart. Please try again.",
+        variant: "destructive"
+      });
+
+      // Add Emma error message
+      const emmaMessage: LexiMessage = {
+        id: Date.now().toString(),
+        type: 'shopgirl',
+        speaker: 'Emma', 
+        content: `Oh no! I'm having trouble adding that book to your cart right now. Could you please try again? I'm here to help!`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, emmaMessage]);
+    }
+  });
 
   // Initialize Lexi greeting
   useEffect(() => {
@@ -345,6 +410,41 @@ export default function VirtualMall() {
     
     setMessages(prev => [...prev, shopgirlGreeting]);
     setSessionProgress(prev => Math.min(prev + 16.67, 100)); // 6 locations = ~16.67% each
+    
+    // If entering bookstore, show coursebook option
+    if (shop.id === 'bookstore') {
+      setShowCoursebooks(true);
+    } else {
+      setShowCoursebooks(false);
+    }
+  };
+
+  const handleBrowseCoursebooks = () => {
+    const emmaMessage: LexiMessage = {
+      id: Date.now().toString(),
+      type: 'shopgirl',
+      speaker: 'Emma',
+      content: "Great choice! Here are our featured coursebooks. These are specially selected for language learners. You can view details, check prices, and add books to your learning library!",
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, emmaMessage]);
+  };
+
+  const handleViewBookDetails = (book: CourseBook) => {
+    setSelectedBook(book);
+    const emmaMessage: LexiMessage = {
+      id: Date.now().toString(),
+      type: 'shopgirl', 
+      speaker: 'Emma',
+      content: `"${book.title}" by ${book.author} is an excellent choice! ${book.description}. ${book.is_free ? 'This book is available for free!' : `The price is ${book.price} ${book.currency_code}.`} ${book.hardcopy_available ? 'We also have physical copies available.' : ''}`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, emmaMessage]);
+  };
+
+  const handleAddToCart = (book: CourseBook) => {
+    // Use the mutation to add to cart - success/error messages are handled in the mutation callbacks
+    addToCartMutation.mutate({ book_id: book.id, quantity: 1 });
   };
 
   const sendMessage = () => {
@@ -467,6 +567,29 @@ export default function VirtualMall() {
                   {currentShop.name}
                 </Badge>
               )}
+              {currentShop?.id === 'bookstore' && (
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    onClick={handleBrowseCoursebooks}
+                    size="sm"
+                    className="gap-2"
+                    style={{ backgroundColor: currentShop.color }}
+                    data-testid="button-browse-coursebooks"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    Browse Coursebooks
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2"
+                    data-testid="button-search-books"
+                  >
+                    <Search className="w-4 h-4" />
+                    Search Books
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             
             <CardContent className="flex-1 flex flex-col">
@@ -525,6 +648,107 @@ export default function VirtualMall() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Coursebook Catalog */}
+          {currentShop?.id === 'bookstore' && showCoursebooks && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Coursebook Catalog
+                </CardTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Emma's curated selection of language learning books
+                </p>
+              </CardHeader>
+              <CardContent>
+                {coursebooksLoading ? (
+                  <div className="text-center py-4" data-testid="coursebooks-loading">
+                    <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Loading coursebooks...</p>
+                  </div>
+                ) : coursebooksError ? (
+                  <div className="text-center py-4" data-testid="coursebooks-error">
+                    <p className="text-sm text-red-600 dark:text-red-400 mb-2">Failed to load coursebooks</p>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => window.location.reload()}
+                      data-testid="button-retry-coursebooks"
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                ) : coursebooks?.data ? (
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto" data-testid="coursebooks-catalog">
+                    {coursebooks.data.map((book) => (
+                      <div 
+                        key={book.id} 
+                        className="border rounded-lg p-3 bg-white dark:bg-gray-800"
+                        data-testid={`book-card-${book.id}`}
+                      >
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100" data-testid={`book-title-${book.id}`}>
+                              {book.title}
+                            </h4>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1" data-testid={`book-author-${book.id}`}>
+                              by {book.author}
+                            </p>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 line-clamp-2" data-testid={`book-description-${book.id}`}>
+                              {book.description}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              {book.is_free ? (
+                                <Badge variant="secondary" className="text-xs" data-testid={`book-free-badge-${book.id}`}>Free</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-xs" data-testid={`book-price-badge-${book.id}`}>
+                                  {book.price} {book.currency_code}
+                                </Badge>
+                              )}
+                              {book.hardcopy_available && (
+                                <Badge variant="outline" className="text-xs" data-testid={`book-hardcopy-badge-${book.id}`}>Physical Copy</Badge>
+                              )}
+                              {book.pdf_file_path && (
+                                <Badge variant="outline" className="text-xs" data-testid={`book-digital-badge-${book.id}`}>Digital</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewBookDetails(book)}
+                              className="text-xs gap-1"
+                              data-testid={`button-view-details-${book.id}`}
+                            >
+                              <Eye className="w-3 h-3" />
+                              Details
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleAddToCart(book)}
+                              className="text-xs gap-1"
+                              style={{ backgroundColor: currentShop?.color }}
+                              disabled={addToCartMutation.isPending}
+                              data-testid={`button-add-to-cart-${book.id}`}
+                            >
+                              <Plus className="w-3 h-3" />
+                              {addToCartMutation.isPending ? 'Adding...' : 'Add to Cart'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4" data-testid="coursebooks-empty">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">No coursebooks available at the moment.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Vocabulary Collection */}
           {collectedVocabulary.length > 0 && (
