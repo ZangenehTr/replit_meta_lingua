@@ -85,6 +85,8 @@ import VideoCoursDetail from "@/pages/student/video-course-detail";
 import VideoPlayer from "@/pages/student/video-player";
 import StudentProfile from "@/pages/student/profile";
 import VirtualMall from "@/pages/student/virtual-mall";
+import StudentDashboardMobile from "@/pages/student/dashboard-mobile";
+import StudentCoursesMobile from "@/pages/student/courses-mobile";
 import BookReader from "@/pages/BookReader";
 import CourseDetail from "@/pages/course-detail";
 import LevelAssessment from "@/pages/level-assessment";
@@ -495,12 +497,12 @@ function Router() {
       </Route>
       <Route path="/student">
         <ProtectedRoute>
-          <StudentDashboard />
+          <StudentDashboardMobile />
         </ProtectedRoute>
       </Route>
       <Route path="/student/dashboard">
         <ProtectedRoute>
-          <StudentDashboard />
+          <StudentDashboardMobile />
         </ProtectedRoute>
       </Route>
       <Route path="/courses">
@@ -510,7 +512,7 @@ function Router() {
       </Route>
       <Route path="/student/courses">
         <ProtectedRoute>
-          <Courses />
+          <StudentCoursesMobile />
         </ProtectedRoute>
       </Route>
       <Route path="/course/:courseId">
@@ -947,7 +949,12 @@ function Router() {
             return <Redirect to="/auth" />;
           }
           
-          // All authenticated users redirect to unified dashboard
+          // Role-based redirects to ensure students use mobile components
+          if (user.role === 'student') {
+            return <Redirect to="/student" />;
+          }
+          
+          // All other authenticated users redirect to unified dashboard
           return <Redirect to="/dashboard" />;
         })()}
       </Route>

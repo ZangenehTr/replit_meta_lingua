@@ -74,6 +74,8 @@ export default function StudentDashboardMobile() {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [greeting, setGreeting] = useState('');
 
+  console.log('StudentDashboardMobile rendering:', { user: user?.role, isRTL: t('dir') === 'rtl' });
+
   // Get appropriate greeting based on time
   useEffect(() => {
     const hour = new Date().getHours();
