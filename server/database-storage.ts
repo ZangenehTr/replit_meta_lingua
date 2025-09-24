@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, gte, lte, lt, inArray, or, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, lt, inArray, or, isNull, isNotNull, ilike } from "drizzle-orm";
 import { db } from "./db";
 import { 
   filterTeachers, 
@@ -14724,27 +14724,85 @@ export class DatabaseStorage implements IStorage {
 
   // Books management
   async getBooks(filters?: { categoryId?: number; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      let query = this.db.select().from(books);
+      
+      // Apply filters
+      if (filters?.categoryId) {
+        query = query.where(eq(books.category, filters.categoryId.toString()));
+      }
+      
+      // Apply limit and offset
+      if (filters?.limit) {
+        query = query.limit(filters.limit);
+      }
+      if (filters?.offset) {
+        query = query.offset(filters.offset);
+      }
+      
+      const result = await query;
+      return result;
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      return [];
+    }
   }
 
   async getBook(id: number): Promise<Book | undefined> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db.select().from(books).where(eq(books.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching book:', error);
+      return undefined;
+    }
   }
 
   async getBookByISBN(isbn: string): Promise<Book | undefined> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db.select().from(books).where(eq(books.isbn, isbn)).limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching book by ISBN:', error);
+      return undefined;
+    }
   }
 
   async getBooksByCategory(categoryId: number): Promise<Book[]> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db.select().from(books).where(eq(books.category, categoryId.toString()));
+      return result;
+    } catch (error) {
+      console.error('Error fetching books by category:', error);
+      return [];
+    }
   }
 
   async getFreeBooks(): Promise<Book[]> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db.select().from(books).where(eq(books.price, 0));
+      return result;
+    } catch (error) {
+      console.error('Error fetching free books:', error);
+      return [];
+    }
   }
 
   async searchBooks(query: string): Promise<Book[]> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const searchTerm = `%${query.toLowerCase()}%`;
+      const result = await this.db.select().from(books)
+        .where(or(
+          ilike(books.title, searchTerm),
+          ilike(books.author, searchTerm),
+          ilike(books.description, searchTerm),
+          ilike(books.category, searchTerm)
+        ));
+      return result;
+    } catch (error) {
+      console.error('Error searching books:', error);
+      return [];
+    }
   }
 
   async createBook(data: BookInsert): Promise<Book> {
