@@ -569,5 +569,20 @@
   "startsIn": "شروع در",
   "midtermExam": "امتحان میان ترم",
   "finalExam": "امتحان پایان ترم",
-  "officialHoliday": "تعطیل رسمی"
+  "officialHoliday": "تعطیل رسمی",
+  "avgProgress": "میانگین پیشرفت",
+  "total": "کل",
+  "exploreMoreCourses": "کاوش دوره‌های بیشتر",
+  "levelAssessmentNeeded": "نیاز به ارزیابی سطح",
+  "contactAdminForLevelAssignment": "برای تعیین سطح با ادمین تماس بگیرید",
+  "yourLevel": "سطح شما",
+  "curriculumTrack": "مسیر آموزشی",
+  "complete": "تکمیل",
+  "nextLevel": "سطح بعدی",
+  "courses": {
+    "all": "همه",
+    "active": "فعال",
+    "upcoming": "آینده",
+    "completed": "تکمیل شده"
+  }
 }

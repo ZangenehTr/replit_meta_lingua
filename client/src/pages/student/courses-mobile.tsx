@@ -406,7 +406,7 @@ export default function StudentCoursesMobile() {
                           className="object-cover"
                         />
                         <AvatarFallback className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white font-bold text-lg">
-                          {course.instructor.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                          {course.instructor ? course.instructor.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'TC'}
                         </AvatarFallback>
                       </Avatar>
                       
