@@ -497,10 +497,15 @@ function Router() {
       </Route>
       <Route path="/student">
         <ProtectedRoute>
-          <StudentDashboardMobile />
+          <StudentDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/student/dashboard">
+        <ProtectedRoute>
+          <StudentDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/mobile">
         <ProtectedRoute>
           <StudentDashboardMobile />
         </ProtectedRoute>
