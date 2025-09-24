@@ -84,18 +84,33 @@ export default function StudentCoursesMobile() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all'); // 'all' or 'currentLevel'
 
-  // Fetch student's curriculum level and progress
-  const { data: curriculumProgress } = useQuery<StudentCurriculumProgress>({
+  // Fetch student's curriculum level and progress  
+  const { data: curriculumProgress, error: curriculumError, isLoading: curriculumLoading } = useQuery<StudentCurriculumProgress>({
     queryKey: ['/api/curriculum/student-level'],
     queryFn: async () => {
+      const token = localStorage.getItem('auth_token');
+      console.log('Courses page: Fetching curriculum level with token:', token?.substring(0, 10) + '...');
+      
       const response = await fetch('/api/curriculum/student-level', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch curriculum level');
-      return response.json();
-    }
+      
+      console.log('Courses page: Curriculum API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Courses page: Curriculum API failed:', errorText);
+        throw new Error(`Failed to fetch curriculum level: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Courses page: Curriculum progress data:', data);
+      return data;
+    },
+    enabled: true,
+    retry: 1
   });
 
   // Fetch courses

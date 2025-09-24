@@ -2533,7 +2533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: studentCurriculumProgress.id,
         studentId: studentCurriculumProgress.studentId,
         curriculumId: studentCurriculumProgress.curriculumId,
-        currentLevelId: studentCurriculumProgress.currentLevelId,
+        currentLevelId: studentCurriculumProgress.current_level_id,
         status: studentCurriculumProgress.status,
         progressPercentage: studentCurriculumProgress.progressPercentage,
         enrolledAt: studentCurriculumProgress.enrolledAt,
@@ -2561,10 +2561,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       })
       .from(studentCurriculumProgress)
-      .innerJoin(curriculumLevels, eq(studentCurriculumProgress.currentLevelId, curriculumLevels.id))
-      .innerJoin(curriculums, eq(curriculumLevels.curriculumId, curriculums.id))
+      .innerJoin(curriculumLevels, eq(studentCurriculumProgress.current_level_id, curriculumLevels.id))
+      .innerJoin(curriculums, eq(curriculumLevels.curriculum_id, curriculums.id))
       .where(and(
-        eq(studentCurriculumProgress.studentId, userId),
+        eq(studentCurriculumProgress.student_id, userId),
         eq(studentCurriculumProgress.status, 'active')
       ))
       .orderBy(desc(studentCurriculumProgress.updatedAt))

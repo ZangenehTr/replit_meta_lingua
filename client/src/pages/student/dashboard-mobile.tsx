@@ -139,17 +139,32 @@ export default function StudentDashboardMobile() {
   });
 
   // Fetch student's curriculum level and progress
-  const { data: curriculumProgress } = useQuery({
+  const { data: curriculumProgress, error: curriculumError, isLoading: curriculumLoading } = useQuery({
     queryKey: ['/api/curriculum/student-level'],
     queryFn: async () => {
+      const token = localStorage.getItem('auth_token');
+      console.log('Fetching curriculum level with token:', token?.substring(0, 10) + '...');
+      
       const response = await fetch('/api/curriculum/student-level', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch curriculum level');
-      return response.json();
-    }
+      
+      console.log('Curriculum API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Curriculum API failed:', errorText);
+        throw new Error(`Failed to fetch curriculum level: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Curriculum progress data:', data);
+      return data;
+    },
+    enabled: true,
+    retry: 1
   });
 
   const progressPercentage = stats ? (stats.completedLessons / stats.totalLessons) * 100 : 0;
@@ -299,7 +314,19 @@ export default function StudentDashboardMobile() {
             )}
 
             {/* Student Level Banner - Show curriculum progress */}
-            {curriculumProgress && (
+            {curriculumError && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 text-white">
+                <p>Error loading curriculum: {curriculumError.message}</p>
+              </div>
+            )}
+            
+            {curriculumLoading && (
+              <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 text-white">
+                <p>Loading curriculum level...</p>
+              </div>
+            )}
+            
+            {curriculumProgress ? (
               <StudentLevelBanner
                 currentLevel={curriculumProgress.currentLevel}
                 progressPercentage={curriculumProgress.progressPercentage}
@@ -308,6 +335,12 @@ export default function StudentDashboardMobile() {
                 variant="detailed"
                 data-testid="student-level-banner"
               />
+            ) : (
+              !curriculumLoading && !curriculumError && (
+                <div className="bg-orange-500/20 border border-orange-500/30 rounded-xl p-4 text-white">
+                  <p>No curriculum level assigned. Contact admin.</p>
+                </div>
+              )
             )}
             
             {/* Peer Socializer System - Iranian Gender-Based Matching */}
@@ -410,56 +443,6 @@ export default function StudentDashboardMobile() {
               </div>
             </GlossyCard>
 
-            {/* Quick Actions - Core Features */}
-            <div className="grid grid-cols-2 gap-4">
-              <GlossyCard interactive className="p-4">
-                <Link href="/student/roadmap">
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-2">
-                      <Map className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-white/90 text-sm font-medium">{t('student:myRoadmap')}</span>
-                    <span className="text-white/60 text-xs mt-1">{t('student:learningPath')}</span>
-                  </div>
-                </Link>
-              </GlossyCard>
-              
-              <GlossyCard interactive className="p-4">
-                <Link href="/callern">
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-2">
-                      <Video className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-white/90 text-sm font-medium">Callern</span>
-                    <span className="text-white/60 text-xs mt-1">{t('student:instantTutoring')}</span>
-                  </div>
-                </Link>
-              </GlossyCard>
-              
-              <GlossyCard interactive className="p-4">
-                <Link href="/games">
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-2">
-                      <Gamepad2 className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-white/90 text-sm font-medium">{t('student:games')}</span>
-                    <span className="text-white/60 text-xs mt-1">{t('student:playAndLearn')}</span>
-                  </div>
-                </Link>
-              </GlossyCard>
-              
-              <GlossyCard interactive className="p-4">
-                <Link href="/video-courses">
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-2">
-                      <PlayCircle className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-white/90 text-sm font-medium">{t('student:videoCourses')}</span>
-                    <span className="text-white/60 text-xs mt-1">{t('student:watchAndLearn')}</span>
-                  </div>
-                </Link>
-              </GlossyCard>
-            </div>
 
             {/* Upcoming Sessions */}
             <GlossyCard>
@@ -499,7 +482,7 @@ export default function StudentDashboardMobile() {
             </GlossyCard>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Link href="/student/courses-mobile" data-testid="link-browse-courses">
                 <GlossyButton variant="primary" fullWidth asChild className="flex items-center gap-2">
                   <span className="flex items-center gap-2">
@@ -514,6 +497,15 @@ export default function StudentDashboardMobile() {
                   <span className="flex items-center gap-2">
                     <Video className="w-5 h-5" />
                     {t('student:startCallern')}
+                  </span>
+                </GlossyButton>
+              </Link>
+              
+              <Link href="/student/roadmap" data-testid="link-my-roadmap">
+                <GlossyButton variant="secondary" fullWidth asChild className="flex items-center gap-2">
+                  <span className="flex items-center gap-2">
+                    <Map className="w-5 h-5" />
+                    {t('student:myRoadmap')}
                   </span>
                 </GlossyButton>
               </Link>
