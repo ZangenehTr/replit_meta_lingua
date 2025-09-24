@@ -22,6 +22,7 @@ import {
   callernCallHistory, callernSyllabusTopics, studentCallernProgress, rooms,
   callernRoadmaps, callernRoadmapSteps, studentRoadmapProgress, courseRoadmapProgress,
   callernPresence, callernSpeechSegments, callernScoresStudent, callernScoresTeacher, callernScoringEvents,
+  books, carts, cart_items,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -43,6 +44,7 @@ import {
   type CallernPresence, type InsertCallernPresence, type CallernSpeechSegment, type InsertCallernSpeechSegment,
   type CallernScoresStudent, type InsertCallernScoresStudent, type CallernScoresTeacher, type InsertCallernScoresTeacher,
   type CallernScoringEvent, type InsertCallernScoringEvent,
+  type Book, type Cart, type CartInsert, type CartItem, type CartItemInsert,
   type CourseRoadmapProgress, type InsertCourseRoadmapProgress,
   type Room, type InsertRoom,
   // Testing subsystem types
@@ -14797,11 +14799,34 @@ export class DatabaseStorage implements IStorage {
 
   // Cart management
   async getUserCart(userId: number): Promise<Cart | undefined> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db
+        .select()
+        .from(carts)
+        .where(eq(carts.user_id, userId))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching user cart:', error);
+      return undefined;
+    }
   }
 
   async createCart(data: CartInsert): Promise<Cart> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db
+        .insert(carts)
+        .values({
+          user_id: data.user_id,
+          created_at: sql`CURRENT_TIMESTAMP`,
+          updated_at: sql`CURRENT_TIMESTAMP`
+        })
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating cart:', error);
+      throw error;
+    }
   }
 
   async updateCart(id: number, updates: Partial<Cart>): Promise<Cart | undefined> {
@@ -14814,23 +14839,130 @@ export class DatabaseStorage implements IStorage {
 
   // Cart items management
   async getCartItems(cartId: number): Promise<(CartItem & { book: Book })[]> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db
+        .select({
+          id: cart_items.id,
+          cart_id: cart_items.cart_id,
+          book_id: cart_items.book_id,
+          quantity: cart_items.quantity,
+          added_at: cart_items.added_at,
+          book: {
+            id: books.id,
+            title: books.title,
+            author: books.author,
+            isbn: books.isbn,
+            description: books.description,
+            publisher: books.publisher,
+            published_date: books.published_date,
+            edition: books.edition,
+            language: books.language,
+            page_count: books.page_count,
+            price_minor: books.price_minor,
+            currency_code: books.currency_code,
+            is_free: books.is_free,
+            hardcopy_available: books.hardcopy_available,
+            pdf_file_path: books.pdf_file_path,
+            cover_image_url: books.cover_image_url,
+            category_id: books.category_id,
+            stock_quantity: books.stock_quantity,
+            is_active: books.is_active,
+            weight_grams: books.weight_grams,
+            dimensions_cm: books.dimensions_cm,
+            created_at: books.created_at,
+            updated_at: books.updated_at
+          }
+        })
+        .from(cart_items)
+        .innerJoin(books, eq(cart_items.book_id, books.id))
+        .where(eq(cart_items.cart_id, cartId));
+      
+      return result as (CartItem & { book: Book })[];
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+      return [];
+    }
   }
 
   async getCartItem(id: number): Promise<CartItem | undefined> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db
+        .select()
+        .from(cart_items)
+        .where(eq(cart_items.id, id))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching cart item:', error);
+      return undefined;
+    }
   }
 
   async addToCart(cartId: number, bookId: number, quantity?: number): Promise<CartItem> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      // Check if item already exists in cart
+      const existingItem = await this.db
+        .select()
+        .from(cart_items)
+        .where(
+          and(
+            eq(cart_items.cart_id, cartId),
+            eq(cart_items.book_id, bookId)
+          )
+        )
+        .limit(1);
+      
+      if (existingItem.length > 0) {
+        // Update existing item quantity
+        const newQuantity = existingItem[0].quantity + (quantity || 1);
+        const result = await this.db
+          .update(cart_items)
+          .set({ quantity: newQuantity })
+          .where(eq(cart_items.id, existingItem[0].id))
+          .returning();
+        return result[0];
+      } else {
+        // Add new item
+        const result = await this.db
+          .insert(cart_items)
+          .values({
+            cart_id: cartId,
+            book_id: bookId,
+            quantity: quantity || 1,
+            added_at: sql`CURRENT_TIMESTAMP`
+          })
+          .returning();
+        return result[0];
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
   }
 
   async updateCartItem(id: number, quantity: number): Promise<CartItem | undefined> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      const result = await this.db
+        .update(cart_items)
+        .set({ quantity })
+        .where(eq(cart_items.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+      return undefined;
+    }
   }
 
   async removeFromCart(id: number): Promise<void> {
-    throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+    try {
+      await this.db
+        .delete(cart_items)
+        .where(eq(cart_items.id, id));
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
+    }
   }
 
   // Orders management
