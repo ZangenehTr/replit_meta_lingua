@@ -517,6 +517,11 @@ function Router() {
       </Route>
       <Route path="/student/courses">
         <ProtectedRoute>
+          <Courses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/courses/mobile">
+        <ProtectedRoute>
           <StudentCoursesMobile />
         </ProtectedRoute>
       </Route>

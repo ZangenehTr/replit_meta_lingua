@@ -51,6 +51,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { StudentLevelBanner } from '@/components/dashboard/StudentLevelBanner';
 
 interface StudentStats {
   totalLessons: number;
@@ -154,6 +155,12 @@ export default function StudentDashboard() {
       return () => clearTimeout(timer);
     }
   }, [user, isFirstLogin, hasEverCompletedProfile]);
+
+  // Fetch curriculum level data
+  const { data: curriculumData } = useQuery({
+    queryKey: ['/api/curriculum/student-level'],
+    enabled: !!user
+  });
 
   const handleCompleteProfile = () => {
     setShowProfileModal(false);
@@ -326,6 +333,24 @@ export default function StudentDashboard() {
             </div>
           </div>
         </motion.div>
+
+        {/* Student Level Banner */}
+        {curriculumData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <StudentLevelBanner
+              currentLevel={curriculumData.currentLevel}
+              progressPercentage={curriculumData.progressPercentage || 0}
+              nextLevel={curriculumData.nextLevel}
+              status={curriculumData.status || 'active'}
+              variant="default"
+              showProgress={true}
+            />
+          </motion.div>
+        )}
 
         {/* HIGHEST PRIORITY: Placement Test for New Learners */}
         {placementStatus && !placementStatus.hasCompletedPlacementTest && (

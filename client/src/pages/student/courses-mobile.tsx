@@ -462,7 +462,7 @@ export default function StudentCoursesMobile() {
                         {course.sessionsPerWeek}x/{t('student:week')}
                       </span>
                     </div>
-                    {course.rating && (
+                    {course.rating && typeof course.rating === 'number' && (
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         <span className="text-gray-600 text-sm">
