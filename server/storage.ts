@@ -7144,11 +7144,11 @@ export class MemStorage implements IStorage {
   }
 
   // Books management
-  async getBooks(filters?: { categoryId?: number; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]> {
+  async getBooks(filters?: { category?: string; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]> {
     let query = this.db.select().from(books);
     
-    if (filters?.categoryId) {
-      query = query.where(eq(books.category_id, filters.categoryId));
+    if (filters?.category) {
+      query = query.where(eq(books.category, filters.category));
     }
     if (filters?.isFree !== undefined) {
       query = query.where(eq(books.is_free, filters.isFree));
@@ -7173,8 +7173,8 @@ export class MemStorage implements IStorage {
     return result[0];
   }
 
-  async getBooksByCategory(categoryId: number): Promise<Book[]> {
-    return await this.db.select().from(books).where(eq(books.category_id, categoryId));
+  async getBooksByCategory(category: string): Promise<Book[]> {
+    return await this.db.select().from(books).where(eq(books.category, category));
   }
 
   async getFreeBooks(): Promise<Book[]> {
