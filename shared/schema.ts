@@ -4946,14 +4946,12 @@ export const books = pgTable("books", {
   description: text("description"),
   author: text("author").notNull(),
   isbn: text("isbn").unique(),
-  category_id: integer("category_id").references(() => book_categories.id).notNull(),
-  price_minor: integer("price_minor").notNull(), // Price in smallest currency unit (e.g., cents)
-  currency_code: text("currency_code").notNull().default("USD"), // ISO 4217 currency code
-  is_free: boolean("is_free").default(false),
-  pdf_file_path: text("pdf_file_path"), // Path to PDF file
-  hardcopy_available: boolean("hardcopy_available").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // Price as decimal  
+  category: text("category").notNull(), // Category as text field
+  cover_image: text("cover_image"), // Cover image URL
+  stock_quantity: integer("stock_quantity").default(0),
+  publication_year: integer("publication_year"),
+  created_at: timestamp("created_at").defaultNow()
 });
 
 // Book assets (additional files, images, etc.)
