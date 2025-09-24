@@ -14923,7 +14923,7 @@ export class DatabaseStorage implements IStorage {
             hardcopy_available: books.hardcopy_available,
             pdf_file_path: books.pdf_file_path,
             cover_image_url: books.cover_image_url,
-            category_id: books.category_id,
+            category: books.category,
             stock_quantity: books.stock_quantity,
             is_active: books.is_active,
             weight_grams: books.weight_grams,
