@@ -430,31 +430,29 @@ export default function VirtualMall() {
     setMessages(prev => [...prev, emmaMessage]);
   };
 
-  // Safe price formatter using snake_case naming
+  // Safe price formatter using snake_case naming - fixed for actual DB schema
   const format_safe_price = (book: CourseBook, locale: string = 'fa-IR'): string => {
-    if (book.is_free) return 'Free';
+    // Check if price exists and is valid
+    const amount = typeof book.price === 'number' ? book.price : undefined;
     
-    const amount = typeof book.price === 'number' ? book.price : 
-                   (typeof book.price_minor === 'number' ? book.price_minor / 100 : undefined);
-    
-    if (amount == null) return 'Price unavailable';
+    if (amount == null || isNaN(amount)) return 'Price unavailable';
     
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: book.currency_code || 'IRR',
+      currency: 'IRR', // Iranian Rial for Persian books
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 0 // No decimals for IRR
     }).format(amount);
   };
 
   const handleViewBookDetails = (book: CourseBook) => {
     setSelectedBook(book);
-    const price_text = book.is_free ? 'This book is available for free!' : `The price is ${format_safe_price(book)}.`;
+    const price_text = `The price is ${format_safe_price(book)}.`;
     const emmaMessage: LexiMessage = {
       id: Date.now().toString(),
       type: 'shopgirl', 
       speaker: 'Emma',
-      content: `"${book.title}" by ${book.author} is an excellent choice! ${book.description}. ${price_text} ${book.hardcopy_available ? 'We also have physical copies available.' : ''}`,
+      content: `"${book.title}" by ${book.author} is an excellent choice! ${book.description}. ${price_text}`,
       timestamp: new Date()
     };
     setMessages(prev => [...prev, emmaMessage]);
@@ -717,13 +715,9 @@ export default function VirtualMall() {
                               {book.description}
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                              {book.is_free ? (
-                                <Badge variant="secondary" className="text-xs" data-testid={`book-free-badge-${book.id}`}>Free</Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-xs" data-testid={`book-price-badge-${book.id}`}>
-                                  {format_safe_price(book)}
-                                </Badge>
-                              )}
+                              <Badge variant="outline" className="text-xs" data-testid={`book-price-badge-${book.id}`}>
+                                {format_safe_price(book)}
+                              </Badge>
                               {book.hardcopy_available && (
                                 <Badge variant="outline" className="text-xs" data-testid={`book-hardcopy-badge-${book.id}`}>Physical Copy</Badge>
                               )}
