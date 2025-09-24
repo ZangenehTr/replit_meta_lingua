@@ -165,7 +165,7 @@ export default function VirtualMall() {
   const [collectedVocabulary, setCollectedVocabulary] = useState<string[]>([]);
   const [sessionProgress, setSessionProgress] = useState(0);
   const [showCoursebooks, setShowCoursebooks] = useState(false);
-  const [selectedBook, setSelectedBook] = useState<Coursebook | null>(null);
+  const [selectedBook, setSelectedBook] = useState<CourseBook | null>(null);
 
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -436,7 +436,7 @@ export default function VirtualMall() {
       id: Date.now().toString(),
       type: 'shopgirl', 
       speaker: 'Emma',
-      content: `"${book.title}" by ${book.author} is an excellent choice! ${book.description}. ${book.is_free ? 'This book is available for free!' : `The price is ${book.price} ${book.currency_code}.`} ${book.hardcopy_available ? 'We also have physical copies available.' : ''}`,
+      content: `"${book.title}" by ${book.author} is an excellent choice! ${book.description}. ${book.is_free ? 'This book is available for free!' : `The price is ${(book.price_minor / 100).toFixed(2)} ${book.currency_code}.`} ${book.hardcopy_available ? 'We also have physical copies available.' : ''}`,
       timestamp: new Date()
     };
     setMessages(prev => [...prev, emmaMessage]);
@@ -703,7 +703,7 @@ export default function VirtualMall() {
                                 <Badge variant="secondary" className="text-xs" data-testid={`book-free-badge-${book.id}`}>Free</Badge>
                               ) : (
                                 <Badge variant="outline" className="text-xs" data-testid={`book-price-badge-${book.id}`}>
-                                  {book.price} {book.currency_code}
+                                  {(book.price_minor / 100).toFixed(2)} {book.currency_code}
                                 </Badge>
                               )}
                               {book.hardcopy_available && (

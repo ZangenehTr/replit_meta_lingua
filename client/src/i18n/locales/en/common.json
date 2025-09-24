@@ -1103,5 +1103,7 @@
     "silence": "Silence",
     "unsilence": "Unsilence",
     "silenced": "Silenced"
-  }
+  },
+  "free": "Free",
+  "error": "Error"
 }
