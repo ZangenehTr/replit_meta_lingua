@@ -89,7 +89,7 @@ const requireRole = (allowedRoles: string[]) => {
 
 // Validation schemas
 const bookFiltersSchema = z.object({
-  category_id: z.string().transform(val => parseInt(val, 10)).optional(),
+  category: z.string().optional(),
   is_free: z.string().transform(val => val === 'true').optional(),
   search: z.string().optional(),
   limit: z.string().transform(val => parseInt(val, 10)).optional(),
@@ -134,7 +134,7 @@ export function setupBookEcommerceRoutes(app: Express) {
         books = await storage.searchBooks(filters.search);
       } else {
         books = await storage.getBooks({
-          categoryId: filters.category_id,
+          category: filters.category,
           isFree: filters.is_free,
           limit: filters.limit,
           offset: filters.offset
@@ -148,7 +148,7 @@ export function setupBookEcommerceRoutes(app: Express) {
           title: book.title,
           author: book.author,
           isbn: book.isbn,
-          category_id: book.category_id,
+          category: book.category,
           description: book.description,
           price: book.price_minor / 100, // Convert from cents to dollars
           price_minor: book.price_minor,
@@ -185,7 +185,7 @@ export function setupBookEcommerceRoutes(app: Express) {
         updatedAt: true 
       }).parse({
         ...req.body,
-        category_id: req.body.category_id,
+        category: req.body.category,
         price_minor: req.body.price_minor || Math.round((req.body.price || 0) * 100), // Convert dollars to cents
         currency_code: req.body.currency_code || 'USD',
         is_free: req.body.is_free || false,
@@ -203,7 +203,7 @@ export function setupBookEcommerceRoutes(app: Express) {
           title: book.title,
           author: book.author,
           isbn: book.isbn,
-          category_id: book.category_id,
+          category: book.category,
           description: book.description,
           price: book.price_minor / 100, // Convert from cents to dollars
           price_minor: book.price_minor,
@@ -259,7 +259,7 @@ export function setupBookEcommerceRoutes(app: Express) {
           title: book.title,
           author: book.author,
           isbn: book.isbn,
-          category_id: book.category_id,
+          category: book.category,
           description: book.description,
           price: book.price_minor / 100, // Convert from cents to dollars
           price_minor: book.price_minor,
@@ -298,7 +298,7 @@ export function setupBookEcommerceRoutes(app: Express) {
         updatedAt: true 
       }).parse({
         ...req.body,
-        category_id: req.body.category_id,
+        category: req.body.category,
         price_minor: req.body.price_minor !== undefined ? req.body.price_minor : (req.body.price ? Math.round(req.body.price * 100) : undefined),
         currency_code: req.body.currency_code,
         is_free: req.body.is_free,
@@ -322,7 +322,7 @@ export function setupBookEcommerceRoutes(app: Express) {
           title: updatedBook.title,
           author: updatedBook.author,
           isbn: updatedBook.isbn,
-          category_id: updatedBook.category_id,
+          category: updatedBook.category,
           description: updatedBook.description,
           price: updatedBook.price_minor / 100, // Convert from cents to dollars
           price_minor: updatedBook.price_minor,

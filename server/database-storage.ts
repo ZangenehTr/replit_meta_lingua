@@ -14723,14 +14723,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Books management
-  async getBooks(filters?: { categoryId?: number; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]> {
+  async getBooks(filters?: { category?: string; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]> {
     try {
       let query = this.db.select().from(books);
       
       // Apply filters
-      if (filters?.categoryId) {
-        // Note: categoryId filter not supported as books.category is a text field, not a foreign key
-        // This would need category table lookup, but for now we'll skip this filter
+      if (filters?.category) {
+        query = query.where(eq(books.category, filters.category));
       }
       
       // Apply limit and offset
@@ -14769,9 +14768,9 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getBooksByCategory(categoryId: number): Promise<Book[]> {
+  async getBooksByCategory(category: string): Promise<Book[]> {
     try {
-      const result = await this.db.select().from(books).where(eq(books.category, categoryId.toString()));
+      const result = await this.db.select().from(books).where(eq(books.category, category));
       return result;
     } catch (error) {
       console.error('Error fetching books by category:', error);

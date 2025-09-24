@@ -1119,10 +1119,10 @@ export interface IStorage {
   deleteBookCategory(id: number): Promise<void>;
 
   // Books management
-  getBooks(filters?: { categoryId?: number; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]>;
+  getBooks(filters?: { category?: string; isFree?: boolean; limit?: number; offset?: number }): Promise<Book[]>;
   getBook(id: number): Promise<Book | undefined>;
   getBookByISBN(isbn: string): Promise<Book | undefined>;
-  getBooksByCategory(categoryId: number): Promise<Book[]>;
+  getBooksByCategory(category: string): Promise<Book[]>;
   getFreeBooks(): Promise<Book[]>;
   searchBooks(query: string): Promise<Book[]>;
   createBook(data: BookInsert): Promise<Book>;
