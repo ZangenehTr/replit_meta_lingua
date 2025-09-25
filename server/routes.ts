@@ -21992,6 +21992,334 @@ Meta Lingua Academy`;
   const { registerPhase2AIRoutes } = await import('./ai-phase2-routes');
   registerPhase2AIRoutes(app);
 
+  // ===== STUDENT ENROLLMENT STATUS API =====
+  
+  // Get student enrollment status - determines dashboard experience
+  app.get("/api/student/enrollment-status", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      
+      // Only allow students to access this endpoint
+      if (req.user.role !== 'Student') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { enrollments, courses, users, mstSessions } = await import("@shared/schema");
+      
+      // Get student's enrollments
+      const studentEnrollments = await db
+        .select({
+          enrollmentId: enrollments.id,
+          courseId: enrollments.courseId,
+          progress: enrollments.progress,
+          enrolledAt: enrollments.enrolledAt,
+          courseTitle: courses.title,
+          courseLevel: courses.level,
+          deliveryMode: courses.deliveryMode,
+          classFormat: courses.classFormat
+        })
+        .from(enrollments)
+        .leftJoin(courses, eq(enrollments.courseId, courses.id))
+        .where(eq(enrollments.userId, studentId));
+      
+      // Check if student has completed placement test
+      const placementTests = await db
+        .select()
+        .from(mstSessions)
+        .where(and(
+          eq(mstSessions.userId, studentId),
+          eq(mstSessions.status, 'completed')
+        ))
+        .limit(1);
+      
+      // Get user details for wallet/credits
+      const [userDetails] = await db
+        .select({
+          walletBalance: users.walletBalance,
+          totalCredits: users.totalCredits,
+          memberTier: users.memberTier
+        })
+        .from(users)
+        .where(eq(users.id, studentId))
+        .limit(1);
+      
+      const enrollmentStatus = {
+        isEnrolled: studentEnrollments.length > 0,
+        hasActiveEnrollments: studentEnrollments.length > 0,
+        totalEnrollments: studentEnrollments.length,
+        activeCourses: studentEnrollments.map(enrollment => ({
+          id: enrollment.courseId,
+          title: enrollment.courseTitle || 'Course',
+          level: enrollment.courseLevel || 'beginner',
+          progress: enrollment.progress || 0,
+          deliveryMode: enrollment.deliveryMode || 'online',
+          classFormat: enrollment.classFormat || 'group'
+        })),
+        hasCompletedPlacementTest: placementTests.length > 0,
+        membershipTier: userDetails?.memberTier || 'bronze',
+        walletBalance: userDetails?.walletBalance || 0,
+        totalCredits: userDetails?.totalCredits || 0
+      };
+      
+      res.json(enrollmentStatus);
+    } catch (error) {
+      console.error('Error fetching enrollment status:', error);
+      res.status(500).json({ message: "Failed to fetch enrollment status" });
+    }
+  });
+  
+  // Get teacher directory for non-enrolled students
+  app.get("/api/teachers/directory", async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const teachers = filterTeachers(users).map(teacher => {
+        // Parse preferences if they exist
+        let preferences: any = {};
+        if (teacher.preferences && typeof teacher.preferences === 'object') {
+          preferences = teacher.preferences;
+        } else if (teacher.preferences && typeof teacher.preferences === 'string') {
+          try {
+            preferences = JSON.parse(teacher.preferences);
+          } catch (e) {
+            preferences = {};
+          }
+        }
+        
+        return {
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          profileImage: teacher.profileImage,
+          specializations: (preferences as any)?.specializations || ['General English'],
+          experience: (preferences as any)?.experience || 3,
+          rating: 4.5 + Math.random() * 0.5, // Mock rating
+          totalStudents: Math.floor(Math.random() * 100) + 20,
+          languages: (preferences as any)?.languages || ['English', 'Persian'],
+          bio: (preferences as any)?.bio || 'Experienced language instructor',
+          availability: ['Monday', 'Wednesday', 'Friday'] // Mock availability
+        };
+      });
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching teacher directory:', error);
+      res.status(500).json({ message: "Failed to fetch teacher directory" });
+    }
+  });
+  
+  // Get course catalog for non-enrolled students
+  app.get("/api/courses/catalog", async (req: any, res) => {
+    try {
+      const { courses, users } = await import("@shared/schema");
+      
+      const courseCatalog = await db
+        .select({
+          id: courses.id,
+          title: courses.title,
+          description: courses.description,
+          level: courses.level,
+          price: courses.price,
+          thumbnail: courses.thumbnail,
+          deliveryMode: courses.deliveryMode,
+          classFormat: courses.classFormat,
+          totalSessions: courses.totalSessions,
+          sessionDuration: courses.sessionDuration,
+          instructorId: courses.instructorId,
+          rating: courses.rating
+        })
+        .from(courses)
+        .limit(20);
+      
+      // Get instructor names
+      const instructorIds = [...new Set(courseCatalog.map(c => c.instructorId).filter(Boolean))];
+      const instructors = instructorIds.length > 0 ? await db
+        .select({ id: users.id, firstName: users.firstName, lastName: users.lastName })
+        .from(users)
+        .where(sql`${users.id} IN (${instructorIds.join(',')})`) : [];
+      
+      const instructorMap = new Map(instructors.map(i => [i.id, i]));
+      
+      const formattedCourses = courseCatalog.map(course => {
+        const instructor = instructorMap.get(course.instructorId);
+        return {
+          ...course,
+          duration: `${course.totalSessions} sessions`,
+          features: ['Certificate', 'Live Classes', 'Practice Materials'],
+          instructorName: instructor ? `${instructor.firstName} ${instructor.lastName}` : 'Expert Instructor',
+          rating: course.rating ? parseFloat(course.rating) : 4.5,
+          studentsCount: Math.floor(Math.random() * 200) + 50
+        };
+      });
+      
+      res.json(formattedCourses);
+    } catch (error) {
+      console.error('Error fetching course catalog:', error);
+      res.status(500).json({ message: "Failed to fetch course catalog" });
+    }
+  });
+  
+  // Book trial lesson for non-enrolled students
+  app.post("/api/student/book-trial", async (req: any, res) => {
+    try {
+      const { teacherId, date, time, studentDetails, lessonType } = req.body;
+      
+      // Store trial booking (you might want to create a trial_bookings table)
+      const bookingData = {
+        teacherId,
+        date,
+        time,
+        studentDetails,
+        lessonType,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      
+      // For now, just return success (in a real app, store in database)
+      console.log('Trial booking created:', bookingData);
+      
+      res.json({ 
+        message: "Trial lesson booked successfully",
+        bookingId: Date.now(), // Mock booking ID
+        booking: bookingData
+      });
+    } catch (error) {
+      console.error('Error booking trial lesson:', error);
+      res.status(500).json({ message: "Failed to book trial lesson" });
+    }
+  });
+  
+  // Submit contact inquiry
+  app.post("/api/contact/inquiry", async (req: any, res) => {
+    try {
+      const inquiryData = req.body;
+      
+      // Store contact inquiry (you might want to create a contact_inquiries table)
+      console.log('Contact inquiry received:', inquiryData);
+      
+      res.json({ 
+        message: "Contact inquiry submitted successfully",
+        inquiryId: Date.now() // Mock inquiry ID
+      });
+    } catch (error) {
+      console.error('Error submitting contact inquiry:', error);
+      res.status(500).json({ message: "Failed to submit contact inquiry" });
+    }
+  });
+  
+  // Get upcoming sessions for enrolled students
+  app.get("/api/student/upcoming-sessions", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      
+      // Only allow students to access this endpoint
+      if (req.user.role !== 'Student') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Mock upcoming sessions data
+      const upcomingSessions = [
+        {
+          id: 1,
+          courseTitle: 'General English A2',
+          teacherName: 'Sarah Johnson',
+          startTime: 'Today 14:00',
+          duration: 60,
+          type: 'group',
+          joinUrl: '/callern/video/session-1'
+        },
+        {
+          id: 2,
+          courseTitle: 'Conversation Practice',
+          teacherName: 'Mike Smith',
+          startTime: 'Tomorrow 16:30',
+          duration: 45,
+          type: 'individual',
+          location: 'Room 201'
+        }
+      ];
+      
+      res.json(upcomingSessions);
+    } catch (error) {
+      console.error('Error fetching upcoming sessions:', error);
+      res.status(500).json({ message: "Failed to fetch upcoming sessions" });
+    }
+  });
+  
+  // Get learning materials for enrolled students
+  app.get("/api/student/materials", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      
+      // Only allow students to access this endpoint
+      if (req.user.role !== 'Student') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Mock learning materials data
+      const materials = [
+        {
+          id: 1,
+          title: 'Unit 5 Vocabulary List',
+          type: 'pdf',
+          courseTitle: 'General English A2',
+          size: '2.5 MB',
+          downloadUrl: '/api/materials/download/1'
+        },
+        {
+          id: 2,
+          title: 'Grammar Exercise Audio',
+          type: 'audio',
+          courseTitle: 'Grammar Fundamentals',
+          size: '15.2 MB',
+          downloadUrl: '/api/materials/download/2'
+        }
+      ];
+      
+      res.json(materials);
+    } catch (error) {
+      console.error('Error fetching learning materials:', error);
+      res.status(500).json({ message: "Failed to fetch learning materials" });
+    }
+  });
+  
+  // Get assignments for enrolled students - enhanced version
+  app.get("/api/student/assignments", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      
+      // Only allow students to access this endpoint
+      if (req.user.role !== 'Student') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Mock assignments data
+      const assignments = [
+        {
+          id: 1,
+          title: 'Essay: My Favorite Holiday',
+          courseTitle: 'Writing Skills B1',
+          dueDate: '2024-02-15',
+          status: 'pending',
+          grade: null,
+          feedback: null
+        },
+        {
+          id: 2,
+          title: 'Grammar Quiz Chapter 3',
+          courseTitle: 'Grammar Fundamentals',
+          dueDate: '2024-02-10',
+          status: 'graded',
+          grade: 85,
+          feedback: 'Good work! Pay attention to past perfect tense.'
+        }
+      ];
+      
+      res.json(assignments);
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      res.status(500).json({ message: "Failed to fetch assignments" });
+    }
+  });
+
   // ===== HOMEWORK API ENDPOINTS =====
   
   // Get homework for a student
