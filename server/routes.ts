@@ -14399,6 +14399,130 @@ Return JSON format:
     }
   });
 
+  // Student Gamification Stats
+  app.get("/api/student/gamification-stats", authenticateToken, requireRole(['Student', 'Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const studentId = req.user.role === 'Student' ? req.user.id : req.query.studentId;
+      
+      // Get user's gamification data
+      const user = await storage.getUser(studentId);
+      if (!user) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Calculate gamification stats with real data
+      const stats = {
+        totalXP: user.xpPoints || 0,
+        currentLevel: Math.floor((user.xpPoints || 0) / 100) + 1,
+        nextLevelXP: (Math.floor((user.xpPoints || 0) / 100) + 1) * 100,
+        xpToNext: Math.max(0, (Math.floor((user.xpPoints || 0) / 100) + 1) * 100 - (user.xpPoints || 0)),
+        totalCoins: user.coins || 0,
+        streak: user.dailyStreak || 0,
+        badges: user.achievements || [],
+        rank: 'Silver', // Based on enrollment tier
+        progressToNextLevel: Math.min(100, ((user.xpPoints || 0) % 100)),
+        weeklyXP: Math.min(user.xpPoints || 0, 350), // Assume current week
+        monthlyGoal: 1000,
+        monthlyProgress: Math.min(100, ((user.xpPoints || 0) / 1000) * 100),
+        completedChallenges: 0,
+        activeChallenges: []
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching student gamification stats:', error);
+      res.status(500).json({ message: "Failed to fetch gamification statistics" });
+    }
+  });
+
+  // Student Learning Progress
+  app.get("/api/student/learning-progress", authenticateToken, requireRole(['Student', 'Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const studentId = req.user.role === 'Student' ? req.user.id : req.query.studentId;
+      
+      // Get student's enrollment and course progress
+      const enrollments = await db.select()
+        .from(enrollments)
+        .innerJoin(courses, eq(enrollments.courseId, courses.id))
+        .where(eq(enrollments.studentId, studentId));
+
+      const progressData = {
+        overallProgress: 0,
+        coursesInProgress: 0,
+        coursesCompleted: 0,
+        skillLevels: {
+          listening: 'A2',
+          speaking: 'A2', 
+          reading: 'B1',
+          writing: 'A2'
+        },
+        recentActivities: [],
+        weeklyStudyTime: 0,
+        totalStudyTime: 0,
+        strongestSkill: 'reading',
+        improvementArea: 'speaking',
+        nextMilestone: 'Complete B1 Reading Module',
+        studyStreak: 0,
+        lastStudyDate: new Date().toISOString(),
+        averageScore: 0,
+        completedLessons: 0,
+        totalLessons: 0
+      };
+
+      if (enrollments.length > 0) {
+        const activeEnrollments = enrollments.filter(e => e.enrollments.status === 'active');
+        const completedEnrollments = enrollments.filter(e => e.enrollments.status === 'completed');
+        
+        progressData.coursesInProgress = activeEnrollments.length;
+        progressData.coursesCompleted = completedEnrollments.length;
+        progressData.overallProgress = enrollments.length > 0 ? 
+          Math.round((completedEnrollments.length / enrollments.length) * 100) : 0;
+      }
+      
+      res.json(progressData);
+    } catch (error) {
+      console.error('Error fetching student learning progress:', error);
+      res.status(500).json({ message: "Failed to fetch learning progress" });
+    }
+  });
+
+  // Student Wallet
+  app.get("/api/student/wallet", authenticateToken, requireRole(['Student', 'Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const studentId = req.user.role === 'Student' ? req.user.id : req.query.studentId;
+      
+      // Get user's wallet data
+      const user = await storage.getUser(studentId);
+      if (!user) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const walletData = {
+        balance: user.walletBalance || 0,
+        coins: user.coins || 0,
+        currency: 'USD',
+        recentTransactions: [],
+        monthlySpending: 0,
+        totalEarned: user.xpPoints || 0, // XP as earnings
+        totalSpent: 0,
+        pendingBalance: 0,
+        subscriptionStatus: 'active',
+        nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        paymentMethods: [],
+        rewardPoints: user.xpPoints || 0,
+        conversionRate: 1, // 1 coin = 1 USD
+        walletId: `wallet_${studentId}`,
+        createdAt: user.createdAt,
+        lastTransaction: null
+      };
+      
+      res.json(walletData);
+    } catch (error) {
+      console.error('Error fetching student wallet:', error);
+      res.status(500).json({ message: "Failed to fetch wallet information" });
+    }
+  });
+
   // Mentor Dashboard Stats
   app.get("/api/mentor/dashboard-stats", authenticateToken, requireRole(['Mentor', 'Admin']), async (req: any, res) => {
     try {

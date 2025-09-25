@@ -150,8 +150,8 @@ export default function DictionaryOverlay({
 
     const overlay = overlayRef.current;
     const rect = overlay.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    const viewportWidth = document.documentElement.clientWidth;
+    const viewportHeight = document.documentElement.clientHeight;
 
     let x = position.x;
     let y = position.y;

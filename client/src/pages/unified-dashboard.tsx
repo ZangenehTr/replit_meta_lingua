@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/use-language";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 
 // Role-specific dashboard imports
 import { AdminDashboard } from "@/pages/admin/admin-dashboard";
@@ -31,21 +32,10 @@ export default function UnifiedDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation(['common', 'admin', 'student']);
   const { language, isRTL } = useLanguage();
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
 
   // Add debug logging
   console.log('UnifiedDashboard rendering:', { user: user?.role, isRTL });
-
-  // Check if mobile viewport with proper client-side detection
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Show loading state while user data loads
   if (!user) {

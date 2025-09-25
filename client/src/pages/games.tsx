@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -95,7 +96,12 @@ export default function GamesPage() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [activeTab, setActiveTab] = useState('browse');
   const queryClient = useQueryClient();
-  const { t, isRTL, formatDate, formatNumber } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+
+  // Helper functions for i18n formatting
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : language === 'ar' ? 'ar' : 'en-US').format(num);
+  };
 
   // Fetch available games
   const { data: games = [], isLoading: gamesLoading } = useQuery({
@@ -106,17 +112,45 @@ export default function GamesPage() {
     }
   });
 
-  // Mock progress and sessions for now (since these endpoints don't exist yet)
-  const progress: GameProgress[] = [];
-  const sessions: GameSession[] = [];
-  const progressLoading = false;
-  const sessionsLoading = false;
+  // Fetch real game progress data
+  const { data: progress = [], isLoading: progressLoading } = useQuery({
+    queryKey: ['/api/student/game-progress'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/student/game-progress');
+      return response as GameProgress[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-  // Mock leaderboard and achievements for now (since these endpoints don't exist yet)  
-  const leaderboard: LeaderboardEntry[] = [];
-  const achievements: Achievement[] = [];
-  const leaderboardLoading = false;
-  const achievementsLoading = false;
+  // Fetch real game sessions data
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ['/api/student/game-sessions'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/student/game-sessions');
+      return response as GameSession[];
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Fetch real leaderboard data
+  const { data: leaderboard = [], isLoading: leaderboardLoading } = useQuery({
+    queryKey: ['/api/student/leaderboard'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/student/leaderboard');
+      return response as LeaderboardEntry[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch real achievements data
+  const { data: achievements = [], isLoading: achievementsLoading } = useQuery({
+    queryKey: ['/api/student/achievements'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/student/achievements');
+      return response as Achievement[];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   // Fetch user stats
   const { data: userStats, isLoading: statsLoading } = useQuery({
@@ -127,9 +161,11 @@ export default function GamesPage() {
     }
   });
 
+  const [, setLocation] = useLocation();
+  
   // Navigate to game player
   const handlePlayGame = (gameId: number) => {
-    window.location.href = `/game/${gameId}`;
+    setLocation(`/game/${gameId}`);
   };
 
   const skillIcons = {
