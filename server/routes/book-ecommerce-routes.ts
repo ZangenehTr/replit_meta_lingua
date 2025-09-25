@@ -150,12 +150,11 @@ export function setupBookEcommerceRoutes(app: Express) {
           isbn: book.isbn,
           category: book.category,
           description: book.description,
-          price: book.price, // Use actual database price field (numeric)
+          price: book.price, // Use actual database price field (decimal)
           cover_image: book.cover_image, // Include cover image from database
-          pdf_file_path: book.pdf_file_path,
-          hardcopy_available: book.hardcopy_available,
-          created_at: book.createdAt,
-          updated_at: book.updatedAt
+          stock_quantity: book.stock_quantity,
+          publication_year: book.publication_year,
+          created_at: book.created_at
         }))
       });
     } catch (error: any) {
@@ -179,16 +178,13 @@ export function setupBookEcommerceRoutes(app: Express) {
     try {
       const bookData = insertBookSchema.omit({ 
         id: true, 
-        createdAt: true, 
-        updatedAt: true 
+        created_at: true
       }).parse({
         ...req.body,
         category: req.body.category,
-        price_minor: req.body.price_minor || Math.round((req.body.price || 0) * 100), // Convert dollars to cents
-        currency_code: req.body.currency_code || 'USD',
-        is_free: req.body.is_free || false,
-        pdf_file_path: req.body.pdf_file_path,
-        hardcopy_available: req.body.hardcopy_available || false
+        price: req.body.price || 0, // Use actual price field
+        stock_quantity: req.body.stock_quantity || 0,
+        publication_year: req.body.publication_year
       });
 
       const book = await storage.createBook(bookData);
@@ -205,10 +201,9 @@ export function setupBookEcommerceRoutes(app: Express) {
           description: book.description,
           price: book.price, // Use actual database price field
           cover_image: book.cover_image,
-          pdf_file_path: book.pdf_file_path,
-          hardcopy_available: book.hardcopy_available,
-          created_at: book.createdAt,
-          updated_at: book.updatedAt
+          stock_quantity: book.stock_quantity,
+          publication_year: book.publication_year,
+          created_at: book.created_at
         }
       });
     } catch (error: any) {
@@ -259,11 +254,10 @@ export function setupBookEcommerceRoutes(app: Express) {
           description: book.description,
           price: book.price, // Use actual database price field
           cover_image: book.cover_image,
-          pdf_file_path: book.pdf_file_path,
-          hardcopy_available: book.hardcopy_available,
+          stock_quantity: book.stock_quantity,
+          publication_year: book.publication_year,
           assets: bookAssets,
-          created_at: book.createdAt,
-          updated_at: book.updatedAt
+          created_at: book.created_at
         }
       });
     } catch (error) {
@@ -288,16 +282,13 @@ export function setupBookEcommerceRoutes(app: Express) {
 
       const updateData = insertBookSchema.partial().omit({ 
         id: true, 
-        createdAt: true, 
-        updatedAt: true 
+        created_at: true
       }).parse({
         ...req.body,
         category: req.body.category,
-        price_minor: req.body.price_minor !== undefined ? req.body.price_minor : (req.body.price ? Math.round(req.body.price * 100) : undefined),
-        currency_code: req.body.currency_code,
-        is_free: req.body.is_free,
-        pdf_file_path: req.body.pdf_file_path,
-        hardcopy_available: req.body.hardcopy_available
+        price: req.body.price,
+        stock_quantity: req.body.stock_quantity,
+        publication_year: req.body.publication_year
       });
 
       const updatedBook = await storage.updateBook(bookId, updateData);
@@ -320,10 +311,9 @@ export function setupBookEcommerceRoutes(app: Express) {
           description: updatedBook.description,
           price: updatedBook.price, // Use actual database price field
           cover_image: updatedBook.cover_image,
-          pdf_file_path: updatedBook.pdf_file_path,
-          hardcopy_available: updatedBook.hardcopy_available,
-          created_at: updatedBook.createdAt,
-          updated_at: updatedBook.updatedAt
+          stock_quantity: updatedBook.stock_quantity,
+          publication_year: updatedBook.publication_year,
+          created_at: updatedBook.created_at
         }
       });
     } catch (error: any) {
@@ -410,10 +400,7 @@ export function setupBookEcommerceRoutes(app: Express) {
         file_size: req.file.size
       });
 
-      // Update book pdf_file_path if needed
-      await storage.updateBook(bookId, {
-        pdf_file_path: req.file.path
-      });
+      // Note: PDF files are stored as assets, not directly in book record
 
       res.json({
         success: true,
@@ -453,7 +440,7 @@ export function setupBookEcommerceRoutes(app: Express) {
       const cartItems = await storage.getCartItems(cart.id);
       
       const totalAmount = cartItems.reduce((sum, item) => 
-        sum + (item.book.price * item.quantity), 0
+        sum + (parseFloat(item.book.price.toString()) * item.quantity), 0
       );
 
       res.json({
@@ -469,11 +456,11 @@ export function setupBookEcommerceRoutes(app: Express) {
               author: item.book.author,
               price: item.book.price, // Use actual database price field
               cover_image: item.book.cover_image,
-              pdf_file_path: item.book.pdf_file_path,
-              hardcopy_available: item.book.hardcopy_available
+              stock_quantity: item.book.stock_quantity,
+              publication_year: item.book.publication_year
             },
             quantity: item.quantity,
-            subtotal: item.book.price * item.quantity,
+            subtotal: parseFloat(item.book.price.toString()) * item.quantity,
             added_at: item.added_at
           })),
           total_items: cartItems.length,
@@ -700,11 +687,12 @@ export function setupBookEcommerceRoutes(app: Express) {
 
       // Calculate total
       const totalAmount = cartItems.reduce((sum, item) => 
-        sum + (item.book.price * item.quantity), 0
+        sum + (parseFloat(item.book.price.toString()) * item.quantity), 0
       );
 
-      const hasFreeItems = cartItems.some(item => item.book.is_free);
-      const hasPaidItems = cartItems.some(item => !item.book.is_free);
+      // All books have a price, check if price is 0 for free items
+      const hasFreeItems = cartItems.some(item => parseFloat(item.book.price.toString()) === 0);
+      const hasPaidItems = cartItems.some(item => parseFloat(item.book.price.toString()) > 0);
 
       // Create order
       const order = await storage.createOrder({
@@ -720,7 +708,7 @@ export function setupBookEcommerceRoutes(app: Express) {
           order_id: order.id,
           book_id: cartItem.book_id,
           quantity: cartItem.quantity,
-          price_minor: cartItem.book.price_minor
+          price_minor: Math.round(parseFloat(cartItem.book.price.toString()) * 100) // Convert price to cents
         });
       }
 
@@ -744,7 +732,7 @@ export function setupBookEcommerceRoutes(app: Express) {
               id: item.book.id,
               title: item.book.title,
               author: item.book.author,
-              price: item.book.price_minor
+              price: parseFloat(item.book.price.toString())
             },
             quantity: item.quantity,
             unit_price: item.price_minor
@@ -789,7 +777,7 @@ export function setupBookEcommerceRoutes(app: Express) {
               id: item.book.id,
               title: item.book.title,
               author: item.book.author,
-              cover_image_url: item.book.pdf_file_path
+              cover_image_url: item.book.cover_image
             },
             quantity: item.quantity,
             unit_price: item.price_minor
@@ -850,8 +838,8 @@ export function setupBookEcommerceRoutes(app: Express) {
               title: item.book.title,
               author: item.book.author,
               isbn: item.book.isbn,
-              price: item.book.price_minor,
-              cover_image_url: item.book.pdf_file_path
+              price: parseFloat(item.book.price.toString()),
+              cover_image_url: item.book.cover_image
             },
             quantity: item.quantity,
             unit_price: item.price_minor,
