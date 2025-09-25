@@ -2,6 +2,11 @@
   "dashboard": {
     "title": "داشبورد زبان آموز",
     "welcome": "به سامانه یادگیری خوش آمدید",
+    "welcomeBack": "خوش آمدید!",
+    "readyToContinue": "آماده ادامه سفر یادگیری؟",
+    "dayStreak": "پیوستگی روزانه",
+    "completedLessons": "درس‌های تکمیل شده",
+    "nextSession": "جلسه بعدی",
     "myCourses": "دوره‌های من",
     "progress": "پیشرفت من",
     "assignments": "تکالیف من",
@@ -12,7 +17,17 @@
     "walletBalance": "موجودی کیف پول",
     "memberTier": "درجه عضویت",
     "studyTimeThisWeek": "زمان مطالعه این هفته",
-    "weeklyGoalHours": "هدف ساعات هفتگی"
+    "weeklyGoalHours": "هدف ساعات هفتگی",
+    "activeCourses": "دوره‌های فعال",
+    "totalCredits": "کل اعتبارات",
+    "pendingAssignments": "تکالیف در انتظار",
+    "recentActivity": "فعالیت‌های اخیر",
+    "member": "عضو",
+    "testResults": "نتایج آزمون",
+    "materials": "مواد آموزشی",
+    "payments": "پرداخت‌ها و اعتبارات",
+    "noUpcomingSessions": "جلسه‌ای در پیش نیست",
+    "withTeacher": "با {{teacher}}"
   },
   "courses": {
     "title": "دوره‌های من",
@@ -33,7 +48,10 @@
     "overdue": "معوقه",
     "dueDate": "مهلت تحویل",
     "submitAssignment": "تحویل تکلیف",
-    "viewFeedback": "مشاهده بازخورد"
+    "viewFeedback": "مشاهده بازخورد",
+    "completedLesson": "درس تکمیل شده",
+    "submittedAssignment": "تکلیف ارسال شده",
+    "watchedVideo": "ویدیو مشاهده شده"
   },
   "progress": {
     "title": "پیشرفت من",
@@ -45,6 +63,11 @@
     "totalXP": "کل امتیاز",
     "currentStreak": "پیوستگی فعلی"
   },
+  "sampleCourse1": "مکالمه انگلیسی B1",
+  "sampleCourse2": "اصول گرامر",
+  "sampleCourse3": "تمرین تلفظ",
+  "hoursAgo": "{{count}} ساعت پیش",
+  "daysAgo": "{{count}} روز پیش",
   "gamification": {
     "xp": "امتیاز",
     "level": "سطح",

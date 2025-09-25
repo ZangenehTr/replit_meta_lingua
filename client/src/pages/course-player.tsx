@@ -84,7 +84,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentLanguage, isRTL } = useLanguage();
+  const { isRTL } = useLanguage();
   const { t } = useTranslation();
 
   // Fetch course data

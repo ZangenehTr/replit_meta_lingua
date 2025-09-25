@@ -4,8 +4,10 @@
     "welcome": "Welcome back, {{name}}",
     "welcomeBack": "Welcome back!",
     "welcomeMessage": "Ready to continue your learning journey?",
+    "readyToContinue": "Ready to continue your learning journey",
     "myProgress": "My Progress",
     "dayStreak": "Day Streak",
+    "completedLessons": "Completed Lessons",
     "lessons": "Lessons", 
     "credits": "Credits",
     "learningStreak": "Learning Streak",
@@ -29,7 +31,17 @@
     "aiPractice": "AI Practice",
     "quickStats": "Quick Stats",
     "todaysGoals": "Today's Goals",
-    "recentAchievements": "Recent Achievements"
+    "recentAchievements": "Recent Achievements",
+    "activeCourses": "Active Courses",
+    "totalCredits": "Total Credits",
+    "pendingAssignments": "Pending Assignments",
+    "recentActivity": "Recent Activity",
+    "member": "Member",
+    "testResults": "Test Results",
+    "materials": "Learning Materials",
+    "payments": "Payments & Credits",
+    "noUpcomingSessions": "No upcoming sessions",
+    "withTeacher": "with {{teacher}}"
   },
   "stats": {
     "totalLessons": "Total Lessons",
@@ -59,7 +71,10 @@
     "dueDate": "Due Date",
     "submit": "Submit",
     "submitted": "Submitted",
-    "graded": "Graded"
+    "graded": "Graded",
+    "completedLesson": "Completed lesson",
+    "submittedAssignment": "Submitted assignment", 
+    "watchedVideo": "Watched video"
   },
   "practice": {
     "title": "AI Practice",
@@ -69,6 +84,11 @@
     "sessionActive": "Session Active",
     "sessionEnded": "Session Ended"
   },
+  "sampleCourse1": "English Conversation B1",
+  "sampleCourse2": "Grammar Fundamentals",
+  "sampleCourse3": "Pronunciation Practice",
+  "hoursAgo": "{{count}} hours ago",
+  "daysAgo": "{{count}} days ago",
   "gamification": {
     "title": "Achievements",
     "level": "Level",

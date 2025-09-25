@@ -300,6 +300,126 @@ export interface Translations {
   mentoringSessions: string;
   progressTracking: string;
   liveVirtualClassroom: string;
+
+  // Missing keys from console warnings
+  payments: string;
+  activeCourses: string;
+  completedLessons: string;
+  totalCredits: string;
+  pendingAssignments: string;
+  recentActivity: string;
+  completedLesson: string;
+  submittedAssignment: string;
+  watchedVideo: string;
+  member: string;
+  testResults: string;
+
+  // Admin-specific translation keys
+  goodMorning: string;
+  goodAfternoon: string;
+  goodEvening: string;
+  totalStudents: string;
+  totalTeachers: string;
+  active: string;
+  total: string;
+  revenueAnalytics: string;
+  platformMetrics: string;
+  systemHealth: string;
+  recentActivities: string;
+  teacherPerformance: string;
+  courseDistribution: string;
+  healthy: string;
+  warning: string;
+  critical: string;
+  database: string;
+  server: string;
+  aiService: string;
+  voipService: string;
+  
+  // Admin form validation messages
+  firstNameRequired: string;
+  lastNameRequired: string;
+  emailRequired: string;
+  emailInvalid: string;
+  specializationRequired: string;
+  qualificationsRequired: string;
+  experienceRequired: string;
+  languagesRequired: string;
+  hourlyRateRequired: string;
+  hourlyRateMinimum: string;
+  
+  // Admin actions and buttons
+  createUser: string;
+  updateUser: string;
+  deleteUser: string;
+  viewDetails: string;
+  editUser: string;
+  assignRole: string;
+  deactivateUser: string;
+  activateUser: string;
+  resetPassword: string;
+  
+  // Financial terms
+  transactions: string;
+  payouts: string;
+  revenue: string;
+  commissions: string;
+  refunds: string;
+  coursePayments: string;
+  teacherPayouts: string;
+  platformCommission: string;
+  manualTransactions: string;
+  
+  // Settings categories
+  paymentSettings: string;
+  smsSettings: string;
+  emailSettings: string;
+  databaseSettings: string;
+  securitySettings: string;
+  systemSettings: string;
+  notificationSettings: string;
+  apiSettings: string;
+  fileStorageSettings: string;
+  aiServicesSettings: string;
+  webrtcSettings: string;
+
+  // Admin page titles and descriptions
+  teacherManagementTitle: string;
+  teacherManagementDescription: string;
+  userManagementTitle: string;
+  userManagementSubtitle: string;
+  financialManagementTitle: string;
+  settingsTitle: string;
+  
+  // Teacher management specific
+  viewCards: string;
+  viewList: string;
+  addTeacher: string;
+  createNewTeacher: string;
+  teacherCreatedSuccessfully: string;
+  failedToCreateTeacher: string;
+  callernAccessGranted: string;
+  callernAccessRevoked: string;
+  callernUpdateFailed: string;
+  
+  // User management specific
+  createNewUser: string;
+  userCreatedSuccessfully: string;
+  userUpdatedSuccessfully: string;
+  userDeletedSuccessfully: string;
+  failedToCreateUser: string;
+  failedToUpdateUser: string;
+  failedToDeleteUser: string;
+  emailAlreadyExists: string;
+  
+  // General admin actions
+  filterByStatus: string;
+  filterByRole: string;
+  searchPlaceholder: string;
+  noResultsFound: string;
+  confirmDelete: string;
+  confirmDeleteMessage: string;
+  areYouSure: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -607,6 +727,126 @@ export const translations: Record<Language, Translations> = {
     mentees: "Mentees",
     mentoringSessions: "Mentoring Sessions",
     progressTracking: "Progress Tracking",
+
+    // Missing keys from console warnings
+    payments: "Payments",
+    activeCourses: "Active Courses",
+    completedLessons: "Completed Lessons",
+    totalCredits: "Total Credits",
+    pendingAssignments: "Pending Assignments",
+    recentActivity: "Recent Activity",
+    completedLesson: "Completed lesson",
+    submittedAssignment: "Submitted assignment",
+    watchedVideo: "Watched video",
+    member: "Member",
+    testResults: "Test Results",
+
+    // Admin-specific translations
+    goodMorning: "Good Morning",
+    goodAfternoon: "Good Afternoon",
+    goodEvening: "Good Evening",
+    totalStudents: "Total Students",
+    totalTeachers: "Total Teachers",
+    active: "Active",
+    total: "Total",
+    revenueAnalytics: "Revenue Analytics",
+    platformMetrics: "Platform Metrics",
+    systemHealth: "System Health",
+    recentActivities: "Recent Activities",
+    teacherPerformance: "Teacher Performance",
+    courseDistribution: "Course Distribution",
+    healthy: "Healthy",
+    warning: "Warning",
+    critical: "Critical",
+    database: "Database",
+    server: "Server",
+    aiService: "AI Service",
+    voipService: "VoIP Service",
+    
+    // Admin form validation messages
+    firstNameRequired: "First name is required",
+    lastNameRequired: "Last name is required",
+    emailRequired: "Email is required",
+    emailInvalid: "Please enter a valid email",
+    specializationRequired: "Specialization is required",
+    qualificationsRequired: "Qualifications are required",
+    experienceRequired: "Experience is required",
+    languagesRequired: "Teaching languages are required",
+    hourlyRateRequired: "Hourly rate is required",
+    hourlyRateMinimum: "Hourly rate must be greater than 0",
+    
+    // Admin actions and buttons
+    createUser: "Create User",
+    updateUser: "Update User",
+    deleteUser: "Delete User",
+    viewDetails: "View Details",
+    editUser: "Edit User",
+    assignRole: "Assign Role",
+    deactivateUser: "Deactivate User",
+    activateUser: "Activate User",
+    resetPassword: "Reset Password",
+    
+    // Financial terms
+    transactions: "Transactions",
+    payouts: "Payouts",
+    revenue: "Revenue",
+    commissions: "Commissions",
+    refunds: "Refunds",
+    coursePayments: "Course Payments",
+    teacherPayouts: "Teacher Payouts",
+    platformCommission: "Platform Commission",
+    manualTransactions: "Manual Transactions",
+    
+    // Settings categories
+    paymentSettings: "Payment Settings",
+    smsSettings: "SMS Settings",
+    emailSettings: "Email Settings",
+    databaseSettings: "Database Settings",
+    securitySettings: "Security Settings",
+    systemSettings: "System Settings",
+    notificationSettings: "Notification Settings",
+    apiSettings: "API Settings",
+    fileStorageSettings: "File Storage Settings",
+    aiServicesSettings: "AI Services Settings",
+    webrtcSettings: "WebRTC Settings",
+
+    // Admin page titles and descriptions
+    teacherManagementTitle: "Teacher Management",
+    teacherManagementDescription: "Manage teaching staff and their profiles",
+    userManagementTitle: "User Management",
+    userManagementSubtitle: "Manage users, roles, and permissions",
+    financialManagementTitle: "Financial Management",
+    settingsTitle: "System Settings",
+    
+    // Teacher management specific
+    viewCards: "Cards View",
+    viewList: "List View",
+    addTeacher: "Add Teacher",
+    createNewTeacher: "Create New Teacher",
+    teacherCreatedSuccessfully: "Teacher created successfully",
+    failedToCreateTeacher: "Failed to create teacher",
+    callernAccessGranted: "CallerN access granted",
+    callernAccessRevoked: "CallerN access revoked",
+    callernUpdateFailed: "Failed to update CallerN access",
+    
+    // User management specific
+    createNewUser: "Create New User",
+    userCreatedSuccessfully: "User created successfully",
+    userUpdatedSuccessfully: "User updated successfully",
+    userDeletedSuccessfully: "User deleted successfully",
+    failedToCreateUser: "Failed to create user",
+    failedToUpdateUser: "Failed to update user",
+    failedToDeleteUser: "Failed to delete user",
+    emailAlreadyExists: "Email already exists",
+    
+    // General admin actions
+    filterByStatus: "Filter by Status",
+    filterByRole: "Filter by Role",
+    searchPlaceholder: "Search users...",
+    noResultsFound: "No results found",
+    confirmDelete: "Confirm Delete",
+    confirmDeleteMessage: "Are you sure you want to delete this item?",
+    areYouSure: "Are you sure?",
   },
 
   fa: {
@@ -875,6 +1115,126 @@ export const translations: Record<Language, Translations> = {
     mentees: "شاگردان",
     mentoringSessions: "جلسات منتورینگ",
     progressTracking: "رهگیری پیشرفت",
+
+    // Missing keys from console warnings
+    payments: "پرداخت‌ها",
+    activeCourses: "دوره‌های فعال",
+    completedLessons: "درس‌های تکمیل شده",
+    totalCredits: "کل اعتبارات",
+    pendingAssignments: "تکالیف در انتظار",
+    recentActivity: "فعالیت‌های اخیر",
+    completedLesson: "درس تکمیل شده",
+    submittedAssignment: "تکلیف ارسال شده",
+    watchedVideo: "ویدیو مشاهده شده",
+    member: "عضو",
+    testResults: "نتایج آزمون",
+
+    // Admin-specific translations
+    goodMorning: "صبح بخیر",
+    goodAfternoon: "عصر بخیر",
+    goodEvening: "شب بخیر",
+    totalStudents: "کل دانش‌آموزان",
+    totalTeachers: "کل معلمان",
+    active: "فعال",
+    total: "کل",
+    revenueAnalytics: "تحلیل درآمد",
+    platformMetrics: "معیارهای پلتفرم",
+    systemHealth: "سلامت سیستم",
+    recentActivities: "فعالیت‌های اخیر",
+    teacherPerformance: "عملکرد معلمان",
+    courseDistribution: "توزیع دوره‌ها",
+    healthy: "سالم",
+    warning: "هشدار",
+    critical: "بحرانی",
+    database: "پایگاه داده",
+    server: "سرور",
+    aiService: "سرویس هوش مصنوعی",
+    voipService: "سرویس VoIP",
+    
+    // Admin form validation messages
+    firstNameRequired: "نام الزامی است",
+    lastNameRequired: "نام خانوادگی الزامی است",
+    emailRequired: "ایمیل الزامی است",
+    emailInvalid: "لطفاً ایمیل معتبر وارد کنید",
+    specializationRequired: "تخصص الزامی است",
+    qualificationsRequired: "مدارک الزامی است",
+    experienceRequired: "تجربه الزامی است",
+    languagesRequired: "زبان‌های تدریس الزامی است",
+    hourlyRateRequired: "نرخ ساعتی الزامی است",
+    hourlyRateMinimum: "نرخ ساعتی باید بیشتر از 0 باشد",
+    
+    // Admin actions and buttons
+    createUser: "ایجاد کاربر",
+    updateUser: "به‌روزرسانی کاربر",
+    deleteUser: "حذف کاربر",
+    viewDetails: "مشاهده جزئیات",
+    editUser: "ویرایش کاربر",
+    assignRole: "تخصیص نقش",
+    deactivateUser: "غیرفعال کردن کاربر",
+    activateUser: "فعال کردن کاربر",
+    resetPassword: "بازنشانی رمز عبور",
+    
+    // Financial terms
+    transactions: "تراکنش‌ها",
+    payouts: "پرداخت‌ها",
+    revenue: "درآمد",
+    commissions: "کمیسیون‌ها",
+    refunds: "بازپرداخت‌ها",
+    coursePayments: "پرداخت‌های دوره",
+    teacherPayouts: "پرداخت‌های معلمان",
+    platformCommission: "کمیسیون پلتفرم",
+    manualTransactions: "تراکنش‌های دستی",
+    
+    // Settings categories
+    paymentSettings: "تنظیمات پرداخت",
+    smsSettings: "تنظیمات پیامک",
+    emailSettings: "تنظیمات ایمیل",
+    databaseSettings: "تنظیمات پایگاه داده",
+    securitySettings: "تنظیمات امنیتی",
+    systemSettings: "تنظیمات سیستم",
+    notificationSettings: "تنظیمات اعلان‌ها",
+    apiSettings: "تنظیمات API",
+    fileStorageSettings: "تنظیمات ذخیره‌سازی فایل",
+    aiServicesSettings: "تنظیمات سرویس‌های هوش مصنوعی",
+    webrtcSettings: "تنظیمات WebRTC",
+
+    // Admin page titles and descriptions
+    teacherManagementTitle: "مدیریت معلمان",
+    teacherManagementDescription: "مدیریت کادر آموزشی و پروفایل‌های آن‌ها",
+    userManagementTitle: "مدیریت کاربران",
+    userManagementSubtitle: "مدیریت کاربران، نقش‌ها و مجوزها",
+    financialManagementTitle: "مدیریت مالی",
+    settingsTitle: "تنظیمات سیستم",
+    
+    // Teacher management specific
+    viewCards: "نمای کارت",
+    viewList: "نمای فهرست",
+    addTeacher: "افزودن معلم",
+    createNewTeacher: "ایجاد معلم جدید",
+    teacherCreatedSuccessfully: "معلم با موفقیت ایجاد شد",
+    failedToCreateTeacher: "ایجاد معلم ناموفق بود",
+    callernAccessGranted: "دسترسی کالرن اعطا شد",
+    callernAccessRevoked: "دسترسی کالرن لغو شد",
+    callernUpdateFailed: "به‌روزرسانی دسترسی کالرن ناموفق بود",
+    
+    // User management specific
+    createNewUser: "ایجاد کاربر جدید",
+    userCreatedSuccessfully: "کاربر با موفقیت ایجاد شد",
+    userUpdatedSuccessfully: "کاربر با موفقیت به‌روزرسانی شد",
+    userDeletedSuccessfully: "کاربر با موفقیت حذف شد",
+    failedToCreateUser: "ایجاد کاربر ناموفق بود",
+    failedToUpdateUser: "به‌روزرسانی کاربر ناموفق بود",
+    failedToDeleteUser: "حذف کاربر ناموفق بود",
+    emailAlreadyExists: "ایمیل قبلاً وجود دارد",
+    
+    // General admin actions
+    filterByStatus: "فیلتر بر اساس وضعیت",
+    filterByRole: "فیلتر بر اساس نقش",
+    searchPlaceholder: "جستجوی کاربران...",
+    noResultsFound: "نتیجه‌ای یافت نشد",
+    confirmDelete: "تأیید حذف",
+    confirmDeleteMessage: "آیا مطمئن هستید که می‌خواهید این مورد را حذف کنید؟",
+    areYouSure: "آیا مطمئن هستید؟",
   },
 
   ar: {
@@ -1108,6 +1468,88 @@ export const translations: Record<Language, Translations> = {
     dailyChallenge: "التحدي اليومي",
     complete5Lessons: "أكمل 5 دروس اليوم",
     reward: "مكافأة",
+
+    // Missing keys from console warnings
+    payments: "المدفوعات",
+    activeCourses: "الدورات النشطة",
+    completedLessons: "الدروس المكتملة",
+    totalCredits: "إجمالي الأرصدة",
+    pendingAssignments: "المهام المعلقة",
+    recentActivity: "النشاط الأخير",
+    completedLesson: "درس مكتمل",
+    submittedAssignment: "مهمة مرسلة",
+    watchedVideo: "فيديو مشاهد",
+    member: "عضو",
+    testResults: "نتائج الاختبار",
+
+    // Admin-specific translations
+    goodMorning: "صباح الخير",
+    goodAfternoon: "مساء الخير",
+    goodEvening: "مساء الخير",
+    totalStudents: "إجمالي الطلاب",
+    totalTeachers: "إجمالي المعلمين",
+    active: "نشط",
+    total: "المجموع",
+    revenueAnalytics: "تحليل الإيرادات",
+    platformMetrics: "مقاييس المنصة",
+    systemHealth: "صحة النظام",
+    recentActivities: "الأنشطة الأخيرة",
+    teacherPerformance: "أداء المعلمين",
+    courseDistribution: "توزيع الدورات",
+    healthy: "صحي",
+    warning: "تحذير",
+    critical: "حرج",
+    database: "قاعدة البيانات",
+    server: "الخادم",
+    aiService: "خدمة الذكاء الاصطناعي",
+    voipService: "خدمة VoIP",
+    
+    // Admin form validation messages
+    firstNameRequired: "الاسم الأول مطلوب",
+    lastNameRequired: "اسم العائلة مطلوب",
+    emailRequired: "البريد الإلكتروني مطلوب",
+    emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
+    specializationRequired: "التخصص مطلوب",
+    qualificationsRequired: "المؤهلات مطلوبة",
+    experienceRequired: "الخبرة مطلوبة",
+    languagesRequired: "لغات التدريس مطلوبة",
+    hourlyRateRequired: "السعر بالساعة مطلوب",
+    hourlyRateMinimum: "يجب أن يكون السعر بالساعة أكبر من 0",
+    
+    // Admin actions and buttons
+    createUser: "إنشاء مستخدم",
+    updateUser: "تحديث المستخدم",
+    deleteUser: "حذف المستخدم",
+    viewDetails: "عرض التفاصيل",
+    editUser: "تعديل المستخدم",
+    assignRole: "تعيين الدور",
+    deactivateUser: "إلغاء تفعيل المستخدم",
+    activateUser: "تفعيل المستخدم",
+    resetPassword: "إعادة تعيين كلمة المرور",
+    
+    // Financial terms
+    transactions: "المعاملات",
+    payouts: "المدفوعات",
+    revenue: "الإيرادات",
+    commissions: "العمولات",
+    refunds: "المبالغ المستردة",
+    coursePayments: "مدفوعات الدورات",
+    teacherPayouts: "مدفوعات المعلمين",
+    platformCommission: "عمولة المنصة",
+    manualTransactions: "المعاملات اليدوية",
+    
+    // Settings categories
+    paymentSettings: "إعدادات الدفع",
+    smsSettings: "إعدادات الرسائل النصية",
+    emailSettings: "إعدادات البريد الإلكتروني",
+    databaseSettings: "إعدادات قاعدة البيانات",
+    securitySettings: "إعدادات الأمان",
+    systemSettings: "إعدادات النظام",
+    notificationSettings: "إعدادات الإشعارات",
+    apiSettings: "إعدادات API",
+    fileStorageSettings: "إعدادات تخزين الملفات",
+    aiServicesSettings: "إعدادات خدمات الذكاء الاصطناعي",
+    webrtcSettings: "إعدادات WebRTC",
   }
 };
 

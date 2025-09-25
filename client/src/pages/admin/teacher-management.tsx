@@ -60,24 +60,37 @@ import {
   VideoOff
 } from "lucide-react";
 
-const teacherSchema = z.object({
-  firstName: z.string().min(1, "نام الزامی است"),
-  lastName: z.string().min(1, "نام خانوادگی الزامی است"),
-  email: z.string().email("ایمیل معتبر الزامی است"),
-  phone: z.string().optional(),
-  specialization: z.string().min(1, "تخصص الزامی است"),
-  qualifications: z.string().min(1, "مدارک الزامی است"),
-  experience: z.string().min(1, "تجربه الزامی است"),
-  languages: z.string().min(1, "زبان‌های تدریس الزامی است"),
-  hourlyRate: z.number().min(1, "نرخ ساعتی باید بیشتر از 0 باشد"),
-  bio: z.string().optional(),
-  status: z.enum(["active", "inactive"]).default("active"),
-});
-
-type TeacherFormData = z.infer<typeof teacherSchema>;
+type TeacherFormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  specialization: string;
+  qualifications: string;
+  experience: string;
+  languages: string;
+  hourlyRate: number;
+  bio?: string;
+  status: "active" | "inactive";
+};
 
 export function AdminTeacherManagement() {
   const { t } = useTranslation(['admin', 'common']);
+  
+  // Create schema inside component where t() is available
+  const teacherSchema = z.object({
+    firstName: z.string().min(1, t('firstNameRequired')),
+    lastName: z.string().min(1, t('lastNameRequired')),
+    email: z.string().email(t('emailInvalid')),
+    phone: z.string().optional(),
+    specialization: z.string().min(1, t('specializationRequired')),
+    qualifications: z.string().min(1, t('qualificationsRequired')),
+    experience: z.string().min(1, t('experienceRequired')),
+    languages: z.string().min(1, t('languagesRequired')),
+    hourlyRate: z.number().min(1, t('hourlyRateMinimum')),
+    bio: z.string().optional(),
+    status: z.enum(["active", "inactive"]).default("active"),
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,7 +102,7 @@ export function AdminTeacherManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch teachers
-  const { data: teachers = [], isLoading: teachersLoading, error, refetch } = useQuery({
+  const { data: teachers = [], isLoading: teachersLoading, error, refetch } = useQuery<any[]>({
     queryKey: ['/api/teachers/list'],
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -97,7 +110,7 @@ export function AdminTeacherManagement() {
   });
   
   // Fetch Callern teachers authorization status
-  const { data: callernTeachers = [] } = useQuery({
+  const { data: callernTeachers = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/callern-teachers'],
     retry: 3,
     staleTime: 5 * 60 * 1000,

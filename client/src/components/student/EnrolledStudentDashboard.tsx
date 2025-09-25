@@ -133,7 +133,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                 <div>
                   <h1 className="text-gray-900 font-bold text-xl">{t('student:brand')}</h1>
                   <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs">
-                    {enrollmentStatus.membershipTier} {t('student:member')}
+                    {enrollmentStatus.membershipTier} {t('student:dashboard.member')}
                   </Badge>
                 </div>
               </div>
@@ -161,10 +161,10 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
             { id: 'overview', label: t('student:overview'), icon: BarChart3 },
             { id: 'schedule', label: t('student:schedule'), icon: Calendar },
             { id: 'progress', label: t('student:progress'), icon: TrendingUp },
-            { id: 'test-results', label: 'Test Results', icon: ClipboardList, link: '/student/test-results' },
-            { id: 'materials', label: t('student:materials'), icon: BookOpen },
+            { id: 'test-results', label: t('student:dashboard.testResults'), icon: ClipboardList, link: '/student/test-results' },
+            { id: 'materials', label: t('student:dashboard.materials'), icon: BookOpen },
             { id: 'assignments', label: t('student:assignments'), icon: FileText },
-            { id: 'payments', label: t('student:payments'), icon: CreditCard },
+            { id: 'payments', label: t('student:dashboard.payments'), icon: CreditCard },
           ].map((tab) => 
             tab.link ? (
               <Link href={tab.link} key={tab.id}>
@@ -219,10 +219,10 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                   </Avatar>
                   <div>
                     <h2 className="text-2xl font-bold">
-                      {t('student:welcomeBack', { firstName: user?.firstName })}
+                      {t('student:dashboard.welcomeBack', { firstName: user?.firstName })}
                     </h2>
                     <p className="text-white/90">
-                      {t('student:readyToContinue')}
+                      {t('student:dashboard.readyToContinue')}
                     </p>
                   </div>
                 </div>
@@ -230,19 +230,19 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                   <div className="text-center">
                     <div className="text-2xl font-bold">{enrollmentStatus.activeCourses.length}</div>
-                    <div className="text-sm text-white/80">{t('student:activeCourses')}</div>
+                    <div className="text-sm text-white/80">{t('student:dashboard.activeCourses')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{user?.streakDays || 0}</div>
-                    <div className="text-sm text-white/80">{t('student:dayStreak')}</div>
+                    <div className="text-sm text-white/80">{t('student:dashboard.dayStreak')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{user?.totalLessons || 0}</div>
-                    <div className="text-sm text-white/80">{t('student:completedLessons')}</div>
+                    <div className="text-sm text-white/80">{t('student:dashboard.completedLessons')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{enrollmentStatus.totalCredits}</div>
-                    <div className="text-sm text-white/80">{t('student:totalCredits')}</div>
+                    <div className="text-sm text-white/80">{t('student:dashboard.totalCredits')}</div>
                   </div>
                 </div>
               </CardContent>
@@ -254,9 +254,9 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">{t('student:nextSession')}</p>
+                      <p className="text-sm text-gray-600">{t('student:dashboard.nextSession')}</p>
                       <p className="text-lg font-semibold text-gray-900">
-                        {upcomingSessions[0]?.startTime || t('student:noUpcomingSessions')}
+                        {upcomingSessions[0]?.startTime || t('student:dashboard.noUpcomingSessions')}
                       </p>
                     </div>
                     <Calendar className="h-8 w-8 text-blue-600" />
@@ -268,7 +268,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">{t('student:pendingAssignments')}</p>
+                      <p className="text-sm text-gray-600">{t('student:dashboard.pendingAssignments')}</p>
                       <p className="text-lg font-semibold text-gray-900">
                         {assignments.filter(a => a.status === 'pending').length}
                       </p>
@@ -282,7 +282,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">{t('student:walletBalance')}</p>
+                      <p className="text-sm text-gray-600">{t('student:stats.walletBalance')}</p>
                       <p className="text-lg font-semibold text-gray-900">
                         {enrollmentStatus.walletBalance.toLocaleString()} {t('common:currency')}
                       </p>
@@ -298,15 +298,15 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  {t('student:recentActivity')}
+                  {t('student:dashboard.recentActivity')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { action: t('student:completedLesson'), course: 'English Conversation B1', time: '2 hours ago' },
-                    { action: t('student:submittedAssignment'), course: 'Grammar Fundamentals', time: '1 day ago' },
-                    { action: t('student:watchedVideo'), course: 'Pronunciation Practice', time: '2 days ago' },
+                    { action: t('student:assignments.completedLesson'), course: t('student:sampleCourse1'), time: t('student:hoursAgo', { count: 2 }) },
+                    { action: t('student:assignments.submittedAssignment'), course: t('student:sampleCourse2'), time: t('student:daysAgo', { count: 1 }) },
+                    { action: t('student:assignments.watchedVideo'), course: t('student:sampleCourse3'), time: t('student:daysAgo', { count: 2 }) },
                   ].map((item, index) => (
                     <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -335,7 +335,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                   <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <h4 className="font-medium">{session.courseTitle}</h4>
-                      <p className="text-sm text-gray-600">with {session.teacherName}</p>
+                      <p className="text-sm text-gray-600">{t('student:withTeacher', { teacher: session.teacherName })}</p>
                       <p className="text-xs text-gray-500">{session.startTime} • {session.duration} min</p>
                     </div>
                     <Button size="sm" data-testid={`button-join-session-${session.id}`}>

@@ -145,13 +145,128 @@ i18n
     ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern', 'coursePlayer', 'courses'],
   });
 
-// Add runtime diagnostics for debugging missing keys
+// Enhanced RTL detection and document direction management
+export const isRTLLanguage = (language: string): boolean => {
+  return ['fa', 'ar'].includes(language);
+};
+
+// Font fallback system for Persian/Arabic languages
+export const getFontFamily = (language: string): string => {
+  switch (language) {
+    case 'fa': 
+      return 'Vazir, "Segoe UI Historic", Tahoma, Arial, sans-serif';
+    case 'ar': 
+      return 'Almarai, "Noto Kufi Arabic", "Segoe UI Historic", Tahoma, Arial, sans-serif';
+    default: 
+      return 'Inter, "Segoe UI", system-ui, -apple-system, sans-serif';
+  }
+};
+
+// RTL layout and direction management
+export const updateDocumentDirection = (language: string): void => {
+  const isRTL = isRTLLanguage(language);
+  const htmlElement = document.documentElement;
+  
+  // Set document direction
+  htmlElement.dir = isRTL ? 'rtl' : 'ltr';
+  
+  // Toggle RTL class for CSS-based styling
+  htmlElement.classList.toggle('rtl', isRTL);
+  htmlElement.classList.toggle('ltr', !isRTL);
+  
+  // Update language attribute
+  htmlElement.lang = language;
+  
+  // Apply font family
+  const fontFamily = getFontFamily(language);
+  document.body.style.fontFamily = fontFamily;
+  
+  // Update CSS custom properties for dynamic font switching
+  document.documentElement.style.setProperty('--font-family', fontFamily);
+  document.documentElement.style.setProperty('--text-direction', isRTL ? 'rtl' : 'ltr');
+};
+
+// Development-time missing key detection system
+const missingKeys = new Set<string>();
+let missingKeyCount = 0;
+
+// Enhanced missing key handler with comprehensive logging
+export const logMissingKey = (lng: string, ns: string, key: string): void => {
+  const fullKey = `${ns}:${key}`;
+  
+  if (!missingKeys.has(fullKey)) {
+    missingKeys.add(fullKey);
+    missingKeyCount++;
+    
+    console.group(`🔍 Missing Translation Key #${missingKeyCount}`);
+    console.warn(`Language: ${lng}`);
+    console.warn(`Namespace: ${ns}`);
+    console.warn(`Key: ${key}`);
+    console.warn(`Full Key: ${fullKey}`);
+    console.warn(`Route: ${window.location.pathname}`);
+    console.warn(`Total Missing Keys: ${missingKeys.size}`);
+    console.groupEnd();
+    
+    // Log missing keys summary periodically
+    if (missingKeyCount % 10 === 0) {
+      console.group(`📊 Missing Keys Summary (${missingKeys.size} total)`);
+      console.table([...missingKeys].sort().map(key => ({ 'Missing Key': key })));
+      console.groupEnd();
+    }
+  }
+};
+
+// Runtime validation and missing key detection
 i18n.on('missingKey', (lng, ns, key) => {
-  console.warn(`[i18n missing] lng=${lng} ns=${ns} key=${key}`);
-  // Enhanced diagnostics with stack trace and route context
-  console.warn('Current route:', window.location.pathname);
-  console.warn('Stack trace:');
-  console.warn(new Error().stack);
+  logMissingKey(lng, ns, key);
 });
+
+// Language change handler with RTL support
+i18n.on('languageChanged', (lng) => {
+  updateDocumentDirection(lng);
+  console.log(`🌍 Language changed to: ${lng} (${isRTLLanguage(lng) ? 'RTL' : 'LTR'})`);
+});
+
+// Initial setup on i18n initialization
+i18n.on('initialized', () => {
+  const currentLang = i18n.language;
+  updateDocumentDirection(currentLang);
+  console.log(`🚀 i18n initialized with language: ${currentLang}`);
+  console.log(`📝 Available namespaces: ${i18n.options.ns?.join(', ')}`);
+  console.log(`🔤 Font family applied: ${getFontFamily(currentLang)}`);
+});
+
+// Export utility functions for use across the application
+export const getCurrentLanguage = () => i18n.language;
+export const getMissingKeys = () => [...missingKeys];
+export const getMissingKeyCount = () => missingKeys.size;
+
+// Development tools for debugging
+export const i18nDevTools = {
+  missingKeys: () => [...missingKeys],
+  missingKeyCount: () => missingKeys.size,
+  clearMissingKeys: () => {
+    missingKeys.clear();
+    missingKeyCount = 0;
+    console.log('🧹 Missing keys cache cleared');
+  },
+  exportMissingKeys: () => {
+    const keys = [...missingKeys].sort();
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      totalCount: keys.length,
+      route: window.location.pathname,
+      keys: keys
+    };
+    console.log('📤 Missing keys export:', exportData);
+    return exportData;
+  }
+};
+
+// Make dev tools available globally in development
+if (process.env.NODE_ENV === 'development') {
+  (window as any).i18nDevTools = i18nDevTools;
+  console.log('🛠️ i18n dev tools available at window.i18nDevTools');
+}
 
 export default i18n;

@@ -6,6 +6,7 @@
     "welcomeMessage": "مستعد لمتابعة رحلة التعلم؟",
     "myProgress": "تقدمي",
     "dayStreak": "سلسلة الأيام",
+    "completedLessons": "الدروس المكتملة",
     "lessons": "الدروس",
     "credits": "الاعتمادات",
     "learningStreak": "سلسلة التعلم",
@@ -29,7 +30,18 @@
     "aiPractice": "ممارسة الذكاء الاصطناعي",
     "quickStats": "إحصائيات سريعة",
     "todaysGoals": "أهداف اليوم",
-    "recentAchievements": "الإنجازات الأخيرة"
+    "recentAchievements": "الإنجازات الأخيرة",
+    "readyToContinue": "مستعد لمتابعة رحلة التعلم؟",
+    "activeCourses": "الدورات النشطة",
+    "totalCredits": "إجمالي الأرصدة",
+    "pendingAssignments": "الواجبات المعلقة",
+    "recentActivity": "النشاط الأخير",
+    "member": "عضو",
+    "testResults": "نتائج الاختبار",
+    "materials": "المواد التعليمية",
+    "payments": "المدفوعات والأرصدة",
+    "noUpcomingSessions": "لا توجد جلسات قادمة",
+    "withTeacher": "مع {{teacher}}"
   },
   "courses": {
     "title": "دوراتي",
@@ -50,8 +62,16 @@
     "overdue": "متأخر",
     "dueDate": "موعد التسليم",
     "submitAssignment": "تسليم المهمة",
-    "viewFeedback": "عرض التعليقات"
+    "viewFeedback": "عرض التعليقات",
+    "completedLesson": "درس مكتمل",
+    "submittedAssignment": "واجب مرسل",
+    "watchedVideo": "فيديو مُشاهد"
   },
+  "sampleCourse1": "محادثة إنجليزية B1",
+  "sampleCourse2": "أساسيات القواعد",
+  "sampleCourse3": "ممارسة النطق",
+  "hoursAgo": "منذ {{count}} ساعة",
+  "daysAgo": "منذ {{count}} يوم",
   "progress": {
     "title": "تقدمي",
     "overallProgress": "التقدم العام",
