@@ -702,8 +702,27 @@ export default function VirtualMall() {
                         className="border rounded-lg p-3 bg-white dark:bg-gray-800"
                         data-testid={`book-card-${book.id}`}
                       >
-                        <div className="flex justify-between items-start gap-3">
-                          <div className="flex-1">
+                        <div className="flex items-start gap-3">
+                          {/* Book Cover Thumbnail */}
+                          <div className="flex-shrink-0" data-testid={`book-cover-${book.id}`}>
+                            {book.cover_image ? (
+                              <img 
+                                src={book.cover_image} 
+                                alt={book.title}
+                                className="w-16 h-20 object-cover rounded border shadow-sm"
+                                onError={(e) => {
+                                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA2NCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAzMkwyNCAzNkwzMiAzNkwzMiAzMkwyNCAzMloiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTI0IDQwTDI0IDQ0TDQwIDQ0TDQwIDQwTDI0IDQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMjQgNDhMMjQgNTJMMzYgNTJMMzYgNDhMMjQgNDhaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPgo=';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded border flex items-center justify-center">
+                                <Book className="w-6 h-6 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Book Information */}
+                          <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100" data-testid={`book-title-${book.id}`}>
                               {book.title}
                             </h4>
@@ -713,7 +732,7 @@ export default function VirtualMall() {
                             <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 line-clamp-2" data-testid={`book-description-${book.id}`}>
                               {book.description}
                             </p>
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
                               <Badge variant="outline" className="text-xs" data-testid={`book-price-badge-${book.id}`}>
                                 {format_safe_price(book)}
                               </Badge>
