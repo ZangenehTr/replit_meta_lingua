@@ -1,0 +1,92 @@
+🎯 REVISED PLAN BASED ON CODEBASE REVIEW
+You were right! I found extensive book e-commerce functionality already built. Here's the corrected implementation status:
+📚 DISCOVERY: Comprehensive Book E-commerce System EXISTS
+✅ ALREADY FULLY IMPLEMENTED:
+Complete backend API (server/routes/book-ecommerce-routes.ts - 1,311 lines!)
+Book management, cart operations, checkout, orders, addresses
+Database schemas for books, cart_items, orders
+Virtual Mall coursebook browsing with real API integration
+Admin e-commerce configuration pages
+❌ MISSING UI COMPONENTS:
+Student cart page (backend exists, UI missing)
+Student checkout page (backend exists, UI missing)
+Student order history (backend exists, UI missing)
+Accountant book inventory management interface (APIs exist, UI missing)
+
+🛒 PHASE 4: Complete E-commerce UI (Use Existing APIs)
+4A. Build student shopping cart page using /api/cart 4B. Build student checkout flow using /api/checkout 4C. Build student order history using existing order APIs 4D. Fix Virtual Mall integration (cache invalidation, error handling) 4E. Build Accountant inventory management UI using existing book APIs
+🔐 AUTH: Update Authentication System
+Redesign login/signup with student page styling
+Add email OR cellphone signup/login with OTP
+👥 PHASE 1-5: Continue as planned
+Student differentiation, MST retention, Front Desk operations, Iranian localization, Security
+
+🎨 UI CONSISTENCY REQUIREMENT
+Use student dashboard color scheme throughout
+Update login page styling to match
+Consistent components and design patterns
+The good news: Most of the heavy backend work is done! We mainly need to build UI components that consume existing APIs.
+
+
+
+🔐 AUTHENTICATION SYSTEM UPDATES (Before Phase 1)
+🔧 BUILT + VISIBLE:
+❌ Updated login/signup UI using student page colors/styling
+❌ Dual signup: Email OR Cellphone number choice
+❌ Enhanced OTP login system for both email and SMS
+🔧 BUILT + PARTIALLY VISIBLE:
+✅ Basic OTP system exists (email-based)
+✅ Authentication forms with i18n support
+
+👥 PHASE 1: Role-Based Student Differentiation
+🔧 BUILT + VISIBLE:
+❌ Non-enrolled students see: Teacher directory with reviews, trial booking CTA, placement test
+❌ Enrolled students see: Class schedules, progress tracking, course materials, assignments
+❌ Feature gating by enrollment status
+🔧 BUILT + BACKEND:
+✅ RBAC system exists (rolePermissions, subsystemPermissions)
+❌ Enrollment status field in user model
+
+📊 PHASE 2: MST Placement Test Result Retention
+🔧 BUILT + VISIBLE:
+❌ Results history page with per-skill proficiency bands
+❌ Export functionality (PDF/CSV for official records)
+❌ Score progression tracking
+🔧 BUILT + BACKEND:
+✅ MST schemas exist (mstSessions, mstSkillStates, mstResponses)
+❌ Result finalization pipeline
+❌ Retake prevention logic
+
+📞 PHASE 3: Front Desk Clerk Operations
+🔧 BUILT + VISIBLE (FDC Role Only):
+❌ Walk-in intake forms (lead + contact + interests)
+❌ Phone call logging with status transitions
+❌ Caller history panels
+❌ SMS template system via Kavenegar
+❌ Direct trial lesson scheduling
+🔧 BUILT + BACKEND:
+✅ Call Center workflow constants exist
+✅ SMS integration (Kavenegar) exists
+✅ Lead management schemas exist
+
+🌍 PHASE 5: Iranian Context Optimization
+🔧 BUILT + VISIBLE:
+❌ Complete RTL support throughout application
+❌ IRR/Toman currency display with proper formatting
+❌ Jalali date system integration
+❌ National ID validation
+❌ Admin/Supervisor trial booking configuration UI
+🔧 BUILT + PARTIALLY VISIBLE:
+✅ Basic i18n system exists (Persian support)
+✅ RTL layout partially implemented
+
+🔒 SECURITY HARDENING (Final Phase)
+🔧 BUILT + BACKEND SECURITY:
+❌ JWT secrets moved to environment variables
+❌ Comprehensive role-based access validation
+❌ File upload security audit
+✅ Zod input validation exists
+
+📋 MANDATORY REQUIREMENTS
+✅ Real Data Only: No mock/fake data - always use real API calls
+✅ U...
