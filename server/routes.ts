@@ -108,6 +108,15 @@ import {
   exportAttendanceCSV 
 } from "./utils/csv-export";
 
+// OTP store for temporary OTP storage
+interface OtpData {
+  code: string;
+  expiresAt: Date;
+  attempts: number;
+}
+
+const otpStore = new Map<string, OtpData>();
+
 // Configure multer for audio uploads
 const audioStorage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -2094,7 +2103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             intermediate: { speaking: 75, listening: 80, reading: 70, writing: 65, grammar: 72, vocabulary: 68 },
             advanced: { speaking: 85, listening: 90, reading: 80, writing: 75, grammar: 82, vocabulary: 78 }
           };
-          const level = profile?.proficiencyLevel || 'beginner';
+          const level = profile?.currentProficiency || 'beginner';
           skillLevels[skill] = defaultScores[level]?.[skill] || 60;
         }
       }
@@ -2147,13 +2156,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recommendedPaths = [
         {
           id: '1',
-          title: profile?.proficiencyLevel === 'beginner' ? 'Foundation Building' : 'Business Communication Mastery',
-          description: profile?.proficiencyLevel === 'beginner' 
+          title: profile?.currentProficiency === 'beginner' ? 'Foundation Building' : 'Business Communication Mastery',
+          description: profile?.currentProficiency === 'beginner' 
             ? 'Build strong foundations in all language skills'
             : 'Focus on professional vocabulary and formal writing',
           currentStep: Math.min(8, Math.max(1, Math.floor(completedSessions / 3))),
           totalSteps: 8,
-          nextMilestone: profile?.proficiencyLevel === 'beginner' ? 'Basic Conversations' : 'Email Writing Workshop',
+          nextMilestone: profile?.currentProficiency === 'beginner' ? 'Basic Conversations' : 'Email Writing Workshop',
           estimatedTime: '2 weeks',
           recommended: true
         },
@@ -2789,12 +2798,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           courseId: curriculumLevelCourses.courseId,
           course: courses,
           isRequired: curriculumLevelCourses.isRequired,
-          sequenceOrder: curriculumLevelCourses.sequenceOrder
+          sequenceOrder: curriculumLevelCourses.orderIndex
         })
         .from(curriculumLevelCourses)
         .innerJoin(courses, eq(curriculumLevelCourses.courseId, courses.id))
         .where(eq(curriculumLevelCourses.curriculumLevelId, progress.curriculumLevelId))
-        .orderBy(curriculumLevelCourses.sequenceOrder);
+        .orderBy(curriculumLevelCourses.orderIndex);
       } else {
         // Fallback: get courses based on proficiency level
         availableCourses = await db.select()
@@ -2829,9 +2838,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'levelCode', ${curriculumLevels.levelCode},
               'levelName', ${curriculumLevels.levelName},
               'difficultyLevel', ${curriculumLevels.difficultyLevel},
-              'sequenceOrder', ${curriculumLevels.sequenceOrder},
+              'sequenceOrder', ${curriculumLevels.orderIndex},
               'totalLessons', ${curriculumLevels.totalLessons}
-            ) ORDER BY ${curriculumLevels.sequenceOrder}
+            ) ORDER BY ${curriculumLevels.orderIndex}
           )
         `
       })
@@ -22027,7 +22036,7 @@ Meta Lingua Academy`;
         .select()
         .from(placementTestSessions)
         .where(and(
-          eq(placementTestSessions.studentId, studentId),
+          eq(placementTestSessions.userId, studentId),
           eq(placementTestSessions.status, 'completed')
         ))
         .limit(1);

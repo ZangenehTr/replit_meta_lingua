@@ -162,6 +162,30 @@ export class DatabaseStorage implements IStorage {
     return newUser;
   }
 
+  // Generate a unique student ID
+  async generateStudentId(): Promise<string> {
+    const today = new Date();
+    const year = today.getFullYear().toString().slice(-2);
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    
+    // Get count of students created today for sequential numbering
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    
+    const studentsToday = await db.select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(and(
+        eq(users.role, 'Student'),
+        sql`${users.createdAt} >= ${startOfDay}`,
+        sql`${users.createdAt} < ${endOfDay}`
+      ));
+    
+    const sequenceNumber = (studentsToday[0]?.count || 0) + 1;
+    const studentId = `STU${year}${month}${String(sequenceNumber).padStart(3, '0')}`;
+    
+    return studentId;
+  }
+
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
     const [updatedUser] = await db
       .update(users)
