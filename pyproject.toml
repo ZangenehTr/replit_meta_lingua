@@ -20,6 +20,7 @@ dependencies = [
     "scipy>=1.16.1",
     "soundfile>=0.13.1",
     "uvicorn>=0.35.0",
+    "whisper>=1.1.10",
 ]
 
 [[tool.uv.index]]

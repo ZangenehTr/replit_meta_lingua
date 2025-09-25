@@ -210,9 +210,35 @@ export class MetaLinguaTTSService {
   }
 
   /**
-   * Generate audio file using edge-tts Python command
+   * Generate audio file using edge-tts Python command with retry logic
    */
   private async generateWithEdgeTTSCommand(text: string, outputPath: string, voice: string, speed: number = 1.0): Promise<boolean> {
+    const maxRetries = 3;
+    const baseDelay = 1000; // 1 second base delay
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const success = await this.attemptEdgeTTSGeneration(text, outputPath, voice, speed, attempt);
+      
+      if (success) {
+        return true;
+      }
+      
+      // If not the last attempt, wait before retrying
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        console.log(`🔄 Edge TTS retry ${attempt + 1}/${maxRetries} in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    console.log(`❌ Edge TTS failed after ${maxRetries} attempts`);
+    return false;
+  }
+
+  /**
+   * Single attempt at Edge TTS generation
+   */
+  private async attemptEdgeTTSGeneration(text: string, outputPath: string, voice: string, speed: number, attempt: number): Promise<boolean> {
     return new Promise((resolve) => {
       try {
         // Calculate rate parameter for edge-tts (speed adjustment)
@@ -228,30 +254,32 @@ export class MetaLinguaTTSService {
           '--write-media', outputPath
         ]);
 
+        // Set timeout for edge-tts process (prevent hanging)
+        const timeout = setTimeout(() => {
+          console.log(`❌ Edge TTS timeout for ${outputPath}`);
+          process.kill('SIGTERM');
+          resolve(false);
+        }, 30000); // 30 second timeout
+
         process.on('close', (code) => {
+          clearTimeout(timeout);
           if (code === 0) {
-            console.log(`✅ Edge TTS generated: ${outputPath}`);
+            console.log(`✅ Edge TTS generated: ${outputPath} (attempt ${attempt + 1})`);
             resolve(true);
           } else {
-            console.log(`❌ Edge TTS failed: ${outputPath} (exit code: ${code})`);
+            console.log(`❌ Edge TTS failed: ${outputPath} (exit code: ${code}, attempt ${attempt + 1})`);
             resolve(false);
           }
         });
 
         process.on('error', (error) => {
-          console.error(`❌ Edge TTS error for ${outputPath}:`, error.message);
+          clearTimeout(timeout);
+          console.error(`❌ Edge TTS error for ${outputPath} (attempt ${attempt + 1}):`, error.message);
           resolve(false);
         });
 
-        // Set timeout for TTS generation (30 seconds max)
-        setTimeout(() => {
-          process.kill();
-          console.error(`❌ Edge TTS timeout for ${outputPath}`);
-          resolve(false);
-        }, 30000);
-
       } catch (error) {
-        console.error(`❌ Edge TTS exception for ${outputPath}:`, error);
+        console.error(`❌ Edge TTS exception for ${outputPath} (attempt ${attempt + 1}):`, error);
         resolve(false);
       }
     });
