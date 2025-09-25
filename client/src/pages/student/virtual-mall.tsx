@@ -170,7 +170,7 @@ export default function VirtualMall() {
   const [showBookDetailsModal, setShowBookDetailsModal] = useState(false);
 
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, isRTL, direction, language } = useLanguage();
 
   // Fetch coursebooks for bookstore using shared query client
   const { data: coursebooks, isLoading: coursebooksLoading, error: coursebooksError } = useQuery<{success: boolean; data: CourseBook[]}>({
@@ -488,7 +488,11 @@ export default function VirtualMall() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800"
+      dir={direction}
+      lang={language}
+    >
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -723,13 +727,13 @@ export default function VirtualMall() {
                           
                           {/* Book Information */}
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100" data-testid={`book-title-${book.id}`}>
+                            <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100" data-testid={`book-title-${book.id}`} dir="auto">
                               {book.title}
                             </h4>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1" data-testid={`book-author-${book.id}`}>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1" data-testid={`book-author-${book.id}`} dir="auto">
                               by {book.author}
                             </p>
-                            <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 line-clamp-2" data-testid={`book-description-${book.id}`}>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 line-clamp-2" data-testid={`book-description-${book.id}`} dir="auto">
                               {book.description}
                             </p>
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -810,10 +814,10 @@ export default function VirtualMall() {
       <Dialog open={showBookDetailsModal} onOpenChange={setShowBookDetailsModal}>
         <DialogContent className="max-w-md mx-auto" data-testid="book-details-modal">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold" data-testid="book-modal-title">
+            <DialogTitle className="text-xl font-semibold" data-testid="book-modal-title" dir="auto">
               {selectedBook?.title}
             </DialogTitle>
-            <DialogDescription className="text-sm text-gray-600 dark:text-gray-400" data-testid="book-modal-author">
+            <DialogDescription className="text-sm text-gray-600 dark:text-gray-400" data-testid="book-modal-author" dir="auto">
               by {selectedBook?.author}
             </DialogDescription>
           </DialogHeader>
@@ -837,7 +841,7 @@ export default function VirtualMall() {
               {/* Book Description */}
               <div data-testid="book-modal-description">
                 <h4 className="font-medium text-sm mb-2">Description</h4>
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed" dir="auto">
                   {selectedBook.description}
                 </p>
               </div>
