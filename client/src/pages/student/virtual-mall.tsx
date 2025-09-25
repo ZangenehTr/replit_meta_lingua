@@ -286,6 +286,21 @@ export default function VirtualMall() {
     enabled: showCoursebooks
   });
 
+  // Fetch learner profile for Lexi's omniscience
+  const { data: user } = useQuery({
+    queryKey: ['/api/users/me'],
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ['/api/profile'],
+    enabled: !!user,
+  });
+
+  const { data: userPerformance } = useQuery({
+    queryKey: [`/api/students/${user?.id}/performance`],
+    enabled: !!user?.id,
+  });
+
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: async (data: { book_id: number; quantity: number }) => {
@@ -599,17 +614,92 @@ export default function VirtualMall() {
   };
 
   const handleBrowseCoursebooks = () => {
-    const emmaMessage: LexiMessage = {
+    // Generate intelligent recommendation based on learner profile
+    const getPersonalizedRecommendation = () => {
+      if (!user || !profile) {
+        // Basic greeting for unidentified learners
+        return language === 'fa' ? 
+          `سلام! من لکسی هستم، دستیار هوشمند شما. به فروشگاه کتاب خوش آمدید! اینجا مجموعه‌ای از بهترین کتاب‌های آموزش زبان را خواهید یافت.` :
+          `Hello! I'm Lexi, your intelligent learning assistant. Welcome to our bookstore! Here you'll find an excellent collection of language learning books.`;
+      }
+
+      const userName = user.firstName || user.name || (language === 'fa' ? 'دانشجوی عزیز' : 'dear learner');
+      const currentLevel = profile.englishLevel || profile.targetLevel || (language === 'fa' ? 'مبتدی' : 'beginner');
+      const nativeLanguage = profile.nativeLanguage || (language === 'fa' ? 'فارسی' : 'Persian');
+      const targetLanguage = profile.targetLanguage || (language === 'fa' ? 'انگلیسی' : 'English');
+      
+      if (language === 'fa') {
+        return `سلام ${userName}! من لکسی هستم و همه چیز درباره مسیر یادگیری شما می‌دانم. شما در حال حاضر در سطح ${currentLevel} زبان انگلیسی هستید و از ${nativeLanguage} به ${targetLanguage} در حال یادگیری هستید. بر اساس پیشرفت شما، چندین کتاب عالی پیشنهاد دارم که کاملاً متناسب با نیازهای یادگیری شما است. اجازه دهید کتاب‌هایی را نشان دهم که می‌توانند مسیر یادگیری شما را تسریع کنند!`;
+      } else {
+        return `Hello ${userName}! I'm Lexi, your omniscient learning companion, and I know everything about your learning journey. You're currently at ${currentLevel} level in English, progressing from ${nativeLanguage} to ${targetLanguage}. Based on your progress and learning style, I have several excellent book recommendations that are perfectly tailored to your needs. Let me show you books that will accelerate your learning path!`;
+      }
+    };
+
+    const personalizedContent = getPersonalizedRecommendation();
+    
+    // Add Lexi's intelligent greeting message
+    const lexiMessage: LexiMessage = {
       id: Date.now().toString(),
-      type: 'shopgirl',
-      speaker: 'Emma',
-      content: "Great choice! Here are our featured coursebooks. These are specially selected for language learners. You can view details, check prices, and add books to your learning library!",
+      type: 'lexi',
+      speaker: 'Lexi',
+      content: personalizedContent,
       timestamp: new Date()
     };
-    setMessages(prev => [...prev, emmaMessage]);
+    setMessages(prev => [...prev, lexiMessage]);
+    
+    // Play Lexi's voice
+    speakText(personalizedContent, 'lexi');
     
     // Now trigger coursebooks fetch and display
     setShowCoursebooks(true);
+
+    // Add follow-up specific book recommendations after books load
+    setTimeout(() => {
+      if (coursebooks?.data && user && profile) {
+        const getBookSpecificRecommendations = () => {
+          const userLevel = profile.englishLevel || profile.targetLevel || 'beginner';
+          const levelMapping: Record<string, string[]> = {
+            'beginner': ['A1', 'A2', 'Basic', 'Elementary'],
+            'intermediate': ['B1', 'B2', 'Intermediate', 'Pre-intermediate'],
+            'advanced': ['C1', 'C2', 'Advanced', 'Upper-intermediate'],
+          };
+
+          const relevantLevels = levelMapping[userLevel.toLowerCase()] || ['A1', 'A2'];
+          const suitableBooks = coursebooks.data.filter(book => 
+            relevantLevels.some(level => 
+              book.title.includes(level) || 
+              book.description?.includes(level) ||
+              book.level?.includes(level)
+            )
+          );
+
+          if (suitableBooks.length === 0) {
+            return language === 'fa' ? 
+              `تمام کتاب‌های موجود را مرور کنید - من کتاب‌هایی را که با سطح فعلی شما مطابقت دارد برایتان پیدا خواهم کرد.` :
+              `Browse through all available books - I'll help you find ones that match your current level perfectly.`;
+          }
+
+          const recommendations = suitableBooks.slice(0, 3).map(book => book.title).join(', ');
+          
+          return language === 'fa' ? 
+            `بر اساس سطح ${userLevel} شما، این کتاب‌ها را بشدت توصیه می‌کنم: ${recommendations}. این کتاب‌ها دقیقاً برای نیازهای یادگیری فعلی شما طراحی شده‌اند.` :
+            `Based on your ${userLevel} level, I highly recommend these books: ${recommendations}. These are specifically designed for your current learning needs.`;
+        };
+
+        const bookRecommendations = getBookSpecificRecommendations();
+        if (bookRecommendations) {
+          const followUpMessage: LexiMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'lexi',
+            speaker: 'Lexi',
+            content: bookRecommendations,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, followUpMessage]);
+          speakText(bookRecommendations, 'lexi');
+        }
+      }
+    }, 3000); // Give books time to load
   };
 
   // Safe price formatter using snake_case naming - handles both string and number prices
