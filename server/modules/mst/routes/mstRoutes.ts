@@ -82,34 +82,62 @@ function getNextWeekStartDate(): string {
 
 /**
  * POST /mst/start
- * Start a new MST session
+ * Start a new MST session with PROPER retake prevention logic
  */
 router.post('/start', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     
-    // Check weekly limits (max 3 attempts per week) - consistent with placement tests
-    const sessionsThisWeek = await storage.getUserPlacementTestSessionsThisWeek(userId);
-    if (sessionsThisWeek.length >= 3) {
-      return res.status(429).json({
-        success: false,
-        error: 'Weekly placement test limit exceeded',
-        message: 'You can only take 3 placement tests per week. Please try again next week.',
-        attemptsUsed: sessionsThisWeek.length,
-        maxAttempts: 3,
-        nextAvailableDate: getNextWeekStartDate()
-      });
+    // SECURITY: Enforce MST-specific retake eligibility BEFORE session creation
+    const retakePeriodDays = 7; // Could be configurable via admin settings
+    const maxAttempts = 3;
+    
+    const attemptsCount = await storage.getMSTAttemptCountForPeriod(userId, retakePeriodDays);
+    const remainingAttempts = Math.max(0, maxAttempts - attemptsCount);
+    
+    if (remainingAttempts === 0) {
+      // Get last attempt to calculate correct cooldown
+      const history = await storage.getUserMSTHistory(userId);
+      
+      if (history.length > 0) {
+        const lastAttempt = new Date(history[0].startedAt);
+        const nextAllowedDate = new Date(lastAttempt);
+        nextAllowedDate.setDate(lastAttempt.getDate() + retakePeriodDays);
+        
+        const now = new Date();
+        const remainingCooldownHours = Math.ceil((nextAllowedDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+        
+        if (nextAllowedDate > now) {
+          console.log(`🚫 MST retake blocked for user ${userId}: ${attemptsCount}/${maxAttempts} attempts used, next available: ${nextAllowedDate.toISOString()}`);
+          
+          return res.status(429).json({
+            success: false,
+            error: 'MST retake limit exceeded',
+            message: `You have used all ${maxAttempts} MST attempts for this ${retakePeriodDays}-day period. Please wait for the cooldown to end.`,
+            attemptsUsed: attemptsCount,
+            maxAttempts,
+            remainingAttempts: 0,
+            nextAvailableDate: nextAllowedDate.toISOString(),
+            remainingCooldownHours,
+            periodDays: retakePeriodDays,
+            lastAttemptDate: lastAttempt.toISOString()
+          });
+        }
+      }
     }
+    
+    console.log(`✅ MST session creation allowed for user ${userId}: ${attemptsCount}/${maxAttempts} attempts used`);
     
     const result = await sessionController.startSession(userId);
     
     res.json({
       success: true,
       ...result,
-      weeklyLimits: {
-        attemptsUsed: sessionsThisWeek.length + 1,
-        maxAttempts: 3,
-        remainingAttempts: 2 - sessionsThisWeek.length
+      retakeLimits: {
+        attemptsUsed: attemptsCount,
+        maxAttempts,
+        remainingAttempts: remainingAttempts - 1, // Account for this new attempt
+        periodDays: retakePeriodDays
       }
     });
   } catch (error) {

@@ -1104,6 +1104,9 @@ export interface IStorage {
   // MST Integration Methods
   getMSTSession(sessionId: string): Promise<any>;
   getMSTResults(sessionId: string): Promise<any>;
+  getUserMSTHistory(userId: number): Promise<any[]>;
+  getUserMSTResultsWithAnalytics(userId: number): Promise<any>;
+  getMSTAttemptCountForPeriod(userId: number, days: number): Promise<number>;
 
   // AI Study Partner management
   getAiStudyPartnerByUserId(userId: number): Promise<AiStudyPartner | undefined>;
@@ -5513,6 +5516,201 @@ export class MemStorage implements IStorage {
     }
     
     return recommendations;
+  }
+
+  // New MST Analytics Methods
+  async getUserMSTHistory(userId: number): Promise<any[]> {
+    try {
+      const sessions = await this.db
+        .select()
+        .from(mstSessions)
+        .where(eq(mstSessions.userId, userId))
+        .orderBy(desc(mstSessions.startedAt));
+
+      const historyWithResults = await Promise.all(
+        sessions.map(async (session) => {
+          const skillStates = await this.db
+            .select()
+            .from(mstSkillStates)
+            .where(eq(mstSkillStates.sessionId, session.id));
+
+          const responses = await this.db
+            .select()
+            .from(mstResponses)
+            .where(eq(mstResponses.sessionId, session.id));
+
+          // Calculate skill results
+          const skillResults = skillStates.map(skillState => {
+            const skillResponses = responses.filter(r => r.skill === skillState.skill);
+            const stage1Score = this.calculateStageScore(skillResponses.filter(r => r.stage === 'core'));
+            const stage2Score = this.calculateStageScore(skillResponses.filter(r => r.stage === 'upper' || r.stage === 'lower'));
+            const finalScore = stage2Score || stage1Score;
+            const band = this.scoreToBand(finalScore, skillState.skill);
+
+            return {
+              skill: skillState.skill,
+              band,
+              score: finalScore,
+              confidence: Math.min(1.0, finalScore / 80),
+              timeSpentSec: skillState.timeSpentSec || 0
+            };
+          });
+
+          // Calculate overall results
+          const overallScore = skillResults.length > 0 
+            ? skillResults.reduce((sum, skill) => sum + skill.score, 0) / skillResults.length 
+            : 0;
+          const overallBand = this.scoreToBand(overallScore, 'overall');
+          const totalTimeMin = Math.round(skillStates.reduce((sum, state) => sum + (state.timeSpentSec || 0), 0) / 60);
+
+          return {
+            id: session.id,
+            sessionId: session.sessionId || `mst_${session.id}`,
+            startedAt: session.startedAt,
+            completedAt: session.completedAt,
+            status: session.status,
+            overallBand,
+            overallScore,
+            totalTimeMin,
+            skillResults,
+            targetLanguage: session.targetLanguage || 'english'
+          };
+        })
+      );
+
+      return historyWithResults;
+    } catch (error) {
+      console.error('❌ Error getting user MST history:', error);
+      return [];
+    }
+  }
+
+  async getUserMSTResultsWithAnalytics(userId: number): Promise<any> {
+    try {
+      const history = await this.getUserMSTHistory(userId);
+      
+      if (history.length === 0) {
+        return {
+          history: [],
+          analytics: {
+            totalAttempts: 0,
+            averageScore: 0,
+            highestScore: 0,
+            mostRecentBand: null,
+            skillProgression: {},
+            improvementRate: 0,
+            consistencyScore: 0,
+            strongestSkill: null,
+            weakestSkill: null
+          }
+        };
+      }
+
+      // Calculate analytics
+      const completedTests = history.filter(test => test.status === 'completed');
+      const scores = completedTests.map(test => test.overallScore);
+      const skillData: Record<string, number[]> = {};
+
+      // Aggregate skill data
+      completedTests.forEach(test => {
+        test.skillResults.forEach((skill: any) => {
+          if (!skillData[skill.skill]) {
+            skillData[skill.skill] = [];
+          }
+          skillData[skill.skill].push(skill.score);
+        });
+      });
+
+      // Calculate skill averages
+      const skillAverages = Object.entries(skillData).map(([skill, scores]) => ({
+        skill,
+        averageScore: scores.reduce((sum, score) => sum + score, 0) / scores.length
+      }));
+
+      const strongestSkill = skillAverages.length > 0 
+        ? skillAverages.reduce((prev, current) => prev.averageScore > current.averageScore ? prev : current)
+        : null;
+
+      const weakestSkill = skillAverages.length > 0 
+        ? skillAverages.reduce((prev, current) => prev.averageScore < current.averageScore ? prev : current)
+        : null;
+
+      // Calculate improvement rate (linear regression slope)
+      let improvementRate = 0;
+      if (scores.length >= 2) {
+        const n = scores.length;
+        const sumX = scores.reduce((sum, _, i) => sum + i, 0);
+        const sumY = scores.reduce((sum, score) => sum + score, 0);
+        const sumXY = scores.reduce((sum, score, i) => sum + (i * score), 0);
+        const sumXX = scores.reduce((sum, _, i) => sum + (i * i), 0);
+        
+        improvementRate = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      }
+
+      // Calculate consistency (inverse of standard deviation)
+      let consistencyScore = 100;
+      if (scores.length > 1) {
+        const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+        const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
+        const stdDev = Math.sqrt(variance);
+        consistencyScore = Math.max(0, 100 - stdDev);
+      }
+
+      const analytics = {
+        totalAttempts: history.length,
+        averageScore: scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0,
+        highestScore: scores.length > 0 ? Math.max(...scores) : 0,
+        mostRecentBand: completedTests.length > 0 ? completedTests[0].overallBand : null,
+        skillProgression: skillData,
+        improvementRate: Number(improvementRate.toFixed(2)),
+        consistencyScore: Number(consistencyScore.toFixed(1)),
+        strongestSkill: strongestSkill?.skill || null,
+        weakestSkill: weakestSkill?.skill || null
+      };
+
+      return {
+        history,
+        analytics
+      };
+    } catch (error) {
+      console.error('❌ Error getting user MST results with analytics:', error);
+      return {
+        history: [],
+        analytics: {
+          totalAttempts: 0,
+          averageScore: 0,
+          highestScore: 0,
+          mostRecentBand: null,
+          skillProgression: {},
+          improvementRate: 0,
+          consistencyScore: 0,
+          strongestSkill: null,
+          weakestSkill: null
+        }
+      };
+    }
+  }
+
+  async getMSTAttemptCountForPeriod(userId: number, days: number): Promise<number> {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+
+      const sessions = await this.db
+        .select()
+        .from(mstSessions)
+        .where(
+          and(
+            eq(mstSessions.userId, userId),
+            gte(mstSessions.startedAt, cutoffDate)
+          )
+        );
+
+      return sessions.length;
+    } catch (error) {
+      console.error('❌ Error getting MST attempt count for period:', error);
+      return 0;
+    }
   }
 
   // Enterprise Features - Database implementations

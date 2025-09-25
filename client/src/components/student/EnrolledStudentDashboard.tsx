@@ -29,7 +29,8 @@ import {
   PlayCircle,
   CheckCircle2,
   Bell,
-  BarChart3
+  BarChart3,
+  ClipboardList
 } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -74,7 +75,7 @@ interface Props {
 export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
   const { t } = useTranslation(['student', 'common']);
   const { isRTL } = useLanguage();
-  const [activeSection, setActiveSection] = useState<'overview' | 'schedule' | 'progress' | 'materials' | 'assignments' | 'payments'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'schedule' | 'progress' | 'materials' | 'assignments' | 'payments' | 'test-results'>('overview');
 
   // Fetch upcoming sessions
   const { data: upcomingSessions = [] } = useQuery<UpcomingSession[]>({
@@ -159,26 +160,41 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
             { id: 'overview', label: t('student:overview'), icon: BarChart3 },
             { id: 'schedule', label: t('student:schedule'), icon: Calendar },
             { id: 'progress', label: t('student:progress'), icon: TrendingUp },
+            { id: 'test-results', label: 'Test Results', icon: ClipboardList, link: '/student/test-results' },
             { id: 'materials', label: t('student:materials'), icon: BookOpen },
             { id: 'assignments', label: t('student:assignments'), icon: FileText },
             { id: 'payments', label: t('student:payments'), icon: CreditCard },
-          ].map((tab) => (
-            <Button
-              key={tab.id}
-              variant={activeSection === tab.id ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setActiveSection(tab.id as any)}
-              className={`flex items-center gap-2 whitespace-nowrap ${
-                activeSection === tab.id
-                  ? 'bg-white text-blue-600 shadow-md'
-                  : 'text-gray-700 hover:bg-white/50'
-              }`}
-              data-testid={`tab-${tab.id}`}
-            >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </Button>
-          ))}
+          ].map((tab) => 
+            tab.link ? (
+              <Link href={tab.link} key={tab.id}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap text-gray-700 hover:bg-white/50"
+                  data-testid={`nav-${tab.id}`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {tab.label}
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                key={tab.id}
+                variant={activeSection === tab.id ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveSection(tab.id as any)}
+                className={`flex items-center gap-2 whitespace-nowrap ${
+                  activeSection === tab.id
+                    ? 'bg-white text-blue-600 shadow-md'
+                    : 'text-gray-700 hover:bg-white/50'
+                }`}
+                data-testid={`tab-${tab.id}`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </Button>
+            )
+          )}
         </div>
       </div>
 

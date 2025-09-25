@@ -14351,6 +14351,242 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getUserMSTHistory(userId: number): Promise<any[]> {
+    try {
+      console.log('📚 Getting MST history for user:', userId);
+      
+      // Get all MST sessions for the user
+      const sessions = await this.db
+        .select()
+        .from(mstSessions)
+        .where(eq(mstSessions.userId, userId))
+        .orderBy(desc(mstSessions.startedAt));
+
+      const history = [];
+      for (const session of sessions) {
+        // Get skill states for this session
+        const skillStates = await this.db
+          .select()
+          .from(mstSkillStates)
+          .where(eq(mstSkillStates.sessionId, session.id));
+
+        // Get responses for this session
+        const responses = await this.db
+          .select()
+          .from(mstResponses)
+          .where(eq(mstResponses.sessionId, session.id));
+
+        // Calculate skill results from skill states and responses - USING REAL TIMING DATA
+        const skillResults = skillStates.map(state => {
+          // Use real timeSpentSec from skill state, fallback to calculating from responses if needed
+          let timeSpentSec = state.timeSpentSec || 0;
+          
+          // If skill state doesn't have timing data, calculate from individual responses
+          if (timeSpentSec === 0) {
+            const skillResponses = responses.filter(r => r.skill === state.skill);
+            timeSpentSec = Math.floor(skillResponses.reduce((total, response) => {
+              return total + (response.timeSpentMs || 0);
+            }, 0) / 1000); // Convert ms to seconds
+          }
+          
+          return {
+            skill: state.skill,
+            band: state.finalBand || 'B1',
+            score: state.finalScore || 0.5,
+            confidence: state.confidence || 0.5,
+            timeSpentSec // Real timing data from database
+          };
+        });
+
+        // Calculate overall metrics
+        const overallScore = skillResults.length > 0 
+          ? Math.round((skillResults.reduce((sum, result) => sum + result.score, 0) / skillResults.length) * 100)
+          : 0;
+
+        const overallBand = skillResults.length > 0 
+          ? skillResults.sort((a, b) => b.score - a.score)[0].band 
+          : 'B1';
+
+        // Calculate totalTimeMin deterministically from real session and skill timing data
+        let totalTimeMin = 0;
+        
+        // Primary: Use skill-level timing data from database
+        if (skillResults.length > 0) {
+          totalTimeMin = skillResults.reduce((sum, result) => sum + (result.timeSpentSec / 60), 0);
+        }
+        
+        // Fallback: If no skill timing data, calculate from session start/end times
+        if (totalTimeMin === 0 && session.startedAt && session.completedAt) {
+          const sessionStartTime = new Date(session.startedAt).getTime();
+          const sessionEndTime = new Date(session.completedAt).getTime();
+          totalTimeMin = (sessionEndTime - sessionStartTime) / (1000 * 60); // Convert ms to minutes
+        }
+        
+        // Ensure reasonable bounds (MST is 10 minutes max)
+        totalTimeMin = Math.min(Math.max(totalTimeMin, 0), 10);
+
+        history.push({
+          id: session.id,
+          sessionId: session.sessionId || `mst_${session.id}`,
+          startedAt: session.startedAt,
+          completedAt: session.completedAt,
+          status: session.status || 'completed',
+          overallBand,
+          overallScore,
+          totalTimeMin: Math.round(totalTimeMin),
+          skillResults,
+          targetLanguage: session.targetLanguage || 'English'
+        });
+      }
+
+      console.log(`✅ Retrieved ${history.length} MST sessions for user:`, userId);
+      return history;
+    } catch (error) {
+      console.error('❌ Error getting user MST history:', error);
+      return [];
+    }
+  }
+
+  async getUserMSTResultsWithAnalytics(userId: number): Promise<any> {
+    try {
+      console.log('📊 Getting MST results with analytics for user:', userId);
+      
+      const history = await this.getUserMSTHistory(userId);
+      
+      if (history.length === 0) {
+        return {
+          history: [],
+          analytics: {
+            totalAttempts: 0,
+            averageScore: 0,
+            highestScore: 0,
+            mostRecentBand: null,
+            skillProgression: {},
+            improvementRate: 0,
+            consistencyScore: 0,
+            strongestSkill: null,
+            weakestSkill: null
+          }
+        };
+      }
+
+      // Calculate analytics
+      const totalAttempts = history.length;
+      const scores = history.map(h => h.overallScore).filter(score => score > 0);
+      const averageScore = scores.length > 0 ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) : 0;
+      const highestScore = scores.length > 0 ? Math.max(...scores) : 0;
+      const mostRecentBand = history.length > 0 ? history[0].overallBand : null;
+
+      // Calculate skill progression
+      const skillProgression: Record<string, number[]> = {};
+      const skillScores: Record<string, number[]> = {};
+      
+      for (const session of history.reverse()) { // Oldest first for progression
+        for (const skillResult of session.skillResults) {
+          if (!skillProgression[skillResult.skill]) {
+            skillProgression[skillResult.skill] = [];
+            skillScores[skillResult.skill] = [];
+          }
+          skillProgression[skillResult.skill].push(Math.round(skillResult.score * 100));
+          skillScores[skillResult.skill].push(skillResult.score);
+        }
+      }
+
+      // Calculate improvement rate (average of all skills)
+      let totalImprovement = 0;
+      let skillsWithData = 0;
+      
+      for (const [skill, scores] of Object.entries(skillScores)) {
+        if (scores.length >= 2) {
+          const improvement = ((scores[scores.length - 1] - scores[0]) / scores[0]) * 100;
+          totalImprovement += improvement;
+          skillsWithData++;
+        }
+      }
+      
+      const improvementRate = skillsWithData > 0 ? Math.round(totalImprovement / skillsWithData) : 0;
+
+      // Calculate consistency score (lower variance = higher consistency)
+      const variance = scores.length > 1 
+        ? scores.reduce((sum, score) => sum + Math.pow(score - averageScore, 2), 0) / scores.length
+        : 0;
+      const consistencyScore = Math.max(0, Math.round(100 - Math.sqrt(variance)));
+
+      // Find strongest and weakest skills (from most recent test)
+      let strongestSkill = null;
+      let weakestSkill = null;
+      
+      if (history.length > 0) {
+        const recentSkills = history[0].skillResults;
+        if (recentSkills.length > 0) {
+          const sortedByScore = [...recentSkills].sort((a, b) => b.score - a.score);
+          strongestSkill = sortedByScore[0].skill;
+          weakestSkill = sortedByScore[sortedByScore.length - 1].skill;
+        }
+      }
+
+      const analytics = {
+        totalAttempts,
+        averageScore,
+        highestScore,
+        mostRecentBand,
+        skillProgression,
+        improvementRate,
+        consistencyScore,
+        strongestSkill,
+        weakestSkill
+      };
+
+      console.log(`✅ Generated analytics for user ${userId}:`, analytics);
+      return {
+        history: history.reverse(), // Most recent first for display
+        analytics
+      };
+    } catch (error) {
+      console.error('❌ Error getting user MST results with analytics:', error);
+      return {
+        history: [],
+        analytics: {
+          totalAttempts: 0,
+          averageScore: 0,
+          highestScore: 0,
+          mostRecentBand: null,
+          skillProgression: {},
+          improvementRate: 0,
+          consistencyScore: 0,
+          strongestSkill: null,
+          weakestSkill: null
+        }
+      };
+    }
+  }
+
+  async getMSTAttemptCountForPeriod(userId: number, days: number): Promise<number> {
+    try {
+      console.log(`🔢 Counting MST attempts for user ${userId} in last ${days} days`);
+      
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      
+      const result = await this.db
+        .select({ count: sql<number>`count(*)` })
+        .from(mstSessions)
+        .where(
+          and(
+            eq(mstSessions.userId, userId),
+            gte(mstSessions.startedAt, cutoffDate)
+          )
+        );
+
+      const count = result[0]?.count || 0;
+      console.log(`✅ Found ${count} MST attempts for user ${userId} in last ${days} days`);
+      return count;
+    } catch (error) {
+      console.error('❌ Error getting MST attempt count for period:', error);
+      return 0;
+    }
+  }
+
   // AI Study Partner management
   async getAiStudyPartnerByUserId(userId: number): Promise<AiStudyPartner | undefined> {
     try {

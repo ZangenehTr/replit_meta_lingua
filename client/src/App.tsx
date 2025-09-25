@@ -80,6 +80,7 @@ import MessagesPage from "@/pages/student/messages";
 import PaymentPage from "@/pages/student/payment";
 import PronunciationPracticePage from "@/pages/pronunciation-practice";
 import StudentTestTaking from "@/pages/student/test-taking";
+import StudentTestResults from "@/pages/student/test-results";
 import StudentVideoCourses from "@/pages/student/video-courses";
 import VideoCoursDetail from "@/pages/student/video-course-detail";
 import VideoPlayer from "@/pages/student/video-player";
@@ -686,6 +687,11 @@ function Router() {
         <ProtectedRoute>
           <StudentTestTaking />
         </ProtectedRoute>
+      </Route>
+      <Route path="/student/test-results">
+        <RoleProtectedRoute allowedRoles={['student']}>
+          <StudentTestResults />
+        </RoleProtectedRoute>
       </Route>
       <Route path="/video-courses">
         <ProtectedRoute>

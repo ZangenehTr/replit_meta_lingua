@@ -56,7 +56,7 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import { generatePayslipPDF, generateCertificatePDF } from "./utils/pdf-generator";
+import { generatePayslipPDF, generateCertificatePDF, generateTestResultsPDF, type TestResultsPDFData } from "./utils/pdf-generator";
 import { validateIranianPhone, validateIranianEmail, validatePersianText } from "./utils/iranian-validation";
 import rateLimit from 'express-rate-limit';
 import { OtpService } from './services/otp-service';
@@ -23126,6 +23126,247 @@ Meta Lingua Academy`;
     });
   };
   
+  // MST Test Results History API (before deprecation middleware)
+  app.get('/api/student/test-results', authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as AuthRequest).user!.id;
+      const results = await storage.getUserMSTResultsWithAnalytics(userId);
+      
+      res.json({
+        success: true,
+        data: results
+      });
+    } catch (error) {
+      console.error('❌ Error getting test results:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get test results'
+      });
+    }
+  });
+
+  // Get MST test history (simplified)
+  app.get('/api/student/test-history', authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as AuthRequest).user!.id;
+      const history = await storage.getUserMSTHistory(userId);
+      
+      res.json({
+        success: true,
+        data: history
+      });
+    } catch (error) {
+      console.error('❌ Error getting test history:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get test history'
+      });
+    }
+  });
+
+  // Check retake eligibility with CORRECTED date calculation
+  app.get('/api/student/test-retake-eligibility', authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as AuthRequest).user!.id;
+      
+      // Validate period parameter with sane bounds
+      const periodParam = req.query.period as string;
+      const period = periodParam ? parseInt(periodParam, 10) : 7;
+      
+      if (isNaN(period) || period < 1 || period > 365) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid period parameter. Must be between 1 and 365 days.'
+        });
+      }
+      
+      const attemptsCount = await storage.getMSTAttemptCountForPeriod(userId, period);
+      const maxAttempts = 3; // Configurable - could be moved to admin settings
+      const remainingAttempts = Math.max(0, maxAttempts - attemptsCount);
+      
+      // FIXED: Calculate next available date based on LAST attempt + period (not now + period)
+      let nextAvailableDate = null;
+      let remainingCooldownHours = 0;
+      
+      if (remainingAttempts === 0) {
+        // Get user's most recent MST attempt to calculate correct cooldown
+        const history = await storage.getUserMSTHistory(userId);
+        
+        if (history.length > 0) {
+          const lastAttempt = new Date(history[0].startedAt);
+          const nextAllowedDate = new Date(lastAttempt);
+          nextAllowedDate.setDate(lastAttempt.getDate() + period);
+          
+          const now = new Date();
+          if (nextAllowedDate > now) {
+            nextAvailableDate = nextAllowedDate.toISOString();
+            remainingCooldownHours = Math.ceil((nextAllowedDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+          } else {
+            // Cooldown period has expired, user can retake now
+            remainingAttempts = 1; // Reset to allow retake
+          }
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          canRetake: remainingAttempts > 0,
+          attemptsUsed: attemptsCount,
+          maxAttempts,
+          remainingAttempts,
+          nextAvailableDate,
+          remainingCooldownHours,
+          periodDays: Number(period)
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error checking retake eligibility:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to check retake eligibility'
+      });
+    }
+  });
+
+  // Export test results as CSV - HARDENED with UTF-8 BOM and proper validation
+  app.get('/api/student/test-results/export-csv', authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as AuthRequest).user!.id;
+      const results = await storage.getUserMSTHistory(userId);
+      
+      if (results.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'No test results found'
+        });
+      }
+
+      // Convert results to CSV format with proper escaping
+      const csvHeader = 'Date,Test ID,Overall Band,Overall Score,Listening,Reading,Speaking,Writing,Duration (min),Status\n';
+      const csvRows = results.map(result => {
+        const skillScores = ['listening', 'reading', 'speaking', 'writing'].map(skill => {
+          const skillResult = result.skillResults.find((s: any) => s.skill === skill);
+          return skillResult ? `"${skillResult.band} (${Math.round(skillResult.score * 100)})"` : 'N/A';
+        });
+        
+        return [
+          result.startedAt ? `"${new Date(result.startedAt).toLocaleDateString()}"` : 'Unknown',
+          `"${result.sessionId}"`,
+          `"${result.overallBand || 'N/A'}"`,
+          result.overallScore || 0,
+          ...skillScores,
+          result.totalTimeMin || 0,
+          `"${result.status || 'unknown'}"`
+        ].join(',');
+      }).join('\n');
+
+      // Add UTF-8 BOM for proper Excel compatibility
+      const BOM = '\ufeff';
+      const csvContent = BOM + csvHeader + csvRows;
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="mst-test-results-${timestamp}.csv"`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error('❌ Error exporting CSV:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to export CSV'
+      });
+    }
+  });
+
+  // Export test results as PDF - COMPREHENSIVE with charts and analytics
+  app.get('/api/student/test-results/export-pdf', authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as AuthRequest).user!.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+      
+      const resultsData = await storage.getUserMSTResultsWithAnalytics(userId);
+      
+      if (!resultsData.history || resultsData.history.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'No test results found to export'
+        });
+      }
+
+      // Get the most recent test result for the main report
+      const latestResult = resultsData.history[0];
+      
+      // Generate recommendations based on analytics
+      const recommendations: string[] = [];
+      
+      if (resultsData.analytics.weakestSkill) {
+        recommendations.push(`Focus on improving your ${resultsData.analytics.weakestSkill} skills - this is your area for growth`);
+      }
+      
+      if (resultsData.analytics.improvementRate > 0) {
+        recommendations.push(`Great progress! You've improved by ${resultsData.analytics.improvementRate}% over time`);
+      } else if (resultsData.analytics.improvementRate < 0) {
+        recommendations.push('Consider reviewing fundamentals - your scores have fluctuated recently');
+      }
+      
+      if (resultsData.analytics.consistencyScore < 70) {
+        recommendations.push('Focus on consistent practice to improve score stability');
+      }
+      
+      const currentLevel = latestResult.overallBand.replace(/[+-]/, '');
+      if (['A1', 'A2'].includes(currentLevel)) {
+        recommendations.push('Consider enrolling in beginner language courses to build foundational skills');
+      } else if (['B1', 'B2'].includes(currentLevel)) {
+        recommendations.push('You\'re ready for intermediate conversation practice and advanced grammar study');
+      } else if (['C1', 'C2'].includes(currentLevel)) {
+        recommendations.push('Excellent proficiency! Focus on specialized vocabulary and advanced communication skills');
+      }
+
+      // Prepare PDF data
+      const pdfData: TestResultsPDFData = {
+        studentName: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email,
+        studentEmail: user.email,
+        testDate: latestResult.startedAt,
+        overallBand: latestResult.overallBand,
+        overallScore: latestResult.overallScore,
+        totalTimeMin: latestResult.totalTimeMin,
+        skillResults: latestResult.skillResults,
+        analytics: resultsData.analytics,
+        recommendations,
+        reportId: `MST-${userId}-${Date.now()}`
+      };
+
+      console.log('🔄 Generating comprehensive PDF report for user:', userId);
+      
+      // Generate PDF using the comprehensive generator
+      const pdfBuffer = await generateTestResultsPDF(pdfData);
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `mst-results-${user.firstName || 'student'}-${timestamp}.pdf`;
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', pdfBuffer.length.toString());
+      
+      console.log('✅ Successfully generated PDF report:', filename);
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('❌ Error generating PDF report:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate PDF report'
+      });
+    }
+  });
+
   // DEPRECATED: Legacy MST routes - redirect to unified testing system
   const deprecatedMSTMiddleware = (req: any, res: any, next: any) => {
     console.log(`⚠️  DEPRECATED: Legacy MST route accessed: ${req.method} ${req.path}`);
