@@ -216,7 +216,7 @@ export default function VirtualMall() {
     }
   };
 
-  // Browser speech synthesis fallback
+  // Enhanced browser speech synthesis with natural voice settings
   const useBrowserSpeech = (text: string, voice: 'lexi' | 'shopgirl' = 'lexi') => {
     if (!window.speechSynthesis) {
       console.error('Browser speech synthesis not supported');
@@ -227,57 +227,88 @@ export default function VirtualMall() {
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Configure voice based on speaker
-    if (voice === 'lexi') {
-      utterance.rate = 0.9; // Slightly slower for sophistication
-      utterance.pitch = 1.1; // Slightly higher for Lexi's character
-      utterance.volume = 0.8;
-    } else {
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 0.7;
-    }
-    
-    // Set language (browser will find best available voice)
-    utterance.lang = language === 'fa' ? 'fa-IR' : 'en-US';
-    
-    // Try to find a good voice
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0) {
-      let preferredVoice;
+    // Wait a moment for voices to load if needed
+    const speak = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
       
-      if (language === 'fa') {
-        // Look for Persian voices
-        preferredVoice = voices.find(v => 
-          v.lang.startsWith('fa') || 
-          v.name.toLowerCase().includes('persian') ||
-          v.name.toLowerCase().includes('farsi')
-        );
+      // Enhanced natural voice configuration
+      if (voice === 'lexi') {
+        utterance.rate = 0.85; // Slower, more thoughtful pace
+        utterance.pitch = 1.15; // Slightly higher for feminine voice
+        utterance.volume = 0.9;
       } else {
-        // Look for quality English voices
-        preferredVoice = voices.find(v => 
-          v.name.toLowerCase().includes('female') || 
-          v.name.toLowerCase().includes('woman') ||
-          v.name.toLowerCase().includes('samantha') ||
-          v.name.toLowerCase().includes('zira') ||
-          v.name.toLowerCase().includes('hazel')
-        );
+        utterance.rate = 0.95; // Natural conversation pace
+        utterance.pitch = 1.05; // Slightly elevated
+        utterance.volume = 0.8;
       }
       
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
+      // Set language (browser will find best available voice)
+      utterance.lang = language === 'fa' ? 'fa-IR' : 'en-US';
+      
+      // Enhanced voice selection
+      const voices = window.speechSynthesis.getVoices();
+      console.log('🎤 Available voices:', voices.map(v => ({ name: v.name, lang: v.lang })));
+      
+      if (voices.length > 0) {
+        let preferredVoice;
+        
+        if (language === 'fa') {
+          // Look for Persian voices first, then high-quality alternatives
+          preferredVoice = voices.find(v => 
+            v.lang.startsWith('fa') || 
+            v.name.toLowerCase().includes('persian') ||
+            v.name.toLowerCase().includes('farsi')
+          ) || voices.find(v => 
+            // Fallback to quality female voices
+            (v.name.toLowerCase().includes('female') || 
+             v.name.toLowerCase().includes('woman') ||
+             v.name.toLowerCase().includes('samantha') ||
+             v.name.toLowerCase().includes('zira')) && v.lang.startsWith('en')
+          );
+        } else {
+          // Look for best quality English voices
+          preferredVoice = voices.find(v => 
+            v.lang.startsWith('en') && (
+              v.name.toLowerCase().includes('samantha') ||
+              v.name.toLowerCase().includes('zira') ||
+              v.name.toLowerCase().includes('hazel') ||
+              v.name.toLowerCase().includes('karen') ||
+              v.name.toLowerCase().includes('victoria')
+            )
+          ) || voices.find(v => 
+            v.lang.startsWith('en') && (
+              v.name.toLowerCase().includes('female') || 
+              v.name.toLowerCase().includes('woman')
+            )
+          ) || voices.find(v => v.lang.startsWith('en') && v.default);
+        }
+        
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+          console.log('🎤 Selected voice:', preferredVoice.name, preferredVoice.lang);
+        } else {
+          console.log('🎤 Using default voice');
+        }
       }
-    }
-    
-    utterance.onend = () => setIsLexiSpeaking(false);
-    utterance.onerror = () => {
-      console.error('Browser speech synthesis failed');
-      setIsLexiSpeaking(false);
+      
+      utterance.onend = () => setIsLexiSpeaking(false);
+      utterance.onerror = (error) => {
+        console.error('Browser speech synthesis failed:', error);
+        setIsLexiSpeaking(false);
+      };
+      
+      window.speechSynthesis.speak(utterance);
     };
-    
-    window.speechSynthesis.speak(utterance);
+
+    // If voices aren't loaded yet, wait for them
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        speak();
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    } else {
+      speak();
+    }
   };
 
   // Fetch coursebooks for bookstore using shared query client
@@ -624,9 +655,6 @@ export default function VirtualMall() {
   const handleBrowseCoursebooks = () => {
     // Generate intelligent recommendation based on learner profile
     const getPersonalizedRecommendation = () => {
-      // Debug logging
-      console.log('🔍 Lexi Debug - User data:', user);
-      console.log('🔍 Lexi Debug - Profile data:', profile);
       
       if (!user || !profile) {
         // For logged in users without complete profile

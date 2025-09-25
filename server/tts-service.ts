@@ -143,7 +143,7 @@ export class MetaLinguaTTSService {
    */
   async generateSpeechWithEdgeTTS(request: TTSRequest): Promise<TTSResponse> {
     try {
-      const { text, language, speed = 1.0 } = request;
+      const { text, language, speed = 1.0, voice: requestedVoice } = request;
       
       // Validate text
       if (!text || text.trim().length === 0) {
@@ -158,18 +158,22 @@ export class MetaLinguaTTSService {
       const filename = `edge_tts_${timestamp}.mp3`;
       const filePath = path.join(this.outputDir, filename);
 
-      // Voice mapping for Microsoft Edge TTS
-      const voiceMap: Record<string, string> = {
-        'en': 'en-US-AriaNeural',       // American English - natural, clear
-        'english': 'en-US-AriaNeural',
-        'fa': 'fa-IR-FaridNeural',      // Persian
-        'farsi': 'fa-IR-FaridNeural',
-        'persian': 'fa-IR-FaridNeural',
-        'ar': 'ar-SA-HamedNeural',      // Arabic
-        'arabic': 'ar-SA-HamedNeural'
-      };
-
-      const voice = voiceMap[language.toLowerCase()] || 'en-US-AriaNeural';
+      // Use requested voice if provided, otherwise use language-based defaults
+      let voice = requestedVoice;
+      
+      if (!voice) {
+        // Voice mapping for Microsoft Edge TTS (fallback when no specific voice requested)
+        const voiceMap: Record<string, string> = {
+          'en': 'en-US-AriaNeural',       // American English - natural, clear
+          'english': 'en-US-AriaNeural',
+          'fa': 'fa-IR-DilaraNeural',     // Persian female voice for Lexi
+          'farsi': 'fa-IR-DilaraNeural',
+          'persian': 'fa-IR-DilaraNeural',
+          'ar': 'ar-SA-HamedNeural',      // Arabic
+          'arabic': 'ar-SA-HamedNeural'
+        };
+        voice = voiceMap[language.toLowerCase()] || 'en-US-AriaNeural';
+      }
 
       // Generate TTS using Python edge-tts command
       const success = await this.generateWithEdgeTTSCommand(text, filePath, voice, speed);
@@ -245,9 +249,9 @@ export class MetaLinguaTTSService {
         const ratePercent = Math.round((speed - 1.0) * 50); // Convert to percentage
         const rateParam = ratePercent >= 0 ? `+${ratePercent}%` : `${ratePercent}%`;
 
-        // Use edge-tts Python command with rate adjustment (full path to ensure it's found)
-        const edgeTtsPath = '/home/runner/workspace/.pythonlibs/bin/edge-tts';
-        const process = spawn(edgeTtsPath, [
+        // Use edge-tts Python module with rate adjustment (more reliable than hardcoded path)
+        const process = spawn('python3', [
+          '-m', 'edge_tts',
           '--voice', voice,
           '--rate', rateParam,
           '--text', text,
