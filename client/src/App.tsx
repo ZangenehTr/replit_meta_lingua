@@ -86,6 +86,10 @@ import VideoPlayer from "@/pages/student/video-player";
 import StudentProfile from "@/pages/student/profile";
 import VirtualMall from "@/pages/student/virtual-mall";
 import StudentCart from "@/pages/student/cart";
+import StudentCheckout from "@/pages/student/checkout";
+import StudentOrderHistory from "@/pages/student/order-history";
+import StudentOrderConfirmation from "@/pages/student/order-confirmation";
+import StudentBookCatalog from "@/pages/student/book-catalog";
 import StudentDashboardMobile from "@/pages/student/dashboard-mobile";
 import StudentCoursesMobile from "@/pages/student/courses-mobile";
 import BookReader from "@/pages/BookReader";
@@ -596,6 +600,26 @@ function Router() {
       <Route path="/student/cart">
         <ProtectedRoute>
           <StudentCart />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/checkout">
+        <ProtectedRoute>
+          <StudentCheckout />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/order-history">
+        <ProtectedRoute>
+          <StudentOrderHistory />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/order-confirmation/:orderId">
+        <ProtectedRoute>
+          <StudentOrderConfirmation />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/book-catalog">
+        <ProtectedRoute>
+          <StudentBookCatalog />
         </ProtectedRoute>
       </Route>
       <Route path="/student/join-class">

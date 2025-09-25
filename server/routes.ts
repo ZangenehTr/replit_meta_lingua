@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
 import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses } from "@shared/schema";
-import { eq, sql, and, desc } from "drizzle-orm";
+import { eq, sql, and, desc, inArray } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { registerCallernAIRoutes } from "./callern-ai-routes";
@@ -22004,7 +22004,7 @@ Meta Lingua Academy`;
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const { enrollments, courses, users, mstSessions } = await import("@shared/schema");
+      const { enrollments, courses, users, placementTestSessions } = await import("@shared/schema");
       
       // Get student's enrollments
       const studentEnrollments = await db
@@ -22025,10 +22025,10 @@ Meta Lingua Academy`;
       // Check if student has completed placement test
       const placementTests = await db
         .select()
-        .from(mstSessions)
+        .from(placementTestSessions)
         .where(and(
-          eq(mstSessions.userId, studentId),
-          eq(mstSessions.status, 'completed')
+          eq(placementTestSessions.studentId, studentId),
+          eq(placementTestSessions.status, 'completed')
         ))
         .limit(1);
       
@@ -22134,7 +22134,7 @@ Meta Lingua Academy`;
       const instructors = instructorIds.length > 0 ? await db
         .select({ id: users.id, firstName: users.firstName, lastName: users.lastName })
         .from(users)
-        .where(sql`${users.id} IN (${instructorIds.join(',')})`) : [];
+        .where(inArray(users.id, instructorIds)) : [];
       
       const instructorMap = new Map(instructors.map(i => [i.id, i]));
       
