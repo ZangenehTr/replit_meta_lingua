@@ -62,6 +62,108 @@ import { validateIranianPhone, validateIranianEmail, validatePersianText } from 
 import rateLimit from 'express-rate-limit';
 import { OtpService } from './services/otp-service';
 import { z } from "zod";
+
+// ============================================================================
+// CRITICAL SECURITY: SMS Rate Limiting & Idempotency Protection
+// ============================================================================
+
+// Critical security: Rate limiting for SMS endpoints to prevent abuse
+const smsRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 SMS per windowMs 
+  message: {
+    error: 'Too many SMS requests from this IP',
+    errorFa: 'تعداد درخواست‌های پیامک از این IP زیاد است',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Bulk SMS rate limiting - more restrictive for bulk operations
+const smsBulkRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // limit each IP to 10 bulk SMS per hour
+  message: {
+    error: 'Too many bulk SMS requests from this IP',
+    errorFa: 'تعداد درخواست‌های پیامک انبوه از این IP زیاد است', 
+    retryAfter: '1 hour'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Idempotency key validation schemas
+const sendSmsSchema = z.object({
+  recipientPhone: z.string().min(10),
+  recipientName: z.string().optional(),
+  variableData: z.record(z.string()).optional(),
+  sendingType: z.string().default('individual'),
+  contextType: z.string().optional(),
+  contextId: z.string().optional(),
+  idempotencyKey: z.string().uuid('Invalid idempotency key format') // Required for duplicate prevention
+});
+
+const sendBulkSmsSchema = z.object({
+  recipients: z.array(z.object({
+    phone: z.string().min(10),
+    name: z.string().optional(),
+    variableData: z.record(z.string()).optional()
+  })).max(500, 'Maximum 500 recipients allowed per bulk send'), // Recipient count cap
+  campaignId: z.string().optional(),
+  sendingType: z.string().default('bulk'),
+  contextType: z.string().optional(),
+  idempotencyKey: z.string().uuid('Invalid idempotency key format') // Required for duplicate prevention
+});
+
+const sendTestSmsSchema = z.object({
+  testPhone: z.string().min(10),
+  variableData: z.record(z.string()).optional(),
+  idempotencyKey: z.string().uuid('Invalid idempotency key format') // Required for duplicate prevention
+});
+
+// In-memory idempotency store for preventing duplicate sends
+const idempotencyStore = new Map<string, { timestamp: number; response: any }>();
+const IDEMPOTENCY_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+// Clean up expired idempotency keys
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of idempotencyStore.entries()) {
+    if (now - value.timestamp > IDEMPOTENCY_TTL) {
+      idempotencyStore.delete(key);
+    }
+  }
+}, 60 * 60 * 1000); // Clean up every hour
+
+// Idempotency middleware
+const checkIdempotency = (req: any, res: any, next: any) => {
+  const idempotencyKey = req.body.idempotencyKey;
+  if (!idempotencyKey) {
+    return res.status(400).json({ 
+      error: 'Idempotency key is required',
+      errorFa: 'کلید منحصر به فرد الزامی است'
+    });
+  }
+
+  const existingResponse = idempotencyStore.get(idempotencyKey);
+  if (existingResponse) {
+    console.log(`Duplicate request blocked by idempotency key: ${idempotencyKey}`);
+    return res.json(existingResponse.response);
+  }
+
+  // Store request in progress
+  req.idempotencyKey = idempotencyKey;
+  next();
+};
+
+// Content length limits
+const SMS_MAX_LENGTH = 1000; // Maximum SMS content length
+const validateSmsContent = (content: string): string | null => {
+  if (!content) return 'SMS content is required';
+  if (content.length > SMS_MAX_LENGTH) return `SMS content exceeds maximum length of ${SMS_MAX_LENGTH} characters`;
+  return null;
+};
 import { 
   insertUserSchema, 
   insertUserProfileSchema, 
@@ -24516,6 +24618,752 @@ Meta Lingua Academy`;
       res.status(500).json({ error: 'Failed to create task', message: error.message });
     }
   });
+
+  // ========================
+  // SMS TEMPLATE MANAGEMENT SYSTEM API ROUTES
+  // ========================
+
+  // SMS Template Categories CRUD
+  app.get("/api/sms-templates/categories", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const categories = await storage.getSmsTemplateCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching SMS template categories:', error);
+      res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
+  app.post("/api/sms-templates/categories", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
+    try {
+      const categoryData = insertSmsTemplateCategorySchema.parse(req.body);
+      const category = await storage.createSmsTemplateCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error: any) {
+      console.error('Error creating SMS template category:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create category' });
+    }
+  });
+
+  app.put("/api/sms-templates/categories/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const category = await storage.updateSmsTemplateCategory(parseInt(id), updates);
+      if (!category) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error('Error updating SMS template category:', error);
+      res.status(500).json({ error: 'Failed to update category' });
+    }
+  });
+
+  app.delete("/api/sms-templates/categories/:id", authenticate, authorizePermission('sms_templates', 'delete'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSmsTemplateCategory(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting SMS template category:', error);
+      res.status(500).json({ error: 'Failed to delete category' });
+    }
+  });
+
+  // SMS Template Variables CRUD
+  app.get("/api/sms-templates/variables", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { category } = req.query;
+      const variables = await storage.getSmsTemplateVariables(category);
+      res.json(variables);
+    } catch (error) {
+      console.error('Error fetching SMS template variables:', error);
+      res.status(500).json({ error: 'Failed to fetch variables' });
+    }
+  });
+
+  app.post("/api/sms-templates/variables", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
+    try {
+      const variableData = insertSmsTemplateVariableSchema.parse(req.body);
+      const variable = await storage.createSmsTemplateVariable(variableData);
+      res.status(201).json(variable);
+    } catch (error: any) {
+      console.error('Error creating SMS template variable:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create variable' });
+    }
+  });
+
+  app.put("/api/sms-templates/variables/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const variable = await storage.updateSmsTemplateVariable(parseInt(id), updates);
+      if (!variable) {
+        return res.status(404).json({ error: 'Variable not found' });
+      }
+      res.json(variable);
+    } catch (error) {
+      console.error('Error updating SMS template variable:', error);
+      res.status(500).json({ error: 'Failed to update variable' });
+    }
+  });
+
+  app.delete("/api/sms-templates/variables/:id", authenticate, authorizePermission('sms_templates', 'delete'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSmsTemplateVariable(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting SMS template variable:', error);
+      res.status(500).json({ error: 'Failed to delete variable' });
+    }
+  });
+
+  // SMS Templates CRUD and Management
+  app.get("/api/sms-templates", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { status, categoryId, search, isFavorite } = req.query;
+      const filters = {
+        status,
+        categoryId: categoryId ? parseInt(categoryId) : undefined,
+        createdBy: req.query.createdBy ? parseInt(req.query.createdBy) : undefined,
+        search,
+        isFavorite: isFavorite === 'true'
+      };
+      
+      const templates = await storage.getSmsTemplates(filters);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch templates' });
+    }
+  });
+
+  app.get("/api/sms-templates/:id", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const template = await storage.getSmsTemplate(parseInt(id));
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error fetching SMS template:', error);
+      res.status(500).json({ error: 'Failed to fetch template' });
+    }
+  });
+
+  app.get("/api/sms-templates/popular", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { limit } = req.query;
+      const templates = await storage.getPopularSmsTemplates(limit ? parseInt(limit) : 10);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching popular SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch popular templates' });
+    }
+  });
+
+  app.get("/api/sms-templates/recent", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { limit } = req.query;
+      const templates = await storage.getRecentSmsTemplates(limit ? parseInt(limit) : 10);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching recent SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch recent templates' });
+    }
+  });
+
+  app.get("/api/sms-templates/favorites", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const templates = await storage.getFavoriteSmsTemplates(req.user.id);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching favorite SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch favorite templates' });
+    }
+  });
+
+  app.post("/api/sms-templates", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
+    try {
+      const templateData = insertSmsTemplateSchema.parse({
+        ...req.body,
+        createdBy: req.user.id,
+        updatedBy: req.user.id
+      });
+      
+      // Calculate character count and SMS parts
+      const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(templateData.content);
+      templateData.characterCount = characterCount;
+      templateData.estimatedSmsCount = smsPartsCount;
+      
+      const template = await storage.createSmsTemplate(templateData);
+      res.status(201).json(template);
+    } catch (error: any) {
+      console.error('Error creating SMS template:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create template' });
+    }
+  });
+
+  app.put("/api/sms-templates/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = {
+        ...req.body,
+        updatedBy: req.user.id
+      };
+      
+      // Recalculate character count if content changed
+      if (updates.content) {
+        const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(updates.content);
+        updates.characterCount = characterCount;
+        updates.estimatedSmsCount = smsPartsCount;
+      }
+      
+      const template = await storage.updateSmsTemplate(parseInt(id), updates);
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error updating SMS template:', error);
+      res.status(500).json({ error: 'Failed to update template' });
+    }
+  });
+
+  app.post("/api/sms-templates/:id/duplicate", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { name } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: 'Template name is required' });
+      }
+      
+      const template = await storage.duplicateSmsTemplate(parseInt(id), name, req.user.id);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('Error duplicating SMS template:', error);
+      res.status(500).json({ error: 'Failed to duplicate template' });
+    }
+  });
+
+  app.post("/api/sms-templates/:id/archive", authenticate, authorizePermission('sms_templates', 'archive'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const template = await storage.archiveSmsTemplate(parseInt(id));
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error archiving SMS template:', error);
+      res.status(500).json({ error: 'Failed to archive template' });
+    }
+  });
+
+  app.post("/api/sms-templates/:id/activate", authenticate, authorizePermission('sms_templates', 'activate'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const template = await storage.activateSmsTemplate(parseInt(id));
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error activating SMS template:', error);
+      res.status(500).json({ error: 'Failed to activate template' });
+    }
+  });
+
+  app.delete("/api/sms-templates/:id", authenticate, authorizePermission('sms_templates', 'delete'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSmsTemplate(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting SMS template:', error);
+      res.status(500).json({ error: 'Failed to delete template' });
+    }
+  });
+
+  // SMS Template Preview and Validation
+  app.post("/api/sms-templates/:id/preview", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { sampleData } = req.body;
+      
+      const preview = await storage.getSmsTemplatePreview(parseInt(id), sampleData);
+      res.json(preview);
+    } catch (error) {
+      console.error('Error generating SMS template preview:', error);
+      res.status(500).json({ error: 'Failed to generate preview' });
+    }
+  });
+
+  app.post("/api/sms-templates/validate", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
+    try {
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ error: 'Content is required' });
+      }
+      
+      const validation = await storage.validateSmsTemplateVariables(content);
+      res.json(validation);
+    } catch (error) {
+      console.error('Error validating SMS template:', error);
+      res.status(500).json({ error: 'Failed to validate template' });
+    }
+  });
+
+  app.post("/api/sms-templates/substitute", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
+    try {
+      const { content, variableData } = req.body;
+      
+      if (!content || !variableData) {
+        return res.status(400).json({ error: 'Content and variable data are required' });
+      }
+      
+      const substitutedContent = await storage.substituteSmsTemplateVariables(content, variableData);
+      const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(substitutedContent);
+      
+      res.json({
+        content: substitutedContent,
+        characterCount,
+        smsPartsCount
+      });
+    } catch (error) {
+      console.error('Error substituting SMS template variables:', error);
+      res.status(500).json({ error: 'Failed to substitute variables' });
+    }
+  });
+
+  // CRITICAL SECURITY: SMS Template Sending with Rate Limiting & Idempotency Protection
+  app.post("/api/sms-templates/:id/send", 
+    smsRateLimit, // Rate limiting protection
+    authenticate, 
+    authorizePermission('sms_templates', 'send'), 
+    checkIdempotency, // Idempotency protection
+    async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // CRITICAL SECURITY: Validate request with strict schema
+      const validationResult = sendSmsSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request data',
+          details: validationResult.error.errors,
+          errorFa: 'داده‌های درخواست نامعتبر است'
+        });
+      }
+      
+      const { recipientPhone, recipientName, variableData, sendingType, contextType, contextId } = validationResult.data;
+      
+      // Get template
+      const template = await storage.getSmsTemplate(parseInt(id));
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      
+      // Substitute variables
+      const finalMessage = await storage.substituteSmsTemplateVariables(template.content, variableData || {});
+      
+      // CRITICAL SECURITY: Validate content length
+      const contentError = validateSmsContent(finalMessage);
+      if (contentError) {
+        return res.status(400).json({ error: contentError });
+      }
+      
+      const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(finalMessage);
+      
+      // Send SMS using Kavenegar service
+      const smsResult = await kavenegarService.sendSimpleSMS(recipientPhone, finalMessage);
+      
+      // Create sending log
+      await storage.createSmsTemplateSendingLog({
+        templateId: parseInt(id),
+        sentBy: req.user.id,
+        sentFrom: 'frontdesk',
+        recipientPhone,
+        recipientName,
+        finalMessage,
+        variableData: variableData || {},
+        characterCount,
+        smsPartsCount,
+        sendingType,
+        contextType,
+        contextId,
+        kavenegarMessageId: smsResult.messageId,
+        kavenegarStatus: smsResult.status,
+        kavenegarCost: smsResult.cost ? parseFloat(smsResult.cost.toString()) : undefined,
+        deliveryStatus: smsResult.success ? 'sent' : 'failed',
+        failureReason: smsResult.success ? undefined : smsResult.error
+      });
+      
+      // Update template usage statistics
+      await storage.updateSmsTemplateUsage(parseInt(id));
+      await storage.updateSmsTemplateStats(parseInt(id), smsResult.success);
+      
+      const response = {
+        success: smsResult.success,
+        messageId: smsResult.messageId,
+        cost: smsResult.cost,
+        characterCount,
+        smsPartsCount,
+        error: smsResult.error
+      };
+      
+      // CRITICAL SECURITY: Store response for idempotency
+      if (req.idempotencyKey) {
+        idempotencyStore.set(req.idempotencyKey, {
+          timestamp: Date.now(),
+          response: response
+        });
+      }
+      
+      res.json(response);
+      
+    } catch (error) {
+      console.error('Error sending SMS template:', error);
+      res.status(500).json({ error: 'Failed to send SMS' });
+    }
+  });
+
+  // CRITICAL SECURITY: Bulk SMS with Enhanced Rate Limiting & Idempotency Protection
+  app.post("/api/sms-templates/:id/send-bulk", 
+    smsBulkRateLimit, // More restrictive rate limiting for bulk operations
+    authenticate, 
+    authorizePermission('sms_templates', 'send_bulk'), 
+    checkIdempotency, // Idempotency protection
+    async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // CRITICAL SECURITY: Validate request with strict schema and recipient limits
+      const validationResult = sendBulkSmsSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid bulk SMS request data',
+          details: validationResult.error.errors,
+          errorFa: 'داده‌های درخواست پیامک انبوه نامعتبر است'
+        });
+      }
+      
+      const { recipients, campaignId, sendingType, contextType } = validationResult.data;
+      
+      // Get template
+      const template = await storage.getSmsTemplate(parseInt(id));
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      
+      const results = [];
+      
+      for (const recipient of recipients) {
+        try {
+          const { phone, name, variableData } = recipient;
+          
+          if (!phone) {
+            results.push({ phone, success: false, error: 'Phone number is required' });
+            continue;
+          }
+          
+          // Substitute variables
+          const finalMessage = await storage.substituteSmsTemplateVariables(template.content, variableData || {});
+          const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(finalMessage);
+          
+          // Send SMS
+          const smsResult = await kavenegarService.sendSimpleSMS(phone, finalMessage);
+          
+          // Create sending log
+          await storage.createSmsTemplateSendingLog({
+            templateId: parseInt(id),
+            sentBy: req.user.id,
+            sentFrom: 'frontdesk',
+            recipientPhone: phone,
+            recipientName: name,
+            finalMessage,
+            variableData: variableData || {},
+            characterCount,
+            smsPartsCount,
+            sendingType,
+            campaignId,
+            contextType,
+            kavenegarMessageId: smsResult.messageId,
+            kavenegarStatus: smsResult.status,
+            kavenegarCost: smsResult.cost ? parseFloat(smsResult.cost.toString()) : undefined,
+            deliveryStatus: smsResult.success ? 'sent' : 'failed',
+            failureReason: smsResult.success ? undefined : smsResult.error
+          });
+          
+          // Update template statistics
+          await storage.updateSmsTemplateStats(parseInt(id), smsResult.success);
+          
+          results.push({
+            phone,
+            success: smsResult.success,
+            messageId: smsResult.messageId,
+            cost: smsResult.cost,
+            error: smsResult.error
+          });
+          
+          // Small delay between sends to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (error: any) {
+          results.push({ 
+            phone: recipient.phone, 
+            success: false, 
+            error: error.message 
+          });
+        }
+      }
+      
+      // Update template usage
+      await storage.updateSmsTemplateUsage(parseInt(id));
+      
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.length - successCount;
+      
+      const response = {
+        totalSent: recipients.length,
+        successful: successCount,
+        failed: failureCount,
+        results
+      };
+      
+      // CRITICAL SECURITY: Store response for idempotency
+      if (req.idempotencyKey) {
+        idempotencyStore.set(req.idempotencyKey, {
+          timestamp: Date.now(),
+          response: response
+        });
+      }
+      
+      res.json(response);
+      
+    } catch (error) {
+      console.error('Error sending bulk SMS:', error);
+      res.status(500).json({ error: 'Failed to send bulk SMS' });
+    }
+  });
+
+  // CRITICAL SECURITY: Test SMS with Rate Limiting & Idempotency Protection
+  app.post("/api/sms-templates/:id/send-test", 
+    smsRateLimit, // Rate limiting protection
+    authenticate, 
+    authorizePermission('sms_templates', 'test'), 
+    checkIdempotency, // Idempotency protection
+    async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // CRITICAL SECURITY: Validate request with strict schema
+      const validationResult = sendTestSmsSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid test SMS request data',
+          details: validationResult.error.errors,
+          errorFa: 'داده‌های درخواست تست پیامک نامعتبر است'
+        });
+      }
+      
+      const { testPhone, variableData } = validationResult.data;
+      
+      // Get template
+      const template = await storage.getSmsTemplate(parseInt(id));
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      
+      // Substitute variables
+      const finalMessage = await storage.substituteSmsTemplateVariables(template.content, variableData || {});
+      const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(finalMessage);
+      
+      // Send test SMS
+      const smsResult = await kavenegarService.sendSimpleSMS(testPhone, `[TEST] ${finalMessage}`);
+      
+      // Create sending log for test
+      await storage.createSmsTemplateSendingLog({
+        templateId: parseInt(id),
+        sentBy: req.user.id,
+        sentFrom: 'frontdesk',
+        recipientPhone: testPhone,
+        recipientName: 'Test User',
+        finalMessage: `[TEST] ${finalMessage}`,
+        variableData: variableData || {},
+        characterCount: characterCount + 7, // Add "[TEST] " prefix
+        smsPartsCount,
+        sendingType: 'test',
+        kavenegarMessageId: smsResult.messageId,
+        kavenegarStatus: smsResult.status,
+        kavenegarCost: smsResult.cost ? parseFloat(smsResult.cost.toString()) : undefined,
+        deliveryStatus: smsResult.success ? 'sent' : 'failed',
+        failureReason: smsResult.success ? undefined : smsResult.error
+      });
+      
+      const response = {
+        success: smsResult.success,
+        messageId: smsResult.messageId,
+        cost: smsResult.cost,
+        characterCount: characterCount + 7,
+        smsPartsCount,
+        preview: `[TEST] ${finalMessage}`,
+        error: smsResult.error
+      };
+      
+      // CRITICAL SECURITY: Store response for idempotency
+      if (req.idempotencyKey) {
+        idempotencyStore.set(req.idempotencyKey, {
+          timestamp: Date.now(),
+          response: response
+        });
+      }
+      
+      res.json(response);
+      
+    } catch (error) {
+      console.error('Error sending test SMS:', error);
+      res.status(500).json({ error: 'Failed to send test SMS' });
+    }
+  });
+
+  // SMS Template Sending Logs
+  app.get("/api/sms-templates/sending-logs", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { templateId, deliveryStatus, sentFrom, recipientPhone, startDate, endDate } = req.query;
+      
+      const filters = {
+        templateId: templateId ? parseInt(templateId) : undefined,
+        sentBy: req.query.sentBy ? parseInt(req.query.sentBy) : undefined,
+        deliveryStatus,
+        sentFrom,
+        recipientPhone,
+        dateRange: startDate && endDate ? { start: startDate, end: endDate } : undefined
+      };
+      
+      const logs = await storage.getSmsTemplateSendingLogs(filters);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching SMS sending logs:', error);
+      res.status(500).json({ error: 'Failed to fetch sending logs' });
+    }
+  });
+
+  app.get("/api/sms-templates/sending-logs/:id", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const log = await storage.getSmsTemplateSendingLog(parseInt(id));
+      if (!log) {
+        return res.status(404).json({ error: 'Sending log not found' });
+      }
+      res.json(log);
+    } catch (error) {
+      console.error('Error fetching SMS sending log:', error);
+      res.status(500).json({ error: 'Failed to fetch sending log' });
+    }
+  });
+
+  // SMS Template Analytics
+  app.get("/api/sms-templates/analytics", authenticate, authorizePermission('sms_templates', 'analytics'), async (req: any, res) => {
+    try {
+      const { templateId, periodType, startDate, endDate } = req.query;
+      
+      const analytics = await storage.getSmsTemplateAnalytics(
+        templateId ? parseInt(templateId) : undefined,
+        periodType,
+        startDate,
+        endDate
+      );
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching SMS template analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
+
+  app.get("/api/sms-templates/:id/performance", authenticate, authorizePermission('sms_templates', 'analytics'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { days } = req.query;
+      
+      const metrics = await storage.getTemplatePerformanceMetrics(
+        parseInt(id),
+        days ? parseInt(days) : 30
+      );
+      
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching template performance metrics:', error);
+      res.status(500).json({ error: 'Failed to fetch performance metrics' });
+    }
+  });
+
+  app.get("/api/sms-templates/performance/top", authenticate, authorizePermission('sms_templates', 'analytics'), async (req: any, res) => {
+    try {
+      const { limit, metric } = req.query;
+      
+      const topTemplates = await storage.getTopPerformingTemplates(
+        limit ? parseInt(limit) : 10,
+        metric as any
+      );
+      
+      res.json(topTemplates);
+    } catch (error) {
+      console.error('Error fetching top performing templates:', error);
+      res.status(500).json({ error: 'Failed to fetch top templates' });
+    }
+  });
+
+  // SMS Template Favorites
+  app.post("/api/sms-templates/:id/favorite", authenticate, authorizePermission('sms_templates', 'favorite'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const favorite = await storage.addSmsTemplateFavorite(req.user.id, parseInt(id));
+      res.status(201).json(favorite);
+    } catch (error) {
+      console.error('Error adding SMS template to favorites:', error);
+      res.status(500).json({ error: 'Failed to add to favorites' });
+    }
+  });
+
+  app.delete("/api/sms-templates/:id/favorite", authenticate, authorizePermission('sms_templates', 'favorite'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.removeSmsTemplateFavorite(req.user.id, parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error removing SMS template from favorites:', error);
+      res.status(500).json({ error: 'Failed to remove from favorites' });
+    }
+  });
+
+  app.get("/api/sms-templates/:id/is-favorite", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const isFavorite = await storage.isSmsTemplateFavorite(req.user.id, parseInt(id));
+      res.json({ isFavorite });
+    } catch (error) {
+      console.error('Error checking if SMS template is favorite:', error);
+      res.status(500).json({ error: 'Failed to check favorite status' });
+    }
+  });
+
+  console.log('✅ SMS Template Management System API routes registered (Categories, Variables, Templates, Sending, Analytics)');
 
   console.log('✅ Front Desk Clerk System API routes registered (Operations, Call Logs, Tasks, Comprehensive Dashboard)');
 

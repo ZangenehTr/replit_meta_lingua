@@ -36,6 +36,9 @@ import {
   // Book e-commerce tables
   book_categories, books, book_assets, dictionary_lookups, carts, cart_items,
   orders, order_items, user_addresses, shipping_orders, courier_tracking,
+  // SMS template tables
+  smsTemplateCategories, smsTemplateVariables, smsTemplates, smsTemplateSendingLogs, 
+  smsTemplateAnalytics, smsTemplateFavorites,
 } from "@shared/schema";
 // Unified testing system tables
 import {
@@ -118,7 +121,14 @@ import {
   type CourierTracking, type CourierTrackingInsert,
   // Front desk types
   type FrontDeskOperation, type InsertFrontDeskOperation,
-  type PhoneCallLog, type InsertPhoneCallLog, type FrontDeskTask, type InsertFrontDeskTask
+  type PhoneCallLog, type InsertPhoneCallLog, type FrontDeskTask, type InsertFrontDeskTask,
+  // SMS template types
+  type SmsTemplateCategory, type InsertSmsTemplateCategory,
+  type SmsTemplateVariable, type InsertSmsTemplateVariable,
+  type SmsTemplate, type InsertSmsTemplate,
+  type SmsTemplateSendingLog, type InsertSmsTemplateSendingLog,
+  type SmsTemplateAnalytics, type InsertSmsTemplateAnalytics,
+  type SmsTemplateFavorite, type InsertSmsTemplateFavorite
 } from "@shared/schema";
 // Unified testing system types
 import {
@@ -1249,6 +1259,92 @@ export interface IStorage {
   completeFrontDeskTask(id: number, completionNotes?: string, taskResult?: string): Promise<FrontDeskTask | undefined>;
   generateFollowUpTask(parentTaskId: number, followUpData: Partial<InsertFrontDeskTask>): Promise<FrontDeskTask>;
   deleteFrontDeskTask(id: number): Promise<void>;
+
+  // ============================================================================
+  // SMS TEMPLATE MANAGEMENT SYSTEM STORAGE METHODS
+  // ============================================================================
+
+  // SMS Template Categories management
+  getSmsTemplateCategories(): Promise<SmsTemplateCategory[]>;
+  getSmsTemplateCategory(id: number): Promise<SmsTemplateCategory | undefined>;
+  getSmsTemplateCategoryByName(name: string): Promise<SmsTemplateCategory | undefined>;
+  createSmsTemplateCategory(data: InsertSmsTemplateCategory): Promise<SmsTemplateCategory>;
+  updateSmsTemplateCategory(id: number, updates: Partial<SmsTemplateCategory>): Promise<SmsTemplateCategory | undefined>;
+  deleteSmsTemplateCategory(id: number): Promise<void>;
+
+  // SMS Template Variables management
+  getSmsTemplateVariables(category?: string): Promise<SmsTemplateVariable[]>;
+  getSmsTemplateVariable(id: number): Promise<SmsTemplateVariable | undefined>;
+  getSmsTemplateVariableByName(name: string): Promise<SmsTemplateVariable | undefined>;
+  createSmsTemplateVariable(data: InsertSmsTemplateVariable): Promise<SmsTemplateVariable>;
+  updateSmsTemplateVariable(id: number, updates: Partial<SmsTemplateVariable>): Promise<SmsTemplateVariable | undefined>;
+  deleteSmsTemplateVariable(id: number): Promise<void>;
+
+  // SMS Templates management
+  getSmsTemplates(filters?: { 
+    status?: string; 
+    categoryId?: number; 
+    createdBy?: number; 
+    search?: string;
+    isFavorite?: boolean;
+  }): Promise<(SmsTemplate & { category: SmsTemplateCategory })[]>;
+  getSmsTemplate(id: number): Promise<(SmsTemplate & { category: SmsTemplateCategory }) | undefined>;
+  getSmsTemplatesByCategory(categoryId: number): Promise<SmsTemplate[]>;
+  getSmsTemplatesByUser(createdBy: number): Promise<SmsTemplate[]>;
+  getPopularSmsTemplates(limit?: number): Promise<(SmsTemplate & { category: SmsTemplateCategory })[]>;
+  getRecentSmsTemplates(limit?: number): Promise<(SmsTemplate & { category: SmsTemplateCategory })[]>;
+  getFavoriteSmsTemplates(userId: number): Promise<(SmsTemplate & { category: SmsTemplateCategory })[]>;
+  createSmsTemplate(data: InsertSmsTemplate): Promise<SmsTemplate>;
+  updateSmsTemplate(id: number, updates: Partial<SmsTemplate>): Promise<SmsTemplate | undefined>;
+  duplicateSmsTemplate(id: number, newName: string, userId: number): Promise<SmsTemplate>;
+  updateSmsTemplateUsage(id: number): Promise<void>;
+  updateSmsTemplateStats(id: number, successful: boolean): Promise<void>;
+  archiveSmsTemplate(id: number): Promise<SmsTemplate | undefined>;
+  activateSmsTemplate(id: number): Promise<SmsTemplate | undefined>;
+  deleteSmsTemplate(id: number): Promise<void>;
+
+  // SMS Template Sending Logs management
+  getSmsTemplateSendingLogs(filters?: {
+    templateId?: number;
+    sentBy?: number;
+    deliveryStatus?: string;
+    sentFrom?: string;
+    dateRange?: { start: string; end: string };
+    recipientPhone?: string;
+  }): Promise<(SmsTemplateSendingLog & { template: SmsTemplate; sender: User })[]>;
+  getSmsTemplateSendingLog(id: number): Promise<(SmsTemplateSendingLog & { template: SmsTemplate; sender: User }) | undefined>;
+  getSmsTemplateSendingLogsByTemplate(templateId: number): Promise<SmsTemplateSendingLog[]>;
+  getSmsTemplateSendingLogsByUser(sentBy: number): Promise<SmsTemplateSendingLog[]>;
+  getSmsTemplateSendingLogsByRecipient(recipientPhone: string): Promise<SmsTemplateSendingLog[]>;
+  createSmsTemplateSendingLog(data: InsertSmsTemplateSendingLog): Promise<SmsTemplateSendingLog>;
+  updateSmsTemplateSendingLogDeliveryStatus(id: number, status: string, deliveryTimestamp?: Date, failureReason?: string): Promise<void>;
+  updateSmsTemplateSendingLogResponse(id: number, responseReceived: boolean): Promise<void>;
+
+  // SMS Template Analytics management
+  getSmsTemplateAnalytics(templateId?: number, periodType?: string, startDate?: string, endDate?: string): Promise<SmsTemplateAnalytics[]>;
+  getSmsTemplateAnalyticsByTemplate(templateId: number): Promise<SmsTemplateAnalytics[]>;
+  createSmsTemplateAnalytics(data: InsertSmsTemplateAnalytics): Promise<SmsTemplateAnalytics>;
+  updateSmsTemplateAnalytics(id: number, updates: Partial<SmsTemplateAnalytics>): Promise<SmsTemplateAnalytics | undefined>;
+  getTemplatePerformanceMetrics(templateId: number, days?: number): Promise<{
+    totalSends: number;
+    deliveryRate: number;
+    responseRate: number;
+    totalCost: number;
+    averageCostPerSms: number;
+  }>;
+  getTopPerformingTemplates(limit?: number, metric?: 'usage' | 'delivery_rate' | 'response_rate'): Promise<SmsTemplate[]>;
+
+  // SMS Template Favorites management
+  getSmsTemplateFavorites(userId: number): Promise<(SmsTemplateFavorite & { template: SmsTemplate })[]>;
+  addSmsTemplateFavorite(userId: number, templateId: number): Promise<SmsTemplateFavorite>;
+  removeSmsTemplateFavorite(userId: number, templateId: number): Promise<void>;
+  isSmsTemplateFavorite(userId: number, templateId: number): Promise<boolean>;
+
+  // SMS Template Utility methods
+  validateSmsTemplateVariables(content: string): Promise<{ isValid: boolean; missingVariables: string[]; invalidVariables: string[] }>;
+  substituteSmsTemplateVariables(content: string, variableData: Record<string, any>): Promise<string>;
+  calculateSmsCharacterCount(content: string): Promise<{ characterCount: number; smsPartsCount: number }>;
+  getSmsTemplatePreview(templateId: number, sampleData: Record<string, any>): Promise<{ content: string; characterCount: number; smsPartsCount: number }>;
 }
 
 export class MemStorage implements IStorage {

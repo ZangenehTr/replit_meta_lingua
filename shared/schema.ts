@@ -6175,6 +6175,184 @@ export const packagesUnifiedView = {
 } as const;
 
 // ============================================================================
+// SMS TEMPLATE MANAGEMENT SYSTEM TABLES
+// ============================================================================
+
+// SMS template categories for organizing templates
+export const smsTemplateCategories = pgTable("sms_template_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // "trial_reminders", "follow_ups", "promotional_offers", "confirmations", "notifications", "general"
+  displayName: text("display_name").notNull(), // "Trial Reminders", "Follow-ups", etc.
+  description: text("description"),
+  icon: text("icon"), // Icon name for UI display
+  color: text("color"), // Color code for UI theming
+  sortOrder: integer("sort_order").default(0), // For custom ordering
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// SMS template variables for personalization
+export const smsTemplateVariables = pgTable("sms_template_variables", {
+  id: serial("id").primaryKey(),
+  variableName: text("variable_name").notNull().unique(), // e.g., "firstName", "lastName", "trialDate"
+  displayName: text("display_name").notNull(), // e.g., "First Name", "Trial Date"
+  description: text("description"), // Description of what this variable represents
+  category: text("category").notNull(), // "student", "institute", "course", "staff", "datetime", "custom"
+  dataType: text("data_type").notNull(), // "text", "date", "time", "number", "boolean"
+  defaultValue: text("default_value"), // Default value if data not available
+  isRequired: boolean("is_required").default(false), // Whether this variable must have a value
+  validationRegex: text("validation_regex"), // Regex for validating variable values
+  examples: text("examples").array().default([]), // Example values for this variable
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Main SMS templates table
+export const smsTemplates = pgTable("sms_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Template name
+  description: text("description"), // Template description
+  categoryId: integer("category_id").references(() => smsTemplateCategories.id).notNull(),
+  
+  // Template content
+  content: text("content").notNull(), // SMS message content with variables
+  subject: text("subject"), // Optional subject/title for organization
+  
+  // Template metadata
+  status: text("status").notNull().default("draft"), // "draft", "active", "archived"
+  language: text("language").default("fa"), // "fa", "en" for Persian/English
+  characterCount: integer("character_count"), // Auto-calculated character count
+  estimatedSmsCount: integer("estimated_sms_count").default(1), // How many SMS parts this will be
+  
+  // Variables used in this template
+  variablesUsed: text("variables_used").array().default([]), // Array of variable names used
+  
+  // Usage and performance tracking
+  usageCount: integer("usage_count").default(0), // How many times this template has been used
+  successfulSends: integer("successful_sends").default(0), // Successful deliveries
+  failedSends: integer("failed_sends").default(0), // Failed deliveries
+  lastUsedAt: timestamp("last_used_at"), // When this template was last used
+  
+  // Template settings
+  isFavorite: boolean("is_favorite").default(false), // For quick access
+  isSystem: boolean("is_system").default(false), // System templates can't be deleted
+  allowBulkSend: boolean("allow_bulk_send").default(true), // Allow bulk sending
+  requiresApproval: boolean("requires_approval").default(false), // Needs approval before sending
+  
+  // Version tracking
+  version: integer("version").default(1), // Template version number
+  parentTemplateId: integer("parent_template_id").references(() => smsTemplates.id), // For template duplicates/versions
+  
+  // Audit fields
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// SMS template sending logs for tracking all SMS sends
+export const smsTemplateSendingLogs = pgTable("sms_template_sending_logs", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => smsTemplates.id).notNull(),
+  
+  // Sender information
+  sentBy: integer("sent_by").references(() => users.id).notNull(), // Front desk clerk who sent
+  sentFrom: text("sent_from").default("frontdesk"), // "frontdesk", "callcenter", "system"
+  
+  // Recipient information
+  recipientPhone: text("recipient_phone").notNull(),
+  recipientName: text("recipient_name"),
+  recipientUserId: integer("recipient_user_id").references(() => users.id), // If recipient is a registered user
+  
+  // Message details
+  finalMessage: text("final_message").notNull(), // Message after variable substitution
+  variableData: jsonb("variable_data"), // The actual variable values used
+  characterCount: integer("character_count").notNull(),
+  smsPartsCount: integer("sms_parts_count").default(1),
+  
+  // Sending details
+  sendingType: text("sending_type").notNull(), // "individual", "bulk", "test", "scheduled"
+  scheduledFor: timestamp("scheduled_for"), // For scheduled messages
+  sentAt: timestamp("sent_at").defaultNow(),
+  
+  // Kavenegar response data
+  kavenegarMessageId: text("kavenegar_message_id"), // Kavenegar's message ID
+  kavenegarStatus: text("kavenegar_status"), // Status from Kavenegar
+  kavenegarCost: decimal("kavenegar_cost", { precision: 10, scale: 2 }), // Cost in IRR
+  
+  // Delivery tracking
+  deliveryStatus: text("delivery_status").default("sent"), // "sent", "delivered", "failed", "unknown"
+  deliveryTimestamp: timestamp("delivery_timestamp"),
+  failureReason: text("failure_reason"), // If delivery failed
+  
+  // Campaign/context information
+  campaignId: text("campaign_id"), // For bulk campaigns
+  contextType: text("context_type"), // "walk_in", "phone_call", "manual", "automated"
+  contextId: integer("context_id"), // ID of related record (operation, call, etc.)
+  
+  // Analytics and feedback
+  wasOpened: boolean("was_opened").default(false), // If we can track opens
+  clickedLinks: text("clicked_links").array().default([]), // If message contained links
+  responseReceived: boolean("response_received").default(false), // If customer responded
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// SMS template analytics for performance tracking
+export const smsTemplateAnalytics = pgTable("sms_template_analytics", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => smsTemplates.id).notNull(),
+  
+  // Time period for analytics
+  periodType: text("period_type").notNull(), // "daily", "weekly", "monthly"
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  
+  // Usage statistics
+  totalSends: integer("total_sends").default(0),
+  successfulDeliveries: integer("successful_deliveries").default(0),
+  failedDeliveries: integer("failed_deliveries").default(0),
+  deliveryRate: decimal("delivery_rate", { precision: 5, scale: 2 }).default(0), // Percentage
+  
+  // Cost analysis
+  totalCost: decimal("total_cost", { precision: 10, scale: 2 }).default(0), // Total cost in IRR
+  averageCostPerSms: decimal("average_cost_per_sms", { precision: 10, scale: 2 }).default(0),
+  
+  // Performance metrics
+  averageDeliveryTime: integer("average_delivery_time"), // Seconds
+  peakUsageHour: integer("peak_usage_hour"), // Hour of day (0-23) with most usage
+  
+  // Response tracking
+  totalResponses: integer("total_responses").default(0), // Customer responses received
+  responseRate: decimal("response_rate", { precision: 5, scale: 2 }).default(0), // Percentage
+  
+  // Conversion tracking (for promotional messages)
+  conversions: integer("conversions").default(0), // Actions taken after SMS
+  conversionRate: decimal("conversion_rate", { precision: 5, scale: 2 }).default(0), // Percentage
+  conversionValue: decimal("conversion_value", { precision: 10, scale: 2 }).default(0), // Value in IRR
+  
+  // Usage context breakdown
+  frontdeskUsage: integer("frontdesk_usage").default(0),
+  callcenterUsage: integer("callcenter_usage").default(0),
+  automatedUsage: integer("automated_usage").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// SMS template favorites for quick access
+export const smsTemplateFavorites = pgTable("sms_template_favorites", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  templateId: integer("template_id").references(() => smsTemplates.id).notNull(),
+  sortOrder: integer("sort_order").default(0), // For custom ordering
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// ============================================================================
 // FRONT DESK CLERK TABLES FOR WALK-IN MANAGEMENT
 // ============================================================================
 
@@ -6579,3 +6757,79 @@ export type PhoneCallLog = typeof phoneCallLogs.$inferSelect;
 export type InsertPhoneCallLog = z.infer<typeof insertPhoneCallLogSchema>;
 export type FrontDeskTask = typeof frontDeskTasks.$inferSelect;
 export type InsertFrontDeskTask = z.infer<typeof insertFrontDeskTaskSchema>;
+
+// ============================================================================
+// SMS TEMPLATE SYSTEM INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// CRITICAL TYPE SAFETY: SMS Log Metadata Schema - replaces unsafe (metadata as any) casts
+export const smsLogMetadataSchema = z.object({
+  placementSessionId: z.number().optional(),
+  trialId: z.number().optional(),
+  courseId: z.number().optional(),
+  messageId: z.string().optional(),
+  cost: z.number().optional(),
+  automated: z.boolean().optional(),
+  leadId: z.number().optional(),
+  reminderType: z.string().optional(),
+  placementLevel: z.string().optional(),
+  daysSinceTest: z.number().optional(),
+  error: z.string().optional(),
+  customData: z.record(z.unknown()).optional()
+}).strict();
+
+export type SmsLogMetadata = z.infer<typeof smsLogMetadataSchema>;
+
+// Insert schemas for SMS Template tables
+export const insertSmsTemplateCategorySchema = createInsertSchema(smsTemplateCategories).omit(['id', 'createdAt', 'updatedAt']);
+export const insertSmsTemplateVariableSchema = createInsertSchema(smsTemplateVariables).omit(['id', 'createdAt', 'updatedAt']);
+export const insertSmsTemplateSchema = createInsertSchema(smsTemplates).omit(['id', 'createdAt', 'updatedAt', 'usageCount', 'successfulSends', 'failedSends', 'lastUsedAt']);
+export const insertSmsTemplateSendingLogSchema = createInsertSchema(smsTemplateSendingLogs).omit(['id', 'createdAt', 'updatedAt']);
+export const insertSmsTemplateAnalyticsSchema = createInsertSchema(smsTemplateAnalytics).omit(['id', 'createdAt', 'updatedAt']);
+export const insertSmsTemplateFavoriteSchema = createInsertSchema(smsTemplateFavorites).omit(['id', 'createdAt']);
+
+// Type exports for SMS Template tables
+export type SmsTemplateCategory = typeof smsTemplateCategories.$inferSelect;
+export type InsertSmsTemplateCategory = z.infer<typeof insertSmsTemplateCategorySchema>;
+export type SmsTemplateVariable = typeof smsTemplateVariables.$inferSelect;
+export type InsertSmsTemplateVariable = z.infer<typeof insertSmsTemplateVariableSchema>;
+export type SmsTemplate = typeof smsTemplates.$inferSelect;
+export type InsertSmsTemplate = z.infer<typeof insertSmsTemplateSchema>;
+export type SmsTemplateSendingLog = typeof smsTemplateSendingLogs.$inferSelect;
+export type InsertSmsTemplateSendingLog = z.infer<typeof insertSmsTemplateSendingLogSchema>;
+export type SmsTemplateAnalytics = typeof smsTemplateAnalytics.$inferSelect;
+export type InsertSmsTemplateAnalytics = z.infer<typeof insertSmsTemplateAnalyticsSchema>;
+export type SmsTemplateFavorite = typeof smsTemplateFavorites.$inferSelect;
+export type InsertSmsTemplateFavorite = z.infer<typeof insertSmsTemplateFavoriteSchema>;
+
+// ============================================================================
+// CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
+// ============================================================================
+
+// Performance indexes for SMS template system
+import { index } from "drizzle-orm/pg-core";
+
+export const smsTemplateIndexes = {
+  // Primary performance indexes for SMS templates
+  categoryIndex: index('sms_templates_category_id_idx').on(smsTemplates.categoryId),
+  createdAtIndex: index('sms_templates_created_at_idx').on(smsTemplates.createdAt),
+  statusIndex: index('sms_templates_status_idx').on(smsTemplates.status),
+  lastUsedIndex: index('sms_templates_last_used_at_idx').on(smsTemplates.lastUsedAt),
+  
+  // Sending logs indexes for query performance
+  sendingLogTemplateIndex: index('sms_sending_logs_template_id_idx').on(smsTemplateSendingLogs.templateId),
+  sendingLogCreatedAtIndex: index('sms_sending_logs_created_at_idx').on(smsTemplateSendingLogs.createdAt),
+  sendingLogStatusIndex: index('sms_sending_logs_delivery_status_idx').on(smsTemplateSendingLogs.deliveryStatus),
+  sendingLogSentByIndex: index('sms_sending_logs_sent_by_idx').on(smsTemplateSendingLogs.sentBy),
+  
+  // Analytics indexes for performance
+  analyticsTemplateIndex: index('sms_analytics_template_id_idx').on(smsTemplateAnalytics.templateId),
+  analyticsDateIndex: index('sms_analytics_date_idx').on(smsTemplateAnalytics.date),
+  
+  // Category indexes
+  categoryNameIndex: index('sms_categories_name_idx').on(smsTemplateCategories.name),
+  
+  // Variable indexes  
+  variableNameIndex: index('sms_variables_name_idx').on(smsTemplateVariables.name),
+  variableTypeIndex: index('sms_variables_type_idx').on(smsTemplateVariables.type)
+};

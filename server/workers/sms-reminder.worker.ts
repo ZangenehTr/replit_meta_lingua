@@ -1,6 +1,6 @@
 import { storage } from '../storage';
 import { KavenegarService } from '../kavenegar-service';
-import { Lead, WORKFLOW_STATUS } from '@shared/schema';
+import { Lead, WORKFLOW_STATUS, smsLogMetadataSchema, type SmsLogMetadata } from '@shared/schema';
 
 interface SMSReminderWorkerConfig {
   checkIntervalMs: number; // How often to check for pending reminders
@@ -439,11 +439,20 @@ export class SMSReminderWorker {
     try {
       // FIXED: Get all communication logs and filter in memory
       const allLogs = await storage.getCommunicationLogs();
-      const placementReminders = allLogs.filter(log => 
-        log.userId === userId &&
-        log.type === 'sms_placement_reminder' &&
-        log.metadata?.placementSessionId === placementSessionId
-      );
+      const placementReminders = allLogs.filter(log => {
+        if (log.toUserId !== userId || log.type !== 'sms_placement_reminder') {
+          return false;
+        }
+        
+        // CRITICAL TYPE SAFETY FIX: Use proper metadata schema parsing instead of unsafe (as any) cast
+        try {
+          const metadata = smsLogMetadataSchema.parse(log.metadata || {});
+          return metadata.placementSessionId === placementSessionId;
+        } catch {
+          // Invalid metadata - skip this log
+          return false;
+        }
+      });
       
       if (placementReminders.length === 0) {
         return null;
@@ -468,11 +477,20 @@ export class SMSReminderWorker {
     try {
       // FIXED: Get all communication logs and filter in memory
       const allLogs = await storage.getCommunicationLogs();
-      return allLogs.filter(log => 
-        log.userId === userId &&
-        log.type === 'sms_placement_reminder' &&
-        log.metadata?.placementSessionId === placementSessionId
-      ).length;
+      return allLogs.filter(log => {
+        if (log.toUserId !== userId || log.type !== 'sms_placement_reminder') {
+          return false;
+        }
+        
+        // CRITICAL TYPE SAFETY FIX: Use proper metadata schema parsing instead of unsafe (as any) cast
+        try {
+          const metadata = smsLogMetadataSchema.parse(log.metadata || {});
+          return metadata.placementSessionId === placementSessionId;
+        } catch {
+          // Invalid metadata - skip this log
+          return false;
+        }
+      }).length;
     } catch (error) {
       console.error('Error getting placement test reminder count:', error);
       return 0;
