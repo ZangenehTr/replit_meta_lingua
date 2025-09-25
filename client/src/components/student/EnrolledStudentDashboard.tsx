@@ -954,22 +954,63 @@ function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats
 }
 
 function LearnHub({ courses, assignments, learningProgress }: any) {
+  const queryClient = useQueryClient();
+  
+  // Fetch LinguaQuest progress data
+  const { data: linguaQuestProgress, isLoading: linguaQuestLoading } = useQuery({
+    queryKey: ['/api/student/linguaquest-progress'],
+    queryFn: () => apiRequest('/api/student/linguaquest-progress'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch learning recommendations
+  const { data: recommendations, isLoading: recommendationsLoading } = useQuery({
+    queryKey: ['/api/student/learning-recommendations'],
+    queryFn: () => apiRequest('/api/student/learning-recommendations'),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
   return (
     <div className="space-y-6">
+      {/* Learning Hub Header */}
+      <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white" data-testid="learn-hub-header">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+              <BookOpen className="h-8 w-8 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold mb-2">Learning Center</h3>
+              <p className="text-blue-100 mb-4">Continue your learning journey with paid courses and free content</p>
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-yellow-300" />
+                  <span>{learningProgress?.totalXP || 0} XP earned</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-green-300" />
+                  <span>{learningProgress?.completedLessons || 0} lessons completed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Learning Progress Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2" data-testid="paid-courses-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600" />
-              My Learning Path
+              <Crown className="h-5 w-5 text-yellow-600" />
+              My Premium Courses
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {courses?.length > 0 ? (
                 courses.slice(0, 3).map((course: any, index: number) => (
-                  <div key={course.id || index} className="flex items-center gap-4 p-4 border border-blue-100 rounded-lg hover:bg-blue-50 transition-all">
+                  <div key={course.id || index} className="flex items-center gap-4 p-4 border border-blue-100 rounded-lg hover:bg-blue-50 transition-all" data-testid={`course-${course.id}`}>
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
                       <BookOpen className="h-6 w-6 text-white" />
                     </div>
@@ -977,8 +1018,12 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
                       <h4 className="font-semibold text-gray-900">{course.title || 'Course Title'}</h4>
                       <p className="text-sm text-gray-600">Progress: {course.progress || 0}%</p>
                       <Progress value={course.progress || 0} className="mt-2 h-2" />
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary" className="text-xs">{course.level || 'Intermediate'}</Badge>
+                        <span className="text-xs text-gray-500">{course.lessonsRemaining || 0} lessons left</span>
+                      </div>
                     </div>
-                    <Button size="sm" className="bg-gradient-to-r from-blue-500 to-indigo-500">
+                    <Button size="sm" className="bg-gradient-to-r from-blue-500 to-indigo-500" data-testid={`button-continue-course-${course.id}`}>
                       Continue
                     </Button>
                   </div>
@@ -986,24 +1031,201 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
               ) : (
                 <div className="text-center py-12">
                   <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No courses available yet</p>
-                  <Button className="bg-gradient-to-r from-blue-500 to-indigo-500">
-                    Browse Courses
-                  </Button>
+                  <p className="text-gray-500 mb-4">No premium courses available yet</p>
+                  <Link href="/student/course-catalog">
+                    <Button className="bg-gradient-to-r from-blue-500 to-indigo-500" data-testid="button-browse-courses">
+                      Browse Premium Courses
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>
+            {courses?.length > 3 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <Link href="/student/my-courses">
+                  <Button variant="outline" className="w-full" data-testid="button-view-all-courses">
+                    View All My Courses ({courses.length})
+                  </Button>
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
         
         <div className="space-y-4">
-          <LearningProgressWidget theme="learner" />
-          <AssignmentsWidget theme="learner" />
+          {/* LinguaQuest Integration */}
+          <Card data-testid="linguaquest-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                LinguaQuest Free
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {linguaQuestLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Free Learning Progress</p>
+                      <div className="flex items-center gap-2">
+                        <Progress value={linguaQuestProgress?.overallProgress || 0} className="w-20 h-2" />
+                        <span className="text-sm font-medium">{linguaQuestProgress?.overallProgress || 0}%</span>
+                      </div>
+                    </div>
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                      Level {linguaQuestProgress?.level || 1}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 text-yellow-500" />
+                      <span>{linguaQuestProgress?.freeXP || 0} XP</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-4 w-4 text-orange-500" />
+                      <span>{linguaQuestProgress?.achievements || 0} achievements</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-green-500" />
+                      <span>{linguaQuestProgress?.freeLessonsCompleted || 0} free lessons</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-red-500" />
+                      <span>{linguaQuestProgress?.freeStreak || 0} day streak</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Link href="/linguaquest">
+                      <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500" data-testid="button-continue-linguaquest">
+                        <Play className="h-4 w-4 mr-2" />
+                        Continue Free Lessons
+                      </Button>
+                    </Link>
+                    {linguaQuestProgress?.canUpgrade && (
+                      <Button variant="outline" className="w-full text-xs" data-testid="button-upgrade-linguaquest">
+                        <Crown className="h-3 w-3 mr-2" />
+                        Upgrade Progress to Premium
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="text-xs text-gray-500 bg-purple-50 p-3 rounded-lg">
+                    🎆 <strong>Tip:</strong> Your LinguaQuest progress complements your premium courses. Use free lessons to practice between paid sessions!
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <LearningProgressWidget theme="learner" data-testid="learning-progress-widget" />
+          <AssignmentsWidget theme="learner" data-testid="assignments-widget" />
         </div>
       </div>
 
+      {/* Learning Recommendations & Resources */}
+      <Card data-testid="learning-recommendations-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-indigo-600" />
+            Personalized Learning Recommendations
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recommendationsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-4 border border-gray-200 rounded-lg">
+                  <Skeleton className="h-6 w-6 mb-3" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-3 w-3/4 mb-3" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(recommendations?.suggestions || [
+                { id: '1', type: 'linguaquest', title: 'Practice Grammar Basics', description: 'Free interactive exercises', icon: 'Sparkles', difficulty: 'Easy' },
+                { id: '2', type: 'premium', title: 'Business English Course', description: 'Advanced communication skills', icon: 'Crown', difficulty: 'Advanced' },
+                { id: '3', type: 'mixed', title: 'Speaking Practice Session', description: 'Combine free & premium content', icon: 'Mic', difficulty: 'Medium' },
+              ]).map((rec: any, index: number) => {
+                const iconMap: any = {
+                  Sparkles: Sparkles,
+                  Crown: Crown,
+                  Mic: Mic,
+                  BookOpen: BookOpen,
+                };
+                const IconComponent = iconMap[rec.icon] || BookOpen;
+                
+                return (
+                  <div key={rec.id || index} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all" data-testid={`recommendation-${rec.id}`}>
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center mb-3",
+                      rec.type === 'linguaquest' ? "bg-purple-100" :
+                      rec.type === 'premium' ? "bg-yellow-100" : "bg-blue-100"
+                    )}>
+                      <IconComponent className={cn(
+                        "h-4 w-4",
+                        rec.type === 'linguaquest' ? "text-purple-600" :
+                        rec.type === 'premium' ? "text-yellow-600" : "text-blue-600"
+                      )} />
+                    </div>
+                    <h4 className="font-medium text-gray-900 mb-1">{rec.title}</h4>
+                    <p className="text-sm text-gray-600 mb-3">{rec.description}</p>
+                    <div className="flex items-center justify-between">
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "text-xs",
+                          rec.difficulty === 'Easy' ? "border-green-200 text-green-700" :
+                          rec.difficulty === 'Medium' ? "border-yellow-200 text-yellow-700" :
+                          "border-red-200 text-red-700"
+                        )}
+                      >
+                        {rec.difficulty}
+                      </Badge>
+                      <Button size="sm" variant="outline" data-testid={`button-try-${rec.id}`}>
+                        Try Now
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Cross-Platform Learning</h4>
+                  <p className="text-sm text-gray-600">Mix free LinguaQuest lessons with your premium courses for optimal learning</p>
+                </div>
+                <Link href="/student/learning-path">
+                  <Button data-testid="button-create-path">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Create Path
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Course Materials & Resources */}
-      <Card>
+      <Card data-testid="course-materials-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-indigo-600" />
@@ -1038,10 +1260,46 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
 }
 
 function LiveHub({ upcomingSessions }: any) {
+  const queryClient = useQueryClient();
+  const [showQuickJoinDialog, setShowQuickJoinDialog] = useState(false);
+  
+  // Fetch Callern data
+  const { data: callernData, isLoading: callernLoading } = useQuery({
+    queryKey: ['/api/student/callern-status'],
+    queryFn: () => apiRequest('/api/student/callern-status'),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  const { data: teacherAvailability, isLoading: availabilityLoading } = useQuery({
+    queryKey: ['/api/student/teacher-availability'],
+    queryFn: () => apiRequest('/api/student/teacher-availability'),
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+
+  const { data: sessionHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ['/api/student/session-history', 'recent'],
+    queryFn: () => apiRequest('/api/student/session-history?limit=3'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Start quick session mutation
+  const startQuickSessionMutation = useMutation({
+    mutationFn: () => apiRequest('/api/student/callern/quick-session', { method: 'POST' }),
+    onSuccess: (data) => {
+      if (data.sessionUrl) {
+        window.open(data.sessionUrl, '_blank');
+      }
+    },
+  });
+
+  const availableTeachers = teacherAvailability?.available || 0;
+  const hasActivePackage = callernData?.hasActivePackage || false;
+  const remainingMinutes = callernData?.remainingMinutes || 0;
+
   return (
     <div className="space-y-6">
-      {/* Live Session Status */}
-      <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+      {/* Callern Video Tutoring Status */}
+      <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white" data-testid="live-hub-header">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
@@ -1049,11 +1307,41 @@ function LiveHub({ upcomingSessions }: any) {
             </div>
             <div className="flex-1">
               <h3 className="text-2xl font-bold mb-2">Callern Video Tutoring</h3>
-              <p className="text-indigo-100">Connect with expert tutors for personalized learning</p>
+              <p className="text-indigo-100 mb-3">Connect with expert tutors for personalized learning</p>
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    "w-2 h-2 rounded-full",
+                    availableTeachers > 0 ? "bg-green-300" : "bg-red-300"
+                  )} />
+                  <span>{availableTeachers} teachers available</span>
+                </div>
+                {hasActivePackage && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{remainingMinutes} minutes remaining</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-              Start Session
-            </Button>
+            <div className="space-y-2">
+              <Link href="/callern">
+                <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-callern-dashboard">
+                  <VideoIcon className="h-4 w-4 mr-2" />
+                  Callern Dashboard
+                </Button>
+              </Link>
+              {hasActivePackage && availableTeachers > 0 && (
+                <Button 
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30 w-full"
+                  onClick={() => setShowQuickJoinDialog(true)}
+                  data-testid="button-quick-session"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Quick Session
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1072,8 +1360,8 @@ function LiveHub({ upcomingSessions }: any) {
           </CardContent>
         </Card>
         
-        {/* Quick Join */}
-        <Card>
+        {/* Quick Actions */}
+        <Card data-testid="live-actions-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Video className="h-5 w-5 text-purple-600" />
@@ -1082,25 +1370,59 @@ function LiveHub({ upcomingSessions }: any) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button className="w-full justify-start h-12 bg-gradient-to-r from-indigo-500 to-purple-500">
-                <VideoIcon className="h-5 w-5 mr-3" />
-                Join Practice Room
-              </Button>
-              <Button variant="outline" className="w-full justify-start h-12">
-                <Calendar className="h-5 w-5 mr-3" />
-                Schedule New Session
-              </Button>
-              <Button variant="outline" className="w-full justify-start h-12">
-                <Clock className="h-5 w-5 mr-3" />
-                View Session History
-              </Button>
+              {hasActivePackage ? (
+                availableTeachers > 0 ? (
+                  <Button 
+                    className="w-full justify-start h-12 bg-gradient-to-r from-indigo-500 to-purple-500"
+                    onClick={() => setShowQuickJoinDialog(true)}
+                    data-testid="button-join-practice-room"
+                  >
+                    <VideoIcon className="h-5 w-5 mr-3" />
+                    Start Instant Session ({availableTeachers} available)
+                  </Button>
+                ) : (
+                  <Button 
+                    disabled
+                    className="w-full justify-start h-12" 
+                    data-testid="button-no-teachers"
+                  >
+                    <VideoIcon className="h-5 w-5 mr-3" />
+                    No Teachers Available
+                  </Button>
+                )
+              ) : (
+                <Link href="/callern">
+                  <Button className="w-full justify-start h-12 bg-gradient-to-r from-green-500 to-teal-500" data-testid="button-buy-package">
+                    <Package className="h-5 w-5 mr-3" />
+                    Buy Callern Package
+                  </Button>
+                </Link>
+              )}
+              <Link href="/student/tutors">
+                <Button variant="outline" className="w-full justify-start h-12" data-testid="button-schedule-session">
+                  <Calendar className="h-5 w-5 mr-3" />
+                  Schedule with Specific Tutor
+                </Button>
+              </Link>
+              <Link href="/student/sessions">
+                <Button variant="outline" className="w-full justify-start h-12" data-testid="button-session-history">
+                  <Clock className="h-5 w-5 mr-3" />
+                  View Session History
+                </Button>
+              </Link>
+              <Link href="/callern">
+                <Button variant="outline" className="w-full justify-start h-12" data-testid="button-callern-full">
+                  <Settings className="h-5 w-5 mr-3" />
+                  Full Callern Dashboard
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Session History */}
-      <Card>
+      <Card data-testid="session-history-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-blue-600" />
@@ -1108,29 +1430,122 @@ function LiveHub({ upcomingSessions }: any) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[
-              { title: 'Grammar Focus Session', teacher: 'Sarah Johnson', date: '2 days ago', duration: '45 min', status: 'completed' },
-              { title: 'Speaking Practice', teacher: 'Mark Wilson', date: '1 week ago', duration: '30 min', status: 'completed' },
-              { title: 'IELTS Preparation', teacher: 'Emma Davis', date: '2 weeks ago', duration: '60 min', status: 'completed' },
-            ].map((session, index) => (
-              <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+          {historyLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                  <Skeleton className="w-10 h-10 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-3 w-36" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-8 w-24" />
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{session.title}</h4>
-                  <p className="text-sm text-gray-600">with {session.teacher} • {session.duration}</p>
-                  <p className="text-xs text-gray-500">{session.date}</p>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {(sessionHistory?.sessions || [
+                { id: '1', title: 'Grammar Focus Session', teacher: 'Sarah Johnson', date: '2 days ago', duration: 45, status: 'completed', recordingUrl: '/recording/1' },
+                { id: '2', title: 'Speaking Practice', teacher: 'Mark Wilson', date: '1 week ago', duration: 30, status: 'completed', recordingUrl: '/recording/2' },
+                { id: '3', title: 'IELTS Preparation', teacher: 'Emma Davis', date: '2 weeks ago', duration: 60, status: 'completed', recordingUrl: null },
+              ]).map((session: any, index: number) => (
+                <div key={session.id || index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-testid={`session-${session.id}`}>
+                  <div className={cn(
+                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                    session.status === 'completed' ? "bg-green-100" : 
+                    session.status === 'scheduled' ? "bg-blue-100" : "bg-gray-100"
+                  )}>
+                    {session.status === 'completed' ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : session.status === 'scheduled' ? (
+                      <Calendar className="h-5 w-5 text-blue-600" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-gray-600" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">{session.title}</h4>
+                    <p className="text-sm text-gray-600">with {session.teacher} • {session.duration} min</p>
+                    <p className="text-xs text-gray-500">{session.date}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {session.recordingUrl && (
+                      <Button size="sm" variant="outline" data-testid={`button-recording-${session.id}`}>
+                        <PlayCircle className="h-4 w-4 mr-1" />
+                        Recording
+                      </Button>
+                    )}
+                    <Button size="sm" variant="ghost" data-testid={`button-details-${session.id}`}>
+                      Details
+                    </Button>
+                  </div>
                 </div>
-                <Button size="sm" variant="outline">
-                  View Recording
-                </Button>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <Link href="/student/sessions">
+              <Button variant="outline" className="w-full" data-testid="button-view-all-sessions">
+                View Complete Session History
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
+
+      {/* Quick Session Dialog */}
+      <Dialog open={showQuickJoinDialog} onOpenChange={setShowQuickJoinDialog}>
+        <DialogContent data-testid="quick-session-dialog">
+          <DialogHeader>
+            <DialogTitle>Start Quick Session</DialogTitle>
+            <DialogDescription>
+              Connect with an available teacher instantly for a practice session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-blue-900">{availableTeachers} Teachers Available</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <span className="text-sm text-blue-700">Average wait time: 2-5 minutes</span>
+              </div>
+            </div>
+            {remainingMinutes > 0 && (
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-green-600" />
+                  <span className="font-medium text-green-900">{remainingMinutes} minutes remaining in your package</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowQuickJoinDialog(false)} data-testid="button-cancel-session">
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                startQuickSessionMutation.mutate();
+                setShowQuickJoinDialog(false);
+              }}
+              disabled={startQuickSessionMutation.isPending}
+              data-testid="button-start-quick-session"
+            >
+              {startQuickSessionMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Video className="h-4 w-4 mr-2" />
+              )}
+              Start Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1259,38 +1674,50 @@ function AIHub(props: any) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
           {
+            id: 'ai-conversation',
             title: 'AI Conversation',
             description: 'Practice speaking with AI tutor',
             icon: MessageCircle,
             color: 'from-blue-500 to-indigo-500',
             available: true,
-            usageCount: 15
+            usageCount: 15,
+            href: '/student/AIConversation'
           },
           {
+            id: 'homework-helper',
             title: 'Homework Helper',
             description: 'Get AI assistance with assignments',
             icon: PenTool,
             color: 'from-indigo-500 to-purple-500',
             available: true,
-            usageCount: 8
+            usageCount: 8,
+            href: '/student/ai-study-partner-mobile'
           },
           {
+            id: 'grammar-checker',
             title: 'Grammar Checker',
             description: 'AI-powered writing assistance',
             icon: CheckCircle,
             color: 'from-purple-500 to-pink-500',
             available: true,
-            usageCount: 22
+            usageCount: 22,
+            onClick: () => {
+              // TODO: Implement grammar checker modal/component
+              console.log('Opening Grammar Checker...');
+            }
           },
           {
+            id: 'pronunciation-coach',
             title: 'Pronunciation Coach',
             description: 'Perfect your pronunciation',
             icon: Mic,
             color: 'from-green-500 to-teal-500',
             available: true,
-            usageCount: 6
+            usageCount: 6,
+            href: '/pronunciation-practice'
           },
           {
+            id: 'reading-comprehension',
             title: 'Reading Comprehension',
             description: 'AI-guided reading practice',
             icon: BookOpen,
@@ -1299,6 +1726,7 @@ function AIHub(props: any) {
             usageCount: 0
           },
           {
+            id: 'study-planner',
             title: 'Study Planner',
             description: 'AI-optimized learning schedule',
             icon: Calendar,
@@ -1309,8 +1737,10 @@ function AIHub(props: any) {
         ].map((tool, index) => (
           <Card key={index} className={cn(
             "transition-all duration-300 hover:shadow-lg",
-            tool.available ? "hover:scale-105" : "opacity-60"
-          )}>
+            tool.available ? "hover:scale-105 cursor-pointer" : "opacity-60"
+          )}
+          data-testid={`ai-tool-${tool.id}`}
+          >
             <CardContent className="p-6">
               <div className={cn(
                 "w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-gradient-to-r",
@@ -1324,13 +1754,34 @@ function AIHub(props: any) {
                 <div className="text-xs text-gray-500">
                   Used {tool.usageCount} times
                 </div>
-                <Button 
-                  size="sm" 
-                  disabled={!tool.available}
-                  className={tool.available ? `bg-gradient-to-r ${tool.color}` : ""}
-                >
-                  {tool.available ? 'Try Now' : 'Coming Soon'}
-                </Button>
+                {tool.available && tool.href ? (
+                  <Link href={tool.href}>
+                    <Button 
+                      size="sm" 
+                      className={`bg-gradient-to-r ${tool.color} hover:opacity-90`}
+                      data-testid={`button-${tool.id}`}
+                    >
+                      Try Now
+                    </Button>
+                  </Link>
+                ) : tool.available && tool.onClick ? (
+                  <Button 
+                    size="sm" 
+                    className={`bg-gradient-to-r ${tool.color} hover:opacity-90`}
+                    onClick={tool.onClick}
+                    data-testid={`button-${tool.id}`}
+                  >
+                    Try Now
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    disabled
+                    data-testid={`button-${tool.id}`}
+                  >
+                    Coming Soon
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1367,10 +1818,56 @@ function AIHub(props: any) {
 }
 
 function SocialHub(props: any) {
+  const queryClient = useQueryClient();
+  
+  // Fetch social data with React Query
+  const { data: socialStats, isLoading: socialLoading } = useQuery({
+    queryKey: ['/api/student/social-stats'],
+    queryFn: () => apiRequest('/api/student/social-stats'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: studyGroups, isLoading: groupsLoading } = useQuery({
+    queryKey: ['/api/student/study-groups'],
+    queryFn: () => apiRequest('/api/student/study-groups'),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  const { data: communityFeed, isLoading: feedLoading } = useQuery({
+    queryKey: ['/api/student/community-feed'],
+    queryFn: () => apiRequest('/api/student/community-feed'),
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+
+  const { data: studyPartners, isLoading: partnersLoading } = useQuery({
+    queryKey: ['/api/student/study-partners'],
+    queryFn: () => apiRequest('/api/student/study-partners'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Join study group mutation
+  const joinGroupMutation = useMutation({
+    mutationFn: (groupId: string) => 
+      apiRequest(`/api/student/study-groups/${groupId}/join`, { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/student/study-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/social-stats'] });
+    },
+  });
+
+  // Connect with study partner mutation
+  const connectPartnerMutation = useMutation({
+    mutationFn: (partnerId: string) => 
+      apiRequest(`/api/student/study-partners/${partnerId}/connect`, { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/student/study-partners'] });
+    },
+  });
+
   return (
     <div className="space-y-6">
       {/* Community Overview */}
-      <Card className="bg-gradient-to-r from-blue-500 to-teal-500 text-white">
+      <Card className="bg-gradient-to-r from-blue-500 to-teal-500 text-white" data-testid="social-hub-header">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
@@ -1379,6 +1876,17 @@ function SocialHub(props: any) {
             <div className="flex-1">
               <h3 className="text-2xl font-bold mb-2">Learning Community</h3>
               <p className="text-blue-100">Connect with fellow learners and practice together</p>
+              <div className="flex items-center gap-4 mt-4">
+                <Link href="/student/messages">
+                  <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-messages">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Messages
+                  </Button>
+                </Link>
+                <div className="text-sm text-blue-100">
+                  {socialStats?.activeConnections || 0} active connections • {socialStats?.unreadMessages || 0} unread messages
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -1386,7 +1894,7 @@ function SocialHub(props: any) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Study Groups */}
-        <Card>
+        <Card data-testid="study-groups-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-teal-600" />
@@ -1394,34 +1902,74 @@ function SocialHub(props: any) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: 'IELTS Warriors', members: 24, activity: 'High', topic: 'IELTS Preparation' },
-                { name: 'Business English Pro', members: 18, activity: 'Medium', topic: 'Business Communication' },
-                { name: 'Grammar Masters', members: 31, activity: 'High', topic: 'Grammar Practice' },
-              ].map((group, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-teal-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                      <Users className="h-5 w-5 text-teal-600" />
+            {groupsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-10 h-10 rounded-lg" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-48" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">{group.name}</h4>
-                      <p className="text-sm text-gray-600">{group.topic}</p>
-                      <p className="text-xs text-gray-500">{group.members} members • {group.activity} activity</p>
-                    </div>
+                    <Skeleton className="h-8 w-16" />
                   </div>
-                  <Button size="sm" variant="outline">
-                    Join
-                  </Button>
-                </div>
-              ))}
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(studyGroups?.groups || [
+                  { id: '1', name: 'IELTS Warriors', members: 24, activity: 'High', topic: 'IELTS Preparation', joined: false },
+                  { id: '2', name: 'Business English Pro', members: 18, activity: 'Medium', topic: 'Business Communication', joined: false },
+                  { id: '3', name: 'Grammar Masters', members: 31, activity: 'High', topic: 'Grammar Practice', joined: true },
+                ]).map((group: any, index: number) => (
+                  <div key={group.id || index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-teal-50 transition-colors" data-testid={`study-group-${group.id}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                        <Users className="h-5 w-5 text-teal-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">{group.name}</h4>
+                        <p className="text-sm text-gray-600">{group.topic}</p>
+                        <p className="text-xs text-gray-500">{group.members} members • {group.activity} activity</p>
+                      </div>
+                    </div>
+                    {group.joined ? (
+                      <Badge className="bg-teal-100 text-teal-700" data-testid={`badge-joined-${group.id}`}>
+                        Joined
+                      </Badge>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => joinGroupMutation.mutate(group.id)}
+                        disabled={joinGroupMutation.isPending}
+                        data-testid={`button-join-group-${group.id}`}
+                      >
+                        {joinGroupMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        ) : null}
+                        Join
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <Link href="/student/study-groups">
+                <Button variant="outline" className="w-full" data-testid="button-view-all-groups">
+                  View All Study Groups
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
 
         {/* Community Feed */}
-        <Card>
+        <Card data-testid="community-feed-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-blue-600" />
@@ -1429,43 +1977,78 @@ function SocialHub(props: any) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { user: 'Sarah M.', content: 'Just completed my first IELTS practice test! Feeling confident 💪', time: '2 hours ago', likes: 12 },
-                { user: 'Ahmed K.', content: 'Looking for a speaking practice partner for tomorrow evening. Anyone interested?', time: '4 hours ago', likes: 5 },
-                { user: 'Emma L.', content: 'Great grammar lesson today! The conditional sentences finally make sense 🎉', time: '1 day ago', likes: 18 },
-              ].map((post, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                        {post.user.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm text-gray-900">{post.user}</span>
-                        <span className="text-xs text-gray-500">{post.time}</span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-2">{post.content}</p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <button className="flex items-center gap-1 hover:text-red-500">
-                          <Heart className="h-3 w-3" />
-                          {post.likes}
-                        </button>
-                        <button className="hover:text-blue-500">Reply</button>
+            {feedLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <div className="flex items-center gap-4">
+                          <Skeleton className="h-3 w-8" />
+                          <Skeleton className="h-3 w-12" />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(communityFeed?.posts || [
+                  { id: '1', user: 'Sarah M.', content: 'Just completed my first IELTS practice test! Feeling confident 💪', time: '2 hours ago', likes: 12 },
+                  { id: '2', user: 'Ahmed K.', content: 'Looking for a speaking practice partner for tomorrow evening. Anyone interested?', time: '4 hours ago', likes: 5 },
+                  { id: '3', user: 'Emma L.', content: 'Great grammar lesson today! The conditional sentences finally make sense 🎉', time: '1 day ago', likes: 18 },
+                ]).map((post: any, index: number) => (
+                  <div key={post.id || index} className="p-4 border border-gray-200 rounded-lg" data-testid={`community-post-${post.id}`}>
+                    <div className="flex items-start gap-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                          {post.user.split(' ').map((n: string) => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm text-gray-900">{post.user}</span>
+                          <span className="text-xs text-gray-500">{post.time}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">{post.content}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <button 
+                            className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                            data-testid={`button-like-${post.id}`}
+                          >
+                            <Heart className="h-3 w-3" />
+                            {post.likes}
+                          </button>
+                          <button className="hover:text-blue-500 transition-colors" data-testid={`button-reply-${post.id}`}>Reply</button>
+                          <button className="hover:text-green-500 transition-colors" data-testid={`button-share-${post.id}`}>Share</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <Link href="/student/community">
+                <Button variant="outline" className="w-full" data-testid="button-view-full-feed">
+                  View Full Community Feed
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Peer Matching */}
-      <Card>
+      <Card data-testid="peer-matching-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-purple-600" />
@@ -1473,42 +2056,92 @@ function SocialHub(props: any) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { name: 'Alex Chen', level: 'Intermediate', interests: ['Speaking', 'IELTS'], location: 'Online', compatibility: 92 },
-              { name: 'Maria Santos', level: 'Advanced', interests: ['Business English', 'Grammar'], location: 'EST Timezone', compatibility: 88 },
-              { name: 'Raj Patel', level: 'Intermediate', interests: ['Conversation', 'Pronunciation'], location: 'Online', compatibility: 85 },
-            ].map((partner, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all">
-                <div className="flex items-center gap-3 mb-3">
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-purple-100 text-purple-600">
-                      {partner.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{partner.name}</h4>
-                    <p className="text-sm text-gray-600">{partner.level} • {partner.location}</p>
+          {partnersLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Skeleton className="w-12 h-12 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
                   </div>
+                  <div className="space-y-2 mb-3">
+                    <div className="flex gap-1">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-12" />
+                    </div>
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-8 w-full" />
                 </div>
-                <div className="space-y-2 mb-3">
-                  <div className="flex flex-wrap gap-1">
-                    {partner.interests.map((interest, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {interest}
-                      </Badge>
-                    ))}
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(studyPartners?.partners || [
+                { id: '1', name: 'Alex Chen', level: 'Intermediate', interests: ['Speaking', 'IELTS'], location: 'Online', compatibility: 92, connected: false },
+                { id: '2', name: 'Maria Santos', level: 'Advanced', interests: ['Business English', 'Grammar'], location: 'EST Timezone', compatibility: 88, connected: false },
+                { id: '3', name: 'Raj Patel', level: 'Intermediate', interests: ['Conversation', 'Pronunciation'], location: 'Online', compatibility: 85, connected: true },
+              ]).map((partner: any, index: number) => (
+                <div key={partner.id || index} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all" data-testid={`study-partner-${partner.id}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-purple-100 text-purple-600">
+                        {partner.name.split(' ').map((n: string) => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">{partner.name}</h4>
+                      <p className="text-sm text-gray-600">{partner.level} • {partner.location}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-500">Compatibility:</span>
-                    <span className="text-xs font-medium text-green-600">{partner.compatibility}%</span>
+                  <div className="space-y-2 mb-3">
+                    <div className="flex flex-wrap gap-1">
+                      {partner.interests.map((interest: string, i: number) => (
+                        <Badge key={i} variant="secondary" className="text-xs">
+                          {interest}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500">Compatibility:</span>
+                      <span className="text-xs font-medium text-green-600">{partner.compatibility}%</span>
+                    </div>
                   </div>
+                  {partner.connected ? (
+                    <Link href="/student/messages">
+                      <Button size="sm" variant="outline" className="w-full" data-testid={`button-message-${partner.id}`}>
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        Message
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90"
+                      onClick={() => connectPartnerMutation.mutate(partner.id)}
+                      disabled={connectPartnerMutation.isPending}
+                      data-testid={`button-connect-${partner.id}`}
+                    >
+                      {connectPartnerMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : null}
+                      Connect
+                    </Button>
+                  )}
                 </div>
-                <Button size="sm" className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
-                  Connect
-                </Button>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <Link href="/student/peer-socializer">
+              <Button variant="outline" className="w-full" data-testid="button-browse-partners">
+                <Search className="h-4 w-4 mr-2" />
+                Browse All Study Partners
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -1667,10 +2300,26 @@ function GamesHub({ games, achievements }: any) {
 }
 
 function CommerceHub({ enrollmentStatus, wallet }: any) {
+  const queryClient = useQueryClient();
+  
+  // Fetch cart data
+  const { data: cartData, isLoading: cartLoading } = useQuery({
+    queryKey: ['/api/student/cart'],
+    queryFn: () => apiRequest('/api/student/cart'),
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+
+  // Fetch recent orders
+  const { data: recentOrders, isLoading: ordersLoading } = useQuery({
+    queryKey: ['/api/student/orders', 'recent'],
+    queryFn: () => apiRequest('/api/student/orders?limit=3'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   return (
     <div className="space-y-6">
       {/* Wallet Overview */}
-      <Card className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white">
+      <Card className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white" data-testid="commerce-hub-header">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
@@ -1678,12 +2327,24 @@ function CommerceHub({ enrollmentStatus, wallet }: any) {
             </div>
             <div className="flex-1">
               <h3 className="text-2xl font-bold mb-2">My Wallet</h3>
-              <div className="text-4xl font-bold mb-2">
+              <div className="text-4xl font-bold mb-2" data-testid="wallet-balance">
                 {enrollmentStatus.walletBalance?.toLocaleString() || '0'} Credits
               </div>
               <p className="text-blue-100">Available for courses and sessions</p>
+              <div className="flex items-center gap-4 mt-4">
+                <Link href="/student/virtual-mall">
+                  <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-virtual-mall">
+                    <Package className="h-4 w-4 mr-2" />
+                    Visit Virtual Mall
+                  </Button>
+                </Link>
+                <div className="text-sm text-blue-100">
+                  {cartData?.itemCount || 0} items in cart
+                </div>
+              </div>
             </div>
-            <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+            <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-top-up">
+              <Plus className="h-4 w-4 mr-2" />
               Top Up
             </Button>
           </div>
@@ -1691,155 +2352,207 @@ function CommerceHub({ enrollmentStatus, wallet }: any) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <Card>
+        {/* Quick Shopping Actions */}
+        <Card data-testid="quick-actions-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-green-600" />
-              Quick Actions
+              <ShoppingCart className="h-5 w-5 text-green-600" />
+              Quick Shopping
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button className="w-full justify-start h-12 bg-gradient-to-r from-green-500 to-emerald-500">
-                <Plus className="h-5 w-5 mr-3" />
-                Add Credits
-              </Button>
-              <Button variant="outline" className="w-full justify-start h-12">
-                <Package className="h-5 w-5 mr-3" />
-                Buy Course Package
-              </Button>
-              <Button variant="outline" className="w-full justify-start h-12">
-                <Video className="h-5 w-5 mr-3" />
-                Book Private Session
-              </Button>
-              <Button variant="outline" className="w-full justify-start h-12">
-                <FileText className="h-5 w-5 mr-3" />
-                Transaction History
-              </Button>
+              <Link href="/student/book-catalog">
+                <Button className="w-full justify-start h-12 bg-gradient-to-r from-blue-500 to-indigo-500" data-testid="button-book-catalog">
+                  <BookOpen className="h-5 w-5 mr-3" />
+                  Browse Book Catalog
+                </Button>
+              </Link>
+              <Link href="/student/cart">
+                <Button variant="outline" className="w-full justify-start h-12" data-testid="button-shopping-cart">
+                  <ShoppingCart className="h-5 w-5 mr-3" />
+                  Shopping Cart ({cartData?.itemCount || 0})
+                </Button>
+              </Link>
+              <Link href="/student/virtual-mall">
+                <Button variant="outline" className="w-full justify-start h-12" data-testid="button-virtual-mall-explore">
+                  <Package className="h-5 w-5 mr-3" />
+                  Explore Virtual Mall
+                </Button>
+              </Link>
+              <Link href="/student/order-history">
+                <Button variant="outline" className="w-full justify-start h-12" data-testid="button-order-history">
+                  <FileText className="h-5 w-5 mr-3" />
+                  Order History
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Transactions */}
-        <Card>
+        {/* Recent Orders */}
+        <Card data-testid="recent-orders-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-blue-600" />
-              Recent Transactions
+              Recent Orders
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { type: 'purchase', description: 'IELTS Preparation Course', amount: -500, date: '2 days ago', status: 'completed' },
-                { type: 'topup', description: 'Credit Top-up', amount: +1000, date: '1 week ago', status: 'completed' },
-                { type: 'purchase', description: 'Grammar Masterclass', amount: -200, date: '2 weeks ago', status: 'completed' },
-              ].map((transaction, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center",
-                      transaction.type === 'topup' ? "bg-green-100" : "bg-blue-100"
-                    )}>
-                      {transaction.type === 'topup' ? (
-                        <Plus className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <CreditCard className="h-5 w-5 text-blue-600" />
-                      )}
+            {ordersLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-10 h-10 rounded-lg" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-900">{transaction.description}</h4>
-                      <p className="text-xs text-gray-500">{transaction.date}</p>
+                    <div className="text-right space-y-1">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-12" />
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={cn(
-                      "font-bold",
-                      transaction.amount > 0 ? "text-green-600" : "text-gray-900"
-                    )}>
-                      {transaction.amount > 0 ? '+' : ''}{transaction.amount} credits
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(recentOrders?.orders || [
+                  { id: '1', type: 'book', description: 'English Grammar Guide', amount: -25, date: '2 days ago', status: 'delivered' },
+                  { id: '2', type: 'course', description: 'IELTS Preparation Course', amount: -500, date: '1 week ago', status: 'active' },
+                  { id: '3', type: 'book', description: 'Business English Vocabulary', amount: -35, date: '2 weeks ago', status: 'delivered' },
+                ]).map((order: any, index: number) => (
+                  <div key={order.id || index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-testid={`order-${order.id}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                        order.type === 'book' ? "bg-blue-100" : "bg-purple-100"
+                      )}>
+                        {order.type === 'book' ? (
+                          <BookOpen className="h-5 w-5 text-blue-600" />
+                        ) : (
+                          <Package className="h-5 w-5 text-purple-600" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-900">{order.description}</h4>
+                        <p className="text-xs text-gray-500">{order.date}</p>
+                      </div>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {transaction.status}
-                    </Badge>
+                    <div className="text-right">
+                      <div className="font-bold text-gray-900">
+                        {Math.abs(order.amount)} credits
+                      </div>
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "text-xs",
+                          order.status === 'delivered' ? "text-green-600 border-green-200" :
+                          order.status === 'active' ? "text-blue-600 border-blue-200" :
+                          "text-gray-600"
+                        )}
+                      >
+                        {order.status}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <Link href="/student/order-history">
+                <Button variant="outline" className="w-full" data-testid="button-view-all-orders">
+                  View Complete Order History
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Available Packages */}
-      <Card>
+      {/* Shopping Categories */}
+      <Card data-testid="shopping-categories-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-purple-600" />
-            Available Packages
+            Shopping Categories
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {[
               { 
-                title: 'Starter Pack', 
-                price: 500, 
-                description: 'Perfect for beginners',
-                features: ['5 Group Sessions', '10 AI Practices', 'Basic Support'],
-                popular: false 
+                id: 'books',
+                title: 'Books & Materials', 
+                icon: BookOpen,
+                color: 'from-blue-500 to-indigo-500',
+                href: '/student/book-catalog',
+                count: '200+ items'
               },
               { 
-                title: 'Pro Pack', 
-                price: 1000, 
-                description: 'Most popular choice',
-                features: ['15 Group Sessions', '25 AI Practices', 'Priority Support', '2 Private Sessions'],
-                popular: true 
+                id: 'courses',
+                title: 'Video Courses', 
+                icon: Video,
+                color: 'from-purple-500 to-pink-500',
+                href: '/student/video-courses',
+                count: '50+ courses'
               },
               { 
-                title: 'Premium Pack', 
-                price: 2000, 
-                description: 'Complete learning experience',
-                features: ['Unlimited Sessions', 'Unlimited AI', 'VIP Support', '10 Private Sessions', 'Certification'],
-                popular: false 
+                id: 'sessions',
+                title: 'Private Sessions', 
+                icon: Users,
+                color: 'from-green-500 to-teal-500',
+                href: '/student/tutors',
+                count: 'Book now'
+              },
+              { 
+                id: 'packages',
+                title: 'Learning Packages', 
+                icon: Package,
+                color: 'from-orange-500 to-red-500',
+                href: '/student/virtual-mall',
+                count: 'Special offers'
               }
-            ].map((pkg, index) => (
-              <Card key={index} className={cn(
-                "relative",
-                pkg.popular && "border-2 border-purple-500 shadow-lg"
-              )}>
-                {pkg.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-purple-500 text-white">Most Popular</Badge>
+            ].map((category) => (
+              <Link key={category.id} href={category.href}>
+                <div 
+                  className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all cursor-pointer group"
+                  data-testid={`category-${category.id}`}
+                >
+                  <div className={cn(
+                    "w-12 h-12 rounded-lg flex items-center justify-center mb-3 bg-gradient-to-r group-hover:scale-105 transition-transform",
+                    category.color
+                  )}>
+                    <category.icon className="h-6 w-6 text-white" />
                   </div>
-                )}
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg text-gray-900 mb-2">{pkg.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{pkg.description}</p>
-                  <div className="text-3xl font-bold text-purple-600 mb-4">
-                    {pkg.price} <span className="text-sm font-normal text-gray-500">credits</span>
-                  </div>
-                  <ul className="space-y-2 mb-6">
-                    {pkg.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    className={cn(
-                      "w-full",
-                      pkg.popular ? "bg-gradient-to-r from-purple-500 to-pink-500" : ""
-                    )}
-                    variant={pkg.popular ? "default" : "outline"}
-                  >
-                    Choose Plan
-                  </Button>
-                </CardContent>
-              </Card>
+                  <h3 className="font-medium text-sm text-gray-900 mb-1">{category.title}</h3>
+                  <p className="text-xs text-gray-500">{category.count}</p>
+                </div>
+              </Link>
             ))}
           </div>
+          
+          {/* Quick Checkout */}
+          {cartData && cartData.itemCount > 0 && (
+            <div className="border-t border-gray-200 pt-4">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-gray-900">Ready to Checkout?</h4>
+                    <p className="text-sm text-gray-600">{cartData.itemCount} items in your cart</p>
+                  </div>
+                  <Link href="/student/checkout">
+                    <Button className="bg-gradient-to-r from-blue-500 to-indigo-500" data-testid="button-quick-checkout">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Checkout Now
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
