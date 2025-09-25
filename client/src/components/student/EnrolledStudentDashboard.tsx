@@ -179,9 +179,11 @@ import {
   LearningProgressWidget,
   UpcomingSessionsWidget,
   AssignmentsWidget,
-  AchievementWidget,
-  QuickActionsWidget
+  AchievementWidget
 } from "@/components/student/widgets";
+
+// Import the comprehensive Quick Actions Bar
+import { ComprehensiveQuickActionsBar } from "./ComprehensiveQuickActionsBar";
 
 // Hub definitions for the 9-hub architecture
 export type HubType = 
@@ -746,6 +748,13 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
         </main>
       </div>
 
+      {/* Comprehensive Quick Actions Bar - Floating across all hubs */}
+      <ComprehensiveQuickActionsBar 
+        position={isMediumScreen ? "bottom-right" : "bottom-right"}
+        className="transition-all duration-300"
+        data-testid="comprehensive-quick-actions-bar"
+      />
+
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -911,8 +920,7 @@ function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats
         </div>
       </div>
 
-      {/* Quick Actions Bar */}
-      <QuickActionsWidget theme="learner" columns={4} data-testid="quick-actions-widget" />
+      {/* Quick Actions Bar - Now handled by ComprehensiveQuickActionsBar at bottom of page */}
 
       {/* Recent Activity */}
       <Card>
