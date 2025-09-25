@@ -45,7 +45,7 @@ const mobileCardVariants = cva(
 );
 
 export interface MobileCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'role'>,
     VariantProps<typeof mobileCardVariants> {
   // Mobile-specific features
   collapsible?: boolean;
