@@ -24,6 +24,10 @@ localPort = 33141
 externalPort = 6000
 
 [[ports]]
+localPort = 33191
+externalPort = 3000
+
+[[ports]]
 localPort = 33439
 externalPort = 8000
 
@@ -90,3 +94,6 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_openai:1.0.0", "javascript_object_storage:1.0.0", "javascript_database:1.0.0", "javascript_log_in_with_replit:1.0.0"]
+
+[objectStorage]
+defaultBucketID = "replit-objstore-c114c7c8-890f-4fe5-abb6-2e5811e3bf92"
