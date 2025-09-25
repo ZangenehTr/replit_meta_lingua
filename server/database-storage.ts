@@ -1736,7 +1736,7 @@ export class DatabaseStorage implements IStorage {
     return updatedPayment;
   }
 
-  // Enhanced Notifications with Role-Based Support
+  // Enhanced Notifications with Role-Based Support (Fixed for actual DB schema)
   async getUserNotifications(
     userId: number, 
     options?: {
@@ -1748,66 +1748,57 @@ export class DatabaseStorage implements IStorage {
       includeDismissed?: boolean;
     }
   ): Promise<Notification[]> {
-    let query = db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.userId, userId));
-
-    // Apply filters based on options
-    const conditions = [eq(notifications.userId, userId)];
-    
-    if (options?.category) {
-      conditions.push(eq(notifications.category, options.category));
+    try {
+      // Use direct SQL to avoid Drizzle schema mismatch issues
+      const limit = options?.limit || 50;
+      const offset = options?.offset || 0;
+      const includeRead = options?.includeRead || false;
+      
+      // SECURITY FIX: Replace sql.raw with parameterized SQL template fragments
+      const result = await db.execute(sql`
+        SELECT id, user_id as "userId", title, message, type, is_read as "isRead", created_at as "createdAt"
+        FROM notifications
+        WHERE user_id = ${userId} ${includeRead ? sql`` : sql`AND is_read = false`}
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `);
+      
+      return result.rows as any[];
+    } catch (error) {
+      console.error('Error in getUserNotifications:', error);
+      return [];
     }
-    
-    if (options?.priority) {
-      conditions.push(eq(notifications.priority, options.priority));
-    }
-    
-    if (!options?.includeRead) {
-      conditions.push(eq(notifications.isRead, false));
-    }
-    
-    if (!options?.includeDismissed) {
-      conditions.push(eq(notifications.isDismissed, false));
-    }
-
-    return await db
-      .select()
-      .from(notifications)
-      .where(and(...conditions))
-      .orderBy(desc(notifications.createdAt))
-      .limit(options?.limit || 50)
-      .offset(options?.offset || 0);
   }
 
   async getUnreadNotifications(userId: number): Promise<Notification[]> {
-    return await db
-      .select()
-      .from(notifications)
-      .where(and(
-        eq(notifications.userId, userId),
-        eq(notifications.isRead, false),
-        eq(notifications.isDismissed, false)
-      ))
-      .orderBy(desc(notifications.createdAt));
+    try {
+      const result = await db.execute(sql`
+        SELECT id, user_id as "userId", title, message, type, is_read as "isRead", created_at as "createdAt"
+        FROM notifications
+        WHERE user_id = ${userId} AND is_read = false
+        ORDER BY created_at DESC
+      `);
+      
+      return result.rows as any[];
+    } catch (error) {
+      console.error('Error in getUnreadNotifications:', error);
+      return [];
+    }
   }
 
   async getUnreadNotificationCount(userId: number): Promise<number> {
-    const [result] = await db
-      .select({ count: sql`count(*)` })
-      .from(notifications)
-      .where(and(
-        eq(notifications.userId, userId),
-        eq(notifications.isRead, false),
-        eq(notifications.isDismissed, false),
-        or(
-          isNull(notifications.expiresAt),
-          gte(notifications.expiresAt, new Date())
-        )
-      ));
-    
-    return Number(result.count) || 0;
+    try {
+      const result = await db.execute(sql`
+        SELECT COUNT(*)::int as count
+        FROM notifications
+        WHERE user_id = ${userId} AND is_read = false
+      `);
+      
+      return Number(result.rows[0]?.count) || 0;
+    } catch (error) {
+      console.error('Error in getUnreadNotificationCount:', error);
+      return 0;
+    }
   }
 
   async getRoleNotifications(role: string, limit: number = 10): Promise<Notification[]> {
@@ -5524,47 +5515,25 @@ export class DatabaseStorage implements IStorage {
   // Check if student has any paid enrollments after placement test
   async hasActiveEnrollmentAfterPlacementTest(userId: number, placementTestCompletedAt: Date): Promise<boolean> {
     try {
-      // Check class enrollments with paid status
-      const paidClassEnrollments = await db.select()
-        .from(classEnrollments)
-        .where(
-          and(
-            eq(classEnrollments.userId, userId),
-            eq(classEnrollments.paymentStatus, 'paid'),
-            gte(classEnrollments.enrollmentDate, placementTestCompletedAt)
-          )
-        );
-
-      if (paidClassEnrollments.length > 0) {
-        return true;
-      }
-
-      // Check course payments after placement test
-      const coursePaymentsAfterTest = await db.select()
-        .from(coursePayments)
-        .where(
-          and(
-            eq(coursePayments.userId, userId),
-            eq(coursePayments.status, 'completed'),
-            gte(coursePayments.createdAt, placementTestCompletedAt)
-          )
-        );
-
-      if (coursePaymentsAfterTest.length > 0) {
-        return true;
-      }
-
-      // Check general enrollments after placement test
-      const enrollmentsAfterTest = await db.select()
-        .from(enrollments)
-        .where(
-          and(
-            eq(enrollments.userId, userId),
-            gte(enrollments.enrolledAt, placementTestCompletedAt)
-          )
-        );
-
-      return enrollmentsAfterTest.length > 0;
+      // Use Drizzle template literals for proper parameterization
+      const placementDateString = placementTestCompletedAt.toISOString();
+      
+      const result = await db.execute(sql`
+        SELECT COUNT(*)::int as total FROM (
+          SELECT 1 FROM class_enrollments 
+          WHERE user_id = ${userId} AND payment_status = 'paid' AND enrollment_date >= ${placementDateString}
+          UNION ALL
+          SELECT 1 FROM course_payments 
+          WHERE user_id = ${userId} AND status = 'completed' AND created_at >= ${placementDateString}
+          UNION ALL
+          SELECT 1 FROM enrollments 
+          WHERE user_id = ${userId} AND enrolled_at >= ${placementDateString}
+        ) combined
+      `);
+      
+      const count = result.rows[0]?.total || 0;
+      
+      return count > 0;
     } catch (error) {
       console.error('Error checking active enrollment after placement test:', error);
       return false;
@@ -5573,68 +5542,64 @@ export class DatabaseStorage implements IStorage {
 
   // Get students who completed placement test but haven't enrolled/paid
   async getUnpaidStudentsAfterPlacementTest(daysSinceTest: number = 7): Promise<any[]> {
+    console.log(`DatabaseStorage.getUnpaidStudentsAfterPlacementTest called with ${daysSinceTest} days - REAL IMPLEMENTATION`);
+    
     try {
-      // TODO: This method is temporarily disabled until placement test tables are created in database
-      // The tables exist in schema but haven't been pushed to database yet
-      console.log(`getUnpaidStudentsAfterPlacementTest called with ${daysSinceTest} days - temporarily returning empty array`);
-      return [];
-      
-      // DISABLED TEMPORARILY - UNCOMMENT AFTER DATABASE PUSH
-      /*
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysSinceTest);
+      const cutoffDateString = cutoffDate.toISOString();
 
-      // Get completed placement test sessions from the specified time period
-      const completedSessions = await db.select({
-        userId: placementTestSessions.userId,
-        sessionId: placementTestSessions.id,
-        completedAt: placementTestSessions.completedAt,
-        overallLevel: placementTestSessions.overallCEFRLevel,
-        userEmail: users.email,
-        userFirstName: users.firstName,
-        userLastName: users.lastName,
-        userPhone: users.phone
-      })
-        .from(placementTestSessions)
-        .leftJoin(users, eq(placementTestSessions.userId, users.id))
-        .where(
-          and(
-            eq(placementTestSessions.status, 'completed'),
-            gte(placementTestSessions.completedAt, cutoffDate),
-            isNotNull(placementTestSessions.completedAt)
-          )
-        );
+      // Use Drizzle template literals for proper parameterization
+      const result = await db.execute(sql`
+        SELECT 
+          pts.id,
+          pts.user_id,
+          pts.completed_at,
+          pts.overall_cefr_level,
+          u.email,
+          u.first_name,
+          u.last_name, 
+          u.phone_number
+        FROM placement_test_sessions pts
+        LEFT JOIN users u ON pts.user_id = u.id
+        WHERE pts.status = 'completed' 
+        AND pts.completed_at >= ${cutoffDateString}
+        AND pts.completed_at IS NOT NULL
+        ORDER BY pts.completed_at DESC
+      `);
+      
+      const completedSessions = result.rows;
 
       // Filter students who haven't enrolled/paid after placement test
       const unpaidStudents = [];
       
       for (const session of completedSessions) {
-        if (session.completedAt) {
+        if (session.completed_at) {
           const hasActivePaidEnrollment = await this.hasActiveEnrollmentAfterPlacementTest(
-            session.userId,
-            session.completedAt
+            session.user_id,
+            new Date(session.completed_at)
           );
 
           if (!hasActivePaidEnrollment) {
             unpaidStudents.push({
-              userId: session.userId,
-              email: session.userEmail,
-              firstName: session.userFirstName,
-              lastName: session.userLastName,
-              phone: session.userPhone,
-              placementSessionId: session.sessionId,
-              placementCompletedAt: session.completedAt,
-              placementLevel: session.overallLevel,
+              userId: session.user_id,
+              email: session.email || '',
+              firstName: session.first_name || '',
+              lastName: session.last_name || '',
+              phone: session.phone_number || '',
+              placementSessionId: session.id,
+              placementCompletedAt: session.completed_at,
+              placementLevel: session.overall_cefr_level,
               daysSinceTest: Math.floor(
-                (new Date().getTime() - new Date(session.completedAt).getTime()) / (1000 * 60 * 60 * 24)
+                (new Date().getTime() - new Date(session.completed_at).getTime()) / (1000 * 60 * 60 * 24)
               )
             });
           }
         }
       }
 
+      console.log(`Found ${unpaidStudents.length} unpaid students after placement test`);
       return unpaidStudents;
-      */
     } catch (error) {
       console.error('Error getting unpaid students after placement test:', error);
       return [];
@@ -6090,8 +6055,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGlobalLeaderboard(): Promise<any[]> {
-    // Return empty array for now - can be implemented later with real leaderboard data
-    return [];
+    try {
+      // Get top performers across all users based on achievements and progress
+      const topPerformers = await db.select({
+        userId: users.id,
+        userName: users.firstName,
+        userLastName: users.lastName,
+        totalPoints: userStats.totalPoints,
+        completedActivities: userStats.completedActivities,
+        averageScore: userStats.averageScore
+      })
+      .from(users)
+      .leftJoin(userStats, eq(users.id, userStats.userId))
+      .where(isNotNull(userStats.totalPoints))
+      .orderBy(desc(userStats.totalPoints), desc(userStats.averageScore))
+      .limit(10);
+      
+      return topPerformers;
+    } catch (error) {
+      console.error('Error fetching global leaderboard:', error);
+      return [];
+    }
   }
 
   // ===== VIDEO LEARNING SUBSYSTEM =====

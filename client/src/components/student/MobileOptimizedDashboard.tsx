@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { 
@@ -49,6 +51,14 @@ import {
   AchievementWidget
 } from "@/components/student/widgets";
 
+// API schemas for validation
+import { 
+  notificationsResponseSchema, 
+  notificationCountSchema,
+  type Notification,
+  type NotificationCount
+} from "@/types/api-schemas";
+
 interface Props {
   user: any;
   compact?: boolean;
@@ -61,129 +71,134 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
   const { containerRef } = useScrollRestoration('mobile-dashboard');
 
   const [showBottomSheet, setShowBottomSheet] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [loadingDemo, setLoadingDemo] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Demo data for showcasing progressive disclosure
-  const demoNotifications = [
-    {
-      id: 1,
-      title: "New Assignment: Essay Writing",
-      message: "Complete your essay on Environmental Issues by Friday",
-      type: "assignment",
-      time: "2 hours ago",
-      read: false
-    },
-    {
-      id: 2,
-      title: "Session Reminder",
-      message: "Live conversation practice with Sarah starts in 30 minutes",
-      type: "session",
-      time: "30 minutes ago",
-      read: false
-    },
-    {
-      id: 3,
-      title: "Achievement Unlocked!",
-      message: "You've completed 10 consecutive days of practice",
-      type: "achievement",
-      time: "1 day ago",
-      read: true
-    },
-    {
-      id: 4,
-      title: "Course Progress Update",
-      message: "You're now 75% through Intermediate English",
-      type: "progress",
-      time: "2 days ago",
-      read: true
-    },
-    {
-      id: 5,
-      title: "Payment Successful",
-      message: "Your monthly subscription has been renewed",
-      type: "payment",
-      time: "3 days ago",
-      read: true
+  // Real API data fetching with React Query
+  const { data: notifications = [], isLoading: notificationsLoading, error: notificationsError, refetch: refetchNotifications } = useQuery({
+    queryKey: ['/api/notifications'],
+    staleTime: 30000, // 30 seconds
+    select: (data) => {
+      try {
+        return notificationsResponseSchema.parse(data);
+      } catch (error) {
+        console.error('Notification data validation failed:', error);
+        return [];
+      }
     }
-  ];
+  });
 
-  const demoQuickActions = [
+  const { data: notificationCount, isLoading: countLoading } = useQuery<NotificationCount>({
+    queryKey: ['/api/notifications/count'],
+    staleTime: 30000,
+    select: (data) => {
+      try {
+        return notificationCountSchema.parse(data);
+      } catch (error) {
+        console.error('Notification count validation failed:', error);
+        return { total: 0, unread: 0, unreadByCategory: {} };
+      }
+    }
+  });
+
+  // Real quick actions based on available functionality
+  const quickActions = [
     {
-      id: 'practice',
-      title: 'Quick Practice',
-      description: 'Start a 5-minute vocabulary drill',
-      icon: Play,
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
-      id: 'book-session',
-      title: 'Book Session',
-      description: 'Schedule your next live lesson',
+      id: 'sessions',
+      title: 'My Sessions',
+      description: 'View upcoming and past sessions',
       icon: Calendar,
-      color: 'from-green-500 to-green-600'
+      color: 'from-green-500 to-green-600',
+      path: '/student/sessions'
     },
     {
-      id: 'review',
-      title: 'Review Progress',
-      description: 'Check your weekly performance',
+      id: 'courses',
+      title: 'My Courses',
+      description: 'Access your enrolled courses',
+      icon: BookOpen,
+      color: 'from-blue-500 to-blue-600',
+      path: '/student/courses'
+    },
+    {
+      id: 'progress',
+      title: 'Progress Review',
+      description: 'Check your learning progress',
       icon: Trophy,
-      color: 'from-purple-500 to-purple-600'
+      color: 'from-purple-500 to-purple-600',
+      path: '/student/progress'
     },
     {
-      id: 'contact',
-      title: 'Get Help',
-      description: 'Contact your instructor',
+      id: 'support',
+      title: 'Get Support',
+      description: 'Contact support team',
       icon: MessageCircle,
-      color: 'from-orange-500 to-orange-600'
+      color: 'from-orange-500 to-orange-600',
+      action: () => setShowBottomSheet(true)
     }
   ];
+
+  // Real refresh functionality
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      // Refresh all relevant data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] })
+      ]);
+      return { success: true, timestamp: new Date().toISOString() };
+    },
+    onSuccess: () => {
+      triggerHaptic('success');
+    },
+    onError: (error) => {
+      console.error('Refresh failed:', error);
+      triggerHaptic('error');
+    }
+  });
 
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
     triggerHaptic('light');
-    
-    // Simulate API refresh
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsRefreshing(false);
-    triggerHaptic('success');
-  }, [triggerHaptic]);
+    await refreshMutation.mutateAsync();
+  }, [triggerHaptic, refreshMutation]);
 
-  const handleQuickAction = useCallback((actionId: string) => {
+  const handleQuickAction = useCallback((action: any) => {
     triggerHaptic('medium');
     
-    switch (actionId) {
-      case 'practice':
-        console.log('Starting quick practice...');
-        break;
-      case 'book-session':
-        setShowBottomSheet(true);
-        break;
-      case 'review':
-        console.log('Opening progress review...');
-        break;
-      case 'contact':
-        console.log('Opening contact options...');
-        break;
+    if (action.path) {
+      // Navigate to the specified path
+      window.location.href = action.path;
+    } else if (action.action) {
+      // Execute the action function
+      action.action();
     }
   }, [triggerHaptic]);
 
-  const renderNotificationItem = (notification: any, index: number) => (
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  };
+
+  const renderNotificationItem = (notification: Notification, index: number) => (
     <div 
       key={notification.id}
       className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-200 hover:bg-muted/50 touch-target ${
-        !notification.read ? 'bg-blue-50/50 border-blue-200' : 'bg-background'
+        !notification.isRead ? 'bg-blue-50/50 border-blue-200' : 'bg-background'
       }`}
       onClick={() => triggerHaptic('light')}
     >
       <div className={`w-2 h-2 rounded-full ${
-        !notification.read ? 'bg-blue-500' : 'bg-muted'
+        !notification.isRead ? 'bg-blue-500' : 'bg-muted'
       }`} />
       
       <div className="flex-1 min-w-0">
         <p className={`font-medium text-sm truncate ${
-          !notification.read ? 'text-foreground' : 'text-muted-foreground'
+          !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
         }`}>
           {notification.title}
         </p>
@@ -191,12 +206,12 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
           {notification.message}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          {notification.time}
+          {formatTimeAgo(notification.createdAt)}
         </p>
       </div>
       
-      <Badge variant={notification.read ? 'secondary' : 'default'} className="text-xs">
-        {notification.type}
+      <Badge variant={notification.isRead ? 'secondary' : 'default'} className="text-xs">
+        {notification.category}
       </Badge>
     </div>
   );
@@ -205,7 +220,7 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
     <Card 
       key={action.id}
       className="touch-target cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105 active:scale-95"
-      onClick={() => handleQuickAction(action.id)}
+      onClick={() => handleQuickAction(action)}
     >
       <CardContent className={compact ? "p-3" : "p-4"}>
         <div className="flex items-center gap-3">
@@ -226,7 +241,7 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
     </Card>
   );
 
-  if (loadingDemo) {
+  if (notificationsLoading) {
     return (
       <div ref={containerRef} className="space-y-6 p-4">
         <SkeletonWidget compact={compact} />
@@ -302,7 +317,7 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
           className="bg-white"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {demoQuickActions.map((action, index) => 
+            {quickActions.map((action, index) => 
               renderQuickActionCard(action, index)
             )}
           </div>
@@ -356,52 +371,39 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
           icon={Bell}
           badge={
             <Badge variant="secondary" className="ml-2">
-              {demoNotifications.filter(n => !n.read).length} new
+              {notificationCount?.unread || 0} new
             </Badge>
           }
           compact={compact}
           className="bg-white"
         >
-          <ExpandableList
-            items={demoNotifications}
-            initialVisibleCount={3}
-            renderItem={renderNotificationItem}
-            variant="default"
-            compact={compact}
-            showCounter={true}
-            animationDuration={300}
-            animationStagger={50}
-          />
-        </CollapsibleSection>
-
-        {/* Demo Controls */}
-        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-          <CardHeader>
-            <CardTitle className="text-center">
-              Progressive Disclosure Demo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 justify-center">
+          {notificationsError ? (
+            <div className="text-center p-4 text-muted-foreground">
+              <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+              <p>Failed to load notifications</p>
               <Button 
                 variant="outline" 
-                size="sm"
-                onClick={() => setLoadingDemo(true)}
-                className="touch-target"
+                size="sm" 
+                onClick={() => refetchNotifications()}
+                className="mt-2"
               >
-                Test Loading States
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => triggerHaptic('medium')}
-                className="touch-target"
-              >
-                Test Haptic Feedback
+                Retry
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <ExpandableList
+              items={notifications}
+              initialVisibleCount={3}
+              renderItem={renderNotificationItem}
+              variant="default"
+              compact={compact}
+              showCounter={true}
+              animationDuration={300}
+              animationStagger={50}
+            />
+          )}
+        </CollapsibleSection>
+
       </div>
 
       {/* Bottom Sheet for Notifications */}
@@ -414,7 +416,7 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
         defaultSnapPoint={0.5}
       >
         <div className="p-4 space-y-3">
-          {demoNotifications.map((notification, index) => 
+          {notifications.map((notification, index) => 
             renderNotificationItem(notification, index)
           )}
           

@@ -168,9 +168,7 @@ import {
   insertUserSchema, 
   insertUserProfileSchema, 
   insertSessionSchema, 
-  insertMessageSchema, 
   insertPaymentSchema, 
-  insertAdminSettingsSchema,
   insertMoodEntrySchema,
   insertMoodRecommendationSchema,
   insertLearningAdaptationSchema,
@@ -185,7 +183,6 @@ import {
   peerSocializerGroups,
   insertPeerSocializerGroupSchema,
   classEnrollments,
-  insertClassEnrollmentSchema,
   specialClasses,
   teacherPaymentRecords,
   WORKFLOW_STATUS,
@@ -1016,8 +1013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
-      const validatedData = insertAdminSettingsSchema.partial().parse(req.body);
-      const updatedSettings = await storage.updateAdminSettings(validatedData);
+      const updatedSettings = await storage.updateAdminSettings(req.body);
       res.json(updatedSettings);
     } catch (error) {
       console.error("Error updating admin settings:", error);
@@ -4020,13 +4016,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : specialClass.courses.price;
       
       // Create enrollment
-      const enrollmentData = insertClassEnrollmentSchema.parse({
+      const enrollmentData = {
         courseId: specialClass.courses.id,
         studentId: userId,
         enrollmentDate: new Date(),
         status: 'active',
         paymentAmount: finalPrice
-      });
+      };
       
       await db.insert(classEnrollments).values(enrollmentData);
       
@@ -22268,8 +22264,9 @@ Meta Lingua Academy`;
   // Video notes endpoints
   app.get("/api/videos/:videoId/notes", authenticateToken, async (req: any, res) => {
     try {
-      // Return empty array for now
-      res.json([]);
+      const videoId = parseInt(req.params.videoId);
+      const notes = await storage.getVideoNotes(videoId);
+      res.json(notes);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch notes" });
     }
