@@ -20,24 +20,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import type { Course } from "@shared/schema";
 
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  level: string;
-  duration: string;
-  price: number;
-  thumbnail?: string;
-  features: string[];
-  instructorName: string;
-  rating: number;
-  studentsCount: number;
-  deliveryMode: string;
-  classFormat: string;
-  totalSessions: number;
-  sessionDuration: number;
-}
 
 interface Props {
   courses: Course[];
@@ -55,8 +39,7 @@ export function CourseCatalog({ courses }: Props) {
   const filteredCourses = courses.filter(course => {
     const matchesSearch = 
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructorName.toLowerCase().includes(searchQuery.toLowerCase());
+      (course.description || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesLevel = !selectedLevel || course.level === selectedLevel;
     const matchesMode = !selectedMode || course.deliveryMode === selectedMode;
@@ -254,10 +237,10 @@ export function CourseCatalog({ courses }: Props) {
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-medium">{course.rating.toFixed(1)}</span>
+                      <span className="text-sm font-medium">{Number(course.rating).toFixed(1)}</span>
                     </div>
                     <span className="text-xs text-gray-500">
-                      ({course.studentsCount} {t('student:students')})
+                      {t('student:newCourse')}
                     </span>
                     <div className="flex items-center gap-1 ml-auto">
                       {course.deliveryMode === 'online' ? (
@@ -292,30 +275,32 @@ export function CourseCatalog({ courses }: Props) {
                     <span>{t(`student:${course.classFormat}`)}</span>
                   </div>
                   <div className="flex items-center gap-1 text-gray-600">
-                    <User className="h-4 w-4" />
-                    <span>{course.instructorName}</span>
+                    <BookOpen className="h-4 w-4" />
+                    <span>{course.courseCode}</span>
                   </div>
                 </div>
 
-                {/* Features */}
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-1">
-                    {course.features.slice(0, 3).map((feature, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className="text-xs bg-gray-100 text-gray-700"
-                      >
-                        {feature}
-                      </Badge>
-                    ))}
-                    {course.features.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{course.features.length - 3}
-                      </Badge>
-                    )}
+                {/* Tags */}
+                {course.tags && course.tags.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-1">
+                      {course.tags.slice(0, 3).map((tag, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="text-xs bg-gray-100 text-gray-700"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                      {course.tags.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{course.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="space-y-2">

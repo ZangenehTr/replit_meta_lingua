@@ -37,6 +37,7 @@ import { TrialBookingInterface } from "./TrialBookingInterface";
 import { CourseCatalog } from "./CourseCatalog";
 import { ContactForm } from "./ContactForm";
 import type { EnrollmentStatus } from "@/hooks/use-enrollment-status";
+import type { Course } from "@shared/schema";
 
 interface Teacher {
   id: number;
@@ -52,19 +53,6 @@ interface Teacher {
   availability: string[];
 }
 
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  level: string;
-  duration: string;
-  price: number;
-  thumbnail?: string;
-  features: string[];
-  instructorName: string;
-  rating: number;
-  studentsCount: number;
-}
 
 interface Props {
   enrollmentStatus: EnrollmentStatus | undefined;
