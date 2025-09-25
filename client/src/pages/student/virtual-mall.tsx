@@ -319,6 +319,70 @@ export default function VirtualMall() {
       scene.add(shopGroup);
     });
 
+    // Raycaster for 3D interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    // Handle mouse clicks on 3D objects
+    const handleMallClick = (event: MouseEvent) => {
+      if (!mountRef.current || !cameraRef.current || !sceneRef.current) return;
+
+      const rect = mountRef.current.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      const intersects = raycaster.intersectObjects(sceneRef.current.children, true);
+
+      if (intersects.length > 0) {
+        // Find the shop group that was clicked
+        let clickedObject = intersects[0].object;
+        while (clickedObject && !clickedObject.userData.shopId) {
+          clickedObject = clickedObject.parent as THREE.Object3D;
+        }
+
+        if (clickedObject && clickedObject.userData.shopId) {
+          const shopId = clickedObject.userData.shopId;
+          const shop = SHOPS.find(s => s.id === shopId);
+          if (shop) {
+            enterShop(shop);
+          }
+        }
+      }
+    };
+
+    // Handle mouse hover for cursor changes
+    const handleMallHover = (event: MouseEvent) => {
+      if (!mountRef.current || !cameraRef.current || !sceneRef.current) return;
+
+      const rect = mountRef.current.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, cameraRef.current);
+      const intersects = raycaster.intersectObjects(sceneRef.current.children, true);
+
+      if (intersects.length > 0) {
+        // Check if hovering over a shop
+        let hoveredObject = intersects[0].object;
+        while (hoveredObject && !hoveredObject.userData.shopId) {
+          hoveredObject = hoveredObject.parent as THREE.Object3D;
+        }
+
+        if (hoveredObject && hoveredObject.userData.shopId) {
+          mountRef.current.style.cursor = 'pointer';
+        } else {
+          mountRef.current.style.cursor = 'default';
+        }
+      } else {
+        mountRef.current.style.cursor = 'default';
+      }
+    };
+
+    // Add mouse event listeners
+    mountRef.current.addEventListener('click', handleMallClick);
+    mountRef.current.addEventListener('mousemove', handleMallHover);
+
     // Animation loop
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
@@ -342,6 +406,8 @@ export default function VirtualMall() {
       }
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement);
+        mountRef.current.removeEventListener('click', handleMallClick);
+        mountRef.current.removeEventListener('mousemove', handleMallHover);
       }
       renderer.dispose();
     };
