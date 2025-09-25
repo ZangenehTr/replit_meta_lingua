@@ -174,20 +174,20 @@ export default function VirtualMall() {
   const { toast } = useToast();
   const { t, isRTL, direction, language } = useLanguage();
 
-  // Microsoft Edge TTS for Lexi's voice (professional quality)
+  // Microsoft Edge TTS with browser fallback for Lexi's voice
   const speakText = async (text: string, voice: 'lexi' | 'shopgirl' = 'lexi') => {
     if (!isVoiceEnabled) return;
     
     setIsLexiSpeaking(true);
     
     try {
-      // Use backend Microsoft Edge TTS service
+      // Try backend Microsoft Edge TTS service first
       const response = await apiRequest('/api/tts/generate', {
         method: 'POST',
         body: JSON.stringify({
           text,
           language: language === 'fa' ? 'fa' : 'en',
-          speed: voice === 'lexi' ? 0.9 : 1.0, // Lexi speaks slightly slower
+          speed: voice === 'lexi' ? 0.9 : 1.0,
           voice: voice === 'lexi' ? 
             (language === 'fa' ? 'fa-IR-DilaraNeural' : 'en-US-AriaNeural') :
             (language === 'fa' ? 'fa-IR-FaridNeural' : 'en-US-JennyNeural')
@@ -195,25 +195,89 @@ export default function VirtualMall() {
       });
 
       if (response.success && response.audioUrl) {
-        // Play the generated audio
+        // Play the professional Edge TTS audio
         const audio = new Audio(response.audioUrl);
         audio.volume = voice === 'lexi' ? 0.8 : 0.7;
         
         audio.onended = () => setIsLexiSpeaking(false);
         audio.onerror = () => {
-          console.error('Audio playback failed');
-          setIsLexiSpeaking(false);
+          console.error('Audio playback failed, trying browser fallback');
+          useBrowserSpeech(text, voice);
         };
         
         await audio.play();
       } else {
-        console.error('TTS generation failed:', response.error);
-        setIsLexiSpeaking(false);
+        console.log('Server TTS failed, using browser fallback:', response.error);
+        useBrowserSpeech(text, voice);
       }
     } catch (error) {
-      console.error('TTS API error:', error);
-      setIsLexiSpeaking(false);
+      console.error('TTS API error, using browser fallback:', error);
+      useBrowserSpeech(text, voice);
     }
+  };
+
+  // Browser speech synthesis fallback
+  const useBrowserSpeech = (text: string, voice: 'lexi' | 'shopgirl' = 'lexi') => {
+    if (!window.speechSynthesis) {
+      console.error('Browser speech synthesis not supported');
+      setIsLexiSpeaking(false);
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Configure voice based on speaker
+    if (voice === 'lexi') {
+      utterance.rate = 0.9; // Slightly slower for sophistication
+      utterance.pitch = 1.1; // Slightly higher for Lexi's character
+      utterance.volume = 0.8;
+    } else {
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.7;
+    }
+    
+    // Set language (browser will find best available voice)
+    utterance.lang = language === 'fa' ? 'fa-IR' : 'en-US';
+    
+    // Try to find a good voice
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      let preferredVoice;
+      
+      if (language === 'fa') {
+        // Look for Persian voices
+        preferredVoice = voices.find(v => 
+          v.lang.startsWith('fa') || 
+          v.name.toLowerCase().includes('persian') ||
+          v.name.toLowerCase().includes('farsi')
+        );
+      } else {
+        // Look for quality English voices
+        preferredVoice = voices.find(v => 
+          v.name.toLowerCase().includes('female') || 
+          v.name.toLowerCase().includes('woman') ||
+          v.name.toLowerCase().includes('samantha') ||
+          v.name.toLowerCase().includes('zira') ||
+          v.name.toLowerCase().includes('hazel')
+        );
+      }
+      
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+    }
+    
+    utterance.onend = () => setIsLexiSpeaking(false);
+    utterance.onerror = () => {
+      console.error('Browser speech synthesis failed');
+      setIsLexiSpeaking(false);
+    };
+    
+    window.speechSynthesis.speak(utterance);
   };
 
   // Fetch coursebooks for bookstore using shared query client
