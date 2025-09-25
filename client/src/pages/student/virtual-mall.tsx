@@ -411,12 +411,8 @@ export default function VirtualMall() {
     setMessages(prev => [...prev, shopgirlGreeting]);
     setSessionProgress(prev => Math.min(prev + 16.67, 100)); // 6 locations = ~16.67% each
     
-    // If entering bookstore, show coursebook option
-    if (shop.id === 'bookstore') {
-      setShowCoursebooks(true);
-    } else {
-      setShowCoursebooks(false);
-    }
+    // Reset coursebooks display when entering any shop
+    setShowCoursebooks(false);
   };
 
   const handleBrowseCoursebooks = () => {
@@ -428,6 +424,9 @@ export default function VirtualMall() {
       timestamp: new Date()
     };
     setMessages(prev => [...prev, emmaMessage]);
+    
+    // Now trigger coursebooks fetch and display
+    setShowCoursebooks(true);
   };
 
   // Safe price formatter using snake_case naming - handles both string and number prices
