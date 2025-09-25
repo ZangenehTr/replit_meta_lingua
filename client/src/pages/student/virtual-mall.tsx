@@ -286,19 +286,27 @@ export default function VirtualMall() {
     enabled: showCoursebooks
   });
 
-  // Fetch learner profile for Lexi's omniscience
-  const { data: user } = useQuery({
+  // Fetch learner profile for Lexi's omniscience with proper typing
+  const { data: user } = useQuery<{
+    id: number;
+    email: string;
+    firstName?: string;
+    name?: string;
+    role: string;
+  }>({
     queryKey: ['/api/users/me'],
   });
 
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery<{
+    englishLevel?: string;
+    targetLevel?: string;
+    nativeLanguage?: string;
+    targetLanguage?: string;
+    learningGoals?: string;
+    interests?: string[];
+  }>({
     queryKey: ['/api/profile'],
     enabled: !!user,
-  });
-
-  const { data: userPerformance } = useQuery({
-    queryKey: [`/api/students/${user?.id}/performance`],
-    enabled: !!user?.id,
   });
 
   // Add to cart mutation
@@ -616,7 +624,19 @@ export default function VirtualMall() {
   const handleBrowseCoursebooks = () => {
     // Generate intelligent recommendation based on learner profile
     const getPersonalizedRecommendation = () => {
+      // Debug logging
+      console.log('🔍 Lexi Debug - User data:', user);
+      console.log('🔍 Lexi Debug - Profile data:', profile);
+      
       if (!user || !profile) {
+        // For logged in users without complete profile
+        if (user) {
+          const userName = user.firstName || user.name || (language === 'fa' ? 'دانشجوی عزیز' : 'dear learner');
+          return language === 'fa' ? 
+            `سلام ${userName}! من لکسی هستم، دستیار هوشمند شما. می‌بینم که شما وارد سیستم شده‌اید. برای ارائه توصیه‌های شخصی‌سازی شده، لطفاً پروفایل یادگیری خود را تکمیل کنید. در حال حاضر، بهترین کتاب‌های آموزش زبان را برای شما آورده‌ام.` :
+            `Hello ${userName}! I'm Lexi, your intelligent learning assistant. I can see you're logged in. To provide personalized recommendations, please complete your learning profile. For now, I've brought you our best language learning books.`;
+        }
+        
         // Basic greeting for unidentified learners
         return language === 'fa' ? 
           `سلام! من لکسی هستم، دستیار هوشمند شما. به فروشگاه کتاب خوش آمدید! اینجا مجموعه‌ای از بهترین کتاب‌های آموزش زبان را خواهید یافت.` :
@@ -668,8 +688,7 @@ export default function VirtualMall() {
           const suitableBooks = coursebooks.data.filter(book => 
             relevantLevels.some(level => 
               book.title.includes(level) || 
-              book.description?.includes(level) ||
-              book.level?.includes(level)
+              book.description?.includes(level)
             )
           );
 
@@ -1073,12 +1092,7 @@ export default function VirtualMall() {
                               <Badge variant="outline" className="text-xs" data-testid={`book-price-badge-${book.id}`}>
                                 {format_safe_price(book)}
                               </Badge>
-                              {book.hardcopy_available && (
-                                <Badge variant="outline" className="text-xs" data-testid={`book-hardcopy-badge-${book.id}`}>Physical Copy</Badge>
-                              )}
-                              {book.pdf_file_path && (
-                                <Badge variant="outline" className="text-xs" data-testid={`book-digital-badge-${book.id}`}>Digital</Badge>
-                              )}
+                              <Badge variant="outline" className="text-xs" data-testid={`book-format-badge-${book.id}`}>Available</Badge>
                             </div>
                           </div>
                           <div className="flex flex-col gap-1">
