@@ -69,6 +69,7 @@ import StudentDashboard from "@/pages/student/dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
 import TeacherSupervisionDashboard from "@/pages/supervisor/teacher-supervision-dashboard";
 import FrontDeskDashboard from "@/pages/frontdesk/dashboard";
+import WalkInIntake from "@/pages/frontdesk/walk-in-intake";
 import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
 // Student pages
@@ -505,6 +506,16 @@ function Router() {
       <Route path="/front-desk">
         <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <FrontDeskDashboard />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/frontdesk">
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+          <FrontDeskDashboard />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/frontdesk/walk-in-intake">
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+          <WalkInIntake />
         </RoleProtectedRoute>
       </Route>
       <Route path="/student">

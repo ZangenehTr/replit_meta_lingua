@@ -6221,6 +6221,36 @@ export const frontDeskOperations = pgTable("front_desk_operations", {
   tags: text("tags").array().default([]), // Tags for categorization
   documents: text("documents").array().default([]), // Uploaded document references
   
+  // Comprehensive intake form data (JSONB for detailed form responses)
+  intakeFormData: jsonb("intake_form_data").$type<{
+    // Contact Information
+    middleName?: string;
+    secondaryPhone?: string;
+    preferredContactMethod?: 'phone' | 'email' | 'sms';
+    
+    // Language Learning Details
+    targetLanguages?: string[];
+    proficiencyLevel?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'beginner' | 'intermediate' | 'advanced';
+    learningGoals?: ('conversation' | 'business' | 'academic' | 'exam_prep' | 'travel' | 'other')[];
+    previousExperience?: string;
+    urgencyLevel?: 'immediate' | 'within_month' | 'flexible';
+    
+    // Schedule Preferences
+    preferredDays?: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
+    preferredTimeSlots?: ('morning' | 'afternoon' | 'evening')[];
+    frequencyPreference?: '1x_week' | '2x_week' | '3x_week' | 'flexible';
+    classTypePreference?: 'group' | 'private' | 'both';
+    budgetRange?: string;
+    
+    // Additional Information
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    howHeardAbout?: string;
+    specialRequirements?: string;
+    accessibilityNeeds?: string;
+    clerkObservations?: string;
+  }>(),
+  
   // Timestamps
   visitedAt: timestamp("visited_at").defaultNow(),
   completedAt: timestamp("completed_at"),

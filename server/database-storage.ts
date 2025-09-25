@@ -15608,7 +15608,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createFrontDeskOperation(data: InsertFrontDeskOperation): Promise<FrontDeskOperation> {
+    // Create the operation first
     const [operation] = await db.insert(frontDeskOperations).values(data).returning();
+    
+    // Automatically create follow-up task based on urgency level from intakeFormData
+    const urgencyLevel = data.intakeFormData?.urgencyLevel || 'flexible';
+    const visitorName = data.visitorName;
+    const preferredContactMethod = data.intakeFormData?.preferredContactMethod || 'phone';
+    
+    // Calculate due date: 2 hours for immediate, 24 hours for others
+    const hoursToAdd = urgencyLevel === 'immediate' ? 2 : 24;
+    const dueDate = new Date(Date.now() + (hoursToAdd * 60 * 60 * 1000));
+    
+    // Create automatic follow-up task
+    const followUpTaskData: InsertFrontDeskTask = {
+      title: `Follow up on walk-in intake: ${visitorName}`,
+      description: `Follow up with ${visitorName} regarding their language learning inquiry. Contact method: ${preferredContactMethod}. Urgency: ${urgencyLevel}.`,
+      taskType: urgencyLevel === 'immediate' ? 'immediate_follow_up' : 'follow_up_call',
+      assignedTo: data.handledBy, // Assign to same person who handled the intake
+      createdBy: data.handledBy,
+      priority: urgencyLevel === 'immediate' ? 'high' : urgencyLevel === 'within_month' ? 'medium' : 'normal',
+      status: 'pending',
+      relatedWalkIn: operation.id,
+      contactName: visitorName,
+      contactPhone: data.visitorPhone,
+      contactEmail: data.visitorEmail,
+      dueDate: dueDate,
+      notes: `Auto-generated follow-up task for walk-in intake #${operation.id}`,
+      tags: ['auto_generated', 'walk_in_intake', urgencyLevel]
+    };
+    
+    // Create the follow-up task
+    await db.insert(frontDeskTasks).values(followUpTaskData);
+    
     return operation;
   }
 

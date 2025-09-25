@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +68,7 @@ interface FrontDeskTask {
 export default function FrontDeskDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState('operations');
 
   // Fetch front desk operations
@@ -240,9 +242,9 @@ export default function FrontDeskDashboard() {
                   <CardTitle>Recent Walk-in Operations</CardTitle>
                   <CardDescription>Track and manage visitor inquiries</CardDescription>
                 </div>
-                <Button data-testid="btn-new-operation">
+                <Button onClick={() => setLocation('/frontdesk/walk-in-intake')} data-testid="btn-new-operation">
                   <UserPlus className="h-4 w-4 mr-2" />
-                  New Walk-in
+                  New Walk-in Intake
                 </Button>
               </div>
             </CardHeader>
