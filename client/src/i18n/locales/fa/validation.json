@@ -4,11 +4,16 @@
   "invalidPhone": "شماره تلفن نامعتبر است",
   "passwordTooShort": "رمز عبور باید حداقل ۸ کاراکتر باشد",
   "passwordsDoNotMatch": "رمزهای عبور مطابقت ندارند",
+  "confirmPassword": "رمزهای عبور مطابقت ندارند",
+  "confirmPasswordPlaceholder": "تکرار رمز عبور",
   "invalidDate": "تاریخ نامعتبر است",
   "invalidNumber": "عدد نامعتبر است",
   "minLength": "باید حداقل {{min}} کاراکتر باشد",
   "maxLength": "باید حداکثر {{max}} کاراکتر باشد",
   "invalidUrl": "آدرس اینترنتی نامعتبر است",
   "fileSize": "حجم فایل نباید بیشتر از {{size}} باشد",
-  "fileType": "نوع فایل پشتیبانی نمی‌شود"
+  "fileType": "نوع فایل پشتیبانی نمی‌شود",
+  "firstName": "نام",
+  "lastName": "نام خانوادگی",
+  "phoneNumber": "شماره تلفن"
 }

@@ -90,6 +90,89 @@ import { useIsMediumScreen } from "@/hooks/useMediaQuery";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { EnrollmentStatus } from "@/hooks/use-enrollment-status";
 
+// Hub Loading and Error State Components
+function HubLoadingSkeleton({ hubId }: { hubId: HubType }) {
+  return (
+    <div className="space-y-6" data-testid={`loading-${hubId}-hub`}>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[...Array(3)].map((_, j) => (
+                  <Skeleton key={j} className="h-4 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HubErrorState({ hubId, onRetry }: { hubId: HubType; onRetry: () => void }) {
+  const queryClient = useQueryClient();
+  return (
+    <div className="flex flex-col items-center justify-center py-12 space-y-4" data-testid={`error-${hubId}-hub`}>
+      <div className="text-center space-y-2">
+        <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+        <h3 className="text-lg font-semibold text-gray-900">Failed to load {hubId} hub</h3>
+        <p className="text-gray-600 max-w-md">
+          Something went wrong while loading your {hubId} data. Please try again.
+        </p>
+      </div>
+      <div className="flex gap-3">
+        <Button 
+          variant="outline" 
+          onClick={onRetry}
+          data-testid={`button-retry-${hubId}`}
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Try Again
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            // Force a complete refresh of all queries
+            queryClient.invalidateQueries();
+            onRetry();
+          }}
+          data-testid={`button-refresh-${hubId}`}
+        >
+          <Loader2 className="h-4 w-4 mr-2" />
+          Refresh Data
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // Import existing widgets
 import {
   GamificationWidget,
@@ -239,60 +322,151 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
     }
   ];
 
-  // Comprehensive API data fetching with React Query
-  const { data: dashboardStats, isLoading: statsLoading } = useQuery({
+  // Comprehensive API data fetching with React Query with proper error handling
+  const { data: dashboardStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
     queryKey: ['/api/student/dashboard-stats'],
     queryFn: () => apiRequest('/api/student/dashboard-stats'),
     staleTime: 2 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: gamificationStats } = useQuery({
+  const { data: gamificationStats, isLoading: gamificationLoading, error: gamificationError, refetch: refetchGamification } = useQuery({
     queryKey: ['/api/student/gamification-stats'],
     queryFn: () => apiRequest('/api/student/gamification-stats'),
     staleTime: 2 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: learningProgress } = useQuery({
+  const { data: learningProgress, isLoading: progressLoading, error: progressError, refetch: refetchProgress } = useQuery({
     queryKey: ['/api/student/learning-progress'],
     queryFn: () => apiRequest('/api/student/learning-progress'),
     staleTime: 5 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: upcomingSessions = [] } = useQuery({
+  const { data: upcomingSessions = [], isLoading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useQuery({
     queryKey: ['/api/student/upcoming-sessions'],
     queryFn: () => apiRequest('/api/student/upcoming-sessions'),
     staleTime: 2 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: assignments = [] } = useQuery({
+  const { data: assignments = [], isLoading: assignmentsLoading, error: assignmentsError, refetch: refetchAssignments } = useQuery({
     queryKey: ['/api/student/assignments'],
     queryFn: () => apiRequest('/api/student/assignments'),
     staleTime: 5 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: achievements = [] } = useQuery({
+  const { data: achievements = [], isLoading: achievementsLoading, error: achievementsError, refetch: refetchAchievements } = useQuery({
     queryKey: ['/api/student/achievements'],
     queryFn: () => apiRequest('/api/student/achievements'),
     staleTime: 10 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: courses = [] } = useQuery({
+  const { data: courses = [], isLoading: coursesLoading, error: coursesError, refetch: refetchCourses } = useQuery({
     queryKey: ['/api/student/courses'],
     queryFn: () => apiRequest('/api/student/courses'),
     staleTime: 15 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: games = [] } = useQuery({
+  const { data: games = [], isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery({
     queryKey: ['/api/student/games/accessible'],
     queryFn: () => apiRequest('/api/student/games/accessible'),
     staleTime: 10 * 60 * 1000,
+    retry: 3,
   });
 
-  const { data: wallet } = useQuery({
+  const { data: wallet, isLoading: walletLoading, error: walletError, refetch: refetchWallet } = useQuery({
     queryKey: ['/api/student/wallet'],
     queryFn: () => apiRequest('/api/student/wallet'),
     staleTime: 5 * 60 * 1000,
+    retry: 3,
   });
+
+  // Hub-specific loading and error state management
+  const getHubLoadingState = (hubId: HubType): boolean => {
+    switch (hubId) {
+      case 'overview':
+        return statsLoading || gamificationLoading;
+      case 'learn':
+        return coursesLoading || progressLoading;
+      case 'live':
+        return sessionsLoading;
+      case 'assessment':
+        return assignmentsLoading;
+      case 'ai':
+        return false; // AI hub doesn't have specific data loading
+      case 'social':
+        return false; // Social hub doesn't have specific data loading
+      case 'games':
+        return gamesLoading || achievementsLoading;
+      case 'commerce':
+        return walletLoading;
+      case 'profile':
+        return achievementsLoading;
+      default:
+        return false;
+    }
+  };
+
+  const getHubErrorState = (hubId: HubType): boolean => {
+    switch (hubId) {
+      case 'overview':
+        return !!(statsError || gamificationError);
+      case 'learn':
+        return !!(coursesError || progressError);
+      case 'live':
+        return !!sessionsError;
+      case 'assessment':
+        return !!assignmentsError;
+      case 'ai':
+        return false;
+      case 'social':
+        return false;
+      case 'games':
+        return !!(gamesError || achievementsError);
+      case 'commerce':
+        return !!walletError;
+      case 'profile':
+        return !!achievementsError;
+      default:
+        return false;
+    }
+  };
+
+  const getHubRetryFunction = (hubId: HubType) => {
+    return () => {
+      switch (hubId) {
+        case 'overview':
+          refetchStats();
+          refetchGamification();
+          break;
+        case 'learn':
+          refetchCourses();
+          refetchProgress();
+          break;
+        case 'live':
+          refetchSessions();
+          break;
+        case 'assessment':
+          refetchAssignments();
+          break;
+        case 'games':
+          refetchGames();
+          refetchAchievements();
+          break;
+        case 'commerce':
+          refetchWallet();
+          break;
+        case 'profile':
+          refetchAchievements();
+          break;
+      }
+    };
+  };
 
   // Update URL when hub changes
   useEffect(() => {
@@ -548,20 +722,25 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
               </div>
 
               {/* Hub Content */}
-              {renderHubContent(activeHub, {
-                enrollmentStatus,
-                user,
-                dashboardStats,
-                gamificationStats,
-                learningProgress,
-                upcomingSessions,
-                assignments,
-                achievements,
-                courses,
-                games,
-                wallet,
-                isLoading: statsLoading
-              })}
+              {renderHubContent(
+                activeHub, 
+                {
+                  enrollmentStatus,
+                  user,
+                  dashboardStats,
+                  gamificationStats,
+                  learningProgress,
+                  upcomingSessions,
+                  assignments,
+                  achievements,
+                  courses,
+                  games,
+                  wallet
+                },
+                getHubLoadingState(activeHub),
+                getHubErrorState(activeHub),
+                getHubRetryFunction(activeHub)
+              )}
             </motion.div>
           </AnimatePresence>
         </main>
@@ -593,19 +772,19 @@ function renderHubContent(
     courses: any[];
     games: any[];
     wallet: any;
-    isLoading: boolean;
-    hasError: boolean;
-    retry: () => void;
-  }
+  },
+  isLoading: boolean,
+  hasError: boolean,
+  retry: () => void
 ) {
   // Show loading state for all hubs
-  if (data.isLoading) {
+  if (isLoading) {
     return <HubLoadingSkeleton hubId={hubId} />;
   }
 
   // Show error state for all hubs
-  if (data.hasError) {
-    return <HubErrorState hubId={hubId} onRetry={data.retry} />;
+  if (hasError) {
+    return <HubErrorState hubId={hubId} onRetry={retry} />;
   }
   switch (hubId) {
     case 'overview':

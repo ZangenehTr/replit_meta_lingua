@@ -10,6 +10,7 @@
     "mustContainSpecial": "Password must contain at least one special character"
   },
   "confirmPassword": "Passwords do not match",
+  "confirmPasswordPlaceholder": "Confirm your password",
   "minLength": "Must be at least {{min}} characters",
   "maxLength": "Must be no more than {{max}} characters",
   "min": "Must be at least {{min}}",
@@ -24,5 +25,8 @@
   "negative": "Must be a negative number",
   "range": "Must be between {{min}} and {{max}}",
   "fileSize": "File size must be less than {{size}}MB",
-  "fileType": "Invalid file type. Allowed types: {{types}}"
+  "fileType": "Invalid file type. Allowed types: {{types}}",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "phoneNumber": "Phone number"
 }
