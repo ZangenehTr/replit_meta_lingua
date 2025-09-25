@@ -133,7 +133,11 @@ import {
   // Front desk tables and types
   frontDeskOperations, phoneCallLogs, frontDeskTasks,
   type FrontDeskOperation, type InsertFrontDeskOperation,
-  type PhoneCallLog, type InsertPhoneCallLog, type FrontDeskTask, type InsertFrontDeskTask
+  type PhoneCallLog, type InsertPhoneCallLog, type FrontDeskTask, type InsertFrontDeskTask,
+  // 3D Lesson types
+  threeDVideoLessons, threeDLessonContent, threeDLessonProgress,
+  type ThreeDVideoLesson, type ThreeDVideoLessonInsert, type ThreeDLessonContent, type ThreeDLessonContentInsert,
+  type ThreeDLessonProgress, type ThreeDLessonProgressInsert
 } from "@shared/schema";
 
 // Placement test tables imported from main schema above
