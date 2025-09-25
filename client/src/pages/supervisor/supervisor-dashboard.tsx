@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/action-button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -51,11 +52,113 @@ interface SupervisorStats {
   studentRetention: number;
 }
 
+interface BusinessIntelligence {
+  monthlyRevenue: number;
+  revenueGrowth: number;
+  studentEngagementRate: number;
+  activeStudents: number;
+  sessionCompletionRate: number;
+  teacherQualityScore: number;
+  observationsCompleted: number;
+  qualityTrend: string;
+  avgRevenuePerStudent: number;
+  weeklyActiveStudents: number;
+  monthlyCompletedSessions: number;
+  totalStudents: number;
+  totalRevenue: number;
+}
+
+interface Teacher {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface TeacherNeedingAttention {
+  id: number;
+  name: string;
+  reason: string;
+  lastObservation?: string;
+  rating?: number;
+}
+
+interface StudentNeedingAttention {
+  id: number;
+  name: string;
+  issue: string;
+  course: string;
+  consecutiveAbsences: number;
+  missedHomeworks: number;
+  teacher: string;
+}
+
+interface UpcomingSession {
+  id: number;
+  teacherId: number;
+  scheduledAt: string;
+  deliveryMode: string;
+  title?: string;
+  student?: string;
+}
+
+interface PendingObservation {
+  id: number;
+  teacherId: number;
+  sessionId: number;
+  scheduledDate: string;
+  type: string;
+}
+
+interface RecentObservation {
+  id: number;
+  teacherId: number;
+  observationDate: string;
+  overallScore: number;
+  notes?: string;
+}
+
+interface TeacherPerformance {
+  teacherId: number;
+  name: string;
+  overallScore: number;
+  observationCount: number;
+}
+
+interface DailyIncome {
+  amount: number;
+  date: string;
+  currency: string;
+  categories?: string[];
+  totalRevenue?: number;
+}
+
+interface ChartData {
+  categories: any;
+  data?: number[];
+  totalRevenue?: number;
+  onlineGroup?: number[];
+  onlineOneOnOne?: number[];
+  inPersonGroup?: number[];
+  inPersonOneOnOne?: number[];
+  callern?: number[];
+}
+
+interface LiveSession {
+  id: number;
+  teacherId: number;
+  title: string;
+  scheduledAt: string;
+  deliveryMode: string;
+}
+
 // Enhanced observation schema with session auto-population and duplication prevention
 const observationSchema = z.object({
   sessionId: z.number().min(1, "Please select a session"),
   teacherId: z.number().min(1, "Please select a teacher"),
-  observationType: z.string(), // Will be validated against API data
+  observationType: z.enum(['live_online', 'live_in_person']), // Will be validated against API data
   scheduledDate: z.string().min(1, "Scheduled date is required"),
   scheduledTime: z.string().min(1, "Scheduled time is required"),
   teachingMethodology: z.number().min(1).max(5),
@@ -95,28 +198,28 @@ export default function SupervisorDashboard() {
     queryKey: ["/api/supervisor/dashboard-stats"],
   });
 
-  const { data: recentObservations } = useQuery({
+  const { data: recentObservations } = useQuery<RecentObservation[]>({
     queryKey: ["/api/supervision/recent-observations"],
   });
 
-  const { data: teacherPerformance } = useQuery({
+  const { data: teacherPerformance } = useQuery<TeacherPerformance[]>({
     queryKey: ["/api/supervision/teacher-performance"],
   });
 
   // Fetch live sessions for observation form
-  const { data: liveSessions } = useQuery({
+  const { data: liveSessions } = useQuery<LiveSession[]>({
     queryKey: ['/api/supervision/live-sessions'],
   });
 
   // Fetch recorded sessions for observation form
-  const { data: recordedSessions } = useQuery({
+  const { data: recordedSessions } = useQuery<LiveSession[]>({
     queryKey: ['/api/supervision/live-sessions', 'completed'],
   });
 
   // Fetch all teachers for the form with proper error handling
-  const { data: allTeachers, isLoading: teachersLoading, error: teachersError } = useQuery({
+  const { data: allTeachers, isLoading: teachersLoading, error: teachersError } = useQuery<Teacher[]>({
     queryKey: ['/api/teachers/list'],
-    select: (data: any[]) => {
+    select: (data: Teacher[]) => {
       console.log('Raw teachers data:', data);
       const filtered = data?.filter(user => user.role === 'Teacher/Tutor') || [];
       console.log('Filtered teachers:', filtered);
@@ -125,7 +228,7 @@ export default function SupervisorDashboard() {
   });
 
   // Fetch pending observations for to-do list with real-time updates
-  const { data: pendingObservations = [] } = useQuery({
+  const { data: pendingObservations = [] } = useQuery<PendingObservation[]>({
     queryKey: ['/api/supervision/pending-observations'],
     refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
     staleTime: 5000, // Consider data stale after 5 seconds
@@ -134,24 +237,24 @@ export default function SupervisorDashboard() {
   });
 
   // Enhanced supervisor dashboard queries
-  const { data: dailyIncome } = useQuery({
+  const { data: dailyIncome } = useQuery<ChartData>({
     queryKey: ['/api/supervisor/daily-income'],
   });
 
-  const { data: teachersNeedingAttention = [] } = useQuery({
+  const { data: teachersNeedingAttention = [] } = useQuery<TeacherNeedingAttention[]>({
     queryKey: ['/api/supervisor/teachers-needing-attention'],
   });
 
-  const { data: studentsNeedingAttention = [] } = useQuery({
+  const { data: studentsNeedingAttention = [] } = useQuery<StudentNeedingAttention[]>({
     queryKey: ['/api/supervisor/students-needing-attention'],
   });
 
-  const { data: upcomingSessionsForObservation = [] } = useQuery({
+  const { data: upcomingSessionsForObservation = [] } = useQuery<UpcomingSession[]>({
     queryKey: ['/api/supervisor/upcoming-sessions-for-observation'],
   });
 
   // Fetch enhanced business intelligence data
-  const { data: businessIntelligence } = useQuery({
+  const { data: businessIntelligence } = useQuery<BusinessIntelligence>({
     queryKey: ['/api/supervisor/business-intelligence'],
   });
 
@@ -160,7 +263,7 @@ export default function SupervisorDashboard() {
 
   // SMS Alert mutations
   const sendTeacherAlert = useMutation({
-    mutationFn: async ({ teacherId, issue }: { teacherId: number; issue: string }) => {
+    mutationFn: async ({ teacherId, issue, reason }: { teacherId: number; issue: string; reason?: string }) => {
       return apiRequest(`/api/supervisor/send-teacher-alert`, {
         method: 'POST',
         body: JSON.stringify({ teacherId, issue }),
@@ -209,7 +312,7 @@ export default function SupervisorDashboard() {
     defaultValues: {
       sessionId: 0,
       teacherId: 0,
-      observationType: 'live_online' as const,
+      observationType: 'live_online' as 'live_online' | 'live_in_person',
       scheduledDate: '',
       scheduledTime: '',
       teachingMethodology: 1,
@@ -231,6 +334,7 @@ export default function SupervisorDashboard() {
       period: 'monthly' as const,
       targetType: 'observations' as const,
       targetValue: 10,
+      description: '',
     },
   });
 
@@ -248,7 +352,7 @@ export default function SupervisorDashboard() {
       observationForm.setValue('scheduledTime', timeStr);
       
       // Set observation type based on delivery mode
-      const observationType = session.deliveryMode === 'online' ? 'live_online' : 'live_in_person';
+      const observationType: 'live_online' | 'live_in_person' = session.deliveryMode === 'online' ? 'live_online' : 'live_in_person';
       observationForm.setValue('observationType', observationType);
       
       console.log('Session selected:', sessionId, 'Auto-populated:', { teacherId: session.teacherId, date: dateStr, time: timeStr, type: observationType });
@@ -259,7 +363,7 @@ export default function SupervisorDashboard() {
   const createObservationMutation = useMutation({
     mutationFn: async (data: any) => {
       try {
-        const result = await apiRequest('/api/supervision/observations', 'POST', data);
+        const result = await apiRequest('/api/supervision/observations', { method: 'POST', body: data });
         console.log('Observation creation result:', result);
         return result;
       } catch (error) {
@@ -296,7 +400,7 @@ export default function SupervisorDashboard() {
   // Target setting mutation
   const setTargetMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('/api/supervisor/targets', 'POST', data);
+      return apiRequest('/api/supervisor/targets', { method: 'POST', body: data });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/supervisor/targets'] });
@@ -1271,6 +1375,7 @@ export default function SupervisorDashboard() {
                             variant="outline"
                             onClick={() => sendTeacherAlert.mutate({ 
                               teacherId: teacher.id, 
+                              issue: teacher.reason,
                               reason: teacher.reason 
                             })}
                             disabled={sendTeacherAlert.isPending}

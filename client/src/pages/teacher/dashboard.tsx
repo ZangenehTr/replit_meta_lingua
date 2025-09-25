@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/action-button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -281,17 +282,29 @@ export default function TeacherDashboard() {
                         </span>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <ActionButton 
+                      size="sm" 
+                      variant="outline"
+                      actionType="teacher.updateClass"
+                      payload={{ classId: cls.id }}
+                      data-testid={`btn-view-class-${cls.id}`}
+                    >
                       {t('teacher:view', 'مشاهده')}
-                    </Button>
+                    </ActionButton>
                   </motion.div>
                 ))}
               </div>
               <Link href="/teacher/schedule">
-                <Button variant="ghost" className="w-full mt-3" size="sm">
+                <ActionButton 
+                  variant="ghost" 
+                  className="w-full mt-3" 
+                  size="sm"
+                  actionType="common.refreshData"
+                  data-testid="btn-view-full-schedule"
+                >
                   {t('teacher:viewFullSchedule', 'مشاهده برنامه کامل')}
                   <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+                </ActionButton>
               </Link>
             </CardContent>
           </Card>

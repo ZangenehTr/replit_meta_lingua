@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/action-button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -101,7 +102,7 @@ export default function LeadsPage() {
         email: '',
         phone: '',
         source: '',
-        priority: 'medium',
+        priority: 'medium' as const,
         notes: '',
         coursesInterested: [],
         preferredContactMethod: 'phone'
@@ -122,10 +123,10 @@ export default function LeadsPage() {
     mutationFn: async ({ phoneNumber, contactName }: { phoneNumber: string; contactName: string }) => {
       return apiRequest("/api/voip/initiate-call", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           phoneNumber,
           contactName
-        }
+        })
       });
     },
     onSuccess: (data) => {

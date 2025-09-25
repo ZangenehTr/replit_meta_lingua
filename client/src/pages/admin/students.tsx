@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/action-button";
+import { ActionConfirmationDialog } from "@/components/ui/action-confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -657,15 +659,17 @@ export function AdminStudents() {
       {/* Header - Mobile-first redesign */}
       <div className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
-          <Button 
+          <ActionButton 
             variant="outline" 
             size="sm"
+            actionType="common.refreshData"
             onClick={() => window.history.back()}
             className="h-8 px-3 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm"
+            data-testid="btn-back-admin-students"
           >
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
             <span className="hidden sm:inline">{t('admin:students.back')}</span>
-          </Button>
+          </ActionButton>
           
           <div className="text-right">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -693,42 +697,56 @@ export function AdminStudents() {
           
           {/* Compact View Toggle */}
           <div className="flex border rounded-md overflow-hidden border-blue-200">
-            <Button
+            <ActionButton
               variant="ghost"
               size="sm"
+              actionType="common.refreshData"
               onClick={() => setViewMode("cards")}
               className={`h-8 px-2 sm:px-3 rounded-none border-0 text-xs ${
                 viewMode === "cards" 
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700" 
                   : "bg-white text-gray-700 hover:bg-gray-100"
               }`}
+              data-testid="btn-view-cards"
             >
               <Grid3X3 className="h-3 w-3" />
-            </Button>
-            <Button
+            </ActionButton>
+            <ActionButton
               variant="ghost"
               size="sm"
+              actionType="common.refreshData"
               onClick={() => setViewMode("list")}
               className={`h-8 px-2 sm:px-3 rounded-none border-0 text-xs ${
                 viewMode === "list" 
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700" 
                   : "bg-white text-gray-700 hover:bg-gray-100"
               }`}
+              data-testid="btn-view-list"
             >
               <List className="h-3 w-3" />
-            </Button>
+            </ActionButton>
           </div>
           
-          <Button variant="outline" className="h-8 px-2 sm:px-3 border-blue-200 hover:bg-blue-50 text-xs">
+          <ActionButton 
+            variant="outline" 
+            className="h-8 px-2 sm:px-3 border-blue-200 hover:bg-blue-50 text-xs"
+            actionType="common.exportData"
+            payload={{ format: 'csv', entity: 'students' }}
+            data-testid="btn-export-students"
+          >
             <Download className="h-3 w-3" />
             <span className="hidden lg:inline lg:ml-1">Export</span>
-          </Button>
+          </ActionButton>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="h-8 px-2 sm:px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs">
+              <ActionButton 
+                className="h-8 px-2 sm:px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs"
+                actionType="admin.createUser"
+                data-testid="btn-add-student"
+              >
                 <Plus className="h-3 w-3" />
                 <span className="hidden sm:inline sm:ml-1">{t('admin:students.add')}</span>
-              </Button>
+              </ActionButton>
             </DialogTrigger>
             <DialogContent className={`max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
               <DialogHeader>
@@ -905,19 +923,44 @@ export function AdminStudents() {
                 </div>
               </div>
               <div className="flex justify-end gap-3">
-                <Button 
+                <ActionButton 
                   variant="outline" 
+                  actionType="common.refreshData"
                   onClick={() => setIsCreateDialogOpen(false)}
                   disabled={createStudentMutation.isPending}
+                  data-testid="btn-cancel-create-student"
                 >
                   Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateStudent}
+                </ActionButton>
+                <ActionButton 
+                  actionType="admin.createUser"
+                  payload={newStudentData}
+                  onSuccess={(data) => {
+                    setIsCreateDialogOpen(false);
+                    setNewStudentData({
+                      firstName: "",
+                      lastName: "",
+                      email: "",
+                      phone: "",
+                      nationalId: "",
+                      birthday: null,
+                      level: "",
+                      status: "active",
+                      guardianName: "",
+                      guardianPhone: "",
+                      profileImage: null,
+                      notes: "",
+                      courses: [],
+                      selectedCourses: [],
+                      totalFee: 0
+                    });
+                  }}
                   disabled={createStudentMutation.isPending}
+                  data-testid="btn-create-student-submit"
+                  loadingText="Creating..."
                 >
-                  {createStudentMutation.isPending ? "Creating..." : "Create Student Profile"}
-                </Button>
+                  Create Student Profile
+                </ActionButton>
               </div>
             </DialogContent>
           </Dialog>
@@ -1775,8 +1818,26 @@ export function AdminStudents() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>{t('admin:students.cancel')}</Button>
-            <Button onClick={handleSaveEdit} disabled={!editingStudent}>{t('admin:students.saveChanges')}</Button>
+            <ActionButton 
+              variant="outline" 
+              actionType="common.refreshData"
+              onClick={() => setIsEditDialogOpen(false)}
+              data-testid="btn-cancel-edit-student"
+            >
+              {t('admin:students.cancel')}
+            </ActionButton>
+            <ActionButton 
+              actionType="admin.updateUser"
+              payload={editingStudent}
+              onSuccess={() => {
+                setIsEditDialogOpen(false);
+                setEditingStudent(null);
+              }}
+              disabled={!editingStudent}
+              data-testid="btn-save-edit-student"
+            >
+              {t('admin:students.saveChanges')}
+            </ActionButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
