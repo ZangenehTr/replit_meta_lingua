@@ -24350,7 +24350,174 @@ Meta Lingua Academy`;
     }
   });
 
-  console.log('✅ Front Desk Clerk System API routes registered (Operations, Call Logs, Tasks)');
+  // ========================
+  // COMPREHENSIVE CALLER HISTORY DASHBOARD ROUTES
+  // ========================
+
+  // Get comprehensive interactions (combining phone calls, walk-ins, tasks, etc.)
+  app.get("/api/front-desk/interactions", authenticate, authorizePermission('front_desk_operations', 'list'), async (req: any, res) => {
+    try {
+      const {
+        query,
+        phone,
+        email,
+        dateFrom,
+        dateTo,
+        callType,
+        outcome,
+        urgencyLevel,
+        interactionType,
+        handledBy,
+        tag,
+        conversionStatus
+      } = req.query;
+
+      const interactions = await storage.getComprehensiveInteractions({
+        query,
+        phone,
+        email,
+        dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+        dateTo: dateTo ? new Date(dateTo) : undefined,
+        callType: Array.isArray(callType) ? callType : callType ? [callType] : [],
+        outcome: Array.isArray(outcome) ? outcome : outcome ? [outcome] : [],
+        urgencyLevel: Array.isArray(urgencyLevel) ? urgencyLevel : urgencyLevel ? [urgencyLevel] : [],
+        interactionType: Array.isArray(interactionType) ? interactionType : interactionType ? [interactionType] : [],
+        handledBy: Array.isArray(handledBy) ? handledBy : handledBy ? [handledBy] : [],
+        tags: Array.isArray(tag) ? tag : tag ? [tag] : [],
+        conversionStatus: Array.isArray(conversionStatus) ? conversionStatus : conversionStatus ? [conversionStatus] : []
+      });
+
+      res.json(interactions);
+    } catch (error) {
+      console.error('Error fetching comprehensive interactions:', error);
+      res.status(500).json({ error: 'Failed to fetch interactions', message: error.message });
+    }
+  });
+
+  // Get analytics data for dashboard
+  app.get("/api/front-desk/analytics", authenticate, authorizePermission('front_desk_operations', 'list'), async (req: any, res) => {
+    try {
+      const { dateFrom, dateTo } = req.query;
+      
+      const analytics = await storage.getFrontDeskAnalytics({
+        dateFrom: dateFrom ? new Date(dateFrom) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        dateTo: dateTo ? new Date(dateTo) : new Date()
+      });
+
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics', message: error.message });
+    }
+  });
+
+  // Get unified customer profile
+  app.get("/api/front-desk/customer-profile/:customerKey", authenticate, authorizePermission('front_desk_operations', 'read'), async (req: any, res) => {
+    try {
+      const { customerKey } = req.params;
+      const profile = await storage.getUnifiedCustomerProfile(customerKey);
+      res.json(profile);
+    } catch (error) {
+      console.error('Error fetching customer profile:', error);
+      res.status(500).json({ error: 'Failed to fetch customer profile', message: error.message });
+    }
+  });
+
+  // Get staff members for filtering
+  app.get("/api/staff/front-desk", authenticate, async (req: any, res) => {
+    try {
+      const staff = await storage.getFrontDeskStaff();
+      res.json(staff);
+    } catch (error) {
+      console.error('Error fetching front desk staff:', error);
+      res.status(500).json({ error: 'Failed to fetch staff', message: error.message });
+    }
+  });
+
+  // Export functionality
+  app.get("/api/front-desk/export", authenticate, authorizePermission('front_desk_operations', 'export'), async (req: any, res) => {
+    try {
+      const { format, ...filters } = req.query;
+      
+      // Get interactions with filters
+      const interactions = await storage.getComprehensiveInteractions({
+        query: filters.query,
+        phone: filters.phone,
+        email: filters.email,
+        dateFrom: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
+        dateTo: filters.dateTo ? new Date(filters.dateTo) : undefined,
+        callType: Array.isArray(filters.callType) ? filters.callType : filters.callType ? [filters.callType] : [],
+        outcome: Array.isArray(filters.outcome) ? filters.outcome : filters.outcome ? [filters.outcome] : [],
+        urgencyLevel: Array.isArray(filters.urgencyLevel) ? filters.urgencyLevel : filters.urgencyLevel ? [filters.urgencyLevel] : [],
+        interactionType: Array.isArray(filters.interactionType) ? filters.interactionType : filters.interactionType ? [filters.interactionType] : [],
+        handledBy: Array.isArray(filters.handledBy) ? filters.handledBy : filters.handledBy ? [filters.handledBy] : [],
+        tags: Array.isArray(filters.tag) ? filters.tag : filters.tag ? [filters.tag] : [],
+        conversionStatus: Array.isArray(filters.conversionStatus) ? filters.conversionStatus : filters.conversionStatus ? [filters.conversionStatus] : []
+      });
+
+      if (format === 'csv') {
+        const csvData = await exportInteractionsCSV(interactions);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="caller-history-${new Date().toISOString().split('T')[0]}.csv"`);
+        res.send(csvData);
+      } else if (format === 'pdf') {
+        const pdfBuffer = await generateInteractionsPDF(interactions);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="caller-history-${new Date().toISOString().split('T')[0]}.pdf"`);
+        res.send(pdfBuffer);
+      } else if (format === 'excel') {
+        const excelBuffer = await generateInteractionsExcel(interactions);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="caller-history-${new Date().toISOString().split('T')[0]}.xlsx"`);
+        res.send(excelBuffer);
+      } else {
+        res.status(400).json({ error: 'Invalid export format. Supported: csv, pdf, excel' });
+      }
+    } catch (error) {
+      console.error('Error exporting interactions:', error);
+      res.status(500).json({ error: 'Failed to export data', message: error.message });
+    }
+  });
+
+  // Update interaction notes
+  app.put("/api/front-desk/interactions/:id/notes", authenticate, authorizePermission('front_desk_operations', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { notes, tags, type } = req.body;
+      
+      const updatedInteraction = await storage.updateInteractionNotes(id, type, {
+        notes,
+        tags,
+        updatedBy: req.user.id
+      });
+      
+      res.json(updatedInteraction);
+    } catch (error) {
+      console.error('Error updating interaction notes:', error);
+      res.status(500).json({ error: 'Failed to update notes', message: error.message });
+    }
+  });
+
+  // Create follow-up task from interaction
+  app.post("/api/front-desk/interactions/:id/create-task", authenticate, authorizePermission('front_desk_tasks', 'create'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { type, ...taskData } = req.body;
+      
+      const task = await storage.createTaskFromInteraction(id, type, {
+        ...taskData,
+        createdBy: req.user.id,
+        assignedTo: taskData.assignedTo || req.user.id
+      });
+      
+      res.status(201).json(task);
+    } catch (error) {
+      console.error('Error creating task from interaction:', error);
+      res.status(500).json({ error: 'Failed to create task', message: error.message });
+    }
+  });
+
+  console.log('✅ Front Desk Clerk System API routes registered (Operations, Call Logs, Tasks, Comprehensive Dashboard)');
 
   // ========================
   // ERROR HANDLING - 404 for non-existent endpoints

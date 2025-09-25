@@ -11006,6 +11006,561 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  // ===== COMPREHENSIVE CALLER HISTORY DASHBOARD =====
+  
+  // Get comprehensive interactions combining phone calls, walk-ins, tasks, etc.
+  async getComprehensiveInteractions(filters: any): Promise<any[]> {
+    try {
+      const {
+        query,
+        phone,
+        email,
+        dateFrom,
+        dateTo,
+        callType,
+        outcome,
+        urgencyLevel,
+        interactionType,
+        handledBy,
+        tags,
+        conversionStatus
+      } = filters;
+
+      // Phone call logs
+      let phoneCallQuery = db.select({
+        id: phoneCallLogs.id,
+        type: sql<string>`'phone_call'`,
+        customerName: phoneCallLogs.customerName,
+        customerPhone: phoneCallLogs.customerPhone,
+        customerEmail: phoneCallLogs.customerEmail,
+        interactionTime: phoneCallLogs.callTime,
+        status: phoneCallLogs.status,
+        outcome: phoneCallLogs.callResult,
+        urgencyLevel: phoneCallLogs.urgencyLevel,
+        handledBy: phoneCallLogs.staffHandlingId,
+        handlerName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+        notes: phoneCallLogs.notes,
+        tags: phoneCallLogs.tags,
+        convertedToLead: phoneCallLogs.convertedToLead,
+        convertedToStudent: phoneCallLogs.convertedToStudent,
+        followUpRequired: phoneCallLogs.followUpRequired,
+        followUpDate: phoneCallLogs.followUpDate,
+        callType: phoneCallLogs.callType,
+        callDuration: phoneCallLogs.duration,
+        callResult: phoneCallLogs.callResult,
+        leadSource: phoneCallLogs.leadSource,
+        interestedLanguage: phoneCallLogs.interestedLanguage,
+        currentLevel: phoneCallLogs.currentLevel,
+        budget: phoneCallLogs.budget
+      })
+      .from(phoneCallLogs)
+      .leftJoin(users, eq(phoneCallLogs.staffHandlingId, users.id));
+
+      // Walk-in operations
+      let walkInQuery = db.select({
+        id: frontDeskOperations.id,
+        type: sql<string>`'walk_in'`,
+        customerName: frontDeskOperations.visitorName,
+        customerPhone: frontDeskOperations.visitorPhone,
+        customerEmail: frontDeskOperations.visitorEmail,
+        interactionTime: frontDeskOperations.visitTime,
+        status: frontDeskOperations.status,
+        outcome: frontDeskOperations.outcome,
+        urgencyLevel: frontDeskOperations.urgencyLevel,
+        handledBy: frontDeskOperations.staffHandlingId,
+        handlerName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+        notes: frontDeskOperations.detailedNotes,
+        tags: frontDeskOperations.tags,
+        convertedToLead: frontDeskOperations.convertedToLead,
+        convertedToStudent: frontDeskOperations.convertedToStudent,
+        followUpRequired: frontDeskOperations.followUpRequired,
+        followUpDate: frontDeskOperations.followUpDate,
+        callType: sql<string>`null`,
+        callDuration: sql<number>`null`,
+        callResult: sql<string>`null`,
+        visitType: frontDeskOperations.visitType,
+        visitPurpose: frontDeskOperations.visitPurpose,
+        leadSource: frontDeskOperations.leadSource,
+        interestedLanguage: frontDeskOperations.interestedLanguage,
+        currentLevel: frontDeskOperations.currentLevel,
+        budget: frontDeskOperations.budget
+      })
+      .from(frontDeskOperations)
+      .leftJoin(users, eq(frontDeskOperations.staffHandlingId, users.id));
+
+      // Front desk tasks
+      let tasksQuery = db.select({
+        id: frontDeskTasks.id,
+        type: sql<string>`'task'`,
+        customerName: frontDeskTasks.customerName,
+        customerPhone: frontDeskTasks.customerPhone,
+        customerEmail: frontDeskTasks.customerEmail,
+        interactionTime: frontDeskTasks.createdAt,
+        status: frontDeskTasks.status,
+        outcome: sql<string>`${frontDeskTasks.status}`,
+        urgencyLevel: frontDeskTasks.priority,
+        handledBy: frontDeskTasks.assignedTo,
+        handlerName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+        notes: frontDeskTasks.notes,
+        tags: frontDeskTasks.tags,
+        convertedToLead: sql<boolean>`false`,
+        convertedToStudent: sql<boolean>`false`,
+        followUpRequired: sql<boolean>`${frontDeskTasks.dueDate} IS NOT NULL`,
+        followUpDate: frontDeskTasks.dueDate,
+        callType: sql<string>`null`,
+        callDuration: sql<number>`null`,
+        callResult: sql<string>`null`,
+        taskType: frontDeskTasks.taskType,
+        priority: frontDeskTasks.priority,
+        dueDate: frontDeskTasks.dueDate,
+        leadSource: sql<string>`null`,
+        interestedLanguage: sql<string>`null`,
+        currentLevel: sql<string>`null`,
+        budget: sql<number>`null`
+      })
+      .from(frontDeskTasks)
+      .leftJoin(users, eq(frontDeskTasks.assignedTo, users.id));
+
+      // Apply filters to each query
+      const conditions = [];
+      
+      if (dateFrom) {
+        conditions.push(gte(phoneCallLogs.callTime, dateFrom));
+      }
+      if (dateTo) {
+        conditions.push(lte(phoneCallLogs.callTime, dateTo));
+      }
+      if (query) {
+        conditions.push(
+          or(
+            ilike(phoneCallLogs.customerName, `%${query}%`),
+            ilike(phoneCallLogs.customerPhone, `%${query}%`),
+            ilike(phoneCallLogs.customerEmail, `%${query}%`),
+            ilike(phoneCallLogs.notes, `%${query}%`)
+          )
+        );
+      }
+      if (phone) {
+        conditions.push(ilike(phoneCallLogs.customerPhone, `%${phone}%`));
+      }
+      if (email) {
+        conditions.push(ilike(phoneCallLogs.customerEmail, `%${email}%`));
+      }
+      if (callType && callType.length > 0) {
+        conditions.push(inArray(phoneCallLogs.callType, callType));
+      }
+      if (outcome && outcome.length > 0) {
+        conditions.push(inArray(phoneCallLogs.callResult, outcome));
+      }
+      if (urgencyLevel && urgencyLevel.length > 0) {
+        conditions.push(inArray(phoneCallLogs.urgencyLevel, urgencyLevel));
+      }
+      if (handledBy && handledBy.length > 0) {
+        conditions.push(inArray(phoneCallLogs.staffHandlingId, handledBy.map(Number)));
+      }
+
+      if (conditions.length > 0) {
+        phoneCallQuery = phoneCallQuery.where(and(...conditions));
+      }
+
+      // Apply similar filters to walk-in operations
+      const walkInConditions = [];
+      
+      if (dateFrom) {
+        walkInConditions.push(gte(frontDeskOperations.visitTime, dateFrom));
+      }
+      if (dateTo) {
+        walkInConditions.push(lte(frontDeskOperations.visitTime, dateTo));
+      }
+      if (query) {
+        walkInConditions.push(
+          or(
+            ilike(frontDeskOperations.visitorName, `%${query}%`),
+            ilike(frontDeskOperations.visitorPhone, `%${query}%`),
+            ilike(frontDeskOperations.visitorEmail, `%${query}%`),
+            ilike(frontDeskOperations.detailedNotes, `%${query}%`)
+          )
+        );
+      }
+      if (phone) {
+        walkInConditions.push(ilike(frontDeskOperations.visitorPhone, `%${phone}%`));
+      }
+      if (email) {
+        walkInConditions.push(ilike(frontDeskOperations.visitorEmail, `%${email}%`));
+      }
+
+      if (walkInConditions.length > 0) {
+        walkInQuery = walkInQuery.where(and(...walkInConditions));
+      }
+
+      // Apply similar filters to tasks
+      const taskConditions = [];
+      
+      if (dateFrom) {
+        taskConditions.push(gte(frontDeskTasks.createdAt, dateFrom));
+      }
+      if (dateTo) {
+        taskConditions.push(lte(frontDeskTasks.createdAt, dateTo));
+      }
+      if (query) {
+        taskConditions.push(
+          or(
+            ilike(frontDeskTasks.customerName, `%${query}%`),
+            ilike(frontDeskTasks.customerPhone, `%${query}%`),
+            ilike(frontDeskTasks.customerEmail, `%${query}%`),
+            ilike(frontDeskTasks.notes, `%${query}%`)
+          )
+        );
+      }
+      if (phone) {
+        taskConditions.push(ilike(frontDeskTasks.customerPhone, `%${phone}%`));
+      }
+      if (email) {
+        taskConditions.push(ilike(frontDeskTasks.customerEmail, `%${email}%`));
+      }
+
+      if (taskConditions.length > 0) {
+        tasksQuery = tasksQuery.where(and(...taskConditions));
+      }
+
+      // Execute queries based on interaction type filter
+      let results: any[] = [];
+      
+      if (!interactionType || interactionType.length === 0 || interactionType.includes('phone_call')) {
+        const phoneResults = await phoneCallQuery.orderBy(desc(phoneCallLogs.callTime));
+        results = [...results, ...phoneResults];
+      }
+      
+      if (!interactionType || interactionType.length === 0 || interactionType.includes('walk_in')) {
+        const walkInResults = await walkInQuery.orderBy(desc(frontDeskOperations.visitTime));
+        results = [...results, ...walkInResults];
+      }
+      
+      if (!interactionType || interactionType.length === 0 || interactionType.includes('task')) {
+        const taskResults = await tasksQuery.orderBy(desc(frontDeskTasks.createdAt));
+        results = [...results, ...taskResults];
+      }
+
+      // Sort all results by interaction time
+      results.sort((a, b) => new Date(b.interactionTime).getTime() - new Date(a.interactionTime).getTime());
+
+      return results;
+    } catch (error) {
+      console.error('Error fetching comprehensive interactions:', error);
+      return [];
+    }
+  }
+
+  // Get analytics data for front desk dashboard
+  async getFrontDeskAnalytics(filters: { dateFrom: Date; dateTo: Date }): Promise<any> {
+    try {
+      const { dateFrom, dateTo } = filters;
+
+      // Total interactions
+      const [phoneCallsCount] = await db.select({ count: sql<number>`count(*)` })
+        .from(phoneCallLogs)
+        .where(and(
+          gte(phoneCallLogs.callTime, dateFrom),
+          lte(phoneCallLogs.callTime, dateTo)
+        ));
+
+      const [walkInsCount] = await db.select({ count: sql<number>`count(*)` })
+        .from(frontDeskOperations)
+        .where(and(
+          gte(frontDeskOperations.visitTime, dateFrom),
+          lte(frontDeskOperations.visitTime, dateTo)
+        ));
+
+      const totalInteractions = (phoneCallsCount?.count || 0) + (walkInsCount?.count || 0);
+
+      // Conversions
+      const [phoneConversions] = await db.select({ count: sql<number>`count(*)` })
+        .from(phoneCallLogs)
+        .where(and(
+          gte(phoneCallLogs.callTime, dateFrom),
+          lte(phoneCallLogs.callTime, dateTo),
+          or(
+            eq(phoneCallLogs.convertedToLead, true),
+            eq(phoneCallLogs.convertedToStudent, true)
+          )
+        ));
+
+      const [walkInConversions] = await db.select({ count: sql<number>`count(*)` })
+        .from(frontDeskOperations)
+        .where(and(
+          gte(frontDeskOperations.visitTime, dateFrom),
+          lte(frontDeskOperations.visitTime, dateTo),
+          or(
+            eq(frontDeskOperations.convertedToLead, true),
+            eq(frontDeskOperations.convertedToStudent, true)
+          )
+        ));
+
+      const totalConversions = (phoneConversions?.count || 0) + (walkInConversions?.count || 0);
+      const conversionRate = totalInteractions > 0 ? (totalConversions / totalInteractions) * 100 : 0;
+
+      // Channel performance
+      const channelPerformance = [
+        {
+          channel: 'phone_call',
+          interactions: phoneCallsCount?.count || 0,
+          conversions: phoneConversions?.count || 0,
+          conversionRate: phoneCallsCount?.count > 0 ? ((phoneConversions?.count || 0) / phoneCallsCount.count) * 100 : 0,
+          averageValue: 0
+        },
+        {
+          channel: 'walk_in',
+          interactions: walkInsCount?.count || 0,
+          conversions: walkInConversions?.count || 0,
+          conversionRate: walkInsCount?.count > 0 ? ((walkInConversions?.count || 0) / walkInsCount.count) * 100 : 0,
+          averageValue: 0
+        }
+      ];
+
+      // Top performers
+      const topPerformers = await db.select({
+        name: sql`${users.firstName} || ' ' || ${users.lastName}`,
+        interactions: sql<number>`count(*)`,
+        conversions: sql<number>`sum(case when ${phoneCallLogs.convertedToLead} = true or ${phoneCallLogs.convertedToStudent} = true then 1 else 0 end)`
+      })
+      .from(phoneCallLogs)
+      .leftJoin(users, eq(phoneCallLogs.staffHandlingId, users.id))
+      .where(and(
+        gte(phoneCallLogs.callTime, dateFrom),
+        lte(phoneCallLogs.callTime, dateTo)
+      ))
+      .groupBy(phoneCallLogs.staffHandlingId, users.firstName, users.lastName)
+      .orderBy(desc(sql`count(*)`))
+      .limit(5);
+
+      return {
+        totalInteractions,
+        conversionRate,
+        averageResponseTime: 0, // Would need timing data
+        topPerformers,
+        conversionFunnel: [],
+        interactionTrends: [],
+        sourceAttribution: [],
+        channelPerformance,
+        timeDistribution: [],
+        outcomeBreakdown: []
+      };
+    } catch (error) {
+      console.error('Error fetching front desk analytics:', error);
+      return {
+        totalInteractions: 0,
+        conversionRate: 0,
+        averageResponseTime: 0,
+        topPerformers: [],
+        conversionFunnel: [],
+        interactionTrends: [],
+        sourceAttribution: [],
+        channelPerformance: [],
+        timeDistribution: [],
+        outcomeBreakdown: []
+      };
+    }
+  }
+
+  // Get unified customer profile
+  async getUnifiedCustomerProfile(customerKey: string): Promise<any> {
+    try {
+      // Customer key could be phone, email, or name
+      const phoneMatches = await db.select()
+        .from(phoneCallLogs)
+        .where(
+          or(
+            eq(phoneCallLogs.customerPhone, customerKey),
+            eq(phoneCallLogs.customerEmail, customerKey),
+            eq(phoneCallLogs.customerName, customerKey)
+          )
+        )
+        .orderBy(desc(phoneCallLogs.callTime));
+
+      const walkInMatches = await db.select()
+        .from(frontDeskOperations)
+        .where(
+          or(
+            eq(frontDeskOperations.visitorPhone, customerKey),
+            eq(frontDeskOperations.visitorEmail, customerKey),
+            eq(frontDeskOperations.visitorName, customerKey)
+          )
+        )
+        .orderBy(desc(frontDeskOperations.visitTime));
+
+      const allInteractions = [...phoneMatches, ...walkInMatches];
+      
+      if (allInteractions.length === 0) {
+        return null;
+      }
+
+      const latest = allInteractions[0];
+      const totalInteractions = allInteractions.length;
+      const conversions = allInteractions.filter(i => 
+        i.convertedToLead || i.convertedToStudent
+      ).length;
+
+      return {
+        customerKey,
+        customerName: latest.customerName || latest.visitorName,
+        customerPhone: latest.customerPhone || latest.visitorPhone,
+        customerEmail: latest.customerEmail || latest.visitorEmail,
+        totalInteractions,
+        firstInteractionDate: allInteractions[allInteractions.length - 1].callTime || allInteractions[allInteractions.length - 1].visitTime,
+        lastInteractionDate: latest.callTime || latest.visitTime,
+        conversionStatus: conversions > 0 ? 'converted' : 'prospect',
+        leadSource: latest.leadSource,
+        interestedLanguages: [latest.interestedLanguage].filter(Boolean),
+        currentLevel: latest.currentLevel,
+        budget: latest.budget,
+        tags: latest.tags || [],
+        notes: latest.notes || latest.detailedNotes || '',
+        lifetimeValue: 0,
+        conversionProbability: conversions > 0 ? 100 : Math.min(totalInteractions * 15, 85),
+        preferredContactMethod: 'phone',
+        bestTimeToContact: '09:00-17:00',
+        languagePreference: 'English',
+        interactionTypes: {
+          phone_call: phoneMatches.length,
+          walk_in: walkInMatches.length
+        },
+        outcomeBreakdown: {},
+        conversionFunnel: [],
+        satisfactionScores: [],
+        averageSatisfaction: 0,
+        relatedCustomers: [],
+        recentActivity: []
+      };
+    } catch (error) {
+      console.error('Error fetching unified customer profile:', error);
+      return null;
+    }
+  }
+
+  // Get front desk staff
+  async getFrontDeskStaff(): Promise<any[]> {
+    try {
+      return await db.select({
+        id: users.id,
+        name: sql`${users.firstName} || ' ' || ${users.lastName}`,
+        email: users.email,
+        role: users.role
+      })
+      .from(users)
+      .where(
+        or(
+          eq(users.role, 'admin'),
+          eq(users.role, 'front_desk_clerk'),
+          eq(users.role, 'manager')
+        )
+      )
+      .orderBy(users.firstName, users.lastName);
+    } catch (error) {
+      console.error('Error fetching front desk staff:', error);
+      return [];
+    }
+  }
+
+  // Update interaction notes
+  async updateInteractionNotes(id: number, type: string, updates: any): Promise<any> {
+    try {
+      const { notes, tags, updatedBy } = updates;
+      
+      if (type === 'phone_call') {
+        const [updated] = await db.update(phoneCallLogs)
+          .set({ 
+            notes,
+            tags: tags || [],
+            updatedAt: new Date()
+          })
+          .where(eq(phoneCallLogs.id, id))
+          .returning();
+        return updated;
+      } else if (type === 'walk_in') {
+        const [updated] = await db.update(frontDeskOperations)
+          .set({ 
+            detailedNotes: notes,
+            tags: tags || [],
+            updatedAt: new Date()
+          })
+          .where(eq(frontDeskOperations.id, id))
+          .returning();
+        return updated;
+      } else if (type === 'task') {
+        const [updated] = await db.update(frontDeskTasks)
+          .set({ 
+            notes,
+            tags: tags || [],
+            updatedAt: new Date()
+          })
+          .where(eq(frontDeskTasks.id, id))
+          .returning();
+        return updated;
+      }
+      
+      throw new Error('Invalid interaction type');
+    } catch (error) {
+      console.error('Error updating interaction notes:', error);
+      throw error;
+    }
+  }
+
+  // Create task from interaction
+  async createTaskFromInteraction(interactionId: number, interactionType: string, taskData: any): Promise<any> {
+    try {
+      let customerInfo: any = {};
+      
+      if (interactionType === 'phone_call') {
+        const interaction = await db.select()
+          .from(phoneCallLogs)
+          .where(eq(phoneCallLogs.id, interactionId))
+          .limit(1);
+        
+        if (interaction.length > 0) {
+          customerInfo = {
+            customerName: interaction[0].customerName,
+            customerPhone: interaction[0].customerPhone,
+            customerEmail: interaction[0].customerEmail
+          };
+        }
+      } else if (interactionType === 'walk_in') {
+        const interaction = await db.select()
+          .from(frontDeskOperations)
+          .where(eq(frontDeskOperations.id, interactionId))
+          .limit(1);
+        
+        if (interaction.length > 0) {
+          customerInfo = {
+            customerName: interaction[0].visitorName,
+            customerPhone: interaction[0].visitorPhone,
+            customerEmail: interaction[0].visitorEmail
+          };
+        }
+      }
+
+      const [created] = await db.insert(frontDeskTasks).values({
+        taskType: taskData.taskType || 'follow_up',
+        title: taskData.title,
+        description: taskData.description,
+        priority: taskData.priority || 'medium',
+        status: 'pending',
+        assignedTo: taskData.assignedTo,
+        createdBy: taskData.createdBy,
+        dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
+        customerName: customerInfo.customerName,
+        customerPhone: customerInfo.customerPhone,
+        customerEmail: customerInfo.customerEmail,
+        notes: taskData.notes,
+        tags: taskData.tags || []
+      }).returning();
+
+      return created;
+    } catch (error) {
+      console.error('Error creating task from interaction:', error);
+      throw error;
+    }
+  }
+
   // ===== STUDENT MANAGEMENT =====
   
   // Mentor Assignments
