@@ -723,6 +723,21 @@ export default function VirtualMall() {
                         <VolumeX className="w-4 h-4 text-gray-400" />
                       )}
                     </Button>
+                    {/* Temporary test button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const testMessage = language === 'fa' ? 
+                          'سلام! من لکسی هستم، دستیار هوشمند شما.' :
+                          'Hello! I am Lexi, your AI study partner. Welcome to our virtual shopping mall!';
+                        speakText(testMessage, 'lexi');
+                      }}
+                      className="text-xs px-2"
+                      data-testid="button-test-voice"
+                    >
+                      Test Voice
+                    </Button>
                     {isLexiSpeaking && (
                       <div className="flex items-center gap-1 text-xs text-blue-600">
                         <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
