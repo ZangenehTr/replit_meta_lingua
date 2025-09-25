@@ -68,6 +68,7 @@ import MentorDashboard from "@/pages/mentor/dashboard";
 import StudentDashboard from "@/pages/student/dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
 import TeacherSupervisionDashboard from "@/pages/supervisor/teacher-supervision-dashboard";
+import FrontDeskDashboard from "@/pages/frontdesk/dashboard";
 import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
 // Student pages
@@ -500,6 +501,11 @@ function Router() {
         <ProtectedRoute>
           <MentorDashboard />
         </ProtectedRoute>
+      </Route>
+      <Route path="/front-desk">
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+          <FrontDeskDashboard />
+        </RoleProtectedRoute>
       </Route>
       <Route path="/student">
         <ProtectedRoute>

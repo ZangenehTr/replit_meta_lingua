@@ -20,7 +20,8 @@ import {
   UserCheck,
   BarChart3,
   Calendar,
-  Shield
+  Shield,
+  Building2
 } from "lucide-react";
 
 interface BottomNavItem {
@@ -87,6 +88,14 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
         { route: "/accountant/payments", icon: DollarSign, label: t('common:navigation.payments') },
         { route: "/accountant/reports", icon: BarChart3, label: t('common:navigation.reports') },
         { route: "/accountant/compliance", icon: Shield, label: t('common:navigation.compliance') }
+      ];
+      
+    case 'front_desk_clerk':
+      return [
+        { route: "/front-desk", icon: Building2, label: t('common:navigation.frontdesk') },
+        { route: "/front-desk", icon: Users, label: t('common:navigation.walkins') },
+        { route: "/front-desk", icon: Phone, label: t('common:navigation.calls') },
+        { route: "/front-desk", icon: ClipboardList, label: t('common:navigation.tasks') }
       ];
       
     default:

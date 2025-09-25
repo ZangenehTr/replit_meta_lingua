@@ -6174,6 +6174,161 @@ export const packagesUnifiedView = {
   updatedAt: timestamp("updated_at").defaultNow()
 } as const;
 
+// ============================================================================
+// FRONT DESK CLERK TABLES FOR WALK-IN MANAGEMENT
+// ============================================================================
+
+// Front desk operations table for tracking walk-in inquiries and visits
+export const frontDeskOperations = pgTable("front_desk_operations", {
+  id: serial("id").primaryKey(),
+  
+  // Visitor information
+  visitorName: text("visitor_name").notNull(),
+  visitorPhone: text("visitor_phone"),
+  visitorEmail: text("visitor_email"),
+  
+  // Visit details
+  visitType: text("visit_type").notNull(), // "inquiry", "trial_lesson", "registration", "complaint", "consultation", "payment"
+  visitPurpose: text("visit_purpose").notNull(), // Detailed description of purpose
+  inquiryType: text("inquiry_type"), // "course_info", "pricing", "schedule", "teacher_info", "level_assessment"
+  
+  // Language learning interests
+  interestedLanguage: text("interested_language"),
+  currentLevel: text("current_level"),
+  preferredSchedule: text("preferred_schedule"),
+  budget: decimal("budget", { precision: 10, scale: 2 }),
+  
+  // Front desk clerk handling this
+  handledBy: integer("handled_by").references(() => users.id).notNull(),
+  
+  // Status and workflow
+  status: text("status").notNull().default("pending"), // "pending", "in_progress", "completed", "follow_up_needed", "converted", "closed"
+  priority: text("priority").notNull().default("normal"), // "low", "normal", "high", "urgent"
+  
+  // Follow-up information
+  needsFollowUp: boolean("needs_follow_up").default(false),
+  followUpDate: timestamp("follow_up_date"),
+  followUpNotes: text("follow_up_notes"),
+  
+  // Conversion tracking
+  convertedToLead: boolean("converted_to_lead").default(false),
+  leadId: integer("lead_id").references(() => leads.id),
+  convertedToStudent: boolean("converted_to_student").default(false),
+  studentId: integer("student_id").references(() => users.id),
+  
+  // Additional information
+  notes: text("notes"),
+  tags: text("tags").array().default([]), // Tags for categorization
+  documents: text("documents").array().default([]), // Uploaded document references
+  
+  // Timestamps
+  visitedAt: timestamp("visited_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Phone call logs table for tracking all phone communications
+export const phoneCallLogs = pgTable("phone_call_logs", {
+  id: serial("id").primaryKey(),
+  
+  // Call details
+  callerName: text("caller_name").notNull(),
+  callerPhone: text("caller_phone").notNull(),
+  callerEmail: text("caller_email"),
+  
+  // Call information
+  callType: text("call_type").notNull(), // "incoming", "outgoing", "missed"
+  callPurpose: text("call_purpose").notNull(), // "inquiry", "follow_up", "appointment", "complaint", "support", "sales"
+  
+  // Language and course interest
+  inquiryType: text("inquiry_type"), // "course_info", "pricing", "schedule", "teacher_info", "level_assessment"
+  interestedLanguage: text("interested_language"),
+  currentLevel: text("current_level"),
+  
+  // Call handling
+  handledBy: integer("handled_by").references(() => users.id).notNull(),
+  callDuration: integer("call_duration"), // Duration in seconds
+  
+  // Call outcome
+  callResult: text("call_result").notNull(), // "information_provided", "appointment_scheduled", "follow_up_needed", "not_interested", "converted"
+  appointmentScheduled: boolean("appointment_scheduled").default(false),
+  appointmentDate: timestamp("appointment_date"),
+  
+  // Follow-up tracking
+  needsFollowUp: boolean("needs_follow_up").default(false),
+  followUpDate: timestamp("follow_up_date"),
+  followUpMethod: text("follow_up_method"), // "call", "email", "sms", "whatsapp"
+  
+  // Conversion tracking
+  convertedToLead: boolean("converted_to_lead").default(false),
+  leadId: integer("lead_id").references(() => leads.id),
+  convertedToWalkIn: boolean("converted_to_walk_in").default(false),
+  walkInId: integer("walk_in_id").references(() => frontDeskOperations.id),
+  
+  // Call notes and tags
+  callNotes: text("call_notes"),
+  tags: text("tags").array().default([]),
+  callRating: integer("call_rating"), // 1-5 quality rating for the call handling
+  
+  // Timestamps
+  callTime: timestamp("call_time").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Front desk tasks table for follow-up and task management
+export const frontDeskTasks = pgTable("front_desk_tasks", {
+  id: serial("id").primaryKey(),
+  
+  // Task details
+  title: text("title").notNull(),
+  description: text("description"),
+  taskType: text("task_type").notNull(), // "follow_up_call", "follow_up_email", "schedule_appointment", "send_brochure", "level_test", "trial_lesson", "documentation"
+  
+  // Task assignment
+  assignedTo: integer("assigned_to").references(() => users.id).notNull(),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  
+  // Task priority and status
+  priority: text("priority").notNull().default("normal"), // "low", "normal", "high", "urgent"
+  status: text("status").notNull().default("pending"), // "pending", "in_progress", "completed", "cancelled", "overdue"
+  
+  // Related records
+  relatedWalkIn: integer("related_walk_in").references(() => frontDeskOperations.id),
+  relatedCall: integer("related_call").references(() => phoneCallLogs.id),
+  relatedLead: integer("related_lead").references(() => leads.id),
+  relatedStudent: integer("related_student").references(() => users.id),
+  
+  // Contact information (for tasks involving external contact)
+  contactName: text("contact_name"),
+  contactPhone: text("contact_phone"),
+  contactEmail: text("contact_email"),
+  
+  // Task scheduling
+  dueDate: timestamp("due_date"),
+  scheduledTime: timestamp("scheduled_time"),
+  estimatedDuration: integer("estimated_duration"), // Duration in minutes
+  
+  // Task completion
+  completedAt: timestamp("completed_at"),
+  completionNotes: text("completion_notes"),
+  taskResult: text("task_result"), // "successful", "unsuccessful", "rescheduled", "no_response"
+  
+  // Follow-up generation
+  generatedFollowUp: boolean("generated_follow_up").default(false),
+  followUpTaskId: integer("follow_up_task_id").references(() => frontDeskTasks.id),
+  
+  // Additional information
+  notes: text("notes"),
+  tags: text("tags").array().default([]),
+  attachments: text("attachments").array().default([]), // File references
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Type definitions for unified packages view
 export type UnifiedPackage = {
   id: number;
@@ -6366,3 +6521,20 @@ export type CurriculumLevelCourse = typeof curriculumLevelCourses.$inferSelect;
 export type InsertCurriculumLevelCourse = z.infer<typeof insertCurriculumLevelCourseSchema>;
 export type StudentCurriculumProgress = typeof studentCurriculumProgress.$inferSelect;
 export type InsertStudentCurriculumProgress = z.infer<typeof insertStudentCurriculumProgressSchema>;
+
+// ============================================================================
+// FRONT DESK CLERK INSERT SCHEMAS AND TYPES  
+// ============================================================================
+
+// Insert schemas for Front Desk tables
+export const insertFrontDeskOperationSchema = createInsertSchema(frontDeskOperations).omit(['id', 'createdAt', 'updatedAt']);
+export const insertPhoneCallLogSchema = createInsertSchema(phoneCallLogs).omit(['id', 'createdAt', 'updatedAt']);
+export const insertFrontDeskTaskSchema = createInsertSchema(frontDeskTasks).omit(['id', 'createdAt', 'updatedAt']);
+
+// Type exports for Front Desk tables
+export type FrontDeskOperation = typeof frontDeskOperations.$inferSelect;
+export type InsertFrontDeskOperation = z.infer<typeof insertFrontDeskOperationSchema>;
+export type PhoneCallLog = typeof phoneCallLogs.$inferSelect;
+export type InsertPhoneCallLog = z.infer<typeof insertPhoneCallLogSchema>;
+export type FrontDeskTask = typeof frontDeskTasks.$inferSelect;
+export type InsertFrontDeskTask = z.infer<typeof insertFrontDeskTaskSchema>;

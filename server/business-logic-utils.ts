@@ -10,8 +10,8 @@ import { User } from '../shared/schema';
  */
 export const TEST_USER_ROLES = ['student', 'teacher', 'admin', 'mentor', 'instructor'] as const;
 export const PRODUCTION_USER_ROLES = ['Student', 'Teacher/Tutor', 'Admin', 'Mentor', 'Teacher', 
-                                       'Supervisor', 'Call Center Agent', 'Accountant',
-                                       'supervisor', 'callcenter', 'accountant'] as const;
+                                       'Supervisor', 'Call Center Agent', 'Accountant', 'Front Desk Clerk',
+                                       'supervisor', 'callcenter', 'accountant', 'front_desk_clerk'] as const;
 
 /**
  * Filter out test users from any user array

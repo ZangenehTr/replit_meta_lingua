@@ -128,6 +128,22 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
     ]
   },
   {
+    id: "front_desk",
+    name: "میز پذیرش و مراجعین",
+    nameEn: "Front Desk & Walk-ins",
+    icon: "UserCheck",
+    children: [
+      { id: "front_desk_dashboard", name: "داشبورد میز پذیرش", nameEn: "Front Desk Dashboard", icon: "Home" },
+      { id: "walk_in_management", name: "مدیریت مراجعین", nameEn: "Walk-in Management", icon: "Users" },
+      { id: "phone_call_logging", name: "ثبت تماس‌ها", nameEn: "Phone Call Logging", icon: "PhoneCall" },
+      { id: "front_desk_tasks", name: "مدیریت وظایف", nameEn: "Task Management", icon: "CheckSquare" },
+      { id: "visitor_intake", name: "پذیرش مراجعین", nameEn: "Visitor Intake", icon: "UserPlus" },
+      { id: "inquiry_tracking", name: "پیگیری استعلامات", nameEn: "Inquiry Tracking", icon: "Search" },
+      { id: "appointment_scheduling", name: "تنظیم قرارها", nameEn: "Appointment Scheduling", icon: "Calendar" },
+      { id: "trial_lesson_coordination", name: "هماهنگی کلاس آزمایشی", nameEn: "Trial Lesson Coordination", icon: "BookOpen" },
+    ]
+  },
+  {
     id: "mentor_platform",
     name: "پلتفرم منتور",
     nameEn: "Mentor Platform",
@@ -193,7 +209,38 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     subsystems: [
       "unified_workflow", "lead_management", "call_logs", "prospects", 
       "call_campaigns"
-    ]
+    ],
+    actions: {
+      "unified_workflow": ["read", "create", "update", "view", "list"],
+      "lead_management": ["read", "create", "update", "view", "list"],
+      "call_logs": ["read", "create", "update", "view", "list"],
+      "prospects": ["read", "create", "update", "view", "list"],
+      "call_campaigns": ["read", "view", "list", "participate"]
+    }
+  },
+  "front_desk_clerk": {
+    subsystems: [
+      "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
+      "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
+      "appointment_scheduling", "trial_lesson_coordination",
+      // Also give access to some call center features for coordination
+      "lead_management", "call_logs"
+    ],
+    actions: {
+      "front_desk_dashboard": ["read", "view"],
+      "walk_in_management": ["read", "create", "update", "view", "list", "delete"],
+      "phone_call_logging": ["read", "create", "update", "view", "list"],
+      "visitor_intake": ["read", "create", "update", "view", "list"],
+      "inquiry_tracking": ["read", "create", "update", "view", "list"],
+      "appointment_scheduling": ["read", "create", "update", "view", "list", "cancel"],
+      "trial_lesson_coordination": ["read", "create", "update", "view", "list", "schedule"],
+      "lead_management": ["read", "create", "update", "view", "list"],
+      "call_logs": ["read", "create", "view", "list"],
+      // Add front desk resource permissions
+      "front_desk_operations": ["read", "create", "update", "view", "list", "delete", "complete", "convert"],
+      "phone_call_logs": ["read", "create", "update", "view", "list", "delete"],
+      "front_desk_tasks": ["read", "create", "update", "view", "list", "delete", "complete", "assign", "follow_up"]
+    }
   },
   "Supervisor": {
     subsystems: [
@@ -228,6 +275,10 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "campaign_management", "website_builder",
       "unified_workflow", "lead_management", "call_logs", "prospects", "call_campaigns",
       "mentor_dashboard", "mentee_management", "mentoring_sessions", "mentoring_progress",
+      // Front Desk subsystems
+      "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
+      "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
+      "appointment_scheduling", "trial_lesson_coordination",
       // New subsystems found in backend routes
       "mst_test_builder", "placement_test", "linguaquest", "ecommerce_system", "book_ecommerce",
       "shopping_cart", "course_roadmaps", "roadmap_templates", "roadmap_instances", 

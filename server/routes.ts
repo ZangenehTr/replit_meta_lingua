@@ -46,6 +46,7 @@ import { ollamaService } from "./ollama-service";
 import { ollamaInstaller } from "./ollama-installer";
 import { setupAiTrainingRoutes } from "./ai-training-routes";
 import { setupAiAnalysisRoutes } from "./ai-analysis-routes";
+import { authenticate, authorizePermission } from "./auth";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -98,7 +99,17 @@ import {
   type Lead,
   type InsertLead,
   type CommunicationLog,
-  type InsertCommunicationLog
+  type InsertCommunicationLog,
+  // Front desk imports
+  insertFrontDeskOperationSchema,
+  insertPhoneCallLogSchema,
+  insertFrontDeskTaskSchema,
+  type FrontDeskOperation,
+  type InsertFrontDeskOperation,
+  type PhoneCallLog,
+  type InsertPhoneCallLog,
+  type FrontDeskTask,
+  type InsertFrontDeskTask
 } from "@shared/schema";
 import mammoth from "mammoth";
 import { 
@@ -23972,6 +23983,297 @@ Meta Lingua Academy`;
   const { threeDContentToolsRouter } = await import('./routes/3d-content-tools-routes');
   app.use('/api/3d-tools', threeDContentToolsRouter);
   console.log('✅ 3D Content Creation Tools routes registered (Lesson Builder, Templates, Mobile Optimization)');
+
+  // ========================
+  // FRONT DESK CLERK SYSTEM API ROUTES
+  // ========================
+  
+  // Front Desk Operations Routes
+  app.get("/api/front-desk/operations", authenticate, authorizePermission('front_desk_operations', 'list'), async (req: any, res) => {
+    try {
+      const { status, handledBy, visitType, date } = req.query;
+      const filters = { status, handledBy: handledBy ? parseInt(handledBy) : undefined, visitType, date };
+      const operations = await storage.getFrontDeskOperations(filters);
+      res.json(operations);
+    } catch (error) {
+      console.error('Error fetching front desk operations:', error);
+      res.status(500).json({ error: 'Failed to fetch operations', message: error.message });
+    }
+  });
+
+  app.get("/api/front-desk/operations/:id", authenticate, authorizePermission('front_desk_operations', 'read'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const operation = await storage.getFrontDeskOperation(id);
+      if (!operation) {
+        return res.status(404).json({ error: 'Operation not found' });
+      }
+      res.json(operation);
+    } catch (error) {
+      console.error('Error fetching front desk operation:', error);
+      res.status(500).json({ error: 'Failed to fetch operation', message: error.message });
+    }
+  });
+
+  app.post("/api/front-desk/operations", authenticate, authorizePermission('front_desk_operations', 'create'), async (req: any, res) => {
+    try {
+      const validation = insertFrontDeskOperationSchema.safeParse({ ...req.body, handledBy: req.user.id });
+      if (!validation.success) {
+        return res.status(400).json({ error: 'Invalid data', details: validation.error.issues });
+      }
+      
+      const operation = await storage.createFrontDeskOperation(validation.data);
+      res.status(201).json(operation);
+    } catch (error) {
+      console.error('Error creating front desk operation:', error);
+      res.status(500).json({ error: 'Failed to create operation', message: error.message });
+    }
+  });
+
+  app.put("/api/front-desk/operations/:id", authenticate, authorizePermission('front_desk_operations', 'update'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const operation = await storage.updateFrontDeskOperation(id, req.body);
+      if (!operation) {
+        return res.status(404).json({ error: 'Operation not found' });
+      }
+      res.json(operation);
+    } catch (error) {
+      console.error('Error updating front desk operation:', error);
+      res.status(500).json({ error: 'Failed to update operation', message: error.message });
+    }
+  });
+
+  app.post("/api/front-desk/operations/:id/complete", authenticate, authorizePermission('front_desk_operations', 'complete'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { completionNotes } = req.body;
+      const operation = await storage.completeFrontDeskOperation(id, completionNotes);
+      if (!operation) {
+        return res.status(404).json({ error: 'Operation not found' });
+      }
+      res.json(operation);
+    } catch (error) {
+      console.error('Error completing front desk operation:', error);
+      res.status(500).json({ error: 'Failed to complete operation', message: error.message });
+    }
+  });
+
+  app.post("/api/front-desk/operations/:id/convert-to-lead", authenticate, authorizePermission('front_desk_operations', 'convert'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const leadData = { ...req.body, createdBy: req.user.id };
+      const result = await storage.convertFrontDeskOperationToLead(id, leadData);
+      res.json(result);
+    } catch (error) {
+      console.error('Error converting operation to lead:', error);
+      res.status(500).json({ error: 'Failed to convert operation', message: error.message });
+    }
+  });
+
+  app.delete("/api/front-desk/operations/:id", authenticate, authorizePermission('front_desk_operations', 'delete'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFrontDeskOperation(id);
+      res.json({ message: 'Operation deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting front desk operation:', error);
+      res.status(500).json({ error: 'Failed to delete operation', message: error.message });
+    }
+  });
+
+  // Phone Call Logs Routes
+  app.get("/api/front-desk/calls", authenticate, authorizePermission('phone_call_logs', 'list'), async (req: any, res) => {
+    try {
+      const { callType, handledBy, date, result } = req.query;
+      const filters = { callType, handledBy: handledBy ? parseInt(handledBy) : undefined, date, result };
+      const calls = await storage.getPhoneCallLogs(filters);
+      res.json(calls);
+    } catch (error) {
+      console.error('Error fetching phone call logs:', error);
+      res.status(500).json({ error: 'Failed to fetch call logs', message: error.message });
+    }
+  });
+
+  app.get("/api/front-desk/calls/:id", authenticate, authorizePermission('phone_call_logs', 'read'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const call = await storage.getPhoneCallLog(id);
+      if (!call) {
+        return res.status(404).json({ error: 'Call log not found' });
+      }
+      res.json(call);
+    } catch (error) {
+      console.error('Error fetching phone call log:', error);
+      res.status(500).json({ error: 'Failed to fetch call log', message: error.message });
+    }
+  });
+
+  app.post("/api/front-desk/calls", authenticate, authorizePermission('phone_call_logs', 'create'), async (req: any, res) => {
+    try {
+      const validation = insertPhoneCallLogSchema.safeParse({ ...req.body, handledBy: req.user.id });
+      if (!validation.success) {
+        return res.status(400).json({ error: 'Invalid data', details: validation.error.issues });
+      }
+      
+      const call = await storage.createPhoneCallLog(validation.data);
+      res.status(201).json(call);
+    } catch (error) {
+      console.error('Error creating phone call log:', error);
+      res.status(500).json({ error: 'Failed to create call log', message: error.message });
+    }
+  });
+
+  app.put("/api/front-desk/calls/:id", authenticate, authorizePermission('phone_call_logs', 'update'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const call = await storage.updatePhoneCallLog(id, req.body);
+      if (!call) {
+        return res.status(404).json({ error: 'Call log not found' });
+      }
+      res.json(call);
+    } catch (error) {
+      console.error('Error updating phone call log:', error);
+      res.status(500).json({ error: 'Failed to update call log', message: error.message });
+    }
+  });
+
+  app.delete("/api/front-desk/calls/:id", authenticate, authorizePermission('phone_call_logs', 'delete'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePhoneCallLog(id);
+      res.json({ message: 'Call log deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting phone call log:', error);
+      res.status(500).json({ error: 'Failed to delete call log', message: error.message });
+    }
+  });
+
+  // Front Desk Tasks Routes
+  app.get("/api/front-desk/tasks", authenticate, authorizePermission('front_desk_tasks', 'list'), async (req: any, res) => {
+    try {
+      const { assignedTo, status, taskType, dueDate } = req.query;
+      const filters = { assignedTo: assignedTo ? parseInt(assignedTo) : undefined, status, taskType, dueDate };
+      const tasks = await storage.getFrontDeskTasks(filters);
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching front desk tasks:', error);
+      res.status(500).json({ error: 'Failed to fetch tasks', message: error.message });
+    }
+  });
+
+  app.get("/api/front-desk/tasks/my", authenticate, authorizePermission('front_desk_tasks', 'list'), async (req: any, res) => {
+    try {
+      const tasks = await storage.getFrontDeskTasksByUser(req.user.id);
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching user tasks:', error);
+      res.status(500).json({ error: 'Failed to fetch tasks', message: error.message });
+    }
+  });
+
+  app.get("/api/front-desk/tasks/today", authenticate, authorizePermission('front_desk_tasks', 'list'), async (req: any, res) => {
+    try {
+      const tasks = await storage.getTodaysFrontDeskTasks(req.user.id);
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching today\'s tasks:', error);
+      res.status(500).json({ error: 'Failed to fetch today\'s tasks', message: error.message });
+    }
+  });
+
+  app.get("/api/front-desk/tasks/overdue", authenticate, authorizePermission('front_desk_tasks', 'list'), async (req: any, res) => {
+    try {
+      const tasks = await storage.getOverdueFrontDeskTasks();
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching overdue tasks:', error);
+      res.status(500).json({ error: 'Failed to fetch overdue tasks', message: error.message });
+    }
+  });
+
+  app.get("/api/front-desk/tasks/:id", authenticate, authorizePermission('front_desk_tasks', 'read'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.getFrontDeskTask(id);
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      res.json(task);
+    } catch (error) {
+      console.error('Error fetching front desk task:', error);
+      res.status(500).json({ error: 'Failed to fetch task', message: error.message });
+    }
+  });
+
+  app.post("/api/front-desk/tasks", authenticate, authorizePermission('front_desk_tasks', 'create'), async (req: any, res) => {
+    try {
+      const validation = insertFrontDeskTaskSchema.safeParse({ ...req.body, createdBy: req.user.id, assignedTo: req.body.assignedTo || req.user.id });
+      if (!validation.success) {
+        return res.status(400).json({ error: 'Invalid data', details: validation.error.issues });
+      }
+      
+      const task = await storage.createFrontDeskTask(validation.data);
+      res.status(201).json(task);
+    } catch (error) {
+      console.error('Error creating front desk task:', error);
+      res.status(500).json({ error: 'Failed to create task', message: error.message });
+    }
+  });
+
+  app.put("/api/front-desk/tasks/:id", authenticate, authorizePermission('front_desk_tasks', 'update'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.updateFrontDeskTask(id, req.body);
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      res.json(task);
+    } catch (error) {
+      console.error('Error updating front desk task:', error);
+      res.status(500).json({ error: 'Failed to update task', message: error.message });
+    }
+  });
+
+  app.post("/api/front-desk/tasks/:id/complete", authenticate, authorizePermission('front_desk_tasks', 'complete'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { completionNotes, taskResult } = req.body;
+      const task = await storage.completeFrontDeskTask(id, completionNotes, taskResult);
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      res.json(task);
+    } catch (error) {
+      console.error('Error completing front desk task:', error);
+      res.status(500).json({ error: 'Failed to complete task', message: error.message });
+    }
+  });
+
+  app.post("/api/front-desk/tasks/:id/follow-up", authenticate, authorizePermission('front_desk_tasks', 'follow_up'), async (req: any, res) => {
+    try {
+      const parentTaskId = parseInt(req.params.id);
+      const followUpData = { ...req.body, createdBy: req.user.id, assignedTo: req.body.assignedTo || req.user.id };
+      const followUpTask = await storage.generateFollowUpTask(parentTaskId, followUpData);
+      res.status(201).json(followUpTask);
+    } catch (error) {
+      console.error('Error generating follow-up task:', error);
+      res.status(500).json({ error: 'Failed to generate follow-up task', message: error.message });
+    }
+  });
+
+  app.delete("/api/front-desk/tasks/:id", authenticate, authorizePermission('front_desk_tasks', 'delete'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFrontDeskTask(id);
+      res.json({ message: 'Task deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting front desk task:', error);
+      res.status(500).json({ error: 'Failed to delete task', message: error.message });
+    }
+  });
+
+  console.log('✅ Front Desk Clerk System API routes registered (Operations, Call Logs, Tasks)');
 
   // ========================
   // ERROR HANDLING - 404 for non-existent endpoints

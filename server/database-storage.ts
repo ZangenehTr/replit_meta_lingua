@@ -129,7 +129,11 @@ import {
   type Cart, type CartInsert, type CartItem, type CartItemInsert,
   type Order, type OrderInsert, type OrderItem, type OrderItemInsert,
   type UserAddress, type UserAddressInsert, type ShippingOrder, type ShippingOrderInsert,
-  type CourierTracking, type CourierTrackingInsert
+  type CourierTracking, type CourierTrackingInsert,
+  // Front desk tables and types
+  frontDeskOperations, phoneCallLogs, frontDeskTasks,
+  type FrontDeskOperation, type InsertFrontDeskOperation,
+  type PhoneCallLog, type InsertPhoneCallLog, type FrontDeskTask, type InsertFrontDeskTask
 } from "@shared/schema";
 
 // Placement test tables imported from main schema above
@@ -15545,5 +15549,321 @@ export class DatabaseStorage implements IStorage {
 
   async getLatestTrackingUpdate(shippingOrderId: number): Promise<CourierTracking | undefined> {
     throw new Error("Method not implemented - book e-commerce system not yet available in DatabaseStorage");
+  }
+
+  // ============================================================================
+  // FRONT DESK CLERK SYSTEM IMPLEMENTATIONS
+  // ============================================================================
+
+  // Front desk operations management
+  async getFrontDeskOperations(filters?: { status?: string; handledBy?: number; visitType?: string; date?: string }): Promise<FrontDeskOperation[]> {
+    let query = db.select().from(frontDeskOperations);
+    
+    const conditions = [];
+    if (filters?.status) conditions.push(eq(frontDeskOperations.status, filters.status));
+    if (filters?.handledBy) conditions.push(eq(frontDeskOperations.handledBy, filters.handledBy));
+    if (filters?.visitType) conditions.push(eq(frontDeskOperations.visitType, filters.visitType));
+    if (filters?.date) {
+      const startDate = new Date(filters.date);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+      conditions.push(gte(frontDeskOperations.visitedAt, startDate));
+      conditions.push(lt(frontDeskOperations.visitedAt, endDate));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(frontDeskOperations.visitedAt));
+  }
+
+  async getFrontDeskOperation(id: number): Promise<FrontDeskOperation | undefined> {
+    const [operation] = await db.select().from(frontDeskOperations).where(eq(frontDeskOperations.id, id));
+    return operation;
+  }
+
+  async getFrontDeskOperationsByUser(handledBy: number): Promise<FrontDeskOperation[]> {
+    return await db.select().from(frontDeskOperations)
+      .where(eq(frontDeskOperations.handledBy, handledBy))
+      .orderBy(desc(frontDeskOperations.visitedAt));
+  }
+
+  async getFrontDeskOperationsByDateRange(startDate: string, endDate: string): Promise<FrontDeskOperation[]> {
+    return await db.select().from(frontDeskOperations)
+      .where(and(
+        gte(frontDeskOperations.visitedAt, new Date(startDate)),
+        lte(frontDeskOperations.visitedAt, new Date(endDate))
+      ))
+      .orderBy(desc(frontDeskOperations.visitedAt));
+  }
+
+  async getPendingFrontDeskOperations(): Promise<FrontDeskOperation[]> {
+    return await db.select().from(frontDeskOperations)
+      .where(or(
+        eq(frontDeskOperations.status, "pending"),
+        eq(frontDeskOperations.status, "in_progress")
+      ))
+      .orderBy(desc(frontDeskOperations.visitedAt));
+  }
+
+  async createFrontDeskOperation(data: InsertFrontDeskOperation): Promise<FrontDeskOperation> {
+    const [operation] = await db.insert(frontDeskOperations).values(data).returning();
+    return operation;
+  }
+
+  async updateFrontDeskOperation(id: number, updates: Partial<FrontDeskOperation>): Promise<FrontDeskOperation | undefined> {
+    const [operation] = await db.update(frontDeskOperations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(frontDeskOperations.id, id))
+      .returning();
+    return operation;
+  }
+
+  async completeFrontDeskOperation(id: number, completionNotes?: string): Promise<FrontDeskOperation | undefined> {
+    const [operation] = await db.update(frontDeskOperations)
+      .set({ 
+        status: "completed", 
+        completedAt: new Date(),
+        notes: completionNotes || undefined,
+        updatedAt: new Date()
+      })
+      .where(eq(frontDeskOperations.id, id))
+      .returning();
+    return operation;
+  }
+
+  async convertFrontDeskOperationToLead(id: number, leadData: any): Promise<{ operation: FrontDeskOperation; lead: any }> {
+    // Create lead from front desk operation
+    const [lead] = await db.insert(leads).values(leadData).returning();
+    
+    // Update operation to mark as converted
+    const [operation] = await db.update(frontDeskOperations)
+      .set({ 
+        convertedToLead: true,
+        leadId: lead.id,
+        status: "converted",
+        updatedAt: new Date()
+      })
+      .where(eq(frontDeskOperations.id, id))
+      .returning();
+
+    return { operation: operation!, lead };
+  }
+
+  async deleteFrontDeskOperation(id: number): Promise<void> {
+    await db.delete(frontDeskOperations).where(eq(frontDeskOperations.id, id));
+  }
+
+  // Phone call logs management  
+  async getPhoneCallLogs(filters?: { callType?: string; handledBy?: number; date?: string; result?: string }): Promise<PhoneCallLog[]> {
+    let query = db.select().from(phoneCallLogs);
+    
+    const conditions = [];
+    if (filters?.callType) conditions.push(eq(phoneCallLogs.callType, filters.callType));
+    if (filters?.handledBy) conditions.push(eq(phoneCallLogs.handledBy, filters.handledBy));
+    if (filters?.result) conditions.push(eq(phoneCallLogs.callResult, filters.result));
+    if (filters?.date) {
+      const startDate = new Date(filters.date);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+      conditions.push(gte(phoneCallLogs.callTime, startDate));
+      conditions.push(lt(phoneCallLogs.callTime, endDate));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(phoneCallLogs.callTime));
+  }
+
+  async getPhoneCallLog(id: number): Promise<PhoneCallLog | undefined> {
+    const [callLog] = await db.select().from(phoneCallLogs).where(eq(phoneCallLogs.id, id));
+    return callLog;
+  }
+
+  async getPhoneCallLogsByUser(handledBy: number): Promise<PhoneCallLog[]> {
+    return await db.select().from(phoneCallLogs)
+      .where(eq(phoneCallLogs.handledBy, handledBy))
+      .orderBy(desc(phoneCallLogs.callTime));
+  }
+
+  async getPhoneCallLogsByDateRange(startDate: string, endDate: string): Promise<PhoneCallLog[]> {
+    return await db.select().from(phoneCallLogs)
+      .where(and(
+        gte(phoneCallLogs.callTime, new Date(startDate)),
+        lte(phoneCallLogs.callTime, new Date(endDate))
+      ))
+      .orderBy(desc(phoneCallLogs.callTime));
+  }
+
+  async getPhoneCallLogsByNumber(phoneNumber: string): Promise<PhoneCallLog[]> {
+    return await db.select().from(phoneCallLogs)
+      .where(eq(phoneCallLogs.callerPhone, phoneNumber))
+      .orderBy(desc(phoneCallLogs.callTime));
+  }
+
+  async createPhoneCallLog(data: InsertPhoneCallLog): Promise<PhoneCallLog> {
+    const [callLog] = await db.insert(phoneCallLogs).values(data).returning();
+    return callLog;
+  }
+
+  async updatePhoneCallLog(id: number, updates: Partial<PhoneCallLog>): Promise<PhoneCallLog | undefined> {
+    const [callLog] = await db.update(phoneCallLogs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(phoneCallLogs.id, id))
+      .returning();
+    return callLog;
+  }
+
+  async deletePhoneCallLog(id: number): Promise<void> {
+    await db.delete(phoneCallLogs).where(eq(phoneCallLogs.id, id));
+  }
+
+  // Front desk tasks management
+  async getFrontDeskTasks(filters?: { assignedTo?: number; status?: string; taskType?: string; dueDate?: string }): Promise<FrontDeskTask[]> {
+    let query = db.select().from(frontDeskTasks);
+    
+    const conditions = [];
+    if (filters?.assignedTo) conditions.push(eq(frontDeskTasks.assignedTo, filters.assignedTo));
+    if (filters?.status) conditions.push(eq(frontDeskTasks.status, filters.status));
+    if (filters?.taskType) conditions.push(eq(frontDeskTasks.taskType, filters.taskType));
+    if (filters?.dueDate) conditions.push(eq(frontDeskTasks.dueDate, new Date(filters.dueDate)));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(asc(frontDeskTasks.dueDate), desc(frontDeskTasks.createdAt));
+  }
+
+  async getFrontDeskTask(id: number): Promise<FrontDeskTask | undefined> {
+    const [task] = await db.select().from(frontDeskTasks).where(eq(frontDeskTasks.id, id));
+    return task;
+  }
+
+  async getFrontDeskTasksByUser(assignedTo: number): Promise<FrontDeskTask[]> {
+    return await db.select().from(frontDeskTasks)
+      .where(eq(frontDeskTasks.assignedTo, assignedTo))
+      .orderBy(asc(frontDeskTasks.dueDate), desc(frontDeskTasks.createdAt));
+  }
+
+  async getFrontDeskTasksByStatus(status: string): Promise<FrontDeskTask[]> {
+    return await db.select().from(frontDeskTasks)
+      .where(eq(frontDeskTasks.status, status))
+      .orderBy(asc(frontDeskTasks.dueDate));
+  }
+
+  async getOverdueFrontDeskTasks(): Promise<FrontDeskTask[]> {
+    const now = new Date();
+    return await db.select().from(frontDeskTasks)
+      .where(and(
+        lt(frontDeskTasks.dueDate, now),
+        inArray(frontDeskTasks.status, ["pending", "in_progress"])
+      ))
+      .orderBy(asc(frontDeskTasks.dueDate));
+  }
+
+  async getTodaysFrontDeskTasks(assignedTo?: number): Promise<FrontDeskTask[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const conditions = [
+      gte(frontDeskTasks.dueDate, today),
+      lt(frontDeskTasks.dueDate, tomorrow)
+    ];
+    
+    if (assignedTo) {
+      conditions.push(eq(frontDeskTasks.assignedTo, assignedTo));
+    }
+    
+    return await db.select().from(frontDeskTasks)
+      .where(and(...conditions))
+      .orderBy(asc(frontDeskTasks.dueDate));
+  }
+
+  async createFrontDeskTask(data: InsertFrontDeskTask): Promise<FrontDeskTask> {
+    const [task] = await db.insert(frontDeskTasks).values(data).returning();
+    return task;
+  }
+
+  async updateFrontDeskTask(id: number, updates: Partial<FrontDeskTask>): Promise<FrontDeskTask | undefined> {
+    const [task] = await db.update(frontDeskTasks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(frontDeskTasks.id, id))
+      .returning();
+    return task;
+  }
+
+  async assignFrontDeskTask(id: number, assignedTo: number): Promise<FrontDeskTask | undefined> {
+    const [task] = await db.update(frontDeskTasks)
+      .set({ assignedTo, updatedAt: new Date() })
+      .where(eq(frontDeskTasks.id, id))
+      .returning();
+    return task;
+  }
+
+  async completeFrontDeskTask(id: number, completionNotes?: string, taskResult?: string): Promise<FrontDeskTask | undefined> {
+    const [task] = await db.update(frontDeskTasks)
+      .set({ 
+        status: "completed",
+        completedAt: new Date(),
+        completionNotes,
+        taskResult,
+        updatedAt: new Date()
+      })
+      .where(eq(frontDeskTasks.id, id))
+      .returning();
+    return task;
+  }
+
+  async generateFollowUpTask(parentTaskId: number, followUpData: Partial<InsertFrontDeskTask>): Promise<FrontDeskTask> {
+    // Get the parent task to copy relevant information
+    const parentTask = await this.getFrontDeskTask(parentTaskId);
+    
+    if (!parentTask) {
+      throw new Error("Parent task not found");
+    }
+    
+    // Create follow-up task with data from parent task
+    const followUpTask: InsertFrontDeskTask = {
+      title: followUpData.title || `Follow-up: ${parentTask.title}`,
+      description: followUpData.description || `Follow-up task for: ${parentTask.title}`,
+      taskType: followUpData.taskType || "follow_up_call",
+      assignedTo: followUpData.assignedTo || parentTask.assignedTo,
+      createdBy: followUpData.createdBy || parentTask.createdBy,
+      priority: followUpData.priority || "normal",
+      status: "pending",
+      relatedWalkIn: parentTask.relatedWalkIn,
+      relatedCall: parentTask.relatedCall,
+      relatedLead: parentTask.relatedLead,
+      relatedStudent: parentTask.relatedStudent,
+      contactName: followUpData.contactName || parentTask.contactName,
+      contactPhone: followUpData.contactPhone || parentTask.contactPhone,
+      contactEmail: followUpData.contactEmail || parentTask.contactEmail,
+      dueDate: followUpData.dueDate,
+      notes: followUpData.notes || `Generated as follow-up for task #${parentTaskId}`,
+      ...followUpData
+    };
+    
+    const [task] = await db.insert(frontDeskTasks).values(followUpTask).returning();
+    
+    // Update parent task to indicate follow-up was generated
+    await db.update(frontDeskTasks)
+      .set({ 
+        generatedFollowUp: true,
+        followUpTaskId: task.id,
+        updatedAt: new Date()
+      })
+      .where(eq(frontDeskTasks.id, parentTaskId));
+    
+    return task;
+  }
+
+  async deleteFrontDeskTask(id: number): Promise<void> {
+    await db.delete(frontDeskTasks).where(eq(frontDeskTasks.id, id));
   }
 }

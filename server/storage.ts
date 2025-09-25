@@ -115,7 +115,10 @@ import {
   type Cart, type CartInsert, type CartItem, type CartItemInsert,
   type Order, type OrderInsert, type OrderItem, type OrderItemInsert,
   type UserAddress, type UserAddressInsert, type ShippingOrder, type ShippingOrderInsert,
-  type CourierTracking, type CourierTrackingInsert
+  type CourierTracking, type CourierTrackingInsert,
+  // Front desk types
+  type FrontDeskOperation, type InsertFrontDeskOperation,
+  type PhoneCallLog, type InsertPhoneCallLog, type FrontDeskTask, type InsertFrontDeskTask
 } from "@shared/schema";
 // Unified testing system types
 import {
@@ -1206,6 +1209,46 @@ export interface IStorage {
   getCourierTracking(shippingOrderId: number): Promise<CourierTracking[]>;
   createCourierTracking(data: CourierTrackingInsert): Promise<CourierTracking>;
   getLatestTrackingUpdate(shippingOrderId: number): Promise<CourierTracking | undefined>;
+
+  // ============================================================================
+  // FRONT DESK CLERK SYSTEM STORAGE METHODS
+  // ============================================================================
+
+  // Front desk operations management
+  getFrontDeskOperations(filters?: { status?: string; handledBy?: number; visitType?: string; date?: string }): Promise<FrontDeskOperation[]>;
+  getFrontDeskOperation(id: number): Promise<FrontDeskOperation | undefined>;
+  getFrontDeskOperationsByUser(handledBy: number): Promise<FrontDeskOperation[]>;
+  getFrontDeskOperationsByDateRange(startDate: string, endDate: string): Promise<FrontDeskOperation[]>;
+  getPendingFrontDeskOperations(): Promise<FrontDeskOperation[]>;
+  createFrontDeskOperation(data: InsertFrontDeskOperation): Promise<FrontDeskOperation>;
+  updateFrontDeskOperation(id: number, updates: Partial<FrontDeskOperation>): Promise<FrontDeskOperation | undefined>;
+  completeFrontDeskOperation(id: number, completionNotes?: string): Promise<FrontDeskOperation | undefined>;
+  convertFrontDeskOperationToLead(id: number, leadData: any): Promise<{ operation: FrontDeskOperation; lead: any }>;
+  deleteFrontDeskOperation(id: number): Promise<void>;
+
+  // Phone call logs management  
+  getPhoneCallLogs(filters?: { callType?: string; handledBy?: number; date?: string; result?: string }): Promise<PhoneCallLog[]>;
+  getPhoneCallLog(id: number): Promise<PhoneCallLog | undefined>;
+  getPhoneCallLogsByUser(handledBy: number): Promise<PhoneCallLog[]>;
+  getPhoneCallLogsByDateRange(startDate: string, endDate: string): Promise<PhoneCallLog[]>;
+  getPhoneCallLogsByNumber(phoneNumber: string): Promise<PhoneCallLog[]>;
+  createPhoneCallLog(data: InsertPhoneCallLog): Promise<PhoneCallLog>;
+  updatePhoneCallLog(id: number, updates: Partial<PhoneCallLog>): Promise<PhoneCallLog | undefined>;
+  deletePhoneCallLog(id: number): Promise<void>;
+
+  // Front desk tasks management
+  getFrontDeskTasks(filters?: { assignedTo?: number; status?: string; taskType?: string; dueDate?: string }): Promise<FrontDeskTask[]>;
+  getFrontDeskTask(id: number): Promise<FrontDeskTask | undefined>;
+  getFrontDeskTasksByUser(assignedTo: number): Promise<FrontDeskTask[]>;
+  getFrontDeskTasksByStatus(status: string): Promise<FrontDeskTask[]>;
+  getOverdueFrontDeskTasks(): Promise<FrontDeskTask[]>;
+  getTodaysFrontDeskTasks(assignedTo?: number): Promise<FrontDeskTask[]>;
+  createFrontDeskTask(data: InsertFrontDeskTask): Promise<FrontDeskTask>;
+  updateFrontDeskTask(id: number, updates: Partial<FrontDeskTask>): Promise<FrontDeskTask | undefined>;
+  assignFrontDeskTask(id: number, assignedTo: number): Promise<FrontDeskTask | undefined>;
+  completeFrontDeskTask(id: number, completionNotes?: string, taskResult?: string): Promise<FrontDeskTask | undefined>;
+  generateFollowUpTask(parentTaskId: number, followUpData: Partial<InsertFrontDeskTask>): Promise<FrontDeskTask>;
+  deleteFrontDeskTask(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
