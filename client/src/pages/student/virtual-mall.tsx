@@ -430,10 +430,16 @@ export default function VirtualMall() {
     setMessages(prev => [...prev, emmaMessage]);
   };
 
-  // Safe price formatter using snake_case naming - fixed for actual DB schema
+  // Safe price formatter using snake_case naming - handles both string and number prices
   const format_safe_price = (book: CourseBook, locale: string = 'fa-IR'): string => {
-    // Check if price exists and is valid
-    const amount = typeof book.price === 'number' ? book.price : undefined;
+    // Handle both string and number price formats from API
+    let amount: number | undefined;
+    
+    if (typeof book.price === 'number') {
+      amount = book.price;
+    } else if (typeof book.price === 'string') {
+      amount = parseFloat(book.price);
+    }
     
     if (amount == null || isNaN(amount)) return 'Price unavailable';
     
