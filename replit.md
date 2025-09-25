@@ -90,3 +90,18 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **Video Infrastructure**: Local filesystem storage and streaming (no YouTube, Vimeo, or external CDNs)
 - **File Storage**: Local server filesystem (no AWS S3, Cloudinary, or external storage)
 - **Self-Hosting**: ZERO dependencies on non-Iranian servers - complete independence from all external services
+
+## Future Enhancements
+
+### Lingo Bookstore Mini-Game (Alternative Approach)
+**Phase 1: Hybrid Enhancement (Planned)**
+- Transform existing Virtual Mall into focused "Lingo Bookstore" experience
+- Remove Maya, Emma, and other shopgirls - keep only Lexi as primary guide
+- Add Lexi as overlay guide with professional voice synthesis and synchronized subtitles
+- Implement level-adaptive dialogue system matching student proficiency (A1-C2)
+- Create history-based book recommendation engine
+- Design elegant single-panel UI for book details and cart actions (avoid duplications)
+- Add guided search functionality where Lexi helps learner find books
+- Implement chat and search in refined overlay interface with RTL support
+- Ensure non-rotating, accessible 3D environment optimized for Iranian mobile devices
+- CTO action required: Resolve Microsoft Edge TTS voice quality issues
