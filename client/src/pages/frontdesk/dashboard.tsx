@@ -44,11 +44,25 @@ interface PhoneCallLog {
   id: number;
   callerName: string;
   callerPhone: string;
+  callerEmail?: string;
   callType: string;
+  callPurpose: string;
   callResult: string;
   callTime: string;
-  duration?: number;
+  callStartTime?: string;
+  callEndTime?: string;
+  callDuration?: number;
+  callNotes?: string;
+  actionItems?: string;
+  nextSteps?: string;
+  customerSatisfaction?: number;
+  urgencyLevel: string;
+  needsFollowUp: boolean;
+  followUpDate?: string;
+  followUpMethod?: string;
+  studentId?: number;
   handledBy: number;
+  tags: string[];
 }
 
 interface FrontDeskTask {
@@ -150,6 +164,35 @@ export default function FrontDeskDashboard() {
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getCallResultColor = (result: string) => {
+    switch (result) {
+      case 'successful':
+        return 'bg-green-100 text-green-800';
+      case 'scheduled_callback':
+        return 'bg-blue-100 text-blue-800';
+      case 'voicemail':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'no_answer':
+      case 'busy':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'urgent':
+        return 'bg-red-100 text-red-800';
+      case 'high':
+        return 'bg-orange-100 text-orange-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
     }
   };
 
@@ -297,7 +340,7 @@ export default function FrontDeskDashboard() {
                   <CardTitle>Recent Phone Calls</CardTitle>
                   <CardDescription>Log and track phone interactions</CardDescription>
                 </div>
-                <Button data-testid="btn-new-call">
+                <Button onClick={() => setLocation('/frontdesk/call-logging')} data-testid="btn-new-call">
                   <PhoneCall className="h-4 w-4 mr-2" />
                   Log Call
                 </Button>
@@ -311,24 +354,61 @@ export default function FrontDeskDashboard() {
               ) : (
                 <div className="space-y-4">
                   {calls.slice(0, 10).map((call: PhoneCallLog) => (
-                    <div key={call.id} className="flex items-center justify-between p-4 border rounded-lg" data-testid={`call-${call.id}`}>
+                    <div key={call.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50" data-testid={`call-${call.id}`}>
                       <div className="flex-1">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 mb-2">
                           <h3 className="font-semibold">{call.callerName}</h3>
-                          <Badge variant="outline">{call.callType}</Badge>
-                          <Badge className={call.callResult === 'successful' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                            {call.callResult}
+                          <Badge variant="outline" className={call.callType === 'incoming' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}>
+                            {call.callType}
                           </Badge>
+                          <Badge className={getCallResultColor(call.callResult)}>
+                            {call.callResult.replace('_', ' ')}
+                          </Badge>
+                          {call.urgencyLevel && call.urgencyLevel !== 'medium' && (
+                            <Badge variant="outline" className={getUrgencyColor(call.urgencyLevel)}>
+                              {call.urgencyLevel} urgency
+                            </Badge>
+                          )}
+                          {call.needsFollowUp && (
+                            <Badge variant="outline" className="bg-orange-50 text-orange-700">
+                              Follow-up needed
+                            </Badge>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{call.callerPhone}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span className="font-mono">{call.callerPhone}</span>
+                          <span>•</span>
+                          <span>{call.callPurpose?.replace('_', ' ')}</span>
+                          {call.customerSatisfaction && (
+                            <div className="flex items-center gap-1">
+                              <span>•</span>
+                              <div className="flex items-center">
+                                {Array.from({ length: 5 }, (_, i) => (
+                                  <Star key={i} className={`h-3 w-3 ${i < call.customerSatisfaction ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
                           {new Date(call.callTime).toLocaleDateString()} at {new Date(call.callTime).toLocaleTimeString()}
-                          {call.duration && ` • ${call.duration}s`}
+                          {call.callDuration && ` • Duration: ${Math.floor(call.callDuration / 60)}:${(call.callDuration % 60).toString().padStart(2, '0')}`}
                         </p>
+                        {call.callNotes && (
+                          <p className="text-sm text-gray-700 mt-2 line-clamp-2">{call.callNotes}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
+                        {call.needsFollowUp && (
+                          <Button variant="outline" size="sm" className="text-orange-600 hover:bg-orange-50" data-testid={`btn-followup-${call.id}`}>
+                            <Calendar className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button variant="outline" size="sm" data-testid={`btn-view-call-${call.id}`}>
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" data-testid={`btn-edit-call-${call.id}`}>
+                          <Edit className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>

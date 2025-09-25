@@ -24149,6 +24149,83 @@ Meta Lingua Academy`;
     }
   });
 
+  // Phone Call Draft endpoint for auto-save functionality
+  app.post("/api/front-desk/calls/draft", authenticate, authorizePermission('phone_call_logs', 'create'), async (req: any, res) => {
+    try {
+      // For now, we'll store drafts in the same table with a draft flag
+      // In production, you might want a separate drafts table
+      const draftData = {
+        ...req.body,
+        handledBy: req.user.id,
+        callNotes: (req.body.callNotes || '') + ' [DRAFT]',
+        tags: [...(req.body.tags || []), 'draft']
+      };
+      
+      const validation = insertPhoneCallLogSchema.safeParse(draftData);
+      if (!validation.success) {
+        return res.status(400).json({ error: 'Invalid data', details: validation.error.issues });
+      }
+      
+      const draft = await storage.createPhoneCallLog(validation.data);
+      res.status(201).json({ message: 'Draft saved', draftId: draft.id });
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      res.status(500).json({ error: 'Failed to save draft', message: error.message });
+    }
+  });
+
+  // Get staff members for follow-up assignments
+  app.get("/api/admin/staff", authenticate, authorizePermission('users', 'list'), async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const staff = users.filter(user => 
+        ['Admin', 'Teacher/Tutor', 'Supervisor', 'Call Center Agent', 'Front Desk'].includes(user.role)
+      );
+      res.json(staff);
+    } catch (error) {
+      console.error('Error fetching staff:', error);
+      res.status(500).json({ error: 'Failed to fetch staff', message: error.message });
+    }
+  });
+
+  // Auto-create follow-up task endpoint
+  app.post("/api/front-desk/calls/:callId/follow-up-task", authenticate, authorizePermission('front_desk_tasks', 'create'), async (req: any, res) => {
+    try {
+      const callId = parseInt(req.params.callId);
+      const call = await storage.getPhoneCallLog(callId);
+      
+      if (!call) {
+        return res.status(404).json({ error: 'Call log not found' });
+      }
+
+      const taskData = {
+        title: `Follow-up call: ${call.callerName}`,
+        description: `Follow-up for call regarding: ${call.callPurpose}`,
+        taskType: 'follow_up_call',
+        assignedTo: req.body.assignedTo || req.user.id,
+        createdBy: req.user.id,
+        priority: req.body.urgencyLevel || 'medium',
+        relatedCall: callId,
+        contactName: call.callerName,
+        contactPhone: call.callerPhone,
+        contactEmail: call.callerEmail,
+        dueDate: req.body.followUpDate ? new Date(req.body.followUpDate) : new Date(Date.now() + 24 * 60 * 60 * 1000),
+        notes: req.body.nextSteps || call.callNotes,
+      };
+
+      const validation = insertFrontDeskTaskSchema.safeParse(taskData);
+      if (!validation.success) {
+        return res.status(400).json({ error: 'Invalid task data', details: validation.error.issues });
+      }
+
+      const task = await storage.createFrontDeskTask(validation.data);
+      res.status(201).json(task);
+    } catch (error) {
+      console.error('Error creating follow-up task:', error);
+      res.status(500).json({ error: 'Failed to create follow-up task', message: error.message });
+    }
+  });
+
   // Front Desk Tasks Routes
   app.get("/api/front-desk/tasks", authenticate, authorizePermission('front_desk_tasks', 'list'), async (req: any, res) => {
     try {

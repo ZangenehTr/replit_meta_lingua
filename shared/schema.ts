@@ -6296,10 +6296,21 @@ export const phoneCallLogs = pgTable("phone_call_logs", {
   convertedToWalkIn: boolean("converted_to_walk_in").default(false),
   walkInId: integer("walk_in_id").references(() => frontDeskOperations.id),
   
-  // Call notes and tags
+  // Call timing (enhanced)
+  callStartTime: timestamp("call_start_time"),
+  callEndTime: timestamp("call_end_time"),
+  
+  // Call notes and additional details
   callNotes: text("call_notes"),
+  actionItems: text("action_items"), // Commitments made during call
+  nextSteps: text("next_steps"), // Recommended actions
+  urgencyLevel: text("urgency_level").default("medium"), // "low", "medium", "high", "urgent"
+  customerSatisfaction: integer("customer_satisfaction"), // 1-5 customer mood/satisfaction
   tags: text("tags").array().default([]),
   callRating: integer("call_rating"), // 1-5 quality rating for the call handling
+  
+  // Student link for existing customers
+  studentId: integer("student_id").references(() => users.id),
   
   // Timestamps
   callTime: timestamp("call_time").defaultNow(),
