@@ -544,7 +544,7 @@ export default function FrontDeskDashboard() {
       id: 'schedule-trial',
       label: isRTL ? 'کلاس آزمایشی' : 'Schedule Trial',
       icon: Calendar,
-      action: () => setSelectedView('trials'),
+      action: () => setLocation('/frontdesk/trial-scheduling'),
       category: 'trial',
       description: isRTL ? 'برنامه‌ریزی کلاس آزمایشی' : 'Schedule trial lesson'
     },

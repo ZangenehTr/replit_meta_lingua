@@ -39,6 +39,7 @@ import {
   Brain,
   Video,
   Award,
+  Cube,
   Target,
   ArrowUpRight,
   ArrowDownRight,
@@ -589,6 +590,28 @@ export const AdminDashboard = () => {
                   >
                     <BookOpen className="h-6 w-6 text-green-500 mb-1" />
                     <span className="text-xs text-gray-600">{t('admin:courses', 'دوره‌ها')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/admin/video-courses">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Video className="h-6 w-6 text-purple-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('admin:videoCourses', 'دوره‌های ویدیویی')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/admin/3d-lesson-builder">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Cube className="h-6 w-6 text-blue-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('admin:threeDLessons.threeDLessonBuilder', '3D درس‌ساز')}</span>
                   </motion.div>
                 </Link>
                 

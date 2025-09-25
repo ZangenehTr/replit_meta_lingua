@@ -7041,6 +7041,331 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =====================================================================
+  // 3D LESSON MANAGEMENT API ENDPOINTS
+  // =====================================================================
+  
+  // Get all 3D lessons for admin management
+  app.get("/api/admin/3d-lessons", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const { courseId, language, level, templateType, search } = req.query;
+      
+      let query = db.select({
+        threeDLesson: threeDVideoLessons,
+        course: courses,
+        threeDContent: threeDLessonContent,
+        creator: users
+      })
+      .from(threeDVideoLessons)
+      .innerJoin(courses, eq(threeDVideoLessons.courseId, courses.id))
+      .innerJoin(threeDLessonContent, eq(threeDVideoLessons.threeDContentId, threeDLessonContent.id))
+      .innerJoin(users, eq(threeDVideoLessons.createdBy, users.id));
+      
+      let lessons = await query;
+      
+      // Apply filters
+      if (courseId) {
+        lessons = lessons.filter(l => l.threeDLesson.courseId === parseInt(courseId));
+      }
+      if (language) {
+        lessons = lessons.filter(l => l.threeDLesson.language === language);
+      }
+      if (level) {
+        lessons = lessons.filter(l => l.threeDLesson.level === level);
+      }
+      if (templateType) {
+        lessons = lessons.filter(l => l.threeDLesson.templateType === templateType);
+      }
+      if (search) {
+        const searchLower = search.toLowerCase();
+        lessons = lessons.filter(l => 
+          l.threeDLesson.title.toLowerCase().includes(searchLower) ||
+          l.threeDLesson.description?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // For teachers, only show their own lessons
+      if (req.user.role === 'Teacher/Tutor') {
+        lessons = lessons.filter(l => l.threeDLesson.createdBy === req.user.id);
+      }
+      
+      res.json(lessons.map(l => ({
+        ...l.threeDLesson,
+        course: l.course,
+        threeDContent: l.threeDContent,
+        creator: {
+          id: l.creator.id,
+          firstName: l.creator.firstName,
+          lastName: l.creator.lastName
+        }
+      })));
+    } catch (error) {
+      console.error('Error fetching 3D lessons:', error);
+      res.status(500).json({ message: "Failed to fetch 3D lessons" });
+    }
+  });
+  
+  // Get single 3D lesson by ID
+  app.get("/api/admin/3d-lessons/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      
+      const [lessonData] = await db.select({
+        threeDLesson: threeDVideoLessons,
+        course: courses,
+        threeDContent: threeDLessonContent,
+        creator: users
+      })
+      .from(threeDVideoLessons)
+      .innerJoin(courses, eq(threeDVideoLessons.courseId, courses.id))
+      .innerJoin(threeDLessonContent, eq(threeDVideoLessons.threeDContentId, threeDLessonContent.id))
+      .innerJoin(users, eq(threeDVideoLessons.createdBy, users.id))
+      .where(eq(threeDVideoLessons.id, lessonId));
+      
+      if (!lessonData) {
+        return res.status(404).json({ message: "3D lesson not found" });
+      }
+      
+      // Check permissions for teachers
+      if (req.user.role === 'Teacher/Tutor' && lessonData.threeDLesson.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json({
+        ...lessonData.threeDLesson,
+        course: lessonData.course,
+        threeDContent: lessonData.threeDContent,
+        creator: {
+          id: lessonData.creator.id,
+          firstName: lessonData.creator.firstName,
+          lastName: lessonData.creator.lastName
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching 3D lesson:', error);
+      res.status(500).json({ message: "Failed to fetch 3D lesson" });
+    }
+  });
+  
+  // Create a new 3D lesson
+  app.post("/api/admin/3d-lessons", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const threeDLessonData = insertThreeDVideoLessonSchema.parse({
+        ...req.body,
+        createdBy: req.user.id
+      });
+      
+      // Validate course exists and user has permission
+      const [course] = await db.select()
+        .from(courses)
+        .where(eq(courses.id, threeDLessonData.courseId));
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // For teachers, ensure they own the course
+      if (req.user.role === 'Teacher/Tutor' && course.instructorId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Create 3D content first
+      const threeDContentData = insertThreeDLessonContentSchema.parse(req.body.threeDContent || {
+        sceneConfig: { camera: { position: [0, 5, 10] }, lighting: { ambient: 0.4 } },
+        models: [],
+        materials: [],
+        hotspots: [],
+        animations: [],
+        particleEffects: []
+      });
+      
+      const [threeDContent] = await db.insert(threeDLessonContent)
+        .values(threeDContentData)
+        .returning();
+      
+      // Create 3D lesson
+      const [threeDLesson] = await db.insert(threeDVideoLessons)
+        .values({
+          ...threeDLessonData,
+          threeDContentId: threeDContent.id
+        })
+        .returning();
+      
+      res.status(201).json({
+        message: "3D lesson created successfully",
+        lesson: threeDLesson,
+        threeDContent
+      });
+    } catch (error) {
+      console.error('Error creating 3D lesson:', error);
+      res.status(500).json({ message: "Failed to create 3D lesson" });
+    }
+  });
+  
+  // Update a 3D lesson
+  app.put("/api/admin/3d-lessons/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      
+      // Check if lesson exists and user has permission
+      const [existingLesson] = await db.select()
+        .from(threeDVideoLessons)
+        .where(eq(threeDVideoLessons.id, lessonId));
+      
+      if (!existingLesson) {
+        return res.status(404).json({ message: "3D lesson not found" });
+      }
+      
+      if (req.user.role === 'Teacher/Tutor' && existingLesson.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updateData = {
+        ...req.body,
+        lastModifiedBy: req.user.id,
+        updatedAt: new Date()
+      };
+      delete updateData.id;
+      delete updateData.createdBy;
+      delete updateData.createdAt;
+      delete updateData.threeDContent;
+      
+      // Update 3D lesson
+      const [updatedLesson] = await db.update(threeDVideoLessons)
+        .set(updateData)
+        .where(eq(threeDVideoLessons.id, lessonId))
+        .returning();
+      
+      // Update 3D content if provided
+      if (req.body.threeDContent) {
+        const threeDContentUpdate = {
+          ...req.body.threeDContent,
+          updatedAt: new Date()
+        };
+        delete threeDContentUpdate.id;
+        delete threeDContentUpdate.createdAt;
+        
+        await db.update(threeDLessonContent)
+          .set(threeDContentUpdate)
+          .where(eq(threeDLessonContent.id, existingLesson.threeDContentId));
+      }
+      
+      res.json({
+        message: "3D lesson updated successfully",
+        lesson: updatedLesson
+      });
+    } catch (error) {
+      console.error('Error updating 3D lesson:', error);
+      res.status(500).json({ message: "Failed to update 3D lesson" });
+    }
+  });
+  
+  // Delete a 3D lesson
+  app.delete("/api/admin/3d-lessons/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      
+      // Check if lesson exists and user has permission
+      const [existingLesson] = await db.select()
+        .from(threeDVideoLessons)
+        .where(eq(threeDVideoLessons.id, lessonId));
+      
+      if (!existingLesson) {
+        return res.status(404).json({ message: "3D lesson not found" });
+      }
+      
+      if (req.user.role === 'Teacher/Tutor' && existingLesson.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Delete 3D lesson (this will cascade to progress records)
+      await db.delete(threeDVideoLessons)
+        .where(eq(threeDVideoLessons.id, lessonId));
+      
+      // Delete associated 3D content
+      await db.delete(threeDLessonContent)
+        .where(eq(threeDLessonContent.id, existingLesson.threeDContentId));
+      
+      res.json({ message: "3D lesson deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting 3D lesson:', error);
+      res.status(500).json({ message: "Failed to delete 3D lesson" });
+    }
+  });
+  
+  // Publish/unpublish a 3D lesson
+  app.post("/api/admin/3d-lessons/:id/publish", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const { isPublished } = req.body;
+      
+      // Check if lesson exists and user has permission
+      const [existingLesson] = await db.select()
+        .from(threeDVideoLessons)
+        .where(eq(threeDVideoLessons.id, lessonId));
+      
+      if (!existingLesson) {
+        return res.status(404).json({ message: "3D lesson not found" });
+      }
+      
+      if (req.user.role === 'Teacher/Tutor' && existingLesson.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const [updatedLesson] = await db.update(threeDVideoLessons)
+        .set({ 
+          isPublished: Boolean(isPublished),
+          updatedAt: new Date()
+        })
+        .where(eq(threeDVideoLessons.id, lessonId))
+        .returning();
+      
+      res.json({
+        message: `3D lesson ${isPublished ? 'published' : 'unpublished'} successfully`,
+        lesson: updatedLesson
+      });
+    } catch (error) {
+      console.error('Error publishing 3D lesson:', error);
+      res.status(500).json({ message: "Failed to publish 3D lesson" });
+    }
+  });
+  
+  // Get 3D lessons for a specific course
+  app.get("/api/admin/courses/:courseId/3d-lessons", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      
+      const lessons = await db.select({
+        threeDLesson: threeDVideoLessons,
+        threeDContent: threeDLessonContent,
+        creator: users
+      })
+      .from(threeDVideoLessons)
+      .innerJoin(threeDLessonContent, eq(threeDVideoLessons.threeDContentId, threeDLessonContent.id))
+      .innerJoin(users, eq(threeDVideoLessons.createdBy, users.id))
+      .where(eq(threeDVideoLessons.courseId, courseId))
+      .orderBy(threeDVideoLessons.orderIndex);
+      
+      // For teachers, only show their own lessons
+      const filteredLessons = req.user.role === 'Teacher/Tutor' 
+        ? lessons.filter(l => l.threeDLesson.createdBy === req.user.id)
+        : lessons;
+      
+      res.json(filteredLessons.map(l => ({
+        ...l.threeDLesson,
+        threeDContent: l.threeDContent,
+        creator: {
+          id: l.creator.id,
+          firstName: l.creator.firstName,
+          lastName: l.creator.lastName
+        }
+      })));
+    } catch (error) {
+      console.error('Error fetching course 3D lessons:', error);
+      res.status(500).json({ message: "Failed to fetch course 3D lessons" });
+    }
+  });
+
   // Video Courses Endpoints (for Admin and Teachers)
   
   // Get all video courses

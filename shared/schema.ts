@@ -5852,7 +5852,7 @@ export const voiceExercisesGuest = pgTable("voice_exercises_guest", {
 // 3D Lesson Content and Assets
 export const threeDLessonContent = pgTable("3d_lesson_content", {
   id: serial("id").primaryKey(),
-  lessonId: integer("lesson_id").references(() => linguaquestLessons.id).notNull(),
+  lessonId: integer("lesson_id").references(() => linguaquestLessons.id), // Optional for standalone 3D lessons
   
   // 3D Scene Configuration
   sceneConfig: jsonb("scene_config").notNull(), // Camera, lighting, environment setup
@@ -5876,6 +5876,95 @@ export const threeDLessonContent = pgTable("3d_lesson_content", {
   difficulty: text("difficulty").default("intermediate"), // beginner, elementary, intermediate, upper_intermediate, advanced
   renderQuality: text("render_quality").default("medium"), // low, medium, high
   targetFps: integer("target_fps").default(30),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// 3D Video Lessons - Bridge between video courses and 3D lessons
+export const threeDVideoLessons = pgTable("3d_video_lessons", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  videoLessonId: integer("video_lesson_id").references(() => videoLessons.id), // Optional: link to video lesson
+  threeDContentId: integer("3d_content_id").references(() => threeDLessonContent.id).notNull(),
+  
+  // Lesson metadata
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+  
+  // Learning configuration
+  language: varchar("language", { length: 10 }).notNull(),
+  level: varchar("level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
+  skillFocus: varchar("skill_focus", { length: 50 }), // speaking, listening, vocabulary, grammar
+  
+  // Content organization
+  moduleId: integer("module_id"), // for grouping lessons
+  orderIndex: integer("order_index").notNull(),
+  
+  // Learning objectives
+  vocabularyWords: text("vocabulary_words").array().default([]),
+  grammarTopics: text("grammar_topics").array().default([]),
+  learningObjectives: text("learning_objectives").array().default([]),
+  
+  // Assessment and progress
+  estimatedDurationMinutes: integer("estimated_duration_minutes").default(15),
+  xpReward: integer("xp_reward").default(100),
+  maxAttempts: integer("max_attempts").default(3),
+  passingScore: integer("passing_score").default(80), // percentage
+  
+  // Access and publishing
+  isFree: boolean("is_free").default(false),
+  isPublished: boolean("is_published").default(false),
+  isInteractive: boolean("is_interactive").default(true),
+  
+  // Template and assets
+  templateType: varchar("template_type", { length: 50 }), // vocabulary_scene, grammar_world, conversation_space
+  assetUrls: jsonb("asset_urls").default([]), // 3D models, textures, audio files
+  
+  // Analytics
+  viewCount: integer("view_count").default(0),
+  completionRate: decimal("completion_rate", { precision: 5, scale: 2 }).default("0"),
+  averageScore: decimal("average_score", { precision: 5, scale: 2 }).default("0"),
+  
+  // Authoring
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  lastModifiedBy: integer("last_modified_by").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// 3D Lesson Progress Tracking
+export const threeDLessonProgress = pgTable("3d_lesson_progress", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  threeDLessonId: integer("3d_lesson_id").references(() => threeDVideoLessons.id).notNull(),
+  
+  // Progress tracking
+  interactionsCompleted: jsonb("interactions_completed").default([]), // Array of completed hotspot IDs
+  currentScore: integer("current_score").default(0),
+  totalInteractions: integer("total_interactions").default(0),
+  completedInteractions: integer("completed_interactions").default(0),
+  
+  // Engagement metrics
+  timeSpent: integer("time_spent").default(0), // seconds
+  attemptsCount: integer("attempts_count").default(0),
+  hintsUsed: integer("hints_used").default(0),
+  
+  // Learning analytics
+  errorCount: integer("error_count").default(0),
+  accuracyRate: decimal("accuracy_rate", { precision: 5, scale: 2 }).default("0"),
+  engagementScore: decimal("engagement_score", { precision: 5, scale: 2 }).default("0"),
+  
+  // Status
+  completed: boolean("completed").default(false),
+  passed: boolean("passed").default(false),
+  
+  // Timestamps
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  lastInteractionAt: timestamp("last_interaction_at"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -6108,6 +6197,8 @@ export const insertLinguaquestLessonSchema = createInsertSchema(linguaquestLesso
 export const insertGuestProgressTrackingSchema = createInsertSchema(guestProgressTracking).omit(['id', 'createdAt', 'updatedAt']);
 export const insertVoiceExercisesGuestSchema = createInsertSchema(voiceExercisesGuest).omit(['id', 'createdAt']);
 export const insertThreeDLessonContentSchema = createInsertSchema(threeDLessonContent).omit(['id', 'createdAt', 'updatedAt']);
+export const insertThreeDVideoLessonSchema = createInsertSchema(threeDVideoLessons).omit(['id', 'createdAt', 'updatedAt']);
+export const insertThreeDLessonProgressSchema = createInsertSchema(threeDLessonProgress).omit(['id', 'createdAt', 'updatedAt']);
 export const insertFreemiumConversionTrackingSchema = createInsertSchema(freemiumConversionTracking).omit(['id', 'createdAt']);
 export const insertVisitorAchievementSchema = createInsertSchema(visitorAchievements).omit(['id', 'createdAt', 'unlockedAt']);
 
@@ -6127,6 +6218,10 @@ export type VoiceExercisesGuest = typeof voiceExercisesGuest.$inferSelect;
 export type VoiceExercisesGuestInsert = z.infer<typeof insertVoiceExercisesGuestSchema>;
 export type ThreeDLessonContent = typeof threeDLessonContent.$inferSelect;
 export type ThreeDLessonContentInsert = z.infer<typeof insertThreeDLessonContentSchema>;
+export type ThreeDVideoLesson = typeof threeDVideoLessons.$inferSelect;
+export type ThreeDVideoLessonInsert = z.infer<typeof insertThreeDVideoLessonSchema>;
+export type ThreeDLessonProgress = typeof threeDLessonProgress.$inferSelect;
+export type ThreeDLessonProgressInsert = z.infer<typeof insertThreeDLessonProgressSchema>;
 export type FreemiumConversionTracking = typeof freemiumConversionTracking.$inferSelect;
 export type FreemiumConversionTrackingInsert = z.infer<typeof insertFreemiumConversionTrackingSchema>;
 export type VisitorAchievement = typeof visitorAchievements.$inferSelect;

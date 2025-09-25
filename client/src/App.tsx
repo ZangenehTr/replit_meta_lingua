@@ -33,6 +33,7 @@ import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-da
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
 import AdminVideoCourses from "@/pages/admin/video-courses";
+import ThreeDLessonBuilder from "@/pages/admin/3d-lesson-builder";
 import { AdminTeacherManagement } from "@/pages/admin/teacher-management";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system-simple";
@@ -73,6 +74,7 @@ import WalkInIntake from "@/pages/frontdesk/walk-in-intake";
 import CallLogging from "@/pages/frontdesk/call-logging";
 import CallerHistory from "@/pages/frontdesk/caller-history";
 import SmsTemplatesPage from "@/pages/frontdesk/sms-templates";
+import TrialLessonScheduling from "@/pages/frontdesk/trial-scheduling";
 import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
 // Student pages
@@ -284,6 +286,11 @@ function Router() {
       <Route path="/admin/video-courses">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminVideoCourses />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/3d-lesson-builder">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <ThreeDLessonBuilder />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/financial">
@@ -534,6 +541,11 @@ function Router() {
       <Route path="/frontdesk/sms-templates">
         <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <SmsTemplatesPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/frontdesk/trial-scheduling">
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+          <TrialLessonScheduling />
         </RoleProtectedRoute>
       </Route>
       <Route path="/student">
