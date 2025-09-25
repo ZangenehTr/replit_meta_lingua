@@ -13,7 +13,7 @@ import {
 } from './business-logic-utils';
 import { 
   users, userProfiles, userSessions, rolePermissions, courses, enrollments,
-  sessions, messages, homework, payments, notifications,
+  sessions, messages, homework, payments, notifications, otpCodes,
   achievements, userAchievements, userStats, dailyGoals, adminSettings,
   walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
   skillAssessments, learningActivities, progressSnapshots, leads,
@@ -22,9 +22,9 @@ import {
   callernCallHistory, callernSyllabusTopics, studentCallernProgress, rooms,
   callernRoadmaps, callernRoadmapSteps, studentRoadmapProgress, courseRoadmapProgress,
   callernPresence, callernSpeechSegments, callernScoresStudent, callernScoresTeacher, callernScoringEvents,
-  books, carts, cart_items,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
+  type OtpCode, type InsertOtpCode,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
   type Session, type InsertSession, type Message, type InsertMessage,
   type Homework, type InsertHomework, type Payment, type InsertPayment,
@@ -44,7 +44,6 @@ import {
   type CallernPresence, type InsertCallernPresence, type CallernSpeechSegment, type InsertCallernSpeechSegment,
   type CallernScoresStudent, type InsertCallernScoresStudent, type CallernScoresTeacher, type InsertCallernScoresTeacher,
   type CallernScoringEvent, type InsertCallernScoringEvent,
-  type Book, type Cart, type CartInsert, type CartItem, type CartItemInsert,
   type CourseRoadmapProgress, type InsertCourseRoadmapProgress,
   type Room, type InsertRoom,
   // Testing subsystem types
@@ -268,15 +267,36 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userSessions.token, token));
   }
 
-  // Role permissions
-  async checkUserPermission(role: string, subsystem: string): Promise<boolean> {
+  // Role permissions - FIXED: Now properly validates both resource AND action
+  async checkUserPermission(role: string, resource: string, action: string): Promise<boolean> {
     const [permission] = await db
       .select()
       .from(rolePermissions)
       .where(eq(rolePermissions.role, role));
     
-    if (!permission?.subsystemPermissions) return false;
-    return permission.subsystemPermissions.includes(subsystem);
+    if (!permission) return false;
+    
+    // First check if role has access to the resource (subsystem level)
+    const hasResourceAccess = permission.subsystemPermissions?.includes(resource);
+    if (!hasResourceAccess) return false;
+    
+    // Then check action-level permissions if they exist
+    if (permission.actionPermissions && typeof permission.actionPermissions === 'object') {
+      const resourceActions = permission.actionPermissions[resource];
+      if (Array.isArray(resourceActions)) {
+        // If action-level permissions are defined, check them
+        return resourceActions.includes(action);
+      }
+    }
+    
+    // Fallback: If no action-level permissions defined, allow basic CRUD for backward compatibility
+    // But Admin role gets all actions, others get limited actions
+    if (role === 'Admin') {
+      return true; // Admin has all actions
+    }
+    
+    // For non-admin roles, only allow read actions by default for security
+    return action === 'read' || action === 'list' || action === 'view';
   }
 
   async getRolePermissions(role: string): Promise<RolePermission[]> {
@@ -14526,6 +14546,145 @@ export class DatabaseStorage implements IStorage {
       console.error('❌ Error marking password reset token as used:', error);
     }
   }
+
+  // OTP verification methods
+  async getUserByIdentifier(identifier: string): Promise<User | undefined> {
+    try {
+      // Check if identifier is email or phone
+      const isEmail = identifier.includes('@');
+      const result = await this.db.select()
+        .from(users)
+        .where(isEmail ? eq(users.email, identifier) : eq(users.phoneNumber, identifier))
+        .limit(1);
+      
+      return result[0];
+    } catch (error) {
+      console.error('❌ Error getting user by identifier:', error);
+      return undefined;
+    }
+  }
+
+  async createOtpCode(otp: InsertOtpCode): Promise<OtpCode> {
+    try {
+      const result = await this.db.insert(otpCodes)
+        .values(otp)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('❌ Error creating OTP code:', error);
+      throw error;
+    }
+  }
+
+  async getActiveOtpCode(identifier: string, purpose: string): Promise<OtpCode | undefined> {
+    try {
+      const result = await this.db.select()
+        .from(otpCodes)
+        .where(
+          and(
+            eq(otpCodes.identifier, identifier),
+            eq(otpCodes.purpose, purpose),
+            isNull(otpCodes.consumedAt),
+            gte(otpCodes.expiresAt, new Date())
+          )
+        )
+        .orderBy(desc(otpCodes.createdAt))
+        .limit(1);
+      
+      return result[0];
+    } catch (error) {
+      console.error('❌ Error getting active OTP code:', error);
+      return undefined;
+    }
+  }
+
+  async incrementOtpAttempts(otpId: number): Promise<void> {
+    try {
+      await this.db.update(otpCodes)
+        .set({ attempts: sql`${otpCodes.attempts} + 1` })
+        .where(eq(otpCodes.id, otpId));
+    } catch (error) {
+      console.error('❌ Error incrementing OTP attempts:', error);
+      throw error;
+    }
+  }
+
+  async consumeOtpCode(otpId: number): Promise<void> {
+    try {
+      await this.db.update(otpCodes)
+        .set({ consumedAt: new Date() })
+        .where(eq(otpCodes.id, otpId));
+    } catch (error) {
+      console.error('❌ Error consuming OTP code:', error);
+      throw error;
+    }
+  }
+
+  async invalidateActiveOtps(identifier: string, purpose: string): Promise<void> {
+    try {
+      await this.db.update(otpCodes)
+        .set({ consumedAt: new Date() })
+        .where(
+          and(
+            eq(otpCodes.identifier, identifier),
+            eq(otpCodes.purpose, purpose),
+            isNull(otpCodes.consumedAt),
+            gte(otpCodes.expiresAt, new Date())
+          )
+        );
+    } catch (error) {
+      console.error('❌ Error invalidating active OTPs:', error);
+      throw error;
+    }
+  }
+
+  async deleteExpiredOtpCodes(): Promise<void> {
+    try {
+      await this.db.delete(otpCodes)
+        .where(lt(otpCodes.expiresAt, new Date()));
+    } catch (error) {
+      console.error('❌ Error deleting expired OTP codes:', error);
+      throw error;
+    }
+  }
+
+  async getOtpAttemptsByIdentifier(identifier: string, since: Date): Promise<number> {
+    try {
+      const result = await this.db.select({ count: sql<number>`count(*)` })
+        .from(otpCodes)
+        .where(
+          and(
+            eq(otpCodes.identifier, identifier),
+            gte(otpCodes.createdAt, since)
+          )
+        );
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('❌ Error getting OTP attempts by identifier:', error);
+      return 0;
+    }
+  }
+
+  async getOtpAttemptsByIp(ip: string, since: Date): Promise<number> {
+    try {
+      const result = await this.db.select({ count: sql<number>`count(*)` })
+        .from(otpCodes)
+        .where(
+          and(
+            eq(otpCodes.ip, ip),
+            gte(otpCodes.createdAt, since)
+          )
+        );
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('❌ Error getting OTP attempts by IP:', error);
+      return 0;
+    }
+  }
+
 
   // AI models method
   async getAiModels(): Promise<any[]> {

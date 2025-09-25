@@ -69,15 +69,15 @@ export function setupCallernPackageRoutes(app: Express, requireRole: any) {
 
       // Create the roadmap if provided
       if (roadmap && roadmap.roadmapName) {
-        const newRoadmap = await storage.db.insert(storage.db.callernRoadmaps).values({
+        const newRoadmap = await storage.createCallernRoadmap({
           packageId: newPackage.id,
           roadmapName: roadmap.roadmapName,
           description: roadmap.description,
           totalSteps: roadmap.steps.length,
           estimatedHours: roadmap.estimatedHours,
-          createdBy: req.user.id,
+          createdBy: req.user.userId,
           isActive: true
-        }).returning();
+        });
 
         // Create the roadmap steps
         if (roadmap.steps && roadmap.steps.length > 0) {

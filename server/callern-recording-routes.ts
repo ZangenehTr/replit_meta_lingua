@@ -31,34 +31,12 @@ const upload = multer({
   }
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'meta-lingua-secret-key';
-
-// Use the same authentication middleware as the main app
-const authenticateToken = async (req: any, res: any, next: any) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const user = await storage.getUser(decoded.userId);
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
-    }
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(403).json({ message: 'Invalid token' });
-  }
-};
+// Use the centralized authentication middleware
+import { authenticate, type AuthenticatedRequest } from './auth';
 
 export function setupCallernRecordingRoutes(app: Express) {
   // Upload and save recording route
-  app.post('/api/callern/upload-recording', authenticateToken, upload.single('recording'), async (req, res) => {
+  app.post('/api/callern/upload-recording', authenticate, upload.single('recording'), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No recording file provided' });
@@ -110,7 +88,7 @@ export function setupCallernRecordingRoutes(app: Express) {
   });
 
   // Get call history for a user
-  app.get('/api/callern/call-history', authenticateToken, async (req, res) => {
+  app.get('/api/callern/call-history', authenticate, async (req, res) => {
     try {
       const userId = (req as any).user?.id;
       const userRole = (req as any).user?.role || 'Student';
@@ -135,7 +113,7 @@ export function setupCallernRecordingRoutes(app: Express) {
   });
 
   // Serve recordings (authenticated)
-  app.get('/recordings/:year/:filename', authenticateToken, async (req, res) => {
+  app.get('/recordings/:year/:filename', authenticate, async (req, res) => {
     try {
       const filePath = path.join(RECORDINGS_DIR, req.params.year, req.params.filename);
       

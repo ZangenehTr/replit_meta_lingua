@@ -5,7 +5,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses } from "@shared/schema";
+import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses } from "@shared/schema";
 import { eq, sql, and, desc } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -58,6 +58,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { generatePayslipPDF, generateCertificatePDF } from "./utils/pdf-generator";
 import { validateIranianPhone, validateIranianEmail, validatePersianText } from "./utils/iranian-validation";
+import rateLimit from 'express-rate-limit';
+import { OtpService } from './services/otp-service';
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -217,14 +219,49 @@ const audioUpload = multer({
   }
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
-
-// Deployment error checker
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  console.error('❌ DEPLOYMENT ERROR: JWT_SECRET environment variable is required in production');
-  console.error('Add JWT_SECRET=your-secret-key to your .env file');
+// Critical security: JWT_SECRET must be provided via environment variable
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is required but not set. Application cannot start.');
   process.exit(1);
 }
+
+// Security: Rate limiting middleware for authentication endpoints
+const authRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 10, // Limit each IP to 10 auth requests per windowMs
+  message: {
+    error: 'Too many authentication attempts. Please try again later.',
+    errorFa: 'تعداد تلاش‌های احراز هویت زیاد است. لطفاً بعداً تلاش کنید.',
+    retryAfter: '1 hour'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const otpRequestRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window  
+  max: 5, // Limit each IP to 5 OTP requests per hour
+  message: {
+    error: 'Too many OTP requests. Please try again later.',
+    errorFa: 'تعداد درخواست کد تأیید زیاد است. لطفاً بعداً تلاش کنید.',
+    retryAfter: '1 hour'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const otpVerifyRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minute window
+  max: 10, // Limit each IP to 10 OTP verification attempts per 15 minutes
+  message: {
+    error: 'Too many OTP verification attempts. Please try again later.',
+    errorFa: 'تعداد تلاش‌های تأیید کد زیاد است. لطفاً بعداً تلاش کنید.',  
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Helper functions to calculate real data from database
 async function calculateStudentAttendance(studentId: number): Promise<number> {
@@ -1557,87 +1594,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // In-memory storage for OTPs
-  const otpStore = new Map<string, {
-    code: string;
-    email: string;
-    phoneNumber: string;
-    expiresAt: Date;
-    attempts: number;
-  }>();
+  // Import OTP service
+  const { OtpService } = await import('./services/otp-service');
 
-  // Clean expired OTPs every 5 minutes
-  setInterval(() => {
-    const now = new Date();
-    for (const [key, otp] of otpStore.entries()) {
-      if (otp.expiresAt < now) {
-        otpStore.delete(key);
-      }
-    }
-  }, 5 * 60 * 1000);
-
-  // Request OTP endpoint
-  app.post("/api/auth/request-otp", async (req, res) => {
+  // Clean expired OTPs every 30 minutes
+  setInterval(async () => {
     try {
-      const { email } = req.body;
-
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        // Don't reveal if user exists or not for security
-        return res.json({ message: "If the email exists, an OTP has been sent to the registered phone number" });
-      }
-
-      if (!user.phoneNumber) {
-        return res.status(400).json({ message: "No phone number registered for this account" });
-      }
-
-      // Generate secure 6-digit OTP using crypto
-      const otpCode = crypto.randomInt(100000, 999999).toString();
-      
-      // Store OTP with 5-minute expiration
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-      otpStore.set(email, {
-        code: otpCode,
-        email: email,
-        phoneNumber: user.phoneNumber,
-        expiresAt: expiresAt,
-        attempts: 0
-      });
-
-      // Send OTP via SMS
-      try {
-        const settings = await storage.getAdminSettings();
-        const smsTemplate = settings?.otpSmsTemplate || 
-          `Your Meta Lingua login code is: {otp}\n\n` +
-          `This code will expire in 5 minutes.\n` +
-          `Do not share this code with anyone.`;
-        
-        const smsMessage = smsTemplate.replace('{otp}', otpCode);
-        
-        if (settings?.kavenegarEnabled && settings?.kavenegarApiKey) {
-          const { kavenegarService } = await import('./kavenegar-service');
-          await kavenegarService.sendSimpleSMS(user.phoneNumber, smsMessage);
-          console.log(`OTP sent to ${user.phoneNumber} for ${email}`);
-        } else {
-          console.log('SMS not configured - OTP would be:', otpCode);
-        }
-      } catch (smsError) {
-        console.error('Error sending OTP SMS:', smsError);
-        // Continue anyway - user can still use password login
-      }
-
-      res.json({ 
-        message: "OTP sent to registered phone number",
-        expiresIn: "5 minutes"
-      });
+      await OtpService.cleanupExpiredOtps();
     } catch (error) {
-      console.error("OTP request error:", error);
-      res.status(500).json({ message: "Failed to send OTP" });
+      console.error('Error cleaning up expired OTPs:', error);
+    }
+  }, 30 * 60 * 1000);
+
+  // Request OTP endpoint - supports both email and phone
+  app.post("/api/auth/request-otp", otpRequestRateLimit, async (req, res) => {
+    try {
+      const { identifier, channel = 'sms', purpose = 'login' } = req.body;
+      const ip = req.ip || req.connection.remoteAddress || '';
+      const locale = req.headers['accept-language']?.includes('fa') ? 'fa' : 'en';
+
+      if (!identifier) {
+        return res.status(400).json({ 
+          message: locale === 'fa' 
+            ? 'ایمیل یا شماره تلفن ضروری است'
+            : 'Email or phone number is required' 
+        });
+      }
+
+      // Determine if identifier is email or phone
+      const isEmail = identifier.includes('@');
+      const isPhone = !isEmail && /^\+?[0-9\s\-\(\)]+$/.test(identifier);
+
+      if (!isEmail && !isPhone) {
+        return res.status(400).json({ 
+          message: locale === 'fa'
+            ? 'فرمت ایمیل یا شماره تلفن نامعتبر است'
+            : 'Invalid email or phone number format'
+        });
+      }
+
+      // For phone numbers, validate Iranian format if it's a phone
+      let formattedIdentifier = identifier;
+      if (isPhone) {
+        if (!OtpService.isValidIranianPhoneNumber(identifier)) {
+          return res.status(400).json({ 
+            message: locale === 'fa'
+              ? 'فرمت شماره تلفن ایرانی نامعتبر است'
+              : 'Invalid Iranian phone number format'
+          });
+        }
+        formattedIdentifier = OtpService.formatIranianPhoneNumber(identifier);
+      }
+
+      // Check if user exists for login purpose
+      let userId;
+      if (purpose === 'login') {
+        const user = await storage.getUserByIdentifier(formattedIdentifier);
+        if (!user) {
+          // Don't reveal if user exists for security
+          return res.json({ 
+            message: locale === 'fa'
+              ? 'اگر این حساب وجود داشته باشد، کد تأیید ارسال شده است'
+              : 'If this account exists, an OTP has been sent'
+          });
+        }
+        userId = user.id;
+      }
+
+      // Generate and send OTP
+      const result = await OtpService.generateOtp(
+        formattedIdentifier,
+        isPhone ? 'sms' : 'email',
+        purpose,
+        userId,
+        ip,
+        locale
+      );
+
+      if (result.success) {
+        res.json({
+          message: result.message,
+          expiresIn: '10 minutes'
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('OTP request error:', error);
+      const locale = req.headers['accept-language']?.includes('fa') ? 'fa' : 'en';
+      res.status(500).json({ 
+        message: locale === 'fa'
+          ? 'خطا در ارسال کد تأیید'
+          : 'Failed to send OTP'
+      });
+    }
+  });
+
+  // Verify OTP endpoint
+  app.post("/api/auth/verify-otp", otpVerifyRateLimit, async (req, res) => {
+    try {
+      const { identifier, code, purpose = 'login' } = req.body;
+      const locale = req.headers['accept-language']?.includes('fa') ? 'fa' : 'en';
+
+      if (!identifier || !code) {
+        return res.status(400).json({ 
+          message: locale === 'fa'
+            ? 'شناسه و کد تأیید ضروری است'
+            : 'Identifier and code are required'
+        });
+      }
+
+      // Format phone numbers
+      const isPhone = !identifier.includes('@');
+      const formattedIdentifier = isPhone 
+        ? OtpService.formatIranianPhoneNumber(identifier)
+        : identifier;
+
+      // Verify OTP
+      const result = await OtpService.verifyOtp(formattedIdentifier, code, purpose, locale);
+
+      if (result.success) {
+        res.json({
+          message: result.message,
+          userId: result.userId,
+          isNewUser: result.isNewUser
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      const locale = req.headers['accept-language']?.includes('fa') ? 'fa' : 'en';
+      res.status(500).json({ 
+        message: locale === 'fa'
+          ? 'خطا در تأیید کد'
+          : 'Failed to verify OTP'
+      });
     }
   });
 

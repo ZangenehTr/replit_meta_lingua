@@ -13,6 +13,8 @@ export interface SubsystemPermission {
 export interface RolePermissions {
   [roleKey: string]: {
     subsystems: string[]; // Array of subsystem IDs the role has access to
+    // NEW: Action-level permissions for fine-grained security
+    actions: Record<string, string[]>; // { "resource": ["create", "read", "update", "delete"] }
   };
 }
 
@@ -139,21 +141,47 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
   }
 ];
 
-// Default role permissions based on current system
+// Default role permissions based on current system with action-level granularity
 export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
   "Student": {
     subsystems: [
       "student_dashboard", "courses", "video_courses", "callern_student", 
       "games", "tutors", "sessions", "tests", "homework", "messages", 
       "progress", "wallet", "referrals"
-    ]
+    ],
+    actions: {
+      "student_dashboard": ["read", "view"],
+      "courses": ["read", "view", "list"],
+      "video_courses": ["read", "view", "list"],
+      "callern_student": ["read", "create", "update", "view"],
+      "games": ["read", "view", "play", "list"],
+      "sessions": ["read", "view", "list", "join"],
+      "tests": ["read", "view", "take", "submit"],
+      "homework": ["read", "view", "submit", "update"],
+      "messages": ["read", "create", "view", "list"],
+      "progress": ["read", "view"],
+      "wallet": ["read", "view"],
+      "referrals": ["read", "create", "view"]
+    }
   },
   "Teacher/Tutor": {
     subsystems: [
       "teacher_dashboard", "callern_teacher", "teacher_classes", "teacher_video_courses",
       "teacher_schedule", "teacher_assignments", "teacher_students", "teacher_resources",
       "teacher_reports", "teacher_payments"
-    ]
+    ],
+    actions: {
+      "teacher_dashboard": ["read", "view"],
+      "callern_teacher": ["read", "create", "update", "view", "list"],
+      "teacher_classes": ["read", "create", "update", "view", "list"],
+      "teacher_video_courses": ["read", "create", "update", "view", "list", "delete"],
+      "teacher_schedule": ["read", "create", "update", "view", "list", "delete"],
+      "teacher_assignments": ["read", "create", "update", "view", "list", "delete"],
+      "teacher_students": ["read", "view", "list", "update"],
+      "teacher_resources": ["read", "create", "update", "view", "list", "delete"],
+      "teacher_reports": ["read", "view", "list", "generate"],
+      "teacher_payments": ["read", "view", "list"]
+    }
   },
   "Mentor": {
     subsystems: [
@@ -206,7 +234,11 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "callern_roadmaps", "exam_roadmaps", "ai_study_partner", "enhanced_analytics",
       "tts_system", "tts_pipeline", "3d_content_tools", "third_party_integrations",
       "calendar_settings", "currency_settings"
-    ]
+    ],
+    actions: {
+      // Admin has ALL actions on ALL resources - full system access
+      "*": ["create", "read", "update", "delete", "list", "view", "manage", "admin", "execute", "generate", "export", "import", "configure"]
+    }
   }
 };
 

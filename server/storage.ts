@@ -5,7 +5,7 @@ import {
   userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
   moodEntries, moodRecommendations, learningAdaptations, attendanceRecords, rooms,
   studentQuestionnaires, userProfiles, rolePermissions, userSessions,
-  passwordResetTokens,
+  passwordResetTokens, otpCodes,
   sessionPackages, walletTransactions, coursePayments, mentorAssignments, mentoringSessions,
   classes, holidays,
   // Testing subsystem tables
@@ -59,6 +59,7 @@ import {
   type UserProfile, type InsertUserProfile, type UserSession, type InsertUserSession,
   type RolePermission, type InsertRolePermission,
   type PasswordResetToken, type InsertPasswordResetToken,
+  type OtpCode, type InsertOtpCode,
   type MentorAssignment, type InsertMentorAssignment,
   type MentoringSession, type InsertMentoringSession,
   type MoodEntry, type InsertMoodEntry,
@@ -102,6 +103,7 @@ import {
   type TeacherObservationResponse, type InsertTeacherObservationResponse,
   // Exam roadmap types
   roadmapPlans, roadmapSessions,
+  type RoadmapPlan, type InsertRoadmapPlan, type RoadmapSession, type InsertRoadmapSession,
   // Chat and AI study partner types
   type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
   type AiStudyPartner, type InsertAiStudyPartner,
@@ -179,6 +181,18 @@ export interface IStorage {
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenAsUsed(token: string): Promise<void>;
   updateUserPassword(userId: number, hashedPassword: string): Promise<void>;
+
+  // OTP verification
+  getUserByIdentifier(identifier: string): Promise<User | undefined>;
+  createOtpCode(otp: InsertOtpCode): Promise<OtpCode>;
+  getActiveOtpCode(identifier: string, purpose: string): Promise<OtpCode | undefined>;
+  incrementOtpAttempts(otpId: number): Promise<void>;
+  consumeOtpCode(otpId: number): Promise<void>;
+  invalidateActiveOtps(identifier: string, purpose: string): Promise<void>;
+  deleteExpiredOtpCodes(): Promise<void>;
+  getOtpAttemptsByIdentifier(identifier: string, since: Date): Promise<number>;
+  getOtpAttemptsByIp(ip: string, since: Date): Promise<number>;
+  getAdminSettings(): Promise<any>;
 
   // Role permissions
   checkUserPermission(role: string, resource: string, action: string): Promise<boolean>;
@@ -1226,7 +1240,7 @@ export class MemStorage implements IStorage {
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
     const result = await this.db.update(users)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updates)
       .where(eq(users.id, id))
       .returning();
     return result[0];
@@ -1234,7 +1248,7 @@ export class MemStorage implements IStorage {
 
   async updateUserPreferences(id: number, preferences: any): Promise<User | undefined> {
     const result = await this.db.update(users)
-      .set({ preferences, updatedAt: new Date() })
+      .set({ preferences })
       .where(eq(users.id, id))
       .returning();
     return result[0];
@@ -1259,7 +1273,45 @@ export class MemStorage implements IStorage {
 
   async getUserCourses(userId: number): Promise<(Course & { progress: number })[]> {
     const result = await this.db.select({
-      ...courses,
+      id: courses.id,
+      courseCode: courses.courseCode,
+      title: courses.title,
+      description: courses.description,
+      language: courses.language,
+      level: courses.level,
+      thumbnail: courses.thumbnail,
+      instructorId: courses.instructorId,
+      price: courses.price,
+      totalSessions: courses.totalSessions,
+      sessionDuration: courses.sessionDuration,
+      deliveryMode: courses.deliveryMode,
+      classFormat: courses.classFormat,
+      maxStudents: courses.maxStudents,
+      rating: courses.rating,
+      firstSessionDate: courses.firstSessionDate,
+      lastSessionDate: courses.lastSessionDate,
+      weekdays: courses.weekdays,
+      startTime: courses.startTime,
+      endTime: courses.endTime,
+      timeZone: courses.timeZone,
+      calendarType: courses.calendarType,
+      targetLanguage: courses.targetLanguage,
+      targetLevel: courses.targetLevel,
+      autoRecord: courses.autoRecord,
+      recordingAvailable: courses.recordingAvailable,
+      accessPeriodMonths: courses.accessPeriodMonths,
+      callernAvailable24h: courses.callernAvailable24h,
+      callernRoadmapId: courses.callernRoadmapId,
+      category: courses.category,
+      tags: courses.tags,
+      prerequisites: courses.prerequisites,
+      learningObjectives: courses.learningObjectives,
+      difficulty: courses.difficulty,
+      certificateTemplate: courses.certificateTemplate,
+      isActive: courses.isActive,
+      isFeatured: courses.isFeatured,
+      createdAt: courses.createdAt,
+      updatedAt: courses.updatedAt,
       progress: enrollments.progress
     })
     .from(courses)
@@ -1504,58 +1556,6 @@ export class MemStorage implements IStorage {
     };
   }
 
-  // User profiles
-  async getUserProfile(userId: number): Promise<UserProfile | undefined> {
-    const result = await this.db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
-    return result[0];
-  }
-
-  async createUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
-    const result = await this.db.insert(userProfiles).values(profile).returning();
-    return result[0];
-  }
-
-  async updateUserProfile(userId: number, updates: Partial<UserProfile>): Promise<UserProfile | undefined> {
-    const result = await this.db.update(userProfiles)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(userProfiles.userId, userId))
-      .returning();
-    return result[0];
-  }
-
-  // Authentication sessions
-  async getUserSession(token: string): Promise<UserSession | undefined> {
-    const result = await this.db.select().from(userSessions).where(eq(userSessions.token, token));
-    return result[0];
-  }
-
-  async getUserSessionByRefreshToken(refreshToken: string): Promise<UserSession | undefined> {
-    const result = await this.db.select().from(userSessions).where(eq(userSessions.refreshToken, refreshToken));
-    return result[0];
-  }
-
-  async createUserSession(session: InsertUserSession): Promise<UserSession> {
-    const result = await this.db.insert(userSessions).values(session).returning();
-    return result[0];
-  }
-
-  async updateUserSessionActivity(sessionId: number): Promise<void> {
-    await this.db.update(userSessions)
-      .set({ lastActiveAt: new Date() })
-      .where(eq(userSessions.id, sessionId));
-  }
-
-  async updateUserSessionTokens(sessionId: number, accessToken: string, refreshToken: string): Promise<void> {
-    await this.db.update(userSessions)
-      .set({ token: accessToken, refreshToken: refreshToken })
-      .where(eq(userSessions.id, sessionId));
-  }
-
-  async invalidateUserSession(token: string): Promise<void> {
-    await this.db.update(userSessions)
-      .set({ isActive: false })
-      .where(eq(userSessions.token, token));
-  }
 
   // Password reset
   async createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken> {

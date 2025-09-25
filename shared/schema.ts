@@ -38,12 +38,14 @@ export type LeadStatus = typeof LEAD_STATUS[keyof typeof LEAD_STATUS];
 // Users table with roles and authentication (PII fields moved to user_profiles)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").unique(), // Made nullable for phone-only signup
+  password: text("password"), // Made nullable for OTP-only login
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("Student"), // Admin, Teacher/Tutor, Mentor, Student, Supervisor, Call Center Agent, Accountant
-  phoneNumber: text("phone_number"),
+  phoneNumber: text("phone_number").unique(), // Made unique for phone-based login
+  isEmailVerified: boolean("is_email_verified").default(false),
+  isPhoneVerified: boolean("is_phone_verified").default(false),
   gender: text("gender"), // male, female - required for peer matching
   profileImage: text("profile_image"), // Profile picture URL
   status: text("status").default("active"), // Account status
@@ -62,11 +64,30 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Comprehensive Subsystem Permissions - controls access to all app subsystems and features
+// OTP Codes table for email/SMS verification
+export const otpCodes = pgTable("otp_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id), // Nullable for pre-registration OTP
+  identifier: text("identifier").notNull(), // Email or phone number
+  channel: text("channel").notNull(), // 'sms' | 'email'
+  purpose: text("purpose").notNull(), // 'login' | 'registration' | 'verification' | 'password_reset'
+  codeHash: text("code_hash").notNull(), // Hashed OTP code
+  expiresAt: timestamp("expires_at").notNull(),
+  consumedAt: timestamp("consumed_at"), // Nullable - set when OTP is used
+  attempts: integer("attempts").default(0),
+  maxAttempts: integer("max_attempts").default(5),
+  ip: text("ip"), // IP address for rate limiting
+  locale: text("locale").default("fa"), // For localized messages
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Comprehensive Subsystem Permissions - controls access to all app subsystems and features with action-level granularity
 export const rolePermissions = pgTable("role_permissions", {
   id: serial("id").primaryKey(),
   role: text("role").notNull().unique(),
   subsystemPermissions: jsonb("subsystem_permissions").$type<string[]>().default([]),
+  // NEW: Action-level permissions for fine-grained control
+  actionPermissions: jsonb("action_permissions").$type<Record<string, string[]>>().default({}), // { "resource": ["create", "read", "update", "delete"] }
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -1205,6 +1226,7 @@ export const insertUserSchema = createInsertSchema(users);
 export const insertUserProfileSchema = createInsertSchema(userProfiles);
 export const insertRolePermissionSchema = createInsertSchema(rolePermissions);
 export const insertUserSessionSchema = createInsertSchema(userSessions);
+export const insertOtpCodeSchema = createInsertSchema(otpCodes).omit(['id', 'createdAt']);
 // Holidays table for managing institute holidays (used for class end date calculation)
 export const holidays = pgTable("holidays", {
   id: serial("id").primaryKey(),
@@ -2623,6 +2645,8 @@ export type RolePermission = typeof rolePermissions.$inferSelect;
 export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type OtpCode = typeof otpCodes.$inferSelect;
+export type InsertOtpCode = z.infer<typeof insertOtpCodeSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Class = typeof classes.$inferSelect;
@@ -2673,6 +2697,9 @@ export type InsertCustomRole = z.infer<typeof insertCustomRoleSchema>;
 // CRM Types
 export type Institute = typeof institutes.$inferSelect;
 export type InsertInstitute = z.infer<typeof insertInstituteSchema>;
+// Branding type aliases (used in storage layer)
+export type InstituteBranding = Institute;
+export type InsertBranding = InsertInstitute;
 export type Department = typeof departments.$inferSelect;
 export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
 export type StudentGroup = typeof studentGroups.$inferSelect;
@@ -3161,6 +3188,31 @@ export type TeacherRetentionData = typeof teacherRetentionData.$inferSelect;
 export type InsertTeacherRetentionData = z.infer<typeof insertTeacherRetentionDataSchema>;
 export type StudentQuestionnaire = typeof studentQuestionnaires.$inferSelect;
 export type InsertStudentQuestionnaire = z.infer<typeof insertStudentQuestionnaireSchema>;
+
+// Create questionnaire response types (appears to be missing from schema)
+// These represent student responses to questionnaires
+export interface QuestionnaireResponse {
+  id: number;
+  questionnaireId: number;
+  studentId: number;
+  responses: Array<{
+    questionId: string;
+    answer: string | number | string[];
+  }>;
+  submittedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface InsertQuestionnaireResponse {
+  questionnaireId: number;
+  studentId: number;
+  responses: Array<{
+    questionId: string;
+    answer: string | number | string[];
+  }>;
+  submittedAt?: Date;
+}
 export type SupervisionObservation = typeof supervisionObservations.$inferSelect;
 export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObservationSchema>;
 
@@ -4464,6 +4516,10 @@ export type RoadmapPlan = typeof roadmapPlans.$inferSelect;
 export type RoadmapPlanInsert = z.infer<typeof roadmapPlanInsertSchema>;
 export type RoadmapSession = typeof roadmapSessions.$inferSelect; 
 export type RoadmapSessionInsert = z.infer<typeof roadmapSessionInsertSchema>;
+
+// Legacy naming compatibility for storage layer
+export type InsertRoadmapPlan = RoadmapPlanInsert;
+export type InsertRoadmapSession = RoadmapSessionInsert;
 
 // Placement test schemas and types exported above
 

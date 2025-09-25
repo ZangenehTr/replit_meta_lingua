@@ -4,7 +4,12 @@ import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage';
 import { User, UserSession, InsertUserSession } from '@shared/schema';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+// Critical security: JWT_SECRET must be provided via environment variable
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is required but not set. Application cannot start.');
+  process.exit(1);
+}
 const JWT_EXPIRES_IN = '24h';
 const REFRESH_TOKEN_EXPIRES_IN = '7d';
 

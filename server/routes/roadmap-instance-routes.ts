@@ -1,42 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
 
-interface AuthenticatedRequest extends Request {
-  user: {
-    id: number;
-    email: string;
-    role: string;
-    [key: string]: any;
-  };
-}
+// Use the centralized AuthenticatedRequest interface
 import { z } from 'zod';
 import { storage } from '../storage';
 import { roadmapStorage } from '../services/roadmap-storage';
-import jwt from 'jsonwebtoken';
+import { authenticate, type AuthenticatedRequest as AuthRequest } from '../auth';
 
-const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
-
-// Auth middleware
-const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const user = await storage.getUser(decoded.userId);
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
-    }
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(403).json({ message: 'Invalid token' });
-  }
-};
+// Use centralized authentication middleware
+const requireAuth = authenticate;
 
 const router = Router();
 
