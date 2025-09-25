@@ -18,7 +18,7 @@ import { z } from "zod";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
-  Cube, 
+  Box, 
   Search, 
   Filter, 
   Plus, 
@@ -86,6 +86,7 @@ const threeDLessonSchema = z.object({
   orderIndex: z.coerce.number().min(0, "Order must be non-negative"),
   isFree: z.boolean().default(false),
   isPublished: z.boolean().default(false),
+  videoUrl: z.string().url("Must be a valid video URL").optional(),
   threeDContent: z.object({
     sceneConfig: z.object({
       camera: z.object({
@@ -109,7 +110,7 @@ const LESSON_TEMPLATES = [
     id: 'vocabulary_scene',
     name: 'Vocabulary Scene',
     description: 'Interactive vocabulary learning with 3D objects',
-    icon: Cube,
+    icon: Box,
     skillFocus: 'vocabulary',
     estimatedDuration: 15,
     defaultConfig: {
@@ -169,7 +170,7 @@ function ThreeDLessonCard({ lesson, onEdit, onDelete, onTogglePublish, onPreview
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Cube className="h-5 w-5 text-blue-500" />
+              <Box className="h-5 w-5 text-blue-500" />
               {lesson.title}
               <Badge variant={lesson.isPublished ? "default" : "secondary"}>
                 {lesson.isPublished ? t('admin:threeDLessons.published') : t('admin:threeDLessons.draft')}

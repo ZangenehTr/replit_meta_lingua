@@ -39,6 +39,8 @@ import {
   // SMS template tables
   smsTemplateCategories, smsTemplateVariables, smsTemplates, smsTemplateSendingLogs, 
   smsTemplateAnalytics, smsTemplateFavorites,
+  // 3D lesson tables
+  threeDLessonContent, threeDVideoLessons, threeDLessonProgress,
 } from "@shared/schema";
 // Unified testing system tables
 import {
@@ -128,7 +130,11 @@ import {
   type SmsTemplate, type InsertSmsTemplate,
   type SmsTemplateSendingLog, type InsertSmsTemplateSendingLog,
   type SmsTemplateAnalytics, type InsertSmsTemplateAnalytics,
-  type SmsTemplateFavorite, type InsertSmsTemplateFavorite
+  type SmsTemplateFavorite, type InsertSmsTemplateFavorite,
+  // 3D lesson types
+  type ThreeDLessonContent, type ThreeDLessonContentInsert,
+  type ThreeDVideoLesson, type ThreeDVideoLessonInsert,
+  type ThreeDLessonProgress, type ThreeDLessonProgressInsert
 } from "@shared/schema";
 // Unified testing system types
 import {
@@ -1345,6 +1351,26 @@ export interface IStorage {
   substituteSmsTemplateVariables(content: string, variableData: Record<string, any>): Promise<string>;
   calculateSmsCharacterCount(content: string): Promise<{ characterCount: number; smsPartsCount: number }>;
   getSmsTemplatePreview(templateId: number, sampleData: Record<string, any>): Promise<{ content: string; characterCount: number; smsPartsCount: number }>;
+
+  // 3D Lesson Content methods
+  getThreeDLessonContent(id: number): Promise<ThreeDLessonContent | undefined>;
+  createThreeDLessonContent(content: ThreeDLessonContentInsert): Promise<ThreeDLessonContent>;
+  updateThreeDLessonContent(id: number, updates: Partial<ThreeDLessonContent>): Promise<ThreeDLessonContent | undefined>;
+  deleteThreeDLessonContent(id: number): Promise<void>;
+
+  // 3D Video Lessons methods
+  getThreeDVideoLessons(filters?: { courseId?: number; language?: string; level?: string; templateType?: string; search?: string }): Promise<ThreeDVideoLesson[]>;
+  getThreeDVideoLesson(id: number): Promise<ThreeDVideoLesson | undefined>;
+  createThreeDVideoLesson(lesson: ThreeDVideoLessonInsert): Promise<ThreeDVideoLesson>;
+  updateThreeDVideoLesson(id: number, updates: Partial<ThreeDVideoLesson>): Promise<ThreeDVideoLesson | undefined>;
+  deleteThreeDVideoLesson(id: number): Promise<void>;
+  getThreeDVideoLessonsByCourse(courseId: number): Promise<ThreeDVideoLesson[]>;
+
+  // 3D Lesson Progress methods
+  getThreeDLessonProgress(userId: number, threeDLessonId: number): Promise<ThreeDLessonProgress | undefined>;
+  createThreeDLessonProgress(progress: ThreeDLessonProgressInsert): Promise<ThreeDLessonProgress>;
+  updateThreeDLessonProgress(userId: number, threeDLessonId: number, updates: Partial<ThreeDLessonProgress>): Promise<ThreeDLessonProgress | undefined>;
+  getUserThreeDLessonProgress(userId: number): Promise<ThreeDLessonProgress[]>;
 }
 
 export class MemStorage implements IStorage {

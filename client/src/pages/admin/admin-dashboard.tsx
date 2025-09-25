@@ -39,7 +39,7 @@ import {
   Brain,
   Video,
   Award,
-  Cube,
+  Box,
   Target,
   ArrowUpRight,
   ArrowDownRight,
@@ -610,7 +610,7 @@ export const AdminDashboard = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Cube className="h-6 w-6 text-blue-500 mb-1" />
+                    <Box className="h-6 w-6 text-blue-500 mb-1" />
                     <span className="text-xs text-gray-600">{t('admin:threeDLessons.threeDLessonBuilder', '3D درس‌ساز')}</span>
                   </motion.div>
                 </Link>

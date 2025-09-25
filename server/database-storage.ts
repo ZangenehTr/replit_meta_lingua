@@ -16453,4 +16453,126 @@ export class DatabaseStorage implements IStorage {
   async deleteFrontDeskTask(id: number): Promise<void> {
     await db.delete(frontDeskTasks).where(eq(frontDeskTasks.id, id));
   }
+
+  // ============================================================================
+  // 3D Lesson Content Methods
+  // ============================================================================
+
+  async getThreeDLessonContent(id: number): Promise<ThreeDLessonContent | undefined> {
+    const [content] = await db.select().from(threeDLessonContent).where(eq(threeDLessonContent.id, id));
+    return content;
+  }
+
+  async createThreeDLessonContent(content: ThreeDLessonContentInsert): Promise<ThreeDLessonContent> {
+    const [newContent] = await db.insert(threeDLessonContent).values(content).returning();
+    return newContent;
+  }
+
+  async updateThreeDLessonContent(id: number, updates: Partial<ThreeDLessonContent>): Promise<ThreeDLessonContent | undefined> {
+    const [updated] = await db.update(threeDLessonContent)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(threeDLessonContent.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteThreeDLessonContent(id: number): Promise<void> {
+    await db.delete(threeDLessonContent).where(eq(threeDLessonContent.id, id));
+  }
+
+  // ============================================================================
+  // 3D Video Lessons Methods
+  // ============================================================================
+
+  async getThreeDVideoLessons(filters?: { courseId?: number; language?: string; level?: string; templateType?: string; search?: string }): Promise<ThreeDVideoLesson[]> {
+    let query = db.select().from(threeDVideoLessons);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.courseId) conditions.push(eq(threeDVideoLessons.courseId, filters.courseId));
+      if (filters.language) conditions.push(eq(threeDVideoLessons.language, filters.language));
+      if (filters.level) conditions.push(eq(threeDVideoLessons.level, filters.level));
+      if (filters.templateType) conditions.push(eq(threeDVideoLessons.templateType, filters.templateType));
+      if (filters.search) {
+        conditions.push(
+          sql`${threeDVideoLessons.title} ILIKE ${`%${filters.search}%`} OR ${threeDVideoLessons.description} ILIKE ${`%${filters.search}%`}`
+        );
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(threeDVideoLessons.createdAt));
+  }
+
+  async getThreeDVideoLesson(id: number): Promise<ThreeDVideoLesson | undefined> {
+    const [lesson] = await db.select().from(threeDVideoLessons).where(eq(threeDVideoLessons.id, id));
+    return lesson;
+  }
+
+  async createThreeDVideoLesson(lesson: ThreeDVideoLessonInsert): Promise<ThreeDVideoLesson> {
+    const [newLesson] = await db.insert(threeDVideoLessons).values(lesson).returning();
+    return newLesson;
+  }
+
+  async updateThreeDVideoLesson(id: number, updates: Partial<ThreeDVideoLesson>): Promise<ThreeDVideoLesson | undefined> {
+    const [updated] = await db.update(threeDVideoLessons)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(threeDVideoLessons.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteThreeDVideoLesson(id: number): Promise<void> {
+    // First delete related content
+    const lesson = await this.getThreeDVideoLesson(id);
+    if (lesson?.threeDContentId) {
+      await this.deleteThreeDLessonContent(lesson.threeDContentId);
+    }
+    // Then delete the lesson itself
+    await db.delete(threeDVideoLessons).where(eq(threeDVideoLessons.id, id));
+  }
+
+  async getThreeDVideoLessonsByCourse(courseId: number): Promise<ThreeDVideoLesson[]> {
+    return await db.select().from(threeDVideoLessons)
+      .where(eq(threeDVideoLessons.courseId, courseId))
+      .orderBy(threeDVideoLessons.orderIndex, threeDVideoLessons.createdAt);
+  }
+
+  // ============================================================================
+  // 3D Lesson Progress Methods
+  // ============================================================================
+
+  async getThreeDLessonProgress(userId: number, threeDLessonId: number): Promise<ThreeDLessonProgress | undefined> {
+    const [progress] = await db.select().from(threeDLessonProgress)
+      .where(and(
+        eq(threeDLessonProgress.userId, userId),
+        eq(threeDLessonProgress.threeDLessonId, threeDLessonId)
+      ));
+    return progress;
+  }
+
+  async createThreeDLessonProgress(progress: ThreeDLessonProgressInsert): Promise<ThreeDLessonProgress> {
+    const [newProgress] = await db.insert(threeDLessonProgress).values(progress).returning();
+    return newProgress;
+  }
+
+  async updateThreeDLessonProgress(userId: number, threeDLessonId: number, updates: Partial<ThreeDLessonProgress>): Promise<ThreeDLessonProgress | undefined> {
+    const [updated] = await db.update(threeDLessonProgress)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(
+        eq(threeDLessonProgress.userId, userId),
+        eq(threeDLessonProgress.threeDLessonId, threeDLessonId)
+      ))
+      .returning();
+    return updated;
+  }
+
+  async getUserThreeDLessonProgress(userId: number): Promise<ThreeDLessonProgress[]> {
+    return await db.select().from(threeDLessonProgress)
+      .where(eq(threeDLessonProgress.userId, userId))
+      .orderBy(desc(threeDLessonProgress.updatedAt));
+  }
 }
