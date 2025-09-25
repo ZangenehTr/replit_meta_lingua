@@ -408,26 +408,36 @@ body.rtl p, body.rtl div, body.rtl span {
 }
 
 :root {
-  --background: 210 11% 98%; /* #F5F7FA */
-  --foreground: 222 84% 5%; /* #0F172A */
-  --muted: 210 9% 93%; /* #E2E8F0 */
-  --muted-foreground: 215 16% 47%; /* #64748B */
+  /* Purple-to-Blue Explorer Theme */
+  --background: 251 91% 98%; /* #FEFCFF - Very light purple-tinted background */
+  --foreground: 234 16% 13%; /* #1F2037 - Dark blue-gray */
+  --muted: 249 22% 95%; /* #F4F3F9 - Light purple muted */
+  --muted-foreground: 241 9% 56%; /* #8B8D98 - Medium purple-gray */
   --popover: 0 0% 100%; /* #FFFFFF */
-  --popover-foreground: 222 84% 5%; /* #0F172A */
+  --popover-foreground: 234 16% 13%; /* #1F2037 */
   --card: 0 0% 100%; /* #FFFFFF */
-  --card-foreground: 222 84% 5%; /* #0F172A */
-  --border: 214 32% 91%; /* #E2E8F0 */
-  --input: 214 32% 91%; /* #E2E8F0 */
-  --primary: 213 94% 68%; /* #3B82F6 */
-  --primary-foreground: 210 40% 98%; /* #F8FAFC */
-  --secondary: 210 40% 96%; /* #F1F5F9 */
-  --secondary-foreground: 222 84% 5%; /* #0F172A */
-  --accent: 210 40% 96%; /* #F1F5F9 */
-  --accent-foreground: 222 84% 5%; /* #0F172A */
+  --card-foreground: 234 16% 13%; /* #1F2037 */
+  --border: 249 20% 90%; /* #E8E5F3 - Light purple border */
+  --input: 249 20% 90%; /* #E8E5F3 */
+  
+  /* Purple-to-Blue Gradient Primary Colors */
+  --primary: 262 83% 58%; /* #8B5CF6 - Purple primary */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --secondary: 249 22% 95%; /* #F4F3F9 - Light purple secondary */
+  --secondary-foreground: 234 16% 13%; /* #1F2037 */
+  --accent: 214 95% 93%; /* #EFF6FF - Light blue accent */
+  --accent-foreground: 213 94% 28%; /* #1E40AF - Dark blue */
+  
+  /* Conversion-Optimized Colors */
+  --conversion-purple: 262 83% 58%; /* #8B5CF6 */
+  --conversion-blue: 213 94% 68%; /* #3B82F6 */
+  --conversion-gradient-start: 262 83% 58%; /* #8B5CF6 */
+  --conversion-gradient-end: 213 94% 68%; /* #3B82F6 */
+  
   --destructive: 0 84% 60%; /* #EF4444 */
-  --destructive-foreground: 210 40% 98%; /* #F8FAFC */
-  --ring: 213 94% 68%; /* #3B82F6 */
-  --radius: 0.5rem;
+  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+  --ring: 262 83% 58%; /* #8B5CF6 - Purple ring */
+  --radius: 0.75rem; /* Increased for modern feel */
 
   /* Sidebar colors */
   --sidebar-background: 0 0% 100%; /* #FFFFFF */
@@ -565,8 +575,54 @@ body.rtl p, body.rtl div, body.rtl span {
     @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
   }
 
+  /* Conversion-Optimized Gradient Components */
+  .conversion-gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--conversion-gradient-start)) 0%, hsl(var(--conversion-gradient-end)) 100%);
+  }
+
+  .conversion-gradient-text {
+    background: linear-gradient(135deg, hsl(var(--conversion-gradient-start)) 0%, hsl(var(--conversion-gradient-end)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .conversion-cta-button {
+    @apply bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:ring-4 focus:ring-purple-200 dark:focus:ring-purple-800;
+  }
+
+  .conversion-cta-secondary {
+    @apply border-2 border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 px-8 py-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg focus:ring-4 focus:ring-purple-200 dark:focus:ring-purple-800;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, hsl(249 22% 95%) 0%, hsl(214 95% 93%) 50%, hsl(251 91% 98%) 100%);
+  }
+
+  .section-gradient {
+    background: linear-gradient(180deg, transparent 0%, hsl(249 22% 95% / 0.3) 100%);
+  }
+
   .card-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--secondary) / 0.1) 100%);
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(249 22% 98%) 100%);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 4px 20px hsl(var(--conversion-gradient-start) / 0.1);
+  }
+
+  .card-hover-effect {
+    @apply transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2;
+  }
+
+  .testimonial-card {
+    @apply bg-white/80 backdrop-blur-sm border border-purple-100 hover:border-purple-200 transition-all duration-300;
+  }
+
+  .feature-icon-bg {
+    @apply bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 p-3 rounded-xl;
+  }
+
+  .stats-card {
+    @apply bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300;
   }
 
   /* Toast/notification styles */

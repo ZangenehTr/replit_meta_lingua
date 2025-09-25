@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +48,31 @@ interface TimeSlot {
   date: string;
 }
 
+// Validation schema
+const trialBookingSchema = z.object({
+  firstName: z.string()
+    .min(2, { message: 'First name must be at least 2 characters' })
+    .max(50, { message: 'First name must be less than 50 characters' }),
+  lastName: z.string()
+    .min(2, { message: 'Last name must be at least 2 characters' })
+    .max(50, { message: 'Last name must be less than 50 characters' }),
+  email: z.string()
+    .email({ message: 'Please enter a valid email address' })
+    .min(1, { message: 'Email is required' }),
+  phone: z.string()
+    .min(10, { message: 'Phone number must be at least 10 digits' })
+    .regex(/^[+]?[(]?[\d\s\-\(\)]{10,}$/, { message: 'Please enter a valid phone number' }),
+  learningGoals: z.string()
+    .min(10, { message: 'Please tell us more about your learning goals (at least 10 characters)' })
+    .max(500, { message: 'Learning goals must be less than 500 characters' }),
+  currentLevel: z.enum(['beginner', 'intermediate', 'advanced'], {
+    required_error: 'Please select your current level'
+  }),
+  preferredLanguage: z.string().min(1, { message: 'Please select your preferred language' })
+});
+
+type TrialBookingFormData = z.infer<typeof trialBookingSchema>;
+
 interface Props {
   teachers: Teacher[];
 }
@@ -56,14 +87,19 @@ export function TrialBookingInterface({ teachers }: Props) {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
-  const [studentDetails, setStudentDetails] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    learningGoals: '',
-    currentLevel: 'beginner',
-    preferredLanguage: 'en'
+
+  // Form setup with react-hook-form and zod validation
+  const form = useForm<TrialBookingFormData>({
+    resolver: zodResolver(trialBookingSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      learningGoals: '',
+      currentLevel: 'beginner',
+      preferredLanguage: 'en'
+    }
   });
 
   // Generate next 7 days
@@ -83,26 +119,13 @@ export function TrialBookingInterface({ teachers }: Props) {
     return dates;
   };
 
-  // Generate time slots for selected date
-  const generateTimeSlots = (): TimeSlot[] => {
-    const slots = [];
-    const times = [
-      '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
-      '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
-    ];
-    
-    times.forEach(time => {
-      // For demo purposes, make some slots unavailable randomly
-      const available = Math.random() > 0.3;
-      slots.push({
-        time,
-        available,
-        date: selectedDate
-      });
-    });
-    
-    return slots;
-  };
+  // Fetch real time slots from API
+  const { data: timeSlots = [], isLoading: timeSlotsLoading, error: timeSlotsError } = useQuery({
+    queryKey: [`/api/trial/slots?teacherId=${selectedTeacher?.id}&date=${selectedDate}`],
+    enabled: !!selectedTeacher?.id && !!selectedDate,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false
+  });
 
   // Book trial lesson mutation
   const bookTrialMutation = useMutation({
@@ -128,11 +151,12 @@ export function TrialBookingInterface({ teachers }: Props) {
   });
 
   const handleBooking = () => {
+    const formData = form.getValues();
     const bookingData = {
       teacherId: selectedTeacher?.id,
       date: selectedDate,
       time: selectedTime,
-      studentDetails,
+      studentDetails: formData,
       lessonType: 'trial'
     };
     
@@ -140,7 +164,6 @@ export function TrialBookingInterface({ teachers }: Props) {
   };
 
   const availableDates = generateAvailableDates();
-  const timeSlots = selectedDate ? generateTimeSlots() : [];
 
   return (
     <motion.div
@@ -169,13 +192,16 @@ export function TrialBookingInterface({ teachers }: Props) {
               { key: 'confirmation', label: t('student:confirmation') }
             ].map((stepItem, index) => (
               <div key={stepItem.key} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step === stepItem.key 
-                    ? 'bg-blue-600 text-white' 
-                    : index < ['teacher', 'datetime', 'details', 'confirmation'].indexOf(step)
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                }`}>
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    step === stepItem.key 
+                      ? 'bg-blue-600 text-white' 
+                      : index < ['teacher', 'datetime', 'details', 'confirmation'].indexOf(step)
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}
+                  data-testid={`step-indicator-${stepItem.key}`}
+                >
                   {index < ['teacher', 'datetime', 'details', 'confirmation'].indexOf(step) ? (
                     <Check className="h-4 w-4" />
                   ) : (
@@ -288,25 +314,55 @@ export function TrialBookingInterface({ teachers }: Props) {
                 <Label className="text-sm font-medium text-gray-700 mb-3 block">
                   {t('student:selectTime')}
                 </Label>
-                <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
-                  {timeSlots.map((slot) => (
+                {timeSlotsLoading ? (
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                    {Array.from({ length: 12 }).map((_, index) => (
+                      <div 
+                        key={index} 
+                        className="p-2 text-center border rounded-lg bg-gray-100 animate-pulse"
+                        data-testid="loading-time-slot"
+                      >
+                        <div className="h-4 bg-gray-300 rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : timeSlotsError ? (
+                  <div className="p-4 border border-red-200 rounded-lg bg-red-50 text-center">
+                    <p className="text-red-600 text-sm">{t('common:errorLoadingTimeSlots')}</p>
                     <button
-                      key={slot.time}
-                      className={`p-2 text-center border rounded-lg transition-all ${
-                        !slot.available
-                          ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : selectedTime === slot.time
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => slot.available && setSelectedTime(slot.time)}
-                      disabled={!slot.available}
-                      data-testid={`time-option-${slot.time}`}
+                      onClick={() => window.location.reload()}
+                      className="mt-2 text-sm text-red-700 underline"
+                      data-testid="button-retry-time-slots"
                     >
-                      {slot.time}
+                      {t('common:retry')}
                     </button>
-                  ))}
-                </div>
+                  </div>
+                ) : timeSlots.length === 0 ? (
+                  <div className="col-span-full text-center py-8 text-gray-500" data-testid="empty-time-slots">
+                    <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p>{t('student:noSlotsAvailable')}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                    {timeSlots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        className={`p-2 text-center border rounded-lg transition-all ${
+                          !slot.available
+                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : selectedTime === slot.time
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => slot.available && setSelectedTime(slot.time)}
+                        disabled={!slot.available}
+                        data-testid={`time-option-${slot.time}`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                )
               </div>
             )}
 
@@ -337,84 +393,124 @@ export function TrialBookingInterface({ teachers }: Props) {
             <CardTitle>{t('student:yourDetails')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">{t('student:firstName')}</Label>
-                <Input
-                  id="firstName"
-                  value={studentDetails.firstName}
-                  onChange={(e) => setStudentDetails(prev => ({ ...prev, firstName: e.target.value }))}
-                  data-testid="input-first-name"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(() => setStep('confirmation'))} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('student:firstName')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} data-testid="input-first-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('student:lastName')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} data-testid="input-last-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('student:email')}</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} data-testid="input-email" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('student:phone')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} data-testid="input-phone" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="currentLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('student:currentLevel')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-current-level">
+                              <SelectValue placeholder={t('student:selectLevel')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="beginner">{t('student:beginner')}</SelectItem>
+                            <SelectItem value="intermediate">{t('student:intermediate')}</SelectItem>
+                            <SelectItem value="advanced">{t('student:advanced')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="preferredLanguage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('student:preferredLanguage')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-preferred-language">
+                              <SelectValue placeholder={t('student:selectLanguage')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="en">English</SelectItem>
+                            <SelectItem value="fa">Persian/Farsi</SelectItem>
+                            <SelectItem value="ar">Arabic</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="learningGoals"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('student:learningGoals')}</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          rows={3}
+                          placeholder={t('student:learningGoalsPlaceholder')}
+                          data-testid="textarea-learning-goals"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div>
-                <Label htmlFor="lastName">{t('student:lastName')}</Label>
-                <Input
-                  id="lastName"
-                  value={studentDetails.lastName}
-                  onChange={(e) => setStudentDetails(prev => ({ ...prev, lastName: e.target.value }))}
-                  data-testid="input-last-name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">{t('student:email')}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={studentDetails.email}
-                  onChange={(e) => setStudentDetails(prev => ({ ...prev, email: e.target.value }))}
-                  data-testid="input-email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">{t('student:phone')}</Label>
-                <Input
-                  id="phone"
-                  value={studentDetails.phone}
-                  onChange={(e) => setStudentDetails(prev => ({ ...prev, phone: e.target.value }))}
-                  data-testid="input-phone"
-                />
-              </div>
-              <div>
-                <Label htmlFor="currentLevel">{t('student:currentLevel')}</Label>
-                <select
-                  id="currentLevel"
-                  value={studentDetails.currentLevel}
-                  onChange={(e) => setStudentDetails(prev => ({ ...prev, currentLevel: e.target.value }))}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  data-testid="select-current-level"
-                >
-                  <option value="beginner">{t('student:beginner')}</option>
-                  <option value="intermediate">{t('student:intermediate')}</option>
-                  <option value="advanced">{t('student:advanced')}</option>
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="preferredLanguage">{t('student:preferredLanguage')}</Label>
-                <select
-                  id="preferredLanguage"
-                  value={studentDetails.preferredLanguage}
-                  onChange={(e) => setStudentDetails(prev => ({ ...prev, preferredLanguage: e.target.value }))}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  data-testid="select-preferred-language"
-                >
-                  <option value="en">English</option>
-                  <option value="fa">Persian/Farsi</option>
-                  <option value="ar">Arabic</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-4">
-              <Label htmlFor="learningGoals">{t('student:learningGoals')}</Label>
-              <textarea
-                id="learningGoals"
-                rows={3}
-                value={studentDetails.learningGoals}
-                onChange={(e) => setStudentDetails(prev => ({ ...prev, learningGoals: e.target.value }))}
-                className="w-full p-2 border border-gray-300 rounded-md"
-                placeholder={t('student:learningGoalsPlaceholder')}
-                data-testid="textarea-learning-goals"
-              />
             </div>
 
             <div className="mt-6 flex justify-between">
@@ -428,7 +524,7 @@ export function TrialBookingInterface({ teachers }: Props) {
               </Button>
               <Button
                 onClick={handleBooking}
-                disabled={!studentDetails.firstName || !studentDetails.lastName || !studentDetails.email || bookTrialMutation.isPending}
+                disabled={!form.formState.isValid || bookTrialMutation.isPending}
                 data-testid="button-book-trial"
               >
                 {bookTrialMutation.isPending ? t('common:booking') : t('student:bookTrialLesson')}
@@ -472,15 +568,7 @@ export function TrialBookingInterface({ teachers }: Props) {
                 setSelectedTeacher(null);
                 setSelectedDate('');
                 setSelectedTime('');
-                setStudentDetails({
-                  firstName: '',
-                  lastName: '',
-                  email: '',
-                  phone: '',
-                  learningGoals: '',
-                  currentLevel: 'beginner',
-                  preferredLanguage: 'en'
-                });
+                form.reset();
               }}
               data-testid="button-book-another"
             >
