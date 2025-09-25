@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
   ShoppingCart,
   Book,
@@ -166,6 +167,7 @@ export default function VirtualMall() {
   const [sessionProgress, setSessionProgress] = useState(0);
   const [showCoursebooks, setShowCoursebooks] = useState(false);
   const [selectedBook, setSelectedBook] = useState<CourseBook | null>(null);
+  const [showBookDetailsModal, setShowBookDetailsModal] = useState(false);
 
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -452,15 +454,7 @@ export default function VirtualMall() {
 
   const handleViewBookDetails = (book: CourseBook) => {
     setSelectedBook(book);
-    const price_text = `The price is ${format_safe_price(book)}.`;
-    const emmaMessage: LexiMessage = {
-      id: Date.now().toString(),
-      type: 'shopgirl', 
-      speaker: 'Emma',
-      content: `"${book.title}" by ${book.author} is an excellent choice! ${book.description}. ${price_text}`,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, emmaMessage]);
+    setShowBookDetailsModal(true);
   };
 
   const handleAddToCart = (book: CourseBook) => {
@@ -792,6 +786,77 @@ export default function VirtualMall() {
           )}
         </div>
       </div>
+
+      {/* Book Details Modal */}
+      <Dialog open={showBookDetailsModal} onOpenChange={setShowBookDetailsModal}>
+        <DialogContent className="max-w-md mx-auto" data-testid="book-details-modal">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold" data-testid="book-modal-title">
+              {selectedBook?.title}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600 dark:text-gray-400" data-testid="book-modal-author">
+              by {selectedBook?.author}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedBook && (
+            <div className="space-y-4 mt-4">
+              {/* Cover Image - placeholder for now */}
+              {selectedBook.cover_image && (
+                <div className="flex justify-center" data-testid="book-modal-cover">
+                  <img 
+                    src={selectedBook.cover_image} 
+                    alt={selectedBook.title}
+                    className="w-32 h-48 object-cover rounded-lg shadow-md"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Book Description */}
+              <div data-testid="book-modal-description">
+                <h4 className="font-medium text-sm mb-2">Description</h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {selectedBook.description}
+                </p>
+              </div>
+              
+              {/* Price */}
+              <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg" data-testid="book-modal-price">
+                <span className="text-sm font-medium">Price:</span>
+                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {format_safe_price(selectedBook)}
+                </span>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  onClick={() => {
+                    handleAddToCart(selectedBook);
+                    setShowBookDetailsModal(false);
+                  }}
+                  className="flex-1"
+                  disabled={addToCartMutation.isPending}
+                  data-testid="book-modal-add-to-cart"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add to Cart
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowBookDetailsModal(false)}
+                  data-testid="book-modal-close"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
