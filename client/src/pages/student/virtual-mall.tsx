@@ -170,49 +170,50 @@ export default function VirtualMall() {
   const [selectedBook, setSelectedBook] = useState<CourseBook | null>(null);
   const [showBookDetailsModal, setShowBookDetailsModal] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
-  const [speechSynthesis] = useState(() => window.speechSynthesis);
 
   const { toast } = useToast();
   const { t, isRTL, direction, language } = useLanguage();
 
-  // Speech synthesis for Lexi's voice
-  const speakText = (text: string, voice: 'lexi' | 'shopgirl' = 'lexi') => {
-    if (!isVoiceEnabled || !speechSynthesis) return;
-    
-    // Cancel any ongoing speech
-    speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Configure voice based on speaker
-    if (voice === 'lexi') {
-      utterance.rate = 0.9; // Slightly slower for sophistication
-      utterance.pitch = 1.1; // Slightly higher for Lexi's character
-      utterance.volume = 0.8;
-      
-      // Try to find a female voice
-      const voices = speechSynthesis.getVoices();
-      const femaleVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes('female') || 
-        voice.name.toLowerCase().includes('woman') ||
-        voice.name.toLowerCase().includes('zira') ||
-        voice.name.toLowerCase().includes('samantha')
-      );
-      if (femaleVoice) utterance.voice = femaleVoice;
-    } else {
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 0.7;
-    }
-    
-    // Set language
-    utterance.lang = language === 'fa' ? 'fa-IR' : 'en-US';
+  // Microsoft Edge TTS for Lexi's voice (professional quality)
+  const speakText = async (text: string, voice: 'lexi' | 'shopgirl' = 'lexi') => {
+    if (!isVoiceEnabled) return;
     
     setIsLexiSpeaking(true);
-    utterance.onend = () => setIsLexiSpeaking(false);
-    utterance.onerror = () => setIsLexiSpeaking(false);
     
-    speechSynthesis.speak(utterance);
+    try {
+      // Use backend Microsoft Edge TTS service
+      const response = await apiRequest('/api/tts/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+          text,
+          language: language === 'fa' ? 'fa' : 'en',
+          speed: voice === 'lexi' ? 0.9 : 1.0, // Lexi speaks slightly slower
+          voice: voice === 'lexi' ? 
+            (language === 'fa' ? 'fa-IR-DilaraNeural' : 'en-US-AriaNeural') :
+            (language === 'fa' ? 'fa-IR-FaridNeural' : 'en-US-JennyNeural')
+        })
+      });
+
+      if (response.success && response.audioUrl) {
+        // Play the generated audio
+        const audio = new Audio(response.audioUrl);
+        audio.volume = voice === 'lexi' ? 0.8 : 0.7;
+        
+        audio.onended = () => setIsLexiSpeaking(false);
+        audio.onerror = () => {
+          console.error('Audio playback failed');
+          setIsLexiSpeaking(false);
+        };
+        
+        await audio.play();
+      } else {
+        console.error('TTS generation failed:', response.error);
+        setIsLexiSpeaking(false);
+      }
+    } catch (error) {
+      console.error('TTS API error:', error);
+      setIsLexiSpeaking(false);
+    }
   };
 
   // Fetch coursebooks for bookstore using shared query client
