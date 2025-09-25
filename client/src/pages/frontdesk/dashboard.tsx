@@ -95,7 +95,7 @@ import {
   Award,
   Shield,
   Database,
-  CloudSync
+  Cloud
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -533,12 +533,12 @@ export default function FrontDeskDashboard() {
       shortcut: 'Ctrl+C'
     },
     {
-      id: 'send-sms',
-      label: isRTL ? 'ارسال پیامک' : 'Send SMS',
+      id: 'sms-templates',
+      label: isRTL ? 'قالب‌های پیامک' : 'SMS Templates',
       icon: MessageSquare,
-      action: () => setShowQuickActions(true),
+      action: () => setLocation('/frontdesk/sms-templates'),
       category: 'sms',
-      description: isRTL ? 'ارسال پیامک انبوه' : 'Send bulk SMS campaign'
+      description: isRTL ? 'مدیریت قالب‌های پیامک' : 'Manage SMS templates'
     },
     {
       id: 'schedule-trial',

@@ -1,5 +1,5 @@
 // Role-based access control system for Meta Lingua Institute
-export type UserRole = 'admin' | 'teacher' | 'student' | 'mentor' | 'supervisor' | 'call_center' | 'accountant' | 'manager';
+export type UserRole = 'admin' | 'teacher' | 'student' | 'mentor' | 'supervisor' | 'call_center' | 'accountant' | 'manager' | 'front_desk_clerk';
 
 interface Permission {
   canView: string[];
@@ -126,6 +126,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     learningAccess: true,
     progressViewing: true,
     courseFeedback: true
+  },
+  front_desk_clerk: {
+    canView: ['front_desk_operations', 'call_logs', 'visitor_intake', 'sms_templates', 'customer_interactions', 'trial_lessons'],
+    canEdit: ['front_desk_operations', 'call_logs', 'visitor_intake', 'sms_templates', 'customer_notes'],
+    canDelete: ['draft_sms_templates'],
+    canCreate: ['front_desk_operations', 'call_logs', 'visitor_intake', 'sms_templates', 'customer_interactions'],
+    // Front Desk-specific powers
+    customerCommunication: true,
+    leadManagement: true
   }
 };
 
@@ -137,7 +146,8 @@ export const DASHBOARD_ROUTES: Record<UserRole, string> = {
   mentor: '/mentor',
   call_center: '/call-center',
   accountant: '/accounting',
-  student: '/dashboard'
+  student: '/dashboard',
+  front_desk_clerk: '/frontdesk'
 };
 
 export function hasPermission(userRole: UserRole, action: 'view' | 'edit' | 'delete' | 'create', resource: string): boolean {
@@ -155,14 +165,15 @@ export function canAccessRoute(userRole: UserRole, route: string): boolean {
   
   // Role-specific route access
   const allowedRoutes = {
-    admin: ['/admin', '/dashboard', '/manager', '/supervisor', '/teacher', '/mentor', '/call-center', '/callcenter', '/accounting'],
+    admin: ['/admin', '/dashboard', '/manager', '/supervisor', '/teacher', '/mentor', '/call-center', '/callcenter', '/accounting', '/frontdesk'],
     manager: ['/manager', '/dashboard', '/supervisor', '/teacher'],
     supervisor: ['/supervisor', '/dashboard', '/teacher', '/callcenter'],
     teacher: ['/teacher', '/dashboard'],
     mentor: ['/mentor', '/dashboard', '/callcenter'],
     call_center: ['/call-center', '/callcenter', '/dashboard'],
     accountant: ['/accounting', '/dashboard'],
-    student: ['/dashboard']
+    student: ['/dashboard'],
+    front_desk_clerk: ['/frontdesk', '/dashboard']
   };
   
   return allowedRoutes[userRole]?.includes(route) || false;
