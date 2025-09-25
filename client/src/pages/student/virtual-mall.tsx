@@ -31,6 +31,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import * as THREE from 'three';
+import lexiAvatar from '@assets/[s_970235333]-[gs_7]-[is_25]-[u_0]-[oi_0]-[m_flux1]-,_beautiful_woman,_blonde_hair,_dressed_in_latex_like_women_in_matrix_movie_with_her_name_Lexi_print_1758759656942.jpeg';
 
 interface Shop {
   id: string;
@@ -168,9 +169,51 @@ export default function VirtualMall() {
   const [showCoursebooks, setShowCoursebooks] = useState(false);
   const [selectedBook, setSelectedBook] = useState<CourseBook | null>(null);
   const [showBookDetailsModal, setShowBookDetailsModal] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
+  const [speechSynthesis] = useState(() => window.speechSynthesis);
 
   const { toast } = useToast();
   const { t, isRTL, direction, language } = useLanguage();
+
+  // Speech synthesis for Lexi's voice
+  const speakText = (text: string, voice: 'lexi' | 'shopgirl' = 'lexi') => {
+    if (!isVoiceEnabled || !speechSynthesis) return;
+    
+    // Cancel any ongoing speech
+    speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Configure voice based on speaker
+    if (voice === 'lexi') {
+      utterance.rate = 0.9; // Slightly slower for sophistication
+      utterance.pitch = 1.1; // Slightly higher for Lexi's character
+      utterance.volume = 0.8;
+      
+      // Try to find a female voice
+      const voices = speechSynthesis.getVoices();
+      const femaleVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes('female') || 
+        voice.name.toLowerCase().includes('woman') ||
+        voice.name.toLowerCase().includes('zira') ||
+        voice.name.toLowerCase().includes('samantha')
+      );
+      if (femaleVoice) utterance.voice = femaleVoice;
+    } else {
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.7;
+    }
+    
+    // Set language
+    utterance.lang = language === 'fa' ? 'fa-IR' : 'en-US';
+    
+    setIsLexiSpeaking(true);
+    utterance.onend = () => setIsLexiSpeaking(false);
+    utterance.onerror = () => setIsLexiSpeaking(false);
+    
+    speechSynthesis.speak(utterance);
+  };
 
   // Fetch coursebooks for bookstore using shared query client
   const { data: coursebooks, isLoading: coursebooksLoading, error: coursebooksError } = useQuery<{success: boolean; data: CourseBook[]}>({
@@ -451,6 +494,13 @@ export default function VirtualMall() {
       
       setMessages(prev => [...prev, newMessage]);
       
+      // Make Lexi speak her responses
+      if (response.speaker === 'Lexi') {
+        speakText(response.message, 'lexi');
+      } else {
+        speakText(response.message, 'shopgirl');
+      }
+      
       if (response.newVocabulary) {
         setCollectedVocabulary(prev => [...prev, ...response.newVocabulary]);
       }
@@ -643,15 +693,62 @@ export default function VirtualMall() {
         <div>
           <Card className="h-[600px] flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                {currentShop ? `Chat with ${currentShop.shopgirl.name}` : 'Chat with Lexi'}
-              </CardTitle>
-              {currentShop && (
-                <Badge style={{ backgroundColor: currentShop.color, color: 'white' }}>
-                  {currentShop.name}
-                </Badge>
-              )}
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5" />
+                    {currentShop ? `Chat with ${currentShop.shopgirl.name}` : 'Chat with Lexi'}
+                  </CardTitle>
+                  {currentShop && (
+                    <Badge style={{ backgroundColor: currentShop.color, color: 'white' }}>
+                      {currentShop.name}
+                    </Badge>
+                  )}
+                </div>
+                
+                {/* Lexi Avatar & Voice Controls */}
+                <div className="flex items-center gap-3">
+                  {/* Voice Controls */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                      className="w-8 h-8 p-0"
+                      data-testid="button-voice-toggle"
+                    >
+                      {isVoiceEnabled ? (
+                        <Volume2 className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <VolumeX className="w-4 h-4 text-gray-400" />
+                      )}
+                    </Button>
+                    {isLexiSpeaking && (
+                      <div className="flex items-center gap-1 text-xs text-blue-600">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                        Speaking...
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Lexi Avatar */}
+                  <div className="relative">
+                    <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isLexiSpeaking ? 'border-blue-500 shadow-lg' : 'border-gray-300'} transition-all duration-300`}>
+                      <img 
+                        src={lexiAvatar} 
+                        alt="Lexi - Virtual Assistant"
+                        className="w-full h-full object-cover"
+                        data-testid="lexi-avatar"
+                      />
+                    </div>
+                    {isLexiSpeaking && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               {currentShop?.id === 'bookstore' && (
                 <div className="flex gap-2 mt-2">
                   <Button
