@@ -150,10 +150,8 @@ export function setupBookEcommerceRoutes(app: Express) {
           isbn: book.isbn,
           category: book.category,
           description: book.description,
-          price: book.price_minor / 100, // Convert from cents to dollars
-          price_minor: book.price_minor,
-          currency_code: book.currency_code,
-          is_free: book.is_free,
+          price: book.price, // Use actual database price field (numeric)
+          cover_image: book.cover_image, // Include cover image from database
           pdf_file_path: book.pdf_file_path,
           hardcopy_available: book.hardcopy_available,
           created_at: book.createdAt,
@@ -205,10 +203,8 @@ export function setupBookEcommerceRoutes(app: Express) {
           isbn: book.isbn,
           category: book.category,
           description: book.description,
-          price: book.price_minor / 100, // Convert from cents to dollars
-          price_minor: book.price_minor,
-          currency_code: book.currency_code,
-          is_free: book.is_free,
+          price: book.price, // Use actual database price field
+          cover_image: book.cover_image,
           pdf_file_path: book.pdf_file_path,
           hardcopy_available: book.hardcopy_available,
           created_at: book.createdAt,
@@ -261,10 +257,8 @@ export function setupBookEcommerceRoutes(app: Express) {
           isbn: book.isbn,
           category: book.category,
           description: book.description,
-          price: book.price_minor / 100, // Convert from cents to dollars
-          price_minor: book.price_minor,
-          currency_code: book.currency_code,
-          is_free: book.is_free,
+          price: book.price, // Use actual database price field
+          cover_image: book.cover_image,
           pdf_file_path: book.pdf_file_path,
           hardcopy_available: book.hardcopy_available,
           assets: bookAssets,
@@ -324,10 +318,8 @@ export function setupBookEcommerceRoutes(app: Express) {
           isbn: updatedBook.isbn,
           category: updatedBook.category,
           description: updatedBook.description,
-          price: updatedBook.price_minor / 100, // Convert from cents to dollars
-          price_minor: updatedBook.price_minor,
-          currency_code: updatedBook.currency_code,
-          is_free: updatedBook.is_free,
+          price: updatedBook.price, // Use actual database price field
+          cover_image: updatedBook.cover_image,
           pdf_file_path: updatedBook.pdf_file_path,
           hardcopy_available: updatedBook.hardcopy_available,
           created_at: updatedBook.createdAt,
@@ -461,7 +453,7 @@ export function setupBookEcommerceRoutes(app: Express) {
       const cartItems = await storage.getCartItems(cart.id);
       
       const totalAmount = cartItems.reduce((sum, item) => 
-        sum + (item.book.price_minor * item.quantity), 0
+        sum + (item.book.price * item.quantity), 0
       );
 
       res.json({
@@ -475,15 +467,13 @@ export function setupBookEcommerceRoutes(app: Express) {
               id: item.book.id,
               title: item.book.title,
               author: item.book.author,
-              price: item.book.price_minor / 100, // Convert from cents to dollars
-              price_minor: item.book.price_minor,
-              currency_code: item.book.currency_code,
-              is_free: item.book.is_free,
+              price: item.book.price, // Use actual database price field
+              cover_image: item.book.cover_image,
               pdf_file_path: item.book.pdf_file_path,
               hardcopy_available: item.book.hardcopy_available
             },
             quantity: item.quantity,
-            subtotal: item.book.price_minor * item.quantity,
+            subtotal: item.book.price * item.quantity,
             added_at: item.added_at
           })),
           total_items: cartItems.length,
@@ -710,7 +700,7 @@ export function setupBookEcommerceRoutes(app: Express) {
 
       // Calculate total
       const totalAmount = cartItems.reduce((sum, item) => 
-        sum + (item.book.price_minor * item.quantity), 0
+        sum + (item.book.price * item.quantity), 0
       );
 
       const hasFreeItems = cartItems.some(item => item.book.is_free);
