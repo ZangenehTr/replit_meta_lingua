@@ -234,6 +234,8 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "inquiry_tracking": ["read", "create", "update", "view", "list"],
       "appointment_scheduling": ["read", "create", "update", "view", "list", "cancel"],
       "trial_lesson_coordination": ["read", "create", "update", "view", "list", "schedule"],
+      // CRITICAL FIX: Add trial_lessons permissions to match API endpoints
+      "trial_lessons": ["read", "create", "update", "view", "list", "checkin", "complete", "waitlist", "analytics"],
       "lead_management": ["read", "create", "update", "view", "list"],
       "call_logs": ["read", "create", "view", "list"],
       // Add front desk resource permissions

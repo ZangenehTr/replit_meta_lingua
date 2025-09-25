@@ -24087,6 +24087,479 @@ Meta Lingua Academy`;
   console.log('✅ 3D Content Creation Tools routes registered (Lesson Builder, Templates, Mobile Optimization)');
 
   // ========================
+  // TRIAL LESSON SCHEDULING SYSTEM API ROUTES
+  // ========================
+
+  // Import trial lesson schema types
+  const { 
+    trialLessons, trialLessonOutcomes, teacherTrialAvailability, 
+    trialLessonConflicts, trialLessonAnalytics, trialLessonWaitList,
+    insertTrialLessonSchema, insertTrialLessonOutcomeSchema,
+    insertTeacherTrialAvailabilitySchema, insertTrialLessonConflictSchema,
+    insertTrialLessonWaitListSchema, insertTrialLessonAnalyticsSchema
+  } = await import("@shared/schema");
+  
+  // Import types separately
+  const { TrialLesson, InsertTrialLesson } = await import("@shared/schema");
+
+  // Get all trial lessons with filtering and pagination
+  app.get("/api/trial-lessons", authenticate, authorizePermission('trial_lessons', 'list'), async (req: any, res) => {
+    try {
+      const { 
+        status, teacherId, bookedBy, lessonType, targetLanguage, 
+        dateFrom, dateTo, page = 1, limit = 20 
+      } = req.query;
+      
+      let query = db.select().from(trialLessons);
+      
+      // Apply filters
+      const conditions = [];
+      if (status) conditions.push(eq(trialLessons.bookingStatus, status));
+      if (teacherId) conditions.push(eq(trialLessons.assignedTeacherId, parseInt(teacherId)));
+      if (bookedBy) conditions.push(eq(trialLessons.bookedBy, parseInt(bookedBy)));
+      if (lessonType) conditions.push(eq(trialLessons.lessonType, lessonType));
+      if (targetLanguage) conditions.push(eq(trialLessons.targetLanguage, targetLanguage));
+      if (dateFrom) conditions.push(sql`${trialLessons.scheduledDate} >= ${dateFrom}`);
+      if (dateTo) conditions.push(sql`${trialLessons.scheduledDate} <= ${dateTo}`);
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      // Add pagination
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      query = query.orderBy(desc(trialLessons.scheduledDate)).offset(offset).limit(parseInt(limit));
+      
+      const lessons = await query;
+      
+      // Add computed studentName field to each lesson
+      const lessonsWithComputedFields = lessons.map(lesson => ({
+        ...lesson,
+        studentName: `${lesson.studentFirstName} ${lesson.studentLastName}`.trim()
+      }));
+      
+      // Get total count for pagination
+      let countQuery = db.select({ count: sql`count(*)` }).from(trialLessons);
+      if (conditions.length > 0) {
+        countQuery = countQuery.where(and(...conditions));
+      }
+      const [{ count }] = await countQuery;
+      
+      res.json({
+        lessons: lessonsWithComputedFields,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: parseInt(count as string),
+          totalPages: Math.ceil(parseInt(count as string) / parseInt(limit))
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching trial lessons:', error);
+      res.status(500).json({ error: 'Failed to fetch trial lessons', message: error.message });
+    }
+  });
+
+  // Get specific trial lesson by ID
+  app.get("/api/trial-lessons/:id", authenticate, authorizePermission('trial_lessons', 'read'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [lesson] = await db.select().from(trialLessons).where(eq(trialLessons.id, id));
+      
+      if (!lesson) {
+        return res.status(404).json({ error: 'Trial lesson not found' });
+      }
+      
+      // Add computed studentName field
+      const lessonWithComputedFields = {
+        ...lesson,
+        studentName: `${lesson.studentFirstName} ${lesson.studentLastName}`.trim()
+      };
+      
+      // Get related data
+      const [outcome] = await db.select().from(trialLessonOutcomes)
+        .where(eq(trialLessonOutcomes.trialLessonId, id));
+      
+      res.json({ lesson: lessonWithComputedFields, outcome });
+    } catch (error) {
+      console.error('Error fetching trial lesson:', error);
+      res.status(500).json({ error: 'Failed to fetch trial lesson', message: error.message });
+    }
+  });
+
+  // Create new trial lesson
+  app.post("/api/trial-lessons", authenticate, authorizePermission('trial_lessons', 'create'), async (req: any, res) => {
+    try {
+      const validation = insertTrialLessonSchema.safeParse({ 
+        ...req.body, 
+        bookedBy: req.user.id 
+      });
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid trial lesson data', 
+          details: validation.error.issues 
+        });
+      }
+      
+      // Check for scheduling conflicts
+      const conflictCheck = await db.select().from(trialLessons)
+        .where(and(
+          eq(trialLessons.assignedTeacherId, validation.data.assignedTeacherId),
+          eq(trialLessons.scheduledDate, validation.data.scheduledDate),
+          sql`${trialLessons.scheduledStartTime} < ${validation.data.scheduledEndTime}`,
+          sql`${trialLessons.scheduledEndTime} > ${validation.data.scheduledStartTime}`,
+          inArray(trialLessons.bookingStatus, ['confirmed', 'pending'])
+        ));
+      
+      if (conflictCheck.length > 0) {
+        // Log conflict
+        await db.insert(trialLessonConflicts).values({
+          trialLessonId: null, // Will be set after lesson creation
+          conflictType: 'double_booking',
+          conflictDescription: 'Teacher already has a lesson at this time',
+          conflictingTeacherId: validation.data.assignedTeacherId,
+          conflictingTrialId: conflictCheck[0].id
+        });
+        
+        return res.status(409).json({ 
+          error: 'Scheduling conflict detected', 
+          conflictingLesson: conflictCheck[0],
+          message: 'Teacher is not available at this time'
+        });
+      }
+      
+      const [newLesson] = await db.insert(trialLessons)
+        .values(validation.data)
+        .returning();
+      
+      // Add computed studentName field for response
+      const responseLesson = {
+        ...newLesson,
+        studentName: `${newLesson.studentFirstName} ${newLesson.studentLastName}`.trim()
+      };
+      
+      // Emit real-time notification for trial lesson creation
+      try {
+        const websocket = req.app.locals.websocketServer;
+        if (websocket) {
+          websocket.io.emit('trial-lesson-created', {
+            lessonId: newLesson.id,
+            studentName: responseLesson.studentName,
+            scheduledDate: newLesson.scheduledDate,
+            scheduledTime: newLesson.scheduledStartTime,
+            lessonType: newLesson.lessonType,
+            targetLanguage: newLesson.targetLanguage,
+            bookedBy: req.user.id,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (socketError) {
+        console.error('Error emitting trial lesson created event:', socketError);
+      }
+      
+      // TODO: Send SMS/Email confirmation
+      // TODO: Create follow-up task
+      
+      res.status(201).json(responseLesson);
+    } catch (error) {
+      console.error('Error creating trial lesson:', error);
+      res.status(500).json({ error: 'Failed to create trial lesson', message: error.message });
+    }
+  });
+
+  // Update trial lesson
+  app.put("/api/trial-lessons/:id", authenticate, authorizePermission('trial_lessons', 'update'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validation = insertTrialLessonSchema.partial().safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid update data', 
+          details: validation.error.issues 
+        });
+      }
+      
+      const [updatedLesson] = await db.update(trialLessons)
+        .set({ ...validation.data, updatedAt: new Date() })
+        .where(eq(trialLessons.id, id))
+        .returning();
+      
+      if (!updatedLesson) {
+        return res.status(404).json({ error: 'Trial lesson not found' });
+      }
+      
+      // Add computed studentName field for response
+      const responseLesson = {
+        ...updatedLesson,
+        studentName: `${updatedLesson.studentFirstName} ${updatedLesson.studentLastName}`.trim()
+      };
+      
+      // Emit real-time notification for trial lesson update
+      try {
+        const websocket = req.app.locals.websocketServer;
+        if (websocket) {
+          websocket.io.emit('trial-lesson-updated', {
+            lessonId: updatedLesson.id,
+            studentName: responseLesson.studentName,
+            changes: validation.data,
+            updatedBy: req.user.id,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (socketError) {
+        console.error('Error emitting trial lesson updated event:', socketError);
+      }
+      
+      res.json(responseLesson);
+    } catch (error) {
+      console.error('Error updating trial lesson:', error);
+      res.status(500).json({ error: 'Failed to update trial lesson', message: error.message });
+    }
+  });
+
+  // Check in student for trial lesson
+  app.post("/api/trial-lessons/:id/checkin", authenticate, authorizePermission('trial_lessons', 'checkin'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const now = new Date();
+      
+      const [updatedLesson] = await db.update(trialLessons)
+        .set({ 
+          attendanceStatus: 'attended',
+          checkedInAt: now,
+          checkedInBy: req.user.id,
+          actualStartTime: now,
+          updatedAt: now
+        })
+        .where(eq(trialLessons.id, id))
+        .returning();
+      
+      if (!updatedLesson) {
+        return res.status(404).json({ error: 'Trial lesson not found' });
+      }
+      
+      // Add computed studentName field for response
+      const responseLesson = {
+        ...updatedLesson,
+        studentName: `${updatedLesson.studentFirstName} ${updatedLesson.studentLastName}`.trim()
+      };
+      
+      // Emit real-time notification for trial lesson check-in
+      try {
+        const websocket = req.app.locals.websocketServer;
+        if (websocket) {
+          websocket.io.emit('trial-lesson-checkin', {
+            lessonId: updatedLesson.id,
+            studentName: responseLesson.studentName,
+            attendanceStatus: 'attended',
+            checkedInBy: req.user.id,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (socketError) {
+        console.error('Error emitting trial lesson check-in event:', socketError);
+      }
+      
+      res.json(responseLesson);
+    } catch (error) {
+      console.error('Error checking in trial lesson:', error);
+      res.status(500).json({ error: 'Failed to check in', message: error.message });
+    }
+  });
+
+  // Complete trial lesson and record outcomes
+  app.post("/api/trial-lessons/:id/complete", authenticate, authorizePermission('trial_lessons', 'complete'), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { outcomeData } = req.body;
+      
+      const outcomeValidation = insertTrialLessonOutcomeSchema.safeParse({
+        ...outcomeData,
+        trialLessonId: id,
+        teacherId: req.user.id
+      });
+      
+      if (!outcomeValidation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid outcome data', 
+          details: outcomeValidation.error.issues 
+        });
+      }
+      
+      // Update lesson status
+      const [updatedLesson] = await db.update(trialLessons)
+        .set({ 
+          bookingStatus: 'completed',
+          actualEndTime: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(trialLessons.id, id))
+        .returning();
+      
+      // Create outcome record
+      const [outcome] = await db.insert(trialLessonOutcomes)
+        .values(outcomeValidation.data)
+        .returning();
+      
+      // Add computed studentName field for response
+      const responseLesson = {
+        ...updatedLesson,
+        studentName: `${updatedLesson.studentFirstName} ${updatedLesson.studentLastName}`.trim()
+      };
+      
+      // Emit real-time notification for trial lesson completion
+      try {
+        const websocket = req.app.locals.websocketServer;
+        if (websocket) {
+          websocket.io.emit('trial-lesson-completed', {
+            lessonId: updatedLesson.id,
+            studentName: responseLesson.studentName,
+            attendanceStatus: outcomeValidation.data.attendanceStatus,
+            assessedLevel: outcomeValidation.data.assessedLevel,
+            completedBy: req.user.id,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (socketError) {
+        console.error('Error emitting trial lesson completed event:', socketError);
+      }
+      
+      res.json({ lesson: responseLesson, outcome });
+    } catch (error) {
+      console.error('Error completing trial lesson:', error);
+      res.status(500).json({ error: 'Failed to complete trial lesson', message: error.message });
+    }
+  });
+
+  // Get teacher availability for trial lessons (by teacher ID)
+  app.get("/api/trial-lessons/teacher-availability/:teacherId", authenticate, authorizePermission('trial_lessons', 'read'), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const { date } = req.query;
+      
+      let query = db.select().from(teacherTrialAvailability)
+        .where(eq(teacherTrialAvailability.teacherId, teacherId));
+      
+      if (date) {
+        query = query.where(eq(teacherTrialAvailability.availableDate, date));
+      }
+      
+      const availability = await query.orderBy(teacherTrialAvailability.startTime);
+      res.json(availability);
+    } catch (error) {
+      console.error('Error fetching teacher availability:', error);
+      res.status(500).json({ error: 'Failed to fetch availability', message: error.message });
+    }
+  });
+
+  // Get available teachers and time slots for trial lessons (what the frontend expects)
+  app.get("/api/teachers/available-slots", authenticate, authorizePermission('trial_lessons', 'read'), async (req: any, res) => {
+    try {
+      const { date, language, gender } = req.query;
+      
+      if (!date) {
+        return res.status(400).json({ error: 'Date parameter is required' });
+      }
+      
+      // Get all available teachers for the date
+      let availabilityQuery = db.select().from(teacherTrialAvailability)
+        .where(eq(teacherTrialAvailability.availableDate, date));
+      
+      const availabilitySlots = await availabilityQuery.orderBy(teacherTrialAvailability.startTime);
+      
+      // For now, return aggregated time slots
+      // In a real implementation, you would filter by teacher qualifications, language expertise, etc.
+      const aggregatedSlots = availabilitySlots.map(slot => ({
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        availableTeachers: 1 // Simplified - would normally count available teachers
+      }));
+      
+      res.json(aggregatedSlots);
+    } catch (error) {
+      console.error('Error fetching available slots:', error);
+      res.status(500).json({ error: 'Failed to fetch available slots', message: error.message });
+    }
+  });
+
+  // Get trial lesson analytics
+  app.get("/api/trial-lessons/analytics", authenticate, authorizePermission('trial_lessons', 'analytics'), async (req: any, res) => {
+    try {
+      const { periodType = 'monthly', startDate, endDate } = req.query;
+      
+      // Basic metrics
+      const totalBookings = await db.select({ count: sql`count(*)` })
+        .from(trialLessons);
+      
+      const completedBookings = await db.select({ count: sql`count(*)` })
+        .from(trialLessons)
+        .where(eq(trialLessons.bookingStatus, 'completed'));
+      
+      const noShowBookings = await db.select({ count: sql`count(*)` })
+        .from(trialLessons)
+        .where(eq(trialLessons.attendanceStatus, 'no_show'));
+      
+      // Conversion metrics
+      const conversions = await db.select({ count: sql`count(*)` })
+        .from(trialLessons)
+        .where(eq(trialLessons.convertedToEnrollment, true));
+      
+      // Time slot popularity
+      const timeSlotStats = await db.select({
+        timeSlot: sql`date_part('hour', ${trialLessons.scheduledStartTime})`,
+        count: sql`count(*)`
+      })
+      .from(trialLessons)
+      .groupBy(sql`date_part('hour', ${trialLessons.scheduledStartTime})`)
+      .orderBy(sql`count(*) DESC`);
+      
+      const analytics = {
+        totalBookings: parseInt(totalBookings[0].count as string),
+        completedBookings: parseInt(completedBookings[0].count as string),
+        noShowBookings: parseInt(noShowBookings[0].count as string),
+        conversions: parseInt(conversions[0].count as string),
+        conversionRate: totalBookings[0].count > 0 
+          ? (parseInt(conversions[0].count as string) / parseInt(totalBookings[0].count as string) * 100).toFixed(2)
+          : 0,
+        timeSlotStats
+      };
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching trial lesson analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics', message: error.message });
+    }
+  });
+
+  // Add to wait list for popular time slots
+  app.post("/api/trial-lessons/waitlist", authenticate, authorizePermission('trial_lessons', 'waitlist'), async (req: any, res) => {
+    try {
+      const validation = insertTrialLessonWaitListSchema.safeParse({
+        ...req.body,
+        addedBy: req.user.id
+      });
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: 'Invalid wait list data', 
+          details: validation.error.issues 
+        });
+      }
+      
+      const [waitListEntry] = await db.insert(trialLessonWaitList)
+        .values(validation.data)
+        .returning();
+      
+      res.status(201).json(waitListEntry);
+    } catch (error) {
+      console.error('Error adding to wait list:', error);
+      res.status(500).json({ error: 'Failed to add to wait list', message: error.message });
+    }
+  });
+
+  // ========================
   // FRONT DESK CLERK SYSTEM API ROUTES
   // ========================
   

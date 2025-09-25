@@ -23,10 +23,13 @@ import {
   Plus,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  BookOpen,
+  GraduationCap
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { TrialLessonCalendar } from '@/components/trial-lessons/TrialLessonCalendar';
 
 interface FrontDeskOperation {
   id: number;
@@ -270,10 +273,11 @@ export default function FrontDeskDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="operations" data-testid="tab-operations">Walk-in Operations</TabsTrigger>
           <TabsTrigger value="calls" data-testid="tab-calls">Phone Calls</TabsTrigger>
           <TabsTrigger value="tasks" data-testid="tab-tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="trial-lessons" data-testid="tab-trial-lessons">Trial Lessons</TabsTrigger>
         </TabsList>
 
         {/* Walk-in Operations Tab */}
@@ -506,6 +510,11 @@ export default function FrontDeskDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Trial Lessons Tab */}
+        <TabsContent value="trial-lessons" className="space-y-4">
+          <TrialLessonCalendar />
         </TabsContent>
       </Tabs>
     </div>

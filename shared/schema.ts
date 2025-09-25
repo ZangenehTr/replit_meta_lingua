@@ -6759,6 +6759,353 @@ export type FrontDeskTask = typeof frontDeskTasks.$inferSelect;
 export type InsertFrontDeskTask = z.infer<typeof insertFrontDeskTaskSchema>;
 
 // ============================================================================
+// TRIAL LESSON SCHEDULING SYSTEM
+// ============================================================================
+
+// Trial Lessons - Core table for all trial lesson bookings
+export const trialLessons = pgTable("trial_lessons", {
+  id: serial("id").primaryKey(),
+  
+  // Student Information (from walk-in or phone inquiry)
+  studentFirstName: text("student_first_name").notNull(),
+  studentLastName: text("student_last_name").notNull(),
+  studentPhone: text("student_phone").notNull(),
+  studentEmail: text("student_email"),
+  studentAge: integer("student_age"),
+  studentGender: text("student_gender"), // for teacher matching preferences
+  
+  // Existing user connection (if return customer)
+  existingUserId: integer("existing_user_id").references(() => users.id),
+  
+  // Emergency contact
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  
+  // Language Learning Information
+  targetLanguage: text("target_language").notNull(),
+  currentProficiencyLevel: text("current_proficiency_level"), // A1, A2, B1, B2, C1, C2, beginner, intermediate, advanced
+  learningObjectives: text("learning_objectives").array().default([]),
+  previousExperience: text("previous_experience"),
+  preferredLearningStyle: text("preferred_learning_style"), // visual, auditory, kinesthetic, reading_writing
+  
+  // Trial Lesson Details
+  lessonType: text("lesson_type").notNull(), // 'in_person', 'online', 'phone_consultation'
+  lessonDuration: integer("lesson_duration").notNull().default(45), // minutes: 30, 45, 60
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  scheduledStartTime: timestamp("scheduled_start_time").notNull(),
+  scheduledEndTime: timestamp("scheduled_end_time").notNull(),
+  
+  // Teacher Assignment
+  assignedTeacherId: integer("assigned_teacher_id").references(() => users.id),
+  teacherAssignmentMethod: text("teacher_assignment_method"), // 'automatic', 'manual', 'student_preference'
+  teacherPreferences: jsonb("teacher_preferences").$type<{
+    preferredGender?: 'male' | 'female';
+    experienceLevel?: 'new' | 'experienced' | 'senior';
+    teachingStyle?: 'formal' | 'conversational' | 'interactive';
+    specializations?: string[];
+  }>(),
+  
+  // Room/Resource Booking (for in-person trials)
+  roomId: integer("room_id").references(() => rooms.id),
+  resourceRequirements: text("resource_requirements").array().default([]), // 'whiteboard', 'projector', 'computer', 'audio_system'
+  
+  // Booking Status and Workflow
+  bookingStatus: text("booking_status").notNull().default("confirmed"), // 'pending', 'confirmed', 'cancelled', 'completed', 'no_show', 'rescheduled'
+  confirmationSent: boolean("confirmation_sent").default(false),
+  remindersSent: jsonb("reminders_sent").$type<{
+    reminder24h?: { sent: boolean; sentAt?: string };
+    reminder2h?: { sent: boolean; sentAt?: string };
+  }>().default({}),
+  
+  // Booking Source and Context
+  bookingSource: text("booking_source").notNull(), // 'walk_in', 'phone_call', 'online_form', 'referral'
+  relatedWalkInId: integer("related_walk_in_id").references(() => frontDeskOperations.id),
+  relatedCallId: integer("related_call_id").references(() => phoneCallLogs.id),
+  bookedBy: integer("booked_by").references(() => users.id).notNull(), // Front desk clerk who made the booking
+  
+  // Payment Information (for paid trials)
+  isPaid: boolean("is_paid").default(false),
+  trialFee: decimal("trial_fee", { precision: 10, scale: 2 }).default("0"),
+  paymentStatus: text("payment_status").default("not_required"), // 'not_required', 'pending', 'paid', 'refunded'
+  paymentMethod: text("payment_method"), // 'cash', 'card', 'online', 'wallet'
+  
+  // Attendance and Outcomes
+  attendanceStatus: text("attendance_status"), // 'attended', 'no_show', 'late', 'left_early'
+  actualStartTime: timestamp("actual_start_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  checkedInAt: timestamp("checked_in_at"),
+  checkedInBy: integer("checked_in_by").references(() => users.id),
+  
+  // Rescheduling
+  originalScheduledDate: timestamp("original_scheduled_date"),
+  rescheduleCount: integer("reschedule_count").default(0),
+  rescheduleReason: text("reschedule_reason"),
+  
+  // Integration and Follow-up
+  followUpTaskId: integer("follow_up_task_id").references(() => frontDeskTasks.id),
+  convertedToEnrollment: boolean("converted_to_enrollment").default(false),
+  enrollmentId: integer("enrollment_id").references(() => enrollments.id),
+  
+  // Special Requirements
+  specialRequirements: text("special_requirements"),
+  accessibilityNeeds: text("accessibility_needs"),
+  culturalConsiderations: text("cultural_considerations"),
+  
+  // Communication preferences
+  preferredCommunicationLanguage: text("preferred_communication_language").default("fa"), // for SMS/email templates
+  communicationPreferences: jsonb("communication_preferences").$type<{
+    smsEnabled?: boolean;
+    emailEnabled?: boolean;
+    callEnabled?: boolean;
+  }>().default({}),
+  
+  // Notes and Additional Information
+  bookingNotes: text("booking_notes"), // Front desk clerk notes during booking
+  specialInstructions: text("special_instructions"), // Instructions for teacher
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Trial Lesson Outcomes - Detailed assessment and feedback after trial
+export const trialLessonOutcomes = pgTable("trial_lesson_outcomes", {
+  id: serial("id").primaryKey(),
+  trialLessonId: integer("trial_lesson_id").references(() => trialLessons.id).notNull().unique(),
+  
+  // Teacher Assessment
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  assessedLevel: text("assessed_level"), // Teacher's assessment of student level
+  skillsAssessment: jsonb("skills_assessment").$type<{
+    listening?: { level: string; notes?: string };
+    speaking?: { level: string; notes?: string };
+    reading?: { level: string; notes?: string };
+    writing?: { level: string; notes?: string };
+    vocabulary?: { level: string; notes?: string };
+    grammar?: { level: string; notes?: string };
+  }>(),
+  
+  // Recommendations
+  recommendedCourse: text("recommended_course"),
+  recommendedLevel: text("recommended_level"),
+  recommendedClassFormat: text("recommended_class_format"), // 'group', 'private', 'semi_private'
+  recommendedFrequency: text("recommended_frequency"), // '1x_week', '2x_week', '3x_week'
+  
+  // Student Feedback
+  studentSatisfactionRating: integer("student_satisfaction_rating"), // 1-5 scale
+  studentFeedbackNotes: text("student_feedback_notes"),
+  studentInterestLevel: text("student_interest_level"), // 'very_interested', 'interested', 'somewhat_interested', 'not_interested'
+  
+  // Teacher Feedback
+  teacherNotes: text("teacher_notes"),
+  teachingRecommendations: text("teaching_recommendations"),
+  learningChallengesIdentified: text("learning_challenges_identified").array().default([]),
+  strengthsIdentified: text("strengths_identified").array().default([]),
+  
+  // Conversion Likelihood
+  conversionLikelihood: text("conversion_likelihood"), // 'high', 'medium', 'low', 'unlikely'
+  conversionBarriers: text("conversion_barriers").array().default([]), // 'price', 'schedule', 'location', 'teacher_fit', 'level_mismatch'
+  
+  // Follow-up Actions
+  nextSteps: text("next_steps").array().default([]),
+  followUpMethod: text("follow_up_method"), // 'phone_call', 'email', 'sms', 'in_person'
+  followUpTimeline: text("follow_up_timeline"), // 'immediate', '24_hours', '3_days', '1_week'
+  assignedFollowUpAgent: integer("assigned_follow_up_agent").references(() => users.id),
+  
+  // Trial Quality Assessment
+  lessonQualityRating: integer("lesson_quality_rating"), // 1-5 teacher self-assessment
+  technicalIssues: text("technical_issues").array().default([]),
+  improvementAreas: text("improvement_areas").array().default([]),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Teacher Trial Lesson Availability - Specific availability windows for trial lessons
+export const teacherTrialAvailability = pgTable("teacher_trial_availability", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  
+  // Availability Window
+  availableDate: date("available_date").notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  
+  // Trial-specific settings
+  maxTrialsPerSlot: integer("max_trials_per_slot").default(1),
+  acceptedTrialTypes: text("accepted_trial_types").array().default(["in_person", "online"]), // which types teacher accepts
+  
+  // Current bookings
+  currentBookings: integer("current_bookings").default(0),
+  isBlocked: boolean("is_blocked").default(false), // manually blocked by teacher/admin
+  blockingReason: text("blocking_reason"),
+  
+  // Teacher preferences for trials
+  preferredStudentLevels: text("preferred_student_levels").array().default([]), // levels teacher prefers to teach in trials
+  preferredLanguages: text("preferred_languages").array().default([]), // target languages teacher specializes in
+  
+  // Automatic scheduling
+  allowAutoAssignment: boolean("allow_auto_assignment").default(true),
+  minNoticeHours: integer("min_notice_hours").default(2), // minimum hours notice needed
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Trial Lesson Conflicts - Track and resolve scheduling conflicts
+export const trialLessonConflicts = pgTable("trial_lesson_conflicts", {
+  id: serial("id").primaryKey(),
+  
+  // Primary trial lesson
+  trialLessonId: integer("trial_lesson_id").references(() => trialLessons.id).notNull(),
+  
+  // Conflict details
+  conflictType: text("conflict_type").notNull(), // 'teacher_unavailable', 'room_occupied', 'double_booking', 'teacher_overload'
+  conflictDescription: text("conflict_description"),
+  
+  // Conflicting resources
+  conflictingTeacherId: integer("conflicting_teacher_id").references(() => users.id),
+  conflictingRoomId: integer("conflicting_room_id").references(() => rooms.id),
+  conflictingTrialId: integer("conflicting_trial_id").references(() => trialLessons.id),
+  
+  // Resolution
+  resolutionStatus: text("resolution_status").notNull().default("pending"), // 'pending', 'resolved', 'escalated'
+  resolutionMethod: text("resolution_method"), // 'reschedule', 'reassign_teacher', 'change_room', 'cancel'
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolutionNotes: text("resolution_notes"),
+  
+  // Alternative suggestions
+  suggestedAlternatives: jsonb("suggested_alternatives").$type<Array<{
+    newDateTime?: string;
+    alternativeTeacherId?: number;
+    alternativeRoomId?: number;
+    reason?: string;
+  }>>().default([]),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at")
+});
+
+// Trial Lesson Analytics - Performance tracking and metrics
+export const trialLessonAnalytics = pgTable("trial_lesson_analytics", {
+  id: serial("id").primaryKey(),
+  
+  // Time period for analytics
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  periodType: text("period_type").notNull(), // 'daily', 'weekly', 'monthly', 'quarterly'
+  
+  // Booking metrics
+  totalBookings: integer("total_bookings").default(0),
+  confirmedBookings: integer("confirmed_bookings").default(0),
+  cancelledBookings: integer("cancelled_bookings").default(0),
+  noShowBookings: integer("no_show_bookings").default(0),
+  completedBookings: integer("completed_bookings").default(0),
+  
+  // Conversion metrics
+  inquiryToTrialConversion: decimal("inquiry_to_trial_conversion", { precision: 5, scale: 2 }).default("0"),
+  trialToEnrollmentConversion: decimal("trial_to_enrollment_conversion", { precision: 5, scale: 2 }).default("0"),
+  totalConversions: integer("total_conversions").default(0),
+  conversionRevenue: decimal("conversion_revenue", { precision: 10, scale: 2 }).default("0"),
+  
+  // Teacher performance
+  teacherMetrics: jsonb("teacher_metrics").$type<Record<string, {
+    trialsCompleted: number;
+    averageRating: number;
+    conversions: number;
+    conversionRate: number;
+  }>>().default({}),
+  
+  // Time slot popularity
+  popularTimeSlots: jsonb("popular_time_slots").$type<Array<{
+    timeSlot: string;
+    bookingCount: number;
+    conversionRate: number;
+  }>>().default([]),
+  
+  // Demographic insights
+  studentDemographics: jsonb("student_demographics").$type<{
+    ageGroups: Record<string, number>;
+    genderDistribution: Record<string, number>;
+    targetLanguages: Record<string, number>;
+    proficiencyLevels: Record<string, number>;
+  }>().default({}),
+  
+  // Revenue metrics
+  totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0"),
+  averageTrialValue: decimal("average_trial_value", { precision: 10, scale: 2 }).default("0"),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Trial Lesson Wait List - Manage waiting lists for popular time slots
+export const trialLessonWaitList = pgTable("trial_lesson_wait_list", {
+  id: serial("id").primaryKey(),
+  
+  // Student information
+  studentFirstName: text("student_first_name").notNull(),
+  studentLastName: text("student_last_name").notNull(),
+  studentPhone: text("student_phone").notNull(),
+  studentEmail: text("student_email"),
+  
+  // Desired trial details
+  targetLanguage: text("target_language").notNull(),
+  preferredLessonType: text("preferred_lesson_type"), // 'in_person', 'online', 'any'
+  preferredDates: text("preferred_dates").array().default([]),
+  preferredTimeSlots: text("preferred_time_slots").array().default([]),
+  preferredTeacherGender: text("preferred_teacher_gender"),
+  maxWaitDays: integer("max_wait_days").default(30), // how long to stay on wait list
+  
+  // Wait list management
+  status: text("status").notNull().default("active"), // 'active', 'contacted', 'booked', 'expired', 'removed'
+  priority: integer("priority").default(1), // higher number = higher priority
+  addedBy: integer("added_by").references(() => users.id).notNull(),
+  
+  // Contact attempts
+  contactAttempts: integer("contact_attempts").default(0),
+  lastContactedAt: timestamp("last_contacted_at"),
+  contactMethod: text("contact_method"), // 'phone', 'sms', 'email'
+  
+  // Resolution
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolutionMethod: text("resolution_method"), // 'booked', 'declined', 'expired', 'removed'
+  bookedTrialId: integer("booked_trial_id").references(() => trialLessons.id),
+  
+  // Notes
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ============================================================================
+// TRIAL LESSON SYSTEM INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// Insert schemas for trial lesson tables
+export const insertTrialLessonSchema = createInsertSchema(trialLessons).omit(['id', 'createdAt', 'updatedAt']);
+export const insertTrialLessonOutcomeSchema = createInsertSchema(trialLessonOutcomes).omit(['id', 'createdAt', 'updatedAt']);
+export const insertTeacherTrialAvailabilitySchema = createInsertSchema(teacherTrialAvailability).omit(['id', 'createdAt', 'updatedAt']);
+export const insertTrialLessonConflictSchema = createInsertSchema(trialLessonConflicts).omit(['id', 'createdAt', 'resolvedAt']);
+export const insertTrialLessonAnalyticsSchema = createInsertSchema(trialLessonAnalytics).omit(['id', 'createdAt']);
+export const insertTrialLessonWaitListSchema = createInsertSchema(trialLessonWaitList).omit(['id', 'createdAt', 'updatedAt']);
+
+// Type exports for trial lesson tables
+export type TrialLesson = typeof trialLessons.$inferSelect;
+export type InsertTrialLesson = z.infer<typeof insertTrialLessonSchema>;
+export type TrialLessonOutcome = typeof trialLessonOutcomes.$inferSelect;
+export type InsertTrialLessonOutcome = z.infer<typeof insertTrialLessonOutcomeSchema>;
+export type TeacherTrialAvailability = typeof teacherTrialAvailability.$inferSelect;
+export type InsertTeacherTrialAvailability = z.infer<typeof insertTeacherTrialAvailabilitySchema>;
+export type TrialLessonConflict = typeof trialLessonConflicts.$inferSelect;
+export type InsertTrialLessonConflict = z.infer<typeof insertTrialLessonConflictSchema>;
+export type TrialLessonAnalytics = typeof trialLessonAnalytics.$inferSelect;
+export type InsertTrialLessonAnalytics = z.infer<typeof insertTrialLessonAnalyticsSchema>;
+export type TrialLessonWaitList = typeof trialLessonWaitList.$inferSelect;
+export type InsertTrialLessonWaitList = z.infer<typeof insertTrialLessonWaitListSchema>;
+
+// ============================================================================
 // SMS TEMPLATE SYSTEM INSERT SCHEMAS AND TYPES
 // ============================================================================
 
@@ -6806,30 +7153,13 @@ export type InsertSmsTemplateFavorite = z.infer<typeof insertSmsTemplateFavorite
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 
-// Performance indexes for SMS template system
-import { index } from "drizzle-orm/pg-core";
+// Performance indexes for SMS template system (commented out temporarily to fix startup issues)
+// import { index } from "drizzle-orm/pg-core";
 
-export const smsTemplateIndexes = {
-  // Primary performance indexes for SMS templates
-  categoryIndex: index('sms_templates_category_id_idx').on(smsTemplates.categoryId),
-  createdAtIndex: index('sms_templates_created_at_idx').on(smsTemplates.createdAt),
-  statusIndex: index('sms_templates_status_idx').on(smsTemplates.status),
-  lastUsedIndex: index('sms_templates_last_used_at_idx').on(smsTemplates.lastUsedAt),
-  
-  // Sending logs indexes for query performance
-  sendingLogTemplateIndex: index('sms_sending_logs_template_id_idx').on(smsTemplateSendingLogs.templateId),
-  sendingLogCreatedAtIndex: index('sms_sending_logs_created_at_idx').on(smsTemplateSendingLogs.createdAt),
-  sendingLogStatusIndex: index('sms_sending_logs_delivery_status_idx').on(smsTemplateSendingLogs.deliveryStatus),
-  sendingLogSentByIndex: index('sms_sending_logs_sent_by_idx').on(smsTemplateSendingLogs.sentBy),
-  
-  // Analytics indexes for performance
-  analyticsTemplateIndex: index('sms_analytics_template_id_idx').on(smsTemplateAnalytics.templateId),
-  analyticsDateIndex: index('sms_analytics_date_idx').on(smsTemplateAnalytics.date),
-  
-  // Category indexes
-  categoryNameIndex: index('sms_categories_name_idx').on(smsTemplateCategories.name),
-  
-  // Variable indexes  
-  variableNameIndex: index('sms_variables_name_idx').on(smsTemplateVariables.name),
-  variableTypeIndex: index('sms_variables_type_idx').on(smsTemplateVariables.type)
-};
+// export const smsTemplateIndexes = {
+//   // Primary performance indexes for SMS templates
+//   categoryIndex: index('sms_templates_category_id_idx').on(smsTemplates.categoryId),
+//   createdAtIndex: index('sms_templates_created_at_idx').on(smsTemplates.createdAt),
+//   statusIndex: index('sms_templates_status_idx').on(smsTemplates.status),
+//   lastUsedIndex: index('sms_templates_last_used_at_idx').on(smsTemplates.lastUsedAt)
+// };
