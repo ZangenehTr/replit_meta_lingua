@@ -7,13 +7,18 @@ import { BaseWidgetProps, LearningProgress, themeConfig } from "./types";
 import { WidgetError } from "./WidgetError";
 import { WidgetLoading } from "./WidgetLoading";
 
+interface LearningProgressWidgetProps extends BaseWidgetProps {
+  compact?: boolean;
+}
+
 export function LearningProgressWidget({ 
   theme = 'learner',
   className,
   loading,
   error,
-  onRefresh 
-}: BaseWidgetProps) {
+  onRefresh,
+  compact = false
+}: LearningProgressWidgetProps) {
   // Fetch learning progress data
   const { data: progress, isLoading, error: fetchError } = useQuery<LearningProgress>({
     queryKey: ["/api/student/learning-progress"],
@@ -58,20 +63,29 @@ export function LearningProgressWidget({
   return (
     <MobileCard 
       variant="default"
-      className={className}
+      className={cn(compact && "p-3", className)}
       data-testid="learning-progress-widget"
     >
-      <MobileCardHeader>
-        <MobileCardTitle className="flex items-center gap-2">
-          <TrendingUp className={cn("h-5 w-5", currentTheme.text)} />
+      <MobileCardHeader className={cn(compact && "pb-2")}>
+        <MobileCardTitle className={cn(
+          "flex items-center gap-2",
+          compact ? "text-sm" : "text-base"
+        )}>
+          <TrendingUp className={cn(
+            compact ? "h-4 w-4" : "h-5 w-5", 
+            currentTheme.text
+          )} />
           Learning Progress
         </MobileCardTitle>
       </MobileCardHeader>
-      <MobileCardContent>
-        <div className="space-y-4">
+      <MobileCardContent className={cn(compact && "p-3 pt-0")}>
+        <div className={cn(compact ? "space-y-2" : "space-y-4")}>
           {/* Overall Progress */}
           <div>
-            <div className="flex justify-between text-sm mb-2">
+            <div className={cn(
+              "flex justify-between mb-2",
+              compact ? "text-xs" : "text-sm"
+            )}>
               <span>Course Progress</span>
               <span data-testid="text-course-progress">
                 {completedLessons}/{totalLessons} lessons
@@ -79,7 +93,7 @@ export function LearningProgressWidget({
             </div>
             <Progress 
               value={overallProgress} 
-              className="h-2"
+              className={cn(compact ? "h-1.5" : "h-2")}
               data-testid="progress-course"
             />
             {progress?.currentCourse && (
@@ -91,7 +105,10 @@ export function LearningProgressWidget({
 
           {/* Weekly Goal */}
           <div>
-            <div className="flex justify-between text-sm mb-2">
+            <div className={cn(
+              "flex justify-between mb-2",
+              compact ? "text-xs" : "text-sm"
+            )}>
               <div className="flex items-center gap-1">
                 <Target className="h-3 w-3" />
                 <span>Weekly Goal</span>

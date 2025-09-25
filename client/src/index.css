@@ -122,6 +122,120 @@ body.rtl p, body.rtl div, body.rtl span {
   }
 }
 
+/* Touch Target Optimization */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  position: relative;
+}
+
+.touch-target:not(button):not(a):not([role="button"]) {
+  cursor: pointer;
+}
+
+/* Ensure touch targets have adequate spacing */
+.touch-target + .touch-target {
+  margin-top: 8px;
+}
+
+/* Progressive Disclosure Utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  .mobile-compact {
+    padding: 0.75rem;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .mobile-gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .mobile-space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+}
+
+/* Smooth animations for progressive disclosure */
+.accordion-content {
+  overflow: hidden;
+  transition: all 200ms ease-in-out;
+}
+
+.accordion-content[data-state="open"] {
+  animation: accordion-down 200ms ease-out;
+}
+
+.accordion-content[data-state="closed"] {
+  animation: accordion-up 200ms ease-out;
+}
+
+@keyframes accordion-down {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-accordion-content-height); opacity: 1; }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
+}
+
+/* Pull-to-refresh indicator */
+.pull-to-refresh {
+  transform: translateY(-100%);
+  transition: transform 300ms ease-out;
+}
+
+.pull-to-refresh.active {
+  transform: translateY(0);
+}
+
+/* Haptic feedback simulation */
+.haptic-light {
+  animation: haptic-pulse-light 150ms ease-out;
+}
+
+.haptic-medium {
+  animation: haptic-pulse-medium 200ms ease-out;
+}
+
+@keyframes haptic-pulse-light {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes haptic-pulse-medium {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.03); }
+  75% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
 /* RTL-specific spacing utilities */
 .rtl .space-x-reverse > * + * {
   margin-left: 0.25rem;

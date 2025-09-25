@@ -9,13 +9,18 @@ import { WidgetError } from "./WidgetError";
 import { WidgetLoading } from "./WidgetLoading";
 import { formatDistanceToNow, parseISO } from "date-fns";
 
+interface UpcomingSessionsWidgetProps extends BaseWidgetProps {
+  compact?: boolean;
+}
+
 export function UpcomingSessionsWidget({ 
   theme = 'learner',
   className,
   loading,
   error,
-  onRefresh 
-}: BaseWidgetProps) {
+  onRefresh,
+  compact = false
+}: UpcomingSessionsWidgetProps) {
   // Fetch upcoming sessions
   const { data: sessions = [], isLoading, error: fetchError } = useQuery<UpcomingSession[]>({
     queryKey: ["/api/student/upcoming-sessions"],
@@ -58,37 +63,55 @@ export function UpcomingSessionsWidget({
   return (
     <MobileCard 
       variant="default"
-      className={className}
+      className={cn(compact && "p-3", className)}
       data-testid="upcoming-sessions-widget"
     >
-      <MobileCardHeader>
-        <MobileCardTitle className="flex items-center gap-2">
-          <Calendar className={cn("h-5 w-5", currentTheme.text)} />
+      <MobileCardHeader className={cn(compact && "pb-2")}>
+        <MobileCardTitle className={cn(
+          "flex items-center gap-2",
+          compact ? "text-sm" : "text-base"
+        )}>
+          <Calendar className={cn(
+            compact ? "h-4 w-4" : "h-5 w-5", 
+            currentTheme.text
+          )} />
           Upcoming Sessions
         </MobileCardTitle>
       </MobileCardHeader>
-      <MobileCardContent>
-        <div className="space-y-3">
+      <MobileCardContent className={cn(compact && "p-3 pt-0")}>
+        <div className={cn(compact ? "space-y-2" : "space-y-3")}>
           {sessions.slice(0, 3).map((session) => (
             <div 
               key={session.id} 
-              className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+              className={cn(
+                "flex items-center justify-between border rounded-lg hover:bg-muted/50 transition-colors touch-target",
+                compact ? "p-2" : "p-3"
+              )}
               data-testid={`session-card-${session.id}`}
             >
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm truncate" data-testid={`session-title-${session.id}`}>
+                <h4 className={cn(
+                  "font-medium truncate",
+                  compact ? "text-xs" : "text-sm"
+                )} data-testid={`session-title-${session.id}`}>
                   {session.title}
                 </h4>
                 
                 <div className="flex items-center gap-2 mt-1">
-                  <User className="h-3 w-3 text-muted-foreground" />
+                  <User className={cn(
+                    "text-muted-foreground",
+                    compact ? "h-2.5 w-2.5" : "h-3 w-3"
+                  )} />
                   <p className="text-xs text-muted-foreground" data-testid={`session-teacher-${session.id}`}>
                     {session.teacher}
                   </p>
                 </div>
                 
                 <div className="flex items-center gap-2 mt-1">
-                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  <Clock className={cn(
+                    "text-muted-foreground",
+                    compact ? "h-2.5 w-2.5" : "h-3 w-3"
+                  )} />
                   <p className="text-xs text-muted-foreground" data-testid={`session-time-${session.id}`}>
                     {session.scheduledAt ? formatDistanceToNow(parseISO(session.scheduledAt), { addSuffix: true }) : session.time}
                   </p>

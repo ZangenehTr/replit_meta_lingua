@@ -6,6 +6,10 @@ export { AssignmentsWidget } from './AssignmentsWidget';
 export { AchievementWidget } from './AchievementWidget';
 export { QuickActionsWidget } from './QuickActionsWidget';
 
+// Progressive Disclosure Widgets
+export { ProgressiveAssignmentsWidget } from './ProgressiveAssignmentsWidget';
+export { ProgressiveSessionsWidget } from './ProgressiveSessionsWidget';
+
 // Utility Components
 export { WidgetError } from './WidgetError';
 export { WidgetLoading } from './WidgetLoading';

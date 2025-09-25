@@ -8,13 +8,18 @@ import { WidgetError } from "./WidgetError";
 import { WidgetLoading } from "./WidgetLoading";
 import { formatDistanceToNow, parseISO, isPast } from "date-fns";
 
+interface AssignmentsWidgetProps extends BaseWidgetProps {
+  compact?: boolean;
+}
+
 export function AssignmentsWidget({ 
   theme = 'learner',
   className,
   loading,
   error,
-  onRefresh 
-}: BaseWidgetProps) {
+  onRefresh,
+  compact = false
+}: AssignmentsWidgetProps) {
   // Fetch assignments data
   const { data: assignments = [], isLoading, error: fetchError } = useQuery<Assignment[]>({
     queryKey: ["/api/student/assignments"],
@@ -94,17 +99,23 @@ export function AssignmentsWidget({
   return (
     <MobileCard 
       variant="default"
-      className={className}
+      className={cn(compact && "p-3", className)}
       data-testid="assignments-widget"
     >
-      <MobileCardHeader>
-        <MobileCardTitle className="flex items-center gap-2">
-          <Target className={cn("h-5 w-5", currentTheme.text)} />
+      <MobileCardHeader className={cn(compact && "pb-2")}>
+        <MobileCardTitle className={cn(
+          "flex items-center gap-2",
+          compact ? "text-sm" : "text-base"
+        )}>
+          <Target className={cn(
+            compact ? "h-4 w-4" : "h-5 w-5", 
+            currentTheme.text
+          )} />
           Recent Assignments
         </MobileCardTitle>
       </MobileCardHeader>
-      <MobileCardContent>
-        <div className="space-y-3">
+      <MobileCardContent className={cn(compact && "p-3 pt-0")}>
+        <div className={cn(compact ? "space-y-2" : "space-y-3")}>
           {sortedAssignments.slice(0, 3).map((assignment) => {
             const IconComponent = getAssignmentIcon(assignment);
             const dueDateColor = getDueDateColor(assignment.dueDate, assignment.status);
@@ -114,7 +125,8 @@ export function AssignmentsWidget({
               <div 
                 key={assignment.id} 
                 className={cn(
-                  "flex items-center justify-between p-3 border rounded-lg transition-colors",
+                  "flex items-center justify-between border rounded-lg transition-colors touch-target",
+                  compact ? "p-2" : "p-3",
                   isOverdue && "border-red-200 bg-red-50/50",
                   !isOverdue && "hover:bg-muted/50"
                 )}
@@ -123,12 +135,15 @@ export function AssignmentsWidget({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <IconComponent className={cn(
-                      "h-4 w-4",
+                      compact ? "h-3 w-3" : "h-4 w-4",
                       assignment.status === 'graded' ? "text-green-600" :
                       assignment.status === 'submitted' ? "text-blue-600" :
                       isOverdue ? "text-red-600" : "text-orange-600"
                     )} />
-                    <h4 className="font-medium text-sm truncate" data-testid={`assignment-title-${assignment.id}`}>
+                    <h4 className={cn(
+                      "font-medium truncate",
+                      compact ? "text-xs" : "text-sm"
+                    )} data-testid={`assignment-title-${assignment.id}`}>
                       {assignment.title}
                     </h4>
                   </div>
