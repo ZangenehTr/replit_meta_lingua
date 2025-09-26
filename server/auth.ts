@@ -97,11 +97,13 @@ export function authorize(allowedRoles: string[]) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
+    // Admin has superset access to everything
+    if (req.user.role === 'Admin' || allowedRoles.includes(req.user.role)) {
+      next();
+      return;
     }
-
-    next();
+    
+    return res.status(403).json({ error: 'Insufficient permissions' });
   };
 }
 
