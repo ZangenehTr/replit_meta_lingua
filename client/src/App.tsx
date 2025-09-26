@@ -157,6 +157,12 @@ import RoadmapInstances from "@/pages/admin/roadmap-instances";
 import AIStudyPartner from "@/pages/admin/ai-study-partner";
 import EnhancedAnalytics from "@/pages/admin/enhanced-analytics";
 import TTSSystem from "@/pages/admin/tts-system";
+import { AdminCallernRoadmaps } from "@/pages/admin/callern-roadmaps";
+import { AdminThreeDContentTools } from "@/pages/admin/3d-content-tools";
+import { AdminBookEcommerce } from "@/pages/admin/book-ecommerce";
+import { AdminExamRoadmaps } from "@/pages/admin/exam-roadmaps";
+import { AdminLinguaQuest } from "@/pages/admin/admin-linguaquest";
+import { AdminPlacementTest } from "@/pages/admin/admin-placement-test";
 import RoadmapPage from "@/pages/roadmap";
 import CallernSystem from "@/pages/callern";
 import CallernEnhancements from "@/pages/callern-enhancements";
@@ -450,6 +456,38 @@ function Router() {
       <Route path="/admin/tts-system">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <TTSSystem />
+        </RoleProtectedRoute>
+      </Route>
+      
+      {/* New Admin Pages */}
+      <Route path="/admin/callern-roadmaps">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AdminCallernRoadmaps />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/3d-content-tools">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AdminThreeDContentTools />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/book-ecommerce">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AdminBookEcommerce />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/exam-roadmaps">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AdminExamRoadmaps />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/linguaquest">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AdminLinguaQuest />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/placement-test">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AdminPlacementTest />
         </RoleProtectedRoute>
       </Route>
 
