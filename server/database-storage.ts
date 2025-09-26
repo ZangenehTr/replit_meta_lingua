@@ -145,6 +145,14 @@ import { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
   private db = db;
+  
+  // Initialize database storage - required by health monitoring service
+  async initialize(): Promise<void> {
+    // Database connection is already established through db property
+    // This method exists to satisfy the IStorage interface contract
+    return Promise.resolve();
+  }
+
   // User management
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

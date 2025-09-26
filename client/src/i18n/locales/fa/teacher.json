@@ -26,7 +26,10 @@
     "reports": "گزارش‌ها",
     "recentFeedback": "بازخورد اخیر",
     "quote": "نقل قول",
-    "activeStudents": "دانشجویان فعال"
+    "activeStudents": "دانشجویان فعال",
+    "reviews": "بازنگری‌ها",
+    "todaySchedule": "برنامه امروز",
+    "goodEvening": "عصر بخیر"
   },
   "classes": {
     "title": "کلاس‌های من",
