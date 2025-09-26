@@ -239,21 +239,21 @@ export const AdminDashboard = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-700">{t('admin:systemHealth', 'سلامت سیستم')}</h3>
                 <div className="flex items-center gap-4">
-                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth.database || 'healthy'))}>
+                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth?.database || 'healthy'))}>
                     <Database className="h-4 w-4" />
-                    {getHealthIcon(stats?.systemHealth.database || 'healthy')}
+                    {getHealthIcon(stats?.systemHealth?.database || 'healthy')}
                   </div>
-                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth.server || 'healthy'))}>
+                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth?.server || 'healthy'))}>
                     <Server className="h-4 w-4" />
-                    {getHealthIcon(stats?.systemHealth.server || 'healthy')}
+                    {getHealthIcon(stats?.systemHealth?.server || 'healthy')}
                   </div>
-                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth.ai || 'warning'))}>
+                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth?.ai || 'warning'))}>
                     <Brain className="h-4 w-4" />
-                    {getHealthIcon(stats?.systemHealth.ai || 'warning')}
+                    {getHealthIcon(stats?.systemHealth?.ai || 'warning')}
                   </div>
-                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth.voip || 'healthy'))}>
+                  <div className={cn("flex items-center gap-1", getHealthColor(stats?.systemHealth?.voip || 'healthy'))}>
                     <Phone className="h-4 w-4" />
-                    {getHealthIcon(stats?.systemHealth.voip || 'healthy')}
+                    {getHealthIcon(stats?.systemHealth?.voip || 'healthy')}
                   </div>
                 </div>
               </div>
