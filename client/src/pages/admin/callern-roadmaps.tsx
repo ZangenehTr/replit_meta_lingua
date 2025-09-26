@@ -2,12 +2,17 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Map, 
   Search, 
@@ -27,8 +32,21 @@ import {
 export function AdminCallernRoadmaps() {
   const { t } = useTranslation(['admin', 'common']);
   const { isRTL } = useLanguage();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  
+  // Form state for creating roadmaps
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    level: "",
+    sessions: "",
+    duration: "",
+    targetLanguage: ""
+  });
 
   // Fetch roadmaps data
   const { data: roadmaps = [], isLoading } = useQuery({
@@ -65,6 +83,50 @@ export function AdminCallernRoadmaps() {
 
   const displayRoadmaps = isLoading ? mockRoadmaps : (Array.isArray(roadmaps) && roadmaps.length > 0 ? roadmaps : mockRoadmaps);
 
+  // Mutation for creating roadmaps
+  const createRoadmapMutation = useMutation({
+    mutationFn: (data: typeof formData) => apiRequest('/api/admin/callern-roadmaps', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+    onSuccess: () => {
+      toast({
+        title: t('common:success'),
+        description: t('admin:callernRoadmaps.createSuccess')
+      });
+      setIsCreateOpen(false);
+      setFormData({
+        title: "",
+        description: "",
+        level: "",
+        sessions: "",
+        duration: "",
+        targetLanguage: ""
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/callern-roadmaps'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:error'),
+        description: error.message || t('admin:callernRoadmaps.createError'),
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.description || !formData.level) {
+      toast({
+        title: t('common:error'),
+        description: t('admin:callernRoadmaps.fillRequired'),
+        variant: 'destructive'
+      });
+      return;
+    }
+    createRoadmapMutation.mutate(formData);
+  };
+
   return (
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
@@ -75,21 +137,130 @@ export function AdminCallernRoadmaps() {
             {t('admin:callernRoadmaps.description')}
           </p>
         </div>
-        <Dialog>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-roadmap">
               <Plus className="h-4 w-4 mr-2" />
-              {t('admin:callernRoadmaps.createRoadmap')}
+              {t('admin:callernRoadmaps.createRoadmap', 'Create Roadmap')}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{t('admin:callernRoadmaps.createRoadmap')}</DialogTitle>
+              <DialogTitle>{t('admin:callernRoadmaps.createRoadmap', 'Create Roadmap')}</DialogTitle>
               <DialogDescription>
-                {t('admin:callernRoadmaps.createDescription')}
+                {t('admin:callernRoadmaps.createDescription', 'Create a new learning roadmap for students')}
               </DialogDescription>
             </DialogHeader>
-            {/* Roadmap creation form would go here */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">{t('admin:callernRoadmaps.title', 'Title')} *</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  data-testid="input-roadmap-title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  placeholder={t('admin:callernRoadmaps.titlePlaceholder', 'Enter roadmap title')}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">{t('admin:callernRoadmaps.description', 'Description')} *</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  data-testid="textarea-roadmap-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder={t('admin:callernRoadmaps.descriptionPlaceholder', 'Describe the roadmap objectives and content')}
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="level">{t('admin:callernRoadmaps.level', 'Level')} *</Label>
+                  <Select value={formData.level} onValueChange={(value) => setFormData({...formData, level: value})}>
+                    <SelectTrigger data-testid="select-roadmap-level">
+                      <SelectValue placeholder={t('admin:callernRoadmaps.selectLevel', 'Select level')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A1">A1 - Beginner</SelectItem>
+                      <SelectItem value="A2">A2 - Elementary</SelectItem>
+                      <SelectItem value="B1">B1 - Intermediate</SelectItem>
+                      <SelectItem value="B2">B2 - Upper Intermediate</SelectItem>
+                      <SelectItem value="C1">C1 - Advanced</SelectItem>
+                      <SelectItem value="C2">C2 - Proficient</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="targetLanguage">{t('admin:callernRoadmaps.targetLanguage', 'Target Language')}</Label>
+                  <Select value={formData.targetLanguage} onValueChange={(value) => setFormData({...formData, targetLanguage: value})}>
+                    <SelectTrigger data-testid="select-target-language">
+                      <SelectValue placeholder={t('admin:callernRoadmaps.selectLanguage', 'Select language')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="persian">Persian</SelectItem>
+                      <SelectItem value="arabic">Arabic</SelectItem>
+                      <SelectItem value="french">French</SelectItem>
+                      <SelectItem value="german">German</SelectItem>
+                      <SelectItem value="spanish">Spanish</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sessions">{t('admin:callernRoadmaps.sessions', 'Number of Sessions')}</Label>
+                  <Input
+                    id="sessions"
+                    name="sessions"
+                    type="number"
+                    data-testid="input-roadmap-sessions"
+                    value={formData.sessions}
+                    onChange={(e) => setFormData({...formData, sessions: e.target.value})}
+                    placeholder={t('admin:callernRoadmaps.sessionsPlaceholder', 'e.g. 24')}
+                    min="1"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="duration">{t('admin:callernRoadmaps.duration', 'Duration')}</Label>
+                  <Input
+                    id="duration"
+                    name="duration"
+                    data-testid="input-roadmap-duration"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                    placeholder={t('admin:callernRoadmaps.durationPlaceholder', 'e.g. 3 months')}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsCreateOpen(false)}
+                  data-testid="button-cancel-roadmap"
+                >
+                  {t('common:cancel', 'Cancel')}
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createRoadmapMutation.isPending}
+                  data-testid="button-save-roadmap"
+                >
+                  {createRoadmapMutation.isPending ? t('common:creating', 'Creating...') : t('common:create', 'Create')}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
