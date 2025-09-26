@@ -221,6 +221,7 @@ export interface IStorage {
   // Courses
   getCourses(): Promise<Course[]>;
   getAllCourses(): Promise<Course[]>;
+  getAllClasses(): Promise<any[]>;
   getCourse(id: number): Promise<Course | undefined>;
   getCoursesByDeliveryMode(mode: string): Promise<Course[]>;
   getUserCourses(userId: number): Promise<(Course & { progress: number })[]>;

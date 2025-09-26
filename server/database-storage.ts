@@ -365,6 +365,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(courses).orderBy(courses.createdAt);
   }
 
+  async getAllClasses(): Promise<any[]> {
+    return await db.select().from(classes).orderBy(classes.createdAt);
+  }
+
   async getCoursesByDeliveryMode(mode: string): Promise<Course[]> {
     return await db.select().from(courses).where(eq(courses.deliveryMode, mode));
   }
