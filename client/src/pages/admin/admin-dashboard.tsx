@@ -634,7 +634,7 @@ export const AdminDashboard = () => {
                   >
                     <Globe className="h-6 w-6 text-purple-500 mb-1" />
                     <span className="text-xs text-gray-600">{t('admin:compliance', 'تطبیق')}</span>
-                    {stats?.systemHealth.ai === 'warning' && (
+                    {stats?.systemHealth?.ai === 'warning' && (
                       <span className="absolute -top-1 -right-1 h-2 w-2 bg-yellow-500 rounded-full" />
                     )}
                   </motion.div>
