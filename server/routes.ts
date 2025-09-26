@@ -2500,6 +2500,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Teacher Payslips endpoints
+  app.get("/api/teacher/payslips", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      // Get teacher payment data and create payslip-like structure
+      const payments = await storage.getTeacherPayments(teacherId);
+      
+      const payslips = payments.map(payment => ({
+        id: payment.id,
+        period: payment.periodDescription || `${payment.month}/${payment.year}`,
+        totalSessions: payment.totalSessions,
+        totalHours: payment.totalHours,
+        finalAmount: payment.finalAmount,
+        status: payment.status || 'pending'
+      }));
+      
+      res.json(payslips);
+    } catch (error) {
+      console.error('Error fetching teacher payslips:', error);
+      res.status(500).json({ message: "Failed to fetch payslips" });
+    }
+  });
+
+  app.get("/api/teacher/payslip/current", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      // Get current month's payment data
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      
+      const payments = await storage.getTeacherPayments(teacherId);
+      const currentPayment = payments.find(p => 
+        p.month === currentMonth && p.year === currentYear
+      );
+      
+      if (currentPayment) {
+        const currentPayslip = {
+          id: currentPayment.id,
+          period: `${currentPayment.month}/${currentPayment.year}`,
+          totalSessions: currentPayment.totalSessions,
+          totalHours: currentPayment.totalHours,
+          finalAmount: currentPayment.finalAmount,
+          status: currentPayment.status || 'pending'
+        };
+        res.json(currentPayslip);
+      } else {
+        // Return empty current payslip if none exists
+        res.json({
+          id: null,
+          period: `${currentMonth}/${currentYear}`,
+          totalSessions: 0,
+          totalHours: 0,
+          finalAmount: 0,
+          status: 'not_generated'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching current payslip:', error);
+      res.status(500).json({ message: "Failed to fetch current payslip" });
+    }
+  });
+
+  // Admin Statistics endpoint
+  app.get("/api/admin/stats", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      // Get comprehensive admin statistics using existing storage methods
+      const allUsers = await storage.getAllUsers();
+      const totalStudents = allUsers.filter(user => user.role === 'Student').length;
+      const totalTeachers = allUsers.filter(user => user.role === 'Teacher/Tutor').length;
+      
+      const allCourses = await storage.getAllCourses();
+      const totalCourses = allCourses.length;
+      
+      const allClasses = await storage.getAllClasses();
+      const activeClasses = allClasses.filter(cls => cls.status === 'active').length;
+      
+      // Additional stats - using placeholder values for now
+      const monthlyRevenue = 0; // TODO: Implement revenue calculation
+      const newStudentsThisMonth = 0; // TODO: Implement new students this month
+      const completionRate = 0; // TODO: Implement completion rate calculation
+      
+      const stats = {
+        totalStudents,
+        totalTeachers,
+        totalCourses,
+        activeClasses,
+        monthlyRevenue: monthlyRevenue || 0,
+        newStudentsThisMonth: newStudentsThisMonth || 0,
+        completionRate: completionRate || 0,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ message: "Failed to fetch admin statistics" });
+    }
+  });
+
   // Configuration API Endpoints - Centralized System Configuration
   app.get("/api/admin/analytics/chart-colors", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
