@@ -3,7 +3,7 @@ import { AlertCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 export default function NotFound() {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['common', 'errors']);
   
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
@@ -11,11 +11,11 @@ export default function NotFound() {
         <CardContent className="pt-6">
           <div className="flex mb-4 gap-2">
             <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">{t('common:errors.pageNotFound')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('errors.pageNotFound')}</h1>
           </div>
 
           <p className="mt-4 text-sm text-gray-600">
-            {t('common:errors.pageNotFoundDescription')}
+            {t('errors.pageNotFoundDescription')}
           </p>
         </CardContent>
       </Card>
