@@ -14,7 +14,19 @@
     "averageRating": "میانگین امتیاز",
     "monthlyEarnings": "درآمد ماهانه",
     "attendanceRate": "نرخ حضور",
-    "nextPaymentDate": "تاریخ پرداخت بعدی"
+    "nextPaymentDate": "تاریخ پرداخت بعدی",
+    "weeklyHours": "ساعات هفتگی",
+    "completionRate": "نرخ تکمیل",
+    "excellent": "عالی",
+    "callernHours": "ساعات کالرن",
+    "viewFullSchedule": "مشاهده برنامه کامل",
+    "performanceTrend": "روند عملکرد",
+    "classDistribution": "توزیع کلاس‌ها",
+    "quickActions": "عملیات سریع",
+    "reports": "گزارش‌ها",
+    "recentFeedback": "بازخورد اخیر",
+    "quote": "نقل قول",
+    "activeStudents": "دانشجویان فعال"
   },
   "classes": {
     "title": "کلاس‌های من",
