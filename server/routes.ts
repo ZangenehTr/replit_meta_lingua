@@ -526,9 +526,10 @@ const requireRole = (roles: string[]) => {
       'accountant': ['accountant']
     };
     
+    // Admin has superset access to everything for oversight
     // Check if user's role (or its mapped equivalents) matches any required role
     const userRoleEquivalents = roleMapping[userRole] || [userRole];
-    const hasPermission = userRoleEquivalents.some(role => 
+    const hasPermission = userRole === 'admin' || userRoleEquivalents.some(role => 
       normalizedRoles.includes(role)
     );
     
@@ -21920,6 +21921,30 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error fetching chart colors:', error);
       res.status(500).json({ message: "Failed to fetch chart colors" });
+    }
+  });
+
+  // Get financial data endpoint
+  app.get("/api/admin/financial", authenticateToken, async (req: any, res) => {
+    try {
+      const { range = '30days', type = 'all' } = req.query;
+      
+      // Mock financial data - replace with real database queries
+      const financialData = {
+        transactions: [],
+        summary: {
+          totalRevenue: 0,
+          totalExpenses: 0,
+          netProfit: 0,
+          transactionCount: 0
+        },
+        filters: { range, type }
+      };
+      
+      res.json(financialData);
+    } catch (error) {
+      console.error('Error fetching financial data:', error);
+      res.status(500).json({ message: 'Failed to fetch financial data' });
     }
   });
 
