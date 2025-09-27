@@ -218,8 +218,13 @@ export const queryClient = new QueryClient({
   },
 });
 
+// Enhanced RequestInit interface that accepts objects for body
+interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
+  body?: any; // Allow any serializable object
+}
+
 // API request function for mutations
-export const apiRequest = async (url: string, options: RequestInit = {}) => {
+export const apiRequest = async (url: string, options: ApiRequestOptions = {}) => {
   try {
     // Validate input parameters
     if (!url || typeof url !== 'string') {

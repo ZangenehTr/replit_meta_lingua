@@ -259,6 +259,11 @@ function Router() {
           <ProfileRedirect />
         </ProtectedRoute>
       </Route>
+      <Route path="/user-profile">
+        <ProtectedRoute>
+          <UserProfile />
+        </ProtectedRoute>
+      </Route>
       <Route path="/search">
         <ProtectedRoute>
           <SearchResults />

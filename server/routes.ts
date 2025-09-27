@@ -2162,6 +2162,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Certificate download endpoint
+  app.get("/api/users/me/certificate", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get user's completed courses for certificate eligibility
+      const userCourses = await storage.getUserCourses(userId);
+      const completedCourses = userCourses?.filter(course => course.progress === 100) || [];
+
+      if (completedCourses.length === 0) {
+        return res.status(404).json({ message: "No completed courses found. Complete a course to receive your certificate." });
+      }
+
+      // Generate a simple certificate PDF content
+      const certificateData = {
+        studentName: `${user.firstName} ${user.lastName}`,
+        coursesCompleted: completedCourses.length,
+        completedCourseNames: completedCourses.map(c => c.title).join(', '),
+        issueDate: new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long', 
+          day: 'numeric'
+        }),
+        certificateId: `CERT-${userId}-${Date.now()}`
+      };
+
+      // For now, return a simple HTML certificate that can be saved as PDF
+      const certificateHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Meta Lingua Certificate</title>
+          <style>
+            body { font-family: 'Times New Roman', serif; margin: 40px; text-align: center; line-height: 1.6; }
+            .certificate { max-width: 800px; margin: 0 auto; border: 3px solid #2563eb; padding: 40px; }
+            .header { font-size: 36px; font-weight: bold; color: #2563eb; margin-bottom: 20px; }
+            .subtitle { font-size: 24px; color: #666; margin-bottom: 30px; }
+            .student-name { font-size: 28px; font-weight: bold; color: #1f2937; margin: 20px 0; }
+            .course-info { font-size: 18px; color: #374151; margin: 20px 0; }
+            .footer { margin-top: 40px; font-size: 14px; color: #6b7280; }
+            .seal { width: 80px; height: 80px; border: 2px solid #2563eb; border-radius: 50%; display: inline-block; line-height: 76px; font-weight: bold; color: #2563eb; margin: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="certificate">
+            <div class="header">CERTIFICATE OF COMPLETION</div>
+            <div class="subtitle">Meta Lingua Language Learning Platform</div>
+            
+            <p style="font-size: 18px; margin: 30px 0;">This certifies that</p>
+            <div class="student-name">${certificateData.studentName}</div>
+            <p style="font-size: 18px; margin: 30px 0;">has successfully completed</p>
+            <div class="course-info">
+              <strong>${certificateData.coursesCompleted} Course${certificateData.coursesCompleted > 1 ? 's' : ''}</strong><br>
+              <em>${certificateData.completedCourseNames}</em>
+            </div>
+            
+            <p style="font-size: 18px; margin: 30px 0;">on this day</p>
+            <div style="font-size: 20px; font-weight: bold; margin: 20px 0;">${certificateData.issueDate}</div>
+            
+            <div class="seal">SEAL</div>
+            
+            <div class="footer">
+              <p>Certificate ID: ${certificateData.certificateId}</p>
+              <p>Meta Lingua - Excellence in Language Education</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', `attachment; filename="MetaLingua-Certificate-${certificateData.studentName.replace(/\s+/g, '-')}.html"`);
+      res.send(certificateHTML);
+
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+      res.status(500).json({ message: "Failed to generate certificate" });
+    }
+  });
+
   // Dashboard data endpoint
   app.get("/api/dashboard", authenticateToken, async (req: any, res) => {
     try {

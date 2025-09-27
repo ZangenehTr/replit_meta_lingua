@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Settings, Globe, BookOpen, Trophy, Users } from "lucide-react";
+import { User, Settings, Globe, BookOpen, Trophy, Users, Download, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/ui/back-button";
@@ -133,6 +133,39 @@ const interests = [
   "business", "travel", "culture", "technology", "arts", "sports", "music", "cooking", "literature", "science"
 ];
 
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  avatar?: string;
+  role: string;
+  preferences?: {
+    theme?: string;
+    language?: string;
+    notifications?: boolean;
+  };
+}
+
+interface UserProfile {
+  culturalBackground?: string;
+  nativeLanguage: string;
+  targetLanguages?: string[];
+  proficiencyLevel?: string;
+  learningGoals?: string[];
+  learningStyle?: string;
+  timezone?: string;
+  preferredStudyTime?: string;
+  weeklyStudyHours?: number;
+  personalityType?: string;
+  motivationFactors?: string[];
+  learningChallenges?: string[];
+  strengths?: string[];
+  interests?: string[];
+  bio?: string;
+}
+
 export default function UserProfile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -141,12 +174,12 @@ export default function UserProfile() {
   const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
 
   // Fetch current user data
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ["/api/auth/user"]
+  const { data: user, isLoading: userLoading } = useQuery<User>({
+    queryKey: ["/api/users/me"]
   });
 
   // Fetch user profile
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
     enabled: !!user
   });
@@ -197,7 +230,7 @@ export default function UserProfile() {
         body: userData
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
       toast({
         title: "Profile Updated",
         description: "Your basic information has been updated successfully."
@@ -236,11 +269,63 @@ export default function UserProfile() {
   });
 
   const onUserSubmit = (data: UserFormData) => {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "User data not loaded. Please wait and try again.",
+        variant: "destructive"
+      });
+      return;
+    }
     updateUserMutation.mutate(data);
   };
 
   const onProfileSubmit = (data: ProfileFormData) => {
     updateProfileMutation.mutate(data);
+  };
+
+  // Certificate download handler
+  const handleDownloadCertificate = async () => {
+    try {
+      const response = await fetch('/api/users/me/certificate', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast({
+          title: "Download Failed",
+          description: errorData.message || "Failed to generate certificate.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create blob and download file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `MetaLingua-Certificate-${user?.firstName}-${user?.lastName}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Certificate Downloaded",
+        description: "Your certificate has been downloaded successfully. You can open it in a browser and print it as PDF.",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Error",
+        description: "An error occurred while downloading your certificate.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (userLoading || profileLoading) {
@@ -364,6 +449,39 @@ export default function UserProfile() {
                   </Button>
                 </form>
               </Form>
+            </CardContent>
+          </Card>
+
+          {/* Certificate Download Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {t('student:certificate', 'Certificate')}
+              </CardTitle>
+              <CardDescription>
+                {t('student:downloadCertificateDesc', 'Download your completion certificate for completed courses')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">
+                    {t('student:certificateAvailable', 'Your certificate is available for download')}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('student:certificateNote', 'Certificate includes all completed courses and achievements')}
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleDownloadCertificate}
+                  className="flex items-center gap-2"
+                  data-testid="button-download-certificate"
+                >
+                  <Download className="h-4 w-4" />
+                  {t('student:downloadCertificate', 'Download Certificate')}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
