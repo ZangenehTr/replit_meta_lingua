@@ -307,6 +307,10 @@
     "submittedFiles": "فایل‌های ارسالی",
     "checkBackLater": "برای تکالیف جدید بعداً مراجعه کنید"
   },
+  "loading": {
+    "title": "در حال بارگذاری...",
+    "checkingEnrollment": "بررسی وضعیت ثبت‌نام..."
+  },
   "payment": {
     "title": "پرداخت",
     "wallet": "کیف پول",
