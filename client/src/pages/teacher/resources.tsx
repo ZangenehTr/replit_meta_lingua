@@ -11,6 +11,7 @@ import {
   Folder, Star, Clock, BookOpen, Users, Globe 
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,7 +52,7 @@ export default function TeacherResourcesPage() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   const { data: resources = [], isLoading } = useQuery<Resource[]>({
-    queryKey: ["/api/teacher/resources"],
+    queryKey: [API_ENDPOINTS.teacher.resources],
   });
 
   const categories: Category[] = [
@@ -66,7 +67,7 @@ export default function TeacherResourcesPage() {
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch('/api/teacher/resources/upload', {
+      const response = await fetch(API_ENDPOINTS.teacher.resourcesUpload, {
         method: 'POST',
         body: formData,
       });
@@ -74,7 +75,7 @@ export default function TeacherResourcesPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/resources"] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.resources] });
       toast({
         title: t('success'),
         description: t('resourceUploadedSuccessfully'),

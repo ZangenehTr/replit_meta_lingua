@@ -15,6 +15,7 @@ import {
   Target, BookOpen, MessageSquare, Phone
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from '@/services/endpoints';
 import { useTranslation } from 'react-i18next';
 
 interface TeachingStats {
@@ -41,9 +42,9 @@ export default function TeacherReportsPage() {
   const [dateRange, setDateRange] = useState("last3months");
   const [reportType, setReportType] = useState("overview");
 
-  // Fetch chart colors from API
+  // Fetch chart colors from API - Fixed path from admin to teacher
   const { data: COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'] } = useQuery({
-    queryKey: ['/api/admin/analytics/chart-colors'],
+    queryKey: [API_ENDPOINTS.teacher.chartColors],
     staleTime: 10 * 60 * 1000
   });
 

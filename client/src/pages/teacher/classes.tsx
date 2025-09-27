@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +43,7 @@ export default function TeacherClassesPage() {
   const [selectedTab, setSelectedTab] = useState("active");
 
   const { data: classes, isLoading } = useQuery<TeacherClass[]>({
-    queryKey: ['/api/teacher/classes'],
+    queryKey: [API_ENDPOINTS.teacher.classes],
     enabled: !!user
   });
 

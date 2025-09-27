@@ -72,16 +72,43 @@ export const API_ENDPOINTS = {
   
   // =============== TEACHER ENDPOINTS ===============
   teacher: {
+    // Basic Teacher Data
+    daysOfWeek: '/api/teacher/days-of-week',
+    stats: '/api/teacher/stats',
+    
+    // Performance & QA
     qa: '/api/teacher-qa',
     performance: '/api/teacher-qa/my-performance',
     peerReviews: '/api/teacher-qa/peer-reviews',
+    
+    // Class & Student Management
     classes: '/api/classes',
+    classesToday: '/api/teacher/classes/today',
     students: '/api/teacher/students',
     assignments: '/api/teacher/assignments',
+    assignmentsPending: '/api/teacher/assignments/pending',
     availability: '/api/teacher/availability',
-    payments: '/api/teacher/payments',
-    resources: '/api/teacher/resources',
     observations: '/api/teacher/observations',
+    
+    // Payment Management
+    payslips: '/api/teacher/payslips',
+    payslipCurrent: '/api/teacher/payslip/current',
+    payslipDownload: '/api/teacher/payslip', // Base for ${id}/download
+    
+    // Resource Management  
+    resources: '/api/teacher/resources',
+    resourcesUpload: '/api/teacher/resources/upload',
+    
+    // Testing & Courses
+    tests: '/api/teacher/tests',
+    courses: '/api/teacher/courses',
+    
+    // Reports & Payments
+    reports: '/api/teacher/reports',
+    chartColors: '/api/teacher/chart-colors',
+    payments: '/api/teacher/payments',
+    
+    // Advanced Features
     callern: '/api/callern/teacher',
     videoManagement: '/api/teacher/videos',
   },

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_ENDPOINTS } from '@/services/endpoints';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,15 +31,15 @@ export default function TeacherAvailabilityPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch days of week from API
+  // Fetch days of week from API - Fixed path from admin to teacher endpoint
   const { data: daysOfWeek = [] } = useQuery({
-    queryKey: ['/api/admin/days-of-week'],
+    queryKey: [API_ENDPOINTS.teacher.daysOfWeek],
     select: (data: any[]) => data || []
   });
 
   // Fetch teacher availability
   const { data: availability = [], isLoading } = useQuery({
-    queryKey: ['/api/teacher/availability']
+    queryKey: [API_ENDPOINTS.teacher.availability]
   });
 
   // Create availability slot mutation
@@ -50,7 +51,7 @@ export default function TeacherAvailabilityPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/availability'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.availability] });
       toast({
         title: 'Success',
         description: 'Availability slot created successfully'
@@ -76,7 +77,7 @@ export default function TeacherAvailabilityPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/availability'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.availability] });
       toast({
         title: 'Success',
         description: 'Availability slot updated successfully'
@@ -101,7 +102,7 @@ export default function TeacherAvailabilityPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/availability'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.availability] });
       toast({
         title: 'Success',
         description: 'Availability slot deleted successfully'

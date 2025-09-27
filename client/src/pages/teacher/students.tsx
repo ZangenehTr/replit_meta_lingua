@@ -13,6 +13,7 @@ import {
   Star, Calendar, Target, AlertCircle 
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useTranslation } from 'react-i18next';
 
 interface Student {
@@ -43,7 +44,7 @@ export default function TeacherStudentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: students = [], isLoading } = useQuery<Student[]>({
-    queryKey: ["/api/teacher/students"],
+    queryKey: [API_ENDPOINTS.teacher.students],
   });
 
   const filteredStudents = students.filter(student => {

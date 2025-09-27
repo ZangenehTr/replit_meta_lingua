@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 
@@ -80,24 +81,24 @@ export default function TeacherAssignmentsPage() {
 
   // Fetch assignments
   const { data: assignments = [], isLoading } = useQuery<any[]>({
-    queryKey: ['/api/teacher/assignments']
+    queryKey: [API_ENDPOINTS.teacher.assignments]
   });
 
   // Fetch teacher's classes for student/course selection
   const { data: classes = [] } = useQuery<any[]>({
-    queryKey: ['/api/teacher/classes']
+    queryKey: [API_ENDPOINTS.teacher.classes]
   });
 
   // Create assignment mutation
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: AssignmentFormData) => {
-      return apiRequest('/api/teacher/assignments', {
+      return apiRequest(API_ENDPOINTS.teacher.assignments, {
         method: 'POST',
         body: JSON.stringify(data)
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/assignments'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.assignments] });
       toast({
         title: 'Success',
         description: 'Assignment created successfully'
@@ -117,13 +118,13 @@ export default function TeacherAssignmentsPage() {
   // Submit feedback mutation
   const submitFeedbackMutation = useMutation({
     mutationFn: async ({ assignmentId, feedback, score }: { assignmentId: number; feedback: string; score: number }) => {
-      return apiRequest(`/api/teacher/assignments/${assignmentId}/feedback`, {
+      return apiRequest(`${API_ENDPOINTS.teacher.assignments}/${assignmentId}/feedback`, {
         method: 'POST',
         body: JSON.stringify({ feedback, score })
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/assignments'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.assignments] });
       toast({
         title: 'Success',
         description: 'Feedback submitted successfully'

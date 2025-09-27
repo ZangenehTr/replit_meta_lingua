@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -98,18 +99,18 @@ export default function TeacherObservationsPage() {
 
   // Fetch teacher's observations
   const { data: observations, isLoading } = useQuery({
-    queryKey: ['/api/teacher/observations'],
+    queryKey: [API_ENDPOINTS.teacher.observations],
   });
 
   // Fetch unacknowledged observations for notification count
   const { data: unacknowledgedObservations } = useQuery({
-    queryKey: ['/api/teacher/observations', 'unacknowledged'],
+    queryKey: [API_ENDPOINTS.teacher.observations, 'unacknowledged'],
   });
 
   // Acknowledge observation mutation
   const acknowledgeMutation = useMutation({
     mutationFn: async (observationId: number) => {
-      const response = await fetch(`/api/teacher/observations/${observationId}/acknowledge`, {
+      const response = await fetch(`${API_ENDPOINTS.teacher.observations}/${observationId}/acknowledge`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -120,8 +121,8 @@ export default function TeacherObservationsPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/observations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/observations', 'unacknowledged'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.observations] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.observations, 'unacknowledged'] });
       toast({
         title: t('common:toast.observationAcknowledged'),
         description: "You have successfully acknowledged this observation.",
@@ -139,7 +140,7 @@ export default function TeacherObservationsPage() {
   // Submit response mutation
   const respondMutation = useMutation({
     mutationFn: async (data: { observationId: number; responseType: string; content: string }) => {
-      const response = await fetch(`/api/teacher/observations/${data.observationId}/respond`, {
+      const response = await fetch(`${API_ENDPOINTS.teacher.observations}/${data.observationId}/respond`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -154,7 +155,7 @@ export default function TeacherObservationsPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/observations'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.observations] });
       setResponseContent('');
       setSelectedObservation(null);
       toast({
@@ -174,7 +175,7 @@ export default function TeacherObservationsPage() {
   // Submit improvement plan mutation
   const improvementPlanMutation = useMutation({
     mutationFn: async (data: { observationId: number; improvementPlan: string; deadline: string }) => {
-      const response = await fetch(`/api/teacher/observations/${data.observationId}/improvement-plan`, {
+      const response = await fetch(`${API_ENDPOINTS.teacher.observations}/${data.observationId}/improvement-plan`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
@@ -189,7 +190,7 @@ export default function TeacherObservationsPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/observations'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.observations] });
       setImprovementPlan('');
       setImprovementDeadline('');
       setSelectedObservation(null);

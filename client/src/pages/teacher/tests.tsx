@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
@@ -53,18 +54,18 @@ export default function TeacherTests() {
 
   // Fetch teacher's tests
   const { data: tests = [], isLoading: testsLoading } = useQuery<any[]>({
-    queryKey: ["/api/teacher/tests"],
+    queryKey: [API_ENDPOINTS.teacher.tests],
   });
 
   // Fetch courses for the dropdown
   const { data: courses = [] } = useQuery<any[]>({
-    queryKey: ["/api/teacher/courses"],
+    queryKey: [API_ENDPOINTS.teacher.courses],
   });
 
   // Create test mutation
   const createTestMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/teacher/tests", {
+      return await apiRequest(API_ENDPOINTS.teacher.tests, {
         method: "POST",
         body: JSON.stringify(data),
       });
@@ -75,7 +76,7 @@ export default function TeacherTests() {
         description: "Test created successfully",
       });
       setIsCreateDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/tests"] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.tests] });
     },
     onError: (error) => {
       toast({
@@ -89,7 +90,7 @@ export default function TeacherTests() {
   // Delete test mutation
   const deleteTestMutation = useMutation({
     mutationFn: async (testId: number) => {
-      return await apiRequest(`/api/teacher/tests/${testId}`, {
+      return await apiRequest(`${API_ENDPOINTS.teacher.tests}/${testId}`, {
         method: "DELETE",
       });
     },
@@ -98,7 +99,7 @@ export default function TeacherTests() {
         title: t('common:toast.success'),
         description: "Test deleted successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/tests"] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.teacher.tests] });
     },
     onError: (error) => {
       toast({

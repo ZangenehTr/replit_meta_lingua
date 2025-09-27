@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, Users, Video, MapPin, Plus, Edit, Trash2, Info } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
 
@@ -35,11 +36,11 @@ export default function TeacherSchedulePage() {
 
   // Only fetch assigned classes (not create sessions)
   const { data: classes = [], isLoading } = useQuery<ClassSession[]>({
-    queryKey: ["/api/teacher/classes"],
+    queryKey: [API_ENDPOINTS.teacher.classes],
   });
 
   const { data: availability = [], isLoading: availabilityLoading } = useQuery<any[]>({
-    queryKey: ["/api/teacher/availability"],
+    queryKey: [API_ENDPOINTS.teacher.availability],
   });
 
   // Get today's sessions

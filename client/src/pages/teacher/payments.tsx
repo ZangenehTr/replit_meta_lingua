@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,18 +72,18 @@ export default function TeacherPayments() {
   const [selectedPayslip, setSelectedPayslip] = useState<PayslipDetail | null>(null);
 
   const { data: payslips, isLoading } = useQuery<PayslipDetail[]>({
-    queryKey: ['/api/teacher/payslips'],
+    queryKey: [API_ENDPOINTS.teacher.payslips],
     queryFn: async () => {
-      const response = await fetch('/api/teacher/payslips');
+      const response = await fetch(API_ENDPOINTS.teacher.payslips);
       if (!response.ok) throw new Error('Failed to fetch payslips');
       return response.json();
     }
   });
 
   const { data: currentPayslip } = useQuery<PayslipDetail>({
-    queryKey: ['/api/teacher/payslip/current'],
+    queryKey: [API_ENDPOINTS.teacher.payslipCurrent],
     queryFn: async () => {
-      const response = await fetch('/api/teacher/payslip/current');
+      const response = await fetch(API_ENDPOINTS.teacher.payslipCurrent);
       if (!response.ok) throw new Error('Failed to fetch current payslip');
       return response.json();
     }
@@ -110,7 +111,7 @@ export default function TeacherPayments() {
 
   const downloadPayslip = async (payslipId: number) => {
     try {
-      const response = await fetch(`/api/teacher/payslip/${payslipId}/download`);
+      const response = await fetch(`${API_ENDPOINTS.teacher.payslips}/${payslipId}/download`);
       if (!response.ok) throw new Error('Failed to download payslip');
       
       const blob = await response.blob();

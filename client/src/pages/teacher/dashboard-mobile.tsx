@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
@@ -65,9 +66,9 @@ export default function TeacherDashboardMobile() {
 
   // Fetch teacher stats
   const { data: stats, isLoading: statsLoading } = useQuery<TeacherStats>({
-    queryKey: ['/api/teacher/stats'],
+    queryKey: [API_ENDPOINTS.teacher.stats],
     queryFn: async () => {
-      const response = await fetch('/api/teacher/stats', {
+      const response = await fetch(API_ENDPOINTS.teacher.stats, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -79,9 +80,9 @@ export default function TeacherDashboardMobile() {
 
   // Fetch today's classes
   const { data: todayClasses = [] } = useQuery({
-    queryKey: ['/api/teacher/classes/today'],
+    queryKey: [API_ENDPOINTS.teacher.classesToday],
     queryFn: async () => {
-      const response = await fetch('/api/teacher/classes/today', {
+      const response = await fetch(API_ENDPOINTS.teacher.classesToday, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -93,9 +94,9 @@ export default function TeacherDashboardMobile() {
 
   // Fetch pending assignments
   const { data: pendingAssignments = [] } = useQuery({
-    queryKey: ['/api/teacher/assignments/pending'],
+    queryKey: [API_ENDPOINTS.teacher.assignmentsPending],
     queryFn: async () => {
-      const response = await fetch('/api/teacher/assignments/pending', {
+      const response = await fetch(API_ENDPOINTS.teacher.assignmentsPending, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
