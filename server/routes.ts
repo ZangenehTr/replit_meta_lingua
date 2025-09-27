@@ -14541,7 +14541,7 @@ Return JSON format:
       const studentEnrollments = await db.select()
         .from(enrollments)
         .innerJoin(courses, eq(enrollments.courseId, courses.id))
-        .where(eq(enrollments.studentId, studentId));
+        .where(eq(enrollments.userId, studentId));
 
       const progressData = {
         overallProgress: 0,
@@ -14567,8 +14567,9 @@ Return JSON format:
       };
 
       if (studentEnrollments.length > 0) {
-        const activeEnrollments = studentEnrollments.filter(e => e.enrollments.status === 'active');
-        const completedEnrollments = studentEnrollments.filter(e => e.enrollments.status === 'completed');
+        // Filter by completion status using completedAt field
+        const activeEnrollments = studentEnrollments.filter(e => !e.enrollments.completedAt);
+        const completedEnrollments = studentEnrollments.filter(e => e.enrollments.completedAt);
         
         progressData.coursesInProgress = activeEnrollments.length;
         progressData.coursesCompleted = completedEnrollments.length;

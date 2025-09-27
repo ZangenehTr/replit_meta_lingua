@@ -8344,7 +8344,7 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(homework)
         .leftJoin(courses, eq(homework.courseId, courses.id))
-        .leftJoin(users, eq(homework.tutorId, users.id))
+        .leftJoin(users, eq(homework.teacherId, users.id))
         .where(eq(homework.studentId, userId))
         .orderBy(desc(homework.dueDate));
 
@@ -8363,7 +8363,7 @@ export class DatabaseStorage implements IStorage {
           dueDate: hw.dueDate,
           status: hw.status || 'pending',
           courseId: hw.courseId,
-          tutorId: hw.tutorId,
+          tutorId: hw.teacherId,
           maxScore: hw.maxScore || 100,
           submittedAt: hw.submittedAt,
           feedback: hw.feedback,
