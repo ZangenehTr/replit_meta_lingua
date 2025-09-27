@@ -4367,48 +4367,205 @@ export class MemStorage implements IStorage {
   
   // Student-specific conversation methods
   async getStudentConversations(studentId: number): Promise<any[]> {
-    // Return mock conversations for in-memory storage
-    return [
-      {
-        id: 1,
-        name: "Teacher Support",
+    try {
+      const conversations = await this.db.select().from(lexiConversations)
+        .where(eq(lexiConversations.userId, studentId))
+        .orderBy(desc(lexiConversations.lastMessageAt));
+      
+      // Transform database format to expected format
+      return conversations.map(conv => ({
+        id: conv.id,
+        name: conv.title || `${conv.sessionType} - ${conv.language}`,
         avatar: "/api/placeholder/40/40",
-        lastMessage: "Welcome! How can we help?",
-        lastMessageTime: new Date().toISOString(),
+        lastMessage: conv.title || "AI Conversation",
+        lastMessageTime: conv.lastMessageAt?.toISOString() || conv.createdAt.toISOString(),
         unreadCount: 0,
-        type: "individual",
-        online: true
-      }
-    ];
+        type: "ai_conversation",
+        online: true,
+        sessionType: conv.sessionType,
+        language: conv.language,
+        proficiencyLevel: conv.proficiencyLevel
+      }));
+    } catch (error) {
+      console.error('Error getting student AI conversations:', error);
+      return [];
+    }
   }
   
   async getConversationMessages(conversationId: number, userId: number): Promise<any[]> {
-    // Return mock messages for in-memory storage
-    return [
-      {
-        id: 1,
-        text: "Welcome to Meta Lingua!",
-        senderId: 1,
-        senderName: "System",
-        senderAvatar: "/api/placeholder/40/40",
-        timestamp: new Date().toISOString(),
-        read: true,
-        type: "text"
+    try {
+      // First verify this conversation belongs to the user
+      const conversation = await this.db.select().from(lexiConversations)
+        .where(and(eq(lexiConversations.id, conversationId), eq(lexiConversations.userId, userId)))
+        .limit(1);
+      
+      if (!conversation.length) {
+        console.error('Conversation not found or not accessible by user:', conversationId, userId);
+        return [];
       }
-    ];
+
+      const messages = await this.db.select().from(lexiMessages)
+        .where(eq(lexiMessages.conversationId, conversationId))
+        .orderBy(asc(lexiMessages.createdAt));
+      
+      // Transform database format to expected format
+      return messages.map(msg => ({
+        id: msg.id,
+        text: msg.content,
+        senderId: msg.role === 'user' ? userId : 0, // 0 for AI assistant
+        senderName: msg.role === 'user' ? "You" : "AI Assistant",
+        senderAvatar: msg.role === 'user' ? "/api/placeholder/40/40" : "/api/placeholder/40/40",
+        timestamp: msg.createdAt.toISOString(),
+        read: true,
+        type: msg.messageType,
+        role: msg.role,
+        metadata: msg.metadata,
+        isBookmarked: msg.isBookmarked,
+        reactions: msg.reactions
+      }));
+    } catch (error) {
+      console.error('Error getting conversation messages:', error);
+      return [];
+    }
   }
   
   async sendConversationMessage(conversationId: number, senderId: number, text: string): Promise<any> {
-    // Create mock message for in-memory storage
-    return {
-      id: Date.now(),
-      text,
-      senderId,
-      senderName: "You",
-      timestamp: new Date().toISOString(),
-      read: false,
-      type: "text"
-    };
+    try {
+      // First verify this conversation belongs to the user
+      const conversation = await this.db.select().from(lexiConversations)
+        .where(and(eq(lexiConversations.id, conversationId), eq(lexiConversations.userId, senderId)))
+        .limit(1);
+      
+      if (!conversation.length) {
+        throw new Error('Conversation not found or not accessible by user');
+      }
+
+      // Create the message
+      const messageData = {
+        conversationId,
+        role: 'user' as const,
+        content: text,
+        messageType: 'text' as const,
+        metadata: null,
+        videoTimestamp: null,
+        isBookmarked: false,
+        reactions: [],
+        relatedConcepts: [],
+        difficulty: null
+      };
+
+      const result = await this.db.insert(lexiMessages).values(messageData).returning();
+      const savedMessage = result[0];
+
+      // Update conversation's last message time and message count
+      await this.db.update(lexiConversations)
+        .set({ 
+          lastMessageAt: new Date(),
+          totalMessages: sql`${lexiConversations.totalMessages} + 1`
+        })
+        .where(eq(lexiConversations.id, conversationId));
+
+      // Transform to expected format
+      return {
+        id: savedMessage.id,
+        text: savedMessage.content,
+        senderId,
+        senderName: "You",
+        timestamp: savedMessage.createdAt.toISOString(),
+        read: false,
+        type: savedMessage.messageType,
+        role: savedMessage.role,
+        metadata: savedMessage.metadata,
+        isBookmarked: savedMessage.isBookmarked,
+        reactions: savedMessage.reactions
+      };
+    } catch (error) {
+      console.error('Error sending conversation message:', error);
+      throw error;
+    }
+  }
+
+  // Create a new AI conversation
+  async createAIConversation(userId: number, language: string, sessionType: string, proficiencyLevel?: string): Promise<any> {
+    try {
+      const conversationData = {
+        userId,
+        sessionType,
+        language,
+        proficiencyLevel: proficiencyLevel || 'intermediate',
+        contextData: null,
+        title: `${sessionType} - ${language}`,
+        status: 'active' as const,
+        totalMessages: 0,
+        learningGoals: [],
+        culturalContext: null,
+        lastMessageAt: new Date()
+      };
+
+      const result = await this.db.insert(lexiConversations).values(conversationData).returning();
+      const conversation = result[0];
+
+      return {
+        id: conversation.id,
+        name: conversation.title,
+        avatar: "/api/placeholder/40/40",
+        lastMessage: "New conversation started",
+        lastMessageTime: conversation.createdAt.toISOString(),
+        unreadCount: 0,
+        type: "ai_conversation",
+        online: true,
+        sessionType: conversation.sessionType,
+        language: conversation.language,
+        proficiencyLevel: conversation.proficiencyLevel
+      };
+    } catch (error) {
+      console.error('Error creating AI conversation:', error);
+      throw error;
+    }
+  }
+
+  // Add AI response message
+  async addAIResponseMessage(conversationId: number, content: string, metadata?: any): Promise<any> {
+    try {
+      const messageData = {
+        conversationId,
+        role: 'assistant' as const,
+        content,
+        messageType: 'text' as const,
+        metadata,
+        videoTimestamp: null,
+        isBookmarked: false,
+        reactions: [],
+        relatedConcepts: [],
+        difficulty: null
+      };
+
+      const result = await this.db.insert(lexiMessages).values(messageData).returning();
+      const savedMessage = result[0];
+
+      // Update conversation's last message time and message count
+      await this.db.update(lexiConversations)
+        .set({ 
+          lastMessageAt: new Date(),
+          totalMessages: sql`${lexiConversations.totalMessages} + 1`
+        })
+        .where(eq(lexiConversations.id, conversationId));
+
+      return {
+        id: savedMessage.id,
+        text: savedMessage.content,
+        senderId: 0, // AI assistant
+        senderName: "AI Assistant",
+        timestamp: savedMessage.createdAt.toISOString(),
+        read: true,
+        type: savedMessage.messageType,
+        role: savedMessage.role,
+        metadata: savedMessage.metadata
+      };
+    } catch (error) {
+      console.error('Error adding AI response message:', error);
+      throw error;
+    }
   }
 
   // CRITICAL MISSING METHODS - Support Tickets

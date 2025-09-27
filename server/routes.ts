@@ -5545,32 +5545,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(messages);
   });
   
-  // Student conversations endpoint - temporary stub to fix JSON parse errors
+  // Student conversations endpoint - now uses real database data
   app.get("/api/student/conversations", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      // Return working stub data to prevent JSON parse errors
-      const conversations = [
-        {
-          id: 1,
-          name: "AI Study Partner",
-          avatar: "/api/placeholder/40/40",
-          lastMessage: "Hi! I'm here to help you learn.",
-          lastMessageTime: new Date().toISOString(),
-          unreadCount: 0,
-          type: "ai_study_partner",
-          online: true
-        },
-        {
-          id: 2,
-          name: "Teacher Support",
-          avatar: "/api/placeholder/40/40", 
-          lastMessage: "Welcome! How can we help you?",
-          lastMessageTime: new Date().toISOString(),
-          unreadCount: 0,
-          type: "individual",
-          online: true
-        }
-      ];
+      // Get real AI conversations from database
+      const conversations = await (storage as any).getStudentConversations(req.user.id);
+      console.log(`Retrieved ${conversations.length} AI conversations for student ${req.user.id}`);
       
       res.json(conversations);
     } catch (error) {
@@ -5579,14 +5559,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI conversation send message endpoint - real AI implementation with fallback
+  // AI conversation send message endpoint - real AI implementation with fallback and persistence
   app.post("/api/student/ai-conversation/send", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      const { message, language, level, topic } = req.body;
+      const { message, language, level, topic, conversationId } = req.body;
       
       // Validate input
       if (!message || !message.trim()) {
         return res.status(400).json({ message: "Message is required" });
+      }
+
+      // Validate input parameters
+      const supportedLanguages = ['english', 'spanish'];
+      const supportedLevels = ['beginner', 'intermediate', 'advanced'];
+      const normalizedLanguage = supportedLanguages.includes(language) ? language : 'english';
+      const normalizedLevel = supportedLevels.includes(level) ? level : 'intermediate';
+      const sessionType = topic && topic !== 'general' ? topic : 'general_chat';
+
+      let currentConversationId = conversationId;
+
+      // Find or create conversation
+      if (!currentConversationId) {
+        try {
+          const newConversation = await (storage as any).createAIConversation(
+            req.user.id, 
+            normalizedLanguage, 
+            sessionType, 
+            normalizedLevel
+          );
+          currentConversationId = newConversation.id;
+          console.log(`Created new AI conversation: ${currentConversationId} for user ${req.user.id}`);
+        } catch (createError) {
+          console.error('Error creating AI conversation:', createError);
+          return res.status(500).json({ message: "Failed to create conversation" });
+        }
+      }
+
+      // Save user message to database
+      try {
+        await (storage as any).sendConversationMessage(currentConversationId, req.user.id, message);
+        console.log(`Saved user message to conversation ${currentConversationId}`);
+      } catch (saveError) {
+        console.error('Error saving user message:', saveError);
+        return res.status(500).json({ message: "Failed to save message" });
       }
 
       // Try to use AI providers first
@@ -5595,12 +5610,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { AIProviderManager } = await import('./ai-providers/ai-provider-manager.js');
         const aiManager = new AIProviderManager();
         await aiManager.initialize();
-
-        // Validate input
-        const supportedLanguages = ['english', 'spanish'];
-        const supportedLevels = ['beginner', 'intermediate', 'advanced'];
-        const normalizedLanguage = supportedLanguages.includes(language) ? language : 'english';
-        const normalizedLevel = supportedLevels.includes(level) ? level : 'intermediate';
 
         // Create system prompt based on language and level
         const systemPrompts = {
@@ -5623,12 +5632,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const topicContext = topic !== 'general' ? ` Focus the conversation on ${topic}-related topics.` : '';
         const fullSystemPrompt = systemPrompt + topicContext;
 
-        // Create AI request
+        // Get conversation history for context
+        const conversationHistory = await (storage as any).getConversationMessages(currentConversationId, req.user.id);
+        
+        // Build AI request with conversation history (last 10 messages for context)
+        const recentHistory = conversationHistory.slice(-10);
+        const messages = [
+          { role: 'system' as const, content: fullSystemPrompt },
+          ...recentHistory.map(msg => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.text
+          }))
+        ];
+
         const aiRequest = {
-          messages: [
-            { role: 'system' as const, content: fullSystemPrompt },
-            { role: 'user' as const, content: message }
-          ],
+          messages,
           temperature: 0.7,
           maxTokens: 200
         };
@@ -5638,14 +5656,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log(`✅ AI response generated successfully via ${aiResponse.model}`);
 
-        // Return real AI response
+        // Save AI response to database
+        const savedAIMessage = await (storage as any).addAIResponseMessage(
+          currentConversationId, 
+          aiResponse.content,
+          { provider: aiResponse.model, topic, level: normalizedLevel }
+        );
+
+        // Return real AI response with conversation data
         return res.json({
           response: aiResponse.content,
           audioUrl: null, // Would be generated by TTS service
           translation: null, // Translation could be added later
-          timestamp: new Date().toISOString(),
-          conversationId: 1, // Default AI Study Partner conversation
-          aiProvider: aiResponse.model
+          timestamp: savedAIMessage.timestamp,
+          conversationId: currentConversationId,
+          aiProvider: aiResponse.model,
+          messageId: savedAIMessage.id
         });
 
       } catch (aiError) {
@@ -5694,13 +5720,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const levelResponses = langResponses[level as keyof typeof langResponses] || langResponses.intermediate;
         const response = levelResponses[Math.floor(Math.random() * levelResponses.length)];
 
-        // Return fallback response
+        // Save fallback AI response to database
+        const savedFallbackMessage = await (storage as any).addAIResponseMessage(
+          currentConversationId, 
+          response,
+          { provider: "fallback-stub", topic, level: normalizedLevel }
+        );
+
+        // Return fallback response with saved data
         return res.json({
           response: response,
           audioUrl: null,
           translation: null,
-          timestamp: new Date().toISOString(),
-          conversationId: 1,
+          timestamp: savedFallbackMessage.timestamp,
+          conversationId: currentConversationId,
           aiProvider: "fallback-stub"
         });
       }
