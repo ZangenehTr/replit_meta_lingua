@@ -1,0 +1,227 @@
+Below is a single, copy-paste **prompt for Replit Agent** to fix the **Metalingua Admin** buttons safely, without breaking other areas. It covers: (A) non-functional buttons, (B1) functional but unclear data flow/usage, (B2) functional but with unusable inputs. Replace `{{…}}` placeholders as needed.
+
+---
+
+# Replit Agent Prompt — Metalingua Admin “Buttons Stabilization & Usability” (120+ buttons)
+
+**Repo / Project**
+
+* Name: **Metalingua Admin**
+* URL/branch to start from: `{{repo url}}` / create feature branch `fix/admin-buttons-audit`
+* Tech stack: `{{e.g., Next.js + React + TypeScript + Node/Express + Prisma + Postgres}}`
+* Environments: `{{dev}}`, `{{staging}}` (do not deploy to prod)
+
+## Goal
+
+Make **all admin buttons** reliable and usable, with **traceable data flow**. Do **not** regress working areas. Solve three categories:
+
+1. **Dead buttons** → wire to correct actions.
+2. **Working but opaque** → make downstream usage observable (where does the input go? which modules consume it?).
+3. **Works but unusable input UI** → replace with standard, validated, accessible forms.
+
+## Non-destructive guardrails (must follow)
+
+* Work in a **feature branch**, open incremental PRs.
+* Add a **feature flag**: `feature.adminButtonsV2` (env-driven) and default it **off**.
+* **Snapshot tests** and **E2E smoke tests** must pass for all existing critical flows.
+* No schema-breaking migrations without a reversible plan. If needed, write **idempotent, backward-compatible** migrations and include rollback scripts.
+* Preserve all existing routes, ids, and public types; mark breaking changes with deprecation warnings only.
+
+## What to deliver (high level)
+
+1. **Inventory & audit** of all ~120 admin buttons, with status and fix plan.
+2. **Standard button contract** (UX + code): click → validate → action → user feedback → logging/telemetry.
+3. **Standard form components** (required labels, placeholders, validation, errors, help text).
+4. **Data lineage**: show where each action’s data appears (teacher allocation, mentor allocation, class scheduler, etc.).
+5. **Tests & telemetry** so we can see results and catch regressions.
+
+---
+
+## Step 1 — Button Inventory (auto-discovery)
+
+Create `/docs/admin-buttons-inventory.json` with one entry per button:
+
+```json
+[
+  {
+    "id": "admin.course.create",
+    "label": "Create Course",
+    "component": "src/admin/courses/CreateCourseButton.tsx",
+    "route": "/admin/courses",
+    "onClickHandler": "createCourse",
+    "api": "POST /api/admin/courses",
+    "status": "dead|works-opaque|works-poor-ui|ok",
+    "consumers": ["teacher-allocation", "inperson-class-allocation", "mentor-allocation"],
+    "telemetryEvent": "admin.course.created",
+    "notes": "Missing required fields; not appearing in teacher allocation list."
+  }
+]
+```
+
+Implementation hints:
+
+* Grep for `<button`, `Button`, `onClick=`, `data-action`, and common button components.
+* Include buttons rendered via menus, dropdowns, and icon buttons.
+
+**Acceptance**: inventory file contains ≥120 entries with accurate paths and current status.
+
+---
+
+## Step 2 — Define the “Admin Button Contract”
+
+Create `/docs/admin-button-contract.md` and implement in code:
+
+**UX requirements (all buttons)**
+
+* Visible **loading** state (disable while pending).
+* **Success toast** with human-readable message.
+* **Error toast** with server message + remediation hint.
+* **A11y**: role, name, focus order, ARIA for spinners/errors.
+* Optional **confirm dialog** for destructive actions.
+
+**Data requirements**
+
+* Every action emits telemetry:
+  `event: admin.<entity>.<verb>`, `actorId`, `entityId`, `payloadSummary`, `timestamp`.
+* Server returns a canonical **DTO** (id, name, timestamps, status, relatedIds).
+
+**Code requirements**
+
+* Centralize button helpers in `src/admin/ui/buttonContract.ts`:
+
+  * `withAction<T>(opts): (e) => Promise<void>` (wraps validation → API → toasts → telemetry → cache invalidation).
+  * `useActionState()` for loading/disabled.
+
+**Acceptance**: two reference buttons refactored to the new contract and documented.
+
+---
+
+## Step 3 — Fix Category A (Dead buttons)
+
+For each `status=dead`:
+
+* Locate intended handler/API from adjacent code, route naming, or business context.
+* If no route exists, **create minimal REST/handler** with proper validation and unit tests.
+* Wire `onClick` to the action via `withAction`.
+* Add **telemetry** and **spec tests**.
+
+**Acceptance**: clicking a previously dead button now produces a visible outcome (DB change or user feedback). Tests cover the path.
+
+---
+
+## Step 4 — Fix Category B1 (Works but opaque data flow)
+
+Example: **Create Course** opens a form, saves, but we don’t know where it is used (teacher/mentor/in-person allocations, etc.).
+
+Do this for each button with `status=works-opaque`:
+
+1. Add server-side **audit log + telemetry** on mutation:
+
+   * Table: `admin_audit_logs` (action, entity, user, before/after, ts).
+   * Event: `admin.course.created` (include derived indexes/relations).
+2. **Propagate cache invalidation** (React Query/RTK Query/SWR) so that lists in:
+
+   * `teacher allocation`, `in-person class allocation`, `mentor allocation`, `course catalog`
+     refresh after creation/update.
+3. Add **“Where is this used?”** link in the success toast that opens a side panel showing:
+
+   * Related entities (teachers/classes/mentors) and whether the new record is visible there.
+4. Add a **lineage test**:
+
+   * Create entity → assert it appears in dependent UIs within one refresh cycle.
+   * If appearance is async (indexers/queues), surface ETA plus manual refresh.
+
+**Acceptance**: For each such button, we can **see** downstream usage (UI side panel + logs), and dependent pages reflect the new data.
+
+---
+
+## Step 5 — Fix Category B2 (Poor/Non-standard input UIs)
+
+For each `status=works-poor-ui`:
+
+* Replace with shared form kit in `src/admin/ui/forms/*`:
+
+  * Input/Textarea/Select/Combobox/Date/Number with:
+
+    * label, placeholder, description/help,
+    * **required/optional** flags,
+    * client validation (Zod/Yup) + server validation,
+    * inline error messages,
+    * keyboard navigation and ARIA attributes.
+* Support **dependent selects** (e.g., Course → Teacher list filtered by department).
+* Add **sane defaults** and **field-level docs** tooltip (what this affects downstream).
+
+**Acceptance**: forms are consistent, accessible, validated; QA can complete flows without guessing.
+
+---
+
+## Step 6 — Data Contracts & Compatibility
+
+* Introduce `src/contracts/{{entity}}.ts` (DTOs, validators).
+* Avoid breaking existing consumers; where necessary, add **adapter mappers**.
+* Write **integration tests** for critical entities: Course, Teacher, Mentor, Class/Room, Allocation, Pricing/Packages.
+
+**Acceptance**: build passes with **no TypeScript/ESLint errors**; contracts exported from a single place.
+
+---
+
+## Step 7 — Tests & QA
+
+* **Unit tests**: handlers, validators, mappers.
+* **Component tests** (RTL): button clicks produce visible outcomes.
+* **E2E** (Playwright/Cypress): golden flows:
+
+  * Create Course → appears in Teacher Allocation & Class Allocation.
+  * Create Mentor → assignable to a course.
+  * Create In-Person Class → visible in scheduling UI.
+* Add a **QA checklist** auto-generated from `/docs/admin-buttons-inventory.json`.
+
+**Acceptance**: New tests run in CI, and a smoke E2E suite covers the main admin journeys.
+
+---
+
+## Step 8 — Telemetry & Observability
+
+* Client: `track('admin.<entity>.<verb>', payloadSummary)` in button contract.
+* Server: structured logs + `admin_audit_logs` table.
+* Create `/admin/telemetry` page to filter recent actions and drill into payloads.
+
+**Acceptance**: Admins can answer “what happened to this input?” from the UI within 2 clicks.
+
+---
+
+## Step 9 — Rollout
+
+* Ship to **staging** behind `feature.adminButtonsV2=false`.
+* Enable per-module (courses, allocation, mentors, classes) and regression-test.
+* After sign-off, enable globally.
+
+**Definition of Done (global)**
+
+* 100% of inventoried buttons have **status=ok** with notes updated.
+* Opaque flows now expose **lineage** and **telemetry**.
+* No critical regressions in Courses, Teacher/Mentor allocation, In-person Class allocation, Scheduling, Payments.
+
+---
+
+### Useful repo details
+
+* Commands: `{{npm run dev}}`, `{{npm run test}}`, `{{npm run e2e}}`, `{{npm run lint}}`
+* Test users/seed data: `{{path}}`
+* API base: `{{/api}}`
+* Auth/keys: `{{where to find or stub}}`
+
+**You have permission** to:
+
+* Refactor small components, add shared form kit, create audit log table, add telemetry, add non-breaking endpoints, and write tests.
+* **Ask before** adding new external libraries or making schema changes that are not backward-compatible.
+
+---
+
+#### Optional quick task to start with
+
+> Begin with “Create Course” button: implement button contract, standard form with validation, audit logs, telemetry, cache invalidation, and lineage panel showing appearance in teacher/mentor/class allocation. Add unit, component, and E2E tests. Update inventory entry to `ok`.
+
+---
+
+If you share your actual stack (e.g., React Query vs SWR, Prisma vs TypeORM), I’ll tailor the validators, cache invalidation, and test examples to match.
