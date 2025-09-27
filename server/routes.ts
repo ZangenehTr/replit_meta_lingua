@@ -2086,6 +2086,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual course by ID (for search results and course detail pages)
+  app.get("/api/courses/:id", async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      if (isNaN(courseId)) {
+        return res.status(400).json({ message: "Invalid course ID" });
+      }
+      
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json(course);
+    } catch (error) {
+      console.error('Error fetching course:', error);
+      res.status(500).json({ message: "Failed to fetch course" });
+    }
+  });
+
   // Update user profile
   app.patch("/api/users/:id", authenticateToken, async (req: any, res) => {
     try {

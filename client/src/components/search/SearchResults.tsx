@@ -135,7 +135,8 @@ export function SearchResults({
       return response.json() as Promise<SearchResponse>;
     },
     getNextPageParam: (lastPage: SearchResponse) => {
-      return lastPage.hasMore ? lastPage.page + 1 : undefined;
+      const hasMore = (lastPage.page * 20) < lastPage.total;
+      return hasMore ? lastPage.page + 1 : undefined;
     },
     enabled: !!query,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -208,8 +209,8 @@ export function SearchResults({
     );
   }
 
-  const totalResults = data?.pages[0]?.totalResults || 0;
-  const responseTime = data?.pages[0]?.responseTime || 0;
+  const totalResults = data?.pages[0]?.total || 0;
+  const responseTime = data?.pages[0]?.searchTime || 0;
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -375,6 +376,24 @@ interface SearchResultCardProps {
   'data-testid'?: string;
 }
 
+// Helper function to generate URLs for different result types
+function generateResultUrl(result: SearchResultItem): string {
+  switch (result.type) {
+    case 'course':
+      return `/course/${result.id}`;
+    case 'book':
+      return `/books/${result.id}`;
+    case 'user':
+      return `/profile/${result.id}`;
+    case 'game':
+      return `/game/${result.id}`;
+    case 'session':
+      return `/sessions/${result.id}`;
+    default:
+      return `/${result.type}/${result.id}`;
+  }
+}
+
 function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-testid': testId }: SearchResultCardProps) {
   const { t } = useTranslation(['common', 'courses']);
   const Icon = CONTENT_TYPE_ICONS[result.type];
@@ -391,7 +410,7 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
       )}
       data-testid={testId}
     >
-      <Link href={result.url} onClick={handleClick}>
+      <Link href={generateResultUrl(result)} onClick={handleClick}>
         <CardHeader className={cn("space-y-2", viewMode === 'grid' && "pb-3")}>
           <div className="flex items-start space-x-3">
             {result.imageUrl ? (

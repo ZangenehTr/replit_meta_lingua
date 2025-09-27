@@ -89,7 +89,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
 
   // Fetch course data
   const { data: course, isLoading } = useQuery<Course>({
-    queryKey: ['/api/courses', courseId, 'player'],
+    queryKey: [`/api/courses/${courseId}/player`],
   });
 
   // Get current lesson (only after course is loaded)
@@ -112,7 +112,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses', courseId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}/player`] });
     },
   });
 
@@ -124,7 +124,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses', courseId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}/player`] });
       toast({
         title: t('coursePlayer:lessonCompleted'),
         description: t('coursePlayer:progressSaved'),
