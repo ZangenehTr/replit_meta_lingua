@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1684,6 +1685,59 @@ function LiveHub({ upcomingSessions }: any) {
 }
 
 function AssessmentHub(props: any) {
+  const { assignments = [], dashboardStats } = props;
+  const { t } = useTranslation();
+  const [location, navigate] = useLocation();
+  const { toast } = useToast();
+
+  // Filter assignments by type for assessments
+  const assessmentAssignments = assignments.filter((assignment: any) => 
+    assignment.type === 'assessment' || assignment.type === 'test' || assignment.type === 'quiz'
+  );
+  
+  // Get completed assignments with scores (assessment type only)
+  const completedAssessments = assessmentAssignments.filter((assignment: any) => 
+    assignment.status === 'graded' && assignment.score != null
+  );
+
+  // Handle assessment actions  
+  const handleAssessmentAction = async (assignment: any) => {
+    if (assignment.status === 'pending') {
+      // Start new MST assessment
+      try {
+        const response = await apiRequest('/api/mst/start', {
+          method: 'POST',
+          body: {
+            assignmentId: assignment.id,
+            type: assignment.type || 'assessment'
+          }
+        });
+
+        if (response.sessionId) {
+          // Navigate to MST interface with session ID
+          navigate(`/mst?sessionId=${response.sessionId}&assignmentId=${assignment.id}`);
+        } else {
+          console.error('Failed to start MST session:', response.error);
+          toast({
+            title: 'Assessment Error',
+            description: response.error || 'Failed to start assessment. Please try again.',
+            variant: 'destructive'
+          });
+        }
+      } catch (error) {
+        console.error('Error starting assessment:', error);
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to start assessment. Please check your connection.',
+          variant: 'destructive'
+        });
+      }
+    } else if (assignment.status === 'graded') {
+      // Navigate to results view
+      navigate(`/student/test-results?assignmentId=${assignment.id}`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Assessment Overview */}
@@ -1697,12 +1751,16 @@ function AssessmentHub(props: any) {
               <h3 className="text-2xl font-bold mb-2">Assessment Center</h3>
               <p className="text-blue-100">Track your progress with comprehensive evaluations</p>
             </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold">{completedAssessments.length}</div>
+              <div className="text-blue-100 text-sm">Completed Tests</div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Available Tests */}
+        {/* Available Assessments */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -1711,33 +1769,56 @@ function AssessmentHub(props: any) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { title: 'Placement Test', description: 'Determine your current level', duration: '45 min', available: true },
-                { title: 'Progress Evaluation', description: 'Monthly progress check', duration: '30 min', available: true },
-                { title: 'IELTS Practice Test', description: 'Full practice exam', duration: '120 min', available: false },
-              ].map((test, index) => (
-                <div key={index} className={cn(
-                  "flex items-center justify-between p-4 border rounded-lg transition-all",
-                  test.available ? "hover:bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-200"
-                )}>
-                  <div className="flex-1">
-                    <h4 className={cn("font-medium", test.available ? "text-gray-900" : "text-gray-500")}>
-                      {test.title}
-                    </h4>
-                    <p className="text-sm text-gray-600">{test.description}</p>
-                    <p className="text-xs text-gray-500">{test.duration}</p>
+            {assessmentAssignments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <ClipboardCheck className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No assessments available at the moment</p>
+                <p className="text-sm mt-2">Check back later for new assignments</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {assessmentAssignments.map((assignment: any) => (
+                  <div key={assignment.id} className={cn(
+                    "flex items-center justify-between p-4 border rounded-lg transition-all",
+                    assignment.status === 'pending' ? "hover:bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-200"
+                  )}>
+                    <div className="flex-1">
+                      <h4 className={cn("font-medium", assignment.status === 'pending' ? "text-gray-900" : "text-gray-500")}>
+                        {assignment.title}
+                      </h4>
+                      <p className="text-sm text-gray-600">{assignment.description || 'Assessment assignment'}</p>
+                      <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                        <span>Due: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No due date'}</span>
+                        <span>Max Score: {assignment.maxScore || 100}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Badge 
+                        className={cn(
+                          assignment.status === 'pending' ? "bg-orange-100 text-orange-700" :
+                          assignment.status === 'submitted' ? "bg-blue-100 text-blue-700" :
+                          assignment.status === 'graded' ? "bg-green-100 text-green-700" :
+                          "bg-gray-100 text-gray-700"
+                        )}
+                      >
+                        {assignment.status}
+                      </Badge>
+                      <Button 
+                        size="sm" 
+                        disabled={assignment.status !== 'pending' && assignment.status !== 'graded'}
+                        className={assignment.status === 'pending' ? "bg-gradient-to-r from-blue-500 to-cyan-500" : ""}
+                        onClick={() => handleAssessmentAction(assignment)}
+                        data-testid={`button-assessment-${assignment.status}-${assignment.id}`}
+                      >
+                        {assignment.status === 'pending' ? 'Start Assessment' : 
+                         assignment.status === 'submitted' ? 'Submitted' :
+                         assignment.status === 'graded' ? 'View Results' : 'Locked'}
+                      </Button>
+                    </div>
                   </div>
-                  <Button 
-                    size="sm" 
-                    disabled={!test.available}
-                    className={test.available ? "bg-gradient-to-r from-blue-500 to-cyan-500" : ""}
-                  >
-                    {test.available ? 'Start Test' : 'Locked'}
-                  </Button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -1750,34 +1831,35 @@ function AssessmentHub(props: any) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { test: 'Grammar Assessment', score: 85, date: '1 week ago', grade: 'B+' },
-                { test: 'Vocabulary Quiz', score: 92, date: '2 weeks ago', grade: 'A-' },
-                { test: 'Listening Test', score: 78, date: '3 weeks ago', grade: 'B' },
-              ].map((result, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{result.test}</h4>
-                    <p className="text-sm text-gray-600">{result.date}</p>
+            {completedAssessments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No completed assessments yet</p>
+                <p className="text-sm mt-2">Results will appear here after completing tests</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {completedAssessments.map((result: any) => (
+                  <div key={result.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                       data-testid={`assessment-result-${result.id}`}>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">{result.title}</h4>
+                      <p className="text-sm text-gray-600">
+                        Completed: {result.submittedAt ? new Date(result.submittedAt).toLocaleDateString() : 'Recently'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-green-600">
+                        {result.score}/{result.maxScore || 100}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {Math.round((result.score / (result.maxScore || 100)) * 100)}%
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">{result.score}%</div>
-                    <Badge className={cn(
-                      "text-xs",
-                      result.score >= 90 ? "bg-green-100 text-green-700" :
-                      result.score >= 80 ? "bg-blue-100 text-blue-700" :
-                      "bg-yellow-100 text-yellow-700"
-                    )}>
-                      {result.grade}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Button variant="outline" className="w-full mt-4">
-              <Link href="/student/test-results">View All Results</Link>
-            </Button>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
