@@ -54,14 +54,14 @@ export function Navigation() {
   const queryClient = useQueryClient();
 
   // Fetch unread notification count
-  const { data: notificationData, isLoading: isLoadingCount } = useQuery({
+  const { data: notificationData, isLoading: isLoadingCount } = useQuery<{ count: number }>({
     queryKey: ['/api/notifications/count'],
     enabled: !!user,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Fetch recent unread notifications for dropdown
-  const { data: notifications = [], isLoading: isLoadingNotifications } = useQuery({
+  const { data: notifications = [], isLoading: isLoadingNotifications } = useQuery<Notification[]>({
     queryKey: ['/api/notifications/unread'],
     enabled: !!user,
     refetchInterval: 30000,
@@ -259,7 +259,7 @@ export function Navigation() {
                   <h3 className="font-semibold text-sm">
                     {t('common:notifications.title', 'Notifications')}
                   </h3>
-                  {notifications.length > 0 && (
+                  {(notifications as Notification[]).length > 0 && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -280,7 +280,7 @@ export function Navigation() {
                         {t('common:notifications.loading', 'Loading notifications...')}
                       </div>
                     </div>
-                  ) : notifications.length === 0 ? (
+                  ) : (notifications as Notification[]).length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-8 text-center">
                       <Bell className="h-12 w-12 text-muted-foreground/30 mb-3" />
                       <p className="text-sm text-muted-foreground">
@@ -292,7 +292,7 @@ export function Navigation() {
                     </div>
                   ) : (
                     <div className="space-y-1">
-                      {notifications.map((notification: Notification) => (
+                      {(notifications as Notification[]).map((notification: Notification) => (
                         <div
                           key={notification.id}
                           className={`group p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
