@@ -195,7 +195,7 @@ export default function GamesPage() {
   };
 
   const renderGameCard = (game: Game) => {
-    const gameProgress = progress.find(p => p.gameId === game.id);
+    const gameProgress = Array.isArray(progress) ? progress.find(p => p.gameId === game.id) : null;
     const completionRate = gameProgress?.completionRate || 0;
     const timesPlayed = gameProgress?.timesPlayed || 0;
     const bestScore = gameProgress?.bestScore || 0;
@@ -610,6 +610,10 @@ export default function GamesPage() {
                   </CardContent>
                 </Card>
               ))
+            ) : !Array.isArray(progress) || progress.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No progress data available</p>
+              </div>
             ) : (
               progress.map(renderProgressCard)
             )}
@@ -630,6 +634,10 @@ export default function GamesPage() {
                   </CardContent>
                 </Card>
               ))
+            ) : !Array.isArray(sessions) || sessions.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No game sessions yet</p>
+              </div>
             ) : (
               sessions.map(renderSessionCard)
             )}
@@ -662,6 +670,8 @@ export default function GamesPage() {
                       </div>
                     </div>
                   ))
+                ) : !Array.isArray(leaderboard) || leaderboard.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">No leaderboard data available</div>
                 ) : (
                   leaderboard.map(renderLeaderboardEntry)
                 )}
@@ -687,6 +697,10 @@ export default function GamesPage() {
                   </CardContent>
                 </Card>
               ))
+            ) : !Array.isArray(achievements) || achievements.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500">No achievements yet</p>
+              </div>
             ) : (
               achievements.map(renderAchievementCard)
             )}

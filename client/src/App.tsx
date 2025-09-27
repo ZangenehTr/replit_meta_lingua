@@ -639,7 +639,7 @@ function Router() {
       </Route>
       <Route path="/games">
         <ProtectedRoute>
-          <GamificationSystem />
+          <GamesPage />
         </ProtectedRoute>
       </Route>
       <Route path="/game/:gameId">
@@ -822,16 +822,6 @@ function Router() {
       <Route path="/mst">
         <ProtectedRoute>
           <MSTPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/games">
-        <ProtectedRoute>
-          <GamesPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/game/:gameId">
-        <ProtectedRoute>
-          <GamePlayer />
         </ProtectedRoute>
       </Route>
       <Route path="/ai-practice">
