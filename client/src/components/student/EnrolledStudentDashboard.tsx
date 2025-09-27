@@ -916,51 +916,36 @@ function renderHubContent(
   hasError: boolean,
   retry: () => void
 ) {
-  console.log('🔧 renderHubContent called:', { hubId, dataKeys: Object.keys(data), isLoading, hasError });
-  
   // Show loading state for all hubs
   if (isLoading) {
-    console.log('📍 Rendering loading state for hub:', hubId);
     return <HubLoadingSkeleton hubId={hubId} />;
   }
 
   // Show error state for all hubs
   if (hasError) {
-    console.log('📍 Rendering error state for hub:', hubId);
     return <HubErrorState hubId={hubId} onRetry={retry} />;
   }
   
-  console.log('📍 Rendering hub component for:', hubId);
   switch (hubId) {
     case 'overview':
-      console.log('📍 Returning OverviewHub');
       return <OverviewHub {...data} />;
     case 'learn':
-      console.log('📍 Returning LearnHub with data:', { courses: data.courses?.length });
       return <LearnHub {...data} />;
     case 'live':
-      console.log('📍 Returning LiveHub with data:', { upcomingSessions: data.upcomingSessions?.length });
       return <LiveHub {...data} />;
     case 'assessment':
-      console.log('📍 Returning AssessmentHub');
       return <AssessmentHub {...data} />;
     case 'ai':
-      console.log('📍 Returning AIHub');
       return <AIHub {...data} />;
     case 'social':
-      console.log('📍 Returning SocialHub');
       return <SocialHub {...data} />;
     case 'games':
-      console.log('📍 Returning GamesHub');
       return <GamesHub {...data} />;
     case 'commerce':
-      console.log('📍 Returning CommerceHub');
       return <CommerceHub {...data} />;
     case 'profile':
-      console.log('📍 Returning ProfileHub');
       return <ProfileHub {...data} />;
     default:
-      console.log('📍 Returning default OverviewHub');
       return <OverviewHub {...data} />;
   }
 }
@@ -1108,12 +1093,6 @@ function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats
 }
 
 function LearnHub({ courses, assignments, learningProgress }: any) {
-  console.log('🎯 LearnHub component mounting with props:', { 
-    coursesCount: courses?.length, 
-    assignmentsCount: assignments?.length, 
-    learningProgress: !!learningProgress 
-  });
-  
   const queryClient = useQueryClient();
   
   // Fetch LinguaQuest progress data
@@ -1420,10 +1399,6 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
 }
 
 function LiveHub({ upcomingSessions }: any) {
-  console.log('🎯 LiveHub component mounting with props:', { 
-    upcomingSessionsCount: upcomingSessions?.length 
-  });
-  
   const queryClient = useQueryClient();
   const [showQuickJoinDialog, setShowQuickJoinDialog] = useState(false);
   

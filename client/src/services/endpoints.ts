@@ -142,7 +142,7 @@ export const API_ENDPOINTS = {
     gameProgress: '/student/game-progress',
     gameSessions: '/student/game-sessions',
     leaderboard: '/gamification/leaderboard',
-    conversations: '/student/conversations',
+    conversations: '/api/student/conversations',
     wallet: '/student/wallet',
     
     // Callern & Tutoring
