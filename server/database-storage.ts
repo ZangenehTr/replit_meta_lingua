@@ -540,8 +540,7 @@ export class DatabaseStorage implements IStorage {
           type: 'group',
           participants: [studentId.toString()],
           metadata: { courseId: courseId },
-          isActive: true,
-          createdAt: new Date()
+          isActive: true
         }).returning();
         chatId = newChat.id;
         
@@ -551,8 +550,7 @@ export class DatabaseStorage implements IStorage {
           senderId: 1, // System message from admin
           senderName: 'System',
           message: `Welcome to the ${course.title} class group! Feel free to ask questions and interact with your classmates.`,
-          messageType: 'system',
-          sentAt: new Date()
+          messageType: 'system'
         });
       } else {
         // Add student to existing group chat
@@ -7372,8 +7370,7 @@ export class DatabaseStorage implements IStorage {
           type: 'individual',
           participants: [studentId.toString(), '1'], // Student and admin/teacher
           metadata: { isSupport: true },
-          isActive: true,
-          createdAt: new Date()
+          isActive: true
         }).returning();
         
         // Create institute announcements channel
@@ -7382,8 +7379,7 @@ export class DatabaseStorage implements IStorage {
           type: 'announcement',
           participants: [studentId.toString()],
           metadata: { isAnnouncement: true },
-          isActive: true,
-          createdAt: new Date()
+          isActive: true
         }).returning();
         
         // Return newly created conversations
