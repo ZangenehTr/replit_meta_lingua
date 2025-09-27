@@ -127,7 +127,7 @@ export const API_ENDPOINTS = {
     sessions: '/api/student/sessions',
     upcomingSessions: '/api/student/upcoming-sessions',
     sessionHistory: '/api/student/session-history',
-    enrollmentStatus: '/api/student/enrollment-status',
+    enrollmentStatus: '/student/enrollment-status',
     sessionPackages: '/api/student/session-packages',
     enroll: '/api/student/enroll',
     
