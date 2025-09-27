@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { API_ENDPOINTS } from '@/services/endpoints';
 
 /**
  * Centralized query invalidation patterns to ensure consistency
@@ -81,7 +82,7 @@ export const queryKeys = {
     stats: ['/api/admin/dashboard-stats'] as const,
     admin: ['/api/admin/dashboard'] as const,
     teacher: ['/api/teacher/dashboard'] as const,
-    student: ['/api/student/dashboard'] as const,
+    student: [API_ENDPOINTS.student.dashboard] as const,
   },
   
   // Supervision
@@ -97,13 +98,13 @@ export const queryKeys = {
   homework: {
     all: ['/api/homework'] as const,
     teacher: ['/api/teacher/homework'] as const,
-    student: ['/api/student/homework'] as const,
+    student: [API_ENDPOINTS.student.homework] as const,
   },
   
   // Session Packages
   sessionPackages: {
     all: ['/api/session-packages'] as const,
-    student: ['/api/student/session-packages'] as const,
+    student: [API_ENDPOINTS.student.sessionPackages] as const,
   },
   
   // Mood Tracking

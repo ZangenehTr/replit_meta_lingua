@@ -85,6 +85,7 @@ import {
 import { Link } from "wouter";
 import { useLanguage } from "@/hooks/useLanguage";
 import { apiRequest } from "@/lib/queryClient";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { cn } from "@/lib/utils";
 import { useIsMediumScreen } from "@/hooks/useMediaQuery";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -326,64 +327,64 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
 
   // Comprehensive API data fetching with React Query with proper error handling
   const { data: dashboardStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
-    queryKey: ['/api/student/dashboard-stats'],
-    queryFn: () => apiRequest('/api/student/dashboard-stats'),
+    queryKey: [API_ENDPOINTS.student.dashboardStats],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.dashboardStats),
     staleTime: 2 * 60 * 1000,
     retry: 3,
   });
 
   const { data: gamificationStats, isLoading: gamificationLoading, error: gamificationError, refetch: refetchGamification } = useQuery({
-    queryKey: ['/api/student/gamification-stats'],
-    queryFn: () => apiRequest('/api/student/gamification-stats'),
+    queryKey: [API_ENDPOINTS.student.gamificationStats],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.gamificationStats),
     staleTime: 2 * 60 * 1000,
     retry: 3,
   });
 
   const { data: learningProgress, isLoading: progressLoading, error: progressError, refetch: refetchProgress } = useQuery({
-    queryKey: ['/api/student/learning-progress'],
-    queryFn: () => apiRequest('/api/student/learning-progress'),
+    queryKey: [API_ENDPOINTS.student.learningProgress],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.learningProgress),
     staleTime: 5 * 60 * 1000,
     retry: 3,
   });
 
   const { data: upcomingSessions = [], isLoading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useQuery({
-    queryKey: ['/api/student/upcoming-sessions'],
-    queryFn: () => apiRequest('/api/student/upcoming-sessions'),
+    queryKey: [API_ENDPOINTS.student.upcomingSessions],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.upcomingSessions),
     staleTime: 2 * 60 * 1000,
     retry: 3,
   });
 
   const { data: assignments = [], isLoading: assignmentsLoading, error: assignmentsError, refetch: refetchAssignments } = useQuery({
-    queryKey: ['/api/student/assignments'],
-    queryFn: () => apiRequest('/api/student/assignments'),
+    queryKey: [API_ENDPOINTS.student.assignments],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.assignments),
     staleTime: 5 * 60 * 1000,
     retry: 3,
   });
 
   const { data: achievements = [], isLoading: achievementsLoading, error: achievementsError, refetch: refetchAchievements } = useQuery({
-    queryKey: ['/api/student/achievements'],
-    queryFn: () => apiRequest('/api/student/achievements'),
+    queryKey: [API_ENDPOINTS.student.achievements],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.achievements),
     staleTime: 10 * 60 * 1000,
     retry: 3,
   });
 
   const { data: courses = [], isLoading: coursesLoading, error: coursesError, refetch: refetchCourses } = useQuery({
-    queryKey: ['/api/student/courses'],
-    queryFn: () => apiRequest('/api/student/courses'),
+    queryKey: [API_ENDPOINTS.student.courses],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.courses),
     staleTime: 15 * 60 * 1000,
     retry: 3,
   });
 
   const { data: games = [], isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery({
-    queryKey: ['/api/student/games/accessible'],
-    queryFn: () => apiRequest('/api/student/games/accessible'),
+    queryKey: [API_ENDPOINTS.student.gamesAccessible],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.gamesAccessible),
     staleTime: 10 * 60 * 1000,
     retry: 3,
   });
 
   const { data: wallet, isLoading: walletLoading, error: walletError, refetch: refetchWallet } = useQuery({
-    queryKey: ['/api/student/wallet'],
-    queryFn: () => apiRequest('/api/student/wallet'),
+    queryKey: [API_ENDPOINTS.student.wallet],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.wallet),
     staleTime: 5 * 60 * 1000,
     retry: 3,
   });
@@ -1273,8 +1274,8 @@ function LiveHub({ upcomingSessions }: any) {
   
   // Fetch Callern data
   const { data: callernData, isLoading: callernLoading } = useQuery({
-    queryKey: ['/api/student/callern-status'],
-    queryFn: () => apiRequest('/api/student/callern-status'),
+    queryKey: [API_ENDPOINTS.student.callernStatus],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.callernStatus),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_ENDPOINTS } from '@/services/endpoints';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -114,9 +115,9 @@ export default function GamesPage() {
 
   // Fetch real game progress data
   const { data: progress = [], isLoading: progressLoading } = useQuery({
-    queryKey: ['/api/student/game-progress'],
+    queryKey: [API_ENDPOINTS.student.gameProgress],
     queryFn: async () => {
-      const response = await apiRequest('/api/student/game-progress');
+      const response = await apiRequest(API_ENDPOINTS.student.gameProgress);
       return response as GameProgress[];
     },
     staleTime: 5 * 60 * 1000,
@@ -124,9 +125,9 @@ export default function GamesPage() {
 
   // Fetch real game sessions data
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
-    queryKey: ['/api/student/game-sessions'],
+    queryKey: [API_ENDPOINTS.student.gameSessions],
     queryFn: async () => {
-      const response = await apiRequest('/api/student/game-sessions');
+      const response = await apiRequest(API_ENDPOINTS.student.gameSessions);
       return response as GameSession[];
     },
     staleTime: 2 * 60 * 1000,
@@ -134,9 +135,9 @@ export default function GamesPage() {
 
   // Fetch real leaderboard data
   const { data: leaderboard = [], isLoading: leaderboardLoading } = useQuery({
-    queryKey: ['/api/student/leaderboard'],
+    queryKey: [API_ENDPOINTS.student.leaderboard],
     queryFn: async () => {
-      const response = await apiRequest('/api/student/leaderboard');
+      const response = await apiRequest(API_ENDPOINTS.student.leaderboard);
       return response as LeaderboardEntry[];
     },
     staleTime: 5 * 60 * 1000,
@@ -144,9 +145,9 @@ export default function GamesPage() {
 
   // Fetch real achievements data
   const { data: achievements = [], isLoading: achievementsLoading } = useQuery({
-    queryKey: ['/api/student/achievements'],
+    queryKey: [API_ENDPOINTS.student.achievements],
     queryFn: async () => {
-      const response = await apiRequest('/api/student/achievements');
+      const response = await apiRequest(API_ENDPOINTS.student.achievements);
       return response as Achievement[];
     },
     staleTime: 10 * 60 * 1000,
@@ -154,9 +155,9 @@ export default function GamesPage() {
 
   // Fetch user stats
   const { data: userStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/student/stats'],
+    queryKey: [API_ENDPOINTS.student.dashboardStats],
     queryFn: async () => {
-      const response = await apiRequest('/api/student/stats');
+      const response = await apiRequest(API_ENDPOINTS.student.dashboardStats);
       return response;
     }
   });

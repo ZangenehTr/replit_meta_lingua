@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import apiClient from "@/lib/apiClient";
 
@@ -25,7 +26,7 @@ export function useEnrollmentStatus() {
   const { user, isAuthenticated } = useAuth();
 
   const { data: enrollmentStatus, isLoading, error, refetch } = useQuery<EnrollmentStatus>({
-    queryKey: ['/api/student/enrollment-status', user?.id],
+    queryKey: [API_ENDPOINTS.student.enrollmentStatus, user?.id],
     queryFn: async () => {
       if (!isAuthenticated || !user) {
         return {
@@ -40,7 +41,7 @@ export function useEnrollmentStatus() {
         };
       }
 
-      const response = await apiClient.get('/student/enrollment-status');
+      const response = await apiClient.get(API_ENDPOINTS.student.enrollmentStatus);
       return response.data;
     },
     enabled: !!user && user.role === 'Student',

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { API_ENDPOINTS } from '@/services/endpoints';
 import { 
   BookOpen, 
   Clock, 
@@ -85,9 +86,9 @@ export default function StudentHomeworkMobile() {
 
   // Fetch homework
   const { data: homework = [], isLoading } = useQuery<Homework[]>({
-    queryKey: ['/api/student/homework', filterStatus],
+    queryKey: [API_ENDPOINTS.student.homework, filterStatus],
     queryFn: async () => {
-      const response = await fetch(`/api/student/homework${filterStatus !== 'all' ? `?status=${filterStatus}` : ''}`, {
+      const response = await fetch(`${API_ENDPOINTS.student.homework}${filterStatus !== 'all' ? `?status=${filterStatus}` : ''}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -99,9 +100,9 @@ export default function StudentHomeworkMobile() {
 
   // Fetch homework stats
   const { data: stats } = useQuery<HomeworkStats>({
-    queryKey: ['/api/student/homework/stats'],
+    queryKey: [API_ENDPOINTS.student.homeworkStats],
     queryFn: async () => {
-      const response = await fetch('/api/student/homework/stats', {
+      const response = await fetch(API_ENDPOINTS.student.homeworkStats, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -118,7 +119,7 @@ export default function StudentHomeworkMobile() {
       if (file) formData.append('file', file);
       if (submission) formData.append('submission', submission);
       
-      const response = await fetch(`/api/student/homework/${id}/submit`, {
+      const response = await fetch(`${API_ENDPOINTS.student.homework}/${id}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
@@ -134,8 +135,8 @@ export default function StudentHomeworkMobile() {
         title: t('student:homeworkSubmitted'),
         description: data.xpAwarded ? t('student:xpEarned', { xp: data.xpAwarded }) : t('student:homeworkSubmittedDesc'),
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/homework'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/homework/stats'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.student.homework] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.student.homeworkStats] });
       setSelectedHomework(null);
     },
     onError: () => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,28 +73,28 @@ export function ComprehensiveQuickActionsBar({
 
   // Real-time data fetching with React Query for dynamic badges - auth-aware
   const { data: upcomingSessions = [], isLoading: sessionsLoading, error: sessionsError, refetch: refetchSessions } = useQuery({
-    queryKey: ['/api/student/upcoming-sessions'],
+    queryKey: [API_ENDPOINTS.student.upcomingSessions],
     enabled: isAuthenticated, // Only fetch when authenticated
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchInterval: isAuthenticated ? 5 * 60 * 1000 : false, // Only refetch when authenticated
   });
 
   const { data: assignments = [], isLoading: assignmentsLoading, error: assignmentsError, refetch: refetchAssignments } = useQuery({
-    queryKey: ['/api/student/assignments'], // Fixed endpoint mismatch
+    queryKey: [API_ENDPOINTS.student.assignments], // Fixed endpoint mismatch
     enabled: isAuthenticated, // Only fetch when authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: isAuthenticated ? 10 * 60 * 1000 : false, // Only refetch when authenticated
   });
 
   const { data: conversations = [], isLoading: conversationsLoading, error: conversationsError, refetch: refetchConversations } = useQuery({
-    queryKey: ['/api/student/conversations'],
+    queryKey: [API_ENDPOINTS.student.conversations],
     enabled: isAuthenticated, // Only fetch when authenticated
     staleTime: 1 * 60 * 1000, // 1 minute
     refetchInterval: isAuthenticated ? 2 * 60 * 1000 : false, // Only refetch when authenticated
   });
 
   const { data: studentStats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
-    queryKey: ['/api/student/stats'],
+    queryKey: [API_ENDPOINTS.student.dashboardStats],
     enabled: isAuthenticated, // Only fetch when authenticated
     staleTime: 10 * 60 * 1000, // 10 minutes
     refetchInterval: isAuthenticated ? 15 * 60 * 1000 : false, // Only refetch when authenticated

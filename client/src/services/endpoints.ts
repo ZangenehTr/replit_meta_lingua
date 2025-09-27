@@ -115,20 +115,68 @@ export const API_ENDPOINTS = {
   
   // =============== STUDENT ENDPOINTS ===============
   student: {
+    // Dashboard & Analytics
     dashboard: '/api/student/dashboard',
+    dashboardStats: '/api/student/dashboard-stats',
+    gamificationStats: '/api/student/gamification-stats',
+    learningProgress: '/api/student/learning-progress',
+    socialStats: '/api/student/social-stats',
+    
+    // Course & Session Management
     courses: '/api/student/courses',
     sessions: '/api/student/sessions',
+    upcomingSessions: '/api/student/upcoming-sessions',
+    sessionHistory: '/api/student/session-history',
+    enrollmentStatus: '/api/student/enrollment-status',
+    sessionPackages: '/api/student/session-packages',
+    enroll: '/api/student/enroll',
+    
+    // Assignments & Homework
+    assignments: '/api/student/assignments',
     homework: '/api/student/homework',
+    homeworkStats: '/api/student/homework/stats',
+    
+    // Gamification & Achievements
     achievements: '/api/gamification/student',
+    gamesAccessible: '/api/student/games/accessible',
+    gameProgress: '/api/student/game-progress',
+    gameSessions: '/api/student/game-sessions',
+    leaderboard: '/api/student/leaderboard',
+    conversations: '/api/student/conversations',
+    wallet: '/api/student/wallet',
+    
+    // Callern & Tutoring
+    callernStatus: '/api/student/callern-status',
+    callernQuickSession: '/api/student/callern/quick-session',
+    teacherAvailability: '/api/student/teacher-availability',
+    
+    // Social & Community
+    studyGroups: '/api/student/study-groups',
+    communityFeed: '/api/student/community-feed',
+    studyPartners: '/api/student/study-partners',
+    
+    // AI & Learning
     aiConversation: '/api/ai-study-partner/student',
+    linguaquestProgress: '/api/student/linguaquest-progress',
+    learningRecommendations: '/api/student/learning-recommendations',
+    moodLearning: '/api/advanced/mood-learning',
+    
+    // E-commerce & Booking
     virtualMall: '/api/student/virtual-mall',
     bookCatalog: '/api/book-ecommerce/student',
     cart: '/api/book-ecommerce/cart',
     orders: '/api/book-ecommerce/student/orders',
+    bookTrial: '/api/student/book-trial',
+    
+    // Testing & Assessments  
+    tests: '/api/student/tests',
+    testsSubmit: '/api/student/tests/submit',
+    testResults: '/api/student/test-results',
+    
+    // Profile & Payments
     payments: '/api/student/payments',
     profile: '/api/student/profile',
     tutors: '/api/student/tutors',
-    moodLearning: '/api/advanced/mood-learning',
   },
   
   // =============== FRONT DESK ENDPOINTS ===============

@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -170,64 +171,64 @@ export const actionRegistry: Record<string, ActionConfig> = {
 
   // ========== STUDENT ACTIONS ==========
   'student.enrollCourse': {
-    endpoint: '/api/student/enroll',
+    endpoint: API_ENDPOINTS.student.enroll,
     method: 'POST',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/student/courses', '/api/student/enrollment-status'],
+    cacheKeys: [API_ENDPOINTS.student.courses, API_ENDPOINTS.student.enrollmentStatus],
     optimistic: true,
     successMessage: 'Enrolled in course successfully'
   },
   'student.submitAssignment': {
-    endpoint: '/api/student/assignments',
+    endpoint: API_ENDPOINTS.student.assignments,
     method: 'POST',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/student/assignments'],
+    cacheKeys: [API_ENDPOINTS.student.assignments],
     successMessage: 'Assignment submitted successfully'
   },
   'student.bookSession': {
-    endpoint: '/api/student/sessions',
+    endpoint: API_ENDPOINTS.student.sessions,
     method: 'POST',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/student/sessions', '/api/student/upcoming-sessions'],
+    cacheKeys: [API_ENDPOINTS.student.sessions, API_ENDPOINTS.student.upcomingSessions],
     successMessage: 'Session booked successfully'
   },
   'student.cancelSession': {
-    endpoint: '/api/student/sessions',
+    endpoint: API_ENDPOINTS.student.sessions,
     method: 'DELETE',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/student/sessions', '/api/student/upcoming-sessions'],
+    cacheKeys: [API_ENDPOINTS.student.sessions, API_ENDPOINTS.student.upcomingSessions],
     successMessage: 'Session cancelled successfully',
     confirmationRequired: true,
     confirmationMessage: 'Are you sure you want to cancel this session?'
   },
   'student.makePayment': {
-    endpoint: '/api/student/payments',
+    endpoint: API_ENDPOINTS.student.payments,
     method: 'POST',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/student/wallet', '/api/student/payments'],
+    cacheKeys: [API_ENDPOINTS.student.wallet, API_ENDPOINTS.student.payments],
     successMessage: 'Payment processed successfully'
   },
   'student.updateProfile': {
-    endpoint: '/api/student/profile',
+    endpoint: API_ENDPOINTS.student.profile,
     method: 'PUT',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/users/me', '/api/student/profile'],
+    cacheKeys: ['/api/users/me', API_ENDPOINTS.student.profile],
     successMessage: 'Profile updated successfully'
   },
   'student.purchaseCourse': {
-    endpoint: '/api/student/purchase',
+    endpoint: API_ENDPOINTS.student.purchase,
     method: 'POST',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/student/courses', '/api/student/wallet'],
+    cacheKeys: [API_ENDPOINTS.student.courses, API_ENDPOINTS.student.wallet],
     successMessage: 'Course purchased successfully',
     confirmationRequired: true,
     confirmationMessage: 'Confirm course purchase?'
   },
   'student.submitTest': {
-    endpoint: '/api/student/tests/submit',
+    endpoint: API_ENDPOINTS.student.testsSubmit,
     method: 'POST',
     requiredRoles: ['Student'],
-    cacheKeys: ['/api/student/tests', '/api/student/test-results'],
+    cacheKeys: [API_ENDPOINTS.student.tests, API_ENDPOINTS.student.testResults],
     successMessage: 'Test submitted successfully'
   },
 
