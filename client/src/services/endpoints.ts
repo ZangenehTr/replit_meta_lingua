@@ -159,8 +159,8 @@ export const API_ENDPOINTS = {
     aiConversation: '/student/ai-conversation',
     aiConversationMessages: '/ai-study-partner/messages',
     aiStudyPartnerChat: '/ai-study-partner/chat',
-    linguaquestProgress: '/student/linguaquest-progress',
-    learningRecommendations: '/student/learning-recommendations',
+    linguaquestProgress: '/api/student/linguaquest-progress',
+    learningRecommendations: '/api/student/learning-recommendations',
     moodLearning: '/advanced/mood-learning',
     
     // E-commerce & Booking

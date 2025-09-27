@@ -24345,6 +24345,194 @@ Meta Lingua Academy`;
     }
   });
 
+  // =============== STUDENT HUB ENDPOINTS - LEARN HUB & LIVE HUB ===============
+  
+  // LinguaQuest progress for Learn Hub
+  app.get("/api/student/linguaquest-progress", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Mock LinguaQuest progress data - replace with real implementation later
+      const progressData = {
+        totalLessons: 48,
+        completedLessons: 12,
+        currentLevel: "A2",
+        streakDays: 7,
+        experiencePoints: 1250,
+        badges: [
+          { id: 1, name: "Grammar Master", earned: true },
+          { id: 2, name: "Vocabulary Builder", earned: true },
+          { id: 3, name: "Speaking Champion", earned: false }
+        ],
+        recentActivities: [
+          { lesson: "Present Tense Practice", completed: true, date: new Date().toISOString() },
+          { lesson: "Vocabulary: Daily Routines", completed: true, date: new Date().toISOString() },
+          { lesson: "Listening Exercise 3", completed: false, date: new Date().toISOString() }
+        ]
+      };
+      
+      res.json(progressData);
+    } catch (error) {
+      console.error('Error fetching LinguaQuest progress:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Learning recommendations for Learn Hub  
+  app.get("/api/student/learning-recommendations", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Mock AI learning recommendations - replace with real AI-generated recommendations later
+      const recommendations = [
+        {
+          id: 1,
+          type: "skill_focus",
+          title: "Focus on Speaking Practice",
+          description: "Your speaking skills could benefit from more practice. Try conversation exercises.",
+          priority: "high",
+          estimatedTime: "15 minutes daily",
+          actionUrl: "/pronunciation-practice"
+        },
+        {
+          id: 2,
+          type: "study_schedule", 
+          title: "Consistent Study Schedule",
+          description: "Study for 20 minutes every day at the same time to build a habit.",
+          priority: "medium",
+          estimatedTime: "20 minutes daily",
+          actionUrl: "/courses"
+        },
+        {
+          id: 3,
+          type: "content_suggestion",
+          title: "Business English Course",
+          description: "Based on your progress, you're ready for intermediate business topics.",
+          priority: "medium", 
+          estimatedTime: "45 minutes per session",
+          actionUrl: "/course/3"
+        }
+      ];
+      
+      res.json({ recommendations, total: recommendations.length });
+    } catch (error) {
+      console.error('Error fetching learning recommendations:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Callern status for Live Hub
+  app.get("/api/student/callern-status", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Mock Callern status data - replace with real session package data later
+      const callernStatus = {
+        hasActivePackage: true,
+        remainingMinutes: 120,
+        packageType: "Premium",
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        totalMinutesUsed: 180,
+        totalMinutesPurchased: 300,
+        usagePercent: 60
+      };
+      
+      res.json(callernStatus);
+    } catch (error) {
+      console.error('Error fetching Callern status:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Teacher availability for Live Hub
+  app.get("/api/student/teacher-availability", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      // Mock teacher availability data - replace with real online teacher count later
+      const availability = {
+        available: 5,
+        total: 12,
+        averageWaitTime: "2-3 minutes",
+        qualityScore: 4.8,
+        availableTeachers: [
+          { id: 1, name: "Sarah M.", specialties: ["Business English"], rating: 4.9 },
+          { id: 2, name: "John D.", specialties: ["IELTS Prep"], rating: 4.7 },
+          { id: 3, name: "Maria L.", specialties: ["Conversation"], rating: 4.8 }
+        ]
+      };
+      
+      res.json(availability);
+    } catch (error) {
+      console.error('Error fetching teacher availability:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Session history for Live Hub
+  app.get("/api/student/session-history", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const limit = parseInt(req.query.limit as string) || 5;
+      
+      // Mock session history data - replace with real session data later
+      const sessions = [
+        {
+          id: 1,
+          teacherName: "Sarah M.",
+          topic: "Business Presentation Skills",
+          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+          duration: 30,
+          rating: 5,
+          notes: "Excellent progress on pronunciation"
+        },
+        {
+          id: 2,
+          teacherName: "John D.",
+          topic: "IELTS Speaking Practice",
+          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+          duration: 45,
+          rating: 4,
+          notes: "Focus on fluency in part 2"
+        },
+        {
+          id: 3,
+          teacherName: "Maria L.",
+          topic: "Daily Conversation",
+          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago  
+          duration: 30,
+          rating: 5,
+          notes: "Great improvement in confidence"
+        }
+      ].slice(0, limit);
+      
+      res.json({ sessions, total: sessions.length });
+    } catch (error) {
+      console.error('Error fetching session history:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Quick session start for Live Hub
+  app.post("/api/student/callern/quick-session", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Mock quick session creation - replace with real WebRTC session creation later
+      const sessionData = {
+        sessionId: `session_${Date.now()}`,
+        sessionUrl: `/callern-video-session?session=${Date.now()}`,
+        teacherId: 1,
+        teacherName: "Next Available Teacher",
+        estimatedWaitTime: "2 minutes",
+        status: "connecting"
+      };
+      
+      res.json(sessionData);
+    } catch (error) {
+      console.error('Error creating quick session:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Student courses - Enhanced with teacher photos and curriculum level filtering
   app.get("/api/student/courses", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
