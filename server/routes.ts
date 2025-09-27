@@ -14538,7 +14538,7 @@ Return JSON format:
       const studentId = req.user.role === 'Student' ? req.user.id : req.query.studentId;
       
       // Get student's enrollment and course progress
-      const enrollments = await db.select()
+      const studentEnrollments = await db.select()
         .from(enrollments)
         .innerJoin(courses, eq(enrollments.courseId, courses.id))
         .where(eq(enrollments.studentId, studentId));
@@ -14566,14 +14566,14 @@ Return JSON format:
         totalLessons: 0
       };
 
-      if (enrollments.length > 0) {
-        const activeEnrollments = enrollments.filter(e => e.enrollments.status === 'active');
-        const completedEnrollments = enrollments.filter(e => e.enrollments.status === 'completed');
+      if (studentEnrollments.length > 0) {
+        const activeEnrollments = studentEnrollments.filter(e => e.enrollments.status === 'active');
+        const completedEnrollments = studentEnrollments.filter(e => e.enrollments.status === 'completed');
         
         progressData.coursesInProgress = activeEnrollments.length;
         progressData.coursesCompleted = completedEnrollments.length;
-        progressData.overallProgress = enrollments.length > 0 ? 
-          Math.round((completedEnrollments.length / enrollments.length) * 100) : 0;
+        progressData.overallProgress = studentEnrollments.length > 0 ? 
+          Math.round((completedEnrollments.length / studentEnrollments.length) * 100) : 0;
       }
       
       res.json(progressData);

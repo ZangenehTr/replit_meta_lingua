@@ -136,14 +136,14 @@ export const API_ENDPOINTS = {
     homework: '/api/student/homework',
     homeworkStats: '/api/student/homework/stats',
     
-    // Gamification & Achievements
-    achievements: '/api/gamification/student',
-    gamesAccessible: '/api/student/games/accessible',
-    gameProgress: '/api/student/game-progress',
-    gameSessions: '/api/student/game-sessions',
-    leaderboard: '/api/student/leaderboard',
-    conversations: '/api/student/conversations',
-    wallet: '/api/student/wallet',
+    // Gamification & Achievements  
+    achievements: '/gamification/achievements',
+    gamesAccessible: '/student/games/accessible',
+    gameProgress: '/student/game-progress',
+    gameSessions: '/student/game-sessions',
+    leaderboard: '/gamification/leaderboard',
+    conversations: '/student/conversations',
+    wallet: '/student/wallet',
     
     // Callern & Tutoring
     callernStatus: '/api/student/callern-status',
@@ -156,10 +156,12 @@ export const API_ENDPOINTS = {
     studyPartners: '/api/student/study-partners',
     
     // AI & Learning
-    aiConversation: '/api/ai-study-partner/student',
-    linguaquestProgress: '/api/student/linguaquest-progress',
-    learningRecommendations: '/api/student/learning-recommendations',
-    moodLearning: '/api/advanced/mood-learning',
+    aiConversation: '/student/ai-conversation',
+    aiConversationMessages: '/ai-study-partner/messages',
+    aiStudyPartnerChat: '/ai-study-partner/chat',
+    linguaquestProgress: '/student/linguaquest-progress',
+    learningRecommendations: '/student/learning-recommendations',
+    moodLearning: '/advanced/mood-learning',
     
     // E-commerce & Booking
     virtualMall: '/api/student/virtual-mall',

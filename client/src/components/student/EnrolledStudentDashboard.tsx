@@ -19,6 +19,7 @@ import {
   Gamepad2,
   Wallet,
   User,
+  ShoppingCart,
   Calendar, 
   Trophy, 
   TrendingUp,
@@ -967,15 +968,15 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
   
   // Fetch LinguaQuest progress data
   const { data: linguaQuestProgress, isLoading: linguaQuestLoading } = useQuery({
-    queryKey: ['/api/student/linguaquest-progress'],
-    queryFn: () => apiRequest('/api/student/linguaquest-progress'),
+    queryKey: [API_ENDPOINTS.student.linguaquestProgress],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.linguaquestProgress),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch learning recommendations
   const { data: recommendations, isLoading: recommendationsLoading } = useQuery({
-    queryKey: ['/api/student/learning-recommendations'],
-    queryFn: () => apiRequest('/api/student/learning-recommendations'),
+    queryKey: [API_ENDPOINTS.student.learningRecommendations],
+    queryFn: () => apiRequest(API_ENDPOINTS.student.learningRecommendations),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
