@@ -12,6 +12,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Map, 
@@ -50,7 +51,7 @@ export function AdminCallernRoadmaps() {
 
   // Fetch roadmaps data
   const { data: roadmaps = [], isLoading } = useQuery({
-    queryKey: ['/api/admin/callern-roadmaps', { search: searchTerm, status: filterStatus }],
+    queryKey: [API_ENDPOINTS.admin.callernRoadmaps, { search: searchTerm, status: filterStatus }],
   });
 
   // Mock roadmaps data for development
@@ -85,7 +86,7 @@ export function AdminCallernRoadmaps() {
 
   // Mutation for creating roadmaps
   const createRoadmapMutation = useMutation({
-    mutationFn: (data: typeof formData) => apiRequest('/api/admin/callern-roadmaps', {
+    mutationFn: (data: typeof formData) => apiRequest(API_ENDPOINTS.admin.callernRoadmaps, {
       method: 'POST',
       body: JSON.stringify(data)
     }),
@@ -103,7 +104,7 @@ export function AdminCallernRoadmaps() {
         duration: "",
         targetLanguage: ""
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/callern-roadmaps'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.callernRoadmaps] });
     },
     onError: (error: any) => {
       toast({

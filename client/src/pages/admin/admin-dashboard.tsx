@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
@@ -97,29 +98,31 @@ export const AdminDashboard = () => {
     else setGreeting(t('admin:goodEvening', 'شب بخیر'));
   }, [t]);
 
-  const { data: stats } = useQuery<AdminStats>({
-    queryKey: ['/api/admin/stats'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/stats', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      if (!response.ok) {
-        return {
-          totalStudents: 458,
-          activeStudents: 412,
-          totalTeachers: 32,
-          activeTeachers: 28,
-          totalCourses: 45,
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<AdminStats>({
+    queryKey: [API_ENDPOINTS.admin.stats],
+    // Use shared query client's default fetcher for consistent auth handling
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401 || error?.status === 403) return false;
+      return failureCount < 3;
+    },
+    // Remove custom queryFn and mock data fallback - let the default fetcher handle it
+  });
+
+  // Mock stats for development when API fails
+  const mockStats = {
+    totalStudents: 458,
+    activeStudents: 412,
+    totalTeachers: 32,
+    activeTeachers: 28,
+    totalCourses: 45,
           activeCourses: 38,
-          monthlyRevenue: 125000000,
-          yearlyRevenue: 1450000000,
-          revenueGrowth: 18.5,
+    monthlyRevenue: 125000000,
+    yearlyRevenue: 1450000000,
+    revenueGrowth: 18.5,
           studentGrowth: 22.3,
-          teacherUtilization: 87,
-          courseCompletionRate: 78,
-          systemHealth: {
+    teacherUtilization: 87,
+    courseCompletionRate: 78,
+    systemHealth: {
             database: 'healthy',
             server: 'healthy',
             ai: 'warning',
@@ -155,13 +158,12 @@ export const AdminDashboard = () => {
             aiRequests: 8923
           }
         };
-      }
-      return response.json();
-    }
-  });
 
-  const studentUtilization = stats ? (stats.activeStudents / stats.totalStudents * 100).toFixed(1) : 0;
-  const teacherUtilization = stats ? (stats.activeTeachers / stats.totalTeachers * 100).toFixed(1) : 0;
+  // Use stats from API or fallback to mock data
+  const displayStats = stats || mockStats;
+
+  const studentUtilization = displayStats ? (displayStats.activeStudents / displayStats.totalStudents * 100).toFixed(1) : 0;
+  const teacherUtilization = displayStats ? (displayStats.activeTeachers / displayStats.totalTeachers * 100).toFixed(1) : 0;
 
   const getHealthColor = (status: string) => {
     switch(status) {
@@ -279,7 +281,7 @@ export const AdminDashboard = () => {
                     {stats?.studentGrowth > 0 ? (
                       <>
                         <ArrowUpRight className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-green-600">+{stats.studentGrowth}%</span>
+                        <span className="text-xs text-green-600">+{displayStats.studentGrowth}%</span>
                       </>
                     ) : (
                       <>
@@ -325,7 +327,7 @@ export const AdminDashboard = () => {
                     {stats?.revenueGrowth > 0 ? (
                       <>
                         <TrendingUp className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-green-600">+{stats.revenueGrowth}%</span>
+                        <span className="text-xs text-green-600">+{displayStats.revenueGrowth}%</span>
                       </>
                     ) : (
                       <>

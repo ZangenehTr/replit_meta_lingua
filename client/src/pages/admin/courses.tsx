@@ -17,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { 
   BookOpen, 
   Search, 
@@ -69,7 +70,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   
   // Fetch available roadmaps for Callern courses
   const { data: availableRoadmaps = [] } = useQuery({
-    queryKey: ['/api/admin/available-roadmaps'],
+    queryKey: [API_ENDPOINTS.admin.courseRoadmaps],
     enabled: isOpen // Only fetch when dialog is open
   });
   const form = useForm<z.infer<typeof courseSchema>>({
@@ -99,14 +100,14 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
 
   const createCourseMutation = useMutation({
     mutationFn: async (data: z.infer<typeof courseSchema>) => {
-      return await apiRequest('/api/admin/courses', {
+      return await apiRequest(API_ENDPOINTS.admin.courses, {
         method: 'POST',
         body: JSON.stringify(data)
       });
     },
     onSuccess: () => {
       toast({ title: t('admin:courses.createdSuccessfully') });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.courses] });
       setIsOpen(false);
       form.reset();
     },
@@ -540,7 +541,7 @@ export function AdminCourses() {
 
   // Fetch courses data - simplified query without parameters
   const { data: courses, isLoading, isError, error } = useQuery({
-    queryKey: ['/api/admin/courses'],
+    queryKey: [API_ENDPOINTS.admin.courses],
     enabled: !!user && ['admin', 'Admin', 'supervisor', 'Supervisor'].some(role => role.toLowerCase() === user?.role?.toLowerCase()),
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.status === 403) {

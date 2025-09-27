@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { 
   BookOpen, 
   Search, 
@@ -33,7 +34,7 @@ export function AdminBookEcommerce() {
 
   // Fetch books data
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ['/api/admin/books', { search: searchTerm, category: filterCategory }],
+    queryKey: [API_ENDPOINTS.admin.bookCatalog, { search: searchTerm, category: filterCategory }],
   });
 
   // Mock books data for development

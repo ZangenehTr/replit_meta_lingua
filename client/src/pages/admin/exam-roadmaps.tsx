@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/services/endpoints";
 import { 
   FileText, 
   Search, 
@@ -32,7 +33,7 @@ export function AdminExamRoadmaps() {
 
   // Fetch exam roadmaps data
   const { data: roadmaps = [], isLoading } = useQuery({
-    queryKey: ['/api/admin/exam-roadmaps', { search: searchTerm, exam: filterExam }],
+    queryKey: [API_ENDPOINTS.admin.examRoadmaps, { search: searchTerm, exam: filterExam }],
   });
 
   // Mock exam roadmaps data for development
