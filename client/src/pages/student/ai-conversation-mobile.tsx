@@ -70,11 +70,11 @@ export default function StudentAIConversationMobile() {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch conversation history
+  // Fetch conversation history - using working endpoint
   const { data: conversations } = useQuery<Conversation[]>({
-    queryKey: ['/api/student/ai-conversations'],
+    queryKey: ['/api/student/conversations'],
     queryFn: async () => {
-      const response = await fetch('/api/student/ai-conversations', {
+      const response = await fetch('/api/student/conversations', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -194,6 +194,7 @@ export default function StudentAIConversationMobile() {
         <button 
           className="p-2 rounded-full glass-button"
           onClick={() => setShowSettings(!showSettings)}
+          data-testid="button-ai-settings"
         >
           <Brain className="w-5 h-5 text-white" />
         </button>
@@ -226,6 +227,7 @@ export default function StudentAIConversationMobile() {
                         ? 'bg-purple-500 text-white' 
                         : 'bg-white/10 text-white/70'}
                     `}
+                    data-testid={`button-language-${lang}`}
                   >
                     {t(`languages.${lang}`)}
                   </button>
@@ -247,6 +249,7 @@ export default function StudentAIConversationMobile() {
                         ? 'bg-purple-500 text-white' 
                         : 'bg-white/10 text-white/70'}
                     `}
+                    data-testid={`button-level-${level}`}
                   >
                     {t(`student:level.${level}`)}
                   </button>
@@ -270,6 +273,7 @@ export default function StudentAIConversationMobile() {
                           ? 'bg-purple-500 text-white' 
                           : 'bg-white/10 text-white/70'}
                       `}
+                      data-testid={`button-topic-${topic.id}`}
                     >
                       <Icon className="w-4 h-4" />
                       {topic.label}
@@ -286,6 +290,7 @@ export default function StudentAIConversationMobile() {
                 setShowSettings(false);
                 startNewConversation();
               }}
+              data-testid="button-start-new-topic"
             >
               {t('student:startNewTopic')}
             </Button>
@@ -331,7 +336,7 @@ export default function StudentAIConversationMobile() {
               {t('student:aiWelcomeDesc')}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              {['Hello! How are you?', 'What is your name?', 'Nice to meet you!'].map((suggestion) => (
+              {['Hello! How are you?', 'What is your name?', 'Nice to meet you!'].map((suggestion, index) => (
                 <button
                   key={suggestion}
                   className="px-3 py-1 bg-white/10 rounded-full text-white/80 text-sm"
@@ -339,6 +344,7 @@ export default function StudentAIConversationMobile() {
                     setInputText(suggestion);
                     handleSend();
                   }}
+                  data-testid={`button-suggestion-${index}`}
                 >
                   {suggestion}
                 </button>
@@ -408,6 +414,7 @@ export default function StudentAIConversationMobile() {
               : 'bg-white/10'
           }`}
           onClick={toggleRecording}
+          data-testid="button-mic-toggle"
         >
           <Mic className="w-5 h-5 text-white" />
         </button>
@@ -423,6 +430,7 @@ export default function StudentAIConversationMobile() {
               handleSend();
             }
           }}
+          data-testid="input-message"
         />
         
         {inputText.trim() ? (
@@ -430,6 +438,7 @@ export default function StudentAIConversationMobile() {
             className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
             whileTap={{ scale: 0.9 }}
             onClick={handleSend}
+            data-testid="button-send"
           >
             <Send className="w-5 h-5 text-white" />
           </motion.button>
@@ -437,6 +446,7 @@ export default function StudentAIConversationMobile() {
           <button
             className="p-2 rounded-full bg-white/10"
             onClick={startNewConversation}
+            data-testid="button-refresh-conversation"
           >
             <RefreshCw className="w-5 h-5 text-white/70" />
           </button>
