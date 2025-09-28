@@ -502,6 +502,337 @@ export const insertDictionaryLookupSchema = z.object({
   bookId: z.number().optional()
 });
 
+// AI Call Insights table for call analytics and AI performance tracking
+export const aiCallInsights = pgTable("ai_call_insights", {
+  id: serial("id").primaryKey(),
+  callId: varchar("call_id", { length: 255 }).notNull().unique(),
+  userId: integer("user_id").references(() => users.id),
+  leadId: integer("lead_id"),
+  callStartTime: timestamp("call_start_time").notNull(),
+  callEndTime: timestamp("call_end_time"),
+  callDuration: integer("call_duration"), // seconds
+  callType: varchar("call_type", { length: 100 }).notNull(), // inbound, outbound, callback
+  callStatus: varchar("call_status", { length: 50 }).notNull(), // completed, abandoned, failed
+  aiEngagementScore: integer("ai_engagement_score"), // 0-100
+  sentimentScore: integer("sentiment_score"), // -100 to +100
+  conversationQuality: varchar("conversation_quality", { length: 50 }), // excellent, good, fair, poor
+  keyTopics: text("key_topics").array(),
+  aiSuggestions: jsonb("ai_suggestions"),
+  transcriptSummary: text("transcript_summary"),
+  nextActionRecommended: text("next_action_recommended"),
+  followUpScheduled: timestamp("follow_up_scheduled"),
+  leadTemperature: varchar("lead_temperature", { length: 20 }), // hot, warm, cold
+  conversionProbability: integer("conversion_probability"), // 0-100 percentage
+  painPointsIdentified: text("pain_points_identified").array(),
+  objections: text("objections").array(),
+  productInterest: text("product_interest").array(),
+  budgetIndicators: jsonb("budget_indicators"),
+  timelineIndicators: varchar("timeline_indicators", { length: 100 }),
+  decisionMakerLevel: varchar("decision_maker_level", { length: 50 }),
+  competitorsMentioned: text("competitors_mentioned").array(),
+  callOutcome: varchar("call_outcome", { length: 100 }), // qualified, not_qualified, follow_up, demo_scheduled
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Leads table for prospect and customer lead management
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }).unique(),
+  phone: varchar("phone", { length: 20 }),
+  company: varchar("company", { length: 255 }),
+  jobTitle: varchar("job_title", { length: 100 }),
+  industry: varchar("industry", { length: 100 }),
+  leadSource: varchar("lead_source", { length: 100 }).notNull(), // website, referral, cold_call, social_media
+  leadStatus: varchar("lead_status", { length: 50 }).notNull().default("new"), // new, contacted, qualified, converted, lost
+  leadScore: integer("lead_score").default(0), // 0-100 scoring
+  assignedTo: integer("assigned_to").references(() => users.id),
+  lastContactDate: timestamp("last_contact_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  estimatedValue: integer("estimated_value"), // potential deal value in IRR
+  conversionProbability: integer("conversion_probability").default(0), // 0-100 percentage
+  languageInterests: text("language_interests").array(),
+  learningGoals: text("learning_goals"),
+  currentLanguageLevel: varchar("current_language_level", { length: 20 }),
+  preferredContactMethod: varchar("preferred_contact_method", { length: 50 }).default("email"),
+  timezone: varchar("timezone", { length: 100 }),
+  notes: text("notes"),
+  tags: text("tags").array(),
+  customFields: jsonb("custom_fields"),
+  lastEngagementType: varchar("last_engagement_type", { length: 100 }),
+  totalInteractions: integer("total_interactions").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Communication Logs table for tracking all lead interactions
+export const communicationLogs = pgTable("communication_logs", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => leads.id).notNull(),
+  userId: integer("user_id").references(() => users.id),
+  communicationType: varchar("communication_type", { length: 100 }).notNull(), // call, email, sms, meeting, demo
+  direction: varchar("direction", { length: 20 }).notNull(), // inbound, outbound
+  subject: varchar("subject", { length: 255 }),
+  content: text("content"),
+  duration: integer("duration"), // seconds for calls, minutes for meetings
+  outcome: varchar("outcome", { length: 100 }), // connected, voicemail, email_opened, meeting_scheduled
+  sentiment: varchar("sentiment", { length: 20 }), // positive, neutral, negative
+  followUpRequired: boolean("follow_up_required").default(false),
+  followUpDate: timestamp("follow_up_date"),
+  attachments: text("attachments").array(),
+  campaignId: varchar("campaign_id", { length: 100 }),
+  responseTime: integer("response_time"), // seconds between initial contact and response
+  engagementScore: integer("engagement_score"), // 0-100
+  conversionEvent: varchar("conversion_event", { length: 100 }), // trial_signup, demo_request, purchase
+  metadata: jsonb("metadata"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Iranian Calendar Settings table for Solar Hijri calendar configuration
+export const iranianCalendarSettings = pgTable("iranian_calendar_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  instituteId: integer("institute_id").references(() => institutes.id),
+  timezone: varchar("timezone", { length: 100 }).default("Asia/Tehran"),
+  weekStartDay: integer("week_start_day").default(6), // Saturday in Persian calendar
+  workingDays: integer("working_days").array().default([6, 0, 1, 2, 3]), // Sat-Wed
+  workingHoursStart: varchar("working_hours_start", { length: 10 }).default("08:00"),
+  workingHoursEnd: varchar("working_hours_end", { length: 10 }).default("17:00"),
+  displayFormat: varchar("display_format", { length: 50 }).default("persian"), // persian, dual, gregorian
+  showHolidays: boolean("show_holidays").default(true),
+  showLunarEvents: boolean("show_lunar_events").default(true),
+  autoDetectHijriMonths: boolean("auto_detect_hijri_months").default(true),
+  eventReminderMinutes: integer("event_reminder_minutes").default(30),
+  enableNotifications: boolean("enable_notifications").default(true),
+  defaultEventDuration: integer("default_event_duration").default(60), // minutes
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Calendar Events Iranian table for Solar Hijri calendar events
+export const calendarEventsIranian = pgTable("calendar_events_iranian", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  instituteId: integer("institute_id").references(() => institutes.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  persianDate: varchar("persian_date", { length: 20 }).notNull(), // 1403/01/15 format
+  gregorianDate: date("gregorian_date").notNull(),
+  startTime: varchar("start_time", { length: 10 }), // HH:MM format
+  endTime: varchar("end_time", { length: 10 }), // HH:MM format
+  isAllDay: boolean("is_all_day").default(false),
+  eventType: varchar("event_type", { length: 100 }).notNull(), // class, exam, meeting, holiday
+  recurrencePattern: varchar("recurrence_pattern", { length: 100 }), // daily, weekly, monthly, yearly
+  recurrenceEnd: date("recurrence_end"),
+  location: varchar("location", { length: 255 }),
+  attendees: text("attendees").array(),
+  reminderMinutes: integer("reminder_minutes").default(30),
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high
+  color: varchar("color", { length: 20 }).default("blue"),
+  isVisible: boolean("is_visible").default(true),
+  metadata: jsonb("metadata"),
+  createdBy: integer("created_by").references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Holiday Calendar Persian table for Iranian official holidays
+export const holidayCalendarPersian = pgTable("holiday_calendar_persian", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  nameEnglish: varchar("name_english", { length: 255 }),
+  description: text("description"),
+  persianDate: varchar("persian_date", { length: 20 }).notNull(), // 1403/01/01 format
+  gregorianDate: date("gregorian_date").notNull(),
+  hijriDate: varchar("hijri_date", { length: 20 }), // 1445/06/15 format for lunar holidays
+  holidayType: varchar("holiday_type", { length: 100 }).notNull(), // national, religious, seasonal
+  isOfficial: boolean("is_official").default(true), // government recognized
+  isRecurring: boolean("is_recurring").default(true),
+  recurrenceType: varchar("recurrence_type", { length: 50 }), // solar, lunar, fixed
+  region: varchar("region", { length: 100 }).default("national"), // national, regional
+  duration: integer("duration").default(1), // days
+  year: integer("year"), // Persian year e.g., 1403
+  category: varchar("category", { length: 100 }), // norouz, muharram, national_day
+  significance: text("significance"),
+  traditions: text("traditions").array(),
+  isWorkingDay: boolean("is_working_day").default(false),
+  compensationDate: date("compensation_date"), // makeup working day
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Third Party APIs table for managing external service integrations
+export const thirdPartyApis = pgTable("third_party_apis", {
+  id: serial("id").primaryKey(),
+  serviceName: varchar("service_name", { length: 100 }).notNull().unique(),
+  displayName: varchar("display_name", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // calendar, payment, sms, email, ai, storage
+  apiBaseUrl: varchar("api_base_url", { length: 500 }).notNull(),
+  authType: varchar("auth_type", { length: 50 }).notNull(), // api_key, oauth, bearer, basic
+  configSchema: jsonb("config_schema"), // expected configuration fields
+  isActive: boolean("is_active").default(true),
+  isConfigured: boolean("is_configured").default(false),
+  lastHealthCheck: timestamp("last_health_check"),
+  healthStatus: varchar("health_status", { length: 50 }).default("unknown"), // healthy, unhealthy, unknown
+  rateLimitPerMinute: integer("rate_limit_per_minute"),
+  rateLimitPerHour: integer("rate_limit_per_hour"),
+  rateLimitPerDay: integer("rate_limit_per_day"),
+  timeoutMs: integer("timeout_ms").default(5000),
+  retryAttempts: integer("retry_attempts").default(3),
+  webhookUrl: varchar("webhook_url", { length: 500 }),
+  supportedFeatures: text("supported_features").array(),
+  requiredPermissions: text("required_permissions").array(),
+  documentation: text("documentation"),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  version: varchar("version", { length: 50 }),
+  createdBy: integer("created_by").references(() => users.id),
+  updatedBy: integer("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Voice Exercises Guest table for anonymous users practicing pronunciation
+export const voiceExercisesGuest = pgTable("voice_exercises_guest", {
+  id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull(),
+  guestIdentifier: varchar("guest_identifier", { length: 100 }).notNull(),
+  exerciseTitle: varchar("exercise_title", { length: 255 }).notNull(),
+  exerciseType: varchar("exercise_type", { length: 100 }).notNull(), // pronunciation, shadowing, dictation, conversation
+  targetLanguage: varchar("target_language", { length: 100 }).notNull(),
+  difficultyLevel: varchar("difficulty_level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
+  audioPromptUrl: varchar("audio_prompt_url", { length: 500 }),
+  textPrompt: text("text_prompt").notNull(),
+  expectedPronunciation: text("expected_pronunciation"),
+  phonetics: varchar("phonetics", { length: 255 }),
+  guestRecordingUrl: varchar("guest_recording_url", { length: 500 }),
+  accuracyScore: integer("accuracy_score"), // 0-100 percentage
+  fluencyScore: integer("fluency_score"), // 0-100 percentage
+  pronunciationScore: integer("pronunciation_score"), // 0-100 percentage
+  overallScore: integer("overall_score"), // 0-100 percentage
+  feedback: text("feedback"),
+  improvementSuggestions: text("improvement_suggestions").array(),
+  attemptNumber: integer("attempt_number").default(1),
+  timeSpent: integer("time_spent"), // seconds
+  isCompleted: boolean("is_completed").default(false),
+  deviceType: varchar("device_type", { length: 50 }),
+  browserType: varchar("browser_type", { length: 100 }),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Visitor Achievements table for tracking guest user accomplishments
+export const visitorAchievements = pgTable("visitor_achievements", {
+  id: serial("id").primaryKey(),
+  visitorId: varchar("visitor_id", { length: 255 }).notNull(), // session or device identifier
+  achievementType: varchar("achievement_type", { length: 100 }).notNull(), // first_lesson, streak_3, perfect_score, etc.
+  achievementTitle: varchar("achievement_title", { length: 255 }).notNull(),
+  achievementDescription: text("achievement_description"),
+  achievementIcon: varchar("achievement_icon", { length: 255 }),
+  pointsEarned: integer("points_earned").default(0),
+  badgeLevel: varchar("badge_level", { length: 50 }), // bronze, silver, gold, platinum
+  unlockCriteria: jsonb("unlock_criteria"),
+  progress: integer("progress").default(0), // current progress toward achievement
+  progressMax: integer("progress_max").default(1), // max progress needed
+  isUnlocked: boolean("is_unlocked").default(false),
+  unlockedAt: timestamp("unlocked_at"),
+  languageTarget: varchar("language_target", { length: 100 }),
+  difficultyLevel: varchar("difficulty_level", { length: 20 }),
+  category: varchar("category", { length: 100 }), // learning, engagement, streak, social
+  isVisible: boolean("is_visible").default(true),
+  displayOrder: integer("display_order").default(0),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  deviceType: varchar("device_type", { length: 50 }),
+  browserType: varchar("browser_type", { length: 100 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// LinguaQuest Lessons table for gamified language learning content
+export const linguaquestLessons = pgTable("linguaquest_lessons", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  level: varchar("level", { length: 10 }).notNull(), // A1, A2, B1, B2, C1, C2
+  language: varchar("language", { length: 100 }).notNull(),
+  questType: varchar("quest_type", { length: 100 }).notNull(), // adventure, conversation, grammar, vocabulary
+  difficulty: integer("difficulty").default(1), // 1-10 scale
+  xpReward: integer("xp_reward").default(0),
+  estimatedDuration: integer("estimated_duration"), // minutes
+  prerequisites: text("prerequisites").array(),
+  content: jsonb("content"), // lesson structure and activities
+  objectives: text("objectives").array(),
+  vocabulary: jsonb("vocabulary"), // key vocabulary items
+  grammarFocus: text("grammar_focus").array(),
+  culturalContext: text("cultural_context"),
+  imageUrl: varchar("image_url", { length: 500 }),
+  audioUrl: varchar("audio_url", { length: 500 }),
+  videoUrl: varchar("video_url", { length: 500 }),
+  interactiveElements: jsonb("interactive_elements"),
+  completionCriteria: jsonb("completion_criteria"),
+  tags: text("tags").array(),
+  isPublished: boolean("is_published").default(false),
+  isFeatured: boolean("is_featured").default(false),
+  viewCount: integer("view_count").default(0),
+  completionCount: integer("completion_count").default(0),
+  averageRating: integer("average_rating").default(0), // 1-5 stars
+  createdBy: integer("created_by").references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Guest Progress Tracking table for anonymous users
+export const guestProgressTracking = pgTable("guest_progress_tracking", {
+  id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull().unique(),
+  guestIdentifier: varchar("guest_identifier", { length: 100 }).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  lessonId: integer("lesson_id").references(() => lessons.id),
+  quizId: integer("quiz_id").references(() => quizzes.id),
+  progressPercentage: integer("progress_percentage").default(0),
+  timeSpent: integer("time_spent").default(0), // seconds
+  lastAccessed: timestamp("last_accessed").defaultNow().notNull(),
+  deviceType: varchar("device_type", { length: 50 }),
+  browserType: varchar("browser_type", { length: 100 }),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  conversionStatus: varchar("conversion_status", { length: 50 }).default("guest"), // guest, registered, paid
+  languageTarget: varchar("language_target", { length: 100 }),
+  completedActivities: integer("completed_activities").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Freemium Conversion Tracking table
+export const freemiumConversionTracking = pgTable("freemium_conversion_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  previousTier: varchar("previous_tier", { length: 50 }).notNull(), // free, trial, etc.
+  newTier: varchar("new_tier", { length: 50 }).notNull(), // premium, pro, etc.
+  conversionDate: timestamp("conversion_date").defaultNow().notNull(),
+  campaignId: varchar("campaign_id", { length: 100 }),
+  conversionMethod: varchar("conversion_method", { length: 50 }), // payment, referral, promotion
+  paymentAmount: integer("payment_amount"), // in IRR
+  paymentProvider: varchar("payment_provider", { length: 50 }),
+  referralSource: varchar("referral_source", { length: 255 }),
+  promotionCode: varchar("promotion_code", { length: 100 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // User Addresses table for shipping addresses
 export const userAddresses = pgTable("user_addresses", {
   id: serial("id").primaryKey(),
@@ -521,6 +852,83 @@ export const userAddresses = pgTable("user_addresses", {
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for Third Party APIs
+export const insertThirdPartyApiSchema = z.object({
+  serviceName: z.string().max(100),
+  displayName: z.string().max(255),
+  category: z.string().max(100), // calendar, payment, sms, email, ai, storage
+  apiBaseUrl: z.string().max(500),
+  authType: z.string().max(50), // api_key, oauth, bearer, basic
+  configSchema: z.any().optional(),
+  isActive: z.boolean().default(true),
+  isConfigured: z.boolean().default(false),
+  lastHealthCheck: z.date().optional(),
+  healthStatus: z.string().max(50).default("unknown"),
+  rateLimitPerMinute: z.number().optional(),
+  rateLimitPerHour: z.number().optional(),
+  rateLimitPerDay: z.number().optional(),
+  timeoutMs: z.number().default(5000),
+  retryAttempts: z.number().default(3),
+  webhookUrl: z.string().max(500).optional(),
+  supportedFeatures: z.array(z.string()).optional(),
+  requiredPermissions: z.array(z.string()).optional(),
+  documentation: z.string().optional(),
+  contactEmail: z.string().max(255).optional(),
+  version: z.string().max(50).optional(),
+  createdBy: z.number().optional(),
+  updatedBy: z.number().optional()
+});
+
+// Insert schema for Iranian Calendar Settings
+export const insertIranianCalendarSettingsSchema = z.object({
+  userId: z.number().optional(),
+  instituteId: z.number().optional(),
+  timezone: z.string().max(100).default("Asia/Tehran"),
+  weekStartDay: z.number().default(6),
+  workingDays: z.array(z.number()).default([6, 0, 1, 2, 3]),
+  workingHoursStart: z.string().max(10).default("08:00"),
+  workingHoursEnd: z.string().max(10).default("17:00"),
+  displayFormat: z.string().max(50).default("persian"),
+  showHolidays: z.boolean().default(true),
+  showLunarEvents: z.boolean().default(true),
+  autoDetectHijriMonths: z.boolean().default(true),
+  eventReminderMinutes: z.number().default(30),
+  enableNotifications: z.boolean().default(true),
+  defaultEventDuration: z.number().default(60),
+  isActive: z.boolean().default(true)
+});
+
+// Insert schema for LinguaQuest lessons
+export const insertLinguaquestLessonSchema = z.object({
+  title: z.string().max(255),
+  description: z.string().optional(),
+  level: z.string().max(10), // A1, A2, B1, B2, C1, C2
+  language: z.string().max(100),
+  questType: z.string().max(100), // adventure, conversation, grammar, vocabulary
+  difficulty: z.number().min(1).max(10).default(1),
+  xpReward: z.number().default(0),
+  estimatedDuration: z.number().optional(), // minutes
+  prerequisites: z.array(z.string()).optional(),
+  content: z.any().optional(), // lesson structure and activities
+  objectives: z.array(z.string()).optional(),
+  vocabulary: z.any().optional(), // key vocabulary items
+  grammarFocus: z.array(z.string()).optional(),
+  culturalContext: z.string().optional(),
+  imageUrl: z.string().max(500).optional(),
+  audioUrl: z.string().max(500).optional(),
+  videoUrl: z.string().max(500).optional(),
+  interactiveElements: z.any().optional(),
+  completionCriteria: z.any().optional(),
+  tags: z.array(z.string()).optional(),
+  isPublished: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
+  viewCount: z.number().default(0),
+  completionCount: z.number().default(0),
+  averageRating: z.number().min(0).max(5).default(0),
+  createdBy: z.number().optional(),
+  isActive: z.boolean().default(true)
 });
 
 // Insert schema for user addresses
@@ -884,22 +1292,6 @@ export const classEnrollments = pgTable("class_enrollments", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Communication Logs table
-export const communicationLogs = pgTable("communication_logs", {
-  id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").references(() => users.id).notNull(),
-  toUserId: integer("to_user_id").references(() => users.id),
-  communicationType: varchar("communication_type", { length: 50 }).notNull(), // sms, email, call, in_app
-  subject: varchar("subject", { length: 255 }),
-  content: text("content"),
-  status: varchar("status", { length: 20 }).default("sent"), // sent, delivered, read, failed
-  direction: varchar("direction", { length: 10 }).notNull(), // inbound, outbound
-  metadata: jsonb("metadata"), // phone numbers, email addresses, etc
-  relatedEntityType: varchar("related_entity_type", { length: 50 }),
-  relatedEntityId: varchar("related_entity_id", { length: 50 }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
-});
 
 // Mentor Assignments table
 export const mentorAssignments = pgTable("mentor_assignments", {
@@ -1702,40 +2094,6 @@ export const progressSnapshots = pgTable("progress_snapshots", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
-// Leads table (CRM)
-export const leads = pgTable("leads", {
-  id: serial("id").primaryKey(),
-  firstName: varchar("first_name", { length: 255 }).notNull(),
-  lastName: varchar("last_name", { length: 255 }),
-  email: varchar("email", { length: 255 }),
-  phone: varchar("phone", { length: 20 }),
-  source: varchar("source", { length: 100 }), // website, referral, social_media, advertisement, walk_in
-  status: varchar("status", { length: 50 }).default("new"), // new, contacted, qualified, converted, lost, nurturing
-  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high, urgent
-  interestedCourses: text("interested_courses").array().default([]),
-  languageLevel: varchar("language_level", { length: 20 }),
-  preferredSchedule: varchar("preferred_schedule", { length: 100 }),
-  budget: decimal("budget", { precision: 10, scale: 2 }),
-  currency: varchar("currency", { length: 3 }).default("IRR"),
-  ageGroup: varchar("age_group", { length: 50 }),
-  occupation: varchar("occupation", { length: 100 }),
-  learningGoals: text("learning_goals"),
-  urgency: varchar("urgency", { length: 50 }), // immediate, within_month, within_3_months, flexible
-  previousExperience: text("previous_experience"),
-  assignedTo: integer("assigned_to").references(() => users.id),
-  lastContactDate: timestamp("last_contact_date"),
-  nextFollowUpDate: timestamp("next_follow_up_date"),
-  convertedToStudentId: integer("converted_to_student_id").references(() => users.id),
-  convertedAt: timestamp("converted_at"),
-  lostReason: varchar("lost_reason", { length: 255 }),
-  lostAt: timestamp("lost_at"),
-  tags: text("tags").array().default([]),
-  notes: text("notes"),
-  communicationHistory: jsonb("communication_history"),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
-});
 
 // Level Assessment Questions table
 export const levelAssessmentQuestions = pgTable("level_assessment_questions", {
