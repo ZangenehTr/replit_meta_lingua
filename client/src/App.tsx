@@ -633,12 +633,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/callern">
-        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher']}>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher', 'student']}>
           <CallernSystem />
         </RoleProtectedRoute>
       </Route>
       <Route path="/callern-enhancements">
-        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher']}>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher', 'student']}>
           <CallernEnhancements />
         </RoleProtectedRoute>
       </Route>
