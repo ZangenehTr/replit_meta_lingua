@@ -1116,32 +1116,23 @@ export const visitorAchievements = pgTable("visitor_achievements", {
 // LinguaQuest Lessons table for gamified language learning content
 export const linguaquestLessons = pgTable("linguaquest_lessons", {
   id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
+  title: text("title").notNull(),
   description: text("description"),
-  level: varchar("level", { length: 10 }).notNull(), // A1, A2, B1, B2, C1, C2
-  language: varchar("language", { length: 100 }).notNull(),
-  questType: varchar("quest_type", { length: 100 }).notNull(), // adventure, conversation, grammar, vocabulary
-  difficulty: integer("difficulty").default(1), // 1-10 scale
-  xpReward: integer("xp_reward").default(0),
-  estimatedDuration: integer("estimated_duration"), // minutes
-  prerequisites: text("prerequisites").array(),
-  content: jsonb("content"), // lesson structure and activities
-  objectives: text("objectives").array(),
-  vocabulary: jsonb("vocabulary"), // key vocabulary items
-  grammarFocus: text("grammar_focus").array(),
-  culturalContext: text("cultural_context"),
-  imageUrl: varchar("image_url", { length: 500 }),
-  audioUrl: varchar("audio_url", { length: 500 }),
-  videoUrl: varchar("video_url", { length: 500 }),
-  interactiveElements: jsonb("interactive_elements"),
-  completionCriteria: jsonb("completion_criteria"),
+  language: text("language").notNull(),
+  difficulty: text("difficulty"), // text field instead of integer
+  lessonType: text("lesson_type"), // renamed from questType to match DB
+  sceneType: text("scene_type"),
+  sceneData: jsonb("scene_data"),
+  interactionConfig: jsonb("interaction_config"),
+  estimatedDurationMinutes: integer("estimated_duration_minutes"),
+  xpReward: integer("xp_reward"),
+  completionRequirements: jsonb("completion_requirements"),
+  vocabularyWords: text("vocabulary_words").array(),
+  grammarTopics: text("grammar_topics").array(),
+  exampleSentences: text("example_sentences").array(),
+  audioFiles: text("audio_files").array(),
   tags: text("tags").array(),
-  isPublished: boolean("is_published").default(false),
-  isFeatured: boolean("is_featured").default(false),
-  viewCount: integer("view_count").default(0),
-  completionCount: integer("completion_count").default(0),
-  averageRating: integer("average_rating").default(0), // 1-5 stars
-  createdBy: integer("created_by").references(() => users.id),
+  prerequisites: text("prerequisites").array(),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
