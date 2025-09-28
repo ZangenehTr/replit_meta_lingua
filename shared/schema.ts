@@ -3326,14 +3326,90 @@ export const rewriteSuggestions = pgTable("rewrite_suggestions", {
 // ============================================================================
 
 // Main curriculum tracks (IELTS and Conversation)
+export const curriculums = pgTable("curriculums", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  key: varchar("key", { length: 100 }).unique().notNull(), // 'ielts', 'conversation'
+  language: varchar("language", { length: 10 }).notNull().default("en"), // target language
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  orderIndex: integer("order_index").default(0),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
 
 // Curriculum levels (Flash IELTS 1, A1.1, A1.2, etc.)
+export const curriculumLevels = pgTable("curriculum_levels", {
+  id: serial("id").primaryKey(),
+  curriculumId: integer("curriculum_id").references(() => curriculums.id).notNull(),
+  code: varchar("code", { length: 20 }).notNull(), // 'A1.1', 'Flash-IELTS-1'
+  name: varchar("name", { length: 255 }).notNull(),
+  levelCode: varchar("level_code", { length: 20 }), // legacy support
+  levelName: varchar("level_name", { length: 255 }), // legacy support
+  orderIndex: integer("order_index").notNull(),
+  cefrBand: varchar("cefr_band", { length: 10 }), // A1, A2, B1, B2, C1, C2
+  difficultyLevel: varchar("difficulty_level", { length: 20 }),
+  totalLessons: integer("total_lessons").default(0),
+  estimatedWeeks: integer("estimated_weeks"),
+  prerequisites: text("prerequisites").array().default([]),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
 
 // Links courses to curriculum levels (many-to-many relationship)
+export const curriculumLevelCourses = pgTable("curriculum_level_courses", {
+  id: serial("id").primaryKey(),
+  curriculumLevelId: integer("curriculum_level_id").references(() => curriculumLevels.id).notNull(),
+  levelId: integer("level_id").references(() => curriculumLevels.id), // alias for backward compatibility
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  orderIndex: integer("order_index").notNull(),
+  isRequired: boolean("is_required").default(true),
+  minimumScore: decimal("minimum_score", { precision: 5, scale: 2 }),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
 
 // Student progress through curriculum levels
+export const studentCurriculumProgress = pgTable("student_curriculum_progress", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  curriculumId: integer("curriculum_id").references(() => curriculums.id).notNull(),
+  curriculumLevelId: integer("curriculum_level_id").references(() => curriculumLevels.id),
+  currentLevelId: integer("current_level_id").references(() => curriculumLevels.id),
+  status: varchar("status", { length: 20 }).default("active"), // active, completed, suspended
+  progressPercentage: decimal("progress_percentage", { precision: 5, scale: 2 }).default("0"),
+  completedLessons: integer("completed_lessons").default(0),
+  totalLessons: integer("total_lessons").default(0),
+  currentLevel: jsonb("current_level"), // level info cache
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  lastActivityAt: timestamp("last_activity_at"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
 
 // Course enrollments
+export const courseEnrollments = pgTable("course_enrollments", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  curriculumLevelId: integer("curriculum_level_id").references(() => curriculumLevels.id),
+  status: varchar("status", { length: 20 }).default("active"), // active, completed, dropped, suspended
+  progressPercentage: decimal("progress_percentage", { precision: 5, scale: 2 }).default("0"),
+  finalGrade: decimal("final_grade", { precision: 5, scale: 2 }),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  droppedAt: timestamp("dropped_at"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
 
 // Rooms table for physical and virtual classrooms
 
