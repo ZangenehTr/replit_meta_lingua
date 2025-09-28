@@ -415,7 +415,7 @@
   "navigation": {
     "home": "خانه",
     "courses": "دوره‌ها",
-    "callern": "کالرن",
+    "callern": "CallerN",
     "aiPartner": "مربی هوشمند",
     "profile": "پروفایل"
   },
@@ -564,7 +564,7 @@
   "home": "خانه",
   "today": "امروز",
   "min": "دقیقه",
-  "callernPackages": "بسته‌های کالرن",
+  "callernPackages": "بسته‌های CallerN",
   "activePackage": "بسته فعال",
   "remaining": "باقی‌مانده",
   "totalUsed": "کل استفاده شده",

@@ -919,11 +919,11 @@
   "teacherManagement": {
     "title": "إدارة المعلمين",
     "description": "إدارة هيئة التدريس وملفاتهم الشخصية",
-    "callernAccessRevoked": "تم إلغاء وصول كالرن",
-    "callernAccessRevokedDescription": "{{name}} لا يمكنه تقديم خدمات كالرن",
-    "callernAccessGranted": "تم منح وصول كالرن",
-    "callernAccessGrantedDescription": "{{name}} يمكنه تقديم خدمات كالرن الآن",
-    "callernUpdateFailed": "فشل تحديث تفويض كالرن"
+    "callernAccessRevoked": "تم إلغاء وصول CallerN",
+    "callernAccessRevokedDescription": "{{name}} لا يمكنه تقديم خدمات CallerN",
+    "callernAccessGranted": "تم منح وصول CallerN",
+    "callernAccessGrantedDescription": "{{name}} يمكنه تقديم خدمات CallerN الآن",
+    "callernUpdateFailed": "فشل تحديث تفويض CallerN"
   },
   "iranianCompliance": {
     "title": "الامتثال الإيراني",

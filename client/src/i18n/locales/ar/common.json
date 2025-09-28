@@ -4,7 +4,7 @@
     "navigation": {
       "home": "الرئيسية",
       "courses": "الدورات",
-      "callern": "كالرن",
+      "callern": "CallerN",
       "homework": "الواجبات",
       "messages": "الرسائل",
       "profile": "الملف الشخصي"
@@ -36,7 +36,7 @@
     "courseManagement": "إدارة الدورات",
     "classScheduling": "جدولة الفصول",
     "gamesManagement": "إدارة الألعاب",
-    "callernManagement": "إدارة كالرن",
+    "callernManagement": "إدارة CallerN",
     "roomManagement": "إدارة الغرف",
     "mentorMatching": "مطابقة الموجه",
     "teacherMatching": "مطابقة المعلم",
@@ -102,8 +102,8 @@
     "userCreateFailed": "فشل في إنشاء المستخدم",
     "availabilityUpdated": "تم تحديث التوفر بنجاح",
     "availabilityUpdateFailed": "فشل في تحديث التوفر",
-    "teacherAddedToCallern": "تم إضافة المعلم إلى كالرن بنجاح",
-    "teacherAddFailed": "فشل في إضافة المعلم إلى كالرن",
+    "teacherAddedToCallern": "تم إضافة المعلم إلى CallerN بنجاح",
+    "teacherAddFailed": "فشل في إضافة المعلم إلى CallerN",
     "selectTeacher": "يرجى اختيار معلم",
     "studentAssigned": "تم تعيين الطالب للمعلم بنجاح",
     "assignmentFailed": "فشل في تعيين الطالب",
