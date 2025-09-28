@@ -65,9 +65,9 @@ export class CallernWebSocketServer {
   
   private async clearAllTeachersOnlineStatus() {
     try {
-      // Set all teachers to offline on server start
-      await db.update(teacherCallernAvailability)
-        .set({ isOnline: false });
+      // Clear teacher socket connections on server start
+      // Online status is managed in memory via teacherSockets Map
+      this.teacherSockets.clear();
       console.log('Cleared all teachers online status on server start');
     } catch (error) {
       console.error('Error clearing teacher online status:', error);
@@ -796,20 +796,16 @@ export class CallernWebSocketServer {
 
   private async findAvailableTeacher(language: string, excludeTeacherId?: number): Promise<number | null> {
     try {
-      // Find available teachers for the language
-      const availableTeachers = await db
+      // Get all teachers from availability table
+      const teacherIds = await db
         .select({
           teacherId: teacherCallernAvailability.teacherId,
-          isOnline: teacherCallernAvailability.isOnline,
         })
         .from(teacherCallernAvailability)
-        .innerJoin(users, eq(users.id, teacherCallernAvailability.teacherId))
-        .where(
-          eq(teacherCallernAvailability.isOnline, true)
-        );
+        .innerJoin(users, eq(users.id, teacherCallernAvailability.teacherId));
 
-      // Filter by language and availability in memory
-      for (const teacher of availableTeachers) {
+      // Filter by online status (in memory) and availability
+      for (const teacher of teacherIds) {
         if (excludeTeacherId && teacher.teacherId === excludeTeacherId) continue;
         
         const teacherSocket = this.teacherSockets.get(teacher.teacherId);
@@ -832,12 +828,16 @@ export class CallernWebSocketServer {
       });
 
       if (student) {
+        const nameParts = (student.name || 'Student').split(' ');
+        const firstName = nameParts[0] || 'Student';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
         return {
           id: student.id,
-          firstName: student.firstName || 'Student',
-          lastName: student.lastName || '',
+          firstName: firstName,
+          lastName: lastName,
           email: student.email || '',
-          profileImageUrl: student.profileImage || null,
+          profileImageUrl: null,
         };
       }
       
@@ -860,10 +860,8 @@ export class CallernWebSocketServer {
       await db.insert(callernCallHistory).values({
         studentId,
         teacherId,
-        packageId,
-        startTime: new Date(),
-        status: 'connecting',
-        notes: `Room ID: ${roomId}` // Store roomId in notes field
+        sessionType: 'callern',
+        duration: 0 // Will be updated when call ends
       });
     } catch (error) {
       console.error('Error creating call record:', error);
@@ -1022,17 +1020,10 @@ export class CallernWebSocketServer {
   }
 
   private async updateTeacherAvailability(teacherId: number, isOnline: boolean) {
-    try {
-      await db
-        .update(teacherCallernAvailability)
-        .set({ 
-          isOnline,
-          lastActiveAt: new Date(),
-        })
-        .where(eq(teacherCallernAvailability.teacherId, teacherId));
-    } catch (error) {
-      console.error('Error updating teacher availability:', error);
-    }
+    // Online status is managed in memory only
+    // teacherCallernAvailability table doesn't have isOnline or lastActiveAt columns
+    // This method is kept for compatibility but does nothing with the database
+    console.log(`Teacher ${teacherId} availability updated in memory: ${isOnline ? 'online' : 'offline'}`);
   }
 
   private async calculateStudentMetrics(studentId: number, roomId: string, minutes: number) {
