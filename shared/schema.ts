@@ -1400,6 +1400,553 @@ export const insertPeerMatchingRequestSchema = z.object({
   notes: z.string().optional()
 });
 
+// Peer Socializer Groups table
+export const peerSocializerGroups = pgTable("peer_socializer_groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  targetLanguage: varchar("target_language", { length: 50 }).notNull(),
+  proficiencyLevel: varchar("proficiency_level", { length: 20 }).notNull(),
+  maxParticipants: integer("max_participants").default(10),
+  currentParticipants: integer("current_participants").default(0),
+  hostId: integer("host_id").references(() => users.id),
+  groupType: varchar("group_type", { length: 50 }).default("conversation"),
+  isActive: boolean("is_active").default(true),
+  isPublic: boolean("is_public").default(true),
+  tags: text("tags").array().default([]),
+  scheduleType: varchar("schedule_type", { length: 20 }).default("flexible"),
+  scheduledTime: timestamp("scheduled_time"),
+  duration: integer("duration").default(60),
+  timeZone: varchar("time_zone", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for peer socializer groups
+export const insertPeerSocializerGroupSchema = z.object({
+  name: z.string().max(255),
+  description: z.string().optional(),
+  targetLanguage: z.string().max(50),
+  proficiencyLevel: z.string().max(20),
+  maxParticipants: z.number().default(10),
+  currentParticipants: z.number().default(0),
+  hostId: z.number().optional(),
+  groupType: z.string().max(50).default("conversation"),
+  isActive: z.boolean().default(true),
+  isPublic: z.boolean().default(true),
+  tags: z.array(z.string()).default([]),
+  scheduleType: z.string().max(20).default("flexible"),
+  scheduledTime: z.date().optional(),
+  duration: z.number().default(60),
+  timeZone: z.string().max(50).optional()
+});
+
+// Peer Socializer Participants table
+export const peerSocializerParticipants = pgTable("peer_socializer_participants", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => peerSocializerGroups.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  role: varchar("role", { length: 20 }).default("participant"),
+  isActive: boolean("is_active").default(true),
+  lastActiveAt: timestamp("last_active_at"),
+  participationScore: integer("participation_score").default(0),
+  contributionLevel: varchar("contribution_level", { length: 20 }).default("normal"),
+  notes: text("notes"),
+  leftAt: timestamp("left_at"),
+  leftReason: varchar("left_reason", { length: 100 })
+});
+
+// Insert schema for peer socializer participants
+export const insertPeerSocializerParticipantSchema = z.object({
+  groupId: z.number(),
+  userId: z.number(),
+  role: z.string().max(20).default("participant"),
+  isActive: z.boolean().default(true),
+  lastActiveAt: z.date().optional(),
+  participationScore: z.number().default(0),
+  contributionLevel: z.string().max(20).default("normal"),
+  notes: z.string().optional(),
+  leftAt: z.date().optional(),
+  leftReason: z.string().max(100).optional()
+});
+
+// Insert schema for phone call logs
+export const insertPhoneCallLogSchema = z.object({
+  callerId: z.string().max(50).optional(),
+  recipientId: z.string().max(50).optional(),
+  userId: z.number().optional(),
+  operatorId: z.number().optional(),
+  callType: z.string().max(50),
+  callPurpose: z.string().max(100).optional(),
+  startTime: z.date(),
+  endTime: z.date().optional(),
+  duration: z.number().optional(),
+  status: z.string().max(20).default("completed"),
+  recordingUrl: z.string().max(500).optional(),
+  transferredTo: z.number().optional(),
+  callNotes: z.string().optional(),
+  followUpRequired: z.boolean().default(false),
+  followUpDate: z.date().optional(),
+  customerSatisfaction: z.number().optional(),
+  tags: z.array(z.string()).default([]),
+  metadata: z.record(z.any()).optional()
+});
+
+// Insert schema for rooms
+export const insertRoomSchema = z.object({
+  name: z.string().max(255),
+  roomType: z.string().max(50).default("physical"),
+  capacity: z.number().optional(),
+  location: z.string().max(255).optional(),
+  equipment: z.array(z.string()).default([]),
+  isActive: z.boolean().default(true),
+  bookingPolicy: z.record(z.any()).optional()
+});
+
+// Insert schema for sessions
+export const insertSessionSchema = z.object({
+  userId: z.number(),
+  sessionToken: z.string().max(255),
+  refreshToken: z.string().max(255).optional(),
+  userAgent: z.string().optional(),
+  ipAddress: z.string().max(45).optional(),
+  deviceType: z.string().max(50).optional(),
+  location: z.string().max(100).optional(),
+  isActive: z.boolean().default(true),
+  lastActivityAt: z.date().optional(),
+  expiresAt: z.date()
+});
+
+// Insert schema for user profiles
+export const insertUserProfileSchema = z.object({
+  userId: z.number(),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  profilePictureUrl: z.string().max(500).optional(),
+  dateOfBirth: z.date().optional(),
+  phoneNumber: z.string().max(20).optional(),
+  address: z.string().optional(),
+  city: z.string().max(100).optional(),
+  country: z.string().max(100).optional(),
+  timezone: z.string().max(50).default("UTC"),
+  preferredLanguage: z.string().max(10).default("en"),
+  nativeLanguage: z.string().max(10).optional(),
+  targetLanguages: z.array(z.string()).default([]),
+  proficiencyLevels: z.record(z.any()).optional(),
+  learningGoals: z.array(z.string()).default([]),
+  interests: z.array(z.string()).default([]),
+  occupation: z.string().max(100).optional(),
+  educationLevel: z.string().max(50).optional(),
+  bio: z.string().optional(),
+  socialLinks: z.record(z.any()).optional(),
+  preferences: z.record(z.any()).optional(),
+  notifications: z.record(z.any()).optional(),
+  privacy: z.record(z.any()).optional(),
+  accessibility: z.record(z.any()).optional(),
+  theme: z.string().max(20).default("light"),
+  isActive: z.boolean().default(true),
+  lastLoginAt: z.date().optional(),
+  profileCompleteness: z.number().default(0),
+  verificationStatus: z.string().max(20).default("unverified"),
+  verifiedAt: z.date().optional(),
+  metadata: z.record(z.any()).optional()
+});
+
+// Special Classes table - admin-flagged featured classes for dashboard showcase
+export const specialClasses = pgTable("special_classes", {
+  id: serial("id").primaryKey(),
+  classId: integer("class_id").references(() => classes.id).notNull(),
+  featuredBy: integer("featured_by").references(() => users.id).notNull(),
+  featuredAt: timestamp("featured_at").defaultNow().notNull(),
+  displayOrder: integer("display_order").default(0),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+  highlightColor: varchar("highlight_color", { length: 7 }).default("#3B82F6"),
+  badgeText: varchar("badge_text", { length: 50 }),
+  isActive: boolean("is_active").default(true),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  targetAudience: text("target_audience").array().default([]),
+  tags: text("tags").array().default([]),
+  priority: integer("priority").default(5),
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  enrollments: integer("enrollments").default(0),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for special classes
+export const insertSpecialClassSchema = z.object({
+  classId: z.number(),
+  featuredBy: z.number(),
+  displayOrder: z.number().default(0),
+  title: z.string().max(255).optional(),
+  description: z.string().optional(),
+  thumbnailUrl: z.string().max(500).optional(),
+  highlightColor: z.string().max(7).default("#3B82F6"),
+  badgeText: z.string().max(50).optional(),
+  isActive: z.boolean().default(true),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+  targetAudience: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
+  priority: z.number().default(5),
+  impressions: z.number().default(0),
+  clicks: z.number().default(0),
+  enrollments: z.number().default(0),
+  metadata: z.record(z.any()).optional()
+});
+
+// Teacher Payment Records table
+export const teacherPaymentRecords = pgTable("teacher_payment_records", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  paymentPeriodStart: date("payment_period_start").notNull(),
+  paymentPeriodEnd: date("payment_period_end").notNull(),
+  totalClasses: integer("total_classes").notNull(),
+  totalHours: decimal("total_hours", { precision: 8, scale: 2 }).notNull(),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  baseAmount: decimal("base_amount", { precision: 10, scale: 2 }).notNull(),
+  bonusAmount: decimal("bonus_amount", { precision: 10, scale: 2 }).default("0"),
+  deductionAmount: decimal("deduction_amount", { precision: 10, scale: 2 }).default("0"),
+  finalAmount: decimal("final_amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("IRR"),
+  paymentStatus: varchar("payment_status", { length: 20 }).default("pending"), // pending, processed, paid, failed
+  paymentMethod: varchar("payment_method", { length: 50 }), // bank_transfer, cash, check, digital_wallet
+  paymentDate: timestamp("payment_date"),
+  paymentReference: varchar("payment_reference", { length: 255 }),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  notes: text("notes"),
+  payrollBatch: varchar("payroll_batch", { length: 100 }),
+  taxDeduction: decimal("tax_deduction", { precision: 10, scale: 2 }).default("0"),
+  socialSecurityDeduction: decimal("social_security_deduction", { precision: 10, scale: 2 }).default("0"),
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }),
+  bankAccount: varchar("bank_account", { length: 100 }),
+  paymentDetails: jsonb("payment_details"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for teacher payment records
+export const insertTeacherPaymentRecordSchema = z.object({
+  teacherId: z.number(),
+  paymentPeriodStart: z.date(),
+  paymentPeriodEnd: z.date(),
+  totalClasses: z.number(),
+  totalHours: z.string(),
+  hourlyRate: z.string().optional(),
+  baseAmount: z.string(),
+  bonusAmount: z.string().default("0"),
+  deductionAmount: z.string().default("0"),
+  finalAmount: z.string(),
+  currency: z.string().max(3).default("IRR"),
+  paymentStatus: z.string().max(20).default("pending"),
+  paymentMethod: z.string().max(50).optional(),
+  paymentDate: z.date().optional(),
+  paymentReference: z.string().max(255).optional(),
+  approvedBy: z.number().optional(),
+  approvedAt: z.date().optional(),
+  notes: z.string().optional(),
+  payrollBatch: z.string().max(100).optional(),
+  taxDeduction: z.string().default("0"),
+  socialSecurityDeduction: z.string().default("0"),
+  netAmount: z.string().optional(),
+  bankAccount: z.string().max(100).optional(),
+  paymentDetails: z.record(z.any()).optional()
+});
+
+// Enhanced Analytics Tables
+
+// Learning Problems table - AI-detected learning issues
+export const learningProblems = pgTable("learning_problems", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // grammar, vocabulary, pronunciation, fluency, etc.
+  severity: varchar("severity", { length: 20 }).notNull(), // low, medium, high, critical
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  detectedAt: timestamp("detected_at").defaultNow().notNull(),
+  affectedSkills: text("affected_skills").array().default([]),
+  confidence: decimal("confidence", { precision: 5, scale: 2 }).notNull(), // 0.00 to 100.00
+  evidence: jsonb("evidence").default([]), // JSON array of evidence data
+  estimatedImpact: text("estimated_impact"),
+  autoGenerated: boolean("auto_generated").default(true),
+  status: varchar("status", { length: 20 }).default("active"), // active, resolved, dismissed
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Learning Recommendations table - AI-generated improvement suggestions
+export const learningRecommendations = pgTable("learning_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  problemId: integer("problem_id").references(() => learningProblems.id),
+  type: varchar("type", { length: 50 }).notNull(), // practice, review, study, exercise
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high, urgent
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  actionItems: jsonb("action_items").default([]), // Array of specific actions
+  estimatedTime: integer("estimated_time"), // minutes
+  difficulty: varchar("difficulty", { length: 20 }), // easy, medium, hard
+  targetSkills: text("target_skills").array().default([]),
+  resources: jsonb("resources").default([]), // Links, materials, exercises
+  successMetrics: jsonb("success_metrics").default([]),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  implementedAt: timestamp("implemented_at"),
+  status: varchar("status", { length: 20 }).default("pending"), // pending, implemented, dismissed
+  effectiveness: decimal("effectiveness", { precision: 5, scale: 2 }), // 0.00 to 100.00
+  feedback: text("feedback"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Skill Correlations table - relationships between different skills
+export const skillCorrelations = pgTable("skill_correlations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  skillA: varchar("skill_a", { length: 100 }).notNull(),
+  skillB: varchar("skill_b", { length: 100 }).notNull(),
+  correlationType: varchar("correlation_type", { length: 20 }).notNull(), // positive, negative, neutral
+  strength: decimal("strength", { precision: 5, scale: 4 }).notNull(), // -1.0000 to 1.0000
+  confidence: decimal("confidence", { precision: 5, scale: 2 }).notNull(), // 0.00 to 100.00
+  sampleSize: integer("sample_size").notNull(),
+  timeframe: varchar("timeframe", { length: 50 }), // daily, weekly, monthly, all-time
+  context: varchar("context", { length: 100 }), // class, homework, test, conversation
+  analysisDate: timestamp("analysis_date").defaultNow().notNull(),
+  metadata: jsonb("metadata"),
+  isGlobal: boolean("is_global").default(false), // user-specific or global pattern
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Performance Patterns table - learning behavior patterns
+export const performancePatterns = pgTable("performance_patterns", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  patternType: varchar("pattern_type", { length: 50 }).notNull(), // learning_curve, plateau, regression, breakthrough
+  description: text("description").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  duration: integer("duration"), // days
+  affectedSkills: text("affected_skills").array().default([]),
+  severity: varchar("severity", { length: 20 }), // mild, moderate, severe
+  frequency: varchar("frequency", { length: 20 }), // rare, occasional, frequent, constant
+  triggers: jsonb("triggers").default([]), // Possible causes/triggers
+  outcomes: jsonb("outcomes").default([]), // Results or consequences
+  interventions: jsonb("interventions").default([]), // Actions taken
+  confidence: decimal("confidence", { precision: 5, scale: 2 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  predictiveIndicators: jsonb("predictive_indicators").default([]),
+  recommendedActions: jsonb("recommended_actions").default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Analytics Insights table - high-level insights and trends
+export const analyticsInsights = pgTable("analytics_insights", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  insightType: varchar("insight_type", { length: 50 }).notNull(), // trend, prediction, recommendation, alert
+  category: varchar("category", { length: 50 }).notNull(), // performance, behavior, progress, risk
+  title: varchar("title", { length: 255 }).notNull(),
+  summary: text("summary").notNull(),
+  details: jsonb("details").default({}),
+  metrics: jsonb("metrics").default({}), // Key performance indicators
+  severity: varchar("severity", { length: 20 }), // info, warning, critical
+  actionRequired: boolean("action_required").default(false),
+  timeframe: varchar("timeframe", { length: 50 }), // real-time, daily, weekly, monthly
+  dataSource: varchar("data_source", { length: 100 }), // ai_analysis, statistical_model, rule_based
+  confidence: decimal("confidence", { precision: 5, scale: 2 }).notNull(),
+  relevanceScore: decimal("relevance_score", { precision: 5, scale: 2 }),
+  expiresAt: timestamp("expires_at"),
+  isRead: boolean("is_read").default(false),
+  isArchived: boolean("is_archived").default(false),
+  relatedInsights: integer("related_insights").array().default([]),
+  tags: text("tags").array().default([]),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schemas for Enhanced Analytics
+
+// Insert schema for learning problems
+export const insertLearningProblemSchema = z.object({
+  userId: z.number(),
+  type: z.string().max(50),
+  severity: z.string().max(20),
+  title: z.string().max(255),
+  description: z.string(),
+  affectedSkills: z.array(z.string()).default([]),
+  confidence: z.string(),
+  evidence: z.array(z.any()).default([]),
+  estimatedImpact: z.string().optional(),
+  autoGenerated: z.boolean().default(true),
+  status: z.string().max(20).default("active"),
+  resolvedAt: z.date().optional(),
+  resolvedBy: z.number().optional()
+});
+
+// Insert schema for learning recommendations
+export const insertLearningRecommendationSchema = z.object({
+  userId: z.number(),
+  problemId: z.number().optional(),
+  type: z.string().max(50),
+  priority: z.string().max(20).default("medium"),
+  title: z.string().max(255),
+  description: z.string(),
+  actionItems: z.array(z.any()).default([]),
+  estimatedTime: z.number().optional(),
+  difficulty: z.string().max(20).optional(),
+  targetSkills: z.array(z.string()).default([]),
+  resources: z.array(z.any()).default([]),
+  successMetrics: z.array(z.any()).default([]),
+  implementedAt: z.date().optional(),
+  status: z.string().max(20).default("pending"),
+  effectiveness: z.string().optional(),
+  feedback: z.string().optional()
+});
+
+// Insert schema for skill correlations
+export const insertSkillCorrelationSchema = z.object({
+  userId: z.number().optional(),
+  skillA: z.string().max(100),
+  skillB: z.string().max(100),
+  correlationType: z.string().max(20),
+  strength: z.string(),
+  confidence: z.string(),
+  sampleSize: z.number(),
+  timeframe: z.string().max(50).optional(),
+  context: z.string().max(100).optional(),
+  analysisDate: z.date().optional(),
+  metadata: z.record(z.any()).optional(),
+  isGlobal: z.boolean().default(false)
+});
+
+// Insert schema for performance patterns
+export const insertPerformancePatternSchema = z.object({
+  userId: z.number().optional(),
+  patternType: z.string().max(50),
+  description: z.string(),
+  startDate: z.date(),
+  endDate: z.date().optional(),
+  duration: z.number().optional(),
+  affectedSkills: z.array(z.string()).default([]),
+  severity: z.string().max(20).optional(),
+  frequency: z.string().max(20).optional(),
+  triggers: z.array(z.any()).default([]),
+  outcomes: z.array(z.any()).default([]),
+  interventions: z.array(z.any()).default([]),
+  confidence: z.string(),
+  isActive: z.boolean().default(true),
+  predictiveIndicators: z.array(z.any()).default([]),
+  recommendedActions: z.array(z.any()).default([])
+});
+
+// Insert schema for analytics insights
+export const insertAnalyticsInsightSchema = z.object({
+  userId: z.number().optional(),
+  insightType: z.string().max(50),
+  category: z.string().max(50),
+  title: z.string().max(255),
+  summary: z.string(),
+  details: z.record(z.any()).default({}),
+  metrics: z.record(z.any()).default({}),
+  severity: z.string().max(20).optional(),
+  actionRequired: z.boolean().default(false),
+  timeframe: z.string().max(50).optional(),
+  dataSource: z.string().max(100).optional(),
+  confidence: z.string(),
+  relevanceScore: z.string().optional(),
+  expiresAt: z.date().optional(),
+  isRead: z.boolean().default(false),
+  isArchived: z.boolean().default(false),
+  relatedInsights: z.array(z.number()).default([]),
+  tags: z.array(z.string()).default([])
+});
+
+// Insert schema for 3D lesson content
+export const insertThreeDLessonContentSchema = z.object({
+  lessonId: z.number(),
+  contentType: z.string().max(50), // dialogue, narration, interaction, assessment, guide_text
+  sequenceOrder: z.number(),
+  sceneTimestamp: z.string().optional(), // decimal as string
+  characterSpeaker: z.string().max(100).optional(),
+  contentText: z.string(),
+  translationKey: z.string().max(255).optional(),
+  voiceSettings: z.record(z.any()).optional(),
+  audioUrl: z.string().max(500).optional(),
+  subtitleStyling: z.record(z.any()).optional(),
+  interactionData: z.record(z.any()).optional(),
+  assessmentData: z.record(z.any()).optional(),
+  animationCues: z.record(z.any()).optional(),
+  cameraInstructions: z.record(z.any()).optional(),
+  environmentChanges: z.record(z.any()).optional(),
+  triggers: z.record(z.any()).optional(),
+  conditions: z.record(z.any()).optional(),
+  variableUpdates: z.record(z.any()).optional(),
+  progressMilestone: z.boolean().default(false),
+  skipAllowed: z.boolean().default(true),
+  repeatAllowed: z.boolean().default(true),
+  difficultyLevel: z.string().max(20).optional(),
+  tags: z.array(z.string()).default([]),
+  notes: z.string().optional(),
+  isActive: z.boolean().default(true)
+});
+
+// SMS Log Metadata Schema - for structured SMS logging and tracking
+export const smsLogMetadataSchema = z.object({
+  messageId: z.string().optional(), // SMS provider message ID
+  provider: z.string().max(50).default("kavenegar"), // SMS service provider
+  providerData: z.record(z.any()).optional(), // Provider-specific response data
+  cost: z.string().optional(), // Cost in local currency (decimal as string)
+  credits: z.number().optional(), // SMS credits used
+  deliveryStatus: z.enum(["sent", "delivered", "failed", "pending", "unknown"]).default("sent"),
+  deliveryTimestamp: z.date().optional(), // When SMS was delivered
+  errorCode: z.string().optional(), // Error code from provider
+  errorMessage: z.string().optional(), // Error description
+  retryCount: z.number().default(0), // Number of retry attempts
+  batchId: z.string().optional(), // For bulk SMS operations
+  campaignId: z.string().optional(), // Marketing campaign identifier
+  templateId: z.string().optional(), // SMS template used
+  variables: z.record(z.string()).optional(), // Template variables substituted
+  recipientDetails: z.object({
+    originalNumber: z.string(),
+    normalizedNumber: z.string().optional(),
+    countryCode: z.string().optional(),
+    region: z.string().optional()
+  }).optional(),
+  messageDetails: z.object({
+    length: z.number().optional(), // Message length in characters
+    parts: z.number().optional(), // Number of SMS parts
+    encoding: z.string().optional(), // utf8, gsm7, ucs2
+    type: z.enum(["transactional", "promotional", "reminder", "notification"]).optional()
+  }).optional(),
+  schedulingInfo: z.object({
+    scheduledAt: z.date().optional(),
+    sentAt: z.date().optional(),
+    timezone: z.string().optional()
+  }).optional(),
+  tracking: z.object({
+    clickUrls: z.array(z.string()).optional(),
+    unsubscribeUrl: z.string().optional(),
+    trackingPixel: z.string().optional()
+  }).optional(),
+  compliance: z.object({
+    consentGiven: z.boolean().optional(),
+    consentTimestamp: z.date().optional(),
+    optOutAvailable: z.boolean().default(true),
+    dataRetentionDays: z.number().optional()
+  }).optional()
+});
+
 // Shopping Carts table
 export const carts = pgTable("carts", {
   id: serial("id").primaryKey(),
