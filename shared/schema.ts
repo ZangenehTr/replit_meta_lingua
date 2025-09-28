@@ -1153,8 +1153,8 @@ export const guestProgressTracking = pgTable("guest_progress_tracking", {
   sessionId: varchar("session_id", { length: 255 }).notNull().unique(),
   guestIdentifier: varchar("guest_identifier", { length: 100 }).notNull(),
   courseId: integer("course_id").references(() => courses.id),
-  lessonId: integer("lesson_id").references(() => lessons.id),
-  quizId: integer("quiz_id").references(() => quizzes.id),
+  lessonId: integer("lesson_id"), // TODO: Add lessons table reference later  
+  quizId: integer("quiz_id"), // TODO: Add quizzes table reference later
   progressPercentage: integer("progress_percentage").default(0),
   timeSpent: integer("time_spent").default(0), // seconds
   lastAccessed: timestamp("last_accessed").defaultNow().notNull(),
@@ -2417,7 +2417,7 @@ export const gradebookEntries = pgTable("gradebook_entries", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(),
   classId: integer("class_id").references(() => classes.id),
-  assignmentId: integer("assignment_id").references(() => assignments.id),
+  assignmentId: integer("assignment_id"), // TODO: Add assignments table reference later
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
   entryType: varchar("entry_type", { length: 50 }).notNull(), // assignment, quiz, exam, participation
   title: varchar("title", { length: 255 }).notNull(),

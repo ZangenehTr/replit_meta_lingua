@@ -54,6 +54,7 @@ export default function Auth() {
   
   const registerSchema = z.object({
     email: z.string().email("Invalid email address"),
+    phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Password confirmation is required"),
     firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -80,6 +81,7 @@ export default function Auth() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
+      phoneNumber: "",
       password: "",
       confirmPassword: "",
       firstName: "",
@@ -162,6 +164,7 @@ export default function Auth() {
     try {
       await registerUser({ 
         email: data.email,
+        phoneNumber: data.phoneNumber,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -468,15 +471,38 @@ export default function Auth() {
                 
                 <div className="space-y-2">
                   <Label htmlFor="register-email">{t('auth:email')}</Label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    placeholder={t('auth:emailPlaceholder')}
-                    {...registerForm.register("email")}
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                    <Input
+                      id="register-email"
+                      type="email"
+                      placeholder={t('auth:emailPlaceholder')}
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                      {...registerForm.register("email")}
+                    />
+                  </div>
                   {registerForm.formState.errors.email && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-300">
                       {registerForm.formState.errors.email.message}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="register-phone" className="text-white/90 text-sm font-medium">{t('auth:phoneNumber', 'Phone Number')}</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                    <Input
+                      id="register-phone"
+                      type="tel"
+                      placeholder={t('auth:phoneNumberPlaceholder', 'Enter your phone number')}
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                      {...registerForm.register("phoneNumber")}
+                    />
+                  </div>
+                  {registerForm.formState.errors.phoneNumber && (
+                    <p className="text-sm text-red-300">
+                      {registerForm.formState.errors.phoneNumber.message}
                     </p>
                   )}
                 </div>
