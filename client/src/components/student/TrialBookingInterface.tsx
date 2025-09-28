@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Calendar, 
   Clock, 
@@ -82,6 +83,7 @@ export function TrialBookingInterface({ teachers }: Props) {
   const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Get current user data
   
   const [step, setStep] = useState<'teacher' | 'datetime' | 'details' | 'confirmation'>('teacher');
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
@@ -102,6 +104,32 @@ export function TrialBookingInterface({ teachers }: Props) {
     }
   });
 
+  // Pre-populate form with user data when available
+  useEffect(() => {
+    if (user) {
+      // Only pre-populate empty fields to avoid overwriting user edits
+      const currentValues = form.getValues();
+      
+      if (!currentValues.firstName) {
+        form.setValue('firstName', user.firstName || '');
+      }
+      if (!currentValues.lastName) {
+        form.setValue('lastName', user.lastName || '');
+      }
+      if (!currentValues.email) {
+        form.setValue('email', user.email || '');
+      }
+      // Try to get phone from user object (may exist even if not typed)
+      if (!currentValues.phone && (user as any).phoneNumber) {
+        form.setValue('phone', (user as any).phoneNumber);
+      }
+      // Only set language if user has a preferred language in preferences and field is empty
+      if (!currentValues.preferredLanguage && user.preferences?.language) {
+        form.setValue('preferredLanguage', user.preferences.language);
+      }
+    }
+  }, [user, form]);
+
   // Generate next 7 days
   const generateAvailableDates = () => {
     const dates = [];
@@ -120,7 +148,7 @@ export function TrialBookingInterface({ teachers }: Props) {
   };
 
   // Fetch real time slots from API
-  const { data: timeSlots = [], isLoading: timeSlotsLoading, error: timeSlotsError } = useQuery({
+  const { data: timeSlots = [], isLoading: timeSlotsLoading, error: timeSlotsError } = useQuery<TimeSlot[]>({
     queryKey: [`/api/trial/slots?teacherId=${selectedTeacher?.id}&date=${selectedDate}`],
     enabled: !!selectedTeacher?.id && !!selectedDate,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
@@ -362,7 +390,7 @@ export function TrialBookingInterface({ teachers }: Props) {
                       </button>
                     ))}
                   </div>
-                )
+                )}
               </div>
             )}
 
@@ -391,6 +419,11 @@ export function TrialBookingInterface({ teachers }: Props) {
         <Card>
           <CardHeader>
             <CardTitle>{t('student:yourDetails')}</CardTitle>
+            {user && (
+              <p className="text-sm text-gray-600">
+                {t('student:fieldsPrePopulated')}
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -511,25 +544,26 @@ export function TrialBookingInterface({ teachers }: Props) {
                     </FormItem>
                   )}
                 />
-            </div>
 
-            <div className="mt-6 flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => setStep('datetime')}
-                data-testid="button-back-to-datetime"
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                {t('common:back')}
-              </Button>
-              <Button
-                onClick={handleBooking}
-                disabled={!form.formState.isValid || bookTrialMutation.isPending}
-                data-testid="button-book-trial"
-              >
-                {bookTrialMutation.isPending ? t('common:booking') : t('student:bookTrialLesson')}
-              </Button>
-            </div>
+                <div className="mt-6 flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep('datetime')}
+                    data-testid="button-back-to-datetime"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    {t('common:back')}
+                  </Button>
+                  <Button
+                    onClick={handleBooking}
+                    disabled={!form.formState.isValid || bookTrialMutation.isPending}
+                    data-testid="button-book-trial"
+                  >
+                    {bookTrialMutation.isPending ? t('common:booking') : t('student:bookTrialLesson')}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </CardContent>
         </Card>
       )}

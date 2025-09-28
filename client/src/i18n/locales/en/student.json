@@ -690,5 +690,6 @@
   "aiPersonalizationDesc": "Customized learning path based on your progress and goals",
   "sampleLessons": "Sample Lessons",
   "tryNow": "Try Now",
-  "exploreAllLessons": "Explore All Lessons"
+  "exploreAllLessons": "Explore All Lessons",
+  "fieldsPrePopulated": "Your information has been pre-populated from your profile. You can edit any field as needed."
 }
