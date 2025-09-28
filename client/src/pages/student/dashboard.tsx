@@ -9,7 +9,7 @@ export default function StudentDashboard() {
   const { t } = useTranslation(['student', 'common']);
 
   // Redirect non-students to their appropriate dashboards
-  if (user && user.role !== 'Student') {
+  if (user && user.role.toLowerCase() !== 'student') {
     return null; // Let the unified dashboard handle role-based routing
   }
 
