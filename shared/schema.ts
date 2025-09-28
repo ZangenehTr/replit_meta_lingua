@@ -7,11 +7,29 @@ import { z } from "zod";
 // ============================================================================
 
 // Canonical workflow status values for call center workflow
+export const WORKFLOW_STATUS = {
+  PENDING: 'pending',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled',
+  ON_HOLD: 'on_hold'
+} as const;
 
 // Type for workflow status
 export type WorkflowStatus = typeof WORKFLOW_STATUS[keyof typeof WORKFLOW_STATUS];
 
 // Lead status constants  
+export const LEAD_STATUS = {
+  NEW: 'new',
+  CONTACTED: 'contacted',
+  QUALIFIED: 'qualified',
+  PROPOSAL: 'proposal',
+  NEGOTIATION: 'negotiation',
+  CLOSED_WON: 'closed_won',
+  CLOSED_LOST: 'closed_lost',
+  NURTURING: 'nurturing'
+} as const;
 
 // Type for lead status
 export type LeadStatus = typeof LEAD_STATUS[keyof typeof LEAD_STATUS];
@@ -436,7 +454,7 @@ export const insertAiCallInsightsSchema = z.object({
   callOutcome: z.string().max(100).optional()
 });
 
-export const insertLeadsSchema = z.object({
+export const insertLeadSchema = z.object({
   firstName: z.string().max(100),
   lastName: z.string().max(100),
   email: z.string().max(255).optional(),
@@ -462,7 +480,7 @@ export const insertLeadsSchema = z.object({
   totalInteractions: z.number().default(0)
 });
 
-export const insertCommunicationLogsSchema = z.object({
+export const insertCommunicationLogSchema = z.object({
   leadId: z.number(),
   userId: z.number().optional(),
   communicationType: z.string().max(100),
@@ -1283,6 +1301,103 @@ export const insertUserAddressSchema = z.object({
   phoneNumber: z.string().max(20).optional(),
   isDefault: z.boolean().default(false),
   isActive: z.boolean().default(true)
+});
+
+// Insert schema for departments
+export const insertDepartmentSchema = z.object({
+  instituteId: z.number(),
+  name: z.string().max(255),
+  code: z.string().max(50),
+  description: z.string().optional(),
+  headId: z.number().optional(),
+  budget: z.number().optional(),
+  currency: z.string().max(3).default("IRR"),
+  isActive: z.boolean().default(true),
+  parentDepartmentId: z.number().optional(),
+  responsibilities: z.array(z.string()).default([]),
+  location: z.string().max(255).optional()
+});
+
+// Insert schema for front desk operations
+export const insertFrontDeskOperationSchema = z.object({
+  operatorId: z.number(),
+  operationType: z.string().max(50),
+  studentId: z.number().optional(),
+  visitorName: z.string().max(255).optional(),
+  visitorPhone: z.string().max(20).optional(),
+  purpose: z.string().max(255).optional(),
+  description: z.string().optional(),
+  status: z.string().max(20).default("pending"),
+  priority: z.string().max(20).default("normal"),
+  assignedTo: z.number().optional(),
+  resolvedAt: z.date().optional(),
+  resolvedBy: z.number().optional(),
+  followUpRequired: z.boolean().default(false),
+  followUpDate: z.date().optional(),
+  notes: z.string().optional(),
+  attachments: z.array(z.string()).default([])
+});
+
+// Insert schema for front desk tasks
+export const insertFrontDeskTaskSchema = z.object({
+  assigneeId: z.number(),
+  assignedBy: z.number().optional(),
+  title: z.string().max(255),
+  description: z.string().optional(),
+  taskType: z.string().max(50).default("general"),
+  priority: z.string().max(20).default("normal"),
+  status: z.string().max(20).default("pending"),
+  dueDate: z.date().optional(),
+  completedAt: z.date().optional(),
+  estimatedDuration: z.number().optional(),
+  actualDuration: z.number().optional(),
+  relatedEntityType: z.string().max(50).optional(),
+  relatedEntityId: z.string().max(50).optional(),
+  reminderSet: z.boolean().default(false),
+  reminderTime: z.date().optional(),
+  isRecurring: z.boolean().default(false),
+  recurringPattern: z.string().max(100).optional(),
+  notes: z.string().optional(),
+  completionNotes: z.string().optional()
+});
+
+// Peer Matching Requests table
+export const peerMatchingRequests = pgTable("peer_matching_requests", {
+  id: serial("id").primaryKey(),
+  requesterId: integer("requester_id").references(() => users.id).notNull(),
+  targetLanguage: varchar("target_language", { length: 50 }).notNull(),
+  nativeLanguage: varchar("native_language", { length: 50 }).notNull(),
+  proficiencyLevel: varchar("proficiency_level", { length: 20 }).notNull(),
+  ageRange: varchar("age_range", { length: 20 }),
+  interests: text("interests").array().default([]),
+  availabilityDays: text("availability_days").array().default([]),
+  availabilityTimes: varchar("availability_times", { length: 100 }),
+  preferredMatchType: varchar("preferred_match_type", { length: 50 }).default("conversation"),
+  locationPreference: varchar("location_preference", { length: 100 }),
+  onlinePreference: boolean("online_preference").default(true),
+  status: varchar("status", { length: 20 }).default("active"),
+  priority: integer("priority").default(5),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for peer matching requests
+export const insertPeerMatchingRequestSchema = z.object({
+  requesterId: z.number(),
+  targetLanguage: z.string().max(50),
+  nativeLanguage: z.string().max(50),
+  proficiencyLevel: z.string().max(20),
+  ageRange: z.string().max(20).optional(),
+  interests: z.array(z.string()).default([]),
+  availabilityDays: z.array(z.string()).default([]),
+  availabilityTimes: z.string().max(100).optional(),
+  preferredMatchType: z.string().max(50).default("conversation"),
+  locationPreference: z.string().max(100).optional(),
+  onlinePreference: z.boolean().default(true),
+  status: z.string().max(20).default("active"),
+  priority: z.number().default(5),
+  notes: z.string().optional()
 });
 
 // Shopping Carts table
