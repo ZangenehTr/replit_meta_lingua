@@ -307,6 +307,180 @@ export const insertAiStudyPartnerSchema = z.object({
   settings: z.any().optional()
 });
 
+// Insert schemas for AI training tables
+export const insertAiTrainingJobSchema = z.object({
+  jobName: z.string().max(255),
+  modelId: z.number().optional(),
+  datasetId: z.number().optional(),
+  jobType: z.string().max(100),
+  priority: z.string().max(20).default("medium"),
+  totalEpochs: z.number(),
+  batchSize: z.number().default(32),
+  learningRate: z.number().optional(),
+  hyperparameters: z.any().optional(),
+  estimatedDuration: z.number().optional(),
+  maxRetries: z.number().default(3),
+  parentJobId: z.number().optional(),
+  childJobs: z.array(z.string()).default([]),
+  dependencies: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
+  notes: z.string().optional(),
+  createdBy: z.number().optional()
+});
+
+export const insertAiTrainingDatasetSchema = z.object({
+  name: z.string().max(255),
+  description: z.string().optional(),
+  datasetType: z.string().max(100),
+  language: z.string().max(20),
+  skillLevel: z.string().max(20).optional(),
+  category: z.string().max(100).optional(),
+  version: z.string().max(50).default("1.0.0"),
+  splitRatio: z.string().max(50).default("80:10:10"),
+  dataPath: z.string().max(500).optional(),
+  configPath: z.string().max(500).optional(),
+  metadataPath: z.string().max(500).optional(),
+  preprocessingRules: z.any().optional(),
+  augmentationRules: z.any().optional(),
+  qualityMetrics: z.any().optional(),
+  dataFormat: z.string().max(50).default("json"),
+  encoding: z.string().max(50).default("utf-8"),
+  compressionType: z.string().max(50).optional(),
+  sizeBytes: z.number().optional(),
+  checksum: z.string().max(255).optional(),
+  source: z.string().max(255).optional(),
+  licenseType: z.string().max(100).optional(),
+  isPublic: z.boolean().default(false),
+  accessLevel: z.string().max(50).default("private"),
+  allowedUsers: z.array(z.string()).default([]),
+  processingStatus: z.string().max(50).default("pending"),
+  processingLog: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  customFields: z.any().optional(),
+  createdBy: z.number().optional()
+});
+
+export const insertAiModelSchema = z.object({
+  name: z.string().max(255),
+  description: z.string().optional(),
+  modelType: z.string().max(100),
+  version: z.string().max(50),
+  language: z.string().max(20),
+  skillLevel: z.string().max(20).optional(),
+  category: z.string().max(100).optional(),
+  architecture: z.string().max(100).optional(),
+  parameters: z.number().optional(),
+  datasetId: z.string().max(255).optional(),
+  trainingDataSize: z.number().optional(),
+  validationDataSize: z.number().optional(),
+  testDataSize: z.number().optional(),
+  hyperparameters: z.any().optional(),
+  metrics: z.any().optional(),
+  status: z.string().max(50).default("training"),
+  deploymentUrl: z.string().max(500).optional(),
+  apiEndpoint: z.string().max(500).optional(),
+  modelPath: z.string().max(500).optional(),
+  configPath: z.string().max(500).optional(),
+  checkpointPath: z.string().max(500).optional(),
+  notes: z.string().optional(),
+  trainedBy: z.number().optional(),
+  isProduction: z.boolean().default(false)
+});
+
+export const insertAiDatasetItemSchema = z.object({
+  datasetName: z.string().max(255),
+  itemType: z.string().max(100),
+  category: z.string().max(100),
+  language: z.string().max(20),
+  skillLevel: z.string().max(20),
+  content: z.any(),
+  expectedOutput: z.any().optional(),
+  metadata: z.any().optional(),
+  source: z.string().max(255).optional(),
+  quality: z.string().max(20).default("unverified"),
+  verifiedBy: z.number().optional(),
+  difficulty: z.string().max(20).default("medium"),
+  tags: z.array(z.string()).default([]),
+  usage: z.string().max(100).default("training"),
+  promptTemplate: z.string().optional(),
+  responseTemplate: z.string().optional(),
+  trainingNotes: z.string().optional(),
+  performance: z.any().optional()
+});
+
+export const insertAiCallInsightsSchema = z.object({
+  callId: z.string().max(255),
+  userId: z.number().optional(),
+  leadId: z.number().optional(),
+  callStartTime: z.date(),
+  callEndTime: z.date().optional(),
+  callDuration: z.number().optional(),
+  callType: z.string().max(100),
+  callStatus: z.string().max(50),
+  aiEngagementScore: z.number().optional(),
+  sentimentScore: z.number().optional(),
+  conversationQuality: z.string().max(50).optional(),
+  keyTopics: z.array(z.string()).default([]),
+  aiSuggestions: z.any().optional(),
+  transcriptSummary: z.string().optional(),
+  nextActionRecommended: z.string().optional(),
+  leadTemperature: z.string().max(20).optional(),
+  conversionProbability: z.number().optional(),
+  painPointsIdentified: z.array(z.string()).default([]),
+  objections: z.array(z.string()).default([]),
+  productInterest: z.array(z.string()).default([]),
+  budgetIndicators: z.any().optional(),
+  timelineIndicators: z.string().max(100).optional(),
+  decisionMakerLevel: z.string().max(50).optional(),
+  competitorsMentioned: z.array(z.string()).default([]),
+  callOutcome: z.string().max(100).optional()
+});
+
+export const insertLeadsSchema = z.object({
+  firstName: z.string().max(100),
+  lastName: z.string().max(100),
+  email: z.string().max(255).optional(),
+  phone: z.string().max(20).optional(),
+  company: z.string().max(255).optional(),
+  jobTitle: z.string().max(100).optional(),
+  industry: z.string().max(100).optional(),
+  leadSource: z.string().max(100),
+  leadStatus: z.string().max(50).default("new"),
+  leadScore: z.number().default(0),
+  assignedTo: z.number().optional(),
+  estimatedValue: z.number().optional(),
+  conversionProbability: z.number().default(0),
+  languageInterests: z.array(z.string()).default([]),
+  learningGoals: z.string().optional(),
+  currentLanguageLevel: z.string().max(20).optional(),
+  preferredContactMethod: z.string().max(50).default("email"),
+  timezone: z.string().max(100).optional(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  customFields: z.any().optional(),
+  lastEngagementType: z.string().max(100).optional(),
+  totalInteractions: z.number().default(0)
+});
+
+export const insertCommunicationLogsSchema = z.object({
+  leadId: z.number(),
+  userId: z.number().optional(),
+  communicationType: z.string().max(100),
+  direction: z.string().max(20),
+  subject: z.string().max(255).optional(),
+  content: z.string().optional(),
+  duration: z.number().optional(),
+  outcome: z.string().max(100).optional(),
+  sentiment: z.string().max(20).optional(),
+  followUpRequired: z.boolean().default(false),
+  attachments: z.array(z.string()).default([]),
+  campaignId: z.string().max(100).optional(),
+  responseTime: z.number().optional(),
+  engagementScore: z.number().optional(),
+  conversionEvent: z.string().max(100).optional(),
+  metadata: z.any().optional()
+});
+
 // Attendance Records table
 export const attendanceRecords = pgTable("attendance_records", {
   id: serial("id").primaryKey(),
@@ -500,6 +674,168 @@ export const insertDictionaryLookupSchema = z.object({
   targetLanguage: z.string().max(10).default("fa"),
   context: z.string().optional(),
   bookId: z.number().optional()
+});
+
+// AI Training Jobs table for tracking model training job execution
+export const aiTrainingJobs = pgTable("ai_training_jobs", {
+  id: serial("id").primaryKey(),
+  jobName: varchar("job_name", { length: 255 }).notNull(),
+  modelId: integer("model_id").references(() => aiModels.id),
+  datasetId: integer("dataset_id").references(() => aiTrainingDatasets.id),
+  jobType: varchar("job_type", { length: 100 }).notNull(), // training, fine_tuning, evaluation, inference
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high, urgent
+  status: varchar("status", { length: 50 }).default("queued"), // queued, running, completed, failed, cancelled, paused
+  progress: decimal("progress", { precision: 5, scale: 2 }).default("0.00"), // 0.00 to 100.00
+  currentEpoch: integer("current_epoch").default(0),
+  totalEpochs: integer("total_epochs").notNull(),
+  batchSize: integer("batch_size").default(32),
+  learningRate: decimal("learning_rate", { precision: 10, scale: 8 }),
+  hyperparameters: jsonb("hyperparameters"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  estimatedDuration: integer("estimated_duration"), // in seconds
+  actualDuration: integer("actual_duration"), // in seconds
+  cpuUsage: decimal("cpu_usage", { precision: 5, scale: 2 }), // percentage
+  memoryUsage: integer("memory_usage"), // in MB
+  gpuUsage: decimal("gpu_usage", { precision: 5, scale: 2 }), // percentage
+  diskUsage: integer("disk_usage"), // in MB
+  networkUsage: integer("network_usage"), // in MB
+  trainingLoss: decimal("training_loss", { precision: 10, scale: 6 }),
+  validationLoss: decimal("validation_loss", { precision: 10, scale: 6 }),
+  accuracy: decimal("accuracy", { precision: 5, scale: 4 }),
+  metrics: jsonb("metrics"),
+  logs: text("logs"),
+  errorMessage: text("error_message"),
+  outputPath: varchar("output_path", { length: 500 }),
+  checkpointPath: varchar("checkpoint_path", { length: 500 }),
+  configPath: varchar("config_path", { length: 500 }),
+  environmentConfig: jsonb("environment_config"),
+  nodeId: varchar("node_id", { length: 100 }), // which compute node is running the job
+  resourceAllocation: jsonb("resource_allocation"),
+  retryCount: integer("retry_count").default(0),
+  maxRetries: integer("max_retries").default(3),
+  parentJobId: integer("parent_job_id"), // for job dependencies
+  childJobs: text("child_jobs").array().default([]),
+  dependencies: text("dependencies").array().default([]),
+  tags: text("tags").array().default([]),
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// AI Training Datasets table for managing training dataset configurations
+export const aiTrainingDatasets = pgTable("ai_training_datasets", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  datasetType: varchar("dataset_type", { length: 100 }).notNull(), // text, conversation, audio, video, mixed
+  language: varchar("language", { length: 20 }).notNull(),
+  skillLevel: varchar("skill_level", { length: 20 }), // A1, A2, B1, B2, C1, C2, all
+  category: varchar("category", { length: 100 }), // grammar, vocabulary, pronunciation, conversation
+  version: varchar("version", { length: 50 }).notNull().default("1.0.0"),
+  totalSamples: integer("total_samples").default(0),
+  trainingSamples: integer("training_samples").default(0),
+  validationSamples: integer("validation_samples").default(0),
+  testSamples: integer("test_samples").default(0),
+  splitRatio: varchar("split_ratio", { length: 50 }).default("80:10:10"), // train:validation:test
+  dataPath: varchar("data_path", { length: 500 }),
+  configPath: varchar("config_path", { length: 500 }),
+  metadataPath: varchar("metadata_path", { length: 500 }),
+  preprocessingRules: jsonb("preprocessing_rules"),
+  augmentationRules: jsonb("augmentation_rules"),
+  qualityMetrics: jsonb("quality_metrics"),
+  dataFormat: varchar("data_format", { length: 50 }).default("json"), // json, csv, text, audio, video
+  encoding: varchar("encoding", { length: 50 }).default("utf-8"),
+  compressionType: varchar("compression_type", { length: 50 }), // gzip, zip, none
+  sizeBytes: integer("size_bytes"),
+  checksum: varchar("checksum", { length: 255 }),
+  source: varchar("source", { length: 255 }), // where the data came from
+  licenseType: varchar("license_type", { length: 100 }),
+  isPublic: boolean("is_public").default(false),
+  accessLevel: varchar("access_level", { length: 50 }).default("private"), // public, private, restricted
+  allowedUsers: text("allowed_users").array().default([]),
+  lastProcessed: timestamp("last_processed"),
+  processingStatus: varchar("processing_status", { length: 50 }).default("pending"), // pending, processing, completed, failed
+  processingLog: text("processing_log"),
+  tags: text("tags").array().default([]),
+  customFields: jsonb("custom_fields"),
+  createdBy: integer("created_by").references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// AI Models table for tracking trained AI models and their performance
+export const aiModels = pgTable("ai_models", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  modelType: varchar("model_type", { length: 100 }).notNull(), // language_model, classifier, conversation, tts, stt
+  version: varchar("version", { length: 50 }).notNull(),
+  language: varchar("language", { length: 20 }).notNull(),
+  skillLevel: varchar("skill_level", { length: 20 }), // A1, A2, B1, B2, C1, C2, all
+  category: varchar("category", { length: 100 }), // grammar, vocabulary, pronunciation, conversation
+  architecture: varchar("architecture", { length: 100 }), // transformer, lstm, cnn, etc
+  parameters: integer("parameters"), // number of model parameters
+  datasetId: varchar("dataset_id", { length: 255 }),
+  trainingDataSize: integer("training_data_size"), // number of training samples
+  validationDataSize: integer("validation_data_size"),
+  testDataSize: integer("test_data_size"),
+  trainingStarted: timestamp("training_started"),
+  trainingCompleted: timestamp("training_completed"),
+  trainingDuration: integer("training_duration"), // in seconds
+  trainingLoss: decimal("training_loss", { precision: 10, scale: 6 }),
+  validationLoss: decimal("validation_loss", { precision: 10, scale: 6 }),
+  testAccuracy: decimal("test_accuracy", { precision: 5, scale: 4 }),
+  modelPath: varchar("model_path", { length: 500 }),
+  configPath: varchar("config_path", { length: 500 }),
+  checkpointPath: varchar("checkpoint_path", { length: 500 }),
+  hyperparameters: jsonb("hyperparameters"),
+  metrics: jsonb("metrics"),
+  status: varchar("status", { length: 50 }).default("training"), // training, completed, failed, deployed, deprecated
+  deploymentUrl: varchar("deployment_url", { length: 500 }),
+  apiEndpoint: varchar("api_endpoint", { length: 500 }),
+  inferenceLatency: decimal("inference_latency", { precision: 8, scale: 3 }), // milliseconds
+  throughput: integer("throughput"), // requests per second
+  memoryUsage: integer("memory_usage"), // in bytes
+  diskUsage: integer("disk_usage"), // in bytes
+  trainingCost: decimal("training_cost", { precision: 10, scale: 2 }),
+  inferenceCost: decimal("inference_cost", { precision: 10, scale: 6 }), // per request
+  notes: text("notes"),
+  trainedBy: integer("trained_by").references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  isProduction: boolean("is_production").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// AI Dataset Items table for training data management
+export const aiDatasetItems = pgTable("ai_dataset_items", {
+  id: serial("id").primaryKey(),
+  datasetName: varchar("dataset_name", { length: 255 }).notNull(),
+  itemType: varchar("item_type", { length: 100 }).notNull(), // text, conversation, audio, video, image
+  category: varchar("category", { length: 100 }).notNull(), // grammar, vocabulary, pronunciation, conversation
+  language: varchar("language", { length: 20 }).notNull(),
+  skillLevel: varchar("skill_level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
+  content: jsonb("content").notNull(),
+  expectedOutput: jsonb("expected_output"),
+  metadata: jsonb("metadata"),
+  source: varchar("source", { length: 255 }), // where the data came from
+  quality: varchar("quality", { length: 20 }).default("unverified"), // verified, unverified, flagged
+  verifiedBy: integer("verified_by").references(() => users.id),
+  verifiedAt: timestamp("verified_at"),
+  difficulty: varchar("difficulty", { length: 20 }).default("medium"), // easy, medium, hard
+  tags: text("tags").array().default([]),
+  usage: varchar("usage", { length: 100 }).default("training"), // training, validation, testing
+  promptTemplate: text("prompt_template"),
+  responseTemplate: text("response_template"),
+  trainingNotes: text("training_notes"),
+  performance: jsonb("performance"), // model performance metrics
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
 // AI Call Insights table for call analytics and AI performance tracking
