@@ -3411,6 +3411,114 @@ export const courseEnrollments = pgTable("course_enrollments", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Student Preferences table for user settings and preferences
+export const studentPreferences = pgTable("student_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  language: varchar("language", { length: 10 }).default("en"), // UI language preference
+  timeZone: varchar("time_zone", { length: 50 }).default("UTC"),
+  preferredCommunicationMethod: varchar("preferred_communication_method", { length: 20 }).default("email"), // email, sms, push
+  emailNotifications: boolean("email_notifications").default(true),
+  smsNotifications: boolean("sms_notifications").default(false),
+  pushNotifications: boolean("push_notifications").default(true),
+  studyReminders: boolean("study_reminders").default(true),
+  weeklyReports: boolean("weekly_reports").default(true),
+  progressSharing: boolean("progress_sharing").default(false), // share with teachers/mentors
+  publicProfile: boolean("public_profile").default(false),
+  preferredLearningStyle: varchar("preferred_learning_style", { length: 20 }), // visual, auditory, kinesthetic, reading
+  difficultyPreference: varchar("difficulty_preference", { length: 20 }).default("adaptive"), // easy, medium, hard, adaptive
+  sessionLength: integer("session_length").default(30), // preferred session length in minutes
+  dailyGoalMinutes: integer("daily_goal_minutes").default(30),
+  weeklyGoalHours: integer("weekly_goal_hours").default(5),
+  autoplayVideos: boolean("autoplay_videos").default(true),
+  showSubtitles: boolean("show_subtitles").default(false),
+  playbackSpeed: decimal("playback_speed", { precision: 3, scale: 2 }).default("1.00"), // 0.5x to 2.0x speed
+  fontSize: varchar("font_size", { length: 10 }).default("medium"), // small, medium, large
+  darkMode: boolean("dark_mode").default(false),
+  highContrast: boolean("high_contrast").default(false),
+  accessibilityMode: boolean("accessibility_mode").default(false),
+  keyboardNavigation: boolean("keyboard_navigation").default(false),
+  screenReader: boolean("screen_reader").default(false),
+  ttsEnabled: boolean("tts_enabled").default(false), // text-to-speech
+  ttsVoice: varchar("tts_voice", { length: 50 }),
+  ttsSpeed: decimal("tts_speed", { precision: 3, scale: 2 }).default("1.00"),
+  calendarIntegration: varchar("calendar_integration", { length: 20 }), // google, outlook, apple
+  studySchedule: jsonb("study_schedule"), // preferred study times
+  breakReminders: boolean("break_reminders").default(true),
+  motivationalMessages: boolean("motivational_messages").default(true),
+  gamificationEnabled: boolean("gamification_enabled").default(true),
+  competitiveMode: boolean("competitive_mode").default(false),
+  privateMode: boolean("private_mode").default(false),
+  dataSharing: boolean("data_sharing").default(false), // for research/improvement
+  analyticsOptOut: boolean("analytics_opt_out").default(false),
+  marketingOptIn: boolean("marketing_opt_in").default(false),
+  customSettings: jsonb("custom_settings"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Teacher Trial Availability for managing trial lesson schedules
+export const teacherTrialAvailability = pgTable("teacher_trial_availability", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday, 1=Monday, ..., 6=Saturday
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  timeZone: varchar("time_zone", { length: 50 }).default("UTC"),
+  maxStudents: integer("max_students").default(1), // concurrent trial students
+  trialDuration: integer("trial_duration").default(30), // minutes
+  isActive: boolean("is_active").default(true),
+  effectiveFrom: timestamp("effective_from").defaultNow().notNull(),
+  effectiveUntil: timestamp("effective_until"),
+  recurringWeeks: integer("recurring_weeks"), // how many weeks this availability repeats
+  exceptions: jsonb("exceptions"), // specific dates when not available
+  notes: text("notes"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Trial Lessons for managing one-time trial sessions
+export const trialLessons = pgTable("trial_lessons", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  lessonType: varchar("lesson_type", { length: 50 }).default("general_trial"), // general_trial, ielts_trial, conversation_trial
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  duration: integer("duration").default(30), // minutes
+  status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, completed, cancelled, no_show
+  meetingUrl: varchar("meeting_url", { length: 500 }), // video call link
+  meetingId: varchar("meeting_id", { length: 255 }),
+  password: varchar("password", { length: 255 }), // meeting password
+  notes: text("notes"), // teacher's notes about the student
+  feedback: text("feedback"), // post-lesson feedback
+  studentRating: integer("student_rating"), // 1-5 star rating from student
+  teacherRating: integer("teacher_rating"), // 1-5 star rating from teacher
+  followUpRequired: boolean("follow_up_required").default(false),
+  followUpNotes: text("follow_up_notes"),
+  skillAssessment: jsonb("skill_assessment"), // assessment results
+  recommendedLevel: varchar("recommended_level", { length: 20 }), // A1, A2, B1, B2, C1, C2
+  recommendedCourse: varchar("recommended_course", { length: 255 }),
+  conversionOutcome: varchar("conversion_outcome", { length: 20 }), // enrolled, not_interested, follow_up, no_decision
+  enrolledCourseId: integer("enrolled_course_id").references(() => courses.id),
+  completedAt: timestamp("completed_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  cancellationReason: text("cancellation_reason"),
+  rescheduledFrom: integer("rescheduled_from").references(() => trialLessons.id),
+  rescheduledTo: integer("rescheduled_to").references(() => trialLessons.id),
+  attendanceStatus: varchar("attendance_status", { length: 20 }), // attended, no_show, late, early_leave
+  technicalIssues: text("technical_issues"),
+  recordingUrl: varchar("recording_url", { length: 500 }),
+  materialUsed: jsonb("material_used"), // what materials/resources were used
+  homeworkAssigned: text("homework_assigned"),
+  nextSteps: text("next_steps"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Rooms table for physical and virtual classrooms
 
 // Classes - Specific instances of courses with teacher and schedule
