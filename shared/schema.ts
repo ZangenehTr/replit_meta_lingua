@@ -3202,6 +3202,43 @@ export const glossaryItems = pgTable("glossary_items", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Quiz Results table for storing test/quiz outcomes
+export const quizResults = pgTable("quiz_results", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  quizId: varchar("quiz_id", { length: 255 }).notNull(),
+  quizType: varchar("quiz_type", { length: 50 }).notNull(), // placement, practice, assessment, callern
+  sessionId: varchar("session_id", { length: 255 }), // for CallernN session tracking
+  score: decimal("score", { precision: 5, scale: 2 }).notNull(), // percentage score 0-100
+  totalQuestions: integer("total_questions").notNull(),
+  correctAnswers: integer("correct_answers").notNull(),
+  incorrectAnswers: integer("incorrect_answers").notNull(),
+  skippedAnswers: integer("skipped_answers").default(0),
+  timeSpent: integer("time_spent"), // seconds
+  maxTimeAllowed: integer("max_time_allowed"), // seconds
+  completionStatus: varchar("completion_status", { length: 20 }).default("completed"), // completed, incomplete, timed_out
+  difficulty: varchar("difficulty", { length: 20 }), // A1, A2, B1, B2, C1, C2
+  subject: varchar("subject", { length: 100 }), // grammar, vocabulary, listening, speaking, reading, writing
+  topics: text("topics").array().default([]), // specific topics covered
+  skillAreas: jsonb("skill_areas"), // detailed skill breakdown
+  detailedResults: jsonb("detailed_results"), // question-by-question analysis
+  feedback: text("feedback"), // AI-generated feedback
+  recommendations: jsonb("recommendations"), // next steps and recommendations
+  certificateId: varchar("certificate_id", { length: 255 }), // if applicable
+  retakeAllowed: boolean("retake_allowed").default(true),
+  retakeCount: integer("retake_count").default(0),
+  proctored: boolean("proctored").default(false),
+  cheatingDetected: boolean("cheating_detected").default(false),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  gradedAt: timestamp("graded_at"),
+  validUntil: timestamp("valid_until"), // certificate/result validity
+  instructorId: integer("instructor_id").references(() => users.id),
+  courseId: integer("course_id").references(() => courses.id),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Suggested Terms table for AI vocabulary suggestions
 export const suggestedTerms = pgTable("suggested_terms", {
   id: serial("id").primaryKey(),
