@@ -70,7 +70,7 @@ export function MobileLayout({
             )}
             {showSettings && (
               <button 
-                onClick={() => navigate('/student/settings')}
+                onClick={() => navigate('/student/profile')}
                 className="tap-scale p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
                 <Settings className="h-5 w-5 text-gray-700" />
