@@ -1902,6 +1902,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // Regular password login
         console.log("Found user:", { id: user.id, email: user.email });
+        console.log("Password from database:", user.password);
+        console.log("Password from request:", password);
         
         const isValidPassword = await bcrypt.compare(password, user.password);
         console.log("Password comparison result:", isValidPassword);

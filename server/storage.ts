@@ -8598,8 +8598,8 @@ export class UnifiedTestingMemStorage implements IUnifiedTestingStorage {
   }
 }
 
-// Switch to MemStorage to use in-memory storage (NO database dependencies)
-export const storage = new MemStorage();
+// Use DatabaseStorage to connect to actual PostgreSQL database for user authentication
+export const storage = new DatabaseStorage();
 
 // Create unified testing storage instance
 export const unifiedTestingStorage = new UnifiedTestingMemStorage();
