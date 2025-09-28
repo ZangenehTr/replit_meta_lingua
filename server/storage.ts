@@ -1402,7 +1402,7 @@ export class MemStorage implements IStorage {
   }
 
   async getTeachers(): Promise<User[]> {
-    return Array.from(this.users.values()).filter(user => user.role === 'Teacher');
+    return Array.from(this.users.values()).filter(user => user.role.toLowerCase() === 'teacher');
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
