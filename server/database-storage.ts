@@ -7341,11 +7341,10 @@ export class DatabaseStorage implements IStorage {
           lastMessage: chatConversations.lastMessage,
           lastMessageAt: chatConversations.lastMessageAt,
           unreadCount: chatConversations.unreadCount,
-          metadata: chatConversations.metadata,
           isActive: chatConversations.isActive
         })
         .from(chatConversations)
-        .where(sql`${studentId.toString()} = ANY(${chatConversations.participants})`)
+        .where(sql`${studentId}::text = ANY(${chatConversations.participants})`)
         .orderBy(desc(chatConversations.lastMessageAt));
       
       // Format conversations for the UI
@@ -7369,8 +7368,9 @@ export class DatabaseStorage implements IStorage {
           title: 'Teacher Support',
           type: 'individual',
           participants: [studentId.toString(), '1'], // Student and admin/teacher
-          metadata: { isSupport: true },
-          isActive: true
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
         }).returning();
         
         // Create institute announcements channel
@@ -7378,8 +7378,9 @@ export class DatabaseStorage implements IStorage {
           title: 'Institute Announcements',
           type: 'announcement',
           participants: [studentId.toString()],
-          metadata: { isAnnouncement: true },
-          isActive: true
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
         }).returning();
         
         // Return newly created conversations

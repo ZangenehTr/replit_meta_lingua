@@ -4368,28 +4368,28 @@ export class MemStorage implements IStorage {
   // Student-specific conversation methods
   async getStudentConversations(studentId: number): Promise<any[]> {
     try {
-      const conversations = await this.db.select().from(lexiConversations)
-        .where(eq(lexiConversations.userId, studentId))
-        .orderBy(desc(lexiConversations.lastMessageAt));
+      // Check if student is in any chat conversations as a participant
+      const conversations = await this.db.select().from(chatConversations)
+        .where(sql`${studentId}::text = ANY(participants)`)
+        .orderBy(desc(chatConversations.lastMessageAt));
       
       // Transform database format to expected format with proper null safety
       return conversations.map(conv => {
-        const sessionType = conv.sessionType || 'general_chat';
-        const language = conv.language || 'english';
-        const title = conv.title || `${sessionType} - ${language}`;
+        const title = conv.title || 'AI Conversation';
+        const lastMessage = conv.lastMessage || 'Start a conversation';
         
         return {
           id: conv.id,
           name: title,
           avatar: "/api/placeholder/40/40",
-          lastMessage: title,
-          lastMessageTime: conv.lastMessageAt?.toISOString() || conv.createdAt.toISOString(),
-          unreadCount: 0,
-          type: "ai_conversation",
+          lastMessage: lastMessage,
+          lastMessageTime: conv.lastMessageAt?.toISOString() || conv.createdAt?.toISOString() || new Date().toISOString(),
+          unreadCount: conv.unreadCount || 0,
+          type: conv.type || "ai_conversation",
           online: true,
-          sessionType,
-          language,
-          proficiencyLevel: conv.proficiencyLevel || 'intermediate'
+          sessionType: 'general_chat',
+          language: 'english',
+          proficiencyLevel: 'intermediate'
         };
       });
     } catch (error) {
@@ -4401,8 +4401,11 @@ export class MemStorage implements IStorage {
   async getConversationMessages(conversationId: number, userId: number): Promise<any[]> {
     try {
       // First verify this conversation belongs to the user
-      const conversation = await this.db.select().from(lexiConversations)
-        .where(and(eq(lexiConversations.id, conversationId), eq(lexiConversations.userId, userId)))
+      const conversation = await this.db.select().from(chatConversations)
+        .where(and(
+          eq(chatConversations.id, conversationId),
+          sql`${userId}::text = ANY(participants)`
+        ))
         .limit(1);
       
       if (!conversation.length) {
@@ -4410,24 +4413,24 @@ export class MemStorage implements IStorage {
         return [];
       }
 
-      const messages = await this.db.select().from(lexiMessages)
-        .where(eq(lexiMessages.conversationId, conversationId))
-        .orderBy(asc(lexiMessages.createdAt));
+      const messages = await this.db.select().from(chatMessages)
+        .where(eq(chatMessages.conversationId, conversationId))
+        .orderBy(asc(chatMessages.sentAt));
       
       // Transform database format to expected format
       return messages.map(msg => ({
         id: msg.id,
-        text: msg.content,
-        senderId: msg.role === 'user' ? userId : 0, // 0 for AI assistant
-        senderName: msg.role === 'user' ? "You" : "AI Assistant",
-        senderAvatar: msg.role === 'user' ? "/api/placeholder/40/40" : "/api/placeholder/40/40",
-        timestamp: msg.createdAt.toISOString(),
-        read: true,
-        type: msg.messageType,
-        role: msg.role,
-        metadata: msg.metadata,
-        isBookmarked: msg.isBookmarked,
-        reactions: msg.reactions
+        text: msg.message || '',
+        senderId: msg.senderId || 0,
+        senderName: msg.senderName || "AI Assistant",
+        senderAvatar: "/api/placeholder/40/40",
+        timestamp: msg.sentAt?.toISOString() || new Date().toISOString(),
+        read: msg.isRead || false,
+        type: msg.messageType || 'text',
+        role: msg.senderId === userId ? 'user' : 'assistant',
+        metadata: {},
+        isBookmarked: false,
+        reactions: msg.reactions || {}
       }));
     } catch (error) {
       console.error('Error getting conversation messages:', error);
@@ -4438,52 +4441,53 @@ export class MemStorage implements IStorage {
   async sendConversationMessage(conversationId: number, senderId: number, text: string): Promise<any> {
     try {
       // First verify this conversation belongs to the user
-      const conversation = await this.db.select().from(lexiConversations)
-        .where(and(eq(lexiConversations.id, conversationId), eq(lexiConversations.userId, senderId)))
+      const conversation = await this.db.select().from(chatConversations)
+        .where(and(
+          eq(chatConversations.id, conversationId),
+          sql`${senderId} = ANY(participants)`
+        ))
         .limit(1);
       
       if (!conversation.length) {
         throw new Error('Conversation not found or not accessible by user');
       }
 
-      // Create the message
+      // Create the message using correct schema
       const messageData = {
         conversationId,
-        role: 'user' as const,
-        content: text,
-        messageType: 'text' as const,
-        metadata: null,
-        videoTimestamp: null,
-        isBookmarked: false,
-        reactions: [],
-        relatedConcepts: [],
-        difficulty: null
+        senderId,
+        senderName: 'User',
+        message: text,
+        messageType: 'text',
+        isRead: false,
+        sentAt: new Date(),
+        reactions: {}
       };
 
-      const result = await this.db.insert(lexiMessages).values(messageData).returning();
+      const result = await this.db.insert(chatMessages).values(messageData).returning();
       const savedMessage = result[0];
 
-      // Update conversation's last message time and message count
-      await this.db.update(lexiConversations)
+      // Update conversation's last message time
+      await this.db.update(chatConversations)
         .set({ 
           lastMessageAt: new Date(),
-          totalMessages: sql`${lexiConversations.totalMessages} + 1`
+          lastMessage: text
         })
-        .where(eq(lexiConversations.id, conversationId));
+        .where(eq(chatConversations.id, conversationId));
 
       // Transform to expected format
       return {
         id: savedMessage.id,
-        text: savedMessage.content,
+        text: savedMessage.message,
         senderId,
         senderName: "You",
-        timestamp: savedMessage.createdAt.toISOString(),
+        timestamp: savedMessage.sentAt?.toISOString() || new Date().toISOString(),
         read: false,
         type: savedMessage.messageType,
-        role: savedMessage.role,
-        metadata: savedMessage.metadata,
-        isBookmarked: savedMessage.isBookmarked,
-        reactions: savedMessage.reactions
+        role: 'user',
+        metadata: {},
+        isBookmarked: false,
+        reactions: savedMessage.reactions || {}
       };
     } catch (error) {
       console.error('Error sending conversation message:', error);
@@ -4494,35 +4498,34 @@ export class MemStorage implements IStorage {
   // Create a new AI conversation
   async createAIConversation(userId: number, language: string, sessionType: string, proficiencyLevel?: string): Promise<any> {
     try {
+      const title = `${sessionType} - ${language}`;
       const conversationData = {
-        userId,
-        sessionType,
-        language,
-        proficiencyLevel: proficiencyLevel || 'intermediate',
-        contextData: null,
-        title: `${sessionType} - ${language}`,
-        status: 'active' as const,
-        totalMessages: 0,
-        learningGoals: [],
-        culturalContext: null,
-        lastMessageAt: new Date()
+        participants: [userId], // Add user to participants array
+        lastMessage: "New conversation started",
+        lastMessageAt: new Date(),
+        unreadCount: 0,
+        type: 'ai_conversation',
+        title,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
-      const result = await this.db.insert(lexiConversations).values(conversationData).returning();
+      const result = await this.db.insert(chatConversations).values(conversationData).returning();
       const conversation = result[0];
 
       return {
         id: conversation.id,
-        name: conversation.title,
+        name: conversation.title || title,
         avatar: "/api/placeholder/40/40",
         lastMessage: "New conversation started",
-        lastMessageTime: conversation.createdAt.toISOString(),
+        lastMessageTime: conversation.createdAt?.toISOString() || new Date().toISOString(),
         unreadCount: 0,
         type: "ai_conversation",
         online: true,
-        sessionType: conversation.sessionType,
-        language: conversation.language,
-        proficiencyLevel: conversation.proficiencyLevel
+        sessionType,
+        language,
+        proficiencyLevel: proficiencyLevel || 'intermediate'
       };
     } catch (error) {
       console.error('Error creating AI conversation:', error);
@@ -4535,38 +4538,38 @@ export class MemStorage implements IStorage {
     try {
       const messageData = {
         conversationId,
-        role: 'assistant' as const,
-        content,
-        messageType: 'text' as const,
-        metadata,
-        videoTimestamp: null,
-        isBookmarked: false,
-        reactions: [],
-        relatedConcepts: [],
-        difficulty: null
+        senderId: 0, // AI assistant ID
+        senderName: 'AI Assistant',
+        message: content,
+        messageType: 'text',
+        isRead: true,
+        sentAt: new Date(),
+        reactions: metadata || {}
       };
 
-      const result = await this.db.insert(lexiMessages).values(messageData).returning();
+      const result = await this.db.insert(chatMessages).values(messageData).returning();
       const savedMessage = result[0];
 
-      // Update conversation's last message time and message count
-      await this.db.update(lexiConversations)
+      // Update conversation's last message time
+      await this.db.update(chatConversations)
         .set({ 
           lastMessageAt: new Date(),
-          totalMessages: sql`${lexiConversations.totalMessages} + 1`
+          lastMessage: content
         })
-        .where(eq(lexiConversations.id, conversationId));
+        .where(eq(chatConversations.id, conversationId));
 
       return {
         id: savedMessage.id,
-        text: savedMessage.content,
+        text: savedMessage.message,
         senderId: 0, // AI assistant
         senderName: "AI Assistant",
-        timestamp: savedMessage.createdAt.toISOString(),
+        timestamp: savedMessage.sentAt?.toISOString() || new Date().toISOString(),
         read: true,
         type: savedMessage.messageType,
-        role: savedMessage.role,
-        metadata: savedMessage.metadata
+        role: 'assistant',
+        metadata: metadata || {},
+        isBookmarked: false,
+        reactions: savedMessage.reactions || {}
       };
     } catch (error) {
       console.error('Error adding AI response message:', error);

@@ -297,41 +297,6 @@ app.use((req, res, next) => {
     }
   });
 
-  // Get class group chats for enrolled students
-  app.get('/api/student/class-groups', authenticateToken, requireRole(['Student']), async (req: any, res) => {
-    try {
-      const userId = req.user.userId;
-      
-      // Mock class groups with Telegram-like chat environment
-      const classGroups = [
-        {
-          id: 1,
-          title: "Business English A2 - Group Chat",
-          description: "Class group chat for Business English A2 students",
-          classId: 101,
-          unreadCount: 3,
-          lastMessage: "Don't forget tomorrow's presentation!",
-          lastMessageAt: new Date().toISOString(),
-          participants: 15
-        },
-        {
-          id: 2,
-          title: "IELTS Speaking B2 - Group Chat", 
-          description: "Class group chat for IELTS Speaking B2 students",
-          classId: 102,
-          unreadCount: 0,
-          lastMessage: "Great job in today's mock exam everyone!",
-          lastMessageAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          participants: 12
-        }
-      ];
-      
-      res.json(classGroups);
-    } catch (error) {
-      console.error('Error getting class groups:', error);
-      res.status(500).json({ error: 'Failed to get class groups' });
-    }
-  });
 
   // CORS support for OPTIONS requests (fix for CORS configuration issue)
   app.options('*', (req, res) => {

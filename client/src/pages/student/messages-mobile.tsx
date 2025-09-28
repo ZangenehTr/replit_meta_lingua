@@ -189,8 +189,8 @@ export default function StudentMessagesMobile() {
   };
 
   const filteredConversations = conversations.filter(conv =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    (conv.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (conv.lastMessage || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
