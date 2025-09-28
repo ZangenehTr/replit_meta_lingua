@@ -4372,20 +4372,26 @@ export class MemStorage implements IStorage {
         .where(eq(lexiConversations.userId, studentId))
         .orderBy(desc(lexiConversations.lastMessageAt));
       
-      // Transform database format to expected format
-      return conversations.map(conv => ({
-        id: conv.id,
-        name: conv.title || `${conv.sessionType} - ${conv.language}`,
-        avatar: "/api/placeholder/40/40",
-        lastMessage: conv.title || "AI Conversation",
-        lastMessageTime: conv.lastMessageAt?.toISOString() || conv.createdAt.toISOString(),
-        unreadCount: 0,
-        type: "ai_conversation",
-        online: true,
-        sessionType: conv.sessionType,
-        language: conv.language,
-        proficiencyLevel: conv.proficiencyLevel
-      }));
+      // Transform database format to expected format with proper null safety
+      return conversations.map(conv => {
+        const sessionType = conv.sessionType || 'general_chat';
+        const language = conv.language || 'english';
+        const title = conv.title || `${sessionType} - ${language}`;
+        
+        return {
+          id: conv.id,
+          name: title,
+          avatar: "/api/placeholder/40/40",
+          lastMessage: title,
+          lastMessageTime: conv.lastMessageAt?.toISOString() || conv.createdAt.toISOString(),
+          unreadCount: 0,
+          type: "ai_conversation",
+          online: true,
+          sessionType,
+          language,
+          proficiencyLevel: conv.proficiencyLevel || 'intermediate'
+        };
+      });
     } catch (error) {
       console.error('Error getting student AI conversations:', error);
       return [];
