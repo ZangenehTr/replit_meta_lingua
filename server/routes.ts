@@ -1671,7 +1671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Legacy authentication endpoints (keeping for compatibility)
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, firstName, lastName, phoneNumber } = req.body;
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -1685,6 +1685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         email,
         password: hashedPassword,
+        phoneNumber,
         firstName,
         lastName,
         role: "student"

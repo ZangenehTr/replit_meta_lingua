@@ -23,6 +23,7 @@ interface LoginCredentials {
 interface RegisterData {
   email: string;
   password: string;
+  phoneNumber: string;
   firstName: string;
   lastName: string;
   role?: string;
@@ -103,23 +104,29 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      const response = await apiClient.post("/auth/register", userData);
-      const data = response.data;
-      
-      // Store both tokens - handle different response formats
-      if (data.accessToken) {
-        localStorage.setItem("auth_token", data.accessToken);
-      } else if (data.auth_token) {
-        localStorage.setItem("auth_token", data.auth_token);
+      try {
+        const response = await apiClient.post("/auth/register", userData);
+        const data = response.data;
+        
+        // Store both tokens - handle different response formats
+        if (data.accessToken) {
+          localStorage.setItem("auth_token", data.accessToken);
+        } else if (data.auth_token) {
+          localStorage.setItem("auth_token", data.auth_token);
+        }
+        
+        if (data.refreshToken) {
+          localStorage.setItem("refresh_token", data.refreshToken);
+        } else if (data.refresh_token) {
+          localStorage.setItem("refresh_token", data.refresh_token);
+        }
+        
+        return data;
+      } catch (error: any) {
+        // Properly throw the error so the auth page can display it
+        const errorMessage = error.response?.data?.message || error.message || "Registration failed";
+        throw new Error(errorMessage);
       }
-      
-      if (data.refreshToken) {
-        localStorage.setItem("refresh_token", data.refreshToken);
-      } else if (data.refresh_token) {
-        localStorage.setItem("refresh_token", data.refresh_token);
-      }
-      
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });

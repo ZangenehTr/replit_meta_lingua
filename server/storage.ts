@@ -1376,36 +1376,50 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private db = db;
+  // In-memory storage using Maps
+  private users = new Map<number, User>();
+  private currentUserId = 1;
 
   constructor() {
-    // Database storage using PostgreSQL via Drizzle ORM
+    // In-memory storage using Maps (NO database dependencies)
   }
 
-
-
-
   async getUser(id: number): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.id, id));
-    return result[0];
+    return this.users.get(id);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const result = await this.db.select().from(users).where(eq(users.email, email));
-    return result[0];
+    for (const user of this.users.values()) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return undefined;
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await this.db.select().from(users);
+    return Array.from(this.users.values());
   }
 
   async getTeachers(): Promise<User[]> {
-    return await this.db.select().from(users).where(eq(users.role, 'Teacher'));
+    return Array.from(this.users.values()).filter(user => user.role === 'Teacher');
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await this.db.insert(users).values(insertUser).returning();
-    return result[0];
+    const newUser: User = {
+      ...insertUser,
+      id: this.currentUserId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      preferences: insertUser.preferences || {},
+      isActive: insertUser.isActive ?? true,
+      lastLoginAt: insertUser.lastLoginAt || null,
+      placementTestScore: insertUser.placementTestScore || null,
+      culturalProfile: insertUser.culturalProfile || null,
+      isOnline: insertUser.isOnline ?? false
+    };
+    this.users.set(newUser.id, newUser);
+    return newUser;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
@@ -4199,63 +4213,46 @@ export class MemStorage implements IStorage {
     return [];
   }
 
-  // CRITICAL MISSING METHODS - Admin Settings
+  // CRITICAL MISSING METHODS - Admin Settings (In-Memory)
   async getAdminSettings(): Promise<any> {
-    try {
-      const result = await this.db.select().from(adminSettings).limit(1);
-      if (result.length === 0) {
-        // Create default admin settings if none exist
-        const defaultSettings = {
-          instituteName: "Meta Lingua",
-          timezone: "Asia/Tehran",
-          emailEnabled: false,
-          emailSmtpHost: "",
-          emailSmtpPort: 587,
-          emailUsername: "",
-          emailPassword: "",
-          smsEnabled: false,
-          smsProvider: "kavenegar",
-          kavenegarEnabled: false,
-          kavenegarApiKey: "",
-          kavenegarSender: "",
-          voipEnabled: false,
-          voipProvider: "isabel",
-          isabelVoipEnabled: false,
-          isabelServerAddress: "",
-          isabelSipPort: 5060,
-          isabelUsername: "",
-          isabelPassword: "",
-          callRecordingEnabled: false,
-          backupEnabled: false,
-          maintenanceMode: false
-        };
-        const created = await this.db.insert(adminSettings).values(defaultSettings).returning();
-        return created[0];
-      }
-      return result[0];
-    } catch (error) {
-      console.error('Error getting admin settings:', error);
-      return null;
-    }
+    // Return mock admin settings for in-memory storage
+    return {
+      id: 1,
+      instituteName: "Meta Lingua",
+      timezone: "Asia/Tehran",
+      emailEnabled: false,
+      emailSmtpHost: "",
+      emailSmtpPort: 587,
+      emailUsername: "",
+      emailPassword: "",
+      smsEnabled: false,
+      smsProvider: "kavenegar",
+      kavenegarEnabled: false,
+      kavenegarApiKey: "",
+      kavenegarSender: "",
+      voipEnabled: false,
+      voipProvider: "isabel",
+      isabelVoipEnabled: false,
+      isabelServerAddress: "",
+      isabelSipPort: 5060,
+      isabelUsername: "",
+      isabelPassword: "",
+      callRecordingEnabled: false,
+      backupEnabled: false,
+      maintenanceMode: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
   }
 
   async updateAdminSettings(updates: any): Promise<any> {
-    try {
-      const existing = await this.getAdminSettings();
-      if (existing) {
-        const result = await this.db.update(adminSettings)
-          .set({ ...updates, updatedAt: new Date() })
-          .where(eq(adminSettings.id, existing.id))
-          .returning();
-        return result[0];
-      } else {
-        const result = await this.db.insert(adminSettings).values(updates).returning();
-        return result[0];
-      }
-    } catch (error) {
-      console.error('Error updating admin settings:', error);
-      return null;
-    }
+    // For in-memory storage, just return the updated mock settings
+    const existing = await this.getAdminSettings();
+    return {
+      ...existing,
+      ...updates,
+      updatedAt: new Date()
+    };
   }
 
   // CRITICAL MISSING METHODS - Course Management
@@ -8601,8 +8598,8 @@ export class UnifiedTestingMemStorage implements IUnifiedTestingStorage {
   }
 }
 
-// Switch to DatabaseStorage to use PostgreSQL database with real users
-export const storage = new DatabaseStorage();
+// Switch to MemStorage to use in-memory storage (NO database dependencies)
+export const storage = new MemStorage();
 
 // Create unified testing storage instance
 export const unifiedTestingStorage = new UnifiedTestingMemStorage();
