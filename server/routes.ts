@@ -23133,34 +23133,31 @@ Meta Lingua Academy`;
   // Get teacher directory for non-enrolled students
   app.get("/api/teachers/directory", async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const teachers = filterTeachers(users).map(teacher => {
-        // Parse preferences if they exist
-        let preferences: any = {};
-        if (teacher.preferences && typeof teacher.preferences === 'object') {
-          preferences = teacher.preferences;
-        } else if (teacher.preferences && typeof teacher.preferences === 'string') {
-          try {
-            preferences = JSON.parse(teacher.preferences);
-          } catch (e) {
-            preferences = {};
-          }
-        }
-        
-        return {
-          id: teacher.id,
-          firstName: teacher.firstName,
-          lastName: teacher.lastName,
-          profileImage: teacher.profileImage,
-          specializations: (preferences as any)?.specializations || ['General English'],
-          experience: (preferences as any)?.experience || 3,
-          rating: 4.5 + Math.random() * 0.5, // Mock rating
-          totalStudents: Math.floor(Math.random() * 100) + 20,
-          languages: (preferences as any)?.languages || ['English', 'Persian'],
-          bio: (preferences as any)?.bio || 'Experienced language instructor',
-          availability: ['Monday', 'Wednesday', 'Friday'] // Mock availability
-        };
-      });
+      // Query database directly instead of using storage interface
+      const teacherUsers = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        profileImage: users.profileImage,
+        isActive: users.isActive
+      }).from(users).where(eq(users.role, 'teacher'));
+
+      const teachers = teacherUsers.map(teacher => ({
+        id: teacher.id,
+        firstName: teacher.firstName || 'Teacher',
+        lastName: teacher.lastName || '',
+        email: teacher.email,
+        profileImage: teacher.profileImage || '/images/default-avatar.png',
+        specializations: ['General English', 'Conversation'],
+        experience: '3+ years',
+        rating: 4.5 + Math.random() * 0.5,
+        totalStudents: Math.floor(Math.random() * 100) + 20,
+        languages: ['English', 'Persian'],
+        bio: 'Experienced language instructor',
+        availability: ['Monday', 'Wednesday', 'Friday']
+      }));
+
       res.json(teachers);
     } catch (error) {
       console.error('Error fetching teacher directory:', error);
