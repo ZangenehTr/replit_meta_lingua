@@ -861,6 +861,23 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
               </div>
             )}
 
+            {/* View All Courses Button */}
+            {!coursesLoading && (
+              <div className="text-center mt-8">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => setLocation('/courses')}
+                  className="conversion-cta-secondary px-8 py-4"
+                  data-testid="button-view-all-courses"
+                >
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  {t('student:courses.viewAllCourses')}
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
             {filteredCourses.length === 0 && !coursesLoading && (
               <div className="text-center py-12">
                 <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />

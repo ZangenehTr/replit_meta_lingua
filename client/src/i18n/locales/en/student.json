@@ -222,6 +222,7 @@
     "schedule": "Schedule",
     "price": "Price",
     "enrollNow": "Enroll Now",
+    "viewAllCourses": "View All Courses",
     "enrollmentSuccess": "Enrollment Successful",
     "enrollmentSuccessDesc": "You have successfully enrolled in the course!",
     "enrollmentFailed": "Enrollment Failed",
