@@ -280,6 +280,33 @@ export const aiStudyPartners = pgTable("ai_study_partners", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Insert schemas for chat and AI study partners
+export const insertChatConversationSchema = z.object({
+  userId: z.number(),
+  title: z.string().max(255).optional(),
+  type: z.string().max(50).default("general"),
+  isActive: z.boolean().default(true)
+});
+
+export const insertChatMessageSchema = z.object({
+  conversationId: z.number(),
+  senderId: z.number().optional(),
+  senderType: z.string().max(20).default("user"),
+  content: z.string(),
+  messageType: z.string().max(20).default("text"),
+  metadata: z.any().optional()
+});
+
+export const insertAiStudyPartnerSchema = z.object({
+  userId: z.number(),
+  name: z.string().max(255),
+  personality: z.string().max(100).optional(),
+  specialization: z.string().max(100).optional(),
+  targetLanguage: z.string().max(50).optional(),
+  isActive: z.boolean().default(true),
+  settings: z.any().optional()
+});
+
 // Attendance Records table
 export const attendanceRecords = pgTable("attendance_records", {
   id: serial("id").primaryKey(),
@@ -419,6 +446,24 @@ export const books = pgTable("books", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Insert schema for books
+export const insertBookSchema = z.object({
+  title: z.string().max(500),
+  author: z.string().max(255).optional(),
+  isbn: z.string().max(20).optional(),
+  description: z.string().optional(),
+  categoryId: z.number().optional(),
+  price: z.string().optional(), // decimal as string
+  currency: z.string().max(3).default("IRR"),
+  language: z.string().max(50).default("en"),
+  level: z.string().max(20).optional(),
+  pageCount: z.number().optional(),
+  publishedYear: z.number().optional(),
+  coverImageUrl: z.string().max(500).optional(),
+  isDigital: z.boolean().default(false),
+  isActive: z.boolean().default(true)
+});
+
 // Book Assets table
 export const book_assets = pgTable("book_assets", {
   id: serial("id").primaryKey(),
@@ -444,6 +489,56 @@ export const dictionary_lookups = pgTable("dictionary_lookups", {
   context: text("context"),
   bookId: integer("book_id").references(() => books.id),
   createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schema for dictionary lookups  
+export const insertDictionaryLookupSchema = z.object({
+  userId: z.number().optional(),
+  word: z.string().max(255),
+  definition: z.string().optional(),
+  sourceLanguage: z.string().max(10).default("en"),
+  targetLanguage: z.string().max(10).default("fa"),
+  context: z.string().optional(),
+  bookId: z.number().optional()
+});
+
+// User Addresses table for shipping addresses
+export const userAddresses = pgTable("user_addresses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  addressType: varchar("address_type", { length: 20 }).default("shipping"), // shipping, billing
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  company: varchar("company", { length: 255 }),
+  addressLine1: varchar("address_line_1", { length: 255 }).notNull(),
+  addressLine2: varchar("address_line_2", { length: 255 }),
+  city: varchar("city", { length: 100 }).notNull(),
+  state: varchar("state", { length: 100 }),
+  postalCode: varchar("postal_code", { length: 20 }).notNull(),
+  country: varchar("country", { length: 100 }).notNull().default("Iran"),
+  phoneNumber: varchar("phone_number", { length: 20 }),
+  isDefault: boolean("is_default").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for user addresses
+export const insertUserAddressSchema = z.object({
+  userId: z.number(),
+  addressType: z.string().max(20).default("shipping"),
+  firstName: z.string().max(100),
+  lastName: z.string().max(100),
+  company: z.string().max(255).optional(),
+  addressLine1: z.string().max(255),
+  addressLine2: z.string().max(255).optional(),
+  city: z.string().max(100),
+  state: z.string().max(100).optional(),
+  postalCode: z.string().max(20),
+  country: z.string().max(100).default("Iran"),
+  phoneNumber: z.string().max(20).optional(),
+  isDefault: z.boolean().default(false),
+  isActive: z.boolean().default(true)
 });
 
 // Shopping Carts table
@@ -4303,6 +4398,13 @@ export type InsertSocializerSession = z.infer<typeof insertSocializerSessionSche
 // ============================================================================
 
 // Exam Types and Enums
+export const ExamType = {
+  IELTS_ACADEMIC: 'IELTS_ACADEMIC',
+  IELTS_GENERAL: 'IELTS_GENERAL',
+  TOEFL_IBT: 'TOEFL_IBT',
+  PTE_ACADEMIC: 'PTE_ACADEMIC',
+  PTE_CORE: 'PTE_CORE'
+} as const;
 
 export type ExamTypeValues = typeof ExamType[keyof typeof ExamType];
 
