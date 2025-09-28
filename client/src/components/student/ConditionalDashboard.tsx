@@ -31,7 +31,7 @@ export function ConditionalDashboard() {
   }
 
   // Only show conditional dashboard for students
-  if (!user || user.role !== 'Student') {
+  if (!user || user.role.toLowerCase() !== 'student') {
     return null;
   }
 
