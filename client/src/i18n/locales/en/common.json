@@ -512,6 +512,9 @@
     "loading": "Loading...",
     "tryAgain": "Try Again"
   },
+  "errorLoadingData": "Error loading data",
+  "teachersLoadError": "Failed to load teachers. Please try again.",
+  "retry": "Retry",
   "minutes": "minutes",
   "student": {
     "dashboard": "Student Dashboard",
