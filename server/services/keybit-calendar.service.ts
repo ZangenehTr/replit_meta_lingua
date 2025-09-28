@@ -2,8 +2,8 @@ import axios, { AxiosResponse } from 'axios';
 import { db } from '../db';
 import { thirdPartyApis } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-// Note: Import path will be adjusted when we create a shared persian calendar utility
-// For now, we'll create local fallback functions in this service
+import crypto from 'crypto';
+import { persianCalendar } from '@shared/persian-calendar';
 
 // Interface for keybit.ir API responses
 interface KeybitDateResponse {
@@ -61,10 +61,57 @@ export class KeybitCalendarService {
         .where(eq(thirdPartyApis.apiName, 'keybit'))
         .limit(1);
 
-      this.apiConfig = config || null;
+      if (config && config.apiKey) {
+        // Decrypt API key for use
+        const decryptedApiKey = this.decryptApiKey(config.apiKey);
+        this.apiConfig = {
+          ...config,
+          apiKey: decryptedApiKey
+        };
+      } else {
+        this.apiConfig = config || null;
+      }
     } catch (error) {
       console.error('Failed to load keybit API config:', error);
       this.apiConfig = null;
+    }
+  }
+
+  /**
+   * Decrypt API key using secure AES-256-GCM
+   */
+  private decryptApiKey(encryptedKey: string): string => {
+    try {
+      const algorithm = 'aes-256-gcm';
+      const encryptionKey = process.env.ENCRYPTION_KEY;
+      
+      if (!encryptionKey || encryptionKey.length !== 64) {
+        console.error('ENCRYPTION_KEY environment variable must be 64 characters (32 bytes hex)');
+        return '';
+      }
+      
+      const key = Buffer.from(encryptionKey, 'hex');
+      const parts = encryptedKey.split(':');
+      
+      if (parts.length !== 3) {
+        console.error('Invalid encrypted key format');
+        return '';
+      }
+      
+      const iv = Buffer.from(parts[0], 'hex');
+      const authTag = Buffer.from(parts[1], 'hex');
+      const encryptedText = parts[2];
+      
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      decipher.setAuthTag(authTag);
+      
+      let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      
+      return decrypted;
+    } catch (error) {
+      console.error('Failed to decrypt API key:', error);
+      return '';
     }
   }
 

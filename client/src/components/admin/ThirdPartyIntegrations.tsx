@@ -513,7 +513,7 @@ export function ThirdPartyIntegrations() {
                         <Badge variant={api.isEnabled ? "default" : "secondary"}>
                           {api.isEnabled ? "Enabled" : "Disabled"}
                         </Badge>
-                        <Badge variant={api.isHealthy ? "success" : "destructive"}>
+                        <Badge variant={api.isHealthy ? "default" : "destructive"}>
                           {api.isHealthy ? <CheckCircle className="h-3 w-3 mr-1" /> : <AlertCircle className="h-3 w-3 mr-1" />}
                           {api.isHealthy ? "Healthy" : "Unhealthy"}
                         </Badge>

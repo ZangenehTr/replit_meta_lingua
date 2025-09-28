@@ -16,28 +16,57 @@ const requireAdmin = (req: any, res: any, next: any) => {
   next();
 };
 
-// Helper function to encrypt API keys
+// Helper function to encrypt API keys using secure AES-256-GCM
 const encryptApiKey = (apiKey: string): string => {
-  const algorithm = 'aes-256-cbc';
-  const key = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-me';
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipher(algorithm, key);
+  const algorithm = 'aes-256-gcm';
+  const encryptionKey = process.env.ENCRYPTION_KEY;
+  
+  if (!encryptionKey || encryptionKey.length !== 64) {
+    throw new Error('ENCRYPTION_KEY environment variable must be 64 characters (32 bytes hex)');
+  }
+  
+  const key = Buffer.from(encryptionKey, 'hex');
+  const iv = crypto.randomBytes(12); // 12 bytes for GCM
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  
   let encrypted = cipher.update(apiKey, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
+  
+  const authTag = cipher.getAuthTag();
+  
+  // Format: iv:authTag:encrypted
+  return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
 };
 
-// Helper function to decrypt API keys
+// Helper function to decrypt API keys using secure AES-256-GCM
 const decryptApiKey = (encryptedKey: string): string => {
   try {
-    const algorithm = 'aes-256-cbc';
-    const key = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-me';
-    const textParts = encryptedKey.split(':');
-    const iv = Buffer.from(textParts.shift()!, 'hex');
-    const encryptedText = textParts.join(':');
-    const decipher = crypto.createDecipher(algorithm, key);
+    const algorithm = 'aes-256-gcm';
+    const encryptionKey = process.env.ENCRYPTION_KEY;
+    
+    if (!encryptionKey || encryptionKey.length !== 64) {
+      console.error('ENCRYPTION_KEY environment variable must be 64 characters (32 bytes hex)');
+      return '';
+    }
+    
+    const key = Buffer.from(encryptionKey, 'hex');
+    const parts = encryptedKey.split(':');
+    
+    if (parts.length !== 3) {
+      console.error('Invalid encrypted key format');
+      return '';
+    }
+    
+    const iv = Buffer.from(parts[0], 'hex');
+    const authTag = Buffer.from(parts[1], 'hex');
+    const encryptedText = parts[2];
+    
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    decipher.setAuthTag(authTag);
+    
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
+    
     return decrypted;
   } catch (error) {
     console.error('Failed to decrypt API key:', error);

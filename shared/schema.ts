@@ -1027,31 +1027,30 @@ export const holidayCalendarPersian = pgTable("holiday_calendar_persian", {
 // Third Party APIs table for managing external service integrations
 export const thirdPartyApis = pgTable("third_party_apis", {
   id: serial("id").primaryKey(),
-  serviceName: varchar("service_name", { length: 100 }).notNull().unique(),
+  apiName: varchar("api_name", { length: 100 }).notNull().unique(),
   displayName: varchar("display_name", { length: 255 }).notNull(),
-  category: varchar("category", { length: 100 }).notNull(), // calendar, payment, sms, email, ai, storage
-  apiBaseUrl: varchar("api_base_url", { length: 500 }).notNull(),
-  authType: varchar("auth_type", { length: 50 }).notNull(), // api_key, oauth, bearer, basic
-  configSchema: jsonb("config_schema"), // expected configuration fields
-  isActive: boolean("is_active").default(true),
-  isConfigured: boolean("is_configured").default(false),
+  description: text("description"),
+  baseUrl: varchar("base_url", { length: 500 }).notNull(),
+  apiKey: text("api_key"),
+  apiSecret: text("api_secret"),
+  isEnabled: boolean("is_enabled").default(true),
+  isHealthy: boolean("is_healthy").default(false),
   lastHealthCheck: timestamp("last_health_check"),
-  healthStatus: varchar("health_status", { length: 50 }).default("unknown"), // healthy, unhealthy, unknown
-  rateLimitPerMinute: integer("rate_limit_per_minute"),
-  rateLimitPerHour: integer("rate_limit_per_hour"),
-  rateLimitPerDay: integer("rate_limit_per_day"),
-  timeoutMs: integer("timeout_ms").default(5000),
-  retryAttempts: integer("retry_attempts").default(3),
-  webhookUrl: varchar("webhook_url", { length: 500 }),
-  supportedFeatures: text("supported_features").array(),
-  requiredPermissions: text("required_permissions").array(),
-  documentation: text("documentation"),
-  contactEmail: varchar("contact_email", { length: 255 }),
-  version: varchar("version", { length: 50 }),
-  createdBy: integer("created_by").references(() => users.id),
-  updatedBy: integer("updated_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  usageCount: integer("usage_count").default(0),
+  usageCountMonth: integer("usage_count_month").default(0),
+  errorCount: integer("error_count").default(0),
+  lastUsedAt: timestamp("last_used_at"),
+  lastErrorAt: timestamp("last_error_at"),
+  lastErrorMessage: text("last_error_message"),
+  rateLimit: integer("rate_limit"),
+  costPerRequest: decimal("cost_per_request", { precision: 10, scale: 6 }),
+  monthlyBudget: decimal("monthly_budget", { precision: 10, scale: 2 }),
+  currentMonthlyCost: decimal("current_monthly_cost", { precision: 10, scale: 2 }).default('0'),
+  configuration: jsonb("configuration"),
+  healthCheckUrl: text("health_check_url"),
+  testEndpoint: text("test_endpoint"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Voice Exercises Guest table for anonymous users practicing pronunciation
@@ -1201,29 +1200,17 @@ export const userAddresses = pgTable("user_addresses", {
 
 // Insert schema for Third Party APIs
 export const insertThirdPartyApiSchema = z.object({
-  serviceName: z.string().max(100),
+  apiName: z.string().max(100),
   displayName: z.string().max(255),
-  category: z.string().max(100), // calendar, payment, sms, email, ai, storage
-  apiBaseUrl: z.string().max(500),
-  authType: z.string().max(50), // api_key, oauth, bearer, basic
-  configSchema: z.any().optional(),
-  isActive: z.boolean().default(true),
-  isConfigured: z.boolean().default(false),
-  lastHealthCheck: z.date().optional(),
-  healthStatus: z.string().max(50).default("unknown"),
-  rateLimitPerMinute: z.number().optional(),
-  rateLimitPerHour: z.number().optional(),
-  rateLimitPerDay: z.number().optional(),
-  timeoutMs: z.number().default(5000),
-  retryAttempts: z.number().default(3),
-  webhookUrl: z.string().max(500).optional(),
-  supportedFeatures: z.array(z.string()).optional(),
-  requiredPermissions: z.array(z.string()).optional(),
-  documentation: z.string().optional(),
-  contactEmail: z.string().max(255).optional(),
-  version: z.string().max(50).optional(),
-  createdBy: z.number().optional(),
-  updatedBy: z.number().optional()
+  description: z.string().optional(),
+  baseUrl: z.string().max(500),
+  apiKey: z.string().optional(),
+  apiSecret: z.string().optional(),
+  isEnabled: z.boolean().default(true),
+  rateLimit: z.number().optional(),
+  costPerRequest: z.number().optional(),
+  monthlyBudget: z.number().optional(),
+  configuration: z.any().optional()
 });
 
 // Insert schema for Iranian Calendar Settings
