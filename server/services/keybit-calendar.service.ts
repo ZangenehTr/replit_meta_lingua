@@ -80,7 +80,7 @@ export class KeybitCalendarService {
   /**
    * Decrypt API key using secure AES-256-GCM
    */
-  private decryptApiKey(encryptedKey: string): string => {
+  private decryptApiKey(encryptedKey: string): string {
     try {
       const algorithm = 'aes-256-gcm';
       const encryptionKey = process.env.ENCRYPTION_KEY;
@@ -119,20 +119,16 @@ export class KeybitCalendarService {
    * Check if keybit.ir API is available and healthy
    */
   async checkHealth(): Promise<boolean> {
-    if (!this.apiConfig?.isEnabled) {
-      return false;
-    }
-
     try {
-      const response = await axios.get(`${this.BASE_URL}/health`, {
+      // Test the actual keybit.ir time endpoint (no auth required)
+      const response = await axios.get(`${this.BASE_URL}/time/`, {
         timeout: 5000,
         headers: {
-          'Authorization': `Bearer ${this.apiConfig.apiKey}`,
           'Content-Type': 'application/json'
         }
       });
 
-      this.isHealthy = response.status === 200;
+      this.isHealthy = response.status === 200 && response.data?.date?.year?.number;
       this.lastHealthCheck = new Date();
       
       // Update health status in database
