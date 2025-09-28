@@ -605,7 +605,7 @@
     "orderPlaced": "Your order #{{orderId}} has been placed successfully!",
     "error": "Checkout Error"
   },
-  "freeExplorer": "Free Explorer",
+  "freeExplorer": "You are in the Free Explorers space",
   "getStarted": "Get Started",
   "trialLesson": "Trial Lesson",
   "contact": "Contact",

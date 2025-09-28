@@ -712,7 +712,7 @@
     "orderPlaced": "سفارش شما #{{orderId}} با موفقیت ثبت شد!",
     "error": "خطای پرداخت"
   },
-  "freeExplorer": "کاوشگر رایگان",
+  "freeExplorer": "شما در فضای کاوشگران رایگان هستید",
   "getStarted": "شروع کنید",
   "trialLesson": "درس آزمایشی",
   "contact": "تماس",

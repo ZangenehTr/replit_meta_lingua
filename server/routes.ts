@@ -23220,32 +23220,53 @@ Meta Lingua Academy`;
   });
   
   // Book trial lesson for non-enrolled students
-  app.post("/api/student/book-trial", async (req: any, res) => {
+  app.post("/api/student/book-trial", authenticateToken, async (req: any, res) => {
     try {
       const { teacherId, date, time, studentDetails, lessonType } = req.body;
+      const studentId = req.user.id;
       
-      // Store trial booking (you might want to create a trial_bookings table)
-      const bookingData = {
-        teacherId,
-        date,
-        time,
-        studentDetails,
-        lessonType,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
+      // Create scheduled timestamp from date and time
+      const scheduledAt = new Date(`${date}T${time}:00`);
       
-      // For now, just return success (in a real app, store in database)
-      console.log('Trial booking created:', bookingData);
+      // Validate required fields
+      if (!teacherId || !date || !time) {
+        return res.status(400).json({ message: "Missing required fields: teacherId, date, time" });
+      }
+      
+      // Create trial lesson in database
+      const [trialLesson] = await db.insert(trialLessons).values({
+        studentId,
+        teacherId: parseInt(teacherId),
+        lessonType: lessonType || 'general_trial',
+        scheduledAt,
+        status: 'scheduled',
+        notes: studentDetails ? JSON.stringify(studentDetails) : null
+      }).returning();
       
       res.json({ 
         message: "Trial lesson booked successfully",
-        bookingId: Date.now(), // Mock booking ID
-        booking: bookingData
+        bookingId: trialLesson.id,
+        booking: trialLesson
       });
     } catch (error) {
       console.error('Error booking trial lesson:', error);
       res.status(500).json({ message: "Failed to book trial lesson" });
+    }
+  });
+
+  // Get trial bookings for current student
+  app.get("/api/student/trial-bookings", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      
+      const bookings = await db.select().from(trialLessons)
+        .where(eq(trialLessons.studentId, studentId))
+        .orderBy(desc(trialLessons.createdAt));
+      
+      res.json(bookings);
+    } catch (error) {
+      console.error('Error fetching trial bookings:', error);
+      res.status(500).json({ message: "Failed to fetch trial bookings" });
     }
   });
   

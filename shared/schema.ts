@@ -6959,6 +6959,11 @@ export type AnalyticsInsightInsert = z.infer<typeof insertAnalyticsInsightSchema
 // ============================================================================
 
 // Insert schemas for trial lesson tables
+export const insertTrialLessonSchema = createInsertSchema(trialLessons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 // Type exports for trial lesson tables
 export type TrialLesson = typeof trialLessons.$inferSelect;
