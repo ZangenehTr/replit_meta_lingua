@@ -1066,6 +1066,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                     size="lg"
                     className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border border-white/30 text-white px-8 py-4"
                     data-testid="button-start-linguaquest"
+                    onClick={() => setLocation('/linguaquest')}
                   >
                     <Play className="mr-2 h-5 w-5" />
                     {t('student:startFreeLearning')}

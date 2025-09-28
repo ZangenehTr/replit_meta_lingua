@@ -784,5 +784,17 @@
   "howLongIsSession": "جلسه چقدر طول می‌کشد؟",
   "thirtyMinutesLong": "جلسه آزمایشی ۳۰ دقیقه است",
   "canIChooseTeacher": "آیا می‌توانم معلم خود را انتخاب کنم؟",
-  "yesChooseOrMatch": "بله، می‌توانید انتخاب کنید یا ما شما را با متخصص تطبیق می‌دهیم"
+  "yesChooseOrMatch": "بله، می‌توانید انتخاب کنید یا ما شما را با متخصص تطبیق می‌دهیم",
+  "linguaquestTitle": "یادگیری رایگان لینگواکوئست",
+  "linguaquestDescription": "تجربه یادگیری زبان با قدرت هوش مصنوعی همراه با درس‌های تعاملی، تمرین‌های صوتی و محتوای شخصی‌سازی شده برای تسریع پیشرفت شما.",
+  "startFreeLearning": "شروع یادگیری رایگان",
+  "interactiveLessons": "درس‌های تعاملی",
+  "interactiveLessonsDesc": "درس‌های جذاب که با سبک و سرعت یادگیری شما سازگار می‌شوند",
+  "voiceExercises": "تمرین‌های صوتی",
+  "voiceExercisesDesc": "تمرین تلفظ و صحبت کردن با بازخورد هوش مصنوعی",
+  "aiPersonalization": "شخصی‌سازی هوش مصنوعی",
+  "aiPersonalizationDesc": "مسیر یادگیری سفارشی بر اساس پیشرفت و اهداف شما",
+  "sampleLessons": "درس‌های نمونه",
+  "tryNow": "الان امتحان کنید",
+  "exploreAllLessons": "کاوش همه درس‌ها"
 }

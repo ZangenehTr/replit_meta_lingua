@@ -677,5 +677,17 @@
   "howLongIsSession": "How long is the session?",
   "thirtyMinutesLong": "The trial session is 30 minutes long",
   "canIChooseTeacher": "Can I choose my teacher?",
-  "yesChooseOrMatch": "Yes, you can choose or we'll match you with an expert"
+  "yesChooseOrMatch": "Yes, you can choose or we'll match you with an expert",
+  "linguaquestTitle": "LinguaQuest Free Learning",
+  "linguaquestDescription": "Experience AI-powered language learning with interactive lessons, voice exercises, and personalized content designed to accelerate your progress.",
+  "startFreeLearning": "Start Free Learning",
+  "interactiveLessons": "Interactive Lessons",
+  "interactiveLessonsDesc": "Engaging lessons that adapt to your learning style and pace",
+  "voiceExercises": "Voice Exercises",
+  "voiceExercisesDesc": "Practice pronunciation and speaking with AI-powered feedback",
+  "aiPersonalization": "AI Personalization",
+  "aiPersonalizationDesc": "Customized learning path based on your progress and goals",
+  "sampleLessons": "Sample Lessons",
+  "tryNow": "Try Now",
+  "exploreAllLessons": "Explore All Lessons"
 }

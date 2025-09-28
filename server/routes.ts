@@ -23133,22 +23133,20 @@ Meta Lingua Academy`;
   // Get teacher directory for non-enrolled students
   app.get("/api/teachers/directory", async (req: any, res) => {
     try {
-      // Query database directly instead of using storage interface
-      const teacherUsers = await db.select({
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        profileImage: users.profileImage,
-        isActive: users.isActive
-      }).from(users).where(eq(users.role, 'teacher'));
+      // Use raw SQL query to avoid Drizzle schema issues
+      const result = await db.execute(sql`
+        SELECT id, first_name, last_name, email, profile_image, is_active 
+        FROM users 
+        WHERE role = 'teacher' 
+        AND is_active = true
+      `);
 
-      const teachers = teacherUsers.map(teacher => ({
+      const teachers = result.rows.map((teacher: any) => ({
         id: teacher.id,
-        firstName: teacher.firstName || 'Teacher',
-        lastName: teacher.lastName || '',
+        firstName: teacher.first_name || 'Teacher',
+        lastName: teacher.last_name || '',
         email: teacher.email,
-        profileImage: teacher.profileImage || '/images/default-avatar.png',
+        profileImage: teacher.profile_image || '/images/default-avatar.png',
         specializations: ['General English', 'Conversation'],
         experience: '3+ years',
         rating: 4.5 + Math.random() * 0.5,
