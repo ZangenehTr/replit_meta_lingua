@@ -577,6 +577,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // In-memory storage for mock leads (fallback when database unavailable)
   const mockLeads = new Map<number, any>();
+  
+  // In-memory storage for mock prospects (fallback when database unavailable)
+  const mockProspects = new Map<number, any>();
 
   // Production gate middleware for test endpoints
   const productionGateMiddleware = (req: any, res: any, next: any) => {
@@ -21480,14 +21483,36 @@ Meta Lingua Academy`;
     }
   });
 
-  // Missing call center prospects endpoint
+  // Call center prospects endpoints
   app.get("/api/callcenter/prospects", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
-      // Return empty prospects for new call center agents (no mock data)
-      res.json([]);
+      // Return mock prospects for testing (database methods not implemented yet)
+      const mockProspectsArray = Array.from(mockProspects.values());
+      res.json(mockProspectsArray);
     } catch (error) {
-      console.error('Error fetching call center prospects:', error);
+      console.error('Error fetching prospects:', error);
       res.status(500).json({ message: "Failed to fetch prospects" });
+    }
+  });
+
+  app.post("/api/callcenter/prospects", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
+    try {
+      // Create prospect with fallback approach (database methods not implemented yet)
+      const prospectData = req.body;
+      
+      const mockProspect = {
+        id: Math.floor(Math.random() * 1000000),
+        ...prospectData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      // Store in memory for retrieval by GET endpoints
+      mockProspects.set(mockProspect.id, mockProspect);
+      res.status(201).json(mockProspect);
+    } catch (error) {
+      console.error('Error creating prospect:', error);
+      res.status(500).json({ message: "Failed to create prospect" });
     }
   });
 
