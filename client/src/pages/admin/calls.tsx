@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -13,13 +13,38 @@ import {
   TableHeader,
   TableRow 
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function AdminCallsPage() {
   const { t } = useTranslation(['callcenter', 'common']);
+  const [isCallModalOpen, setIsCallModalOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const { data: callLogs = [], isLoading } = useQuery({
     queryKey: ['/api/call-logs'],
   });
+
+  // Calculate average duration from actual call logs (no hardcoded data)
+  const calculateAverageDuration = () => {
+    if (!callLogs.length) return '0:00';
+    const totalSeconds = callLogs.reduce((acc: number, call: any) => {
+      const [minutes, seconds] = (call.duration || '0:00').split(':').map(Number);
+      return acc + (minutes * 60) + (seconds || 0);
+    }, 0);
+    const avgSeconds = Math.round(totalSeconds / callLogs.length);
+    const mins = Math.floor(avgSeconds / 60);
+    const secs = avgSeconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const columns = [
     {
@@ -132,7 +157,7 @@ export default function AdminCallsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('callcenter:calls.title')}</h1>
-        <Button>
+        <Button onClick={() => setIsCallModalOpen(true)} data-testid="button-start-call">
           <Phone className="h-4 w-4 mr-2" />
           {t('callcenter:calls.makeCall')}
         </Button>
@@ -196,7 +221,7 @@ export default function AdminCallsPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5:23</div>
+            <div className="text-2xl font-bold">{calculateAverageDuration()}</div>
             <p className="text-xs text-muted-foreground">
               {t('callcenter:calls.minutes')}
             </p>
@@ -307,6 +332,50 @@ export default function AdminCallsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Call Modal */}
+      <Dialog open={isCallModalOpen} onOpenChange={setIsCallModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t('callcenter:calls.makeCall')}</DialogTitle>
+            <DialogDescription>
+              {t('callcenter:calls.enterPhoneNumber', 'Enter the phone number to call')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phone" className="text-right">
+                {t('callcenter:calls.phoneNumber', 'Phone')}
+              </Label>
+              <Input
+                id="phone"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+1 (555) 123-4567"
+                className="col-span-3"
+                data-testid="input-phone-number"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCallModalOpen(false)}>
+              {t('common:cancel')}
+            </Button>
+            <Button 
+              onClick={() => {
+                // Here would be VoIP integration - for now just close modal
+                setIsCallModalOpen(false);
+                setPhoneNumber('');
+              }}
+              disabled={!phoneNumber.trim()}
+              data-testid="button-place-call"
+            >
+              <Phone className="h-4 w-4 mr-2" />
+              {t('callcenter:calls.placeCall', 'Place Call')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
