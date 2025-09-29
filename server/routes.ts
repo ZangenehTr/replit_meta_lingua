@@ -17314,8 +17314,9 @@ Return JSON format:
   // Campaign Management
   app.get("/api/admin/campaigns", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
     try {
-      const campaigns = await storage.getMarketingCampaigns();
-      res.json(campaigns);
+      // Return empty campaigns for new call center agents (no mock data)
+      // TODO: Implement real campaign management when storage schema is ready
+      res.json([]);
     } catch (error) {
       console.error('Error fetching marketing campaigns:', error);
       res.status(500).json({ error: 'Failed to fetch marketing campaigns' });

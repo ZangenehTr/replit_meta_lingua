@@ -19,8 +19,15 @@ export default function AdminCampaignsPage() {
 
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['/api/admin/campaigns'],
-    enabled: false, // Temporarily disabled until endpoint is ready
   });
+
+  // Calculate real metrics from actual campaign data (no hardcoded values)
+  const activeCampaigns = campaigns.filter((c: any) => c.status === 'active').length;
+  const totalLeads = campaigns.reduce((sum: number, c: any) => sum + (c.leads || 0), 0);
+  const totalConversions = campaigns.reduce((sum: number, c: any) => sum + (c.conversions || 0), 0);
+  const conversionRate = totalLeads > 0 ? ((totalConversions / totalLeads) * 100).toFixed(1) : '0.0';
+  const avgROI = campaigns.length > 0 ? 
+    (campaigns.reduce((sum: number, c: any) => sum + (c.roi || 0), 0) / campaigns.length).toFixed(1) : '0.0';
 
   const columns = [
     {
@@ -90,36 +97,7 @@ export default function AdminCampaignsPage() {
     },
   ];
 
-  // Sample data for demonstration
-  const sampleCampaigns = [
-    {
-      id: 1,
-      name: t('admin:campaigns.summerEnrollment'),
-      type: t('admin:campaigns.emailMarketing'),
-      status: 'active',
-      leads: 245,
-      conversions: 32,
-      startDate: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      name: t('admin:campaigns.referralProgram'),
-      type: t('admin:campaigns.referral'),
-      status: 'active',
-      leads: 189,
-      conversions: 28,
-      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 3,
-      name: t('admin:campaigns.instagramAds'),
-      type: t('admin:campaigns.socialMedia'),
-      status: 'paused',
-      leads: 412,
-      conversions: 67,
-      startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-  ];
+  // Real data from API - no mock data
 
   return (
     <div className="space-y-6">
@@ -140,7 +118,7 @@ export default function AdminCampaignsPage() {
             <Megaphone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-2xl font-bold">{activeCampaigns}</div>
             <p className="text-xs text-muted-foreground">
               {t('admin:campaigns.runningNow')}
             </p>
@@ -155,7 +133,7 @@ export default function AdminCampaignsPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">846</div>
+            <div className="text-2xl font-bold">{totalLeads}</div>
             <p className="text-xs text-muted-foreground">
               {t('admin:campaigns.thisMonth')}
             </p>
@@ -170,9 +148,9 @@ export default function AdminCampaignsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">15.2%</div>
+            <div className="text-2xl font-bold">{conversionRate}%</div>
             <p className="text-xs text-muted-foreground">
-              +2.4% {t('admin:campaigns.fromLastMonth')}
+              {t('admin:campaigns.fromLastMonth')}
             </p>
           </CardContent>
         </Card>
@@ -185,7 +163,7 @@ export default function AdminCampaignsPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3.4x</div>
+            <div className="text-2xl font-bold">{avgROI}x</div>
             <p className="text-xs text-muted-foreground">
               {t('admin:campaigns.averageROI')}
             </p>
@@ -216,43 +194,57 @@ export default function AdminCampaignsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sampleCampaigns.map((campaign: any) => (
-                <TableRow key={campaign.id}>
-                  <TableCell className="font-medium">{campaign.name}</TableCell>
-                  <TableCell>{campaign.type}</TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      campaign.status === 'active' ? 'default' :
-                      campaign.status === 'scheduled' ? 'secondary' :
-                      campaign.status === 'completed' ? 'outline' :
-                      campaign.status === 'paused' ? 'destructive' : 'default'
-                    }>
-                      {campaign.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {new Date(campaign.startDate).toLocaleDateString()}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(campaign.endDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>{campaign.leads}</TableCell>
-                  <TableCell>{campaign.conversionRate}%</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 sm:gap-2">
-                      <Button size="sm" variant="outline" className="text-xs sm:text-sm px-2 sm:px-3">
-                        {t('admin:campaigns.edit')}
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs sm:text-sm px-2 sm:px-3">
-                        {t('admin:campaigns.view')}
-                      </Button>
-                    </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    {t('common:loading')}
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : campaigns.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    {t('admin:campaigns.noCampaigns', 'No campaigns created yet')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                campaigns.map((campaign: any) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="font-medium">{campaign.name}</TableCell>
+                    <TableCell>{campaign.type}</TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        campaign.status === 'active' ? 'default' :
+                        campaign.status === 'scheduled' ? 'secondary' :
+                        campaign.status === 'completed' ? 'outline' :
+                        campaign.status === 'paused' ? 'destructive' : 'default'
+                      }>
+                        {campaign.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        {new Date(campaign.startDate).toLocaleDateString()}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : '-'}
+                    </TableCell>
+                    <TableCell>{campaign.leads || 0}</TableCell>
+                    <TableCell>{campaign.conversionRate || '0'}%</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 sm:gap-2">
+                        <Button size="sm" variant="outline" className="text-xs sm:text-sm px-2 sm:px-3">
+                          {t('admin:campaigns.edit')}
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-xs sm:text-sm px-2 sm:px-3">
+                          {t('admin:campaigns.view')}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
           </div>
@@ -272,7 +264,7 @@ export default function AdminCampaignsPage() {
               <div>
                 <h4 className="font-medium">{t('admin:campaigns.instagram')}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin:campaigns.followers')}: 12.5K
+                  {t('admin:campaigns.followers')}: 0
                 </p>
               </div>
               <Button variant="outline">{t('admin:campaigns.manage')}</Button>
@@ -281,7 +273,7 @@ export default function AdminCampaignsPage() {
               <div>
                 <h4 className="font-medium">{t('admin:campaigns.telegram')}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {t('admin:campaigns.members')}: 8.2K
+                  {t('admin:campaigns.members')}: 0
                 </p>
               </div>
               <Button variant="outline">{t('admin:campaigns.manage')}</Button>
@@ -300,19 +292,19 @@ export default function AdminCampaignsPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{t('admin:campaigns.instagramEnrollment')}</span>
-                <span className="font-medium">127</span>
+                <span className="font-medium">0</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">{t('admin:campaigns.googleAdsEnrollment')}</span>
-                <span className="font-medium">89</span>
+                <span className="font-medium">0</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">{t('admin:campaigns.telegramEnrollment')}</span>
-                <span className="font-medium">156</span>
+                <span className="font-medium">0</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm">{t('admin:campaigns.referralEnrollment')}</span>
-                <span className="font-medium">234</span>
+                <span className="font-medium">0</span>
               </div>
             </div>
           </CardContent>
