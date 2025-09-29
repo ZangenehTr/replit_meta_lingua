@@ -21321,46 +21321,35 @@ Meta Lingua Academy`;
     }
   });
 
-  // Teacher Reports API
+  // Teacher Reports API (simplified to avoid mock data)
   app.get("/api/teacher/reports", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const { dateRange = 'last3months' } = req.query;
       
-      // Mock reports data - in real implementation, calculate from actual data
+      // Return empty/zero values for new teachers (no mock data)
       const stats = {
-        totalStudents: 28,
-        activeClasses: 8,
-        completedLessons: 45,
-        averageRating: 4.7,
-        totalHours: 156,
-        attendanceRate: 87,
-        studentProgress: 72,
-        monthlyHours: [
-          { month: 'Jan', hours: 42, lessons: 15 },
-          { month: 'Feb', hours: 38, lessons: 14 },
-          { month: 'Mar', hours: 45, lessons: 16 },
-          { month: 'Apr', hours: 31, lessons: 12 }
-        ],
-        subjectDistribution: [
-          { subject: 'Grammar', hours: 45, percentage: 30 },
-          { subject: 'Conversation', hours: 38, percentage: 25 },
-          { subject: 'Reading', hours: 35, percentage: 23 },
-          { subject: 'Writing', hours: 28, percentage: 18 },
-          { subject: 'Listening', hours: 10, percentage: 4 }
-        ],
+        totalStudents: 0,
+        activeClasses: 0,
+        completedLessons: 0,
+        averageRating: 0,
+        totalHours: 0,
+        attendanceRate: 0,
+        studentProgress: 0,
+        monthlyHours: [],
+        subjectDistribution: [],
         studentRatings: [
-          { rating: 5, count: 18 },
-          { rating: 4, count: 8 },
-          { rating: 3, count: 2 },
+          { rating: 5, count: 0 },
+          { rating: 4, count: 0 },
+          { rating: 3, count: 0 },
           { rating: 2, count: 0 },
           { rating: 1, count: 0 }
         ],
         performanceMetrics: {
-          preparation: 92,
-          delivery: 88,
-          engagement: 85,
-          feedback: 90
+          preparation: 0,
+          delivery: 0,
+          engagement: 0,
+          feedback: 0
         }
       };
       
@@ -21368,6 +21357,17 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error fetching teacher reports:', error);
       res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  // Teacher Chart Colors API
+  app.get("/api/teacher/chart-colors", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
+      res.json(colors);
+    } catch (error) {
+      console.error('Error fetching teacher chart colors:', error);
+      res.status(500).json({ message: "Failed to fetch chart colors" });
     }
   });
 
