@@ -256,6 +256,267 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   );
 }
 
+// Edit Course Dialog Component
+function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClose: () => void, queryClient: any }) {
+  const { t } = useTranslation(['admin', 'common']);
+  
+  const form = useForm<z.infer<typeof courseSchema>>({
+    resolver: zodResolver(courseSchema),
+    defaultValues: {
+      title: course.title || "",
+      description: course.description || "",
+      category: course.category || "Language Learning",
+      language: course.language || "English", 
+      level: course.level || "Beginner",
+      isActive: course.isActive !== undefined ? course.isActive : true
+    }
+  });
+
+  const updateCourseMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof courseSchema>) => {
+      return await apiRequest(`${API_ENDPOINTS.admin.courses}/${course.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+    },
+    onSuccess: () => {
+      toast({ title: t('admin:courses.updatedSuccessfully') });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.courses] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:courses.updateFailed'), 
+        description: error?.message || t('admin:courses.updateError'),
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  const onSubmit = (data: z.infer<typeof courseSchema>) => {
+    updateCourseMutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]" role="dialog">
+        <DialogHeader>
+          <DialogTitle>{t('admin:courses.editCourse')}</DialogTitle>
+          <DialogDescription>{t('admin:courses.editCourseDescription')}</DialogDescription>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:courses.courseTitle')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('admin:courses.courseTitlePlaceholder')} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:courses.category')}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('admin:courses.selectCategory')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Language Learning">{t('admin:courses.languageLearning')}</SelectItem>
+                        <SelectItem value="Business">{t('admin:courses.business')}</SelectItem>
+                        <SelectItem value="Academic">{t('admin:courses.academic')}</SelectItem>
+                        <SelectItem value="Test Preparation">{t('admin:courses.testPreparation')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:courses.language')}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('admin:courses.selectLanguage')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="English">{t('admin:courses.english')}</SelectItem>
+                        <SelectItem value="Persian">{t('admin:courses.persian')}</SelectItem>
+                        <SelectItem value="Arabic">{t('admin:courses.arabic')}</SelectItem>
+                        <SelectItem value="French">{t('admin:courses.french')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:courses.level')}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('admin:courses.selectLevel')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Beginner">{t('admin:courses.beginner')}</SelectItem>
+                        <SelectItem value="Intermediate">{t('admin:courses.intermediate')}</SelectItem>
+                        <SelectItem value="Advanced">{t('admin:courses.advanced')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('admin:courses.courseDescription')}</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder={t('admin:courses.courseDescriptionPlaceholder')} 
+                      rows={3} 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">{t('admin:courses.activeCourse')}</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      {t('admin:courses.activeCourseDescription')}
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="is-active-switch"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t('admin:courses.cancel')}
+              </Button>
+              <Button type="submit" disabled={updateCourseMutation.isPending} data-testid="save-course-button">
+                {updateCourseMutation.isPending ? "Saving..." : t('admin:courses.save')}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// View Course Dialog Component  
+function ViewCourseDialog({ course, onClose }: { course: any, onClose: () => void }) {
+  const { t } = useTranslation(['admin', 'common']);
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]" role="dialog">
+        <DialogHeader>
+          <DialogTitle>{course.title}</DialogTitle>
+          <DialogDescription>{t('admin:courses.courseDetails')}</DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">{t('admin:courses.category')}</label>
+              <p className="text-sm text-gray-900">{course.category}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">{t('admin:courses.language')}</label>
+              <p className="text-sm text-gray-900">{course.language}</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">{t('admin:courses.level')}</label>
+              <p className="text-sm text-gray-900">{course.level}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">{t('admin:courses.status')}</label>
+              <Badge className={course.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                {course.isActive ? t('admin:courses.active') : t('admin:courses.inactive')}
+              </Badge>
+            </div>
+          </div>
+          
+          {course.description && (
+            <div>
+              <label className="text-sm font-medium text-gray-700">{t('admin:courses.description')}</label>
+              <p className="text-sm text-gray-900 mt-1">{course.description}</p>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">{t('admin:courses.createdAt')}</label>
+              <p className="text-sm text-gray-900">{new Date(course.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">{t('admin:courses.updatedAt')}</label>
+              <p className="text-sm text-gray-900">{new Date(course.updatedAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-end">
+          <Button onClick={onClose}>
+            {t('common:close')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function AdminCourses() {
   const { t } = useTranslation(['admin', 'common']);
   const { isRTL } = useLanguage();
@@ -263,6 +524,8 @@ export function AdminCourses() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLanguage, setFilterLanguage] = useState("all");
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [viewingCourse, setViewingCourse] = useState<any>(null);
 
   // Fetch courses data - simplified query without parameters
   const { data: courses, isLoading, isError, error } = useQuery({
@@ -426,11 +689,23 @@ export function AdminCourses() {
                   {(course.price || 0).toLocaleString('fa-IR')} IRR
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="outline" size="sm" className="flex-1 sm:flex-initial flex items-center justify-center gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1"
+                    onClick={() => setViewingCourse(course)}
+                    data-testid={`view-course-${course.id}`}
+                  >
                     <Eye className="h-4 w-4" />
                     <span className="hidden sm:inline">{t('common:view')}</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 sm:flex-initial flex items-center justify-center gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1"
+                    onClick={() => setEditingCourse(course)}
+                    data-testid={`edit-course-${course.id}`}
+                  >
                     <Edit3 className="h-4 w-4" />
                     <span className="hidden sm:inline">{t('common:edit')}</span>
                   </Button>
@@ -440,6 +715,23 @@ export function AdminCourses() {
           </Card>
         ))}
       </div>
+
+      {/* Edit Course Dialog */}
+      {editingCourse && (
+        <EditCourseDialog 
+          course={editingCourse} 
+          onClose={() => setEditingCourse(null)} 
+          queryClient={queryClient} 
+        />
+      )}
+
+      {/* View Course Dialog */}
+      {viewingCourse && (
+        <ViewCourseDialog 
+          course={viewingCourse} 
+          onClose={() => setViewingCourse(null)} 
+        />
+      )}
 
       {/* Statistics Summary - Mobile First */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8">
