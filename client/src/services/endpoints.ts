@@ -82,7 +82,7 @@ export const API_ENDPOINTS = {
     peerReviews: '/api/teacher-qa/peer-reviews',
     
     // Class & Student Management
-    classes: '/api/classes',
+    classes: '/api/teacher/classes',
     classesToday: '/api/teacher/classes/today',
     students: '/api/teacher/students',
     assignments: '/api/teacher/assignments',
