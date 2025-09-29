@@ -7791,34 +7791,7 @@ export class DatabaseStorage implements IStorage {
       }));
     } catch (error) {
       console.error('Error fetching call center logs:', error);
-      return [
-        {
-          id: 1,
-          studentId: 60,
-          studentName: "علی رضایی",
-          phoneNumber: "+989123838552",
-          direction: 'outbound',
-          duration: 285,
-          status: 'completed',
-          recordingUrl: '/recordings/call_001.mp3',
-          notes: 'Student interested in Persian fundamentals course',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          agentName: 'نرگس احمدی'
-        },
-        {
-          id: 2,
-          studentId: 63,
-          studentName: "جلال زنگنه", 
-          phoneNumber: "+989123838552",
-          direction: 'inbound',
-          duration: 142,
-          status: 'completed',
-          recordingUrl: '/recordings/call_002.mp3',
-          notes: 'Follow-up on Business English enrollment',
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          agentName: 'احمد محمدی'
-        }
-      ];
+      return [];
     }
   }
 

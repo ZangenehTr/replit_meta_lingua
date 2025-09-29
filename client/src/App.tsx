@@ -543,6 +543,11 @@ function Router() {
           <VoIPCenter />
         </RoleProtectedRoute>
       </Route>
+      <Route path="/callcenter/voip-center">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
+          <VoIPCenter />
+        </RoleProtectedRoute>
+      </Route>
       <Route path="/teacher-new">
         <ProtectedRoute>
           <TeacherDashboardNew />
