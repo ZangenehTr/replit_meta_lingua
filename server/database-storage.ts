@@ -279,6 +279,12 @@ export class DatabaseStorage implements IStorage {
     return newSession;
   }
 
+  async invalidateAllUserSessions(userId: number): Promise<void> {
+    await db
+      .delete(userSessions)
+      .where(eq(userSessions.userId, userId));
+  }
+
   async updateUserSessionActivity(sessionId: number): Promise<void> {
     await db
       .update(userSessions)

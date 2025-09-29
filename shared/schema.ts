@@ -77,6 +77,7 @@ export const users = pgTable("users", {
   phoneNumber: varchar("phone_number", { length: 20 }),
   avatar: varchar("avatar", { length: 500 }),
   isActive: boolean("is_active").default(true),
+  passwordResetRequired: boolean("password_reset_required").default(false),
   preferences: jsonb("preferences"),
   credits: integer("credits").default(0),
   streakDays: integer("streak_days").default(0),
