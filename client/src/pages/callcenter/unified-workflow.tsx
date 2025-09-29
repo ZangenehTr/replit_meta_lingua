@@ -65,25 +65,36 @@ export default function UnifiedCallCenterWorkflow() {
     queryKey: ['/api/users/me']
   });
 
-  // Check user permissions based on role
+  // Normalize role for exact matching (handles different formats from backend)
+  const normalizeRole = (role: string): string => {
+    return role.toLowerCase().trim().replace(/[\s_-]+/g, '_');
+  };
+
+  // Check user permissions based on role with exact matching only
   const hasStageAccess = (stage: WorkflowStage): boolean => {
     if (!user) return false;
     
-    const userRole = user.role;
+    const normalizedUserRole = normalizeRole(user.role);
+    
+    // Helper function for exact role matching against known role variations
+    const isRole = (...allowedRoles: string[]): boolean => {
+      const normalizedAllowed = allowedRoles.map(r => normalizeRole(r));
+      return normalizedAllowed.includes(normalizedUserRole);
+    };
     
     switch (stage) {
       case "contact_desk":
         return true; // All call center roles can access contact desk
       case "new_intake":
-        return userRole === 'Admin' || userRole === 'Supervisor';
+        return isRole('admin', 'supervisor');
       case "no_response":
-        return userRole === 'Admin' || userRole === 'Supervisor';
+        return isRole('admin', 'supervisor');
       case "follow_up":
-        return userRole === 'Admin' || userRole === 'Supervisor' || userRole === 'Call Center Agent';
+        return isRole('admin', 'supervisor', 'call_center_agent', 'callcenter');
       case "level_assessment":
-        return userRole === 'Admin' || userRole === 'Supervisor' || userRole === 'Mentor';
+        return isRole('admin', 'supervisor', 'mentor');
       case "withdrawal":
-        return userRole === 'Admin' || userRole === 'Supervisor';
+        return isRole('admin', 'supervisor');
       default:
         return false;
     }

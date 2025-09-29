@@ -232,6 +232,7 @@ function Router() {
       <Route path="/meta-lingua-complete" component={MetaLinguaComplete} />
       
       <Route path="/auth" component={Auth} />
+      <Route path="/login" component={Auth} />
       <Route path="/simple-auth" component={SimpleAuth} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
