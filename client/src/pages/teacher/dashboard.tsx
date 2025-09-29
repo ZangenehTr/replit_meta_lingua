@@ -72,7 +72,7 @@ export default function TeacherDashboard() {
     else setGreeting(t('teacher:goodEvening', 'شب بخیر'));
   }, [t]);
 
-  const { data: stats } = useQuery<TeacherStats>({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<TeacherStats>({
     queryKey: [API_ENDPOINTS.teacher.stats],
     queryFn: async () => {
       const response = await fetch(API_ENDPOINTS.teacher.stats, {
@@ -81,51 +81,61 @@ export default function TeacherDashboard() {
         }
       });
       if (!response.ok) {
-        return {
-          totalStudents: 48,
-          activeClasses: 12,
-          weeklyHours: 32,
-          monthlyEarnings: 8500000,
-          averageRating: 4.8,
-          totalReviews: 127,
-          completionRate: 94,
-          studentSatisfaction: 96,
-          callernMinutes: 1250,
-          upcomingClasses: [
-            { id: 1, title: 'Business English B2', time: '10:00', students: 8, type: 'group' },
-            { id: 2, title: 'IELTS Preparation', time: '14:00', students: 1, type: 'private' },
-            { id: 3, title: 'Conversation Practice', time: '16:30', students: 6, type: 'group' }
-          ],
-          performanceData: [
-            { month: 'Jan', earnings: 7200000, hours: 28, satisfaction: 92 },
-            { month: 'Feb', earnings: 7800000, hours: 30, satisfaction: 94 },
-            { month: 'Mar', earnings: 8500000, hours: 32, satisfaction: 96 }
-          ],
-          classDistribution: [
-            { name: 'Group Classes', value: 65, color: '#8B5CF6' },
-            { name: 'Private Sessions', value: 20, color: '#10B981' },
-            { name: 'Callern', value: 15, color: '#F59E0B' }
-          ],
-          recentFeedback: [
-            { id: 1, student: 'Ali Rezaei', rating: 5, comment: 'Excellent teaching method!', date: '2024-01-25' },
-            { id: 2, student: 'Sara Ahmadi', rating: 5, comment: 'Very patient and helpful', date: '2024-01-24' }
-          ],
-          weeklySchedule: [
-            { day: 'Sat', classes: 4, hours: 6 },
-            { day: 'Sun', classes: 5, hours: 7 },
-            { day: 'Mon', classes: 3, hours: 5 },
-            { day: 'Tue', classes: 4, hours: 6 },
-            { day: 'Wed', classes: 3, hours: 5 },
-            { day: 'Thu', classes: 2, hours: 3 },
-            { day: 'Fri', classes: 0, hours: 0 }
-          ]
-        };
+        throw new Error(`Teacher stats API failed: ${response.status}`);
       }
       return response.json();
     }
   });
 
-  const earningsGrowth = stats?.performanceData ? 
+  // Handle loading and error states
+  if (statsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">{t('common:ui.loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (statsError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {t('teacher:dashboard.loadError', 'خطا در بارگذاری اطلاعات')}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {t('teacher:dashboard.loadErrorMessage', 'اطلاعات داشبورد در حال حاضر در دسترس نیست.')}
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            {t('common:ui.retry', 'تلاش مجدد')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show "No data" state for new teachers with no teaching activity
+  if (!stats || (stats.totalStudents === 0 && stats.activeClasses === 0 && stats.weeklyHours === 0)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <div className="text-center">
+          <GraduationCap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {t('teacher:dashboard.noData', 'هنوز اطلاعاتی موجود نیست')}
+          </h2>
+          <p className="text-gray-600">
+            {t('teacher:dashboard.noDataMessage', 'پس از شروع تدریس، اطلاعات شما اینجا نمایش داده خواهد شد.')}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const earningsGrowth = stats?.performanceData && stats.performanceData.length >= 3 ? 
     ((stats.performanceData[2].earnings - stats.performanceData[0].earnings) / stats.performanceData[0].earnings * 100).toFixed(1) : 0;
 
   return (

@@ -5110,12 +5110,13 @@ export class DatabaseStorage implements IStorage {
   
   async getTeacherStudentCount(teacherId: number): Promise<number> {
     try {
-      const result = await db.select({
-        count: sql<number>`COUNT(DISTINCT ${sessions.studentId})`
-      }).from(sessions)
-        .where(eq(sessions.tutorId, teacherId));
+      const result = await db.execute(sql`
+        SELECT COUNT(DISTINCT student_id) as count 
+        FROM sessions 
+        WHERE tutor_id = ${teacherId}
+      `);
       
-      return result[0]?.count || 0;
+      return (result[0] as any)?.count || 0;
     } catch (error) {
       console.error('Error getting teacher student count:', error);
       return 0;
@@ -5124,15 +5125,13 @@ export class DatabaseStorage implements IStorage {
   
   async getTeacherRevenue(teacherId: number): Promise<number> {
     try {
-      const teacherSessions = await db.select({
-        totalAmount: sql<number>`COUNT(*) * 750000`
-      }).from(sessions)
-        .where(and(
-          eq(sessions.tutorId, teacherId),
-          eq(sessions.status, 'completed')
-        ));
+      const result = await db.execute(sql`
+        SELECT (COUNT(*) * 750000) as total_amount 
+        FROM sessions 
+        WHERE tutor_id = ${teacherId} AND status = 'completed'
+      `);
       
-      return teacherSessions[0]?.totalAmount || 0;
+      return (result[0] as any)?.total_amount || 0;
     } catch (error) {
       console.error('Error calculating teacher revenue:', error);
       return 0;
