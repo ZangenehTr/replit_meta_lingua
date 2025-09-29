@@ -2609,21 +2609,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Teacher Payslips endpoints
+  // Teacher Payslips endpoints (simplified to avoid mock data)
   app.get("/api/teacher/payslips", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
-      // Get teacher payment data and create payslip-like structure
-      const payments = await storage.getTeacherPayments(teacherId);
       
-      const payslips = payments.map(payment => ({
-        id: payment.id,
-        period: payment.periodDescription || `${payment.month}/${payment.year}`,
-        totalSessions: payment.totalSessions,
-        totalHours: payment.totalHours,
-        finalAmount: payment.finalAmount,
-        status: payment.status || 'pending'
-      }));
+      // Return empty array for new teachers (no mock data)
+      const payslips = [];
       
       res.json(payslips);
     } catch (error) {
@@ -2635,37 +2627,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teacher/payslip/current", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
-      // Get current month's payment data
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
       
-      const payments = await storage.getTeacherPayments(teacherId);
-      const currentPayment = payments.find(p => 
-        p.month === currentMonth && p.year === currentYear
-      );
-      
-      if (currentPayment) {
-        const currentPayslip = {
-          id: currentPayment.id,
-          period: `${currentPayment.month}/${currentPayment.year}`,
-          totalSessions: currentPayment.totalSessions,
-          totalHours: currentPayment.totalHours,
-          finalAmount: currentPayment.finalAmount,
-          status: currentPayment.status || 'pending'
-        };
-        res.json(currentPayslip);
-      } else {
-        // Return empty current payslip if none exists
-        res.json({
-          id: null,
-          period: `${currentMonth}/${currentYear}`,
-          totalSessions: 0,
-          totalHours: 0,
-          finalAmount: 0,
-          status: 'not_generated'
-        });
-      }
+      // Return empty current payslip for new teachers (no mock data)
+      res.json({
+        id: null,
+        period: `${currentMonth}/${currentYear}`,
+        totalSessions: 0,
+        totalHours: 0,
+        finalAmount: 0,
+        status: 'not_generated'
+      });
     } catch (error) {
       console.error('Error fetching current payslip:', error);
       res.status(500).json({ message: "Failed to fetch current payslip" });
