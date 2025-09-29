@@ -321,22 +321,22 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/leads">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
+        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
           <AdminLeadsPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/campaigns">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
+        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
           <AdminCampaignsPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/prospects">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
+        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
           <AdminProspectsPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/calls">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
+        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
           <AdminCallsPage />
         </RoleProtectedRoute>
       </Route>

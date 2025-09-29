@@ -43,7 +43,25 @@ export function RoleProtectedRoute({
     return <Redirect to="/auth" />;
   }
 
-  const userRole = user.role.toLowerCase() as UserRole;
+  // Normalize role mapping to handle database role names
+  const normalizeRole = (role: string): UserRole => {
+    const roleMapping: Record<string, UserRole> = {
+      'admin': 'admin',
+      'teacher': 'teacher', 
+      'teacher/tutor': 'teacher',
+      'student': 'student',
+      'mentor': 'mentor',
+      'supervisor': 'supervisor',
+      'call center agent': 'call_center',
+      'callcenter': 'call_center',
+      'accountant': 'accountant',
+      'manager': 'manager',
+      'front desk clerk': 'front_desk_clerk'
+    };
+    return roleMapping[role.toLowerCase()] || 'student';
+  };
+  
+  const userRole = normalizeRole(user.role);
 
   // Check role-based access
   if (allowedRoles && !allowedRoles.includes(userRole)) {
