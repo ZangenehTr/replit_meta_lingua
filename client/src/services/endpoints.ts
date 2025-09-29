@@ -36,7 +36,7 @@ export const API_ENDPOINTS = {
     dailyChallenges: '/api/gamification/daily-challenges',
     
     // Course & Roadmap Management
-    courses: '/api/courses',
+    courses: '/api/admin/courses',
     courseRoadmaps: '/api/course-roadmaps',
     examRoadmaps: '/api/roadmap/exams',
     sampleCourses: '/api/sample-courses',

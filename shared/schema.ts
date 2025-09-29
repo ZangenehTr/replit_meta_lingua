@@ -110,6 +110,7 @@ export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
+  category: varchar("category", { length: 100 }).notNull().default("Language Learning"),
   language: varchar("language", { length: 50 }).notNull().default("en"),
   level: varchar("level", { length: 20 }),
   isActive: boolean("is_active").default(true),
@@ -5076,8 +5077,9 @@ export const trialLessons = pgTable("trial_lessons", {
 // export const insertOtpCodeSchema = createInsertSchema(otpCodes).omit({ id: true, createdAt: true });
 // Holidays table for managing institute holidays (used for class end date calculation)
 
-// Temporarily commented out insert schemas
-// export const insertCourseSchema = createInsertSchema(courses);
+// Course insert schema - re-enabled for storage layer
+export const insertCourseSchema = createInsertSchema(courses).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCourse = z.infer<typeof insertCourseSchema>;
 // export const insertClassSchema = createInsertSchema(classes);
 // export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
 // export const insertHolidaySchema = createInsertSchema(holidays);
@@ -6044,8 +6046,6 @@ export type InsertAiConversation = z.infer<typeof insertAiConversationSchema>;
 // export const insertOtpCodeSchema = createInsertSchema(otpCodes).omit({ id: true, createdAt: true });
 // Holidays table for managing institute holidays (used for class end date calculation)
 
-// Temporarily commented out insert schemas
-// export const insertCourseSchema = createInsertSchema(courses);
 // export const insertClassSchema = createInsertSchema(classes);
 // export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
 // export const insertHolidaySchema = createInsertSchema(holidays);

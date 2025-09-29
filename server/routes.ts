@@ -1901,14 +1901,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("OTP login successful for:", email);
       } else {
         // Regular password login
-        console.log("Found user:", { id: user.id, email: user.email });
-        console.log("Password from database:", user.password);
-        console.log("Password from request:", password);
+        console.log("Password authentication attempt for user ID:", user.id);
         
         const isValidPassword = await bcrypt.compare(password, user.password);
-        console.log("Password comparison result:", isValidPassword);
+        console.log("Password validation result:", isValidPassword ? "success" : "failure");
         
         if (!isValidPassword) {
+          console.log("Authentication failed for user ID:", user.id);
           return res.status(401).json({ message: "Invalid credentials" });
         }
       }
@@ -7288,42 +7287,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/courses", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const courseData = req.body;
+      console.log("Course creation request received:", JSON.stringify(courseData, null, 2));
       
-      // Validate required fields
-      if (!courseData.courseCode || !courseData.title || !courseData.targetLanguage) {
-        return res.status(400).json({ message: "Missing required fields" });
+      // Validate required fields (only validate fields that exist in schema)
+      if (!courseData.title) {
+        console.log("Course creation failed - missing required fields:", {
+          title: !!courseData.title
+        });
+        return res.status(400).json({ message: "Title is required" });
       }
 
-      // Create course with all required fields
-      const newCourse = await storage.createCourse({
-        courseCode: courseData.courseCode,
+      // Map frontend fields to database schema fields only
+      const dbCourseData = {
         title: courseData.title,
         description: courseData.description || '',
-        language: courseData.language || 'English',
-        level: courseData.level || 'Beginner',
-        thumbnail: courseData.thumbnail || '',
-        instructorId: courseData.instructorId || 1,
-        price: courseData.price || 0,
-        totalSessions: courseData.totalSessions || 1,
-        sessionDuration: courseData.sessionDuration || 60,
-        deliveryMode: courseData.deliveryMode || 'online',
-        classFormat: courseData.classFormat || 'group',
-        maxStudents: courseData.maxStudents,
-        weekdays: courseData.weekdays || [],
-        startTime: courseData.startTime,
-        endTime: courseData.endTime,
-        targetLanguage: courseData.targetLanguage,
-        targetLevel: courseData.targetLevel || ['beginner'],
-        autoRecord: courseData.autoRecord || false,
-        recordingAvailable: courseData.recordingAvailable || false,
         category: courseData.category || 'Language Learning',
-        tags: courseData.tags || [],
-        prerequisites: courseData.prerequisites || [],
-        learningObjectives: courseData.learningObjectives || [],
-        difficulty: courseData.difficulty || 'beginner',
-        isActive: courseData.isActive !== undefined ? courseData.isActive : true,
-        isFeatured: courseData.isFeatured || false
-      });
+        language: courseData.language || courseData.targetLanguage || 'English',
+        level: courseData.level || 'Beginner',
+        isActive: courseData.isActive !== undefined ? courseData.isActive : true
+      };
+
+      console.log("Mapped course data for database:", JSON.stringify(dbCourseData, null, 2));
+
+      // Create course with only existing schema fields
+      const newCourse = await storage.createCourse(dbCourseData);
 
       res.status(201).json({ message: "Course created successfully", course: newCourse });
     } catch (error) {

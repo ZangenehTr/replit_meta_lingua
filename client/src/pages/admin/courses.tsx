@@ -30,37 +30,14 @@ import {
   Upload
 } from "lucide-react";
 
-// Schema for course creation and editing - matches new architecture (no teacher/schedule)
+// Schema for course creation - aligned with database schema
 const courseSchema = z.object({
-  courseCode: z.string().min(1, "Course code is required"),
   title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  language: z.string().min(1, "Language is required"),
-  level: z.string().min(1, "Level is required"),
-  targetLanguage: z.string().min(1, "Target language is required"),
-  targetLevel: z.array(z.string()).min(1, "At least one target level required"),
-  totalSessions: z.coerce.number().min(1, "Total sessions must be at least 1"),
-  sessionDuration: z.coerce.number().min(30, "Session duration must be at least 30 minutes"),
-  deliveryMode: z.string().min(1, "Delivery mode is required"),
-  classFormat: z.string().min(1, "Class format is required"),
-  category: z.string().min(1, "Category is required"),
-  price: z.coerce.number().min(0, "Price must be non-negative"),
-  maxStudents: z.coerce.number().optional(),
-  isActive: z.boolean().default(true),
-  isFeatured: z.boolean().default(false),
-  // Callern-specific fields
-  accessPeriodMonths: z.coerce.number().optional(), // For Callern courses: access period in months
-  callernAvailable24h: z.boolean().optional(), // For Callern courses: 24/7 availability
-  callernRoadmapId: z.coerce.number().optional() // For Callern courses: assigned roadmap
-}).refine((data) => {
-  // For Callern courses, require access period
-  if (data.deliveryMode === 'callern') {
-    return data.accessPeriodMonths && data.accessPeriodMonths > 0;
-  }
-  return true;
-}, {
-  message: "Callern courses require access period.",
-  path: ['accessPeriodMonths']
+  description: z.string().optional(),
+  category: z.string().default("Language Learning"),
+  language: z.string().default("English"),
+  level: z.string().default("Beginner"),
+  isActive: z.boolean().default(true)
 });
 
 // Create Course Dialog Component
@@ -76,25 +53,12 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   const form = useForm<z.infer<typeof courseSchema>>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      courseCode: "",
       title: "",
       description: "",
+      category: "Language Learning",
       language: "English",
-      level: "",
-      targetLanguage: "",
-      targetLevel: ["Beginner"],
-      totalSessions: 12,
-      sessionDuration: 90,
-      deliveryMode: "online",
-      classFormat: "group",
-      category: "",
-      price: 0,
-      maxStudents: 30,
-      isActive: true,
-      isFeatured: false,
-      accessPeriodMonths: 2,
-      callernAvailable24h: true,
-      callernRoadmapId: undefined
+      level: "Beginner",
+      isActive: true
     }
   });
 
@@ -128,7 +92,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" data-testid="button-create-course">
           <Plus className="h-4 w-4" />
           {t('admin:courses.createCourse')}
         </Button>
@@ -143,22 +107,8 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="courseCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('admin:courses.courseCode')}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t('admin:courses.courseCodePlaceholder')} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+            {/* Course Information - aligned with database schema */}
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="title"
@@ -166,7 +116,11 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                   <FormItem>
                     <FormLabel>{t('admin:courses.courseTitle')}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('admin:courses.courseTitlePlaceholder')} {...field} />
+                      <Input 
+                        placeholder={t('admin:courses.courseTitlePlaceholder')} 
+                        data-testid="course-title-input" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,94 +129,112 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
               
               <FormField
                 control={form.control}
-                name="category"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('admin:courses.category')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('admin:courses.selectCategory')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Language Learning">Language Learning</SelectItem>
-                        <SelectItem value="Persian Language">Persian Language</SelectItem>
-                        <SelectItem value="English Language">English Language</SelectItem>
-                        <SelectItem value="Arabic Language">Arabic Language</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>{t('admin:courses.description')}</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder={t('admin:courses.descriptionPlaceholder')} 
+                        data-testid="course-description-input"
+                        {...field} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="language"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('admin:courses.courseLanguage')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('admin:courses.selectLanguage')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="English">{t('admin:courses.english')}</SelectItem>
-                        <SelectItem value="Persian">{t('admin:courses.persian')}</SelectItem>
-                        <SelectItem value="Arabic">{t('admin:courses.arabic')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('admin:courses.category')}</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="category-select-trigger">
+                            <SelectValue placeholder={t('admin:courses.selectCategory')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent data-testid="category-select-content">
+                          <SelectItem value="Language Learning" data-testid="category-option-language-learning">Language Learning</SelectItem>
+                          <SelectItem value="Persian Language" data-testid="category-option-persian">Persian Language</SelectItem>
+                          <SelectItem value="English Language" data-testid="category-option-english">English Language</SelectItem>
+                          <SelectItem value="Arabic Language" data-testid="category-option-arabic">Arabic Language</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="language"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('admin:courses.courseLanguage')}</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="language-select-trigger">
+                            <SelectValue placeholder={t('admin:courses.selectLanguage')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="English">{t('admin:courses.english')}</SelectItem>
+                          <SelectItem value="Persian">{t('admin:courses.persian')}</SelectItem>
+                          <SelectItem value="Arabic">{t('admin:courses.arabic')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="level"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('admin:courses.level')}</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="level-select-trigger">
+                            <SelectValue placeholder={t('admin:courses.selectLevel')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Beginner">{t('admin:courses.beginner')}</SelectItem>
+                          <SelectItem value="Intermediate">{t('admin:courses.intermediate')}</SelectItem>
+                          <SelectItem value="Advanced">{t('admin:courses.advanced')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <FormField
                 control={form.control}
-                name="targetLanguage"
+                name="isActive"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('admin:courses.targetLanguage')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('admin:courses.selectTargetLanguage')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="persian">{t('admin:courses.persian')}</SelectItem>
-                        <SelectItem value="english">{t('admin:courses.english')}</SelectItem>
-                        <SelectItem value="arabic">{t('admin:courses.arabic')}</SelectItem>
-                        <SelectItem value="french">{t('admin:courses.french')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('admin:courses.level')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('admin:courses.selectLevel')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="beginner">{t('admin:courses.beginner')}</SelectItem>
-                        <SelectItem value="intermediate">{t('admin:courses.intermediate')}</SelectItem>
-                        <SelectItem value="advanced">{t('admin:courses.advanced')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">{t('admin:courses.activeCourse')}</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        {t('admin:courses.activeCourseDescription')}
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="is-active-switch"
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -520,7 +492,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 {t('admin:courses.cancel')}
               </Button>
-              <Button type="submit" disabled={createCourseMutation.isPending}>
+              <Button type="submit" disabled={createCourseMutation.isPending} data-testid="submit-course-button">
                 {createCourseMutation.isPending ? "Creating..." : t('admin:courses.save')}
               </Button>
             </div>
