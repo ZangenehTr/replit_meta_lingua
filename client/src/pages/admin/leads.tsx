@@ -211,9 +211,11 @@ export default function AdminLeadsPage() {
   // Create lead mutation
   const createLeadMutation = useMutation({
     mutationFn: async (leadData: CreateLeadFormData) => {
-      // Transform form data for API
+      // Transform form data for API - ensure leadSource is properly mapped
+      const { source, ...otherFields } = leadData; // Extract source separately
       const apiData = {
-        ...leadData,
+        ...otherFields,
+        leadSource: source || leadData.source, // Ensure leadSource gets the source value
         budget: leadData.budget || null,
         nextFollowUpDate: leadData.nextFollowUpDate ? new Date(leadData.nextFollowUpDate).toISOString() : null
       };
