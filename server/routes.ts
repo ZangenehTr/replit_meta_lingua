@@ -21345,6 +21345,57 @@ Meta Lingua Academy`;
     }
   });
 
+  // Teacher CallerN API Endpoints
+  app.get("/api/teacher/callern", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      // For new teachers, CallerN is not authorized by default (no mock data)
+      res.json({
+        isAuthorized: false,
+        message: "CallerN authorization required - please contact admin"
+      });
+    } catch (error) {
+      console.error('Error fetching teacher CallerN status:', error);
+      res.status(500).json({ message: "Failed to fetch CallerN status" });
+    }
+  });
+
+  app.get("/api/teacher/callern/sessions", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      // Return empty sessions for unauthorized teachers (no mock data)
+      res.json([]);
+    } catch (error) {
+      console.error('Error fetching teacher CallerN sessions:', error);
+      res.status(500).json({ message: "Failed to fetch CallerN sessions" });
+    }
+  });
+
+  app.get("/api/teacher/callern/history", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      // Return empty history for unauthorized teachers (no mock data)
+      res.json([]);
+    } catch (error) {
+      console.error('Error fetching teacher CallerN history:', error);
+      res.status(500).json({ message: "Failed to fetch CallerN history" });
+    }
+  });
+
+  app.get("/api/teacher/callern/authorize", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      // New teachers need admin authorization for CallerN (no mock data)
+      res.status(403).json({
+        error: "CallerN authorization required",
+        message: "Please contact administrator to enable CallerN services"
+      });
+    } catch (error) {
+      console.error('Error checking teacher CallerN authorization:', error);
+      res.status(500).json({ message: "Failed to check CallerN authorization" });
+    }
+  });
+
   // Teacher Detailed Reports API
   app.get("/api/teacher/detailed-reports", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
