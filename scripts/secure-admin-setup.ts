@@ -24,9 +24,9 @@ async function setupSecureAdmin() {
         lastName: 'Administrator',
         role: 'Admin', // Use proper capitalization for RBAC
         isActive: true,
-        passwordResetRequired: true, // Dedicated column for enforcement
         preferences: { 
           ...adminUser.preferences, 
+          mustChangePassword: true, // Use preferences until schema is updated
           securitySetupCompleted: true
         }
       });
@@ -62,8 +62,8 @@ async function setupSecureAdmin() {
         lastName: 'Administrator',
         phoneNumber: '+1-555-ADMIN',
         isActive: true,
-        passwordResetRequired: true,
         preferences: { 
+          mustChangePassword: true, // Use preferences until schema is updated
           securitySetupCompleted: true
         },
         createdAt: new Date(),
