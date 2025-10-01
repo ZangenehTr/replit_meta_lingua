@@ -15,29 +15,40 @@ export const ROLE_COLORS: Record<string, string> = {
   "Front Desk Clerk": "bg-indigo-500",
 };
 
+// Normalize a role name to match the ROLE_COLORS keys
+const normalizeRole = (role: string): string => {
+  const normalized = role.toLowerCase();
+  
+  switch (normalized) {
+    case "admin": return "Admin";
+    case "teacher": case "tutor": case "teacher/tutor": return "Teacher/Tutor";
+    case "mentor": return "Mentor";
+    case "student": return "Student";
+    case "supervisor": return "Supervisor";
+    case "call center agent": case "call_center": case "callcenter": return "Call Center Agent";
+    case "accountant": return "Accountant";
+    case "front desk clerk": case "front_desk_clerk": case "frontdesk": return "Front Desk Clerk";
+    default: return role;
+  }
+};
+
 // Get role color for display - returns color based on the menu item's accessible roles
 // If multiple roles can access an item, returns the color of the primary/first role
 export const getRoleColor = (roles: string[]): string => {
   if (!roles || roles.length === 0) return "bg-gray-500";
   
-  // Normalize the first role (primary role for this menu item)
-  const primaryRole = roles[0];
-  const normalized = primaryRole.toLowerCase();
-  
-  let mappedRole = primaryRole;
-  switch (normalized) {
-    case "admin": mappedRole = "Admin"; break;
-    case "teacher": case "tutor": case "teacher/tutor": mappedRole = "Teacher/Tutor"; break;
-    case "mentor": mappedRole = "Mentor"; break;
-    case "student": mappedRole = "Student"; break;
-    case "supervisor": mappedRole = "Supervisor"; break;
-    case "call center agent": case "call_center": case "callcenter": mappedRole = "Call Center Agent"; break;
-    case "accountant": mappedRole = "Accountant"; break;
-    case "front desk clerk": case "front_desk_clerk": case "frontdesk": mappedRole = "Front Desk Clerk"; break;
-    default: mappedRole = primaryRole;
-  }
-  
+  const mappedRole = normalizeRole(roles[0]);
   return ROLE_COLORS[mappedRole] || "bg-gray-500";
+};
+
+// Get all role colors for multi-role items - returns array of colors
+export const getRoleColors = (roles: string[]): string[] => {
+  if (!roles || roles.length === 0) return ["bg-gray-500"];
+  
+  return roles.map(role => {
+    const mappedRole = normalizeRole(role);
+    return ROLE_COLORS[mappedRole] || "bg-gray-500";
+  });
 };
 
 export interface NavigationItem {

@@ -54,7 +54,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Link, useLocation } from "wouter";
-import { getNavigationForRole, getRoleColor } from "@/lib/role-based-navigation";
+import { getNavigationForRole, getRoleColor, getRoleColors } from "@/lib/role-based-navigation";
 
 const iconMap = {
   Home,
@@ -144,13 +144,14 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
           {navigationItems.map((item, index) => {
             const isActive = location === item.path;
             const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
-            const roleColor = getRoleColor(item.roles);
+            const roleColors = getRoleColors(item.roles);
+            const hasMultipleRoles = roleColors.length > 1;
 
             return (
               <Link key={`${item.path}-${index}`} href={item.path}>
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  className={`w-full ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'} ${
+                  className={`w-full ${isRTL ? 'justify-end flex-row-reverse pr-3' : 'justify-start pl-3'} ${
                     isActive 
                       ? "bg-primary text-primary-foreground" 
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -162,8 +163,16 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                   dir={isRTL ? 'rtl' : 'ltr'}
                   style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
                 >
-                  {/* Role color indicator */}
-                  <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${roleColor}`}></span>
+                  {/* Multi-role color indicators */}
+                  {hasMultipleRoles ? (
+                    <div className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 flex flex-col gap-0.5`}>
+                      {roleColors.map((color, idx) => (
+                        <span key={idx} className={`w-1 h-2 rounded-full ${color}`}></span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${roleColors[0]}`}></span>
+                  )}
                   
                   <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
                   <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>

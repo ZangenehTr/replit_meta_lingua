@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { cn } from "@/lib/utils";
+import { ROLE_COLORS } from "@/lib/role-based-navigation";
 import { 
   Users,
   GraduationCap,
@@ -268,6 +269,31 @@ export const AdminDashboard = () => {
                     <Phone className="h-4 w-4" />
                     {getHealthIcon(stats?.systemHealth?.voip || 'healthy')}
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Role Color Legend */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <Card className="shadow-lg border-l-4 border-l-purple-500">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-700">
+                  {isRTL ? 'راهنمای رنگ نقش‌ها در منوی سایدبار' : 'Sidebar Menu Role Color Guide'}
+                </h3>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {Object.entries(ROLE_COLORS).map(([role, colorClass]) => (
+                    <div key={role} className="flex items-center gap-1.5">
+                      <div className={cn("w-3 h-3 rounded-full", colorClass)} />
+                      <span className="text-xs text-gray-600">{role}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
