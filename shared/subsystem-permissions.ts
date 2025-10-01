@@ -223,8 +223,8 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
       "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
       "appointment_scheduling", "trial_lesson_coordination",
-      // Also give access to some call center features for coordination
-      "lead_management", "call_logs"
+      // Also give access to lead management for coordination
+      "lead_management"
     ],
     actions: {
       "front_desk_dashboard": ["read", "view"],
@@ -237,7 +237,6 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       // CRITICAL FIX: Add trial_lessons permissions to match API endpoints
       "trial_lessons": ["read", "create", "update", "view", "list", "checkin", "complete", "waitlist", "analytics"],
       "lead_management": ["read", "create", "update", "view", "list"],
-      "call_logs": ["read", "create", "view", "list"],
       // Add front desk resource permissions
       "front_desk_operations": ["read", "create", "update", "view", "list", "delete", "complete", "convert"],
       "phone_call_logs": ["read", "create", "update", "view", "list", "delete"],
@@ -249,7 +248,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
       "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
       "appointment_scheduling", "trial_lesson_coordination",
-      "lead_management", "call_logs"
+      "lead_management"
     ],
     actions: {
       "front_desk_dashboard": ["read", "view"],
@@ -261,7 +260,6 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "trial_lesson_coordination": ["read", "create", "update", "view", "list", "schedule"],
       "trial_lessons": ["read", "create", "update", "view", "list", "checkin", "complete", "waitlist", "analytics"],
       "lead_management": ["read", "create", "update", "view", "list"],
-      "call_logs": ["read", "create", "view", "list"],
       "front_desk_operations": ["read", "create", "update", "view", "list", "delete", "complete", "convert"],
       "phone_call_logs": ["read", "create", "update", "view", "list", "delete"],
       "front_desk_tasks": ["read", "create", "update", "view", "list", "delete", "complete", "assign", "follow_up"]
@@ -452,7 +450,17 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "mentor_dashboard": "/dashboard",
   "mentee_management": "/mentor/students",
   "mentoring_sessions": "/mentor/sessions",
-  "mentoring_progress": "/mentor/progress"
+  "mentoring_progress": "/mentor/progress",
+
+  // Front Desk Platform
+  "front_desk_dashboard": "/frontdesk",
+  "walk_in_management": "/frontdesk/walk-in-intake",
+  "phone_call_logging": "/frontdesk/call-logging",
+  "front_desk_tasks": "/frontdesk/caller-history",
+  "visitor_intake": "/frontdesk/walk-in-intake",
+  "inquiry_tracking": "/frontdesk/caller-history",
+  "appointment_scheduling": "/frontdesk/trial-scheduling",
+  "trial_lesson_coordination": "/frontdesk/trial-scheduling"
 };
 
 // Generate navigation items dynamically from SUBSYSTEM_TREE based on user role

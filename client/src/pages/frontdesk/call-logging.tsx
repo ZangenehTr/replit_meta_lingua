@@ -789,7 +789,7 @@ export default function CallLogging() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {students.map((student: any) => (
+                              {Array.isArray(students) && students.map((student: any) => (
                                 <SelectItem key={student.id} value={student.id.toString()}>
                                   {student.firstName} {student.lastName} - {student.phoneNumber}
                                 </SelectItem>
@@ -890,7 +890,7 @@ export default function CallLogging() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {staff.map((member: any) => (
+                                {Array.isArray(staff) && staff.map((member: any) => (
                                   <SelectItem key={member.id} value={member.id.toString()}>
                                     {member.firstName} {member.lastName} ({member.role})
                                   </SelectItem>
