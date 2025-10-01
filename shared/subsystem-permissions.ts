@@ -203,7 +203,8 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     subsystems: [
       "mentor_dashboard", "mentee_management", "mentoring_sessions", 
       "mentoring_progress", "unified_workflow"
-    ]
+    ],
+    actions: {}
   },
   "Call Center Agent": {
     subsystems: [
@@ -271,15 +272,17 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "sis", "course_management", "video_course_management", "class_scheduling", 
       "games_management", "callern_management", "room_management", "staff_management",
       "financial_management", "reports_analytics", "communication_center", 
-      "quality_assurance", "schedule_review", "sms_management",
+      "quality_assurance", "schedule_review", "sms_management", "mentor_matching",
       // Call Center
       "unified_workflow", "lead_management", "call_logs", "prospects", "call_campaigns"
-    ]
+    ],
+    actions: {}
   },
   "Accountant": {
     subsystems: [
       "financial_management", "teacher_payment_management", "reports_analytics"
-    ]
+    ],
+    actions: {}
   },
   "Admin": {
     subsystems: [
@@ -291,7 +294,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "teacher_reports", "teacher_payments",
       "sis", "user_management", "course_management", "video_course_management", 
       "class_scheduling", "games_management", "game_access_control", "callern_management",
-      "roadmap_designer", "room_management", "mentor_matching", "teacher_matching",
+      "roadmap_designer", "room_management", "teacher_matching",
       "staff_management", "financial_management", "reports_analytics", "iranian_compliance",
       "ai_services", "ai_training", "communication_center", "quality_assurance", 
       "schedule_review", "teacher_payment_management", "white_label", "sms_management",
@@ -494,6 +497,19 @@ const SUBSYSTEM_PRIMARY_ROLE: Record<string, string> = {
   // Admin Platform - default to Admin if not specified
 };
 
+// Helper function to get all roles that have access to a subsystem
+const getRolesForSubsystem = (subsystemId: string): string[] => {
+  const rolesWithAccess: string[] = [];
+  
+  for (const [role, permissions] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
+    if (permissions.subsystems && permissions.subsystems.includes(subsystemId)) {
+      rolesWithAccess.push(role);
+    }
+  }
+  
+  return rolesWithAccess;
+};
+
 // Generate navigation items dynamically from SUBSYSTEM_TREE based on user role
 export const generateDynamicNavigation = (userRole: string, t?: any): NavigationItem[] => {
   const userPermissions = DEFAULT_ROLE_PERMISSIONS[userRole];
@@ -523,15 +539,15 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
       } else {
         // Only include if user has permission and route mapping exists
         if (allowedSubsystems.includes(subsystem.id) && SUBSYSTEM_ROUTES[subsystem.id]) {
-          // Get primary role from map or use parent platform or default to userRole
-          const primaryRole = SUBSYSTEM_PRIMARY_ROLE[subsystem.id] || parentPlatform || userRole;
+          // Get ALL roles that have access to this subsystem for multi-role color indicators
+          const allRolesWithAccess = getRolesForSubsystem(subsystem.id);
           
           navigationItems.push({
             path: SUBSYSTEM_ROUTES[subsystem.id],
             icon: subsystem.icon || "Home",
             label: subsystem.name,
             nameEn: subsystem.nameEn,
-            roles: [primaryRole] // Use primary role instead of current userRole
+            roles: allRolesWithAccess.length > 0 ? allRolesWithAccess : [userRole]
           });
         }
       }
