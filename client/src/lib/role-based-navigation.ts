@@ -15,36 +15,29 @@ export const ROLE_COLORS: Record<string, string> = {
   "Front Desk Clerk": "bg-indigo-500",
 };
 
-// Get role color for display with normalization support
+// Get role color for display - returns color based on the menu item's accessible roles
+// If multiple roles can access an item, returns the color of the primary/first role
 export const getRoleColor = (roles: string[]): string => {
   if (!roles || roles.length === 0) return "bg-gray-500";
   
-  // Normalize roles to match ROLE_COLORS keys
-  const normalizedRoles = roles.map(role => {
-    const normalized = role.toLowerCase();
-    switch (normalized) {
-      case "admin": return "Admin";
-      case "teacher": case "tutor": case "teacher/tutor": return "Teacher/Tutor";
-      case "mentor": return "Mentor";
-      case "student": return "Student";
-      case "supervisor": return "Supervisor";
-      case "call center agent": case "call_center": case "callcenter": return "Call Center Agent";
-      case "accountant": return "Accountant";
-      case "front desk clerk": case "front_desk_clerk": case "frontdesk": return "Front Desk Clerk";
-      default: return role; // Return original if no match
-    }
-  });
+  // Normalize the first role (primary role for this menu item)
+  const primaryRole = roles[0];
+  const normalized = primaryRole.toLowerCase();
   
-  // Priority order: Admin > Supervisor > Teacher > Others
-  const priority = ["Admin", "Supervisor", "Teacher/Tutor", "Mentor", "Accountant", "Call Center Agent", "Front Desk Clerk", "Student"];
-  
-  for (const priorityRole of priority) {
-    if (normalizedRoles.includes(priorityRole)) {
-      return ROLE_COLORS[priorityRole] || "bg-gray-500";
-    }
+  let mappedRole = primaryRole;
+  switch (normalized) {
+    case "admin": mappedRole = "Admin"; break;
+    case "teacher": case "tutor": case "teacher/tutor": mappedRole = "Teacher/Tutor"; break;
+    case "mentor": mappedRole = "Mentor"; break;
+    case "student": mappedRole = "Student"; break;
+    case "supervisor": mappedRole = "Supervisor"; break;
+    case "call center agent": case "call_center": case "callcenter": mappedRole = "Call Center Agent"; break;
+    case "accountant": mappedRole = "Accountant"; break;
+    case "front desk clerk": case "front_desk_clerk": case "frontdesk": mappedRole = "Front Desk Clerk"; break;
+    default: mappedRole = primaryRole;
   }
   
-  return ROLE_COLORS[normalizedRoles[0]] || "bg-gray-500";
+  return ROLE_COLORS[mappedRole] || "bg-gray-500";
 };
 
 export interface NavigationItem {
