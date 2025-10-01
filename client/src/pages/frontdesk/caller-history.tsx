@@ -440,7 +440,7 @@ export default function CallerHistoryDashboard() {
                     List
                   </TabsTrigger>
                   <TabsTrigger value="timeline" data-testid="view-timeline">
-                    <Timeline className="h-4 w-4 mr-2" />
+                    <History className="h-4 w-4 mr-2" />
                     Timeline
                   </TabsTrigger>
                   <TabsTrigger value="analytics" data-testid="view-analytics">
