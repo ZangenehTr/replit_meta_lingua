@@ -463,6 +463,37 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "trial_lesson_coordination": "/frontdesk/trial-scheduling"
 };
 
+// Map subsystems to their primary platform/role for color coding
+const SUBSYSTEM_PRIMARY_ROLE: Record<string, string> = {
+  // Student Platform
+  "student_dashboard": "Student",
+  "courses": "Student",
+  "video_courses": "Student",
+  "callern_student": "Student",
+  "games": "Student",
+  "tutors": "Student",
+  "sessions": "Student",
+  "tests": "Student",
+  "homework": "Student",
+  "messages": "Student",
+  "progress": "Student",
+  "wallet": "Student",
+  "referrals": "Student",
+  
+  // Teacher Platform
+  "teacher_dashboard": "Teacher/Tutor",
+  "callern_teacher": "Teacher/Tutor",
+  "teacher_classes": "Teacher/Tutor",
+  "teacher_schedule": "Teacher/Tutor",
+  "teacher_assignments": "Teacher/Tutor",
+  "teacher_students": "Teacher/Tutor",
+  "teacher_resources": "Teacher/Tutor",
+  "teacher_reports": "Teacher/Tutor",
+  "teacher_payments": "Teacher/Tutor",
+  
+  // Admin Platform - default to Admin if not specified
+};
+
 // Generate navigation items dynamically from SUBSYSTEM_TREE based on user role
 export const generateDynamicNavigation = (userRole: string, t?: any): NavigationItem[] => {
   const userPermissions = DEFAULT_ROLE_PERMISSIONS[userRole];
@@ -475,19 +506,32 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
   const navigationItems: NavigationItem[] = [];
 
   // Collect all leaf subsystems (those without children) from SUBSYSTEM_TREE
-  const collectLeafSubsystems = (subsystems: SubsystemPermission[]) => {
+  const collectLeafSubsystems = (subsystems: SubsystemPermission[], parentPlatform?: string) => {
     subsystems.forEach(subsystem => {
       if (subsystem.children) {
-        collectLeafSubsystems(subsystem.children);
+        // Determine platform from parent subsystem
+        let platform = parentPlatform;
+        if (subsystem.id === "student_platform") platform = "Student";
+        else if (subsystem.id === "teacher_platform") platform = "Teacher/Tutor";
+        else if (subsystem.id === "mentor_platform") platform = "Mentor";
+        else if (subsystem.id === "call_center_platform") platform = "Call Center Agent";
+        else if (subsystem.id === "front_desk_platform") platform = "Front Desk Clerk";
+        else if (subsystem.id === "supervisor_platform") platform = "Supervisor";
+        else if (!platform) platform = "Admin"; // Default to Admin
+        
+        collectLeafSubsystems(subsystem.children, platform);
       } else {
         // Only include if user has permission and route mapping exists
         if (allowedSubsystems.includes(subsystem.id) && SUBSYSTEM_ROUTES[subsystem.id]) {
+          // Get primary role from map or use parent platform or default to userRole
+          const primaryRole = SUBSYSTEM_PRIMARY_ROLE[subsystem.id] || parentPlatform || userRole;
+          
           navigationItems.push({
             path: SUBSYSTEM_ROUTES[subsystem.id],
             icon: subsystem.icon || "Home",
             label: subsystem.name,
             nameEn: subsystem.nameEn,
-            roles: [userRole]
+            roles: [primaryRole] // Use primary role instead of current userRole
           });
         }
       }

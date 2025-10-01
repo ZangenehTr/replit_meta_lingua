@@ -141,12 +141,13 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
     <div className={`w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="p-4">
         <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
-          {navigationItems.map((item) => {
+          {navigationItems.map((item, index) => {
             const isActive = location === item.path;
             const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
+            const roleColor = getRoleColor(item.roles);
 
             return (
-              <Link key={item.path} href={item.path}>
+              <Link key={`${item.path}-${index}`} href={item.path}>
                 <Button
                   variant={isActive ? "default" : "ghost"}
                   className={`w-full ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'} ${
@@ -162,7 +163,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                   style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
                 >
                   {/* Role color indicator */}
-                  <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${getRoleColor(item.roles)}`}></span>
+                  <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${roleColor}`}></span>
                   
                   <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
                   <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
