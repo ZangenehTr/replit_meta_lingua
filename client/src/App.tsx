@@ -564,37 +564,37 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/front-desk">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
           <FrontDeskDashboard />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
           <FrontDeskDashboard />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/walk-in-intake">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
           <WalkInIntake />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/call-logging">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
           <CallLogging />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/caller-history">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
           <CallerHistory />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/sms-templates">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
           <SmsTemplatesPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/trial-scheduling">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
           <TrialLessonScheduling />
         </RoleProtectedRoute>
       </Route>

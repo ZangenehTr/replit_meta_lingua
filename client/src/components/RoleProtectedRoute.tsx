@@ -56,7 +56,11 @@ export function RoleProtectedRoute({
       'callcenter': 'call_center',
       'accountant': 'accountant',
       'manager': 'manager',
-      'front desk clerk': 'front_desk_clerk'
+      'front desk clerk': 'front_desk_clerk',
+      'frontdesk': 'front_desk_clerk',
+      'front_desk': 'front_desk_clerk',
+      'front_desk_clerk': 'front_desk_clerk',
+      'frontdeskclerk': 'front_desk_clerk'
     };
     return roleMapping[role.toLowerCase()] || 'student';
   };
