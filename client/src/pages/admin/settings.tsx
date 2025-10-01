@@ -868,7 +868,7 @@ export default function AdminSettings() {
                     <Input
                       id="ollama-host"
                       placeholder="http://localhost:11434"
-                      value={settings?.ollamaHost || process.env.OLLAMA_HOST || ''}
+                      value={settings?.ollamaHost || ''}
                       onChange={(e) => handleSettingUpdate('ollamaHost', e.target.value)}
                     />
                   </div>
