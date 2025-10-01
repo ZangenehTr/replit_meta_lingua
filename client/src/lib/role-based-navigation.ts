@@ -3,12 +3,57 @@
 
 import { generateDynamicNavigation, NavigationItem as DynamicNavItem } from '@shared/subsystem-permissions';
 
+// Role color mapping for sidebar visual indicators
+export const ROLE_COLORS: Record<string, string> = {
+  "Admin": "bg-purple-500",
+  "Teacher/Tutor": "bg-blue-500",
+  "Mentor": "bg-green-500",
+  "Student": "bg-yellow-500",
+  "Supervisor": "bg-orange-500",
+  "Call Center Agent": "bg-pink-500",
+  "Accountant": "bg-teal-500",
+  "Front Desk Clerk": "bg-indigo-500",
+};
+
+// Get role color for display with normalization support
+export const getRoleColor = (roles: string[]): string => {
+  if (!roles || roles.length === 0) return "bg-gray-500";
+  
+  // Normalize roles to match ROLE_COLORS keys
+  const normalizedRoles = roles.map(role => {
+    const normalized = role.toLowerCase();
+    switch (normalized) {
+      case "admin": return "Admin";
+      case "teacher": case "tutor": case "teacher/tutor": return "Teacher/Tutor";
+      case "mentor": return "Mentor";
+      case "student": return "Student";
+      case "supervisor": return "Supervisor";
+      case "call center agent": case "call_center": case "callcenter": return "Call Center Agent";
+      case "accountant": return "Accountant";
+      case "front desk clerk": case "front_desk_clerk": case "frontdesk": return "Front Desk Clerk";
+      default: return role; // Return original if no match
+    }
+  });
+  
+  // Priority order: Admin > Supervisor > Teacher > Others
+  const priority = ["Admin", "Supervisor", "Teacher/Tutor", "Mentor", "Accountant", "Call Center Agent", "Front Desk Clerk", "Student"];
+  
+  for (const priorityRole of priority) {
+    if (normalizedRoles.includes(priorityRole)) {
+      return ROLE_COLORS[priorityRole] || "bg-gray-500";
+    }
+  }
+  
+  return ROLE_COLORS[normalizedRoles[0]] || "bg-gray-500";
+};
+
 export interface NavigationItem {
   path: string;
   icon: any;
   label: string;
   badge?: number;
   roles: string[];
+  roleColor?: string; // Color indicator for the role(s) that have access to this item
 }
 
 // Student-facing platform navigation

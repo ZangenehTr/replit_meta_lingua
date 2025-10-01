@@ -4,6 +4,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +93,48 @@ interface AdminStats {
   };
 }
 
+// Notifications content component
+const NotificationsContent = () => {
+  const { t } = useTranslation();
+  
+  const { data: notifications, isLoading, error } = useQuery<any[]>({
+    queryKey: [API_ENDPOINTS.common.notifications],
+  });
+
+  if (isLoading) {
+    return <div className="p-4 text-center">{t('common:loading', 'بارگذاری...')}</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-center text-red-500">
+        <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+        <p>{t('admin:notificationsError', 'خطا در بارگذاری اعلان‌ها')}</p>
+      </div>
+    );
+  }
+
+  if (!notifications || notifications.length === 0) {
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        {t('admin:noNotifications', 'اعلان جدیدی وجود ندارد')}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 max-h-96 overflow-y-auto">
+      {notifications.map((notif: any, idx: number) => (
+        <div key={idx} className="p-3 border rounded-lg hover:bg-gray-50">
+          <p className="font-medium">{notif.title}</p>
+          <p className="text-sm text-muted-foreground">{notif.message}</p>
+          <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const AdminDashboard = () => {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -100,67 +150,13 @@ export const AdminDashboard = () => {
 
   const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<AdminStats>({
     queryKey: [API_ENDPOINTS.admin.stats],
-    // Use shared query client's default fetcher for consistent auth handling
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.status === 403) return false;
       return failureCount < 3;
     },
-    // Remove custom queryFn and mock data fallback - let the default fetcher handle it
   });
 
-  // Mock stats for development when API fails
-  const mockStats = {
-    totalStudents: 458,
-    activeStudents: 412,
-    totalTeachers: 32,
-    activeTeachers: 28,
-    totalCourses: 45,
-          activeCourses: 38,
-    monthlyRevenue: 125000000,
-    yearlyRevenue: 1450000000,
-    revenueGrowth: 18.5,
-          studentGrowth: 22.3,
-    teacherUtilization: 87,
-    courseCompletionRate: 78,
-    systemHealth: {
-            database: 'healthy',
-            server: 'healthy',
-            ai: 'warning',
-            voip: 'healthy'
-          },
-          revenueData: [
-            { month: 'Jan', revenue: 95000000, students: 380, sessions: 1200 },
-            { month: 'Feb', revenue: 102000000, students: 395, sessions: 1350 },
-            { month: 'Mar', revenue: 125000000, students: 412, sessions: 1580 }
-          ],
-          courseDistribution: [
-            { name: 'English', value: 45, color: '#8B5CF6' },
-            { name: 'French', value: 20, color: '#10B981' },
-            { name: 'German', value: 15, color: '#F59E0B' },
-            { name: 'Spanish', value: 12, color: '#EF4444' },
-            { name: 'Others', value: 8, color: '#6B7280' }
-          ],
-          teacherPerformance: [
-            { name: 'Sara Ahmadi', rating: 4.9, students: 45, hours: 160 },
-            { name: 'Ali Rezaei', rating: 4.8, students: 38, hours: 145 },
-            { name: 'Maryam Hosseini', rating: 4.7, students: 42, hours: 155 }
-          ],
-          recentActivities: [
-            { id: 1, type: 'enrollment', message: 'New student enrolled in Business English', time: '5 mins ago', status: 'success' },
-            { id: 2, type: 'payment', message: 'Payment received: 250,000 IRR', time: '15 mins ago', status: 'success' },
-            { id: 3, type: 'system', message: 'Ollama AI service connection timeout', time: '30 mins ago', status: 'warning' }
-          ],
-          platformMetrics: {
-            callernMinutes: 15420,
-            totalTests: 892,
-            walletTransactions: 3254,
-            smssSent: 1876,
-            aiRequests: 8923
-          }
-        };
-
-  // Use stats from API or fallback to mock data
-  const displayStats = stats || mockStats;
+  const displayStats = stats;
 
   const studentUtilization = displayStats ? (displayStats.activeStudents / displayStats.totalStudents * 100).toFixed(1) : 0;
   const teacherUtilization = displayStats ? (displayStats.activeTeachers / displayStats.totalTeachers * 100).toFixed(1) : 0;
@@ -214,12 +210,27 @@ export const AdminDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
-              </Button>
+              {/* Notifications Dialog */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('admin:notifications', 'اعلان‌ها')}</DialogTitle>
+                    <DialogDescription>
+                      {t('admin:notificationsDescription', 'آخرین اعلان‌های سیستم')}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <NotificationsContent />
+                </DialogContent>
+              </Dialog>
+              
               <Link href="/admin/settings">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" data-testid="button-settings">
                   <Settings className="h-5 w-5" />
                 </Button>
               </Link>

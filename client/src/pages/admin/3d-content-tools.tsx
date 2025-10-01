@@ -7,7 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Box, 
   Search, 
@@ -29,52 +32,56 @@ import {
 export function AdminThreeDContentTools() {
   const { t } = useTranslation(['admin', 'common']);
   const { isRTL } = useLanguage();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({ name: '', description: '', type: '' });
+  const [uploadFormData, setUploadFormData] = useState({ name: '', description: '', file: null as File | null });
 
   // Fetch 3D content data
-  const { data: content = [], isLoading } = useQuery({
+  const { data: content = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/3d-content', { search: searchTerm, type: filterType }],
   });
 
-  // Mock 3D content data for development
-  const mockContent = [
-    {
-      id: 1,
-      name: "Virtual Classroom",
-      type: "environment",
-      description: "Interactive 3D classroom with whiteboards and student desks",
-      status: "published",
-      lastModified: "2024-01-20",
-      fileSize: "45.2 MB",
-      downloads: 234,
-      rating: 4.8
+  // Save/Update content mutation
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (selectedContent?.id) {
+        return apiRequest(`/api/admin/3d-content/${selectedContent.id}`, { method: 'PATCH', body: data });
+      } else {
+        return apiRequest('/api/admin/3d-content', { method: 'POST', body: data });
+      }
     },
-    {
-      id: 2,
-      name: "Grammar Tower",
-      type: "interactive",
-      description: "3D tower climbing game for grammar practice",
-      status: "draft",
-      lastModified: "2024-01-18",
-      fileSize: "67.8 MB",
-      downloads: 156,
-      rating: 4.6
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/3d-content'] });
+      toast({ title: t('common:success'), description: t('admin:3dContent.saveSuccess', 'محتوا با موفقیت ذخیره شد') });
+      setIsEditorOpen(false);
+      setSelectedContent(null);
     },
-    {
-      id: 3,
-      name: "Language Lab",
-      type: "environment",
-      description: "Modern language laboratory with audio stations",
-      status: "published",
-      lastModified: "2024-01-15",
-      fileSize: "52.1 MB",
-      downloads: 189,
-      rating: 4.9
+    onError: () => {
+      toast({ title: t('common:error'), description: t('admin:3dContent.saveError', 'خطا در ذخیره محتوا'), variant: 'destructive' });
     }
-  ];
+  });
 
-  const displayContent = isLoading ? mockContent : (Array.isArray(content) && content.length > 0 ? content : mockContent);
+  // Upload content mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      return apiRequest('/api/admin/3d-content/upload', { method: 'POST', body: formData });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/3d-content'] });
+      toast({ title: t('common:success'), description: t('admin:3dContent.uploadSuccess', 'فایل با موفقیت آپلود شد') });
+      setUploadFormData({ name: '', description: '', file: null });
+    },
+    onError: () => {
+      toast({ title: t('common:error'), description: t('admin:3dContent.uploadError', 'خطا در آپلود فایل'), variant: 'destructive' });
+    }
+  });
+
+  const displayContent = Array.isArray(content) ? content : [];
 
   return (
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -98,13 +105,63 @@ export function AdminThreeDContentTools() {
               <DialogHeader>
                 <DialogTitle>{t('admin:3dContent.uploadContent')}</DialogTitle>
                 <DialogDescription>
-                  {t('admin:3dContent.uploadDescription')}
+                  {t('admin:3dContent.uploadDescription', 'فایل محتوای سه‌بعدی خود را آپلود کنید')}
                 </DialogDescription>
               </DialogHeader>
-              {/* Upload form would go here */}
+              <div className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('admin:3dContent.name', 'نام')}</label>
+                  <Input 
+                    value={uploadFormData.name}
+                    onChange={(e) => setUploadFormData({ ...uploadFormData, name: e.target.value })}
+                    placeholder={t('admin:3dContent.namePlaceholder', 'نام محتوا را وارد کنید')}
+                    data-testid="input-upload-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('admin:3dContent.description', 'توضیحات')}</label>
+                  <Input 
+                    value={uploadFormData.description}
+                    onChange={(e) => setUploadFormData({ ...uploadFormData, description: e.target.value })}
+                    placeholder={t('admin:3dContent.descriptionPlaceholder', 'توضیحات محتوا را وارد کنید')}
+                    data-testid="input-upload-description"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('admin:3dContent.file', 'فایل')}</label>
+                  <Input 
+                    type="file" 
+                    accept=".glb,.gltf,.fbx,.obj"
+                    onChange={(e) => setUploadFormData({ ...uploadFormData, file: e.target.files?.[0] || null })}
+                    data-testid="input-upload-file"
+                  />
+                </div>
+                <Button 
+                  className="w-full" 
+                  data-testid="button-upload-submit"
+                  onClick={() => {
+                    if (uploadFormData.file) {
+                      const formData = new FormData();
+                      formData.append('name', uploadFormData.name);
+                      formData.append('description', uploadFormData.description);
+                      formData.append('file', uploadFormData.file);
+                      uploadMutation.mutate(formData);
+                    }
+                  }}
+                  disabled={!uploadFormData.file || uploadMutation.isPending}
+                >
+                  {uploadMutation.isPending ? t('common:uploading', 'در حال آپلود...') : t('common:upload', 'آپلود')}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
-          <Button data-testid="button-create-3d">
+          <Button 
+            data-testid="button-create-3d"
+            onClick={() => {
+              setSelectedContent(null);
+              setIsEditorOpen(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             {t('admin:3dContent.createNew')}
           </Button>
@@ -237,11 +294,27 @@ export function AdminThreeDContentTools() {
                   </div>
 
                   <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline" data-testid={`button-preview-${item.id}`}>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      data-testid={`button-preview-${item.id}`}
+                      onClick={() => {
+                        setSelectedContent(item);
+                        setIsPreviewOpen(true);
+                      }}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       {t('common:preview')}
                     </Button>
-                    <Button size="sm" variant="outline" data-testid={`button-edit-${item.id}`}>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      data-testid={`button-edit-${item.id}`}
+                      onClick={() => {
+                        setSelectedContent(item);
+                        setIsEditorOpen(true);
+                      }}
+                    >
                       <Edit className="h-4 w-4 mr-1" />
                       {t('common:edit')}
                     </Button>
@@ -264,11 +337,51 @@ export function AdminThreeDContentTools() {
                 {t('admin:3dContent.editorDescription')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Box className="h-12 w-12 mx-auto mb-4" />
-                <p>{t('admin:3dContent.editorPlaceholder')}</p>
-              </div>
+            <CardContent className="space-y-4">
+              {isEditorOpen && selectedContent ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('admin:3dContent.name')}</label>
+                    <Input 
+                      defaultValue={selectedContent?.name} 
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      placeholder={t('admin:3dContent.namePlaceholder')}
+                      data-testid="input-content-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('admin:3dContent.description')}</label>
+                    <Input 
+                      defaultValue={selectedContent?.description} 
+                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                      placeholder={t('admin:3dContent.descriptionPlaceholder')}
+                      data-testid="input-content-description"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('admin:3dContent.type')}</label>
+                    <Input 
+                      defaultValue={selectedContent?.type} 
+                      onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
+                      placeholder={t('admin:3dContent.typePlaceholder')}
+                      data-testid="input-content-type"
+                    />
+                  </div>
+                  <Button 
+                    className="w-full" 
+                    data-testid="button-save-content"
+                    onClick={() => saveMutation.mutate(editFormData)}
+                    disabled={saveMutation.isPending}
+                  >
+                    {saveMutation.isPending ? t('common:saving', 'در حال ذخیره...') : t('common:save')}
+                  </Button>
+                </>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Box className="h-12 w-12 mx-auto mb-4" />
+                  <p>{t('admin:3dContent.editorPlaceholder', 'لطفاً یک محتوا را برای ویرایش انتخاب کنید یا محتوای جدید ایجاد کنید')}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -282,10 +395,38 @@ export function AdminThreeDContentTools() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Monitor className="h-12 w-12 mx-auto mb-4" />
-                <p>{t('admin:3dContent.previewPlaceholder')}</p>
-              </div>
+              {isPreviewOpen && selectedContent ? (
+                <div className="space-y-4">
+                  <div className="bg-gray-100 rounded-lg p-8 text-center min-h-[300px] flex items-center justify-center">
+                    <Monitor className="h-24 w-24 text-gray-400" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t('admin:3dContent.name')}</p>
+                      <p className="font-medium" data-testid="preview-content-name">{selectedContent.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t('admin:3dContent.type')}</p>
+                      <p className="font-medium" data-testid="preview-content-type">{selectedContent.type}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground">{t('admin:3dContent.description')}</p>
+                      <p className="font-medium" data-testid="preview-content-description">{selectedContent.description}</p>
+                    </div>
+                  </div>
+                  <Button variant="secondary" className="w-full" data-testid="button-close-preview" onClick={() => {
+                    setIsPreviewOpen(false);
+                    setSelectedContent(null);
+                  }}>
+                    {t('common:close')}
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Monitor className="h-12 w-12 mx-auto mb-4" />
+                  <p>{t('admin:3dContent.previewPlaceholder', 'لطفاً یک محتوا را برای پیش‌نمایش انتخاب کنید')}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

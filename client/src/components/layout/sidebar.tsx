@@ -54,7 +54,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Link, useLocation } from "wouter";
-import { getNavigationForRole } from "@/lib/role-based-navigation";
+import { getNavigationForRole, getRoleColor } from "@/lib/role-based-navigation";
 
 const iconMap = {
   Home,
@@ -153,7 +153,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                     isActive 
                       ? "bg-primary text-primary-foreground" 
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
+                  } relative`}
                   onClick={() => {
                     setLocation(item.path);
                     onNavigate?.();
@@ -161,7 +161,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                   dir={isRTL ? 'rtl' : 'ltr'}
                   style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
                 >
-                  <Icon className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  {/* Role color indicator */}
+                  <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${getRoleColor(item.roles)}`}></span>
+                  
+                  <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
                   <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
                   {item.badge && (
                     <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
