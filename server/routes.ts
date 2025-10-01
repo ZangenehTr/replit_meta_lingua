@@ -14079,21 +14079,8 @@ Return JSON format:
       const leads = await storage.getLeads();
       res.json(leads);
     } catch (dbError: any) {
-      // Fallback to mock leads when database schema is not available
-      const isSchemaError = dbError.message && (
-        dbError.message.includes('column') && dbError.message.includes('does not exist') ||
-        dbError.message.includes('relation') && dbError.message.includes('does not exist') ||
-        dbError.code === '42P01' || // undefined_table
-        dbError.code === '42703'    // undefined_column
-      );
-      if (isSchemaError) {
-        console.log('Database schema issue detected, returning mock leads for testing');
-        const mockLeadsArray = Array.from(mockLeads.values());
-        res.json(mockLeadsArray);
-      } else {
-        console.error('Error fetching leads:', dbError);
-        res.status(500).json({ message: "Failed to fetch leads" });
-      }
+      console.error('Error fetching leads:', dbError);
+      res.json([]);
     }
   });
 
@@ -14112,26 +14099,8 @@ Return JSON format:
         res.status(404).json({ message: "Lead not found" });
       }
     } catch (dbError: any) {
-      // Fallback to mock leads when database schema is not available
-      const isSchemaError = dbError.message && (
-        dbError.message.includes('column') && dbError.message.includes('does not exist') ||
-        dbError.message.includes('relation') && dbError.message.includes('does not exist') ||
-        dbError.code === '42P01' || // undefined_table
-        dbError.code === '42703'    // undefined_column
-      );
-      if (isSchemaError) {
-        console.log('Database schema issue detected, checking mock leads for testing');
-        const leadId = parseInt(req.params.id);
-        const mockLead = mockLeads.get(leadId);
-        if (mockLead) {
-          res.json(mockLead);
-        } else {
-          res.status(404).json({ message: "Lead not found" });
-        }
-      } else {
-        console.error('Error fetching lead:', dbError);
-        res.status(500).json({ message: "Failed to fetch lead" });
-      }
+      console.error('Error fetching lead:', dbError);
+      res.status(404).json({ message: "Lead not found" });
     }
   });
 
