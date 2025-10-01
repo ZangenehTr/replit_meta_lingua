@@ -165,7 +165,7 @@ export async function createUserSession(
 
   const sessionData: InsertUserSession = {
     userId,
-    token: accessToken,
+    sessionToken: accessToken,
     refreshToken,
     expiresAt,
     ipAddress,

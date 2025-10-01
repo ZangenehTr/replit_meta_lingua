@@ -2926,7 +2926,7 @@ export class MemStorage implements IStorage {
     try {
       const result = await this.db.select().from(userSessions)
         .where(and(
-          eq(userSessions.token, token),
+          eq(userSessions.sessionToken, token),
           eq(userSessions.isActive, true),
           gte(userSessions.expiresAt, new Date())
         ))
@@ -2982,7 +2982,7 @@ export class MemStorage implements IStorage {
     try {
       await this.db.update(userSessions)
         .set({ 
-          token: accessToken,
+          sessionToken: accessToken,
           refreshToken: refreshToken,
           lastActiveAt: new Date()
         })
@@ -2996,7 +2996,7 @@ export class MemStorage implements IStorage {
     try {
       await this.db.update(userSessions)
         .set({ isActive: false })
-        .where(eq(userSessions.token, token));
+        .where(eq(userSessions.sessionToken, token));
     } catch (error) {
       console.error('Error invalidating user session:', error);
     }

@@ -262,7 +262,7 @@ export class DatabaseStorage implements IStorage {
     const [session] = await db
       .select()
       .from(userSessions)
-      .where(eq(userSessions.token, token));
+      .where(eq(userSessions.sessionToken, token));
     return session;
   }
 
@@ -299,7 +299,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(userSessions)
       .set({ 
-        token: accessToken, 
+        sessionToken: accessToken, 
         refreshToken: refreshToken,
         expiresAt: expiresAt
       })
