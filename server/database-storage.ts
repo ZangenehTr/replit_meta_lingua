@@ -7787,7 +7787,7 @@ export class DatabaseStorage implements IStorage {
         recordingUrl: log.recordingUrl,
         notes: log.notes,
         timestamp: log.timestamp?.toISOString() || new Date().toISOString(),
-        agentName: 'Call Center Agent' // Fallback since agent table not synced yet
+        agentName: null
       }));
     } catch (error) {
       console.error('Error fetching call center logs:', error);
