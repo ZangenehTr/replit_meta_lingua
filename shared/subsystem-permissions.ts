@@ -244,6 +244,29 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "front_desk_tasks": ["read", "create", "update", "view", "list", "delete", "complete", "assign", "follow_up"]
     }
   },
+  "Front Desk Clerk": {
+    subsystems: [
+      "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
+      "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
+      "appointment_scheduling", "trial_lesson_coordination",
+      "lead_management", "call_logs"
+    ],
+    actions: {
+      "front_desk_dashboard": ["read", "view"],
+      "walk_in_management": ["read", "create", "update", "view", "list", "delete"],
+      "phone_call_logging": ["read", "create", "update", "view", "list"],
+      "visitor_intake": ["read", "create", "update", "view", "list"],
+      "inquiry_tracking": ["read", "create", "update", "view", "list"],
+      "appointment_scheduling": ["read", "create", "update", "view", "list", "cancel"],
+      "trial_lesson_coordination": ["read", "create", "update", "view", "list", "schedule"],
+      "trial_lessons": ["read", "create", "update", "view", "list", "checkin", "complete", "waitlist", "analytics"],
+      "lead_management": ["read", "create", "update", "view", "list"],
+      "call_logs": ["read", "create", "view", "list"],
+      "front_desk_operations": ["read", "create", "update", "view", "list", "delete", "complete", "convert"],
+      "phone_call_logs": ["read", "create", "update", "view", "list", "delete"],
+      "front_desk_tasks": ["read", "create", "update", "view", "list", "delete", "complete", "assign", "follow_up"]
+    }
+  },
   "Supervisor": {
     subsystems: [
       // Institute Management

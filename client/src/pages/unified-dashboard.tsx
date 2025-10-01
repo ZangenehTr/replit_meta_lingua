@@ -12,6 +12,7 @@ import CallCenterDashboard from "@/pages/callcenter/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
 import StudentDashboard from "@/pages/student/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
+import FrontDeskDashboard from "@/pages/frontdesk/dashboard";
 
 /**
  * Unified Dashboard Component
@@ -77,6 +78,12 @@ export default function UnifiedDashboard() {
 
     case 'accountant':
       return <AccountantDashboard />;
+
+    case 'front_desk_clerk':
+    case 'frontdesk':
+    case 'front_desk':
+    case 'front desk clerk':
+      return <FrontDeskDashboard />;
 
     default:
       // Fallback to student dashboard for unknown roles

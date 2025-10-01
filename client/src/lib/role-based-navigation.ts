@@ -172,7 +172,9 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
     "callcenter": "Call Center Agent",
     "call center": "Call Center Agent",
     "accountant": "Accountant",
-    "front_desk_clerk": "Front Desk Clerk"
+    "front_desk_clerk": "Front Desk Clerk",
+    "frontdesk": "Front Desk Clerk",
+    "front_desk": "Front Desk Clerk"
   };
 
   const mappedRole = roleMapping[normalizedRole] || "Student";

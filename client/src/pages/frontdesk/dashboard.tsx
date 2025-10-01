@@ -566,34 +566,34 @@ export default function FrontDeskDashboard() {
     const today = new Date();
     const todayStr = today.toDateString();
 
-    const pendingOperations = operations.filter(
+    const pendingOperations = Array.isArray(operations) ? operations.filter(
       (op: FrontDeskOperation) =>
         op.status === "pending" || op.status === "in_progress",
-    ).length;
+    ).length : 0;
 
-    const completedToday = operations.filter(
+    const completedToday = Array.isArray(operations) ? operations.filter(
       (op: FrontDeskOperation) =>
         op.status === "completed" &&
         new Date(op.completedAt || "").toDateString() === todayStr,
-    ).length;
+    ).length : 0;
 
-    const callsToday = calls.filter(
+    const callsToday = Array.isArray(calls) ? calls.filter(
       (call: PhoneCallLog) =>
         new Date(call.callTime).toDateString() === todayStr,
-    ).length;
+    ).length : 0;
 
-    const urgentFollowUps = followUps.filter(
+    const urgentFollowUps = Array.isArray(followUps) ? followUps.filter(
       (followUp: FollowUp) =>
         followUp.priority === "urgent" && followUp.status === "pending",
-    ).length;
+    ).length : 0;
 
-    const todayTrialsCount = todayTrials.length;
-    const confirmedTrials = todayTrials.filter(
+    const todayTrialsCount = Array.isArray(todayTrials) ? todayTrials.length : 0;
+    const confirmedTrials = Array.isArray(todayTrials) ? todayTrials.filter(
       (trial: TrialLesson) => trial.status === "confirmed",
-    ).length;
+    ).length : 0;
 
     const conversionRate =
-      operations.length > 0
+      Array.isArray(operations) && operations.length > 0
         ? (operations.filter(
             (op: FrontDeskOperation) =>
               op.convertedToLead || op.convertedToStudent,
@@ -603,19 +603,19 @@ export default function FrontDeskDashboard() {
         : 0;
 
     const averageResponseTime =
-      calls.length > 0
+      Array.isArray(calls) && calls.length > 0
         ? calls.reduce(
             (sum: number, call: PhoneCallLog) => sum + (call.callDuration || 0),
             0,
           ) / calls.length
         : 0;
 
-    const unreadNotifications = notifications.filter(
+    const unreadNotifications = Array.isArray(notifications) ? notifications.filter(
       (notif: Notification) => !notif.isRead,
-    ).length;
-    const priorityNotifications = notifications.filter(
+    ).length : 0;
+    const priorityNotifications = Array.isArray(notifications) ? notifications.filter(
       (notif: Notification) => !notif.isRead && notif.priority === "high",
-    ).length;
+    ).length : 0;
 
     return {
       pendingOperations,
@@ -872,7 +872,7 @@ export default function FrontDeskDashboard() {
                     {isRTL ? "اقدامات سریع" : "Quick Actions"}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {quickActions.slice(0, 4).map((action) => {
+                  {Array.isArray(quickActions) && quickActions.slice(0, 4).map((action) => {
                     const Icon = action.icon;
                     return (
                       <DropdownMenuItem
@@ -936,7 +936,7 @@ export default function FrontDeskDashboard() {
                   </SheetHeader>
                   <ScrollArea className="h-[calc(100vh-120px)] mt-4">
                     <div className="space-y-3">
-                      {notifications.map((notification: Notification) => (
+                      {Array.isArray(notifications) && notifications.map((notification: Notification) => (
                         <Card
                           key={notification.id}
                           className={cn(
@@ -1255,7 +1255,7 @@ export default function FrontDeskDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {operations.slice(0, 5).map((operation: FrontDeskOperation) => (
+                {Array.isArray(operations) && operations.slice(0, 5).map((operation: FrontDeskOperation) => (
                   <div
                     key={operation.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
@@ -1738,7 +1738,7 @@ export default function FrontDeskDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {followUps.map((followUp: FollowUp) => (
+              {Array.isArray(followUps) && followUps.map((followUp: FollowUp) => (
                 <div
                   key={followUp.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -1917,7 +1917,7 @@ export default function FrontDeskDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {todayTrials.map((trial: TrialLesson) => (
+                  {Array.isArray(todayTrials) && todayTrials.map((trial: TrialLesson) => (
                     <div key={trial.id} className="p-3 border rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium">{trial.studentName}</h4>
@@ -1966,7 +1966,7 @@ export default function FrontDeskDashboard() {
 
   function renderAnalytics() {
     const analyticsData = {
-      totalInteractions: operations.length + calls.length,
+      totalInteractions: (Array.isArray(operations) ? operations.length : 0) + (Array.isArray(calls) ? calls.length : 0),
       conversionRate: dashboardStats.conversionRate,
       averageResponseTime: dashboardStats.averageResponseTime,
       topPerformers: [],
@@ -1979,7 +1979,7 @@ export default function FrontDeskDashboard() {
     };
 
     const interactions = [
-      ...operations.map((op) => ({
+      ...(Array.isArray(operations) ? operations.map((op) => ({
         id: op.id,
         type: "walk_in" as const,
         customerName: op.visitorName,
@@ -1989,8 +1989,8 @@ export default function FrontDeskDashboard() {
         urgencyLevel: op.priority || "medium",
         convertedToLead: op.convertedToLead,
         convertedToStudent: op.convertedToStudent,
-      })),
-      ...calls.map((call) => ({
+      })) : []),
+      ...(Array.isArray(calls) ? calls.map((call) => ({
         id: call.id,
         type: "phone_call" as const,
         customerName: call.callerName,
@@ -2000,7 +2000,7 @@ export default function FrontDeskDashboard() {
         urgencyLevel: call.urgencyLevel,
         convertedToLead: false,
         convertedToStudent: false,
-      })),
+      })) : []),
     ];
 
     return (
