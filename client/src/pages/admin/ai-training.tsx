@@ -625,7 +625,7 @@ export default function AITrainingDashboard() {
 
       {/* Add Model Dialog - Download Llama Models */}
       <Dialog open={showAddModelDialog} onOpenChange={setShowAddModelDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-download-model">
               {t('admin:downloadModel', 'Download AI Model')}

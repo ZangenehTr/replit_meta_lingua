@@ -62,6 +62,9 @@ export default function TeacherAssignmentsPage() {
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
+  // Word counter state
+  const [wordCount, setWordCount] = useState(0);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
@@ -83,6 +86,11 @@ export default function TeacherAssignmentsPage() {
       // Sync editor content to form
       const html = editor.getHTML();
       form.setValue('instructions', html);
+      
+      // Update word count
+      const text = editor.getText();
+      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+      setWordCount(words.length);
     },
   });
 
@@ -672,72 +680,123 @@ export default function TeacherAssignmentsPage() {
                   {/* Tiptap Editor for Writing Assignments */}
                   {assignmentType === 'writing' && editor && (
                     <div className="space-y-2">
-                      <Label>Rich Text Instructions</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Rich Text Instructions</Label>
+                        <Badge variant="secondary" className="text-xs">
+                          {wordCount} {wordCount === 1 ? 'word' : 'words'}
+                        </Badge>
+                      </div>
                       <div className="border rounded-lg">
                         {/* Tiptap Toolbar */}
-                        <div className="flex items-center gap-1 p-2 border-b bg-gray-50">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={editor.isActive('bold') ? 'default' : 'ghost'}
-                            onClick={() => editor.chain().focus().toggleBold().run()}
-                            data-testid="button-bold"
-                          >
-                            B
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={editor.isActive('italic') ? 'default' : 'ghost'}
-                            onClick={() => editor.chain().focus().toggleItalic().run()}
-                            data-testid="button-italic"
-                          >
-                            I
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
-                            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                            data-testid="button-h1"
-                          >
-                            H1
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
-                            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                            data-testid="button-h2"
-                          >
-                            H2
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
-                            onClick={() => editor.chain().focus().toggleBulletList().run()}
-                            data-testid="button-bullet-list"
-                          >
-                            • List
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={editor.isActive('highlight') ? 'default' : 'ghost'}
-                            onClick={() => editor.chain().focus().toggleHighlight().run()}
-                            data-testid="button-highlight"
-                          >
-                            Highlight
-                          </Button>
+                        <div className="flex items-center justify-between gap-1 p-2 border-b bg-gray-50">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('bold') ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleBold().run()}
+                              data-testid="button-bold"
+                              title="Bold (Ctrl+B)"
+                            >
+                              <strong>B</strong>
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('italic') ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleItalic().run()}
+                              data-testid="button-italic"
+                              title="Italic (Ctrl+I)"
+                            >
+                              <em>I</em>
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('strike') ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleStrike().run()}
+                              data-testid="button-strike"
+                              title="Strikethrough"
+                            >
+                              <s>S</s>
+                            </Button>
+                            <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                              data-testid="button-h1"
+                              title="Heading 1"
+                            >
+                              H1
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                              data-testid="button-h2"
+                              title="Heading 2"
+                            >
+                              H2
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                              data-testid="button-h3"
+                              title="Heading 3"
+                            >
+                              H3
+                            </Button>
+                            <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleBulletList().run()}
+                              data-testid="button-bullet-list"
+                              title="Bullet List"
+                            >
+                              • List
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                              data-testid="button-ordered-list"
+                              title="Numbered List"
+                            >
+                              1. List
+                            </Button>
+                            <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+                              onClick={() => editor.chain().focus().toggleHighlight().run()}
+                              data-testid="button-highlight"
+                              title="Highlight"
+                            >
+                              Highlight
+                            </Button>
+                          </div>
                         </div>
-                        {/* Editor Content */}
+                        {/* Editor Content - LTR forced */}
                         <EditorContent 
                           editor={editor} 
                           className="prose max-w-none p-4 min-h-[200px] focus:outline-none"
+                          dir="ltr"
+                          style={{ direction: 'ltr', textAlign: 'left' }}
                         />
                       </div>
-                      <p className="text-sm text-gray-500">Use the rich text editor to create detailed writing instructions</p>
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>Use the rich text editor to create detailed writing instructions</span>
+                        <span className="text-blue-600 font-medium">{wordCount} words</span>
+                      </div>
                     </div>
                   )}
 

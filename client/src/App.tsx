@@ -351,16 +351,6 @@ function Router() {
           <FinancialReportsPage />
         </RoleProtectedRoute>
       </Route>
-      <Route path="/admin/ai-management">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
-          <AIServicesManagement />
-        </RoleProtectedRoute>
-      </Route>
-      <Route path="/admin/ai-services">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
-          <AIServicesManagement />
-        </RoleProtectedRoute>
-      </Route>
       <Route path="/admin/ai-training">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <AiTrainingDashboard />

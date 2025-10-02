@@ -164,7 +164,7 @@ export default function AIStudyPartner() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="configuration" data-testid="tab-ai-configuration">
             <Settings className="h-4 w-4 mr-2" />
             {t('admin:configuration', 'Configuration')}
@@ -176,10 +176,6 @@ export default function AIStudyPartner() {
           <TabsTrigger value="analytics" data-testid="tab-ai-analytics">
             <BarChart3 className="h-4 w-4 mr-2" />
             {t('admin:analytics', 'Analytics')}
-          </TabsTrigger>
-          <TabsTrigger value="training" data-testid="tab-ai-training">
-            <Brain className="h-4 w-4 mr-2" />
-            {t('admin:training', 'Training')}
           </TabsTrigger>
         </TabsList>
 
@@ -349,64 +345,6 @@ export default function AIStudyPartner() {
               <div className="text-center text-gray-500 py-8" data-testid="status-ai-analytics-loading">
                 <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>{t('admin:loadingAIAnalytics', 'Loading AI analytics data...')}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="training" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle data-testid="card-title-ai-training">
-                {t('admin:aiTraining', 'AI Training')}
-              </CardTitle>
-              <CardDescription>
-                {t('admin:aiTrainingDescription', 'Improve AI responses through training and fine-tuning')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold" data-testid="heading-training-data">
-                      {t('admin:trainingData', 'Training Data')}
-                    </h3>
-                    <div className="text-center text-gray-500 py-8 border-2 border-dashed border-gray-200 rounded-lg">
-                      <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>{t('admin:uploadTrainingData', 'Upload training data files')}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-semibold" data-testid="heading-training-status">
-                      {t('admin:trainingStatus', 'Training Status')}
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm">{t('admin:lastTraining', 'Last Training:')}</span>
-                        <span className="text-sm text-gray-600">3 days ago</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">{t('admin:trainingAccuracy', 'Accuracy:')}</span>
-                        <span className="text-sm text-green-600">92.5%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">{t('admin:trainingExamples', 'Training Examples:')}</span>
-                        <span className="text-sm text-gray-600">2,847</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" data-testid="button-validate-model">
-                    {t('admin:validateModel', 'Validate Model')}
-                  </Button>
-                  <Button data-testid="button-start-training">
-                    <Play className="h-4 w-4 mr-2" />
-                    {t('admin:startTraining', 'Start Training')}
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>

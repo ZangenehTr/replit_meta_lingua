@@ -142,11 +142,8 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
   // Iranian Market Compliance Settings
   { path: "/admin/iranian-compliance", icon: "Settings", label: t('common:navigation.thirdPartySettings'), roles: ["Admin"] },
   
-  // AI Services Management
-  { path: "/admin/ai-services", icon: "Bot", label: t('common:navigation.aiServices'), roles: ["Admin"] },
-  
-  // AI Training Management
-  { path: "/admin/ai-training", icon: "Bot", label: t('common:navigation.aiTraining') || 'AI Model Training', roles: ["Admin"] },
+  // AI Training Management (comprehensive AI model and training management)
+  { path: "/admin/ai-training", icon: "Bot", label: t('common:navigation.aiTraining') || 'AI Training Management', roles: ["Admin"] },
   
   // Communication & Collaboration Tools
   { path: "/admin/communications", icon: "MessageCircle", label: t('common:navigation.communicationCenter'), roles: ["Admin", "Supervisor"] },
