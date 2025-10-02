@@ -79,7 +79,7 @@ export function setupAiTrainingRoutes(app: Express) {
       
       const [newModel] = await db.insert(aiModels).values({
         ...modelData,
-        createdBy: userId
+        trainedBy: userId
       }).returning();
       
       res.status(201).json(newModel);
@@ -158,13 +158,14 @@ export function setupAiTrainingRoutes(app: Express) {
         id: aiTrainingDatasets.id,
         name: aiTrainingDatasets.name,
         description: aiTrainingDatasets.description,
-        dataType: aiTrainingDatasets.dataType,
+        datasetType: aiTrainingDatasets.datasetType,
         language: aiTrainingDatasets.language,
-        sourceType: aiTrainingDatasets.sourceType,
-        dataCount: aiTrainingDatasets.dataCount,
-        totalSize: aiTrainingDatasets.totalSize,
+        source: aiTrainingDatasets.source,
+        totalSamples: aiTrainingDatasets.totalSamples,
+        sizeBytes: aiTrainingDatasets.sizeBytes,
         isActive: aiTrainingDatasets.isActive,
-        qualityScore: aiTrainingDatasets.qualityScore,
+        qualityMetrics: aiTrainingDatasets.qualityMetrics,
+        processingStatus: aiTrainingDatasets.processingStatus,
         createdAt: aiTrainingDatasets.createdAt,
         updatedAt: aiTrainingDatasets.updatedAt
       })
@@ -193,25 +194,20 @@ export function setupAiTrainingRoutes(app: Express) {
         return res.status(404).json({ error: "Dataset not found" });
       }
       
-      // Get dataset items with training data
+      // Get dataset items (simplified - no training data join for now)
       const items = await db.select({
         id: aiDatasetItems.id,
         itemType: aiDatasetItems.itemType,
-        qualityScore: aiDatasetItems.qualityScore,
-        isValidated: aiDatasetItems.isValidated,
-        validatedAt: aiDatasetItems.validatedAt,
-        trainingData: {
-          id: aiTrainingData.id,
-          fileName: aiTrainingData.fileName,
-          fileType: aiTrainingData.fileType,
-          content: aiTrainingData.content,
-          tags: aiTrainingData.tags,
-          createdAt: aiTrainingData.createdAt
-        }
+        category: aiDatasetItems.category,
+        quality: aiDatasetItems.quality,
+        verifiedBy: aiDatasetItems.verifiedBy,
+        verifiedAt: aiDatasetItems.verifiedAt,
+        content: aiDatasetItems.content,
+        tags: aiDatasetItems.tags,
+        createdAt: aiDatasetItems.createdAt
       })
       .from(aiDatasetItems)
-      .leftJoin(aiTrainingData, eq(aiDatasetItems.trainingDataId, aiTrainingData.id))
-      .where(eq(aiDatasetItems.datasetId, datasetId));
+      .where(eq(aiDatasetItems.datasetName, dataset[0].name));
       
       res.json({
         ...dataset[0],
@@ -450,14 +446,16 @@ async function startTrainingJob(jobId: number, jobData: any) {
     
     // Create the trained model
     const [newModel] = await db.insert(aiModels).values({
-      modelName: `${jobData.modelName}_trained_${Date.now()}`,
-      baseModel: jobData.modelName,
+      name: `${jobData.modelName}_trained_${Date.now()}`,
+      modelType: jobData.modelType || 'language_model',
       version: '1.0.0',
+      language: jobData.language || 'en',
       description: `Fine-tuned model from job ${jobId}`,
+      status: 'completed',
       isActive: false,
-      isDefault: false,
-      createdBy: jobData.createdBy,
-      performanceMetrics: {
+      isProduction: false,
+      trainedBy: jobData.createdBy,
+      metrics: {
         accuracy: 0.85 + Math.random() * 0.1, // Simulated metrics
         loss: Math.random() * 0.5,
         training_time: 3600
