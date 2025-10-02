@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User, ArrowLeft, Upload, Trash2, Mic } from 'lucide-react';
+import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User, ArrowLeft, Upload, Trash2, Mic, MicOff, Play, Pause, Square } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { API_ENDPOINTS } from "@/services/endpoints";
@@ -54,6 +54,13 @@ export default function TeacherAssignmentsPage() {
   const [viewAssignmentId, setViewAssignmentId] = useState<number | null>(null);
   const [assignmentType, setAssignmentType] = useState<string>('general');
   const [audioFiles, setAudioFiles] = useState<File[]>([]);
+  
+  // Audio recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -94,6 +101,42 @@ export default function TeacherAssignmentsPage() {
 
     }
   }, [location]);
+
+  // Cleanup recording on dialog close or component unmount
+  useEffect(() => {
+    // Cleanup function runs on unmount or when dialog closes
+    return () => {
+      if (isRecording) {
+        // Stop recording and cleanup
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+          
+          // Stop all media tracks
+          if (mediaRecorderRef.current.stream) {
+            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+          }
+        }
+        
+        // Clear interval
+        if (recordingIntervalRef.current) {
+          clearInterval(recordingIntervalRef.current);
+          recordingIntervalRef.current = null;
+        }
+        
+        setIsRecording(false);
+        setRecordingTime(0);
+        audioChunksRef.current = [];
+      }
+    };
+  }, [isRecording]);
+
+  // Additional cleanup when dialog closes
+  useEffect(() => {
+    if (!createDialogOpen && isRecording) {
+      // Trigger stop recording
+      stopRecording();
+    }
+  }, [createDialogOpen]);
 
   const form = useForm<AssignmentFormData>({
     resolver: zodResolver(assignmentSchema),
@@ -139,6 +182,93 @@ export default function TeacherAssignmentsPage() {
 
   const removeAudioFile = (index: number) => {
     setAudioFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioFile = new File([audioBlob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
+        
+        // Use callback to check current state, not stale closure
+        setAudioFiles(prev => {
+          if (prev.length >= 5) {
+            toast({
+              title: "Maximum Files Reached",
+              description: "You can only have 5 audio files",
+              variant: "destructive"
+            });
+            return prev; // Don't add file
+          }
+          
+          toast({
+            title: "Recording Saved",
+            description: "Audio recording added successfully"
+          });
+          return [...prev, audioFile];
+        });
+        
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Clear interval defensively (handles unexpected recorder stops)
+        if (recordingIntervalRef.current) {
+          clearInterval(recordingIntervalRef.current);
+          recordingIntervalRef.current = null;
+        }
+        
+        setRecordingTime(0);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      
+      // Start timer
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      toast({
+        title: "Recording Started",
+        description: "Speak into your microphone"
+      });
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: "Recording Failed",
+        description: "Could not access microphone. Please check permissions.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }
+  };
+
+  const formatRecordingTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Audio feedback handlers for teacher
@@ -467,7 +597,7 @@ export default function TeacherAssignmentsPage() {
                 Create Assignment
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Assignment</DialogTitle>
               </DialogHeader>
@@ -611,13 +741,59 @@ export default function TeacherAssignmentsPage() {
                     </div>
                   )}
 
-                  {/* Audio Upload for Speaking Assignments */}
+                  {/* Audio Recording & Upload for Speaking Assignments */}
                   {assignmentType === 'speaking' && (
-                    <div className="space-y-2">
-                      <Label>Audio Files ({audioFiles.length}/5)</Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <Mic className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-600 mb-2">Upload example audio or instructions</p>
+                    <div className="space-y-4">
+                      <Label>Audio Instructions ({audioFiles.length}/5)</Label>
+                      
+                      {/* Audio Recording Controls */}
+                      <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Mic className="h-5 w-5 text-blue-600" />
+                            <span className="font-medium text-blue-900">Record Audio</span>
+                          </div>
+                          {isRecording && (
+                            <Badge variant="destructive" className="animate-pulse">
+                              Recording {formatRecordingTime(recordingTime)}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          {!isRecording ? (
+                            <Button
+                              type="button"
+                              onClick={startRecording}
+                              disabled={audioFiles.length >= 5}
+                              className="flex-1"
+                              data-testid="button-start-recording"
+                            >
+                              <Mic className="h-4 w-4 mr-2" />
+                              Start Recording
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              onClick={stopRecording}
+                              variant="destructive"
+                              className="flex-1"
+                              data-testid="button-stop-recording"
+                            >
+                              <Square className="h-4 w-4 mr-2" />
+                              Stop & Save Recording
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2">
+                          Click to record audio instructions for your students
+                        </p>
+                      </div>
+
+                      {/* Audio File Upload */}
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                        <Upload className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-gray-600 mb-2">Or upload audio files</p>
                         <Input
                           type="file"
                           multiple
