@@ -42,6 +42,10 @@ export default function AITrainingDashboard() {
   const [showAddModelDialog, setShowAddModelDialog] = useState(false);
   const [showAddDatasetDialog, setShowAddDatasetDialog] = useState(false);
   const [selectedModelToPull, setSelectedModelToPull] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [datasetName, setDatasetName] = useState("");
+  const [datasetLanguage, setDatasetLanguage] = useState("en");
+  const [datasetType, setDatasetType] = useState("general");
 
   // Fetch AI models
   const { data: models = [], isLoading: modelsLoading } = useQuery<AiModel[]>({
@@ -103,6 +107,102 @@ export default function AITrainingDashboard() {
       return;
     }
     pullModelMutation.mutate(selectedModelToPull);
+  };
+
+  // Dataset upload mutation
+  const uploadDatasetMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const data = await apiRequest("/api/ai-datasets/upload", {
+        method: "POST",
+        body: formData
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Dataset Uploaded",
+        description: "Training dataset uploaded successfully",
+      });
+      setShowAddDatasetDialog(false);
+      setUploadedFiles([]);
+      setDatasetName("");
+      setDatasetLanguage("en");
+      setDatasetType("general");
+      queryClient.invalidateQueries({ queryKey: ['/api/ai-datasets'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload dataset",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    
+    // Limit to 10 files
+    if (uploadedFiles.length + files.length > 10) {
+      toast({
+        title: "Too Many Files",
+        description: "Maximum 10 files allowed per dataset",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file types
+    const allowedTypes = ['.pdf', '.doc', '.docx', '.txt'];
+    const invalidFiles = files.filter(file => {
+      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+      return !allowedTypes.includes(ext);
+    });
+
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Invalid File Type",
+        description: "Only PDF, Word, and Text files are allowed",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUploadDataset = () => {
+    if (!datasetName.trim()) {
+      toast({
+        title: "Dataset Name Required",
+        description: "Please enter a dataset name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (uploadedFiles.length === 0) {
+      toast({
+        title: "No Files Selected",
+        description: "Please upload at least one file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', datasetName);
+    formData.append('language', datasetLanguage);
+    formData.append('datasetType', datasetType);
+    uploadedFiles.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    uploadDatasetMutation.mutate(formData);
   };
 
   // Popular Llama models for download
@@ -269,13 +369,20 @@ export default function AITrainingDashboard() {
                       <div>
                         <CardTitle className="flex items-center gap-2">
                           {model.name}
-                          {model.status === 'completed' && (
-                            <Badge variant="default" data-testid={`badge-model-trained-${model.id}`}>
+                          {model.isTrained ? (
+                            <Badge variant="default" className="bg-green-600" data-testid={`badge-model-trained-${model.id}`}>
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
                               {t('admin:trained', 'Trained')}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="bg-gray-400" data-testid={`badge-model-untrained-${model.id}`}>
+                              <XCircle className="h-3 w-3 mr-1" />
+                              {t('admin:untrained', 'Untrained')}
                             </Badge>
                           )}
                           {model.status === 'training' && (
-                            <Badge variant="secondary" data-testid={`badge-model-training-${model.id}`}>
+                            <Badge variant="secondary" className="bg-blue-600" data-testid={`badge-model-training-${model.id}`}>
+                              <Activity className="h-3 w-3 mr-1 animate-pulse" />
                               {t('admin:training', 'Training...')}
                             </Badge>
                           )}
@@ -312,8 +419,10 @@ export default function AITrainingDashboard() {
                         <span className="ml-2 font-medium">{model.language}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600 dark:text-gray-400">{t('admin:status', 'Status')}:</span>
-                        <span className="ml-2 font-medium">{model.status}</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('admin:accuracy', 'Accuracy')}:</span>
+                        <span className="ml-2 font-medium">
+                          {model.performanceMetrics?.accuracy ? `${model.performanceMetrics.accuracy}%` : 'N/A'}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -436,20 +545,59 @@ export default function AITrainingDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {job.status === 'running' && (
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>{t('admin:progress', 'Progress')}</span>
-                          <span>{job.progress}%</span>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="font-medium">{t('admin:trainingProgress', 'Training Progress')}</span>
+                            <span className="font-bold text-blue-600">{job.progress}%</span>
+                          </div>
+                          <Progress value={parseFloat(job.progress)} className="h-3" />
+                          {job.currentEpoch && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {t('admin:epoch', 'Epoch')}: {job.currentEpoch} / {job.totalEpochs}
+                            </p>
+                          )}
                         </div>
-                        <Progress value={parseFloat(job.progress)} className="h-2" />
-                        {job.currentEpoch && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {t('admin:epoch', 'Epoch')}: {job.currentEpoch} / {job.totalEpochs}
-                          </p>
+
+                        <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+                              <Activity className="h-3 w-3" />
+                              <span>CPU</span>
+                            </div>
+                            <div className="text-sm font-bold">{job.cpuUsage || 0}%</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+                              <Database className="h-3 w-3" />
+                              <span>RAM</span>
+                            </div>
+                            <div className="text-sm font-bold">{job.memoryUsage || 0}%</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+                              <Bot className="h-3 w-3" />
+                              <span>GPU</span>
+                            </div>
+                            <div className="text-sm font-bold">{job.gpuUsage || 'N/A'}</div>
+                          </div>
+                        </div>
+
+                        {job.trainingMetrics && (
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Loss:</span>
+                              <span className="font-medium">{job.trainingMetrics.loss?.toFixed(4) || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Accuracy:</span>
+                              <span className="font-medium">{job.trainingMetrics.accuracy ? `${job.trainingMetrics.accuracy}%` : 'N/A'}</span>
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm pt-3 border-t">
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:started', 'Started')}:</span>
                         <span className="ml-2 font-medium">
@@ -457,14 +605,14 @@ export default function AITrainingDashboard() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-600 dark:text-gray-400">{t('admin:duration', 'Duration')}:</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('admin:remaining', 'Remaining')}:</span>
                         <span className="ml-2 font-medium">
-                          {job.estimatedTimeRemaining ? `${job.estimatedTimeRemaining}s` : '-'}
+                          {job.estimatedTimeRemaining ? `${Math.floor(job.estimatedTimeRemaining / 60)}m ${job.estimatedTimeRemaining % 60}s` : '-'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-600 dark:text-gray-400">{t('admin:cpuUsage', 'CPU Usage')}:</span>
-                        <span className="ml-2 font-medium">{job.cpuUsage || '-'}%</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('admin:dataset', 'Dataset')}:</span>
+                        <span className="ml-2 font-medium">{job.datasetId || 'N/A'}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -564,19 +712,159 @@ export default function AITrainingDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Dataset Dialog - Placeholder */}
+      {/* Add Dataset Dialog - Multi-file Upload */}
       <Dialog open={showAddDatasetDialog} onOpenChange={setShowAddDatasetDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t('admin:addNewDataset', 'Add New Dataset')}</DialogTitle>
+            <DialogTitle data-testid="dialog-title-upload-dataset">
+              {t('admin:uploadDataset', 'Upload Training Dataset')}
+            </DialogTitle>
             <DialogDescription>
-              {t('admin:addDatasetDescription', 'Upload training data files (PDF, Word, Text)')}
+              {t('admin:uploadDatasetDescription', 'Upload up to 10 files (PDF, Word, Text) for training')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-center text-gray-500 py-8">
-              {t('admin:comingSoon', 'Dataset upload coming soon...')}
-            </p>
+            <div>
+              <Label htmlFor="dataset-name">{t('admin:datasetName', 'Dataset Name')}</Label>
+              <Input
+                id="dataset-name"
+                data-testid="input-dataset-name"
+                placeholder={t('admin:datasetNamePlaceholder', 'Enter dataset name')}
+                value={datasetName}
+                onChange={(e) => setDatasetName(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="dataset-language">{t('admin:language', 'Language')}</Label>
+                <Select value={datasetLanguage} onValueChange={setDatasetLanguage}>
+                  <SelectTrigger id="dataset-language" data-testid="select-dataset-language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fa">Persian</SelectItem>
+                    <SelectItem value="ar">Arabic</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="dataset-type">{t('admin:datasetType', 'Dataset Type')}</Label>
+                <Select value={datasetType} onValueChange={setDatasetType}>
+                  <SelectTrigger id="dataset-type" data-testid="select-dataset-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="conversation">Conversation</SelectItem>
+                    <SelectItem value="grammar">Grammar</SelectItem>
+                    <SelectItem value="vocabulary">Vocabulary</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label>{t('admin:uploadFiles', 'Upload Files')} ({uploadedFiles.length}/10)</Label>
+              <div className="mt-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {t('admin:dragDropFiles', 'Drag and drop files here, or click to browse')}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {t('admin:supportedFormats', 'PDF, Word (.doc, .docx), Text (.txt)')}
+                </p>
+                <Input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="mt-4"
+                  data-testid="input-file-upload"
+                  disabled={uploadedFiles.length >= 10}
+                />
+              </div>
+            </div>
+
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <Label>{t('admin:uploadedFiles', 'Uploaded Files')}</Label>
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {uploadedFiles.map((file, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded border"
+                      data-testid={`file-item-${index}`}
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Upload className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        <span className="text-sm truncate">{file.name}</span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">
+                          ({(file.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        data-testid={`button-remove-file-${index}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {uploadDatasetMutation.isPending && (
+              <div className="space-y-2">
+                <Label>{t('admin:uploading', 'Uploading...')}</Label>
+                <div className="flex items-center gap-2">
+                  <Upload className="h-4 w-4 animate-pulse" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t('admin:uploadingDatasetPleaseWait', 'Uploading dataset files, please wait...')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddDatasetDialog(false);
+                  setUploadedFiles([]);
+                  setDatasetName("");
+                }}
+                disabled={uploadDatasetMutation.isPending}
+                data-testid="button-cancel-upload"
+              >
+                {t('common:cancel', 'Cancel')}
+              </Button>
+              <Button
+                onClick={handleUploadDataset}
+                disabled={uploadDatasetMutation.isPending || uploadedFiles.length === 0 || !datasetName.trim()}
+                data-testid="button-confirm-upload"
+              >
+                {uploadDatasetMutation.isPending ? (
+                  <>
+                    <Upload className="h-4 w-4 mr-2 animate-pulse" />
+                    {t('admin:uploading', 'Uploading...')}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t('admin:upload', 'Upload')}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
