@@ -72,6 +72,11 @@ export default function TeacherAssignmentsPage() {
       Highlight,
     ],
     content: '',
+    onUpdate: ({ editor }) => {
+      // Sync editor content to form
+      const html = editor.getHTML();
+      form.setValue('instructions', html);
+    },
   });
 
   // Handle URL parameters for viewing specific assignment
@@ -178,9 +183,35 @@ export default function TeacherAssignmentsPage() {
     queryKey: [API_ENDPOINTS.teacher.classes]
   });
 
-  // Create assignment mutation
+  // Create assignment mutation with audio file support
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: AssignmentFormData) => {
+      // If it's a speaking assignment with audio files, use FormData
+      if (assignmentType === 'speaking' && audioFiles.length > 0) {
+        const formData = new FormData();
+        formData.append('title', data.title);
+        formData.append('description', data.description);
+        formData.append('assignmentType', data.assignmentType);
+        formData.append('studentId', data.studentId.toString());
+        formData.append('courseId', data.courseId.toString());
+        formData.append('dueDate', data.dueDate.toISOString());
+        formData.append('maxScore', data.maxScore.toString());
+        if (data.instructions) {
+          formData.append('instructions', data.instructions);
+        }
+        
+        // Append audio files
+        audioFiles.forEach((file) => {
+          formData.append('audioFiles', file);
+        });
+        
+        return apiRequest(API_ENDPOINTS.teacher.assignments, {
+          method: 'POST',
+          body: formData
+        });
+      }
+      
+      // Otherwise, use standard JSON
       return apiRequest(API_ENDPOINTS.teacher.assignments, {
         method: 'POST',
         body: JSON.stringify(data)
@@ -193,6 +224,11 @@ export default function TeacherAssignmentsPage() {
         description: 'Assignment created successfully'
       });
       setCreateDialogOpen(false);
+      setAudioFiles([]);
+      setAssignmentType('general');
+      if (editor) {
+        editor.commands.setContent('');
+      }
       form.reset();
     },
     onError: () => {
@@ -204,9 +240,27 @@ export default function TeacherAssignmentsPage() {
     }
   });
 
-  // Submit feedback mutation
+  // Submit feedback mutation with audio support
   const submitFeedbackMutation = useMutation({
     mutationFn: async ({ assignmentId, feedback, score }: { assignmentId: number; feedback: string; score: number }) => {
+      // If there are audio files, use FormData
+      if (feedbackAudioFiles.length > 0) {
+        const formData = new FormData();
+        formData.append('feedback', feedback);
+        formData.append('score', score.toString());
+        
+        // Append audio files
+        feedbackAudioFiles.forEach((file) => {
+          formData.append('audioFeedback', file);
+        });
+        
+        return apiRequest(`${API_ENDPOINTS.teacher.assignments}/${assignmentId}/feedback`, {
+          method: 'POST',
+          body: formData
+        });
+      }
+      
+      // Otherwise, use standard JSON
       return apiRequest(`${API_ENDPOINTS.teacher.assignments}/${assignmentId}/feedback`, {
         method: 'POST',
         body: JSON.stringify({ feedback, score })
@@ -221,6 +275,7 @@ export default function TeacherAssignmentsPage() {
       setFeedbackDialogOpen(false);
       setSelectedAssignment(null);
       setFeedback('');
+      setFeedbackAudioFiles([]);
       setScore(0);
     },
     onError: () => {
@@ -449,6 +504,164 @@ export default function TeacherAssignmentsPage() {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="assignmentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assignment Type</FormLabel>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setAssignmentType(value);
+                            if (value === 'writing' && editor) {
+                              editor.commands.setContent('');
+                            }
+                          }}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-assignment-type">
+                              <SelectValue placeholder="Select assignment type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="writing">Writing (Rich Text Editor)</SelectItem>
+                            <SelectItem value="speaking">Speaking (Audio Recorder)</SelectItem>
+                            <SelectItem value="reading">Reading</SelectItem>
+                            <SelectItem value="listening">Listening</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Tiptap Editor for Writing Assignments */}
+                  {assignmentType === 'writing' && editor && (
+                    <div className="space-y-2">
+                      <Label>Rich Text Instructions</Label>
+                      <div className="border rounded-lg">
+                        {/* Tiptap Toolbar */}
+                        <div className="flex items-center gap-1 p-2 border-b bg-gray-50">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editor.isActive('bold') ? 'default' : 'ghost'}
+                            onClick={() => editor.chain().focus().toggleBold().run()}
+                            data-testid="button-bold"
+                          >
+                            B
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editor.isActive('italic') ? 'default' : 'ghost'}
+                            onClick={() => editor.chain().focus().toggleItalic().run()}
+                            data-testid="button-italic"
+                          >
+                            I
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                            data-testid="button-h1"
+                          >
+                            H1
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
+                            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                            data-testid="button-h2"
+                          >
+                            H2
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
+                            onClick={() => editor.chain().focus().toggleBulletList().run()}
+                            data-testid="button-bullet-list"
+                          >
+                            • List
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+                            onClick={() => editor.chain().focus().toggleHighlight().run()}
+                            data-testid="button-highlight"
+                          >
+                            Highlight
+                          </Button>
+                        </div>
+                        {/* Editor Content */}
+                        <EditorContent 
+                          editor={editor} 
+                          className="prose max-w-none p-4 min-h-[200px] focus:outline-none"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-500">Use the rich text editor to create detailed writing instructions</p>
+                    </div>
+                  )}
+
+                  {/* Audio Upload for Speaking Assignments */}
+                  {assignmentType === 'speaking' && (
+                    <div className="space-y-2">
+                      <Label>Audio Files ({audioFiles.length}/5)</Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <Mic className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm text-gray-600 mb-2">Upload example audio or instructions</p>
+                        <Input
+                          type="file"
+                          multiple
+                          accept="audio/*"
+                          onChange={handleAudioFileUpload}
+                          className="mt-2"
+                          data-testid="input-audio-upload"
+                          disabled={audioFiles.length >= 5}
+                        />
+                      </div>
+
+                      {audioFiles.length > 0 && (
+                        <div className="space-y-2">
+                          <Label>Uploaded Audio Files</Label>
+                          <div className="space-y-2">
+                            {audioFiles.map((file, index) => (
+                              <div 
+                                key={index} 
+                                className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                                data-testid={`audio-file-${index}`}
+                              >
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <Mic className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                  <span className="text-sm truncate">{file.name}</span>
+                                  <span className="text-xs text-gray-500 flex-shrink-0">
+                                    ({(file.size / 1024).toFixed(1)} KB)
+                                  </span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeAudioFile(index)}
+                                  data-testid={`button-remove-audio-${index}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -694,44 +907,112 @@ export default function TeacherAssignmentsPage() {
           )}
         </div>
 
-        {/* Feedback Dialog */}
+        {/* Feedback Dialog - Enhanced with Text + Audio */}
         <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Grade Assignment</DialogTitle>
+              <DialogTitle>Grade Assignment & Provide Feedback</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Score</Label>
+                <Label htmlFor="feedback-score">Score</Label>
                 <Input
+                  id="feedback-score"
                   type="number"
                   placeholder="Enter score"
                   value={score}
                   onChange={(e) => setScore(parseInt(e.target.value))}
                   max={selectedAssignment?.maxScore}
+                  data-testid="input-feedback-score"
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Max score: {selectedAssignment?.maxScore}
                 </p>
               </div>
+              
               <div>
-                <Label>Feedback</Label>
+                <Label htmlFor="feedback-text">Text Feedback</Label>
                 <Textarea
-                  placeholder="Provide feedback to the student"
+                  id="feedback-text"
+                  placeholder="Provide written feedback to the student"
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  className="min-h-24"
+                  className="min-h-32"
+                  data-testid="textarea-feedback"
                 />
               </div>
-              <div className="flex justify-end space-x-4">
-                <Button variant="outline" onClick={() => setFeedbackDialogOpen(false)}>
+
+              {/* Audio Feedback Upload */}
+              <div className="space-y-2">
+                <Label>Audio Feedback (Optional) ({feedbackAudioFiles.length}/5)</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <Mic className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600 mb-2">
+                    Upload audio feedback for more personalized comments
+                  </p>
+                  <Input
+                    type="file"
+                    multiple
+                    accept="audio/*"
+                    onChange={handleFeedbackAudioUpload}
+                    className="mt-2"
+                    data-testid="input-feedback-audio"
+                    disabled={feedbackAudioFiles.length >= 5}
+                  />
+                </div>
+
+                {feedbackAudioFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Audio Feedback Files</Label>
+                    <div className="space-y-2">
+                      {feedbackAudioFiles.map((file, index) => (
+                        <div 
+                          key={index} 
+                          className="flex items-center justify-between p-2 bg-blue-50 rounded border border-blue-200"
+                          data-testid={`feedback-audio-${index}`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Mic className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                            <span className="text-sm truncate">{file.name}</span>
+                            <span className="text-xs text-gray-500 flex-shrink-0">
+                              ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFeedbackAudioFile(index)}
+                            data-testid={`button-remove-feedback-audio-${index}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setFeedbackDialogOpen(false);
+                    setFeedback('');
+                    setFeedbackAudioFiles([]);
+                    setScore(0);
+                  }}
+                  data-testid="button-cancel-feedback"
+                >
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleFeedbackSubmit}
                   disabled={!feedback || score === 0 || submitFeedbackMutation.isPending}
+                  data-testid="button-submit-feedback"
                 >
-                  {submitFeedbackMutation.isPending ? 'Submitting...' : 'Submit Grade'}
+                  {submitFeedbackMutation.isPending ? 'Submitting...' : 'Submit Grade & Feedback'}
                 </Button>
               </div>
             </div>
