@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Bot, 
   MessageSquare, 
@@ -29,8 +32,54 @@ export default function AIStudyPartner() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
+  const { toast } = useToast();
 
   const [selectedTab, setSelectedTab] = useState("configuration");
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [testPrompt, setTestPrompt] = useState("");
+  const [testResponse, setTestResponse] = useState("");
+
+  // Test AI mutation
+  const testAIMutation = useMutation({
+    mutationFn: async (prompt: string) => {
+      const data = await apiRequest("/api/ollama/generate", {
+        method: "POST",
+        body: {
+          prompt,
+          model: "llama3.2:3b",
+          stream: false
+        }
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      setTestResponse(data.response || "No response");
+      toast({
+        title: "AI Test Successful",
+        description: "AI responded successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "AI Test Failed",
+        description: error.message || "Failed to get AI response",
+        variant: "destructive"
+      });
+      setTestResponse("Error: " + (error.message || "Failed to get response"));
+    }
+  });
+
+  const handleTestAI = () => {
+    if (!testPrompt.trim()) {
+      toast({
+        title: "Empty Prompt",
+        description: "Please enter a test prompt",
+        variant: "destructive"
+      });
+      return;
+    }
+    testAIMutation.mutate(testPrompt);
+  };
 
   return (
     <div className={`container mx-auto p-6 space-y-6 ${isRTL ? 'rtl' : ''}`}>
@@ -49,7 +98,7 @@ export default function AIStudyPartner() {
             <Bot className="h-4 w-4 mr-1" />
             {t('admin:aiOnline', 'AI Online')}
           </Badge>
-          <Button variant="outline" data-testid="button-test-ai">
+          <Button variant="outline" data-testid="button-test-ai" onClick={() => setTestDialogOpen(true)}>
             <MessageCircle className="h-4 w-4 mr-2" />
             {t('admin:testAI', 'Test AI')}
           </Button>
@@ -372,6 +421,77 @@ export default function AIStudyPartner() {
           {t('admin:saveSettings', 'Save Settings')}
         </Button>
       </div>
+
+      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle data-testid="dialog-title-test-ai">
+              {t('admin:testAI', 'Test AI')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('admin:testAIDescription', 'Test the AI service by sending a prompt and viewing the response')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="test-prompt">{t('admin:testPrompt', 'Test Prompt')}</Label>
+              <Textarea
+                id="test-prompt"
+                data-testid="textarea-test-prompt"
+                placeholder={t('admin:testPromptPlaceholder', 'Enter your test prompt here...')}
+                rows={4}
+                value={testPrompt}
+                onChange={(e) => setTestPrompt(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleTestAI} 
+                disabled={testAIMutation.isPending || !testPrompt.trim()}
+                data-testid="button-send-test-prompt"
+              >
+                {testAIMutation.isPending ? (
+                  <>
+                    <Pause className="h-4 w-4 mr-2 animate-spin" />
+                    {t('admin:testing', 'Testing...')}
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    {t('admin:sendTest', 'Send Test')}
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setTestPrompt("");
+                  setTestResponse("");
+                }}
+                disabled={testAIMutation.isPending}
+                data-testid="button-clear-test"
+              >
+                {t('admin:clear', 'Clear')}
+              </Button>
+            </div>
+
+            {testResponse && (
+              <div>
+                <Label>{t('admin:aiResponse', 'AI Response')}</Label>
+                <div 
+                  className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                  data-testid="text-test-response"
+                >
+                  <p className="whitespace-pre-wrap text-sm">{testResponse}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

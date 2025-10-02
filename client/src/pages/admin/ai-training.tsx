@@ -28,6 +28,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,6 +41,7 @@ export default function AITrainingDashboard() {
   const [selectedTab, setSelectedTab] = useState("models");
   const [showAddModelDialog, setShowAddModelDialog] = useState(false);
   const [showAddDatasetDialog, setShowAddDatasetDialog] = useState(false);
+  const [selectedModelToPull, setSelectedModelToPull] = useState("");
 
   // Fetch AI models
   const { data: models = [], isLoading: modelsLoading } = useQuery<AiModel[]>({
@@ -64,6 +66,55 @@ export default function AITrainingDashboard() {
 
   const isAIOnline = aiHealth?.status === 'online';
 
+  // Model pull/download mutation
+  const pullModelMutation = useMutation({
+    mutationFn: async (modelName: string) => {
+      const data = await apiRequest("/api/ollama/models/pull", {
+        method: "POST",
+        body: { modelName }
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Model Downloaded",
+        description: "The model has been downloaded successfully",
+      });
+      setShowAddModelDialog(false);
+      setSelectedModelToPull("");
+      queryClient.invalidateQueries({ queryKey: ['/api/ai-models'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download model",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handlePullModel = () => {
+    if (!selectedModelToPull) {
+      toast({
+        title: "No Model Selected",
+        description: "Please select a model to download",
+        variant: "destructive"
+      });
+      return;
+    }
+    pullModelMutation.mutate(selectedModelToPull);
+  };
+
+  // Popular Llama models for download
+  const popularModels = [
+    { name: "llama3.2:1b", size: "1B parameters", description: "Fast and lightweight model" },
+    { name: "llama3.2:3b", size: "3B parameters", description: "Balanced performance and speed" },
+    { name: "llama3.1:8b", size: "8B parameters", description: "High quality responses" },
+    { name: "llama3.1:70b", size: "70B parameters", description: "Best quality, slower" },
+    { name: "mistral:7b", size: "7B parameters", description: "Excellent general purpose model" },
+    { name: "mixtral:8x7b", size: "8x7B parameters", description: "Mixture of experts model" },
+  ];
+
   return (
     <div className={`container mx-auto p-6 space-y-6 ${isRTL ? 'rtl' : ''}`}>
       <div className="flex items-center justify-between">
@@ -77,23 +128,30 @@ export default function AITrainingDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge 
-            variant={isAIOnline ? "default" : "destructive"} 
-            data-testid="badge-ai-health"
-            className="flex items-center gap-1"
-          >
-            {isAIOnline ? (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                {t('admin:aiOnline', 'AI Online')}
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4" />
-                {t('admin:aiOffline', 'AI Offline')}
-              </>
-            )}
-          </Badge>
+          {healthLoading ? (
+            <Badge variant="secondary" data-testid="badge-ai-health-loading" className="flex items-center gap-1">
+              <Activity className="h-4 w-4 animate-pulse" />
+              {t('common:checking', 'Checking...')}
+            </Badge>
+          ) : (
+            <Badge 
+              variant={isAIOnline ? "default" : "destructive"} 
+              data-testid="badge-ai-health"
+              className="flex items-center gap-1"
+            >
+              {isAIOnline ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t('admin:aiOnline', 'AI Online')}
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4" />
+                  {t('admin:aiOffline', 'AI Offline')}
+                </>
+              )}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -417,19 +475,91 @@ export default function AITrainingDashboard() {
         </TabsContent>
       </Tabs>
 
-      {/* Add Model Dialog - Placeholder */}
+      {/* Add Model Dialog - Download Llama Models */}
       <Dialog open={showAddModelDialog} onOpenChange={setShowAddModelDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t('admin:addNewModel', 'Add New Model')}</DialogTitle>
+            <DialogTitle data-testid="dialog-title-download-model">
+              {t('admin:downloadModel', 'Download AI Model')}
+            </DialogTitle>
             <DialogDescription>
-              {t('admin:addModelDescription', 'Download a Llama model or configure a custom model')}
+              {t('admin:downloadModelDescription', 'Select a Llama model to download from Ollama')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-center text-gray-500 py-8">
-              {t('admin:comingSoon', 'Model management coming soon...')}
-            </p>
+            <div>
+              <Label>{t('admin:selectModel', 'Select Model')}</Label>
+              <RadioGroup 
+                value={selectedModelToPull} 
+                onValueChange={setSelectedModelToPull}
+                className="mt-4 space-y-3"
+              >
+                {popularModels.map((model) => (
+                  <div key={model.name} className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <RadioGroupItem 
+                      value={model.name} 
+                      id={model.name}
+                      data-testid={`radio-model-${model.name}`}
+                    />
+                    <div className="flex-1">
+                      <Label 
+                        htmlFor={model.name}
+                        className="font-medium cursor-pointer"
+                        data-testid={`label-model-${model.name}`}
+                      >
+                        {model.name}
+                      </Label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {model.size} • {model.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {pullModelMutation.isPending && (
+              <div className="space-y-2">
+                <Label>{t('admin:downloading', 'Downloading...')}</Label>
+                <div className="flex items-center gap-2">
+                  <Download className="h-4 w-4 animate-pulse" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t('admin:downloadingModelPleaseWait', 'Downloading model, this may take several minutes...')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddModelDialog(false);
+                  setSelectedModelToPull("");
+                }}
+                disabled={pullModelMutation.isPending}
+                data-testid="button-cancel-download"
+              >
+                {t('common:cancel', 'Cancel')}
+              </Button>
+              <Button 
+                onClick={handlePullModel}
+                disabled={pullModelMutation.isPending || !selectedModelToPull}
+                data-testid="button-confirm-download"
+              >
+                {pullModelMutation.isPending ? (
+                  <>
+                    <Download className="h-4 w-4 mr-2 animate-pulse" />
+                    {t('admin:downloading', 'Downloading...')}
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    {t('admin:download', 'Download')}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

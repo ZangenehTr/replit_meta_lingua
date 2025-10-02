@@ -18,6 +18,9 @@ import {
 } from "@shared/schema";
 import { eq, desc, count, sum, and, inArray } from "drizzle-orm";
 import { ollamaService } from "./ollama-service";
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+import crypto from "crypto";
 // Authentication middleware - inline implementation since auth-utils doesn't exist
 const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
@@ -35,11 +38,124 @@ const authenticateToken = (req: any, res: any, next: any) => {
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
-import jwt from "jsonwebtoken";
-import { z } from "zod";
-import crypto from "crypto";
 
 export function setupAiTrainingRoutes(app: Express) {
+  
+  // ===================
+  // AI HEALTH CHECK
+  // ===================
+  
+  // Get Ollama health status
+  app.get("/api/ollama/health", async (req: Request, res: Response) => {
+    try {
+      const isAvailable = await ollamaService.isServiceAvailable();
+      
+      res.json({
+        status: isAvailable ? 'online' : 'offline',
+        timestamp: new Date().toISOString(),
+        service: 'ollama'
+      });
+    } catch (error) {
+      console.error("Error checking Ollama health:", error);
+      res.json({
+        status: 'offline',
+        timestamp: new Date().toISOString(),
+        service: 'ollama',
+        error: 'Failed to check service status'
+      });
+    }
+  });
+
+  // ===================
+  // OLLAMA MODEL MANAGEMENT
+  // ===================
+  
+  // Get available Ollama models
+  app.get("/api/ollama/models", async (req: Request, res: Response) => {
+    try {
+      const models = await ollamaService.listModels();
+      res.json({ models });
+    } catch (error) {
+      console.error("Error fetching Ollama models:", error);
+      res.status(500).json({ error: "Failed to fetch available models" });
+    }
+  });
+
+  // Generate text completion with Ollama
+  app.post("/api/ollama/generate", async (req: Request, res: Response) => {
+    try {
+      const { prompt, model, stream } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      console.log(`Generating completion with model: ${model || 'default'}`);
+      
+      const response = await ollamaService.generateCompletion(prompt, undefined, {
+        model: model || 'llama3.2:3b',
+        temperature: 0.7,
+      });
+
+      res.json({ 
+        response,
+        model: model || 'llama3.2:3b'
+      });
+    } catch (error: any) {
+      console.error("Error generating completion:", error);
+      
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        return res.status(503).json({ 
+          error: "Ollama service is not available. Please ensure Ollama is running.",
+          response: "I apologize, but the AI service is currently unavailable. Please try again later." 
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to generate completion",
+        response: "An error occurred while processing your request." 
+      });
+    }
+  });
+
+  // Download/pull a new Ollama model
+  app.post("/api/ollama/models/pull", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const { modelName } = req.body;
+      
+      if (!modelName) {
+        return res.status(400).json({ error: "Model name is required" });
+      }
+
+      console.log(`Starting model pull for: ${modelName}`);
+      
+      const success = await ollamaService.pullModel(modelName, (progress) => {
+        console.log(`Model ${modelName} download progress:`, progress);
+      });
+
+      if (success) {
+        res.json({ 
+          success: true, 
+          message: `Model ${modelName} downloaded successfully` 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          error: `Failed to download model ${modelName}` 
+        });
+      }
+    } catch (error: any) {
+      console.error("Error pulling model:", error);
+      
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        return res.status(503).json({ 
+          error: "Ollama service is not available. Please ensure Ollama is running." 
+        });
+      }
+      
+      res.status(500).json({ error: "Failed to pull model" });
+    }
+  });
   
   // ===================
   // AI MODELS MANAGEMENT
