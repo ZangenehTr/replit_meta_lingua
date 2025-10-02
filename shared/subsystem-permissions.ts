@@ -104,7 +104,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "roadmap_instances", name: "نمونه‌های نقشه راه", nameEn: "Roadmap Instances", icon: "MapPin" },
       { id: "callern_roadmaps", name: "نقشه راه Callern", nameEn: "Callern Roadmaps", icon: "Video" },
       { id: "exam_roadmaps", name: "نقشه راه آزمون", nameEn: "Exam Roadmaps", icon: "GraduationCap" },
-      { id: "ai_study_partner", name: "همکار مطالعه AI", nameEn: "AI Study Partner", icon: "Bot" },
+      { id: "ai_study_partner", name: "مدیریت همکار مطالعه AI", nameEn: "AI Study Partner Management", icon: "Bot" },
       { id: "enhanced_analytics", name: "تحلیل‌های پیشرفته", nameEn: "Enhanced Analytics", icon: "TrendingUp" },
       { id: "tts_system", name: "سیستم TTS", nameEn: "Text-to-Speech System", icon: "Volume2" },
       { id: "tts_pipeline", name: "خط تولید TTS", nameEn: "TTS Pipeline", icon: "Workflow" },
