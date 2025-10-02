@@ -15,16 +15,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User, ArrowLeft } from 'lucide-react';
+import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User, ArrowLeft, Upload, Trash2, Mic } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import TextAlign from '@tiptap/extension-text-align';
+import Highlight from '@tiptap/extension-highlight';
 
 const assignmentSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
+  assignmentType: z.enum(['writing', 'speaking', 'reading', 'listening', 'general']).default('general'),
   studentId: z.number().min(1, 'Student is required'),
   courseId: z.number().min(1, 'Course is required'),
   dueDate: z.coerce.date().refine(
@@ -43,12 +49,30 @@ export default function TeacherAssignmentsPage() {
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [feedback, setFeedback] = useState('');
+  const [feedbackAudioFiles, setFeedbackAudioFiles] = useState<File[]>([]);
   const [score, setScore] = useState<number>(0);
   const [viewAssignmentId, setViewAssignmentId] = useState<number | null>(null);
+  const [assignmentType, setAssignmentType] = useState<string>('general');
+  const [audioFiles, setAudioFiles] = useState<File[]>([]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
+
+  // Tiptap editor for Writing assignments
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: 'Write your assignment instructions here...',
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Highlight,
+    ],
+    content: '',
+  });
 
   // Handle URL parameters for viewing specific assignment
   useEffect(() => {
@@ -71,6 +95,7 @@ export default function TeacherAssignmentsPage() {
     defaultValues: {
       title: '',
       description: '',
+      assignmentType: 'general',
       studentId: 0,
       courseId: 0,
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 1 week from now
@@ -78,6 +103,70 @@ export default function TeacherAssignmentsPage() {
       instructions: ''
     }
   });
+
+  // Audio file handlers for Speaking assignments
+  const handleAudioFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    
+    if (audioFiles.length + files.length > 5) {
+      toast({
+        title: "Too Many Files",
+        description: "Maximum 5 audio files allowed per assignment",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const audioTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3', 'audio/webm'];
+    const invalidFiles = files.filter(file => !audioTypes.includes(file.type));
+
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Invalid File Type",
+        description: "Only audio files are allowed (MP3, WAV, OGG, WebM)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setAudioFiles(prev => [...prev, ...files]);
+  };
+
+  const removeAudioFile = (index: number) => {
+    setAudioFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Audio feedback handlers for teacher
+  const handleFeedbackAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    
+    if (feedbackAudioFiles.length + files.length > 5) {
+      toast({
+        title: "Too Many Files",
+        description: "Maximum 5 audio files allowed",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const audioTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3', 'audio/webm'];
+    const invalidFiles = files.filter(file => !audioTypes.includes(file.type));
+
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Invalid File Type",
+        description: "Only audio files are allowed",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setFeedbackAudioFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFeedbackAudioFile = (index: number) => {
+    setFeedbackAudioFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Fetch assignments
   const { data: assignments = [], isLoading } = useQuery<any[]>({
