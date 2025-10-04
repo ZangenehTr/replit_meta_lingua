@@ -137,8 +137,24 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   console.log('Sidebar rendering with items:', navigationItems.length, 'items');
   console.log('Callern items:', navigationItems.filter(item => item.path.includes('callern')));
   
+  // Prevent sidebar scroll on navigation
+  const handleNavigate = (path: string) => {
+    const sidebar = document.querySelector('.sidebar-container');
+    const currentScroll = sidebar?.scrollTop || 0;
+    
+    setLocation(path);
+    onNavigate?.();
+    
+    // Restore scroll position after navigation
+    requestAnimationFrame(() => {
+      if (sidebar) {
+        sidebar.scrollTop = currentScroll;
+      }
+    });
+  };
+
   return (
-    <div className={`w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`sidebar-container w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="p-4">
         <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
           {navigationItems.map((item, index) => {
@@ -157,8 +173,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   } relative`}
                   onClick={() => {
-                    setLocation(item.path);
-                    onNavigate?.();
+                    handleNavigate(item.path);
                   }}
                   dir={isRTL ? 'rtl' : 'ltr'}
                   style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}

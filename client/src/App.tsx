@@ -147,7 +147,6 @@ import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
 import RoadmapDesigner from "@/pages/admin/roadmap-designer";
 import MSTTestBuilder from "@/pages/admin/mst-test-builder";
-import EcommerceManagement from "@/pages/admin/ecommerce";
 import ShoppingCartSettings from "@/pages/admin/shopping-cart";
 import CalendarSettings from "@/pages/admin/calendar-settings";
 import CurrencySettings from "@/pages/admin/currency-settings";
@@ -402,11 +401,6 @@ function Router() {
       <Route path="/admin/mst-test-builder">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <MSTTestBuilder />
-        </RoleProtectedRoute>
-      </Route>
-      <Route path="/admin/ecommerce">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
-          <EcommerceManagement />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/shopping-cart">

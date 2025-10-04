@@ -706,6 +706,8 @@ export const books = pgTable("books", {
   author: varchar("author", { length: 255 }),
   isbn: varchar("isbn", { length: 20 }),
   description: text("description"),
+  bookType: varchar("book_type", { length: 20 }).notNull().default("pdf"), // 'pdf' or 'hardcopy'
+  aiDescription: text("ai_description"), // AI-generated Farsi description (100-200 words)
   categoryId: integer("category_id").references(() => book_categories.id),
   price: decimal("price", { precision: 10, scale: 2 }),
   currency: varchar("currency", { length: 3 }).default("IRR"),
@@ -714,6 +716,18 @@ export const books = pgTable("books", {
   pageCount: integer("page_count"),
   publishedYear: integer("published_year"),
   coverImageUrl: varchar("cover_image_url", { length: 500 }),
+  
+  // PDF book specific fields
+  pdfFileUrl: varchar("pdf_file_url", { length: 500 }),
+  downloadCount: integer("download_count").default(0),
+  successfulDownloads: integer("successful_downloads").default(0),
+  failedDownloads: integer("failed_downloads").default(0),
+  
+  // Hardcopy book specific fields
+  shipmentStatus: varchar("shipment_status", { length: 50 }), // 'pending', 'processing', 'shipped', 'delivered'
+  postOfficeTrackingNo: varchar("post_office_tracking_no", { length: 255 }),
+  stock: integer("stock").default(0),
+  
   isDigital: boolean("is_digital").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -726,6 +740,8 @@ export const insertBookSchema = z.object({
   author: z.string().max(255).optional(),
   isbn: z.string().max(20).optional(),
   description: z.string().optional(),
+  bookType: z.enum(['pdf', 'hardcopy']).default('pdf'),
+  aiDescription: z.string().optional(),
   categoryId: z.number().optional(),
   price: z.string().optional(), // decimal as string
   currency: z.string().max(3).default("IRR"),
@@ -734,6 +750,18 @@ export const insertBookSchema = z.object({
   pageCount: z.number().optional(),
   publishedYear: z.number().optional(),
   coverImageUrl: z.string().max(500).optional(),
+  
+  // PDF book specific fields
+  pdfFileUrl: z.string().max(500).optional(),
+  downloadCount: z.number().default(0),
+  successfulDownloads: z.number().default(0),
+  failedDownloads: z.number().default(0),
+  
+  // Hardcopy book specific fields
+  shipmentStatus: z.string().max(50).optional(),
+  postOfficeTrackingNo: z.string().max(255).optional(),
+  stock: z.number().default(0),
+  
   isDigital: z.boolean().default(false),
   isActive: z.boolean().default(true)
 });
