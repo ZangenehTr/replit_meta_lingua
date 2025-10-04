@@ -40,7 +40,6 @@ import { AdminSystem } from "@/pages/admin/system-simple";
 import AdminSettings from "@/pages/admin/settings";
 import { IranianComplianceSettings } from "@/pages/admin/iranian-compliance-settings";
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
-import AIServicesManagement from "@/pages/admin/AIServicesManagement";
 import GamesManagement from "@/pages/admin/games-management";
 import AiTrainingDashboard from "@/pages/admin/ai-training";
 import { GameAccessControl } from "@/pages/admin/game-access-control";
@@ -554,37 +553,37 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/front-desk">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <FrontDeskDashboard />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <FrontDeskDashboard />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/walk-in-intake">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <WalkInIntake />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/call-logging">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <CallLogging />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/caller-history">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <CallerHistory />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/sms-templates">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <SmsTemplatesPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/frontdesk/trial-scheduling">
-        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'frontdesk', 'front_desk', 'Front Desk Clerk', 'admin']}>
+        <RoleProtectedRoute allowedRoles={['front_desk_clerk', 'admin']}>
           <TrialLessonScheduling />
         </RoleProtectedRoute>
       </Route>
