@@ -7178,3 +7178,61 @@ export type InsertSmsTemplateFavorite = z.infer<typeof insertSmsTemplateFavorite
 //   statusIndex: index('sms_templates_status_idx').on(smsTemplates.status),
 //   lastUsedIndex: index('sms_templates_last_used_at_idx').on(smsTemplates.lastUsedAt)
 // };
+
+// ============================================================================
+// CALENDAR SETTINGS - System-wide calendar configuration
+// ============================================================================
+export const calendarSettings = pgTable("calendar_settings", {
+  id: serial("id").primaryKey(),
+  calendarType: varchar("calendar_type", { length: 20 }).notNull().default("gregorian"), // 'gregorian' or 'persian'
+  timezone: varchar("timezone", { length: 100 }).notNull().default("Asia/Tehran"),
+  weekStartDay: varchar("week_start_day", { length: 10 }).notNull().default("saturday"), // 'sunday', 'monday', 'saturday'
+  dateFormat: varchar("date_format", { length: 50 }).notNull().default("yyyy/mm/dd"),
+  timeFormat: varchar("time_format", { length: 10 }).notNull().default("24h"), // '12h' or '24h'
+  showWeekends: boolean("show_weekends").default(true),
+  autoDST: boolean("auto_dst").default(true),
+  defaultStartTime: time("default_start_time").default("08:00"),
+  defaultEndTime: time("default_end_time").default("18:00"),
+  defaultSessionDuration: integer("default_session_duration").default(60), // minutes
+  maxBookingAdvance: integer("max_booking_advance").default(30), // days
+  minBookingNotice: integer("min_booking_notice").default(2), // hours
+  allowPastBooking: boolean("allow_past_booking").default(false),
+  emailReminders: boolean("email_reminders").default(true),
+  smsReminders: boolean("sms_reminders").default(false),
+  reminderTime: integer("reminder_time").default(24), // hours before
+  followupTime: integer("followup_time").default(2), // hours after
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// ============================================================================
+// IRANIAN HOLIDAYS - Cache for Persian calendar holidays and occasions
+// ============================================================================
+export const iranianHolidays = pgTable("iranian_holidays", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(), // Gregorian date
+  persianDate: varchar("persian_date", { length: 20 }).notNull(), // Persian date string (e.g., "1403/07/15")
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  isHoliday: boolean("is_holiday").default(false), // Is it an official holiday?
+  type: varchar("type", { length: 50 }).default("occasion"), // 'holiday', 'occasion', 'religious', 'national'
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schemas
+export const insertCalendarSettingsSchema = createInsertSchema(calendarSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertIranianHolidaySchema = createInsertSchema(iranianHolidays).omit({
+  id: true,
+  createdAt: true
+});
+
+// Types
+export type CalendarSettings = typeof calendarSettings.$inferSelect;
+export type InsertCalendarSettings = z.infer<typeof insertCalendarSettingsSchema>;
+export type IranianHoliday = typeof iranianHolidays.$inferSelect;
+export type InsertIranianHoliday = z.infer<typeof insertIranianHolidaySchema>;
