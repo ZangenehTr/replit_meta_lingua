@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import type { AiModel } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,12 @@ export default function AIStudyPartner() {
   const [testDialogOpen, setTestDialogOpen] = useState(false);
   const [testPrompt, setTestPrompt] = useState("");
   const [testResponse, setTestResponse] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
+
+  // Fetch AI models (downloaded + trained)
+  const { data: models = [], isLoading: modelsLoading } = useQuery<AiModel[]>({
+    queryKey: ['/api/ai-models'],
+  });
 
   // Test AI mutation
   const testAIMutation = useMutation({
@@ -194,16 +201,45 @@ export default function AIStudyPartner() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="ai-model">{t('admin:aiModel', 'AI Model')}</Label>
-                    <Select defaultValue="gpt-4">
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
                       <SelectTrigger data-testid="select-ai-model">
                         <SelectValue placeholder={t('admin:selectModel', 'Select model')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="gpt-4">GPT-4</SelectItem>
-                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                        <SelectItem value="claude-3">Claude 3</SelectItem>
+                        {modelsLoading ? (
+                          <div className="px-2 py-4 text-center text-sm text-gray-500">
+                            {t('common:loading', 'Loading models...')}
+                          </div>
+                        ) : models.length === 0 ? (
+                          <div className="px-2 py-4 text-center text-sm text-gray-500">
+                            {t('admin:noModelsAvailable', 'No models available. Please download a model in AI Training Management.')}
+                          </div>
+                        ) : (
+                          <>
+                            {models.map((model) => (
+                              <SelectItem key={model.id} value={model.id.toString()}>
+                                {model.name}
+                                {model.name.includes('Trained') && (
+                                  <span className="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
+                                    Trained
+                                  </span>
+                                )}
+                                {model.parameters && (
+                                  <span className="ml-2 text-xs text-gray-500">
+                                    ({model.parameters}B params)
+                                  </span>
+                                )}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
+                    {models.length === 0 && !modelsLoading && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        {t('admin:downloadModelFirst', 'Download models from AI Training Management → Models tab')}
+                      </p>
+                    )}
                   </div>
 
                   <div>
