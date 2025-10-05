@@ -1,0 +1,35 @@
+You're about to delete confidence_score column in placement_test_sessions table with 27 items
+· You're about to delete generated_roadmap_id column in placement_test_sessions table with 27 items
+· You're about to delete subsystem_permissions column in role_permissions table with 8 items
+· You're about to delete student_id column in homework table with 23 items
+· You're about to delete status column in homework table with 23 items
+· You're about to delete submission column in homework table with 23 items
+· You're about to delete grade column in homework table with 23 items
+· You're about to delete feedback column in homework table with 23 items
+· You're about to delete assigned_at column in homework table with 23 items
+· You're about to delete tutor_id column in homework table with 23 items
+· You're about to delete submission_url column in homework table with 23 items
+· You're about to delete submission_files column in homework table with 23 items
+· You're about to delete max_grade column in homework table with 23 items
+· You're about to delete estimated_time column in homework table with 23 items
+· You're about to delete xp_reward column in homework table with 23 items
+· You're about to delete late_penalty_percent column in homework table with 23 items
+· You're about to delete submitted_at column in homework table with 23 items
+· You're about to delete is_visible column in homework table with 23 items
+· You're about to delete next_level_unlocked_at column in student_curriculum_progress table with 3 items
+· You're about to delete cover_image column in books table with 10 items
+· You're about to delete stock_quantity column in books table with 10 items
+· You're about to delete category column in books table with 10 items
+· You're about to delete publication_year column in books table with 10 items
+
+THIS ACTION WILL CAUSE DATA LOSS AND CANNOT BE REVERTED
+
+Do you still want to push changes?
+[x] All changes were aborted
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
