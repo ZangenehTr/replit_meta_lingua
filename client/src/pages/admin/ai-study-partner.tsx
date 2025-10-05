@@ -49,11 +49,12 @@ export default function AIStudyPartner() {
   // Test AI mutation
   const testAIMutation = useMutation({
     mutationFn: async (prompt: string) => {
+      const modelToUse = models.find(m => m.id.toString() === selectedModel);
       const data = await apiRequest("/api/ollama/generate", {
         method: "POST",
         body: {
           prompt,
-          model: "llama3.2:3b",
+          model: modelToUse?.name || "llama3.2:3b",
           stream: false
         }
       });
