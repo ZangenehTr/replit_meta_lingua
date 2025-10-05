@@ -2,13 +2,18 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/services/endpoints";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { 
   BookOpen, 
   Search, 
@@ -18,24 +23,158 @@ import {
   ShoppingCart,
   DollarSign,
   Package,
-  Users,
   Star,
   TrendingUp,
-  Download,
   Upload,
-  Settings
+  Settings,
+  FileText,
+  HardDrive,
+  Music,
+  Video
 } from "lucide-react";
+
+type BookType = 'pdf' | 'hardcopy';
 
 export function AdminBookEcommerce() {
   const { t } = useTranslation(['admin', 'common']);
   const { isRTL } = useLanguage();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+
+  // Add Book form state
+  const [bookType, setBookType] = useState<BookType>('pdf');
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [isbn, setIsbn] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [language, setLanguage] = useState("en");
+  const [level, setLevel] = useState("");
+  const [pageCount, setPageCount] = useState("");
+  const [publishedYear, setPublishedYear] = useState("");
+  const [stock, setStock] = useState("");
+  
+  // File uploads
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [audioFiles, setAudioFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
 
   // Fetch books data
-  const { data: books = [], isLoading } = useQuery({
+  const { data: books = [], isLoading, refetch } = useQuery({
     queryKey: [API_ENDPOINTS.admin.bookCatalog, { search: searchTerm, category: filterCategory }],
   });
+
+  // Create book mutation
+  const createBookMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      return apiRequest('/api/books', {
+        method: 'POST',
+        body: formData,
+      });
+    },
+    onSuccess: async (data) => {
+      toast({
+        title: t('common:success'),
+        description: t('admin:bookEcommerce.bookCreatedSuccess'),
+      });
+      
+      // Generate AI description after book creation
+      if (data.data?.id) {
+        try {
+          await apiRequest(`/api/books/${data.data.id}/generate-ai-description`, {
+            method: 'POST',
+          });
+          toast({
+            title: t('common:success'),
+            description: t('admin:bookEcommerce.aiDescriptionGenerated'),
+          });
+        } catch (error) {
+          console.error('Failed to generate AI description:', error);
+        }
+      }
+      
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.bookCatalog] });
+      resetForm();
+      setAddDialogOpen(false);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:error'),
+        description: error.message || t('admin:bookEcommerce.bookCreatedError'),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('author', author);
+    formData.append('isbn', isbn);
+    formData.append('description', description);
+    formData.append('bookType', bookType);
+    formData.append('price', price);
+    formData.append('currency', 'IRR');
+    formData.append('language', language);
+    
+    if (level) formData.append('level', level);
+    if (pageCount) formData.append('pageCount', pageCount);
+    if (publishedYear) formData.append('publishedYear', publishedYear);
+    
+    if (bookType === 'pdf') {
+      if (pdfFile) formData.append('pdfFile', pdfFile);
+      audioFiles.forEach((file, index) => {
+        formData.append(`audioFile${index}`, file);
+      });
+      videoFiles.forEach((file, index) => {
+        formData.append(`videoFile${index}`, file);
+      });
+    } else {
+      if (stock) formData.append('stock', stock);
+      if (coverImage) formData.append('coverImage', coverImage);
+    }
+    
+    createBookMutation.mutate(formData);
+  };
+
+  const resetForm = () => {
+    setBookType('pdf');
+    setTitle("");
+    setAuthor("");
+    setIsbn("");
+    setDescription("");
+    setPrice("");
+    setLanguage("en");
+    setLevel("");
+    setPageCount("");
+    setPublishedYear("");
+    setStock("");
+    setPdfFile(null);
+    setCoverImage(null);
+    setAudioFiles([]);
+    setVideoFiles([]);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'pdf' | 'cover' | 'audio' | 'video') => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    if (type === 'pdf') {
+      setPdfFile(files[0]);
+    } else if (type === 'cover') {
+      setCoverImage(files[0]);
+    } else if (type === 'audio') {
+      setAudioFiles(Array.from(files));
+    } else if (type === 'video') {
+      setVideoFiles(Array.from(files));
+    }
+  };
 
   // Mock books data for development
   const mockBooks = [
@@ -50,6 +189,7 @@ export function AdminBookEcommerce() {
       sold: 128,
       rating: 4.8,
       status: "published",
+      bookType: "hardcopy",
       cover: "/api/placeholder/book-cover-1.jpg",
       description: "Comprehensive guide to Persian grammar for beginners"
     },
@@ -60,10 +200,11 @@ export function AdminBookEcommerce() {
       category: "business",
       price: 1250000,
       currency: "IRR",
-      stock: 32,
+      stock: 0,
       sold: 89,
       rating: 4.6,
       status: "published",
+      bookType: "pdf",
       cover: "/api/placeholder/book-cover-2.jpg",
       description: "Essential business English phrases and conversations"
     },
@@ -78,6 +219,7 @@ export function AdminBookEcommerce() {
       sold: 156,
       rating: 4.9,
       status: "published",
+      bookType: "hardcopy",
       cover: "/api/placeholder/book-cover-3.jpg",
       description: "Complete IELTS speaking preparation guide"
     }
@@ -96,14 +238,278 @@ export function AdminBookEcommerce() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" data-testid="button-upload-book">
-            <Upload className="h-4 w-4 mr-2" />
-            {t('admin:bookEcommerce.uploadBook')}
-          </Button>
-          <Button data-testid="button-add-book">
-            <Plus className="h-4 w-4 mr-2" />
-            {t('admin:bookEcommerce.addBook')}
-          </Button>
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-book">
+                <Plus className="h-4 w-4 mr-2" />
+                {t('admin:bookEcommerce.addBook')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{t('admin:bookEcommerce.addNewBook')}</DialogTitle>
+                <DialogDescription>
+                  {t('admin:bookEcommerce.addBookDescription')}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Book Type Selection */}
+                <div className="space-y-2">
+                  <Label>{t('admin:bookEcommerce.bookType')}</Label>
+                  <Select value={bookType} onValueChange={(value: BookType) => setBookType(value)}>
+                    <SelectTrigger data-testid="select-book-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pdf">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          {t('admin:bookEcommerce.pdfBook')}
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="hardcopy">
+                        <div className="flex items-center gap-2">
+                          <HardDrive className="h-4 w-4" />
+                          {t('admin:bookEcommerce.hardcopyBook')}
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">{t('admin:bookEcommerce.title')} *</Label>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                      data-testid="input-title"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="author">{t('admin:bookEcommerce.author')}</Label>
+                      <Input
+                        id="author"
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                        data-testid="input-author"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="isbn">ISBN</Label>
+                      <Input
+                        id="isbn"
+                        value={isbn}
+                        onChange={(e) => setIsbn(e.target.value)}
+                        data-testid="input-isbn"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">{t('admin:bookEcommerce.description')}</Label>
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={3}
+                      data-testid="input-description"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('admin:bookEcommerce.aiDescriptionNote')}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="price">{t('admin:bookEcommerce.price')} (IRR) *</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        required
+                        data-testid="input-price"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="language">{t('admin:bookEcommerce.language')}</Label>
+                      <Select value={language} onValueChange={setLanguage}>
+                        <SelectTrigger data-testid="select-language">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="fa">Farsi</SelectItem>
+                          <SelectItem value="ar">Arabic</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="level">{t('admin:bookEcommerce.level')}</Label>
+                      <Input
+                        id="level"
+                        value={level}
+                        onChange={(e) => setLevel(e.target.value)}
+                        placeholder="A1, B2, etc."
+                        data-testid="input-level"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="pageCount">{t('admin:bookEcommerce.pageCount')}</Label>
+                      <Input
+                        id="pageCount"
+                        type="number"
+                        value={pageCount}
+                        onChange={(e) => setPageCount(e.target.value)}
+                        data-testid="input-page-count"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="year">{t('admin:bookEcommerce.publishedYear')}</Label>
+                      <Input
+                        id="year"
+                        type="number"
+                        value={publishedYear}
+                        onChange={(e) => setPublishedYear(e.target.value)}
+                        placeholder="2024"
+                        data-testid="input-published-year"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Conditional Fields Based on Book Type */}
+                {bookType === 'pdf' ? (
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="font-semibold">{t('admin:bookEcommerce.pdfBookFiles')}</h3>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="pdfFile">{t('admin:bookEcommerce.pdfFile')} *</Label>
+                      <Input
+                        id="pdfFile"
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => handleFileChange(e, 'pdf')}
+                        required
+                        data-testid="input-pdf-file"
+                      />
+                      {pdfFile && (
+                        <p className="text-sm text-muted-foreground">
+                          {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="audioFiles">
+                        <Music className="h-4 w-4 inline mr-2" />
+                        {t('admin:bookEcommerce.audioFiles')}
+                      </Label>
+                      <Input
+                        id="audioFiles"
+                        type="file"
+                        accept="audio/*"
+                        multiple
+                        onChange={(e) => handleFileChange(e, 'audio')}
+                        data-testid="input-audio-files"
+                      />
+                      {audioFiles.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {audioFiles.length} file(s) selected
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="videoFiles">
+                        <Video className="h-4 w-4 inline mr-2" />
+                        {t('admin:bookEcommerce.videoFiles')}
+                      </Label>
+                      <Input
+                        id="videoFiles"
+                        type="file"
+                        accept="video/*"
+                        multiple
+                        onChange={(e) => handleFileChange(e, 'video')}
+                        data-testid="input-video-files"
+                      />
+                      {videoFiles.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {videoFiles.length} file(s) selected
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="font-semibold">{t('admin:bookEcommerce.hardcopyBookDetails')}</h3>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="coverImage">{t('admin:bookEcommerce.coverImage')} *</Label>
+                      <Input
+                        id="coverImage"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'cover')}
+                        required
+                        data-testid="input-cover-image"
+                      />
+                      {coverImage && (
+                        <p className="text-sm text-muted-foreground">
+                          {coverImage.name} ({(coverImage.size / 1024).toFixed(2)} KB)
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="stock">{t('admin:bookEcommerce.stock')} *</Label>
+                      <Input
+                        id="stock"
+                        type="number"
+                        value={stock}
+                        onChange={(e) => setStock(e.target.value)}
+                        required
+                        min="0"
+                        data-testid="input-stock"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddDialogOpen(false)}
+                    data-testid="button-cancel"
+                  >
+                    {t('common:cancel')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createBookMutation.isPending}
+                    data-testid="button-submit"
+                  >
+                    {createBookMutation.isPending ? t('common:saving') : t('common:save')}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -203,9 +609,14 @@ export function AdminBookEcommerce() {
                         {book.title}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">{book.author}</p>
-                      <Badge variant="secondary" className="mt-1">
-                        {book.category}
-                      </Badge>
+                      <div className="flex gap-2 mt-1">
+                        <Badge variant="secondary">
+                          {book.category}
+                        </Badge>
+                        <Badge variant={book.bookType === 'pdf' ? 'default' : 'outline'}>
+                          {book.bookType === 'pdf' ? 'PDF' : 'Hardcopy'}
+                        </Badge>
+                      </div>
                     </div>
                     <Badge 
                       variant={book.status === 'published' ? 'default' : 'secondary'}
@@ -224,10 +635,12 @@ export function AdminBookEcommerce() {
                         {book.price.toLocaleString()} {book.currency}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>{t('admin:bookEcommerce.stock')}</span>
-                      <span data-testid={`text-stock-${book.id}`}>{book.stock}</span>
-                    </div>
+                    {book.bookType === 'hardcopy' && (
+                      <div className="flex justify-between">
+                        <span>{t('admin:bookEcommerce.stock')}</span>
+                        <span data-testid={`text-stock-${book.id}`}>{book.stock}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span>{t('admin:bookEcommerce.sold')}</span>
                       <span data-testid={`text-sold-${book.id}`}>{book.sold}</span>

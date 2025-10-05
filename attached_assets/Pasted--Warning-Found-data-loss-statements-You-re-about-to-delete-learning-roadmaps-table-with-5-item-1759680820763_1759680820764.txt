@@ -1,0 +1,588 @@
+
+
+ Warning  Found data-loss statements:
+· You're about to delete learning_roadmaps table with 5 items
+· You're about to delete roadmap_steps table with 1 items
+· You're about to delete roadmap_milestones table with 3 items
+· You're about to delete placement_test_responses table with 23 items
+· You're about to delete placement_test_questions table with 49 items
+· You're about to change title column type from text to varchar(255) with 647 items
+· You're about to change permissions column type from jsonb to text[] with 279 items
+· You're about to change options column type from jsonb to text[] with 6 items
+· You're about to change total_score column type from integer to numeric(5, 2) with 8 items
+· You're about to change name column type from text to varchar(255) with 351 items
+· You're about to change code column type from text to varchar(50) with 351 items
+· You're about to change email column type from text to varchar(255) with 351 items
+· You're about to change website column type from text to varchar(255) with 351 items
+· You're about to change logo column type from text to varchar(500) with 351 items
+· You're about to change timezone column type from text to varchar(50) with 351 items
+· You're about to change priority column type from text to varchar(20) with 343 items
+· You're about to change relationship column type from text to varchar(50) with 276 items
+· You're about to change email column type from text to varchar(255) with 276 items
+· You're about to change name column type from text to varchar(255) with 12 items
+· You're about to change first_name column type from text to varchar(100) with 496 items
+· You're about to change last_name column type from text to varchar(100) with 496 items
+· You're about to change email column type from text to varchar(255) with 496 items
+· You're about to change phone_number column type from text to varchar(20) with 496 items
+· You're about to change source column type from text to varchar(100) with 496 items
+· You're about to change status column type from text to varchar(50) with 496 items
+· You're about to change priority column type from text to varchar(50) with 496 items
+· You're about to change interested_language column type from text to varchar(100) with 496 items
+· You're about to change level column type from text to varchar(50) with 496 items
+· You're about to change assigned_to column type from text to integer with 496 items
+· You're about to change interested_level column type from text to varchar(50) with 496 items
+· You're about to change preferred_format column type from text to varchar(50) with 496 items
+· You're about to change gender column type from text to varchar(20) with 496 items
+· You're about to change course_target column type from text to varchar(100) with 496 items
+· You're about to change course_module column type from text to varchar(100) with 496 items
+· You're about to change workflow_status column type from text to varchar(50) with 496 items
+· You're about to change follow_up_start column type from timestamp with time zone to timestamp with 496 items
+· You're about to change follow_up_end column type from timestamp with time zone to timestamp with 496 items
+· You're about to change sms_reminder_sent_at column type from timestamp with time zone to timestamp with 496 items
+· You're about to change national_id column type from text to varchar(20) with 496 items
+· You're about to change native_language column type from text to varchar(10) with 1 items
+· You're about to change timezone column type from text to varchar(50) with 1 items
+· You're about to change status column type from text to varchar(20) with 495 items
+· You're about to change goals column type from text[] to text with 495 items
+· You're about to change title column type from text to varchar(255) with 193 items
+· You're about to change language column type from text to varchar(50) with 193 items
+· You're about to change level column type from text to varchar(20) with 193 items
+· You're about to change category column type from text to varchar(100) with 193 items
+· You're about to change type column type from text to varchar(50) with 2 items
+· You're about to change amount column type from integer to numeric(10, 2) with 2 items
+· You're about to change status column type from text to varchar(20) with 2 items
+· You're about to change category column type from varchar(50) to varchar(100) with 18 items
+· You're about to change title column type from varchar(200) to varchar(255) with 18 items
+· You're about to change passing_score column type from integer to numeric(5, 2) with 6 items
+· You're about to change priority column type from text to varchar(20) with 2 items
+· You're about to change status column type from text to varchar(20) with 2 items
+· You're about to change category column type from text to varchar(100) with 2 items
+· You're about to change assigned_to column type from text to integer with 2 items
+· You're about to change type column type from text to varchar(50) with 34 items
+· You're about to change title column type from text to varchar(255) with 34 items
+· You're about to change title column type from text to varchar(255) with 18 items
+· You're about to change status column type from varchar(50) to varchar(20) with 1 items
+· You're about to change message_type column type from text to varchar(20) with 38 items
+· You're about to change day_of_week column type from text to integer with 608 items
+· You're about to change recording_url column type from text to varchar(500) with 3 items
+· You're about to change strengths column type from text to text[] with 7 items
+· You're about to change areas_for_improvement column type from text to text[] with 7 items
+· You're about to change email column type from text to varchar(255) with 8567 items
+· You're about to change password column type from text to varchar(255) with 8567 items
+· You're about to change first_name column type from text to varchar(100) with 8567 items
+· You're about to change last_name column type from text to varchar(100) with 8567 items
+· You're about to change role column type from text to varchar(50) with 8567 items
+· You're about to change phone_number column type from text to varchar(20) with 8567 items
+· You're about to change avatar column type from text to varchar(500) with 8567 items
+· You're about to change member_tier column type from text to varchar(50) with 8567 items
+· You're about to change national_id column type from varchar(50) to varchar(20) with 8567 items
+· You're about to change guardian_phone column type from varchar(50) to varchar(20) with 8567 items
+· You're about to change profile_image column type from text to varchar(500) with 8567 items
+· You're about to change level column type from text to varchar(10) with 8567 items
+· You're about to change status column type from text to varchar(50) with 8567 items
+· You're about to change gender column type from varchar(20) to varchar(10) with 8567 items
+· You're about to change socializer_level column type from text to varchar(50) with 8567 items
+· You're about to change recording_url column type from text to varchar(500) with 165 items
+· You're about to change status column type from text to varchar(20) with 203 items
+· You're about to change session_type column type from text to varchar(50) with 203 items
+· You're about to change observation_date column type from timestamp to date with 88 items
+· You're about to change strengths column type from text[] to text with 88 items
+· You're about to change improvements column type from text[] to text with 88 items
+· You're about to change overall_rating column type from integer to numeric(3, 2) with 88 items
+· You're about to change name column type from text to varchar(255) with 1 items
+· You're about to change recurring_pattern column type from text to varchar(50) with 1 items
+· You're about to change correct_answer column type from jsonb to text with 10 items
+· You're about to change title column type from varchar(200) to varchar(255) with 7 items
+· You're about to change skill_focus column type from varchar(50) to text[] with 7 items
+· You're about to change database_backup_frequency column type from varchar(20) to varchar(50) with 1 items
+· You're about to change system_log_level column type from varchar(20) to varchar(50) with 1 items
+· You're about to change file_storage_provider column type from varchar(20) to varchar(50) with 1 items
+· You're about to change voip_username column type from varchar(100) to varchar(255) with 1 items
+· You're about to change role column type from text to varchar(50) with 8 items
+· You're about to change api_name column type from varchar(255) to varchar(100) with 1 items
+· You're about to change base_url column type from varchar(255) to varchar(500) with 1 items
+· You're about to change title column type from text to varchar(255) with 23 items
+· You're about to change difficulty column type from text to varchar(20) with 23 items
+· You're about to change attachments column type from jsonb to text[] with 23 items
+· You're about to change key column type from text to varchar(100) with 2 items
+· You're about to change name column type from text to varchar(255) with 2 items
+· You're about to change language column type from text to varchar(10) with 2 items
+· You're about to change code column type from text to varchar(20) with 17 items
+· You're about to change name column type from text to varchar(255) with 17 items
+· You're about to change cefr_band column type from text to varchar(10) with 17 items
+· You're about to change status column type from text to varchar(20) with 3 items
+· You're about to change progress_percentage column type from integer to numeric(5, 2) with 3 items
+· You're about to change title column type from varchar(255) to varchar(500) with 10 items
+· You're about to change prerequisites column type from integer[] to text[] with 3 items
+· You're about to add not-null student_id column without default value, which contains 6 items
+· You're about to add not-null notification_type column without default value, which contains 647 items
+· You're about to add not-null user_id column without default value, which contains 188 items
+· You're about to add not-null session_token column without default value, which contains 188 items
+· You're about to add not-null expires_at column without default value, which contains 188 items
+· You're about to add not-null role_name column without default value, which contains 279 items
+· You're about to add not-null skill_area column without default value, which contains 6 items
+· You're about to add not-null level column without default value, which contains 6 items
+· You're about to add not-null student_id column without default value, which contains 8 items
+· You're about to add not-null user_id column without default value, which contains 202 items
+· You're about to add not-null author_id column without default value, which contains 343 items
+· You're about to add not-null guardian_name column without default value, which contains 276 items
+· You're about to add not-null code column without default value, which contains 12 items
+· You're about to add not-null start_date column without default value, which contains 495 items
+· You're about to add not-null name column without default value, which contains 1 items
+· You're about to add not-null session_count column without default value, which contains 1 items
+· You're about to add not-null validity_days column without default value, which contains 1 items
+· You're about to add not-null sessions_remaining column without default value, which contains 5 items
+· You're about to add not-null title column without default value, which contains 1 items
+· You're about to add not-null session_token column without default value, which contains 2 items
+· You're about to add not-null ticket_number column without default value, which contains 2 items
+· You're about to add not-null submitter_id column without default value, which contains 2 items
+· You're about to add not-null subject column without default value, which contains 2 items
+· You're about to add not-null user_id column without default value, which contains 34 items
+· You're about to add not-null start_date column without default value, which contains 1 items
+· You're about to add not-null end_date column without default value, which contains 1 items
+· You're about to add not-null period_type column without default value, which contains 1 items
+· You're about to add not-null notification_type column without default value, which contains 18 items
+· You're about to add not-null body column without default value, which contains 18 items
+· You're about to add not-null user_id column without default value, which contains 1 items
+· You're about to add not-null delivery_method column without default value, which contains 1 items
+· You're about to add not-null content column without default value, which contains 38 items
+· You're about to add not-null effective_from_date column without default value, which contains 608 items
+· You're about to add not-null response_text column without default value, which contains 3 items
+· You're about to add not-null class_id column without default value, which contains 3 items
+· You're about to add not-null session_date column without default value, which contains 3 items
+· You're about to add not-null observation_date column without default value, which contains 7 items
+· You're about to add not-null mentor_id column without default value, which contains 203 items
+· You're about to add not-null student_id column without default value, which contains 203 items
+· You're about to add not-null scheduled_at column without default value, which contains 203 items
+· You're about to add not-null question_text column without default value, which contains 10 items
+· You're about to add not-null name column without default value, which contains 1 items
+· You're about to add not-null session_count column without default value, which contains 1 items
+· You're about to add not-null validity_days column without default value, which contains 1 items
+· You're about to add not-null name column without default value, which contains 3 items
+· You're about to add not-null step_order column without default value, which contains 7 items
+· You're about to add not-null step_type column without default value, which contains 7 items
+· You're about to add not-null day_of_week column without default value, which contains 4 items
+· You're about to add not-null start_time column without default value, which contains 4 items
+· You're about to add not-null end_time column without default value, which contains 4 items
+· You're about to add not-null test_id column without default value, which contains 27 items
+· You're about to add not-null student_id column without default value, which contains 27 items
+· You're about to add not-null session_token column without default value, which contains 27 items
+· You're about to add not-null permission column without default value, which contains 8 items
+· You're about to add not-null action column without default value, which contains 8 items
+· You're about to delete user_id column in enrollments table with 6 items
+· You're about to delete progress column in enrollments table with 6 items
+· You're about to delete enrolled_at column in enrollments table with 6 items
+· You're about to delete completed_at column in enrollments table with 6 items
+· You're about to delete receiver_id column in messages table with 499 items
+· You're about to delete sent_at column in messages table with 499 items
+· You're about to delete type column in notifications table with 647 items
+· You're about to delete student_id column in sessions table with 188 items
+· You're about to delete tutor_id column in sessions table with 188 items
+· You're about to delete course_id column in sessions table with 188 items
+· You're about to delete title column in sessions table with 188 items
+· You're about to delete description column in sessions table with 188 items
+· You're about to delete scheduled_at column in sessions table with 188 items
+· You're about to delete duration column in sessions table with 188 items
+· You're about to delete status column in sessions table with 188 items
+· You're about to delete session_url column in sessions table with 188 items
+· You're about to delete notes column in sessions table with 188 items
+· You're about to delete name column in custom_roles table with 279 items
+· You're about to delete is_system_role column in custom_roles table with 279 items
+· You're about to delete current_level column in user_stats table with 4 items
+· You're about to delete longest_streak column in user_stats table with 4 items
+· You're about to delete total_study_time column in user_stats table with 4 items
+· You're about to delete lessons_completed column in user_stats table with 4 items
+· You're about to delete quizzes_completed column in user_stats table with 4 items
+· You're about to delete perfect_scores column in user_stats table with 4 items
+· You're about to delete words_learned column in user_stats table with 4 items
+· You're about to delete conversations_completed column in user_stats table with 4 items
+· You're about to delete last_activity_date column in user_stats table with 4 items
+· You're about to delete language column in level_assessment_questions table with 6 items
+· You're about to delete media_url column in level_assessment_questions table with 6 items
+· You're about to delete order column in level_assessment_questions table with 6 items
+· You're about to delete user_id column in level_assessment_results table with 8 items
+· You're about to delete language column in level_assessment_results table with 8 items
+· You're about to delete max_score column in level_assessment_results table with 8 items
+· You're about to delete proficiency_level column in level_assessment_results table with 8 items
+· You're about to delete completed_at column in level_assessment_results table with 8 items
+· You're about to delete answers column in level_assessment_results table with 8 items
+· You're about to delete time_taken column in level_assessment_results table with 8 items
+· You're about to delete student_id column in attendance_records table with 202 items
+· You're about to delete group_id column in attendance_records table with 202 items
+· You're about to delete date column in attendance_records table with 202 items
+· You're about to delete status column in attendance_records table with 202 items
+· You're about to delete marked_by column in attendance_records table with 202 items
+· You're about to delete phone_number column in institutes table with 351 items
+· You're about to delete primary_color column in institutes table with 351 items
+· You're about to delete secondary_color column in institutes table with 351 items
+· You're about to delete teacher_id column in student_notes table with 343 items
+· You're about to delete type column in student_notes table with 343 items
+· You're about to delete title column in student_notes table with 343 items
+· You're about to delete institute_id column in teacher_assignments table with 454 items
+· You're about to delete department_id column in teacher_assignments table with 454 items
+· You're about to delete subjects column in teacher_assignments table with 454 items
+· You're about to delete max_students column in teacher_assignments table with 454 items
+· You're about to delete current_students column in teacher_assignments table with 454 items
+· You're about to delete hourly_rate column in teacher_assignments table with 454 items
+· You're about to delete contract_type column in teacher_assignments table with 454 items
+· You're about to delete start_date column in teacher_assignments table with 454 items
+· You're about to delete end_date column in teacher_assignments table with 454 items
+· You're about to delete status column in teacher_assignments table with 454 items
+· You're about to delete name column in parent_guardians table with 276 items
+· You're about to delete phone_number column in parent_guardians table with 276 items
+· You're about to delete head_teacher_id column in departments table with 12 items
+· You're about to delete cultural_background column in user_profiles table with 1 items
+· You're about to delete proficiency_level column in user_profiles table with 1 items
+· You're about to delete learning_style column in user_profiles table with 1 items
+· You're about to delete preferred_study_time column in user_profiles table with 1 items
+· You're about to delete weekly_study_hours column in user_profiles table with 1 items
+· You're about to delete personality_type column in user_profiles table with 1 items
+· You're about to delete motivation_factors column in user_profiles table with 1 items
+· You're about to delete learning_challenges column in user_profiles table with 1 items
+· You're about to delete strengths column in user_profiles table with 1 items
+· You're about to delete national_id column in user_profiles table with 1 items
+· You're about to delete birthday column in user_profiles table with 1 items
+· You're about to delete guardian_name column in user_profiles table with 1 items
+· You're about to delete guardian_phone column in user_profiles table with 1 items
+· You're about to delete notes column in user_profiles table with 1 items
+· You're about to delete current_level column in user_profiles table with 1 items
+· You're about to delete target_language column in user_profiles table with 1 items
+· You're about to delete current_proficiency column in user_profiles table with 1 items
+· You're about to delete assigned_date column in mentor_assignments table with 495 items
+· You're about to delete completed_date column in mentor_assignments table with 495 items
+· You're about to delete thumbnail column in courses table with 193 items
+· You're about to delete instructor_id column in courses table with 193 items
+· You're about to delete price column in courses table with 193 items
+· You're about to delete duration column in courses table with 193 items
+· You're about to delete total_lessons column in courses table with 193 items
+· You're about to delete tags column in courses table with 193 items
+· You're about to delete prerequisites column in courses table with 193 items
+· You're about to delete learning_objectives column in courses table with 193 items
+· You're about to delete difficulty column in courses table with 193 items
+· You're about to delete certificate_template column in courses table with 193 items
+· You're about to delete is_featured column in courses table with 193 items
+· You're about to delete course_code column in courses table with 193 items
+· You're about to delete total_sessions column in courses table with 193 items
+· You're about to delete session_duration column in courses table with 193 items
+· You're about to delete class_type column in courses table with 193 items
+· You're about to delete weekdays column in courses table with 193 items
+· You're about to delete start_time column in courses table with 193 items
+· You're about to delete end_time column in courses table with 193 items
+· You're about to delete auto_record column in courses table with 193 items
+· You're about to delete recording_available column in courses table with 193 items
+· You're about to delete delivery_mode column in courses table with 193 items
+· You're about to delete target_language column in courses table with 193 items
+· You're about to delete proficiency_level column in courses table with 193 items
+· You're about to delete class_format column in courses table with 193 items
+· You're about to delete max_students column in courses table with 193 items
+· You're about to delete target_level column in courses table with 193 items
+· You're about to delete first_session_date column in courses table with 193 items
+· You're about to delete last_session_date column in courses table with 193 items
+· You're about to delete time_zone column in courses table with 193 items
+· You're about to delete calendar_type column in courses table with 193 items
+· You're about to delete rating column in courses table with 193 items
+· You're about to delete access_period_months column in courses table with 193 items
+· You're about to delete callern_available_24h column in courses table with 193 items
+· You're about to delete callern_roadmap_id column in courses table with 193 items
+· You're about to delete merchant_transaction_id column in wallet_transactions table with 2 items
+· You're about to delete shetab_transaction_id column in wallet_transactions table with 2 items
+· You're about to delete shetab_reference_number column in wallet_transactions table with 2 items
+· You're about to delete card_number column in wallet_transactions table with 2 items
+· You're about to delete gateway_response column in wallet_transactions table with 2 items
+· You're about to delete completed_at column in wallet_transactions table with 2 items
+· You're about to delete student_id column in session_packages table with 1 items
+· You're about to delete package_name column in session_packages table with 1 items
+· You're about to delete total_sessions column in session_packages table with 1 items
+· You're about to delete used_sessions column in session_packages table with 1 items
+· You're about to delete remaining_sessions column in session_packages table with 1 items
+· You're about to delete status column in session_packages table with 1 items
+· You're about to delete purchased_at column in session_packages table with 1 items
+· You're about to delete expires_at column in session_packages table with 1 items
+· You're about to delete notes column in session_packages table with 1 items
+· You're about to delete total_hours column in student_callern_packages table with 5 items
+· You're about to delete used_minutes column in student_callern_packages table with 5 items
+· You're about to delete remaining_minutes column in student_callern_packages table with 5 items
+· You're about to delete price column in student_callern_packages table with 5 items
+· You're about to delete status column in student_callern_packages table with 5 items
+· You're about to delete level column in callern_syllabus_topics table with 18 items
+· You're about to delete order column in callern_syllabus_topics table with 18 items
+· You're about to delete language column in tests table with 6 items
+· You're about to delete level column in tests table with 6 items
+· You're about to delete max_attempts column in tests table with 6 items
+· You're about to delete show_results column in tests table with 6 items
+· You're about to delete scheduled_date column in tests table with 6 items
+· You're about to delete due_date column in tests table with 6 items
+· You're about to delete started_at column in test_attempts table with 4 items
+· You're about to delete completed_at column in test_attempts table with 4 items
+· You're about to delete game_name column in games table with 1 items
+· You're about to delete game_code column in games table with 1 items
+· You're about to delete age_group column in games table with 1 items
+· You're about to delete min_level column in games table with 1 items
+· You're about to delete max_level column in games table with 1 items
+· You're about to delete game_mode column in games table with 1 items
+· You're about to delete duration column in games table with 1 items
+· You're about to delete points_per_correct column in games table with 1 items
+· You're about to delete bonus_multiplier column in games table with 1 items
+· You're about to delete lives_system column in games table with 1 items
+· You're about to delete timer_enabled column in games table with 1 items
+· You're about to delete background_image column in games table with 1 items
+· You're about to delete sound_effects column in games table with 1 items
+· You're about to delete total_levels column in games table with 1 items
+· You're about to delete unlock_requirements column in games table with 1 items
+· You're about to delete level_id column in game_sessions table with 2 items
+· You're about to delete started_at column in game_sessions table with 2 items
+· You're about to delete ended_at column in game_sessions table with 2 items
+· You're about to delete wrong_answers column in game_sessions table with 2 items
+· You're about to delete accuracy column in game_sessions table with 2 items
+· You're about to delete stars_earned column in game_sessions table with 2 items
+· You're about to delete new_badges column in game_sessions table with 2 items
+· You're about to delete game_state column in game_sessions table with 2 items
+· You're about to delete is_completed column in game_sessions table with 2 items
+· You're about to delete title column in support_tickets table with 2 items
+· You're about to delete student_id column in support_tickets table with 2 items
+· You're about to delete student_name column in support_tickets table with 2 items
+· You're about to delete participants column in chat_conversations table with 34 items
+· You're about to delete last_message column in chat_conversations table with 34 items
+· You're about to delete last_message_at column in chat_conversations table with 34 items
+· You're about to delete unread_count column in chat_conversations table with 34 items
+· You're about to delete period_start_date column in teacher_availability_periods table with 1 items
+· You're about to delete period_end_date column in teacher_availability_periods table with 1 items
+· You're about to delete day_of_week column in teacher_availability_periods table with 1 items
+· You're about to delete time_division column in teacher_availability_periods table with 1 items
+· You're about to delete class_format column in teacher_availability_periods table with 1 items
+· You're about to delete specific_hours column in teacher_availability_periods table with 1 items
+· You're about to delete is_active column in teacher_availability_periods table with 1 items
+· You're about to delete supervisor_notified column in teacher_availability_periods table with 1 items
+· You're about to delete admin_notified column in teacher_availability_periods table with 1 items
+· You're about to delete message column in push_notifications table with 18 items
+· You're about to delete type column in push_notifications table with 18 items
+· You're about to delete target_audience column in push_notifications table with 18 items
+· You're about to delete channels column in push_notifications table with 18 items
+· You're about to delete status column in push_notifications table with 18 items
+· You're about to delete scheduled_at column in push_notifications table with 18 items
+· You're about to delete delivery_stats column in push_notifications table with 18 items
+· You're about to delete target_user_ids column in push_notifications table with 18 items
+· You're about to delete icon column in push_notifications table with 18 items
+· You're about to delete image column in push_notifications table with 18 items
+· You're about to delete action_text column in push_notifications table with 18 items
+· You're about to delete recipient_id column in notification_delivery_logs table with 1 items
+· You're about to delete channel column in notification_delivery_logs table with 1 items
+· You're about to delete sent_at column in notification_delivery_logs table with 1 items
+· You're about to delete sender_name column in chat_messages table with 38 items
+· You're about to delete message column in chat_messages table with 38 items
+· You're about to delete attachments column in chat_messages table with 38 items
+· You're about to delete is_read column in chat_messages table with 38 items
+· You're about to delete sent_at column in chat_messages table with 38 items
+· You're about to delete is_edited column in chat_messages table with 38 items
+· You're about to delete edited_at column in chat_messages table with 38 items
+· You're about to delete reply_to column in chat_messages table with 38 items
+· You're about to delete reactions column in chat_messages table with 38 items
+· You're about to delete read_by column in chat_messages table with 38 items
+· You're about to delete teacher_id column in teacher_observation_responses table with 3 items
+· You're about to delete content column in teacher_observation_responses table with 3 items
+· You're about to delete submitted_at column in teacher_observation_responses table with 3 items
+· You're about to delete supervisor_reviewed column in teacher_observation_responses table with 3 items
+· You're about to delete supervisor_reviewed_at column in teacher_observation_responses table with 3 items
+· You're about to delete session_id column in live_class_sessions table with 3 items
+· You're about to delete status column in live_class_sessions table with 3 items
+· You're about to delete notes column in live_class_sessions table with 3 items
+· You're about to delete course_id column in live_class_sessions table with 3 items
+· You're about to delete class_title column in live_class_sessions table with 3 items
+· You're about to delete class_type column in live_class_sessions table with 3 items
+· You're about to delete meeting_url column in live_class_sessions table with 3 items
+· You're about to delete room_number column in live_class_sessions table with 3 items
+· You're about to delete supervisor_join_count column in live_class_sessions table with 3 items
+· You're about to delete quality_score column in live_class_sessions table with 3 items
+· You're about to delete session_id column in scheduled_observations table with 5 items
+· You're about to delete priority column in scheduled_observations table with 5 items
+· You're about to delete teacher_notified column in scheduled_observations table with 5 items
+· You're about to delete notification_sent_at column in scheduled_observations table with 5 items
+· You're about to delete session_id column in supervision_observations table with 7 items
+· You're about to delete overall_score column in supervision_observations table with 7 items
+· You're about to delete notes column in supervision_observations table with 7 items
+· You're about to delete teacher_acknowledged column in supervision_observations table with 7 items
+· You're about to delete teacher_acknowledged_at column in supervision_observations table with 7 items
+· You're about to delete teacher_response column in supervision_observations table with 7 items
+· You're about to delete teacher_improvement_plan column in supervision_observations table with 7 items
+· You're about to delete improvement_plan_deadline column in supervision_observations table with 7 items
+· You're about to delete follow_up_completed column in supervision_observations table with 7 items
+· You're about to delete follow_up_completed_at column in supervision_observations table with 7 items
+· You're about to delete scheduled_observation_id column in supervision_observations table with 7 items
+· You're about to delete observation_status column in supervision_observations table with 7 items
+· You're about to delete package_id column in callern_call_history table with 165 items
+· You're about to delete duration_minutes column in callern_call_history table with 165 items
+· You're about to delete notes column in callern_call_history table with 165 items
+· You're about to delete transcript_url column in callern_call_history table with 165 items
+· You're about to delete transcript_lang column in callern_call_history table with 165 items
+· You're about to delete ai_summary_json column in callern_call_history table with 165 items
+· You're about to delete consent_recording_at column in callern_call_history table with 165 items
+· You're about to delete student_consent_recording column in callern_call_history table with 165 items
+· You're about to delete teacher_consent_recording column in callern_call_history table with 165 items
+· You're about to delete content_bundle_url column in callern_call_history table with 165 items
+· You're about to delete student_rating column in callern_call_history table with 165 items
+· You're about to delete supervisor_rating column in callern_call_history table with 165 items
+· You're about to delete teacher_connection_quality column in callern_call_history table with 165 items
+· You're about to delete student_connection_quality column in callern_call_history table with 165 items
+· You're about to delete scheduled_date column in mentoring_sessions table with 203 items
+· You're about to delete duration_minutes column in mentoring_sessions table with 203 items
+· You're about to delete topics column in mentoring_sessions table with 203 items
+· You're about to delete next_steps column in mentoring_sessions table with 203 items
+· You're about to delete student_progress column in mentoring_sessions table with 203 items
+· You're about to delete mentor_notes column in mentoring_sessions table with 203 items
+· You're about to delete completed_at column in mentoring_sessions table with 203 items
+· You're about to delete observation_id column in teacher_evaluations table with 1 items
+· You're about to delete overall_score column in teacher_evaluations table with 1 items
+· You're about to delete criteria column in teacher_evaluations table with 1 items
+· You're about to delete strengths column in teacher_evaluations table with 1 items
+· You're about to delete areas_for_improvement column in teacher_evaluations table with 1 items
+· You're about to delete recommendations column in teacher_evaluations table with 1 items
+· You're about to delete follow_up_required column in teacher_evaluations table with 1 items
+· You're about to delete metadata column in teacher_evaluations table with 1 items
+· You're about to delete supervisor_id column in teacher_evaluations table with 1 items
+· You're about to delete evaluation_period column in teacher_evaluations table with 1 items
+· You're about to delete teaching_effectiveness column in teacher_evaluations table with 1 items
+· You're about to delete classroom_management column in teacher_evaluations table with 1 items
+· You're about to delete student_engagement column in teacher_evaluations table with 1 items
+· You're about to delete content_knowledge column in teacher_evaluations table with 1 items
+· You're about to delete communication column in teacher_evaluations table with 1 items
+· You're about to delete professionalism column in teacher_evaluations table with 1 items
+· You're about to delete overall_rating column in teacher_evaluations table with 1 items
+· You're about to delete improvement_areas column in teacher_evaluations table with 1 items
+· You're about to delete goals column in teacher_evaluations table with 1 items
+· You're about to delete observation_notes column in teacher_evaluations table with 1 items
+· You're about to delete student_feedback_summary column in teacher_evaluations table with 1 items
+· You're about to delete status column in teacher_evaluations table with 1 items
+· You're about to delete class_id column in class_observations table with 88 items
+· You're about to delete duration column in class_observations table with 88 items
+· You're about to delete feedback column in class_observations table with 88 items
+· You're about to delete metadata column in class_observations table with 88 items
+· You're about to delete supervisor_id column in class_observations table with 88 items
+· You're about to delete course_id column in class_observations table with 88 items
+· You're about to delete session_id column in class_observations table with 88 items
+· You're about to delete duration_minutes column in class_observations table with 88 items
+· You're about to delete lesson_topic column in class_observations table with 88 items
+· You're about to delete preparedness column in class_observations table with 88 items
+· You're about to delete delivery column in class_observations table with 88 items
+· You're about to delete student_participation column in class_observations table with 88 items
+· You're about to delete material_usage column in class_observations table with 88 items
+· You're about to delete time_management column in class_observations table with 88 items
+· You're about to delete observations column in class_observations table with 88 items
+· You're about to delete positive_points column in class_observations table with 88 items
+· You're about to delete improvement_suggestions column in class_observations table with 88 items
+· You're about to delete follow_up_required column in class_observations table with 88 items
+· You're about to delete follow_up_notes column in class_observations table with 88 items
+· You're about to delete type column in holidays table with 1 items
+· You're about to delete level_id column in game_questions table with 10 items
+· You're about to delete language column in game_questions table with 10 items
+· You're about to delete skill_focus column in game_questions table with 10 items
+· You're about to delete question column in game_questions table with 10 items
+· You're about to delete question_audio column in game_questions table with 10 items
+· You're about to delete question_image column in game_questions table with 10 items
+· You're about to delete options column in game_questions table with 10 items
+· You're about to delete alternative_answers column in game_questions table with 10 items
+· You're about to delete hint column in game_questions table with 10 items
+· You're about to delete teaching_point column in game_questions table with 10 items
+· You're about to delete base_points column in game_questions table with 10 items
+· You're about to delete bonus_points column in game_questions table with 10 items
+· You're about to delete times_used column in game_questions table with 10 items
+· You're about to delete correct_rate column in game_questions table with 10 items
+· You're about to delete average_time column in game_questions table with 10 items
+· You're about to delete ai_generated column in game_questions table with 10 items
+· You're about to delete ai_prompt column in game_questions table with 10 items
+· You're about to delete module_id column in video_lessons table with 1 items
+· You're about to delete order_index column in video_lessons table with 1 items
+· You're about to delete language column in video_lessons table with 1 items
+· You're about to delete level column in video_lessons table with 1 items
+· You're about to delete skill_focus column in video_lessons table with 1 items
+· You're about to delete materials_url column in video_lessons table with 1 items
+· You're about to delete is_free column in video_lessons table with 1 items
+· You're about to delete is_published column in video_lessons table with 1 items
+· You're about to delete completion_rate column in video_lessons table with 1 items
+· You're about to delete package_name column in callern_packages table with 1 items
+· You're about to delete total_hours column in callern_packages table with 1 items
+· You're about to delete package_type column in callern_packages table with 1 items
+· You're about to delete target_level column in callern_packages table with 1 items
+· You're about to delete max_students column in callern_packages table with 1 items
+· You're about to delete available_from column in callern_packages table with 1 items
+· You're about to delete available_to column in callern_packages table with 1 items
+· You're about to delete package_id column in callern_roadmaps table with 3 items
+· You're about to delete roadmap_name column in callern_roadmaps table with 3 items
+· You're about to delete total_steps column in callern_roadmaps table with 3 items
+· You're about to delete estimated_hours column in callern_roadmaps table with 3 items
+· You're about to delete step_number column in callern_roadmap_steps table with 7 items
+· You're about to delete objectives column in callern_roadmap_steps table with 7 items
+· You're about to delete teacher_ai_tips column in callern_roadmap_steps table with 7 items
+· You're about to delete estimated_minutes column in callern_roadmap_steps table with 7 items
+· You're about to delete materials column in callern_roadmap_steps table with 7 items
+· You're about to delete assessment_criteria column in callern_roadmap_steps table with 7 items
+· You're about to delete revoked_at column in teacher_callern_authorization table with 3 items
+· You're about to delete is_online column in teacher_callern_availability table with 4 items
+· You're about to delete last_active_at column in teacher_callern_availability table with 4 items
+· You're about to delete hourly_rate column in teacher_callern_availability table with 4 items
+· You're about to delete available_hours column in teacher_callern_availability table with 4 items
+· You're about to delete morning_slot column in teacher_callern_availability table with 4 items
+· You're about to delete afternoon_slot column in teacher_callern_availability table with 4 items
+· You're about to delete evening_slot column in teacher_callern_availability table with 4 items
+· You're about to delete night_slot column in teacher_callern_availability table with 4 items
+· You're about to delete missed_shifts column in teacher_callern_availability table with 4 items
+· You're about to delete missed_calls column in teacher_callern_availability table with 4 items
+· You're about to delete total_calls_handled column in teacher_callern_availability table with 4 items
+· You're about to delete last_connection_strength column in teacher_callern_availability table with 4 items
+· You're about to delete user_id column in placement_test_sessions table with 27 items
+· You're about to delete target_language column in placement_test_sessions table with 27 items
+· You're about to delete learning_goal column in placement_test_sessions table with 27 items
+· You're about to delete started_at column in placement_test_sessions table with 27 items
+· You're about to delete completed_at column in placement_test_sessions table with 27 items
+· You're about to delete total_duration_seconds column in placement_test_sessions table with 27 items
+· You're about to delete current_skill column in placement_test_sessions table with 27 items
+· You're about to delete overall_cefr_level column in placement_test_sessions table with 27 items
+· You're about to delete speaking_level column in placement_test_sessions table with 27 items
+· You're about to delete listening_level column in placement_test_sessions table with 27 items
+· You're about to delete reading_level column in placement_test_sessions table with 27 items
+· You're about to delete writing_level column in placement_test_sessions table with 27 items
+· You're about to delete overall_score column in placement_test_sessions table with 27 items
+· You're about to delete speaking_score column in placement_test_sessions table with 27 items
+· You're about to delete listening_score column in placement_test_sessions table with 27 items
+· You're about to delete reading_score column in placement_test_sessions table with 27 items
+· You're about to delete writing_score column in placement_test_sessions table with 27 items
+· You're about to delete strengths column in placement_test_sessions table with 27 items
+· You're about to delete weaknesses column in placement_test_sessions table with 27 items
+· You're about to delete recommendations column in placement_test_sessions table with 27 items
+· You're about to delete confidence_score column in placement_test_sessions table with 27 items
+· You're about to delete generated_roadmap_id column in placement_test_sessions table with 27 items
+· You're about to delete subsystem_permissions column in role_permissions table with 8 items
+· You're about to delete student_id column in homework table with 23 items
+· You're about to delete status column in homework table with 23 items
+· You're about to delete submission column in homework table with 23 items
+· You're about to delete grade column in homework table with 23 items
+· You're about to delete feedback column in homework table with 23 items
+· You're about to delete assigned_at column in homework table with 23 items
+· You're about to delete tutor_id column in homework table with 23 items
+· You're about to delete submission_url column in homework table with 23 items
+· You're about to delete submission_files column in homework table with 23 items
+· You're about to delete max_grade column in homework table with 23 items
+· You're about to delete estimated_time column in homework table with 23 items
+· You're about to delete xp_reward column in homework table with 23 items
+· You're about to delete late_penalty_percent column in homework table with 23 items
+· You're about to delete submitted_at column in homework table with 23 items
+· You're about to delete is_visible column in homework table with 23 items
+· You're about to delete next_level_unlocked_at column in student_curriculum_progress table with 3 items
+· You're about to delete cover_image column in books table with 10 items
+· You're about to delete stock_quantity column in books table with 10 items
+· You're about to delete category column in books table with 10 items
+· You're about to delete publication_year column in books table with 10 items
+
+THIS ACTION WILL CAUSE DATA LOSS AND CANNOT BE REVERTED
+
+Do you still want to push changes?
+[x] All changes were aborted
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
+~/workspace$ 
