@@ -13,12 +13,14 @@ import {
   insertBookCategorySchema,
   insertCartItemSchema,
   insertOrderSchema,
+  insertBookOrderSchema,
   insertUserAddressSchema,
   insertDictionaryLookupSchema,
   type Book,
   type Cart,
   type CartItem,
   type Order,
+  type BookOrder,
   type UserAddress,
   type DictionaryLookup
 } from "@shared/schema";
@@ -1376,6 +1378,170 @@ Please write a compelling description in Persian that highlights the book's valu
       res.status(500).json({
         success: false,
         message: error.message || 'Failed to generate AI description'
+      });
+    }
+  });
+
+  // ============================================================================
+  // BOOK ORDERS ROUTES
+  // ============================================================================
+
+  // GET /api/book-ecommerce/orders - Get all book orders (Admin only)
+  app.get("/api/book-ecommerce/orders", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const orders = await storage.getAllBookOrders();
+      
+      res.json({
+        success: true,
+        data: orders.map(order => ({
+          id: order.id,
+          userId: order.userId,
+          bookId: order.bookId,
+          orderStatus: order.orderStatus,
+          paymentStatus: order.paymentStatus,
+          totalAmount: order.totalAmount,
+          currency: order.currency,
+          downloadCount: order.downloadCount,
+          lastDownloadAt: order.lastDownloadAt,
+          downloadLimit: order.downloadLimit,
+          shippingStatus: order.shippingStatus,
+          trackingNumber: order.trackingNumber,
+          shippingAddress: order.shippingAddress,
+          shippedAt: order.shippedAt,
+          deliveredAt: order.deliveredAt,
+          createdAt: order.createdAt,
+          updatedAt: order.updatedAt
+        }))
+      });
+    } catch (error: any) {
+      console.error('Error fetching book orders:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch book orders'
+      });
+    }
+  });
+
+  // GET /api/book-ecommerce/student/orders - Get student's book orders
+  app.get("/api/book-ecommerce/student/orders", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const orders = await storage.getUserBookOrders(userId);
+      
+      res.json({
+        success: true,
+        data: orders.map(order => ({
+          id: order.id,
+          bookId: order.bookId,
+          orderStatus: order.orderStatus,
+          paymentStatus: order.paymentStatus,
+          totalAmount: order.totalAmount,
+          currency: order.currency,
+          downloadCount: order.downloadCount,
+          lastDownloadAt: order.lastDownloadAt,
+          downloadLimit: order.downloadLimit,
+          shippingStatus: order.shippingStatus,
+          trackingNumber: order.trackingNumber,
+          shippingAddress: order.shippingAddress,
+          shippedAt: order.shippedAt,
+          deliveredAt: order.deliveredAt,
+          createdAt: order.createdAt
+        }))
+      });
+    } catch (error: any) {
+      console.error('Error fetching user book orders:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch your orders'
+      });
+    }
+  });
+
+  // PATCH /api/book-ecommerce/orders/:id/shipping - Update shipping status (Admin only)
+  app.patch("/api/book-ecommerce/orders/:id/shipping", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const orderId = parseInt(req.params.id, 10);
+      if (isNaN(orderId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid order ID'
+        });
+      }
+
+      const updateData = {
+        shippingStatus: req.body.shippingStatus,
+        trackingNumber: req.body.trackingNumber,
+        shippedAt: req.body.shippedAt ? new Date(req.body.shippedAt) : undefined,
+        deliveredAt: req.body.deliveredAt ? new Date(req.body.deliveredAt) : undefined
+      };
+
+      const updated = await storage.updateBookOrderShipping(orderId, updateData);
+
+      res.json({
+        success: true,
+        message: 'Shipping status updated successfully',
+        data: updated
+      });
+    } catch (error: any) {
+      console.error('Error updating shipping status:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update shipping status'
+      });
+    }
+  });
+
+  // POST /api/book-ecommerce/orders/:id/download - Record PDF download
+  app.post("/api/book-ecommerce/orders/:id/download", authenticateToken, async (req: any, res) => {
+    try {
+      const orderId = parseInt(req.params.id, 10);
+      const userId = req.user.id;
+      
+      if (isNaN(orderId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid order ID'
+        });
+      }
+
+      const order = await storage.getBookOrder(orderId);
+      
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      if (order.userId !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied'
+        });
+      }
+
+      if (order.downloadCount >= order.downloadLimit) {
+        return res.status(403).json({
+          success: false,
+          message: `Download limit reached (${order.downloadLimit} downloads)`
+        });
+      }
+
+      await storage.recordBookDownload(orderId);
+
+      res.json({
+        success: true,
+        message: 'Download recorded successfully',
+        data: {
+          downloadCount: order.downloadCount + 1,
+          downloadLimit: order.downloadLimit
+        }
+      });
+    } catch (error: any) {
+      console.error('Error recording download:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to record download'
       });
     }
   });

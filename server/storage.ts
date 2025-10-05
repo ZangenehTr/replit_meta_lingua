@@ -34,7 +34,7 @@ import {
   // MST tables
   mstSessions, mstSkillStates, mstResponses,
   // Book e-commerce tables
-  book_categories, books, book_assets, dictionary_lookups, carts, cart_items,
+  book_categories, books, book_assets, dictionary_lookups, book_orders, carts, cart_items,
   orders, order_items, user_addresses, shipping_orders, courier_tracking,
   // SMS template tables
   smsTemplateCategories, smsTemplateVariables, smsTemplates, smsTemplateSendingLogs, 
@@ -117,6 +117,7 @@ import {
   // Book e-commerce types
   type BookCategory, type BookCategoryInsert, type Book, type BookInsert,
   type BookAsset, type BookAssetInsert, type DictionaryLookup, type DictionaryLookupInsert,
+  type BookOrder, type BookOrderInsert,
   type Cart, type CartInsert, type CartItem, type CartItemInsert,
   type Order, type OrderInsert, type OrderItem, type OrderItemInsert,
   type UserAddress, type UserAddressInsert, type ShippingOrder, type ShippingOrderInsert,
@@ -1212,6 +1213,14 @@ export interface IStorage {
   getDefaultUserAddress(userId: number): Promise<UserAddress | undefined>;
   createUserAddress(data: UserAddressInsert): Promise<UserAddress>;
   updateUserAddress(id: number, updates: Partial<UserAddress>): Promise<UserAddress | undefined>;
+
+  // Book orders management
+  getAllBookOrders(): Promise<BookOrder[]>;
+  getUserBookOrders(userId: number): Promise<BookOrder[]>;
+  getBookOrder(id: number): Promise<BookOrder | undefined>;
+  createBookOrder(data: BookOrderInsert): Promise<BookOrder>;
+  updateBookOrderShipping(id: number, updates: Partial<BookOrder>): Promise<BookOrder | undefined>;
+  recordBookDownload(orderId: number): Promise<void>;
   setDefaultAddress(userId: number, addressId: number): Promise<void>;
   deleteUserAddress(id: number): Promise<void>;
 
@@ -7986,6 +7995,61 @@ export class MemStorage implements IStorage {
 
   async deleteUserAddress(id: number): Promise<void> {
     await this.db.delete(user_addresses).where(eq(user_addresses.id, id));
+  }
+
+  // Book orders management
+  async getAllBookOrders(): Promise<BookOrder[]> {
+    return await this.db.select().from(book_orders)
+      .orderBy(desc(book_orders.createdAt));
+  }
+
+  async getUserBookOrders(userId: number): Promise<BookOrder[]> {
+    return await this.db.select().from(book_orders)
+      .where(eq(book_orders.userId, userId))
+      .orderBy(desc(book_orders.createdAt));
+  }
+
+  async getBookOrder(id: number): Promise<BookOrder | undefined> {
+    const result = await this.db.select().from(book_orders)
+      .where(eq(book_orders.id, id));
+    return result[0];
+  }
+
+  async createBookOrder(data: BookOrderInsert): Promise<BookOrder> {
+    const result = await this.db.insert(book_orders).values(data).returning();
+    return result[0];
+  }
+
+  async updateBookOrderShipping(id: number, updates: Partial<BookOrder>): Promise<BookOrder | undefined> {
+    const result = await this.db.update(book_orders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(book_orders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async recordBookDownload(orderId: number): Promise<void> {
+    const order = await this.getBookOrder(orderId);
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.downloadCount >= order.downloadLimit) {
+      throw new Error(`Download limit reached (${order.downloadLimit} downloads)`);
+    }
+
+    const book = await this.getBook(order.bookId);
+    if (!book || book.bookType !== 'pdf') {
+      throw new Error('Only PDF books can be downloaded');
+    }
+
+    await this.db.update(book_orders)
+      .set({ 
+        downloadCount: sql`${book_orders.downloadCount} + 1`,
+        lastDownloadAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(book_orders.id, orderId));
   }
 
   // Shipping orders management

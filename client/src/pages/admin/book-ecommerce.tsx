@@ -113,6 +113,11 @@ export function AdminBookEcommerce() {
     queryKey: [API_ENDPOINTS.admin.bookCatalog, { search: searchTerm, category: filterCategory }],
   });
 
+  // Fetch book orders
+  const { data: orders = [], isLoading: ordersLoading } = useQuery<any[]>({
+    queryKey: [API_ENDPOINTS.admin.bookOrders],
+  });
+
   // Create book mutation
   const createBookMutation = useMutation({
     mutationFn: async (data: AddBookFormData) => {
@@ -674,9 +679,74 @@ export function AdminBookEcommerce() {
               <CardDescription>{t('admin:bookEcommerce.ordersDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground" data-testid="text-no-orders">
-                {t('admin:bookEcommerce.noOrdersPlaceholder')}
-              </div>
+              {ordersLoading ? (
+                <div className="text-center py-8">{t('common:loading')}</div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground" data-testid="text-no-orders">
+                  {t('admin:bookEcommerce.noOrdersPlaceholder')}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((order: any) => (
+                    <Card key={order.id} data-testid={`card-order-${order.id}`}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-base">Order #{order.id}</CardTitle>
+                            <CardDescription>User ID: {order.userId}</CardDescription>
+                          </div>
+                          <Badge variant={order.paymentStatus === 'paid' ? 'default' : 'secondary'}>
+                            {order.paymentStatus}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">Amount</p>
+                            <p className="font-medium">{order.totalAmount} {order.currency}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Status</p>
+                            <p className="font-medium">{order.orderStatus}</p>
+                          </div>
+                        </div>
+                        
+                        {order.downloadLimit !== undefined ? (
+                          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                            <p className="text-sm font-medium mb-1">PDF Downloads</p>
+                            <p className="text-sm text-muted-foreground">
+                              {order.downloadCount || 0} / {order.downloadLimit} downloads used
+                            </p>
+                            {order.lastDownloadAt && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Last: {new Date(order.lastDownloadAt).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        ) : order.shippingStatus !== undefined || order.trackingNumber ? (
+                          <div className="mt-4 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                            <p className="text-sm font-medium mb-1">Hardcopy Shipping</p>
+                            <p className="text-sm text-muted-foreground">
+                              Status: {order.shippingStatus || 'Pending'}
+                            </p>
+                            {order.trackingNumber && (
+                              <p className="text-sm text-muted-foreground">
+                                Tracking: {order.trackingNumber}
+                              </p>
+                            )}
+                            {order.deliveredAt && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Delivered: {new Date(order.deliveredAt).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        ) : null}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

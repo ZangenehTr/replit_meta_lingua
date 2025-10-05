@@ -810,6 +810,50 @@ export const insertDictionaryLookupSchema = z.object({
   bookId: z.number().optional()
 });
 
+// Book Orders table
+export const book_orders = pgTable("book_orders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  bookId: integer("book_id").references(() => books.id).notNull(),
+  orderStatus: varchar("order_status", { length: 50 }).default("pending"), // pending, confirmed, completed, cancelled
+  paymentStatus: varchar("payment_status", { length: 50 }).default("pending"), // pending, paid, refunded
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("IRR"),
+  
+  // PDF book specific - download tracking
+  downloadCount: integer("download_count").default(0),
+  lastDownloadAt: timestamp("last_download_at"),
+  downloadLimit: integer("download_limit").default(5), // max downloads allowed
+  
+  // Hardcopy book specific - shipping tracking
+  shippingStatus: varchar("shipping_status", { length: 50 }), // pending, processing, shipped, delivered
+  trackingNumber: varchar("tracking_number", { length: 255 }), // FDC or post office tracking
+  shippingAddress: text("shipping_address"),
+  shippedAt: timestamp("shipped_at"),
+  deliveredAt: timestamp("delivered_at"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for book orders
+export const insertBookOrderSchema = z.object({
+  userId: z.number(),
+  bookId: z.number(),
+  orderStatus: z.string().max(50).optional(),
+  paymentStatus: z.string().max(50).optional(),
+  totalAmount: z.string(), // decimal as string
+  currency: z.string().max(3).default("IRR"),
+  downloadCount: z.number().default(0),
+  lastDownloadAt: z.date().optional(),
+  downloadLimit: z.number().default(5),
+  shippingStatus: z.string().max(50).optional(),
+  trackingNumber: z.string().max(255).optional(),
+  shippingAddress: z.string().optional(),
+  shippedAt: z.date().optional(),
+  deliveredAt: z.date().optional()
+});
+
 // AI Training Jobs table for tracking model training job execution
 export const aiTrainingJobs = pgTable("ai_training_jobs", {
   id: serial("id").primaryKey(),
@@ -6773,6 +6817,8 @@ export type Book = typeof books.$inferSelect;
 export type BookInsert = z.infer<typeof insertBookSchema>;
 export type BookAsset = typeof book_assets.$inferSelect;
 export type BookAssetInsert = z.infer<typeof insertBookAssetSchema>;
+export type BookOrder = typeof book_orders.$inferSelect;
+export type BookOrderInsert = z.infer<typeof insertBookOrderSchema>;
 export type DictionaryLookup = typeof dictionary_lookups.$inferSelect;
 export type DictionaryLookupInsert = z.infer<typeof insertDictionaryLookupSchema>;
 export type Cart = typeof carts.$inferSelect;
