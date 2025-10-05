@@ -7,6 +7,7 @@ import fs from "fs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { storage } from "../storage";
+import { AIProviderManager } from "../ai-providers/ai-provider-manager";
 import { 
   insertBookSchema, 
   insertBookCategorySchema,
@@ -1283,6 +1284,98 @@ export function setupBookEcommerceRoutes(app: Express) {
       res.status(500).json({
         success: false,
         message: 'Failed to log dictionary usage'
+      });
+    }
+  });
+
+  // ============================================================================
+  // AI DESCRIPTION GENERATION (Admin only)
+  // ============================================================================
+
+  // POST /api/books/:id/generate-description - Generate AI description for book
+  app.post("/api/books/:id/generate-description", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const bookId = parseInt(req.params.id, 10);
+      if (isNaN(bookId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid book ID'
+        });
+      }
+
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({
+          success: false,
+          message: 'Book not found'
+        });
+      }
+
+      // Initialize AI provider
+      const aiProvider = new AIProviderManager();
+      await aiProvider.initialize();
+
+      // Generate Farsi description (100-200 words)
+      const prompt = `Generate a professional book description in Persian (Farsi) language for the following book. The description should be 100-200 words and suitable for an e-commerce book store.
+
+Book Title: ${book.title}
+Author: ${book.author || 'Unknown'}
+${book.description ? `English Description: ${book.description}` : ''}
+${book.category ? `Category: ${book.category}` : ''}
+${book.level ? `Level: ${book.level}` : ''}
+${book.language ? `Language: ${book.language}` : ''}
+
+Please write a compelling description in Persian that highlights the book's value and target audience. Write ONLY the description in Persian, nothing else.`;
+
+      const aiResponse = await aiProvider.createChatCompletion({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional book description writer. Generate engaging, accurate descriptions in Persian (Farsi) for books.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      });
+
+      const aiDescription = (aiResponse.message?.content || '').trim();
+      const wordCount = aiDescription.split(/\s+/).filter(word => word.length > 0).length;
+
+      // Validate word count (100-200 words)
+      if (wordCount < 100 || wordCount > 200) {
+        return res.status(422).json({
+          success: false,
+          message: `AI description must be 100-200 words. Generated ${wordCount} words.`,
+          data: {
+            wordCount,
+            description: aiDescription
+          }
+        });
+      }
+
+      // Update book with AI description
+      await storage.updateBook(bookId, {
+        aiDescription
+      });
+
+      res.json({
+        success: true,
+        message: 'AI description generated successfully',
+        data: {
+          bookId,
+          aiDescription,
+          wordCount
+        }
+      });
+    } catch (error: any) {
+      console.error('Error generating AI description:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to generate AI description'
       });
     }
   });

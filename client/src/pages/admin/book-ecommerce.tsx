@@ -111,15 +111,20 @@ export function AdminBookEcommerce() {
       // Generate AI description after book creation
       if (response.data?.id) {
         try {
-          await apiRequest(`/api/books/${response.data.id}/generate-ai-description`, {
+          await apiRequest(`/api/books/${response.data.id}/generate-description`, {
             method: 'POST',
           });
           toast({
             title: t('common:success'),
             description: t('admin:bookEcommerce.aiDescriptionGenerated'),
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to generate AI description:', error);
+          toast({
+            title: t('common:warning'),
+            description: error.message || 'AI description generation failed. You can retry later.',
+            variant: 'default',
+          });
         }
       }
       
