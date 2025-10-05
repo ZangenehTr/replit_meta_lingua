@@ -3006,23 +3006,38 @@ export const messages = pgTable("messages", {
 // Homework table
 export const homework = pgTable("homework", {
   id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id),
   classId: integer("class_id").references(() => classes.id),
   courseId: integer("course_id").references(() => courses.id),
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  tutorId: integer("tutor_id").references(() => users.id),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   homeworkType: varchar("homework_type", { length: 50 }).default("assignment"), // assignment, reading, writing, listening, speaking
   difficulty: varchar("difficulty", { length: 20 }).default("medium"),
   instructions: text("instructions"),
   resources: text("resources").array().default([]),
-  attachments: text("attachments").array().default([]),
+  attachments: jsonb("attachments"),
   maxScore: integer("max_score").default(100),
+  maxGrade: integer("max_grade"),
   timeLimit: integer("time_limit"), // in minutes
   dueDate: timestamp("due_date"),
   assignedDate: timestamp("assigned_date").defaultNow().notNull(),
+  assignedAt: timestamp("assigned_at"),
   isGraded: boolean("is_graded").default(true),
   allowLateSubmission: boolean("allow_late_submission").default(false),
   lateSubmissionPenalty: decimal("late_submission_penalty", { precision: 5, scale: 2 }),
+  latePenaltyPercent: integer("late_penalty_percent"),
+  status: text("status"),
+  submission: text("submission"),
+  submissionUrl: text("submission_url"),
+  submissionFiles: jsonb("submission_files"),
+  submittedAt: timestamp("submitted_at"),
+  grade: integer("grade"),
+  feedback: text("feedback"),
+  estimatedTime: integer("estimated_time"),
+  xpReward: integer("xp_reward"),
+  isVisible: boolean("is_visible"),
   isActive: boolean("is_active").default(true),
   rubric: jsonb("rubric"),
   tags: text("tags").array().default([]),
@@ -3591,6 +3606,8 @@ export const placementTestSessions = pgTable("placement_test_sessions", {
   pauseCount: integer("pause_count").default(0),
   resumeCount: integer("resume_count").default(0),
   warningCount: integer("warning_count").default(0),
+  confidenceScore: decimal("confidence_score", { precision: 5, scale: 2 }),
+  generatedRoadmapId: integer("generated_roadmap_id"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -3774,11 +3791,12 @@ export const roadmapSessions = pgTable("roadmap_sessions", {
 // Role Permissions table
 export const rolePermissions = pgTable("role_permissions", {
   id: serial("id").primaryKey(),
-  role: varchar("role", { length: 50 }).notNull(), // Admin, Teacher, Mentor, Student, Supervisor, Call Center Agent, Accountant
+  role: text("role").notNull(), // Admin, Teacher, Mentor, Student, Supervisor, Call Center Agent, Accountant
   permission: varchar("permission", { length: 100 }).notNull(),
   resource: varchar("resource", { length: 100 }), // users, courses, classes, payments, reports, etc.
   action: varchar("action", { length: 50 }).notNull(), // create, read, update, delete, manage, view
   conditions: jsonb("conditions"), // additional conditions for the permission
+  subsystemPermissions: jsonb("subsystem_permissions"),
   isGranted: boolean("is_granted").default(true),
   priority: integer("priority").default(0), // for conflict resolution
   description: text("description"),
@@ -4937,6 +4955,7 @@ export const studentCurriculumProgress = pgTable("student_curriculum_progress", 
   enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
   lastActivityAt: timestamp("last_activity_at"),
+  nextLevelUnlockedAt: timestamp("next_level_unlocked_at"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
