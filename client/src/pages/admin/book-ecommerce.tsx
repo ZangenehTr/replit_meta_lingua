@@ -72,8 +72,27 @@ export function AdminBookEcommerce() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
   const form = useForm<AddBookFormData>({
+    resolver: zodResolver(addBookFormSchema),
+    defaultValues: {
+      title: "",
+      author: "",
+      isbn: "",
+      description: "",
+      price: "",
+      bookType: 'pdf',
+      language: "en",
+      level: "",
+      category: "",
+      stockQuantity: 0,
+    },
+  });
+
+  const editForm = useForm<AddBookFormData>({
     resolver: zodResolver(addBookFormSchema),
     defaultValues: {
       title: "",
@@ -146,7 +165,79 @@ export function AdminBookEcommerce() {
     createBookMutation.mutate(data);
   };
 
+  // Handlers for View and Edit
+  const handleViewBook = (book: Book) => {
+    setSelectedBook(book);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditBook = async (book: Book) => {
+    setSelectedBook(book);
+    
+    // Fetch full book details from API to avoid partial data
+    try {
+      const fullBook = await apiRequest(`/api/books/${book.id}`, { method: 'GET' });
+      
+      editForm.reset({
+        title: fullBook.data.title || "",
+        author: fullBook.data.author || "",
+        isbn: fullBook.data.isbn || "",
+        description: fullBook.data.description || "",
+        price: fullBook.data.price || "",
+        bookType: (fullBook.data.bookType || fullBook.data.book_type || 'pdf') as 'pdf' | 'hardcopy',
+        language: fullBook.data.language || "en",
+        level: fullBook.data.level || "",
+        category: fullBook.data.category || "",
+        stockQuantity: fullBook.data.stockQuantity || fullBook.data.stock_quantity || 0,
+        pageCount: fullBook.data.pageCount || fullBook.data.page_count,
+        publicationYear: fullBook.data.publicationYear || fullBook.data.publication_year,
+      });
+      
+      setEditDialogOpen(true);
+    } catch (error) {
+      console.error('Failed to fetch book details:', error);
+      toast({
+        title: t('common:error'),
+        description: 'Failed to load book details',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Update book mutation
+  const updateBookMutation = useMutation({
+    mutationFn: async (data: AddBookFormData) => {
+      if (!selectedBook) throw new Error('No book selected');
+      return apiRequest(`/api/books/${selectedBook.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: t('common:success'),
+        description: 'Book updated successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.bookCatalog] });
+      setEditDialogOpen(false);
+      setSelectedBook(null);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:error'),
+        description: error.message || 'Failed to update book',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const onEditSubmit = (data: AddBookFormData) => {
+    updateBookMutation.mutate(data);
+  };
+
   const bookType = form.watch("bookType");
+  const editBookType = editForm.watch("bookType");
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -546,11 +637,23 @@ export function AdminBookEcommerce() {
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1" data-testid={`button-view-${book.id}`}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1" 
+                            data-testid={`button-view-${book.id}`}
+                            onClick={() => handleViewBook(book)}
+                          >
                             <Eye className="mr-1 h-3 w-3" />
                             {t('common:view')}
                           </Button>
-                          <Button variant="outline" size="sm" className="flex-1" data-testid={`button-edit-${book.id}`}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1" 
+                            data-testid={`button-edit-${book.id}`}
+                            onClick={() => handleEditBook(book)}
+                          >
                             <Edit className="mr-1 h-3 w-3" />
                             {t('common:edit')}
                           </Button>
@@ -592,6 +695,114 @@ export function AdminBookEcommerce() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* View Book Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl" data-testid="dialog-view-book">
+          <DialogHeader>
+            <DialogTitle data-testid="text-view-title">{selectedBook?.title}</DialogTitle>
+            <DialogDescription data-testid="text-view-author">{selectedBook?.author}</DialogDescription>
+          </DialogHeader>
+          {selectedBook && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">ISBN</p>
+                  <p data-testid="text-view-isbn">{selectedBook.isbn || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Price</p>
+                  <p data-testid="text-view-price">{selectedBook.price} {selectedBook.currency || 'IRR'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Type</p>
+                  <p data-testid="text-view-type">{selectedBook.bookType || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Language</p>
+                  <p data-testid="text-view-language">{selectedBook.language || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Level</p>
+                  <p data-testid="text-view-level">{selectedBook.level || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Book Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-edit-book">
+          <DialogHeader>
+            <DialogTitle data-testid="text-edit-title">Edit Book</DialogTitle>
+            <DialogDescription data-testid="text-edit-description">
+              Update book details
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-edit-title">{t('admin:bookEcommerce.bookTitle')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} data-testid="input-edit-title" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="author"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-edit-author">{t('admin:bookEcommerce.author')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} data-testid="input-edit-author" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel data-testid="label-edit-price">{t('admin:bookEcommerce.price')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" data-testid="input-edit-price" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditDialogOpen(false)}
+                  data-testid="button-edit-cancel"
+                >
+                  {t('common:cancel')}
+                </Button>
+                <Button type="submit" disabled={updateBookMutation.isPending} data-testid="button-edit-save">
+                  {updateBookMutation.isPending ? t('common:saving') : t('common:save')}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
