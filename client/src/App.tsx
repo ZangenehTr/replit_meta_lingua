@@ -57,7 +57,6 @@ import AdminCallsPage from "@/pages/admin/calls";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
-import LeadManagement from "@/pages/lead-management";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
 import UnifiedCallCenterWorkflow from "@/pages/callcenter/unified-workflow";
 import VoIPCenter from "@/pages/callcenter/voip-center";
@@ -510,16 +509,6 @@ function Router() {
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor']}>
           <UnifiedCallCenterWorkflow />
         </RoleProtectedRoute>
-      </Route>
-      <Route path="/lead-management">
-        <ProtectedRoute>
-          <LeadManagement />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/callcenter/leads">
-        <ProtectedRoute>
-          <LeadManagement />
-        </ProtectedRoute>
       </Route>
       <Route path="/callcenter/voip">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>

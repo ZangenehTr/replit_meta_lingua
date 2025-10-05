@@ -194,7 +194,6 @@ export const API_ENDPOINTS = {
   // =============== CALL CENTER ENDPOINTS ===============
   callCenter: {
     dashboard: '/api/callcenter/dashboard',
-    leads: '/api/callcenter/leads',
     campaigns: '/api/callcenter/campaigns',
     calls: '/api/callcenter/calls',
     voipCenter: '/api/callcenter/voip',

@@ -381,20 +381,6 @@ export const actionRegistry: Record<string, ActionConfig> = {
   },
 
   // ========== CALL CENTER ACTIONS ==========
-  'callcenter.createLead': {
-    endpoint: '/api/callcenter/leads',
-    method: 'POST',
-    requiredRoles: ['Call Center Agent'],
-    cacheKeys: ['/api/callcenter/leads'],
-    successMessage: 'Lead created successfully'
-  },
-  'callcenter.updateLead': {
-    endpoint: '/api/callcenter/leads',
-    method: 'PUT',
-    requiredRoles: ['Call Center Agent'],
-    cacheKeys: ['/api/callcenter/leads'],
-    successMessage: 'Lead updated successfully'
-  },
   'callcenter.makeCall': {
     endpoint: '/api/callcenter/calls',
     method: 'POST',

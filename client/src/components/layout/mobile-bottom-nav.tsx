@@ -69,7 +69,7 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
     case 'call center':
       return [
         { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
-        { route: "/callcenter/leads", icon: Target, label: t('common:navigation.leads') },
+        { route: "/callcenter/unified-workflow", icon: Target, label: t('common:navigation.unifiedWorkflow') || 'Unified Workflow' },
         { route: "/callcenter/voip", icon: Phone, label: t('common:navigation.calls') },
         { route: "/callcenter/performance", icon: BarChart3, label: t('common:navigation.performance') }
       ];
