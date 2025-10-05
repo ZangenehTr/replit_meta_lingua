@@ -549,8 +549,8 @@ export function setupAiTrainingRoutes(app: Express) {
         status: 'pending'
       }).returning();
       
-      // Start training job asynchronously
-      startTrainingJob(newJob.id, jobData);
+      // Start training job asynchronously with createdBy included
+      startTrainingJob(newJob.id, { ...jobData, createdBy: userId });
       
       res.status(201).json(newJob);
     } catch (error) {
@@ -647,44 +647,84 @@ export function setupAiTrainingRoutes(app: Express) {
 
 async function startTrainingJob(jobId: number, jobData: any) {
   try {
+    // Fetch base model and dataset information
+    const [baseModel] = await db.select()
+      .from(aiModels)
+      .where(eq(aiModels.id, jobData.modelId))
+      .limit(1);
+    
+    const [dataset] = await db.select()
+      .from(aiTrainingDatasets)
+      .where(eq(aiTrainingDatasets.id, jobData.datasetId))
+      .limit(1);
+    
+    if (!baseModel || !dataset) {
+      throw new Error('Base model or dataset not found');
+    }
+    
     // Update job status to running
     await db.update(aiTrainingJobs)
       .set({ 
         status: 'running',
         startedAt: new Date(),
         progress: 0,
+        currentEpoch: 1,
+        totalEpochs: jobData.hyperparameters?.epochs || 3,
         updatedAt: new Date()
       })
       .where(eq(aiTrainingJobs.id, jobId));
     
     // Simulate training progress (replace with actual Ollama training)
-    for (let progress = 10; progress <= 100; progress += 10) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-      
-      await db.update(aiTrainingJobs)
-        .set({ 
-          progress,
-          updatedAt: new Date(),
-          trainingLogs: `Training progress: ${progress}%`
-        })
-        .where(eq(aiTrainingJobs.id, jobId));
+    const totalEpochs = jobData.hyperparameters?.epochs || 3;
+    const progressStep = 100 / (totalEpochs * 10);
+    
+    for (let epoch = 1; epoch <= totalEpochs; epoch++) {
+      for (let step = 1; step <= 10; step++) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay per step
+        
+        const progress = Math.min(Math.round((epoch - 1) * 10 * progressStep + step * progressStep), 100);
+        const estimatedRemaining = Math.round((100 - progress) * 2); // seconds
+        
+        await db.update(aiTrainingJobs)
+          .set({ 
+            progress,
+            currentEpoch: epoch,
+            cpuUsage: (50 + Math.random() * 30).toFixed(1),
+            memoryUsage: (40 + Math.random() * 20).toFixed(1),
+            gpuUsage: Math.random() > 0.5 ? (70 + Math.random() * 20).toFixed(1) : null,
+            estimatedTimeRemaining: estimatedRemaining,
+            trainingMetrics: {
+              loss: (1.5 - (progress / 100) * 1.2 + Math.random() * 0.1).toFixed(4),
+              accuracy: (progress * 0.8 + Math.random() * 5).toFixed(2)
+            },
+            trainingLogs: `Epoch ${epoch}/${totalEpochs}, Step ${step}/10 - Progress: ${progress}%`,
+            updatedAt: new Date()
+          })
+          .where(eq(aiTrainingJobs.id, jobId));
+      }
     }
     
-    // Create the trained model
+    // Create the trained model with proper naming: "modelName-Trained-{dataset-name}"
+    const trainedModelName = `${baseModel.name}-Trained-${dataset.name}`;
+    
     const [newModel] = await db.insert(aiModels).values({
-      name: `${jobData.modelName}_trained_${Date.now()}`,
-      modelType: jobData.modelType || 'language_model',
+      name: trainedModelName,
+      modelType: baseModel.modelType,
       version: '1.0.0',
-      language: jobData.language || 'en',
-      description: `Fine-tuned model from job ${jobId}`,
+      language: baseModel.language,
+      architecture: baseModel.architecture,
+      parameters: baseModel.parameters,
+      description: `Fine-tuned model (${jobData.jobType}) from ${baseModel.name} using dataset ${dataset.name}`,
       status: 'completed',
       isActive: false,
       isProduction: false,
       trainedBy: jobData.createdBy,
+      trainingCompleted: new Date(),
       metrics: {
         accuracy: 0.85 + Math.random() * 0.1, // Simulated metrics
-        loss: Math.random() * 0.5,
-        training_time: 3600
+        loss: 0.2 + Math.random() * 0.1,
+        training_time: totalEpochs * 10 * 2, // total seconds
+        training_type: jobData.jobType
       }
     }).returning();
     
@@ -695,13 +735,14 @@ async function startTrainingJob(jobId: number, jobData: any) {
         completedAt: new Date(),
         progress: 100,
         resultModelId: newModel.id,
+        trainingLogs: `Training completed successfully! Trained model: ${trainedModelName}`,
         updatedAt: new Date()
       })
       .where(eq(aiTrainingJobs.id, jobId));
     
-    console.log(`Training job ${jobId} completed successfully`);
+    console.log(`Training job ${jobId} completed successfully. Created model: ${trainedModelName}`);
     
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Training job ${jobId} failed:`, error);
     
     // Update job as failed
