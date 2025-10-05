@@ -3,17 +3,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { insertBookSchema } from "@shared/schema";
 import { 
   BookOpen, 
   Search, 
@@ -25,15 +29,41 @@ import {
   Package,
   Star,
   TrendingUp,
-  Upload,
-  Settings,
   FileText,
-  HardDrive,
-  Music,
-  Video
+  HardDrive
 } from "lucide-react";
 
 type BookType = 'pdf' | 'hardcopy';
+
+interface Book {
+  id: number;
+  title: string;
+  author?: string;
+  isbn?: string;
+  price: string;
+  currency?: string;
+  bookType?: string;
+  language?: string;
+  level?: string;
+}
+
+// Form schema for Add Book dialog (simplified for initial creation)
+const addBookFormSchema = z.object({
+  title: z.string().min(1, "Title is required").max(500),
+  author: z.string().max(255).optional(),
+  isbn: z.string().max(20).optional(),
+  description: z.string().optional(),
+  price: z.string().min(1, "Price is required"),
+  bookType: z.enum(['pdf', 'hardcopy']).default('pdf'),
+  language: z.string().max(50).default("en"),
+  level: z.string().max(20).optional(),
+  pageCount: z.number().optional(),
+  publicationYear: z.number().optional(),
+  category: z.string().max(255).optional(),
+  stockQuantity: z.number().default(0),
+});
+
+type AddBookFormData = z.infer<typeof addBookFormSchema>;
 
 export function AdminBookEcommerce() {
   const { t } = useTranslation(['admin', 'common']);
@@ -43,48 +73,45 @@ export function AdminBookEcommerce() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Add Book form state
-  const [bookType, setBookType] = useState<BookType>('pdf');
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [isbn, setIsbn] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [language, setLanguage] = useState("en");
-  const [level, setLevel] = useState("");
-  const [pageCount, setPageCount] = useState("");
-  const [publishedYear, setPublishedYear] = useState("");
-  const [stock, setStock] = useState("");
-  
-  // File uploads
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [coverImage, setCoverImage] = useState<File | null>(null);
-  const [audioFiles, setAudioFiles] = useState<File[]>([]);
-  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const form = useForm<AddBookFormData>({
+    resolver: zodResolver(addBookFormSchema),
+    defaultValues: {
+      title: "",
+      author: "",
+      isbn: "",
+      description: "",
+      price: "",
+      bookType: 'pdf',
+      language: "en",
+      level: "",
+      category: "",
+      stockQuantity: 0,
+    },
+  });
 
   // Fetch books data
-  const { data: books = [], isLoading, refetch } = useQuery({
+  const { data: books = [], isLoading, refetch } = useQuery<Book[]>({
     queryKey: [API_ENDPOINTS.admin.bookCatalog, { search: searchTerm, category: filterCategory }],
   });
 
   // Create book mutation
   const createBookMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+    mutationFn: async (data: AddBookFormData) => {
       return apiRequest('/api/books', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(data),
       });
     },
-    onSuccess: async (data) => {
+    onSuccess: async (response) => {
       toast({
         title: t('common:success'),
         description: t('admin:bookEcommerce.bookCreatedSuccess'),
       });
       
       // Generate AI description after book creation
-      if (data.data?.id) {
+      if (response.data?.id) {
         try {
-          await apiRequest(`/api/books/${data.data.id}/generate-ai-description`, {
+          await apiRequest(`/api/books/${response.data.id}/generate-ai-description`, {
             method: 'POST',
           });
           toast({
@@ -97,7 +124,7 @@ export function AdminBookEcommerce() {
       }
       
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.bookCatalog] });
-      resetForm();
+      form.reset();
       setAddDialogOpen(false);
       refetch();
     },
@@ -110,387 +137,281 @@ export function AdminBookEcommerce() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('author', author);
-    formData.append('isbn', isbn);
-    formData.append('description', description);
-    formData.append('bookType', bookType);
-    formData.append('price', price);
-    formData.append('currency', 'IRR');
-    formData.append('language', language);
-    
-    if (level) formData.append('level', level);
-    if (pageCount) formData.append('pageCount', pageCount);
-    if (publishedYear) formData.append('publishedYear', publishedYear);
-    
-    if (bookType === 'pdf') {
-      if (pdfFile) formData.append('pdfFile', pdfFile);
-      audioFiles.forEach((file, index) => {
-        formData.append(`audioFile${index}`, file);
-      });
-      videoFiles.forEach((file, index) => {
-        formData.append(`videoFile${index}`, file);
-      });
-    } else {
-      if (stock) formData.append('stock', stock);
-      if (coverImage) formData.append('coverImage', coverImage);
-    }
-    
-    createBookMutation.mutate(formData);
+  const onSubmit = (data: AddBookFormData) => {
+    createBookMutation.mutate(data);
   };
 
-  const resetForm = () => {
-    setBookType('pdf');
-    setTitle("");
-    setAuthor("");
-    setIsbn("");
-    setDescription("");
-    setPrice("");
-    setLanguage("en");
-    setLevel("");
-    setPageCount("");
-    setPublishedYear("");
-    setStock("");
-    setPdfFile(null);
-    setCoverImage(null);
-    setAudioFiles([]);
-    setVideoFiles([]);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'pdf' | 'cover' | 'audio' | 'video') => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    if (type === 'pdf') {
-      setPdfFile(files[0]);
-    } else if (type === 'cover') {
-      setCoverImage(files[0]);
-    } else if (type === 'audio') {
-      setAudioFiles(Array.from(files));
-    } else if (type === 'video') {
-      setVideoFiles(Array.from(files));
-    }
-  };
-
-  // Mock books data for development
-  const mockBooks = [
-    {
-      id: 1,
-      title: "Persian Grammar Essentials",
-      author: "Dr. Reza Mohtashemi",
-      category: "grammar",
-      price: 890000,
-      currency: "IRR",
-      stock: 45,
-      sold: 128,
-      rating: 4.8,
-      status: "published",
-      bookType: "hardcopy",
-      cover: "/api/placeholder/book-cover-1.jpg",
-      description: "Comprehensive guide to Persian grammar for beginners"
-    },
-    {
-      id: 2,
-      title: "Business English Conversations",
-      author: "Sarah Johnson",
-      category: "business",
-      price: 1250000,
-      currency: "IRR",
-      stock: 0,
-      sold: 89,
-      rating: 4.6,
-      status: "published",
-      bookType: "pdf",
-      cover: "/api/placeholder/book-cover-2.jpg",
-      description: "Essential business English phrases and conversations"
-    },
-    {
-      id: 3,
-      title: "IELTS Speaking Mastery",
-      author: "Michael Chen",
-      category: "test-prep",
-      price: 1450000,
-      currency: "IRR",
-      stock: 18,
-      sold: 156,
-      rating: 4.9,
-      status: "published",
-      bookType: "hardcopy",
-      cover: "/api/placeholder/book-cover-3.jpg",
-      description: "Complete IELTS speaking preparation guide"
-    }
-  ];
-
-  const displayBooks = isLoading ? mockBooks : (Array.isArray(books) && books.length > 0 ? books : mockBooks);
+  const bookType = form.watch("bookType");
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t('admin:navigation.bookEcommerce')}</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-3xl font-bold" data-testid="text-page-title">
+            {t('admin:bookEcommerce.title')}
+          </h1>
+          <p className="text-muted-foreground mt-1" data-testid="text-page-description">
             {t('admin:bookEcommerce.description')}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="button-add-book">
-                <Plus className="h-4 w-4 mr-2" />
-                {t('admin:bookEcommerce.addBook')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{t('admin:bookEcommerce.addNewBook')}</DialogTitle>
-                <DialogDescription>
-                  {t('admin:bookEcommerce.addBookDescription')}
-                </DialogDescription>
-              </DialogHeader>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-add-book">
+              <Plus className="mr-2 h-4 w-4" />
+              {t('admin:bookEcommerce.addBook')}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-add-book">
+            <DialogHeader>
+              <DialogTitle data-testid="text-dialog-title">{t('admin:bookEcommerce.addNewBook')}</DialogTitle>
+              <DialogDescription data-testid="text-dialog-description">
+                {t('admin:bookEcommerce.addBookDescription')}
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {/* Book Type Selection */}
-                <div className="space-y-2">
-                  <Label>{t('admin:bookEcommerce.bookType')}</Label>
-                  <Select value={bookType} onValueChange={(value: BookType) => setBookType(value)}>
-                    <SelectTrigger data-testid="select-book-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pdf">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
-                          {t('admin:bookEcommerce.pdfBook')}
+                <FormField
+                  control={form.control}
+                  name="bookType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-book-type">{t('admin:bookEcommerce.bookType')}</FormLabel>
+                      <FormControl>
+                        <div className="grid grid-cols-2 gap-4">
+                          <button
+                            type="button"
+                            onClick={() => field.onChange('pdf')}
+                            data-testid="button-type-pdf"
+                            className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-colors ${
+                              field.value === 'pdf'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-muted hover:border-primary/50'
+                            }`}
+                          >
+                            <FileText className="h-6 w-6" />
+                            <div className="text-left">
+                              <div className="font-semibold">{t('admin:bookEcommerce.pdfBook')}</div>
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange('hardcopy')}
+                            data-testid="button-type-hardcopy"
+                            className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-colors ${
+                              field.value === 'hardcopy'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-muted hover:border-primary/50'
+                            }`}
+                          >
+                            <HardDrive className="h-6 w-6" />
+                            <div className="text-left">
+                              <div className="font-semibold">{t('admin:bookEcommerce.hardcopyBook')}</div>
+                            </div>
+                          </button>
                         </div>
-                      </SelectItem>
-                      <SelectItem value="hardcopy">
-                        <div className="flex items-center gap-2">
-                          <HardDrive className="h-4 w-4" />
-                          {t('admin:bookEcommerce.hardcopyBook')}
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {/* Basic Information */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">{t('admin:bookEcommerce.title')} *</Label>
-                    <Input
-                      id="title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      data-testid="input-title"
-                    />
-                  </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel data-testid="label-title">{t('admin:bookEcommerce.bookTitle')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} data-testid="input-title" placeholder={t('admin:bookEcommerce.bookTitle')} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="author">{t('admin:bookEcommerce.author')}</Label>
-                      <Input
-                        id="author"
-                        value={author}
-                        onChange={(e) => setAuthor(e.target.value)}
-                        data-testid="input-author"
-                      />
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="author"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-author">{t('admin:bookEcommerce.author')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} data-testid="input-author" placeholder={t('admin:bookEcommerce.author')} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="isbn">ISBN</Label>
-                      <Input
-                        id="isbn"
-                        value={isbn}
-                        onChange={(e) => setIsbn(e.target.value)}
-                        data-testid="input-isbn"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">{t('admin:bookEcommerce.description')}</Label>
-                    <Textarea
-                      id="description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={3}
-                      data-testid="input-description"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('admin:bookEcommerce.aiDescriptionNote')}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="price">{t('admin:bookEcommerce.price')} (IRR) *</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        required
-                        data-testid="input-price"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="language">{t('admin:bookEcommerce.language')}</Label>
-                      <Select value={language} onValueChange={setLanguage}>
-                        <SelectTrigger data-testid="select-language">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="fa">Farsi</SelectItem>
-                          <SelectItem value="ar">Arabic</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="level">{t('admin:bookEcommerce.level')}</Label>
-                      <Input
-                        id="level"
-                        value={level}
-                        onChange={(e) => setLevel(e.target.value)}
-                        placeholder="A1, B2, etc."
-                        data-testid="input-level"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="pageCount">{t('admin:bookEcommerce.pageCount')}</Label>
-                      <Input
-                        id="pageCount"
-                        type="number"
-                        value={pageCount}
-                        onChange={(e) => setPageCount(e.target.value)}
-                        data-testid="input-page-count"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="year">{t('admin:bookEcommerce.publishedYear')}</Label>
-                      <Input
-                        id="year"
-                        type="number"
-                        value={publishedYear}
-                        onChange={(e) => setPublishedYear(e.target.value)}
-                        placeholder="2024"
-                        data-testid="input-published-year"
-                      />
-                    </div>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="isbn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-isbn">ISBN</FormLabel>
+                        <FormControl>
+                          <Input {...field} data-testid="input-isbn" placeholder="ISBN" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                {/* Conditional Fields Based on Book Type */}
-                {bookType === 'pdf' ? (
-                  <div className="space-y-4 border-t pt-4">
-                    <h3 className="font-semibold">{t('admin:bookEcommerce.pdfBookFiles')}</h3>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="pdfFile">{t('admin:bookEcommerce.pdfFile')} *</Label>
-                      <Input
-                        id="pdfFile"
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => handleFileChange(e, 'pdf')}
-                        required
-                        data-testid="input-pdf-file"
-                      />
-                      {pdfFile && (
-                        <p className="text-sm text-muted-foreground">
-                          {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
-                        </p>
-                      )}
-                    </div>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-description">{t('admin:bookEcommerce.description')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} data-testid="input-description" placeholder={t('admin:bookEcommerce.description')} />
+                      </FormControl>
+                      <FormDescription data-testid="text-ai-note">
+                        {t('admin:bookEcommerce.aiDescriptionNote')}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="audioFiles">
-                        <Music className="h-4 w-4 inline mr-2" />
-                        {t('admin:bookEcommerce.audioFiles')}
-                      </Label>
-                      <Input
-                        id="audioFiles"
-                        type="file"
-                        accept="audio/*"
-                        multiple
-                        onChange={(e) => handleFileChange(e, 'audio')}
-                        data-testid="input-audio-files"
-                      />
-                      {audioFiles.length > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          {audioFiles.length} file(s) selected
-                        </p>
-                      )}
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-price">{t('admin:bookEcommerce.price')} (IRR)</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" data-testid="input-price" placeholder="500000" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="videoFiles">
-                        <Video className="h-4 w-4 inline mr-2" />
-                        {t('admin:bookEcommerce.videoFiles')}
-                      </Label>
-                      <Input
-                        id="videoFiles"
-                        type="file"
-                        accept="video/*"
-                        multiple
-                        onChange={(e) => handleFileChange(e, 'video')}
-                        data-testid="input-video-files"
-                      />
-                      {videoFiles.length > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          {videoFiles.length} file(s) selected
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4 border-t pt-4">
-                    <h3 className="font-semibold">{t('admin:bookEcommerce.hardcopyBookDetails')}</h3>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="coverImage">{t('admin:bookEcommerce.coverImage')} *</Label>
-                      <Input
-                        id="coverImage"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileChange(e, 'cover')}
-                        required
-                        data-testid="input-cover-image"
-                      />
-                      {coverImage && (
-                        <p className="text-sm text-muted-foreground">
-                          {coverImage.name} ({(coverImage.size / 1024).toFixed(2)} KB)
-                        </p>
-                      )}
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="language"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-language">{t('admin:bookEcommerce.language')}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-language">
+                              <SelectValue placeholder={t('admin:bookEcommerce.language')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="en" data-testid="option-language-en">English</SelectItem>
+                            <SelectItem value="fa" data-testid="option-language-fa">فارسی</SelectItem>
+                            <SelectItem value="ar" data-testid="option-language-ar">العربية</SelectItem>
+                            <SelectItem value="fr" data-testid="option-language-fr">Français</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="stock">{t('admin:bookEcommerce.stock')} *</Label>
-                      <Input
-                        id="stock"
-                        type="number"
-                        value={stock}
-                        onChange={(e) => setStock(e.target.value)}
-                        required
-                        min="0"
-                        data-testid="input-stock"
-                      />
-                    </div>
-                  </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-level">{t('admin:bookEcommerce.level')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-level">
+                              <SelectValue placeholder={t('admin:bookEcommerce.level')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="A1" data-testid="option-level-a1">A1</SelectItem>
+                            <SelectItem value="A2" data-testid="option-level-a2">A2</SelectItem>
+                            <SelectItem value="B1" data-testid="option-level-b1">B1</SelectItem>
+                            <SelectItem value="B2" data-testid="option-level-b2">B2</SelectItem>
+                            <SelectItem value="C1" data-testid="option-level-c1">C1</SelectItem>
+                            <SelectItem value="C2" data-testid="option-level-c2">C2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="pageCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-page-count">{t('admin:bookEcommerce.pageCount')}</FormLabel>
+                        <FormControl>
+                          <Input 
+                            value={field.value || ""}
+                            type="number"
+                            data-testid="input-page-count"
+                            placeholder="300"
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="publicationYear"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-publication-year">{t('admin:bookEcommerce.publishedYear')}</FormLabel>
+                        <FormControl>
+                          <Input 
+                            value={field.value || ""}
+                            type="number"
+                            data-testid="input-publication-year"
+                            placeholder="2024"
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Hardcopy specific: Stock */}
+                {bookType === 'hardcopy' && (
+                  <FormField
+                    control={form.control}
+                    name="stockQuantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel data-testid="label-stock">{t('admin:bookEcommerce.stock')}</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field}
+                            type="number"
+                            data-testid="input-stock"
+                            placeholder="100"
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-4">
                   <Button
                     type="button"
                     variant="outline"
@@ -508,201 +429,159 @@ export function AdminBookEcommerce() {
                   </Button>
                 </div>
               </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card data-testid="card-total-books">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('admin:bookEcommerce.totalBooks')}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:bookEcommerce.totalBooks')}</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-total-books">
-              {displayBooks.length}
-            </div>
+            <div className="text-2xl font-bold" data-testid="text-total-books">{books.length || 0}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-total-sales">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('admin:bookEcommerce.totalSales')}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:bookEcommerce.totalSales')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-total-sales">
-              {(displayBooks.reduce((sum, book) => sum + (book.sold * book.price), 0) / 1000000).toFixed(1)}M IRR
-            </div>
+            <div className="text-2xl font-bold" data-testid="text-total-sales">0</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-in-stock">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('admin:bookEcommerce.inStock')}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:bookEcommerce.inStock')}</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-in-stock">
-              {displayBooks.reduce((sum, book) => sum + book.stock, 0)}
-            </div>
+            <div className="text-2xl font-bold" data-testid="text-in-stock">0</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-avg-rating">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('admin:bookEcommerce.avgRating')}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:bookEcommerce.avgRating')}</CardTitle>
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" data-testid="text-avg-rating">
-              {(displayBooks.reduce((sum, book) => sum + book.rating, 0) / displayBooks.length).toFixed(1)}
-            </div>
+            <div className="text-2xl font-bold" data-testid="text-avg-rating">0.0</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Book Management */}
-      <Tabs defaultValue="catalog" className="w-full">
-        <TabsList>
-          <TabsTrigger value="catalog">{t('admin:bookEcommerce.catalog')}</TabsTrigger>
-          <TabsTrigger value="orders">{t('admin:bookEcommerce.orders')}</TabsTrigger>
-          <TabsTrigger value="analytics">{t('admin:bookEcommerce.analytics')}</TabsTrigger>
+      {/* Tabs */}
+      <Tabs defaultValue="catalog" className="space-y-4">
+        <TabsList data-testid="tabs-navigation">
+          <TabsTrigger value="catalog" data-testid="tab-catalog">
+            <BookOpen className="mr-2 h-4 w-4" />
+            {t('admin:bookEcommerce.catalog')}
+          </TabsTrigger>
+          <TabsTrigger value="orders" data-testid="tab-orders">
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            {t('admin:bookEcommerce.orders')}
+          </TabsTrigger>
+          <TabsTrigger value="analytics" data-testid="tab-analytics">
+            <TrendingUp className="mr-2 h-4 w-4" />
+            {t('admin:bookEcommerce.analytics')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="catalog" className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('admin:bookEcommerce.searchPlaceholder')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                data-testid="input-search-books"
-              />
-            </div>
-          </div>
-
-          {/* Books Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {displayBooks.map((book) => (
-              <Card key={book.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex gap-4">
-                    <div className="w-16 h-20 bg-gray-200 rounded flex items-center justify-center">
-                      <BookOpen className="h-8 w-8 text-gray-400" />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-lg" data-testid={`text-book-title-${book.id}`}>
-                        {book.title}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">{book.author}</p>
-                      <div className="flex gap-2 mt-1">
-                        <Badge variant="secondary">
-                          {book.category}
-                        </Badge>
-                        <Badge variant={book.bookType === 'pdf' ? 'default' : 'outline'}>
-                          {book.bookType === 'pdf' ? 'PDF' : 'Hardcopy'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Badge 
-                      variant={book.status === 'published' ? 'default' : 'secondary'}
-                      data-testid={`badge-status-${book.id}`}
-                    >
-                      {book.status}
-                    </Badge>
+          <Card data-testid="card-catalog">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{t('admin:bookEcommerce.catalog')}</CardTitle>
+                  <CardDescription>{t('admin:bookEcommerce.description')}</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder={t('admin:bookEcommerce.searchPlaceholder')}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      data-testid="input-search"
+                      className="pl-8 w-[300px]"
+                    />
                   </div>
-                  <CardDescription>{book.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>{t('admin:bookEcommerce.price')}</span>
-                      <span className="font-medium" data-testid={`text-price-${book.id}`}>
-                        {book.price.toLocaleString()} {book.currency}
-                      </span>
-                    </div>
-                    {book.bookType === 'hardcopy' && (
-                      <div className="flex justify-between">
-                        <span>{t('admin:bookEcommerce.stock')}</span>
-                        <span data-testid={`text-stock-${book.id}`}>{book.stock}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span>{t('admin:bookEcommerce.sold')}</span>
-                      <span data-testid={`text-sold-${book.id}`}>{book.sold}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>{t('admin:bookEcommerce.rating')}</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span data-testid={`text-rating-${book.id}`}>{book.rating}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline" data-testid={`button-view-${book.id}`}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      {t('common:view')}
-                    </Button>
-                    <Button size="sm" variant="outline" data-testid={`button-edit-${book.id}`}>
-                      <Edit className="h-4 w-4 mr-1" />
-                      {t('common:edit')}
-                    </Button>
-                    <Button size="sm" variant="outline" data-testid={`button-settings-${book.id}`}>
-                      <Settings className="h-4 w-4 mr-1" />
-                      {t('common:settings')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-center py-8" data-testid="text-loading">{t('common:loading')}</div>
+              ) : books.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground" data-testid="text-no-books">
+                  {t('admin:bookEcommerce.noOrdersPlaceholder')}
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {books.map((book) => (
+                    <Card key={book.id} data-testid={`card-book-${book.id}`}>
+                      <CardHeader>
+                        <CardTitle className="line-clamp-1" data-testid={`text-book-title-${book.id}`}>{book.title}</CardTitle>
+                        <CardDescription data-testid={`text-book-author-${book.id}`}>{book.author}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" data-testid={`badge-book-type-${book.id}`}>
+                            {book.bookType === 'pdf' ? t('admin:bookEcommerce.pdfBook') : t('admin:bookEcommerce.hardcopyBook')}
+                          </Badge>
+                          <span className="font-semibold" data-testid={`text-book-price-${book.id}`}>
+                            {book.price} {book.currency || 'IRR'}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1" data-testid={`button-view-${book.id}`}>
+                            <Eye className="mr-1 h-3 w-3" />
+                            {t('common:view')}
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1" data-testid={`button-edit-${book.id}`}>
+                            <Edit className="mr-1 h-3 w-3" />
+                            {t('common:edit')}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-4">
-          <Card>
+          <Card data-testid="card-orders">
             <CardHeader>
               <CardTitle>{t('admin:bookEcommerce.recentOrders')}</CardTitle>
-              <CardDescription>
-                {t('admin:bookEcommerce.ordersDescription')}
-              </CardDescription>
+              <CardDescription>{t('admin:bookEcommerce.ordersDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <ShoppingCart className="h-12 w-12 mx-auto mb-4" />
-                <p>{t('admin:bookEcommerce.noOrdersPlaceholder')}</p>
+              <div className="text-center py-8 text-muted-foreground" data-testid="text-no-orders">
+                {t('admin:bookEcommerce.noOrdersPlaceholder')}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <Card>
+          <Card data-testid="card-analytics">
             <CardHeader>
               <CardTitle>{t('admin:bookEcommerce.salesAnalytics')}</CardTitle>
-              <CardDescription>
-                {t('admin:bookEcommerce.analyticsDescription')}
-              </CardDescription>
+              <CardDescription>{t('admin:bookEcommerce.analyticsDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4" />
-                <p>{t('admin:bookEcommerce.analyticsPlaceholder')}</p>
+              <div className="text-center py-8 text-muted-foreground" data-testid="text-no-analytics">
+                {t('admin:bookEcommerce.analyticsPlaceholder')}
               </div>
             </CardContent>
           </Card>
@@ -711,3 +590,5 @@ export function AdminBookEcommerce() {
     </div>
   );
 }
+
+export default AdminBookEcommerce;
