@@ -41,11 +41,18 @@ export default function AITrainingDashboard() {
   const [selectedTab, setSelectedTab] = useState("models");
   const [showAddModelDialog, setShowAddModelDialog] = useState(false);
   const [showAddDatasetDialog, setShowAddDatasetDialog] = useState(false);
+  const [showStartTrainingDialog, setShowStartTrainingDialog] = useState(false);
   const [selectedModelToPull, setSelectedModelToPull] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [datasetName, setDatasetName] = useState("");
   const [datasetLanguage, setDatasetLanguage] = useState("en");
   const [datasetType, setDatasetType] = useState("general");
+  
+  // Training job form state
+  const [trainingJobName, setTrainingJobName] = useState("");
+  const [selectedBaseModel, setSelectedBaseModel] = useState("");
+  const [selectedDataset, setSelectedDataset] = useState("");
+  const [trainingType, setTrainingType] = useState("lora");
 
   // Fetch AI models
   const { data: models = [], isLoading: modelsLoading } = useQuery<AiModel[]>({
@@ -203,6 +210,88 @@ export default function AITrainingDashboard() {
     });
 
     uploadDatasetMutation.mutate(formData);
+  };
+
+  // Start training job mutation
+  const startTrainingMutation = useMutation({
+    mutationFn: async (jobData: {
+      jobName: string;
+      baseModelId: string;
+      datasetId: string;
+      trainingType: string;
+    }) => {
+      const data = await apiRequest("/api/ai-training-jobs", {
+        method: "POST",
+        body: {
+          jobName: jobData.jobName,
+          modelId: parseInt(jobData.baseModelId),
+          datasetId: parseInt(jobData.datasetId),
+          jobType: jobData.trainingType,
+          priority: "medium",
+          hyperparameters: {
+            epochs: jobData.trainingType === "lora" ? 3 : 5,
+            learningRate: 0.0001,
+            batchSize: 4
+          }
+        }
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Training Started",
+        description: "Training job has been started successfully",
+      });
+      setShowStartTrainingDialog(false);
+      setTrainingJobName("");
+      setSelectedBaseModel("");
+      setSelectedDataset("");
+      setTrainingType("lora");
+      queryClient.invalidateQueries({ queryKey: ['/api/ai-training-jobs'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Training Failed",
+        description: error.message || "Failed to start training job",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleStartTraining = () => {
+    if (!trainingJobName.trim()) {
+      toast({
+        title: "Job Name Required",
+        description: "Please enter a training job name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!selectedBaseModel) {
+      toast({
+        title: "Base Model Required",
+        description: "Please select a base model",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!selectedDataset) {
+      toast({
+        title: "Dataset Required",
+        description: "Please select a dataset",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    startTrainingMutation.mutate({
+      jobName: trainingJobName,
+      baseModelId: selectedBaseModel,
+      datasetId: selectedDataset,
+      trainingType
+    });
   };
 
   // Popular Llama models for download
@@ -504,6 +593,14 @@ export default function AITrainingDashboard() {
         <TabsContent value="training" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">{t('admin:trainingJobs', 'Training Jobs')}</h2>
+            <Button 
+              onClick={() => setShowStartTrainingDialog(true)}
+              disabled={models.length === 0 || datasets.length === 0}
+              data-testid="button-start-training"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              {t('admin:startTraining', 'Start Training')}
+            </Button>
           </div>
 
           <div className="grid gap-4">
@@ -861,6 +958,168 @@ export default function AITrainingDashboard() {
                   <>
                     <Upload className="h-4 w-4 mr-2" />
                     {t('admin:upload', 'Upload')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Start Training Dialog */}
+      <Dialog open={showStartTrainingDialog} onOpenChange={setShowStartTrainingDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle data-testid="dialog-title-start-training">
+              {t('admin:startTraining', 'Start Training')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('admin:startTrainingDescription', 'Configure and start a new AI model training job')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="training-job-name">{t('admin:jobName', 'Job Name')}</Label>
+              <Input
+                id="training-job-name"
+                data-testid="input-training-job-name"
+                placeholder={t('admin:jobNamePlaceholder', 'Enter training job name')}
+                value={trainingJobName}
+                onChange={(e) => setTrainingJobName(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="base-model">{t('admin:baseModel', 'Base Model')}</Label>
+              <Select value={selectedBaseModel} onValueChange={setSelectedBaseModel}>
+                <SelectTrigger id="base-model" data-testid="select-base-model" className="mt-2">
+                  <SelectValue placeholder={t('admin:selectBaseModel', 'Select a base model')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {models.map((model) => (
+                    <SelectItem key={model.id} value={model.id.toString()}>
+                      {model.name} {model.parameters ? `(${model.parameters}B parameters)` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {models.length === 0 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  {t('admin:noModelsAvailable', 'No models available. Please download a model first.')}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="dataset">{t('admin:dataset', 'Dataset')}</Label>
+              <Select value={selectedDataset} onValueChange={setSelectedDataset}>
+                <SelectTrigger id="dataset" data-testid="select-dataset" className="mt-2">
+                  <SelectValue placeholder={t('admin:selectDataset', 'Select a dataset')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {datasets.map((dataset) => (
+                    <SelectItem key={dataset.id} value={dataset.id.toString()}>
+                      {dataset.name} ({dataset.totalSamples || 0} samples)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {datasets.length === 0 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  {t('admin:noDatasetsAvailable', 'No datasets available. Please upload a dataset first.')}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>{t('admin:trainingType', 'Training Type')}</Label>
+              <RadioGroup 
+                value={trainingType} 
+                onValueChange={setTrainingType}
+                className="mt-2 space-y-3"
+              >
+                <div className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <RadioGroupItem 
+                    value="lora" 
+                    id="lora"
+                    data-testid="radio-training-lora"
+                  />
+                  <div className="flex-1">
+                    <Label 
+                      htmlFor="lora"
+                      className="font-medium cursor-pointer"
+                    >
+                      {t('admin:loraFineTuning', 'LoRA Fine-tuning')}
+                    </Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {t('admin:loraDescription', 'Fast, efficient fine-tuning using Low-Rank Adaptation (recommended for most cases)')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <RadioGroupItem 
+                    value="full" 
+                    id="full"
+                    data-testid="radio-training-full"
+                  />
+                  <div className="flex-1">
+                    <Label 
+                      htmlFor="full"
+                      className="font-medium cursor-pointer"
+                    >
+                      {t('admin:fullFineTuning', 'Full Fine-tuning')}
+                    </Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {t('admin:fullDescription', 'Complete model fine-tuning - slower but more comprehensive (requires more GPU resources)')}
+                    </p>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {startTrainingMutation.isPending && (
+              <div className="space-y-2">
+                <Label>{t('admin:starting', 'Starting training...')}</Label>
+                <div className="flex items-center gap-2">
+                  <Play className="h-4 w-4 animate-pulse" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t('admin:startingTrainingPleaseWait', 'Initializing training job...')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowStartTrainingDialog(false);
+                  setTrainingJobName("");
+                  setSelectedBaseModel("");
+                  setSelectedDataset("");
+                  setTrainingType("lora");
+                }}
+                disabled={startTrainingMutation.isPending}
+                data-testid="button-cancel-training"
+              >
+                {t('common:cancel', 'Cancel')}
+              </Button>
+              <Button
+                onClick={handleStartTraining}
+                disabled={startTrainingMutation.isPending || !trainingJobName.trim() || !selectedBaseModel || !selectedDataset}
+                data-testid="button-confirm-start-training"
+              >
+                {startTrainingMutation.isPending ? (
+                  <>
+                    <Play className="h-4 w-4 mr-2 animate-pulse" />
+                    {t('admin:starting', 'Starting...')}
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    {t('admin:startTraining', 'Start Training')}
                   </>
                 )}
               </Button>
