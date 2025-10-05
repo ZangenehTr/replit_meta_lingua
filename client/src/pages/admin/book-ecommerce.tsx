@@ -118,6 +118,59 @@ export function AdminBookEcommerce() {
     queryKey: [API_ENDPOINTS.admin.bookOrders],
   });
 
+  // Shipping address dialog state
+  const [shippingDialogOpen, setShippingDialogOpen] = useState(false);
+  const [selectedBookForPurchase, setSelectedBookForPurchase] = useState<Book | null>(null);
+  const [shippingAddress, setShippingAddress] = useState('');
+
+  // Purchase book mutation
+  const purchaseBookMutation = useMutation({
+    mutationFn: async ({ bookId, shippingAddress }: { bookId: number; shippingAddress?: string }) => {
+      return await apiRequest(`/api/book-ecommerce/books/${bookId}/purchase`, {
+        method: 'POST',
+        body: JSON.stringify({
+          paymentMethod: 'wallet',
+          shippingAddress
+        })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.bookOrders] });
+      toast({
+        title: t('common:success'),
+        description: 'Book purchased successfully'
+      });
+      setShippingDialogOpen(false);
+      setSelectedBookForPurchase(null);
+      setShippingAddress('');
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:error'),
+        description: error.message || 'Failed to purchase book',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const handlePurchaseClick = (book: Book) => {
+    if (book.bookType === 'hardcopy') {
+      setSelectedBookForPurchase(book);
+      setShippingDialogOpen(true);
+    } else {
+      purchaseBookMutation.mutate({ bookId: book.id });
+    }
+  };
+
+  const handleConfirmPurchase = () => {
+    if (selectedBookForPurchase) {
+      purchaseBookMutation.mutate({ 
+        bookId: selectedBookForPurchase.id,
+        shippingAddress: selectedBookForPurchase.bookType === 'hardcopy' ? shippingAddress : undefined
+      });
+    }
+  };
+
   // Create book mutation
   const createBookMutation = useMutation({
     mutationFn: async (data: AddBookFormData) => {
@@ -663,6 +716,17 @@ export function AdminBookEcommerce() {
                             {t('common:edit')}
                           </Button>
                         </div>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="w-full" 
+                          data-testid={`button-purchase-${book.id}`}
+                          onClick={() => handlePurchaseClick(book)}
+                          disabled={purchaseBookMutation.isPending}
+                        >
+                          <ShoppingCart className="mr-1 h-3 w-3" />
+                          Purchase ({book.price} {book.currency || 'IRR'})
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
@@ -871,6 +935,48 @@ export function AdminBookEcommerce() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={shippingDialogOpen} onOpenChange={setShippingDialogOpen}>
+        <DialogContent data-testid="dialog-shipping-address">
+          <DialogHeader>
+            <DialogTitle>Enter Shipping Address</DialogTitle>
+            <DialogDescription>
+              Please provide your shipping address for the hardcopy book delivery
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="shipping-address">Shipping Address</Label>
+              <textarea
+                id="shipping-address"
+                className="w-full min-h-[100px] p-2 border rounded-md"
+                value={shippingAddress}
+                onChange={(e) => setShippingAddress(e.target.value)}
+                placeholder="Enter your complete shipping address..."
+                data-testid="textarea-shipping-address"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShippingDialogOpen(false)}
+                data-testid="button-shipping-cancel"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmPurchase}
+                disabled={!shippingAddress || purchaseBookMutation.isPending}
+                data-testid="button-shipping-confirm"
+              >
+                {purchaseBookMutation.isPending ? 'Processing...' : 'Confirm Purchase'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

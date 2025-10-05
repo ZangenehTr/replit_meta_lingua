@@ -1545,4 +1545,142 @@ Please write a compelling description in Persian that highlights the book's valu
       });
     }
   });
+
+  // POST /api/book-ecommerce/books/:id/purchase - Purchase a book
+  app.post("/api/book-ecommerce/books/:id/purchase", authenticateToken, async (req: any, res) => {
+    try {
+      const bookId = parseInt(req.params.id, 10);
+      const userId = req.user.id;
+      const { paymentMethod = 'wallet', shippingAddress } = req.body;
+      
+      if (isNaN(bookId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid book ID'
+        });
+      }
+
+      const book = await storage.getBook(bookId);
+      
+      if (!book) {
+        return res.status(404).json({
+          success: false,
+          message: 'Book not found'
+        });
+      }
+
+      // For hardcopy books, shipping address is required
+      if (book.bookType === 'hardcopy' && !shippingAddress) {
+        return res.status(400).json({
+          success: false,
+          message: 'Shipping address is required for hardcopy books'
+        });
+      }
+
+      // Import required modules for transaction
+      const { db } = await import("../db");
+      const { users, walletTransactions, book_orders } = await import("@shared/schema");
+      const { eq, sql } = await import("drizzle-orm");
+
+      // Handle wallet payment with atomic transaction
+      let order;
+      if (paymentMethod === 'wallet') {
+        const user = await storage.getUser(userId);
+        if (!user || user.walletBalance < book.price) {
+          return res.status(400).json({ 
+            success: false,
+            message: 'Insufficient wallet balance',
+            required: book.price,
+            current: user?.walletBalance || 0
+          });
+        }
+
+        // Atomic transaction: deduct wallet, create transaction, create order
+        order = await db.transaction(async (tx) => {
+          // Deduct from wallet
+          await tx.update(users)
+            .set({ 
+              walletBalance: sql`${users.walletBalance} - ${book.price}`,
+              updatedAt: new Date()
+            })
+            .where(eq(users.id, userId));
+
+          // Create wallet transaction record
+          await tx.insert(walletTransactions).values({
+            userId,
+            type: 'payment',
+            amount: book.price.toString(),
+            currency: book.currency || 'IRR',
+            description: `Book purchase: ${book.title}`,
+            status: 'completed',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+
+          // Create book order
+          const orderData: any = {
+            userId,
+            bookId,
+            orderStatus: 'completed',
+            paymentStatus: 'paid',
+            totalAmount: book.price,
+            currency: book.currency || 'IRR',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+
+          // Set download limit for PDF books
+          if (book.bookType === 'pdf') {
+            orderData.downloadLimit = 5;
+            orderData.downloadCount = 0;
+          }
+
+          // Set shipping info for hardcopy books
+          if (book.bookType === 'hardcopy' && shippingAddress) {
+            orderData.shippingStatus = 'pending';
+            orderData.shippingAddress = shippingAddress;
+          }
+
+          const result = await tx.insert(book_orders).values(orderData).returning();
+          return result[0];
+        });
+      } else {
+        // For other payment methods, just create the order
+        const orderData: any = {
+          userId,
+          bookId,
+          orderStatus: 'pending',
+          paymentStatus: 'pending',
+          totalAmount: book.price,
+          currency: book.currency || 'IRR',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        if (book.bookType === 'pdf') {
+          orderData.downloadLimit = 5;
+          orderData.downloadCount = 0;
+        }
+
+        if (book.bookType === 'hardcopy' && shippingAddress) {
+          orderData.shippingStatus = 'pending';
+          orderData.shippingAddress = shippingAddress;
+        }
+
+        order = await storage.createBookOrder(orderData);
+      }
+
+      res.json({
+        success: true,
+        message: 'Book purchased successfully',
+        data: order
+      });
+    } catch (error: any) {
+      console.error('Error purchasing book:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to purchase book'
+      });
+    }
+  });
 }
