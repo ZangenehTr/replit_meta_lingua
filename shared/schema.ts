@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, varchar, date, time } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, varchar, date, time, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -3571,6 +3571,195 @@ export const notificationDeliveryLogs = pgTable("notification_delivery_logs", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// ========== MARKETING & SOCIAL MEDIA MANAGEMENT ==========
+
+// Marketing Campaigns table - stores campaign information
+export const marketingCampaigns = pgTable("marketing_campaigns", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).notNull(), // enrollment, retention, referral, awareness, seasonal
+  status: varchar("status", { length: 20 }).default("draft"), // draft, active, paused, completed, cancelled
+  budget: bigint("budget", { mode: "number" }).default(0), // in IRR (Iranian Rial)
+  spent: bigint("spent", { mode: "number" }).default(0), // in IRR
+  targetAudience: varchar("target_audience", { length: 255 }), // persian_learners, arabic_students, etc
+  channels: text("channels").array().default([]), // instagram, telegram, youtube, linkedin, twitter, facebook, email, sms
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  impressions: bigint("impressions", { mode: "number" }).default(0),
+  clicks: bigint("clicks", { mode: "number" }).default(0),
+  conversions: integer("conversions").default(0),
+  costPerLead: bigint("cost_per_lead", { mode: "number" }).default(0), // in IRR
+  roi: decimal("roi", { precision: 10, scale: 2 }).default("0"), // return on investment
+  conversionRate: decimal("conversion_rate", { precision: 5, scale: 2 }).default("0"),
+  engagementRate: decimal("engagement_rate", { precision: 5, scale: 2 }).default("0"),
+  tags: text("tags").array().default([]),
+  iranianCompliance: boolean("iranian_compliance").default(true),
+  createdBy: integer("created_by").references(() => users.id),
+  lastModifiedBy: integer("last_modified_by").references(() => users.id),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Platform Credentials table - stores API keys and tokens for social media platforms
+export const platformCredentials = pgTable("platform_credentials", {
+  id: serial("id").primaryKey(),
+  platform: varchar("platform", { length: 50 }).notNull(), // instagram, telegram, youtube, linkedin, twitter, facebook, email_smtp, sms
+  accountName: varchar("account_name", { length: 255 }).notNull(),
+  accountHandle: varchar("account_handle", { length: 255 }), // @username or email
+  credentialType: varchar("credential_type", { length: 50 }).notNull(), // api_key, oauth_token, app_password, bot_token
+  accessToken: text("access_token"), // encrypted
+  refreshToken: text("refresh_token"), // encrypted
+  apiKey: text("api_key"), // encrypted
+  apiSecret: text("api_secret"), // encrypted
+  tokenExpiry: timestamp("token_expiry"),
+  isActive: boolean("is_active").default(true),
+  isVerified: boolean("is_verified").default(false),
+  lastVerified: timestamp("last_verified"),
+  permissions: text("permissions").array().default([]), // read, write, publish, analytics
+  metadata: jsonb("metadata"), // platform-specific configuration
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Scheduled Posts table - stores scheduled social media posts
+export const scheduledPosts = pgTable("scheduled_posts", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id),
+  platforms: text("platforms").array().notNull(), // which platforms to post to
+  postType: varchar("post_type", { length: 50 }).notNull(), // text, image, video, carousel, story
+  content: text("content").notNull(),
+  media: text("media").array().default([]), // URLs or file paths
+  hashtags: text("hashtags").array().default([]),
+  mentions: text("mentions").array().default([]),
+  scheduledFor: timestamp("scheduled_for").notNull(),
+  status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, publishing, published, failed, cancelled
+  publishedAt: timestamp("published_at"),
+  aiGenerated: boolean("ai_generated").default(false),
+  aiPrompt: text("ai_prompt"),
+  language: varchar("language", { length: 10 }).default("fa"), // fa, ar, en
+  targetAudience: varchar("target_audience", { length: 255 }),
+  priority: varchar("priority", { length: 20 }).default("normal"), // low, normal, high, urgent
+  createdBy: integer("created_by").references(() => users.id),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Social Media Posts table - stores published posts and their metadata
+export const socialMediaPosts = pgTable("social_media_posts", {
+  id: serial("id").primaryKey(),
+  scheduledPostId: integer("scheduled_post_id").references(() => scheduledPosts.id),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  platformPostId: varchar("platform_post_id", { length: 255 }), // ID from the platform
+  postType: varchar("post_type", { length: 50 }).notNull(),
+  content: text("content").notNull(),
+  media: text("media").array().default([]),
+  hashtags: text("hashtags").array().default([]),
+  mentions: text("mentions").array().default([]),
+  publishedAt: timestamp("published_at").defaultNow().notNull(),
+  status: varchar("status", { length: 20 }).default("published"), // published, deleted, hidden, archived
+  impressions: bigint("impressions", { mode: "number" }).default(0),
+  reach: bigint("reach", { mode: "number" }).default(0),
+  likes: integer("likes").default(0),
+  comments: integer("comments").default(0),
+  shares: integer("shares").default(0),
+  clicks: integer("clicks").default(0),
+  saves: integer("saves").default(0),
+  engagementRate: decimal("engagement_rate", { precision: 5, scale: 2 }).default("0"),
+  language: varchar("language", { length: 10 }).default("fa"),
+  createdBy: integer("created_by").references(() => users.id),
+  metadata: jsonb("metadata"),
+  lastSyncedAt: timestamp("last_synced_at"), // last time analytics were synced from platform
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Social Media Analytics table - stores daily aggregated analytics
+export const socialMediaAnalytics = pgTable("social_media_analytics", {
+  id: serial("id").primaryKey(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  date: timestamp("date").notNull(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id),
+  followers: integer("followers").default(0),
+  followersGrowth: integer("followers_growth").default(0),
+  impressions: bigint("impressions", { mode: "number" }).default(0),
+  reach: bigint("reach", { mode: "number" }).default(0),
+  likes: integer("likes").default(0),
+  comments: integer("comments").default(0),
+  shares: integer("shares").default(0),
+  clicks: integer("clicks").default(0),
+  profileViews: integer("profile_views").default(0),
+  engagementRate: decimal("engagement_rate", { precision: 5, scale: 2 }).default("0"),
+  topPerformingPost: varchar("top_performing_post", { length: 255 }),
+  iranianAudience: decimal("iranian_audience", { precision: 5, scale: 2 }), // percentage
+  demographics: jsonb("demographics"), // age, gender, location data
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Email Campaigns table - stores email broadcast campaigns
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  content: text("content").notNull(),
+  htmlContent: text("html_content"),
+  senderName: varchar("sender_name", { length: 255 }).default("Meta Lingua"),
+  senderEmail: varchar("sender_email", { length: 255 }).notNull(),
+  replyTo: varchar("reply_to", { length: 255 }),
+  recipientType: varchar("recipient_type", { length: 50 }).notNull(), // all_students, all_teachers, custom_list, segment
+  recipientList: text("recipient_list").array().default([]), // email addresses
+  scheduledFor: timestamp("scheduled_for"),
+  sentAt: timestamp("sent_at"),
+  status: varchar("status", { length: 20 }).default("draft"), // draft, scheduled, sending, sent, failed
+  totalRecipients: integer("total_recipients").default(0),
+  successfulSends: integer("successful_sends").default(0),
+  failedSends: integer("failed_sends").default(0),
+  opened: integer("opened").default(0),
+  clicked: integer("clicked").default(0),
+  bounced: integer("bounced").default(0),
+  unsubscribed: integer("unsubscribed").default(0),
+  openRate: decimal("open_rate", { precision: 5, scale: 2 }).default("0"),
+  clickRate: decimal("click_rate", { precision: 5, scale: 2 }).default("0"),
+  bounceRate: decimal("bounce_rate", { precision: 5, scale: 2 }).default("0"),
+  attachments: text("attachments").array().default([]),
+  createdBy: integer("created_by").references(() => users.id),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Telegram Messages table - stores telegram channel/group messages
+export const telegramMessages = pgTable("telegram_messages", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id),
+  channelId: varchar("channel_id", { length: 255 }).notNull(), // @channel_name or chat_id
+  messageType: varchar("message_type", { length: 50 }).notNull(), // text, photo, video, document, poll
+  content: text("content").notNull(),
+  media: text("media").array().default([]),
+  buttons: jsonb("buttons"), // inline keyboard buttons
+  scheduledFor: timestamp("scheduled_for"),
+  sentAt: timestamp("sent_at"),
+  status: varchar("status", { length: 20 }).default("draft"), // draft, scheduled, sent, failed
+  telegramMessageId: varchar("telegram_message_id", { length: 255 }), // ID from Telegram
+  views: integer("views").default(0),
+  forwards: integer("forwards").default(0),
+  reactions: jsonb("reactions"),
+  autoReply: boolean("auto_reply").default(false),
+  autoReplyRules: jsonb("auto_reply_rules"),
+  createdBy: integer("created_by").references(() => users.id),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Placement Tests table
 export const placementTests = pgTable("placement_tests", {
   id: serial("id").primaryKey(),
@@ -6988,6 +7177,99 @@ export type CalendarEventsIranian = typeof calendarEventsIranian.$inferSelect;
 export type CalendarEventsIranianInsert = z.infer<typeof insertCalendarEventsIranianSchema>;
 export type HolidayCalendarPersian = typeof holidayCalendarPersian.$inferSelect;
 export type HolidayCalendarPersianInsert = z.infer<typeof insertHolidayCalendarPersianSchema>;
+
+// ============================================================================
+// MARKETING & SOCIAL MEDIA INSERT SCHEMAS AND TYPES
+// ============================================================================
+
+// Insert schemas for marketing and social media tables
+export const insertMarketingCampaignSchema = createInsertSchema(marketingCampaigns).omit({
+  id: true,
+  impressions: true,
+  clicks: true,
+  conversions: true,
+  costPerLead: true,
+  roi: true,
+  conversionRate: true,
+  engagementRate: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPlatformCredentialSchema = createInsertSchema(platformCredentials).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertScheduledPostSchema = createInsertSchema(scheduledPosts).omit({
+  id: true,
+  publishedAt: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertSocialMediaPostSchema = createInsertSchema(socialMediaPosts).omit({
+  id: true,
+  impressions: true,
+  reach: true,
+  likes: true,
+  comments: true,
+  shares: true,
+  clicks: true,
+  saves: true,
+  engagementRate: true,
+  lastSyncedAt: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertSocialMediaAnalyticsSchema = createInsertSchema(socialMediaAnalytics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertEmailCampaignSchema = createInsertSchema(emailCampaigns).omit({
+  id: true,
+  sentAt: true,
+  successfulSends: true,
+  failedSends: true,
+  opened: true,
+  clicked: true,
+  bounced: true,
+  unsubscribed: true,
+  openRate: true,
+  clickRate: true,
+  bounceRate: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTelegramMessageSchema = createInsertSchema(telegramMessages).omit({
+  id: true,
+  sentAt: true,
+  views: true,
+  forwards: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Type exports for marketing and social media tables
+export type MarketingCampaign = typeof marketingCampaigns.$inferSelect;
+export type MarketingCampaignInsert = z.infer<typeof insertMarketingCampaignSchema>;
+export type PlatformCredential = typeof platformCredentials.$inferSelect;
+export type PlatformCredentialInsert = z.infer<typeof insertPlatformCredentialSchema>;
+export type ScheduledPost = typeof scheduledPosts.$inferSelect;
+export type ScheduledPostInsert = z.infer<typeof insertScheduledPostSchema>;
+export type SocialMediaPost = typeof socialMediaPosts.$inferSelect;
+export type SocialMediaPostInsert = z.infer<typeof insertSocialMediaPostSchema>;
+export type SocialMediaAnalytics = typeof socialMediaAnalytics.$inferSelect;
+export type SocialMediaAnalyticsInsert = z.infer<typeof insertSocialMediaAnalyticsSchema>;
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;
+export type EmailCampaignInsert = z.infer<typeof insertEmailCampaignSchema>;
+export type TelegramMessage = typeof telegramMessages.$inferSelect;
+export type TelegramMessageInsert = z.infer<typeof insertTelegramMessageSchema>;
 
 // ============================================================================
 // LINGUAQUEST FREE LEARNING SYSTEM SCHEMA
