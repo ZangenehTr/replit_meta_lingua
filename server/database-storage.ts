@@ -16554,4 +16554,497 @@ export class DatabaseStorage implements IStorage {
       .where(eq(threeDLessonProgress.userId, userId))
       .orderBy(desc(threeDLessonProgress.updatedAt));
   }
+
+  // ============================================================================
+  // Marketing Campaign Methods
+  // ============================================================================
+
+  async getMarketingCampaigns(filters?: { status?: string; type?: string }): Promise<MarketingCampaign[]> {
+    let query = db.select().from(marketingCampaigns);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.status) conditions.push(eq(marketingCampaigns.status, filters.status));
+      if (filters.type) conditions.push(eq(marketingCampaigns.type, filters.type));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(marketingCampaigns.createdAt));
+  }
+
+  async getMarketingCampaign(id: number): Promise<MarketingCampaign | undefined> {
+    const [campaign] = await db.select().from(marketingCampaigns).where(eq(marketingCampaigns.id, id));
+    return campaign;
+  }
+
+  async createMarketingCampaign(campaign: InsertMarketingCampaign): Promise<MarketingCampaign> {
+    const [newCampaign] = await db.insert(marketingCampaigns).values(campaign).returning();
+    return newCampaign;
+  }
+
+  async updateMarketingCampaign(id: number, updates: Partial<MarketingCampaign>): Promise<MarketingCampaign | undefined> {
+    const [updated] = await db.update(marketingCampaigns)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(marketingCampaigns.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMarketingCampaign(id: number): Promise<void> {
+    await db.delete(marketingCampaigns).where(eq(marketingCampaigns.id, id));
+  }
+
+  async getCampaignMetrics(id: number): Promise<{
+    impressions: bigint;
+    clicks: bigint;
+    conversions: number;
+    spent: bigint;
+    roi: number;
+    engagement_rate: number;
+  } | undefined> {
+    const [campaign] = await db.select({
+      impressions: marketingCampaigns.impressions,
+      clicks: marketingCampaigns.clicks,
+      conversions: marketingCampaigns.conversions,
+      spent: marketingCampaigns.spent,
+      roi: marketingCampaigns.roi,
+      engagement_rate: marketingCampaigns.engagementRate
+    }).from(marketingCampaigns).where(eq(marketingCampaigns.id, id));
+    
+    if (!campaign) return undefined;
+    
+    return {
+      impressions: campaign.impressions ?? BigInt(0),
+      clicks: campaign.clicks ?? BigInt(0),
+      conversions: campaign.conversions ?? 0,
+      spent: campaign.spent ?? BigInt(0),
+      roi: Number(campaign.roi ?? 0),
+      engagement_rate: Number(campaign.engagement_rate ?? 0)
+    };
+  }
+
+  // ============================================================================
+  // Platform Credentials Methods
+  // ============================================================================
+
+  async getPlatformCredentials(filters?: { platform?: string; isActive?: boolean }): Promise<PlatformCredential[]> {
+    let query = db.select().from(platformCredentials);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.platform) conditions.push(eq(platformCredentials.platform, filters.platform));
+      if (filters.isActive !== undefined) conditions.push(eq(platformCredentials.isActive, filters.isActive));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(platformCredentials.createdAt));
+  }
+
+  async getPlatformCredential(id: number): Promise<PlatformCredential | undefined> {
+    const [credential] = await db.select().from(platformCredentials).where(eq(platformCredentials.id, id));
+    return credential;
+  }
+
+  async getPlatformCredentialByPlatform(platform: string, accountHandle?: string): Promise<PlatformCredential | undefined> {
+    let query = db.select().from(platformCredentials).where(eq(platformCredentials.platform, platform));
+    
+    if (accountHandle) {
+      query = query.where(and(
+        eq(platformCredentials.platform, platform),
+        eq(platformCredentials.accountHandle, accountHandle)
+      ));
+    }
+    
+    const [credential] = await query;
+    return credential;
+  }
+
+  async createPlatformCredential(credential: InsertPlatformCredential): Promise<PlatformCredential> {
+    const [newCredential] = await db.insert(platformCredentials).values(credential).returning();
+    return newCredential;
+  }
+
+  async updatePlatformCredential(id: number, updates: Partial<PlatformCredential>): Promise<PlatformCredential | undefined> {
+    const [updated] = await db.update(platformCredentials)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(platformCredentials.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePlatformCredential(id: number): Promise<void> {
+    await db.delete(platformCredentials).where(eq(platformCredentials.id, id));
+  }
+
+  async verifyPlatformCredential(id: number): Promise<boolean> {
+    const [updated] = await db.update(platformCredentials)
+      .set({ isVerified: true, lastVerified: new Date(), updatedAt: new Date() })
+      .where(eq(platformCredentials.id, id))
+      .returning();
+    return !!updated;
+  }
+
+  // ============================================================================
+  // Scheduled Posts Methods
+  // ============================================================================
+
+  async getScheduledPosts(filters?: { status?: string; campaignId?: number; platforms?: string[] }): Promise<ScheduledPost[]> {
+    let query = db.select().from(scheduledPosts);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.status) conditions.push(eq(scheduledPosts.status, filters.status));
+      if (filters.campaignId) conditions.push(eq(scheduledPosts.campaignId, filters.campaignId));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(scheduledPosts.scheduledFor));
+  }
+
+  async getScheduledPost(id: number): Promise<ScheduledPost | undefined> {
+    const [post] = await db.select().from(scheduledPosts).where(eq(scheduledPosts.id, id));
+    return post;
+  }
+
+  async createScheduledPost(post: InsertScheduledPost): Promise<ScheduledPost> {
+    const [newPost] = await db.insert(scheduledPosts).values(post).returning();
+    return newPost;
+  }
+
+  async updateScheduledPost(id: number, updates: Partial<ScheduledPost>): Promise<ScheduledPost | undefined> {
+    const [updated] = await db.update(scheduledPosts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(scheduledPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteScheduledPost(id: number): Promise<void> {
+    await db.delete(scheduledPosts).where(eq(scheduledPosts.id, id));
+  }
+
+  async getScheduledPostsDueForPublishing(): Promise<ScheduledPost[]> {
+    return await db.select().from(scheduledPosts)
+      .where(and(
+        eq(scheduledPosts.status, 'scheduled'),
+        lte(scheduledPosts.scheduledFor, new Date())
+      ))
+      .orderBy(asc(scheduledPosts.scheduledFor));
+  }
+
+  async publishScheduledPost(id: number): Promise<ScheduledPost | undefined> {
+    const [published] = await db.update(scheduledPosts)
+      .set({ 
+        status: 'published',
+        publishedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(scheduledPosts.id, id))
+      .returning();
+    return published;
+  }
+
+  // ============================================================================
+  // Social Media Posts Methods
+  // ============================================================================
+
+  async getSocialMediaPosts(filters?: { platform?: string; campaignId?: number; dateFrom?: Date; dateTo?: Date }): Promise<SocialMediaPost[]> {
+    let query = db.select().from(socialMediaPosts);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.platform) conditions.push(eq(socialMediaPosts.platform, filters.platform));
+      if (filters.campaignId) conditions.push(eq(socialMediaPosts.campaignId, filters.campaignId));
+      if (filters.dateFrom) conditions.push(gte(socialMediaPosts.publishedAt, filters.dateFrom));
+      if (filters.dateTo) conditions.push(lte(socialMediaPosts.publishedAt, filters.dateTo));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(socialMediaPosts.publishedAt));
+  }
+
+  async getSocialMediaPost(id: number): Promise<SocialMediaPost | undefined> {
+    const [post] = await db.select().from(socialMediaPosts).where(eq(socialMediaPosts.id, id));
+    return post;
+  }
+
+  async createSocialMediaPost(post: InsertSocialMediaPost): Promise<SocialMediaPost> {
+    const [newPost] = await db.insert(socialMediaPosts).values(post).returning();
+    return newPost;
+  }
+
+  async updateSocialMediaPost(id: number, updates: Partial<SocialMediaPost>): Promise<SocialMediaPost | undefined> {
+    const [updated] = await db.update(socialMediaPosts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(socialMediaPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSocialMediaPost(id: number): Promise<void> {
+    await db.delete(socialMediaPosts).where(eq(socialMediaPosts.id, id));
+  }
+
+  async updateSocialMediaPostMetrics(id: number, metrics: {
+    impressions?: bigint;
+    reach?: bigint;
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    clicks?: number;
+    saves?: number;
+  }): Promise<SocialMediaPost | undefined> {
+    const updates: Partial<SocialMediaPost> = {
+      ...metrics,
+      lastSyncedAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    if (metrics.likes !== undefined || metrics.comments !== undefined || metrics.shares !== undefined) {
+      const total = (metrics.likes ?? 0) + (metrics.comments ?? 0) + (metrics.shares ?? 0);
+      const reach = Number(metrics.reach ?? 0);
+      if (reach > 0) {
+        updates.engagementRate = (total / reach) * 100;
+      }
+    }
+    
+    const [updated] = await db.update(socialMediaPosts)
+      .set(updates)
+      .where(eq(socialMediaPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ============================================================================
+  // Social Media Analytics Methods
+  // ============================================================================
+
+  async getSocialMediaAnalytics(filters?: { platform?: string; dateFrom?: Date; dateTo?: Date; campaignId?: number }): Promise<SocialMediaAnalytics[]> {
+    let query = db.select().from(socialMediaAnalytics);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.platform) conditions.push(eq(socialMediaAnalytics.platform, filters.platform));
+      if (filters.campaignId) conditions.push(eq(socialMediaAnalytics.campaignId, filters.campaignId));
+      if (filters.dateFrom) conditions.push(gte(socialMediaAnalytics.date, filters.dateFrom));
+      if (filters.dateTo) conditions.push(lte(socialMediaAnalytics.date, filters.dateTo));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(socialMediaAnalytics.date));
+  }
+
+  async createSocialMediaAnalytics(analytics: InsertSocialMediaAnalytics): Promise<SocialMediaAnalytics> {
+    const [newAnalytics] = await db.insert(socialMediaAnalytics).values(analytics).returning();
+    return newAnalytics;
+  }
+
+  async updateSocialMediaAnalytics(id: number, updates: Partial<SocialMediaAnalytics>): Promise<SocialMediaAnalytics | undefined> {
+    const [updated] = await db.update(socialMediaAnalytics)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(socialMediaAnalytics.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAnalyticsSummary(platform?: string, dateFrom?: Date, dateTo?: Date): Promise<{
+    totalFollowers: number;
+    totalImpressions: bigint;
+    totalEngagement: number;
+    averageEngagementRate: number;
+    followersGrowth: number;
+  }> {
+    let query = db.select({
+      followers: socialMediaAnalytics.followers,
+      followersGrowth: socialMediaAnalytics.followersGrowth,
+      impressions: socialMediaAnalytics.impressions,
+      likes: socialMediaAnalytics.likes,
+      comments: socialMediaAnalytics.comments,
+      shares: socialMediaAnalytics.shares,
+      engagementRate: socialMediaAnalytics.engagementRate
+    }).from(socialMediaAnalytics);
+    
+    const conditions = [];
+    if (platform) conditions.push(eq(socialMediaAnalytics.platform, platform));
+    if (dateFrom) conditions.push(gte(socialMediaAnalytics.date, dateFrom));
+    if (dateTo) conditions.push(lte(socialMediaAnalytics.date, dateTo));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    const records = await query;
+    
+    if (records.length === 0) {
+      return {
+        totalFollowers: 0,
+        totalImpressions: BigInt(0),
+        totalEngagement: 0,
+        averageEngagementRate: 0,
+        followersGrowth: 0
+      };
+    }
+    
+    const latestFollowers = records[0]?.followers ?? 0;
+    const totalImpressions = records.reduce((sum, r) => sum + (r.impressions ?? BigInt(0)), BigInt(0));
+    const totalEngagement = records.reduce((sum, r) => sum + (r.likes ?? 0) + (r.comments ?? 0) + (r.shares ?? 0), 0);
+    const avgEngagementRate = records.reduce((sum, r) => sum + Number(r.engagementRate ?? 0), 0) / records.length;
+    const totalFollowersGrowth = records.reduce((sum, r) => sum + (r.followersGrowth ?? 0), 0);
+    
+    return {
+      totalFollowers: latestFollowers,
+      totalImpressions,
+      totalEngagement,
+      averageEngagementRate: avgEngagementRate,
+      followersGrowth: totalFollowersGrowth
+    };
+  }
+
+  // ============================================================================
+  // Email Campaign Methods
+  // ============================================================================
+
+  async getEmailCampaigns(filters?: { status?: string; campaignId?: number }): Promise<EmailCampaign[]> {
+    let query = db.select().from(emailCampaigns);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.status) conditions.push(eq(emailCampaigns.status, filters.status));
+      if (filters.campaignId) conditions.push(eq(emailCampaigns.campaignId, filters.campaignId));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(emailCampaigns.createdAt));
+  }
+
+  async getEmailCampaign(id: number): Promise<EmailCampaign | undefined> {
+    const [email] = await db.select().from(emailCampaigns).where(eq(emailCampaigns.id, id));
+    return email;
+  }
+
+  async createEmailCampaign(email: InsertEmailCampaign): Promise<EmailCampaign> {
+    const [newEmail] = await db.insert(emailCampaigns).values(email).returning();
+    return newEmail;
+  }
+
+  async updateEmailCampaign(id: number, updates: Partial<EmailCampaign>): Promise<EmailCampaign | undefined> {
+    const [updated] = await db.update(emailCampaigns)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(emailCampaigns.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteEmailCampaign(id: number): Promise<void> {
+    await db.delete(emailCampaigns).where(eq(emailCampaigns.id, id));
+  }
+
+  async updateEmailCampaignMetrics(id: number, metrics: {
+    successful_sends?: number;
+    failed_sends?: number;
+    opened?: number;
+    clicked?: number;
+    bounced?: number;
+    unsubscribed?: number;
+  }): Promise<EmailCampaign | undefined> {
+    const campaign = await this.getEmailCampaign(id);
+    if (!campaign) return undefined;
+    
+    const updates: Partial<EmailCampaign> = {
+      ...metrics,
+      updatedAt: new Date()
+    };
+    
+    const totalRecipients = campaign.totalRecipients ?? 0;
+    if (totalRecipients > 0) {
+      if (metrics.opened !== undefined) {
+        updates.openRate = (metrics.opened / totalRecipients) * 100;
+      }
+      if (metrics.clicked !== undefined) {
+        updates.clickRate = (metrics.clicked / totalRecipients) * 100;
+      }
+      if (metrics.bounced !== undefined) {
+        updates.bounceRate = (metrics.bounced / totalRecipients) * 100;
+      }
+    }
+    
+    const [updated] = await db.update(emailCampaigns)
+      .set(updates)
+      .where(eq(emailCampaigns.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ============================================================================
+  // Telegram Message Methods
+  // ============================================================================
+
+  async getTelegramMessages(filters?: { status?: string; campaignId?: number; channelId?: string }): Promise<TelegramMessage[]> {
+    let query = db.select().from(telegramMessages);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.status) conditions.push(eq(telegramMessages.status, filters.status));
+      if (filters.campaignId) conditions.push(eq(telegramMessages.campaignId, filters.campaignId));
+      if (filters.channelId) conditions.push(eq(telegramMessages.channelId, filters.channelId));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return await query.orderBy(desc(telegramMessages.createdAt));
+  }
+
+  async getTelegramMessage(id: number): Promise<TelegramMessage | undefined> {
+    const [message] = await db.select().from(telegramMessages).where(eq(telegramMessages.id, id));
+    return message;
+  }
+
+  async createTelegramMessage(message: InsertTelegramMessage): Promise<TelegramMessage> {
+    const [newMessage] = await db.insert(telegramMessages).values(message).returning();
+    return newMessage;
+  }
+
+  async updateTelegramMessage(id: number, updates: Partial<TelegramMessage>): Promise<TelegramMessage | undefined> {
+    const [updated] = await db.update(telegramMessages)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(telegramMessages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTelegramMessage(id: number): Promise<void> {
+    await db.delete(telegramMessages).where(eq(telegramMessages.id, id));
+  }
+
+  async updateTelegramMessageMetrics(id: number, metrics: {
+    views?: number;
+    forwards?: number;
+    reactions?: any;
+  }): Promise<TelegramMessage | undefined> {
+    const [updated] = await db.update(telegramMessages)
+      .set({ ...metrics, updatedAt: new Date() })
+      .where(eq(telegramMessages.id, id))
+      .returning();
+    return updated;
+  }
 }

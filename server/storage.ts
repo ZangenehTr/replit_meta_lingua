@@ -41,6 +41,9 @@ import {
   smsTemplateAnalytics, smsTemplateFavorites,
   // 3D lesson tables
   threeDLessonContent, threeDVideoLessons, threeDLessonProgress,
+  // Social media & marketing tables
+  marketingCampaigns, platformCredentials, scheduledPosts, socialMediaPosts,
+  socialMediaAnalytics, emailCampaigns, telegramMessages,
 } from "@shared/schema";
 // Unified testing system tables
 import {
@@ -135,7 +138,15 @@ import {
   // 3D lesson types
   type ThreeDLessonContent, type ThreeDLessonContentInsert,
   type ThreeDVideoLesson, type ThreeDVideoLessonInsert,
-  type ThreeDLessonProgress, type ThreeDLessonProgressInsert
+  type ThreeDLessonProgress, type ThreeDLessonProgressInsert,
+  // Social media & marketing types
+  type MarketingCampaign, type InsertMarketingCampaign,
+  type PlatformCredential, type InsertPlatformCredential,
+  type ScheduledPost, type InsertScheduledPost,
+  type SocialMediaPost, type InsertSocialMediaPost,
+  type SocialMediaAnalytics, type InsertSocialMediaAnalytics,
+  type EmailCampaign, type InsertEmailCampaign,
+  type TelegramMessage, type InsertTelegramMessage
 } from "@shared/schema";
 // Unified testing system types
 import {
@@ -1382,6 +1393,94 @@ export interface IStorage {
   createThreeDLessonProgress(progress: ThreeDLessonProgressInsert): Promise<ThreeDLessonProgress>;
   updateThreeDLessonProgress(userId: number, threeDLessonId: number, updates: Partial<ThreeDLessonProgress>): Promise<ThreeDLessonProgress | undefined>;
   getUserThreeDLessonProgress(userId: number): Promise<ThreeDLessonProgress[]>;
+
+  // Marketing Campaign methods
+  getMarketingCampaigns(filters?: { status?: string; type?: string }): Promise<MarketingCampaign[]>;
+  getMarketingCampaign(id: number): Promise<MarketingCampaign | undefined>;
+  createMarketingCampaign(campaign: InsertMarketingCampaign): Promise<MarketingCampaign>;
+  updateMarketingCampaign(id: number, updates: Partial<MarketingCampaign>): Promise<MarketingCampaign | undefined>;
+  deleteMarketingCampaign(id: number): Promise<void>;
+  getCampaignMetrics(id: number): Promise<{
+    impressions: bigint;
+    clicks: bigint;
+    conversions: number;
+    spent: bigint;
+    roi: number;
+    engagement_rate: number;
+  } | undefined>;
+
+  // Platform Credentials methods
+  getPlatformCredentials(filters?: { platform?: string; isActive?: boolean }): Promise<PlatformCredential[]>;
+  getPlatformCredential(id: number): Promise<PlatformCredential | undefined>;
+  getPlatformCredentialByPlatform(platform: string, accountHandle?: string): Promise<PlatformCredential | undefined>;
+  createPlatformCredential(credential: InsertPlatformCredential): Promise<PlatformCredential>;
+  updatePlatformCredential(id: number, updates: Partial<PlatformCredential>): Promise<PlatformCredential | undefined>;
+  deletePlatformCredential(id: number): Promise<void>;
+  verifyPlatformCredential(id: number): Promise<boolean>;
+
+  // Scheduled Posts methods
+  getScheduledPosts(filters?: { status?: string; campaignId?: number; platforms?: string[] }): Promise<ScheduledPost[]>;
+  getScheduledPost(id: number): Promise<ScheduledPost | undefined>;
+  createScheduledPost(post: InsertScheduledPost): Promise<ScheduledPost>;
+  updateScheduledPost(id: number, updates: Partial<ScheduledPost>): Promise<ScheduledPost | undefined>;
+  deleteScheduledPost(id: number): Promise<void>;
+  getScheduledPostsDueForPublishing(): Promise<ScheduledPost[]>;
+  publishScheduledPost(id: number): Promise<ScheduledPost | undefined>;
+
+  // Social Media Posts methods
+  getSocialMediaPosts(filters?: { platform?: string; campaignId?: number; dateFrom?: Date; dateTo?: Date }): Promise<SocialMediaPost[]>;
+  getSocialMediaPost(id: number): Promise<SocialMediaPost | undefined>;
+  createSocialMediaPost(post: InsertSocialMediaPost): Promise<SocialMediaPost>;
+  updateSocialMediaPost(id: number, updates: Partial<SocialMediaPost>): Promise<SocialMediaPost | undefined>;
+  deleteSocialMediaPost(id: number): Promise<void>;
+  updateSocialMediaPostMetrics(id: number, metrics: {
+    impressions?: bigint;
+    reach?: bigint;
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    clicks?: number;
+    saves?: number;
+  }): Promise<SocialMediaPost | undefined>;
+
+  // Social Media Analytics methods
+  getSocialMediaAnalytics(filters?: { platform?: string; dateFrom?: Date; dateTo?: Date; campaignId?: number }): Promise<SocialMediaAnalytics[]>;
+  createSocialMediaAnalytics(analytics: InsertSocialMediaAnalytics): Promise<SocialMediaAnalytics>;
+  updateSocialMediaAnalytics(id: number, updates: Partial<SocialMediaAnalytics>): Promise<SocialMediaAnalytics | undefined>;
+  getAnalyticsSummary(platform?: string, dateFrom?: Date, dateTo?: Date): Promise<{
+    totalFollowers: number;
+    totalImpressions: bigint;
+    totalEngagement: number;
+    averageEngagementRate: number;
+    followersGrowth: number;
+  }>;
+
+  // Email Campaign methods
+  getEmailCampaigns(filters?: { status?: string; campaignId?: number }): Promise<EmailCampaign[]>;
+  getEmailCampaign(id: number): Promise<EmailCampaign | undefined>;
+  createEmailCampaign(email: InsertEmailCampaign): Promise<EmailCampaign>;
+  updateEmailCampaign(id: number, updates: Partial<EmailCampaign>): Promise<EmailCampaign | undefined>;
+  deleteEmailCampaign(id: number): Promise<void>;
+  updateEmailCampaignMetrics(id: number, metrics: {
+    successful_sends?: number;
+    failed_sends?: number;
+    opened?: number;
+    clicked?: number;
+    bounced?: number;
+    unsubscribed?: number;
+  }): Promise<EmailCampaign | undefined>;
+
+  // Telegram Message methods
+  getTelegramMessages(filters?: { status?: string; campaignId?: number; channelId?: string }): Promise<TelegramMessage[]>;
+  getTelegramMessage(id: number): Promise<TelegramMessage | undefined>;
+  createTelegramMessage(message: InsertTelegramMessage): Promise<TelegramMessage>;
+  updateTelegramMessage(id: number, updates: Partial<TelegramMessage>): Promise<TelegramMessage | undefined>;
+  deleteTelegramMessage(id: number): Promise<void>;
+  updateTelegramMessageMetrics(id: number, metrics: {
+    views?: number;
+    forwards?: number;
+    reactions?: any;
+  }): Promise<TelegramMessage | undefined>;
 }
 
 export class MemStorage implements IStorage {
