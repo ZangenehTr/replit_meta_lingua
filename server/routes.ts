@@ -63,6 +63,8 @@ import { validateIranianPhone, validateIranianEmail, validatePersianText } from 
 import rateLimit from 'express-rate-limit';
 import { OtpService } from './services/otp-service';
 import { z } from "zod";
+import { createPlatformAuthMiddleware, validatePlatformCredential } from "./middleware/platform-auth";
+import { PlatformFactory, getPlatformStrategy } from "./social-platforms/platform-factory";
 
 // ============================================================================
 // CRITICAL SECURITY: SMS Rate Limiting & Idempotency Protection
@@ -17729,6 +17731,227 @@ Return JSON format:
     } catch (error) {
       console.error('Error managing marketing tool:', error);
       res.status(500).json({ error: 'Failed to manage marketing tool' });
+    }
+  });
+
+  // ===== SOCIAL MEDIA PLATFORM INTEGRATION ROUTES =====
+  
+  const platformAuth = createPlatformAuthMiddleware(storage);
+
+  app.post("/api/admin/platforms/:platform/publish", authenticateToken, requireRole(['Admin', 'Call Center Agent']), platformAuth, async (req: any, res) => {
+    try {
+      const { content, mediaUrls, hashtags, language } = req.body;
+      const credential = req.platformCredential;
+      const platform = req.platform;
+
+      const credentials = {
+        apiKey: credential.apiKey,
+        apiSecret: credential.apiSecret,
+        accessToken: credential.accessToken,
+        refreshToken: credential.refreshToken,
+        accountId: credential.accountId,
+        channelId: credential.channelId,
+        additionalData: credential.additionalData as Record<string, any>,
+      };
+
+      const strategy = await getPlatformStrategy(platform, credentials);
+
+      const result = await strategy.publishPost({
+        content,
+        mediaUrls,
+        hashtags,
+        language: language || 'fa',
+        scheduledFor: new Date(),
+      });
+
+      if (result.success && result.platformPostId) {
+        await storage.createSocialMediaPost({
+          platform,
+          content,
+          mediaUrls,
+          hashtags,
+          language: language || 'fa',
+          scheduledFor: new Date(),
+          status: 'published',
+          platformPostId: result.platformPostId,
+        });
+      }
+
+      res.json({
+        success: result.success,
+        data: result,
+        message: result.success ? `Post published to ${platform} successfully` : `Failed to publish to ${platform}`,
+      });
+    } catch (error: any) {
+      console.error('Platform publish error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/admin/platforms/:platform/schedule", authenticateToken, requireRole(['Admin', 'Call Center Agent']), platformAuth, async (req: any, res) => {
+    try {
+      const { content, mediaUrls, hashtags, scheduledFor, language } = req.body;
+      const platform = req.platform;
+
+      const scheduledPost = await storage.createScheduledPost({
+        platforms: [platform],
+        content,
+        mediaUrls,
+        hashtags,
+        scheduledFor: new Date(scheduledFor),
+        language: language || 'fa',
+        status: 'scheduled',
+      });
+
+      res.json({
+        success: true,
+        data: scheduledPost,
+        message: `Post scheduled for ${platform} on ${new Date(scheduledFor).toLocaleString('fa-IR')}`,
+      });
+    } catch (error: any) {
+      console.error('Platform schedule error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/admin/platforms/:platform/sync-analytics", authenticateToken, requireRole(['Admin']), platformAuth, async (req: any, res) => {
+    try {
+      const { dateFrom, dateTo } = req.body;
+      const credential = req.platformCredential;
+      const platform = req.platform;
+
+      const credentials = {
+        apiKey: credential.apiKey,
+        apiSecret: credential.apiSecret,
+        accessToken: credential.accessToken,
+        refreshToken: credential.refreshToken,
+        accountId: credential.accountId,
+        channelId: credential.channelId,
+        additionalData: credential.additionalData as Record<string, any>,
+      };
+
+      const strategy = await getPlatformStrategy(platform, credentials);
+
+      const from = dateFrom ? new Date(dateFrom) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const to = dateTo ? new Date(dateTo) : new Date();
+
+      const analytics = await strategy.getAnalytics(from, to);
+
+      const analyticsRecord = await storage.createSocialMediaAnalytics({
+        platform,
+        date: to,
+        followers: analytics.followers,
+        impressions: analytics.impressions,
+        engagement: analytics.engagement,
+        clicks: analytics.clicks || 0,
+        shares: analytics.shares || 0,
+        comments: analytics.comments || 0,
+        likes: analytics.likes || 0,
+        reach: analytics.reach || 0,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          analytics: analyticsRecord,
+          platformData: analytics,
+        },
+        message: `Analytics synced for ${platform}`,
+      });
+    } catch (error: any) {
+      console.error('Platform analytics sync error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.delete("/api/admin/platforms/:platform/posts/:postId", authenticateToken, requireRole(['Admin', 'Call Center Agent']), platformAuth, async (req: any, res) => {
+    try {
+      const { postId } = req.params;
+      const credential = req.platformCredential;
+      const platform = req.platform;
+
+      const post = await storage.getSocialMediaPostById(parseInt(postId, 10));
+      if (!post || !post.platformPostId) {
+        return res.status(404).json({
+          success: false,
+          error: 'Post not found or not published to platform',
+        });
+      }
+
+      const credentials = {
+        apiKey: credential.apiKey,
+        apiSecret: credential.apiSecret,
+        accessToken: credential.accessToken,
+        refreshToken: credential.refreshToken,
+        accountId: credential.accountId,
+        channelId: credential.channelId,
+        additionalData: credential.additionalData as Record<string, any>,
+      };
+
+      const strategy = await getPlatformStrategy(platform, credentials);
+      const deleted = await strategy.deletePost(post.platformPostId);
+
+      if (deleted) {
+        await storage.updateSocialMediaPost(parseInt(postId, 10), { status: 'deleted' });
+      }
+
+      res.json({
+        success: deleted,
+        message: deleted ? `Post deleted from ${platform}` : `Failed to delete post from ${platform}`,
+      });
+    } catch (error: any) {
+      console.error('Platform post deletion error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/admin/platforms/credentials/validate", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { platform, credentialId } = req.body;
+
+      const result = await validatePlatformCredential(storage, platform, credentialId);
+
+      res.json({
+        success: result.valid,
+        valid: result.valid,
+        error: result.error,
+        message: result.valid ? 'Credentials are valid' : `Validation failed: ${result.error}`,
+      });
+    } catch (error: any) {
+      console.error('Credential validation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.get("/api/admin/platforms/supported", authenticateToken, requireRole(['Admin', 'Call Center Agent']), (req: any, res) => {
+    try {
+      const platforms = PlatformFactory.getSupportedPlatforms();
+      res.json({
+        success: true,
+        platforms,
+        count: platforms.length,
+      });
+    } catch (error: any) {
+      console.error('Get supported platforms error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
     }
   });
 
