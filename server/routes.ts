@@ -17476,7 +17476,24 @@ Return JSON format:
     try {
       const { platform, action } = req.params;
       
-      // Simulate social media management operations with Iranian data
+      // Get real analytics summary for the platform (last 30 days)
+      const dateFrom = new Date();
+      dateFrom.setDate(dateFrom.getDate() - 30);
+      
+      const analyticsData = await storage.getAnalyticsSummary(platform, dateFrom, new Date());
+      
+      // Get latest posts for this platform
+      const recentPosts = await storage.getSocialMediaPosts({ 
+        platform, 
+        dateFrom,
+        dateTo: new Date()
+      });
+      
+      const lastPost = recentPosts.length > 0 ? recentPosts[0].content : null;
+      
+      // Calculate engagement rate from real data
+      const engagementRate = analyticsData.averageEngagementRate.toFixed(1) + '%';
+      
       const socialMediaData = {
         platform: platform,
         action: action,
@@ -17484,9 +17501,13 @@ Return JSON format:
         user: req.user.email,
         success: true,
         metrics: {
-          followers: crypto.randomInt(1000, 11000),
-          engagement: (crypto.randomInt(200, 700) / 100).toFixed(1) + '%',
-          lastPost: 'آموزش زبان فارسی - درس جدید',
+          followers: analyticsData.totalFollowers,
+          followersGrowth: analyticsData.followersGrowth,
+          engagement: engagementRate,
+          lastPost: lastPost || 'No recent posts',
+          totalPosts: recentPosts.length,
+          totalImpressions: Number(analyticsData.totalImpressions),
+          totalEngagement: analyticsData.totalEngagement,
           iranianMarket: true
         }
       };
@@ -17507,31 +17528,91 @@ Return JSON format:
     try {
       const { tool } = req.params;
       
+      let toolMetrics;
+      
+      if (tool === 'scheduler') {
+        // Get real scheduled posts data
+        const scheduledPosts = await storage.getScheduledPosts({ status: 'scheduled' });
+        const uniquePlatforms = [...new Set(scheduledPosts.flatMap(p => p.platforms))];
+        const nextPostData = scheduledPosts.length > 0 ? scheduledPosts[0] : null;
+        const timeToNext = nextPostData ? 
+          Math.floor((new Date(nextPostData.scheduledFor).getTime() - Date.now()) / (1000 * 60 * 60)) : null;
+        
+        toolMetrics = {
+          scheduledPosts: scheduledPosts.length,
+          platforms: uniquePlatforms,
+          nextPost: timeToNext ? `${timeToNext} hours` : 'No scheduled posts'
+        };
+      } else if (tool === 'analytics') {
+        // Get real analytics summary across all platforms (last 30 days)
+        const dateFrom = new Date();
+        dateFrom.setDate(dateFrom.getDate() - 30);
+        const analyticsData = await storage.getAnalyticsSummary(undefined, dateFrom, new Date());
+        
+        // Get all campaigns to calculate ROI and conversion rate
+        const campaigns = await storage.getMarketingCampaigns({ status: 'active' });
+        const totalSpent = campaigns.reduce((sum, c) => sum + Number(c.spent ?? 0), 0);
+        const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget ?? 0), 0);
+        const avgROI = campaigns.length > 0 ? 
+          campaigns.reduce((sum, c) => sum + Number(c.roi ?? 0), 0) / campaigns.length : 0;
+        
+        // Calculate real conversion rate from campaign data
+        const totalClicks = campaigns.reduce((sum, c) => sum + Number(c.clicks ?? 0), 0);
+        const totalConversions = campaigns.reduce((sum, c) => sum + (c.conversions ?? 0), 0);
+        const realConversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
+        
+        // Get Iranian user percentage from analytics demographics (fallback to campaign data)
+        const totalFollowers = analyticsData.totalFollowers;
+        const iranianFollowers = campaigns.reduce((sum, c) => {
+          const metadata = c.metadata as any;
+          return sum + (metadata?.iranianAudience ?? 0);
+        }, 0);
+        const iranianPercentage = totalFollowers > 0 ? (iranianFollowers / totalFollowers) * 100 : 0;
+        
+        toolMetrics = {
+          totalReach: Number(analyticsData.totalImpressions),
+          iranianUsers: iranianPercentage > 0 ? iranianPercentage.toFixed(1) + '%' : 'N/A',
+          conversionRate: realConversionRate.toFixed(2) + '%',
+          roi: avgROI.toFixed(1) + '%'
+        };
+      } else if (tool === 'tracking') {
+        // Get real lead tracking data
+        const dateFrom = new Date();
+        dateFrom.setDate(dateFrom.getDate() - 30);
+        const campaigns = await storage.getMarketingCampaigns({ status: 'active' });
+        
+        // Calculate total leads and conversions from campaign data
+        const totalClicks = campaigns.reduce((sum, c) => sum + Number(c.clicks ?? 0), 0);
+        const totalConversions = campaigns.reduce((sum, c) => sum + (c.conversions ?? 0), 0);
+        const avgConversionRate = totalClicks > 0 ? 
+          (totalConversions / totalClicks) * 100 : 0;
+        
+        // Calculate Iranian leads from campaign metadata
+        const iranianLeads = campaigns.reduce((sum, c) => {
+          const metadata = c.metadata as any;
+          return sum + (metadata?.iranianLeads ?? 0);
+        }, 0);
+        
+        // Calculate average response time from communication logs (placeholder for future implementation)
+        const avgResponseTime = 'N/A';
+        
+        toolMetrics = {
+          totalLeads: totalClicks, // Leads are tracked as clicks in marketing campaigns
+          iranianLeads: iranianLeads > 0 ? iranianLeads : 0,
+          conversionRate: avgConversionRate.toFixed(2) + '%',
+          avgResponseTime: avgResponseTime
+        };
+      } else {
+        toolMetrics = { status: 'configured' };
+      }
+      
       const toolData = {
         tool: tool,
         timestamp: new Date(),
         user: req.user.email,
         success: true,
         iranianCompliance: true,
-        metrics: {
-          scheduler: {
-            scheduledPosts: 45,
-            platforms: ['Instagram', 'Telegram', 'YouTube'],
-            nextPost: '2 hours'
-          },
-          analytics: {
-            totalReach: 125000,
-            iranianUsers: '78%',
-            conversionRate: '4.2%',
-            roi: '340%'
-          },
-          tracking: {
-            totalLeads: 186,
-            iranianLeads: 156,
-            conversionRate: '12.8%',
-            avgResponseTime: '2.5 hours'
-          }
-        }[tool] || { status: 'configured' }
+        metrics: toolMetrics
       };
 
       res.json({
@@ -17550,6 +17631,80 @@ Return JSON format:
     try {
       const { toolName, action } = req.params;
       
+      let toolMetrics;
+      const dateFrom = new Date();
+      dateFrom.setDate(dateFrom.getDate() - 30);
+      
+      if (toolName === 'Instagram Integration') {
+        const analyticsData = await storage.getAnalyticsSummary('Instagram', dateFrom, new Date());
+        const credential = await storage.getPlatformCredentialByPlatform('Instagram');
+        const posts = await storage.getSocialMediaPosts({ platform: 'Instagram', dateFrom, dateTo: new Date() });
+        
+        // Calculate Persian content percentage from actual posts
+        const persianPosts = posts.filter(p => p.language === 'fa' || (p.content && p.content.match(/[\u0600-\u06FF]/)));
+        const persianPercentage = posts.length > 0 ? (persianPosts.length / posts.length) * 100 : 0;
+        
+        toolMetrics = {
+          connected: credential?.isActive ?? false,
+          followers: analyticsData.totalFollowers,
+          persianContent: persianPercentage > 0 ? persianPercentage.toFixed(1) + '%' : 'N/A',
+          engagement: analyticsData.averageEngagementRate.toFixed(1) + '%'
+        };
+      } else if (toolName === 'Telegram Marketing') {
+        const messages = await storage.getTelegramMessages({ status: 'sent' });
+        const analyticsData = await storage.getAnalyticsSummary('Telegram', dateFrom, new Date());
+        const channelIds = [...new Set(messages.map(m => m.channelId))];
+        
+        // Calculate Persian user percentage from message content
+        const persianMessages = messages.filter(m => m.content && m.content.match(/[\u0600-\u06FF]/));
+        const persianPercentage = messages.length > 0 ? (persianMessages.length / messages.length) * 100 : 0;
+        
+        // Calculate delivery rate from sent messages
+        const sentMessages = messages.filter(m => m.status === 'sent');
+        const deliveryRate = messages.length > 0 ? (sentMessages.length / messages.length) * 100 : 0;
+        
+        toolMetrics = {
+          channels: channelIds.length,
+          subscribers: analyticsData.totalFollowers,
+          persianUsers: persianPercentage > 0 ? persianPercentage.toFixed(1) + '%' : 'N/A',
+          messageDelivery: deliveryRate > 0 ? deliveryRate.toFixed(1) + '%' : 'N/A'
+        };
+      } else if (toolName === 'YouTube Channel') {
+        const analyticsData = await storage.getAnalyticsSummary('YouTube', dateFrom, new Date());
+        const posts = await storage.getSocialMediaPosts({ platform: 'YouTube', dateFrom, dateTo: new Date() });
+        const persianPosts = posts.filter(p => p.language === 'fa');
+        
+        // Calculate Iranian viewers from analytics metadata (placeholder for future implementation)
+        const iranianViewers = 'N/A';
+        const watchTime = 'N/A';
+        
+        toolMetrics = {
+          subscribers: analyticsData.totalFollowers,
+          persianVideos: persianPosts.length,
+          watchTime: watchTime,
+          iranianViewers: iranianViewers
+        };
+      } else if (toolName === 'Email Marketing') {
+        const emails = await storage.getEmailCampaigns({ status: 'sent' });
+        const totalRecipients = emails.reduce((sum, e) => sum + (e.totalRecipients ?? 0), 0);
+        const totalOpened = emails.reduce((sum, e) => sum + (e.opened ?? 0), 0);
+        const avgOpenRate = totalRecipients > 0 ? (totalOpened / totalRecipients) * 100 : 0;
+        
+        // Calculate delivery rate from actual email campaigns
+        const totalSent = emails.reduce((sum, e) => sum + (e.successfulSends ?? 0), 0);
+        const totalFailed = emails.reduce((sum, e) => sum + (e.failedSends ?? 0), 0);
+        const deliveryRate = (totalSent + totalFailed) > 0 ? (totalSent / (totalSent + totalFailed)) * 100 : 0;
+        
+        toolMetrics = {
+          subscribers: totalRecipients,
+          persianTemplates: emails.filter(e => e.subject.match(/[\u0600-\u06FF]/)).length,
+          openRate: avgOpenRate.toFixed(1) + '%',
+          iranianDelivery: deliveryRate > 0 ? deliveryRate.toFixed(1) + '%' : 'N/A'
+        };
+      } else {
+        toolMetrics = { status: 'configured' };
+      }
+      
       const marketingToolData = {
         tool: toolName,
         action: action,
@@ -17563,32 +17718,7 @@ Return JSON format:
           compliance: 'Iranian regulations',
           localization: true
         },
-        metrics: {
-          'Instagram Integration': {
-            connected: true,
-            followers: 15400,
-            persianContent: '85%',
-            engagement: '6.8%'
-          },
-          'Telegram Marketing': {
-            channels: 3,
-            subscribers: 8500,
-            persianUsers: '92%',
-            messageDelivery: '98.5%'
-          },
-          'YouTube Channel': {
-            subscribers: 12300,
-            persianVideos: 89,
-            watchTime: '45 hours/day',
-            iranianViewers: '76%'
-          },
-          'Email Marketing': {
-            subscribers: 4200,
-            persianTemplates: 15,
-            openRate: '34.5%',
-            iranianDelivery: '99.2%'
-          }
-        }[toolName] || { status: 'configured' }
+        metrics: toolMetrics
       };
 
       res.json({
