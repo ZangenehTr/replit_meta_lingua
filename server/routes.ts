@@ -17955,6 +17955,138 @@ Return JSON format:
     }
   });
 
+  // ===== AI CONTENT GENERATION ROUTES =====
+  
+  app.post("/api/admin/ai/generate-content", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { socialMediaContentGenerator, SocialContentRequestSchema } = await import('./services/social-media-content-generator');
+      
+      const validationResult = SocialContentRequestSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid request body',
+          details: validationResult.error.errors,
+        });
+      }
+
+      const result = await socialMediaContentGenerator.generateContent(validationResult.data);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Content generated successfully',
+      });
+    } catch (error: any) {
+      console.error('AI content generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/admin/ai/generate-bulk", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { socialMediaContentGenerator, SocialContentRequestSchema } = await import('./services/social-media-content-generator');
+      
+      if (!Array.isArray(req.body.requests)) {
+        return res.status(400).json({
+          success: false,
+          error: 'requests must be an array',
+        });
+      }
+
+      const validationErrors: any[] = [];
+      const validRequests: any[] = [];
+
+      req.body.requests.forEach((request: any, index: number) => {
+        const validationResult = SocialContentRequestSchema.safeParse(request);
+        if (!validationResult.success) {
+          validationErrors.push({ index, errors: validationResult.error.errors });
+        } else {
+          validRequests.push(validationResult.data);
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Some requests are invalid',
+          details: validationErrors,
+        });
+      }
+
+      const results = await socialMediaContentGenerator.generateBulkContent(validRequests);
+
+      res.json({
+        success: true,
+        data: results,
+        count: results.length,
+        message: `Generated ${results.length} pieces of content`,
+      });
+    } catch (error: any) {
+      console.error('AI bulk content generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/admin/ai/improve-content", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { socialMediaContentGenerator } = await import('./services/social-media-content-generator');
+      
+      const { originalContent, platform, language, improvements } = req.body;
+      const improved = await socialMediaContentGenerator.improveContent(
+        originalContent,
+        platform,
+        language,
+        improvements
+      );
+
+      res.json({
+        success: true,
+        data: { improvedContent: improved },
+        message: 'Content improved successfully',
+      });
+    } catch (error: any) {
+      console.error('AI content improvement error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/admin/ai/generate-hashtags", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { socialMediaContentGenerator } = await import('./services/social-media-content-generator');
+      
+      const { content, platform, language, count = 10 } = req.body;
+      const hashtags = await socialMediaContentGenerator.generateHashtags(
+        content,
+        platform,
+        language,
+        count
+      );
+
+      res.json({
+        success: true,
+        data: { hashtags },
+        count: hashtags.length,
+        message: `Generated ${hashtags.length} hashtags`,
+      });
+    } catch (error: any) {
+      console.error('AI hashtag generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
   // ===== USER MANAGEMENT API =====
   
   // Get all users
