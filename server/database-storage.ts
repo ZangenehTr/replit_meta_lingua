@@ -137,7 +137,11 @@ import {
   // 3D Lesson types
   threeDVideoLessons, threeDLessonContent, threeDLessonProgress,
   type ThreeDVideoLesson, type ThreeDVideoLessonInsert, type ThreeDLessonContent, type ThreeDLessonContentInsert,
-  type ThreeDLessonProgress, type ThreeDLessonProgressInsert
+  type ThreeDLessonProgress, type ThreeDLessonProgressInsert,
+  // Web scraping tables and types
+  scrapeJobs, competitorPrices, scrapedLeads, marketTrends,
+  type ScrapeJob, type InsertScrapeJob, type CompetitorPrice, type InsertCompetitorPrice,
+  type ScrapedLead, type InsertScrapedLead, type MarketTrend, type InsertMarketTrend
 } from "@shared/schema";
 
 // Placement test tables imported from main schema above
@@ -17046,5 +17050,211 @@ export class DatabaseStorage implements IStorage {
       .where(eq(telegramMessages.id, id))
       .returning();
     return updated;
+  }
+
+  // ============================================================================
+  // Web Scraping Infrastructure Methods
+  // ============================================================================
+
+  async createScrapeJob(job: InsertScrapeJob): Promise<ScrapeJob> {
+    const [created] = await db.insert(scrapeJobs).values(job).returning();
+    return created;
+  }
+
+  async getScrapeJob(id: number): Promise<ScrapeJob | undefined> {
+    const [job] = await db.select().from(scrapeJobs).where(eq(scrapeJobs.id, id));
+    return job;
+  }
+
+  async getAllScrapeJobs(): Promise<ScrapeJob[]> {
+    return await db.select().from(scrapeJobs).orderBy(desc(scrapeJobs.createdAt));
+  }
+
+  async getScrapeJobsByType(type: string): Promise<ScrapeJob[]> {
+    return await db.select().from(scrapeJobs).where(eq(scrapeJobs.type, type));
+  }
+
+  async updateScrapeJob(id: number, updates: Partial<ScrapeJob>): Promise<ScrapeJob | undefined> {
+    const [updated] = await db.update(scrapeJobs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(scrapeJobs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteScrapeJob(id: number): Promise<void> {
+    await db.delete(scrapeJobs).where(eq(scrapeJobs.id, id));
+  }
+
+  async markScrapeJobAsRunning(id: number): Promise<ScrapeJob | undefined> {
+    const [updated] = await db.update(scrapeJobs)
+      .set({ status: 'running', lastRunAt: new Date(), updatedAt: new Date() })
+      .where(eq(scrapeJobs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async markScrapeJobAsCompleted(id: number, itemsScraped: number): Promise<ScrapeJob | undefined> {
+    const [updated] = await db.update(scrapeJobs)
+      .set({ 
+        status: 'completed', 
+        itemsScraped, 
+        errorMessage: null,
+        updatedAt: new Date() 
+      })
+      .where(eq(scrapeJobs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async markScrapeJobAsFailed(id: number, errorMessage: string): Promise<ScrapeJob | undefined> {
+    const [updated] = await db.update(scrapeJobs)
+      .set({ status: 'failed', errorMessage, updatedAt: new Date() })
+      .where(eq(scrapeJobs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getDueScrapeJobs(): Promise<ScrapeJob[]> {
+    return await db.select().from(scrapeJobs)
+      .where(
+        and(
+          eq(scrapeJobs.status, 'pending'),
+          or(
+            isNull(scrapeJobs.nextRunAt),
+            lte(scrapeJobs.nextRunAt, new Date())
+          )
+        )
+      );
+  }
+
+  async createCompetitorPrice(price: InsertCompetitorPrice): Promise<CompetitorPrice> {
+    const [created] = await db.insert(competitorPrices).values(price).returning();
+    return created;
+  }
+
+  async getCompetitorPrices(filters?: {
+    competitorName?: string;
+    courseName?: string;
+    scrapeJobId?: number;
+  }): Promise<CompetitorPrice[]> {
+    let query = db.select().from(competitorPrices);
+
+    const conditions = [];
+    if (filters?.competitorName) {
+      conditions.push(eq(competitorPrices.competitorName, filters.competitorName));
+    }
+    if (filters?.courseName) {
+      conditions.push(ilike(competitorPrices.courseName, `%${filters.courseName}%`));
+    }
+    if (filters?.scrapeJobId) {
+      conditions.push(eq(competitorPrices.scrapeJobId, filters.scrapeJobId));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(competitorPrices.scrapedAt));
+  }
+
+  async getLatestCompetitorPrices(competitorName?: string): Promise<CompetitorPrice[]> {
+    let query = db.select().from(competitorPrices);
+    
+    if (competitorName) {
+      query = query.where(eq(competitorPrices.competitorName, competitorName)) as any;
+    }
+
+    return await query
+      .orderBy(desc(competitorPrices.scrapedAt))
+      .limit(50);
+  }
+
+  async createScrapedLead(lead: InsertScrapedLead): Promise<ScrapedLead> {
+    const [created] = await db.insert(scrapedLeads).values(lead).returning();
+    return created;
+  }
+
+  async getScrapedLeads(filters?: {
+    source?: string;
+    status?: string;
+    importedToLeads?: boolean;
+    scrapeJobId?: number;
+  }): Promise<ScrapedLead[]> {
+    let query = db.select().from(scrapedLeads);
+
+    const conditions = [];
+    if (filters?.source) {
+      conditions.push(eq(scrapedLeads.source, filters.source));
+    }
+    if (filters?.status) {
+      conditions.push(eq(scrapedLeads.status, filters.status));
+    }
+    if (filters?.importedToLeads !== undefined) {
+      conditions.push(eq(scrapedLeads.importedToLeads, filters.importedToLeads));
+    }
+    if (filters?.scrapeJobId) {
+      conditions.push(eq(scrapedLeads.scrapeJobId, filters.scrapeJobId));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(scrapedLeads.scrapedAt));
+  }
+
+  async updateScrapedLead(id: number, updates: Partial<ScrapedLead>): Promise<ScrapedLead | undefined> {
+    const [updated] = await db.update(scrapedLeads)
+      .set(updates)
+      .where(eq(scrapedLeads.id, id))
+      .returning();
+    return updated;
+  }
+
+  async markLeadAsImported(id: number): Promise<ScrapedLead | undefined> {
+    const [updated] = await db.update(scrapedLeads)
+      .set({ importedToLeads: true })
+      .where(eq(scrapedLeads.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createMarketTrend(trend: InsertMarketTrend): Promise<MarketTrend> {
+    const [created] = await db.insert(marketTrends).values(trend).returning();
+    return created;
+  }
+
+  async getMarketTrends(filters?: {
+    category?: string;
+    source?: string;
+    scrapeJobId?: number;
+  }): Promise<MarketTrend[]> {
+    let query = db.select().from(marketTrends);
+
+    const conditions = [];
+    if (filters?.category) {
+      conditions.push(eq(marketTrends.category, filters.category));
+    }
+    if (filters?.source) {
+      conditions.push(eq(marketTrends.source, filters.source));
+    }
+    if (filters?.scrapeJobId) {
+      conditions.push(eq(marketTrends.scrapeJobId, filters.scrapeJobId));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(marketTrends.scrapedAt));
+  }
+
+  async getTrendingTopics(): Promise<MarketTrend[]> {
+    return await db.select()
+      .from(marketTrends)
+      .where(gte(marketTrends.impactScore, 70))
+      .orderBy(desc(marketTrends.impactScore), desc(marketTrends.scrapedAt))
+      .limit(20);
   }
 }

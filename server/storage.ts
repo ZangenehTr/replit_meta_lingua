@@ -146,7 +146,11 @@ import {
   type SocialMediaPost, type InsertSocialMediaPost,
   type SocialMediaAnalytics, type InsertSocialMediaAnalytics,
   type EmailCampaign, type InsertEmailCampaign,
-  type TelegramMessage, type InsertTelegramMessage
+  type TelegramMessage, type InsertTelegramMessage,
+  type ScrapeJob, type InsertScrapeJob,
+  type CompetitorPrice, type InsertCompetitorPrice,
+  type ScrapedLead, type InsertScrapedLead,
+  type MarketTrend, type InsertMarketTrend
 } from "@shared/schema";
 // Unified testing system types
 import {
@@ -1481,6 +1485,31 @@ export interface IStorage {
     forwards?: number;
     reactions?: any;
   }): Promise<TelegramMessage | undefined>;
+
+  // Web Scraping Infrastructure methods
+  createScrapeJob(job: InsertScrapeJob): Promise<ScrapeJob>;
+  getScrapeJob(id: number): Promise<ScrapeJob | undefined>;
+  getAllScrapeJobs(): Promise<ScrapeJob[]>;
+  getScrapeJobsByType(type: string): Promise<ScrapeJob[]>;
+  updateScrapeJob(id: number, updates: Partial<ScrapeJob>): Promise<ScrapeJob | undefined>;
+  deleteScrapeJob(id: number): Promise<void>;
+  markScrapeJobAsRunning(id: number): Promise<ScrapeJob | undefined>;
+  markScrapeJobAsCompleted(id: number, itemsScraped: number): Promise<ScrapeJob | undefined>;
+  markScrapeJobAsFailed(id: number, errorMessage: string): Promise<ScrapeJob | undefined>;
+  getDueScrapeJobs(): Promise<ScrapeJob[]>;
+
+  createCompetitorPrice(price: InsertCompetitorPrice): Promise<CompetitorPrice>;
+  getCompetitorPrices(filters?: { competitorName?: string; courseName?: string; scrapeJobId?: number }): Promise<CompetitorPrice[]>;
+  getLatestCompetitorPrices(competitorName?: string): Promise<CompetitorPrice[]>;
+
+  createScrapedLead(lead: InsertScrapedLead): Promise<ScrapedLead>;
+  getScrapedLeads(filters?: { source?: string; status?: string; importedToLeads?: boolean; scrapeJobId?: number }): Promise<ScrapedLead[]>;
+  updateScrapedLead(id: number, updates: Partial<ScrapedLead>): Promise<ScrapedLead | undefined>;
+  markLeadAsImported(id: number): Promise<ScrapedLead | undefined>;
+
+  createMarketTrend(trend: InsertMarketTrend): Promise<MarketTrend>;
+  getMarketTrends(filters?: { category?: string; source?: string; scrapeJobId?: number }): Promise<MarketTrend[]>;
+  getTrendingTopics(): Promise<MarketTrend[]>;
 }
 
 export class MemStorage implements IStorage {

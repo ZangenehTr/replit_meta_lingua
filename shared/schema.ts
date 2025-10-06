@@ -7451,6 +7451,135 @@ export type SmsTemplateFavorite = typeof smsTemplateFavorites.$inferSelect;
 export type InsertSmsTemplateFavorite = z.infer<typeof insertSmsTemplateFavoriteSchema>;
 
 // ============================================================================
+// WEB SCRAPING INFRASTRUCTURE TABLES
+// ============================================================================
+
+export const SCRAPE_JOB_STATUS = {
+  PENDING: 'pending',
+  RUNNING: 'running',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled'
+} as const;
+
+export const SCRAPE_JOB_TYPE = {
+  PRICING: 'pricing',
+  LEADS: 'leads',
+  TRENDS: 'trends',
+  CUSTOM: 'custom'
+} as const;
+
+export type ScrapeJobStatus = typeof SCRAPE_JOB_STATUS[keyof typeof SCRAPE_JOB_STATUS];
+export type ScrapeJobType = typeof SCRAPE_JOB_TYPE[keyof typeof SCRAPE_JOB_TYPE];
+
+export const scrapeJobs = pgTable("scrape_jobs", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
+  targetUrl: varchar("target_url", { length: 1000 }).notNull(),
+  selectors: jsonb("selectors").notNull(),
+  schedule: varchar("schedule", { length: 100 }),
+  status: varchar("status", { length: 50 }).notNull().default('pending'),
+  lastRunAt: timestamp("last_run_at"),
+  nextRunAt: timestamp("next_run_at"),
+  itemsScraped: integer("items_scraped").default(0),
+  errorMessage: text("error_message"),
+  config: jsonb("config"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const competitorPrices = pgTable("competitor_prices", {
+  id: serial("id").primaryKey(),
+  scrapeJobId: integer("scrape_job_id").references(() => scrapeJobs.id),
+  competitorName: varchar("competitor_name", { length: 255 }).notNull(),
+  competitorUrl: varchar("competitor_url", { length: 1000 }).notNull(),
+  courseName: varchar("course_name", { length: 255 }).notNull(),
+  courseLevel: varchar("course_level", { length: 100 }),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default('IRR'),
+  duration: varchar("duration", { length: 100 }),
+  features: text("features").array(),
+  discount: decimal("discount", { precision: 5, scale: 2 }),
+  availability: varchar("availability", { length: 100 }),
+  rawData: jsonb("raw_data"),
+  scrapedAt: timestamp("scraped_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const scrapedLeads = pgTable("scraped_leads", {
+  id: serial("id").primaryKey(),
+  scrapeJobId: integer("scrape_job_id").references(() => scrapeJobs.id),
+  source: varchar("source", { length: 255 }).notNull(),
+  sourceUrl: varchar("source_url", { length: 1000 }),
+  name: varchar("name", { length: 255 }),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  company: varchar("company", { length: 255 }),
+  position: varchar("position", { length: 255 }),
+  location: varchar("location", { length: 255 }),
+  industry: varchar("industry", { length: 100 }),
+  interests: text("interests").array(),
+  socialProfiles: jsonb("social_profiles"),
+  qualificationScore: integer("qualification_score").default(0),
+  status: varchar("status", { length: 50 }).default('new'),
+  importedToLeads: boolean("imported_to_leads").default(false),
+  rawData: jsonb("raw_data"),
+  scrapedAt: timestamp("scraped_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const marketTrends = pgTable("market_trends", {
+  id: serial("id").primaryKey(),
+  scrapeJobId: integer("scrape_job_id").references(() => scrapeJobs.id),
+  category: varchar("category", { length: 100 }).notNull(),
+  trendName: varchar("trend_name", { length: 255 }).notNull(),
+  description: text("description"),
+  source: varchar("source", { length: 255 }).notNull(),
+  sourceUrl: varchar("source_url", { length: 1000 }),
+  keywords: text("keywords").array(),
+  sentiment: varchar("sentiment", { length: 50 }),
+  impactScore: integer("impact_score").default(0),
+  confidence: decimal("confidence", { precision: 5, scale: 2 }),
+  aiInsights: text("ai_insights"),
+  recommendations: text("recommendations").array(),
+  relatedTopics: text("related_topics").array(),
+  rawData: jsonb("raw_data"),
+  scrapedAt: timestamp("scraped_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const insertScrapeJobSchema = createInsertSchema(scrapeJobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCompetitorPriceSchema = createInsertSchema(competitorPrices).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertScrapedLeadSchema = createInsertSchema(scrapedLeads).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertMarketTrendSchema = createInsertSchema(marketTrends).omit({
+  id: true,
+  createdAt: true
+});
+
+export type ScrapeJob = typeof scrapeJobs.$inferSelect;
+export type InsertScrapeJob = z.infer<typeof insertScrapeJobSchema>;
+export type CompetitorPrice = typeof competitorPrices.$inferSelect;
+export type InsertCompetitorPrice = z.infer<typeof insertCompetitorPriceSchema>;
+export type ScrapedLead = typeof scrapedLeads.$inferSelect;
+export type InsertScrapedLead = z.infer<typeof insertScrapedLeadSchema>;
+export type MarketTrend = typeof marketTrends.$inferSelect;
+export type InsertMarketTrend = z.infer<typeof insertMarketTrendSchema>;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 
