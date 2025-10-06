@@ -146,7 +146,7 @@ export const userStats = pgTable("user_stats", {
   totalXp: integer("total_xp").default(0),
   level: integer("level").default(1),
   streakDays: integer("streak_days").default(0),
-  lastActivityAt: timestamp("last_activity_at"),
+  lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -296,11 +296,15 @@ export const walletTransactions = pgTable("wallet_transactions", {
   userId: integer("user_id").references(() => users.id).notNull(),
   type: varchar("type", { length: 50 }).notNull(), // deposit, withdrawal, payment, refund
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  currency: varchar("currency", { length: 3 }).default("IRR"),
   description: text("description"),
   status: varchar("status", { length: 20 }).default("pending"),
+  merchantTransactionId: varchar("merchant_transaction_id", { length: 255 }),
+  shetabTransactionId: varchar("shetab_transaction_id", { length: 255 }),
+  shetabReferenceNumber: varchar("shetab_reference_number", { length: 255 }),
+  cardNumber: varchar("card_number", { length: 20 }),
+  gatewayResponse: jsonb("gateway_response"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  completedAt: timestamp("completed_at")
 });
 
 // Course Payments table
@@ -3020,7 +3024,7 @@ export const sessions = pgTable("sessions", {
   deviceType: varchar("device_type", { length: 50 }),
   location: varchar("location", { length: 100 }),
   isActive: boolean("is_active").default(true),
-  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -4116,7 +4120,7 @@ export const threeDLessonProgress = pgTable("threed_lesson_progress", {
   studentId: integer("student_id").references(() => users.id).notNull(),
   sessionId: varchar("session_id", { length: 255 }), // unique session identifier
   startedAt: timestamp("started_at").defaultNow().notNull(),
-  lastActivityAt: timestamp("last_activity_at").defaultNow().notNull(),
+  lastActiveAt: timestamp("last_active_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
   status: varchar("status", { length: 20 }).default("in_progress"), // in_progress, completed, paused, abandoned
   currentSequence: integer("current_sequence").default(0),
@@ -4231,7 +4235,7 @@ export const userSessions = pgTable("user_sessions", {
   location: varchar("location", { length: 255 }), // city, country
   userAgent: text("user_agent"),
   isActive: boolean("is_active").default(true),
-  lastActivityAt: timestamp("last_activity_at").defaultNow().notNull(),
+  lastActiveAt: timestamp("last_active_at").defaultNow().notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   refreshExpiresAt: timestamp("refresh_expires_at"),
   loginMethod: varchar("login_method", { length: 50 }).default("password"), // password, sms, google, replit
@@ -4998,7 +5002,7 @@ export const studentCurriculumProgress = pgTable("student_curriculum_progress", 
   currentLevel: jsonb("current_level"), // level info cache
   enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
-  lastActivityAt: timestamp("last_activity_at"),
+  lastActiveAt: timestamp("last_active_at"),
   nextLevelUnlockedAt: timestamp("next_level_unlocked_at"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

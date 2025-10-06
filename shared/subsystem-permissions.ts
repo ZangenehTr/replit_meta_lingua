@@ -96,9 +96,6 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "mst_test_builder", name: "سازنده آزمون MST", nameEn: "MST Test Builder", icon: "FileText" },
       { id: "placement_test", name: "آزمون تعیین سطح", nameEn: "Placement Test", icon: "ClipboardCheck" },
       { id: "linguaquest", name: "لینگوا کوئست", nameEn: "LinguaQuest", icon: "Map" },
-      { id: "ecommerce_system", name: "سیستم فروشگاه", nameEn: "E-commerce System", icon: "ShoppingCart" },
-      { id: "book_ecommerce", name: "فروشگاه کتاب", nameEn: "Book E-commerce", icon: "Book" },
-      { id: "shopping_cart", name: "سبد خرید", nameEn: "Shopping Cart", icon: "ShoppingBag" },
       { id: "course_roadmaps", name: "نقشه راه دوره‌ها", nameEn: "Course Roadmaps", icon: "Route" },
       { id: "roadmap_templates", name: "قالب‌های نقشه راه", nameEn: "Roadmap Templates", icon: "File" },
       { id: "roadmap_instances", name: "نمونه‌های نقشه راه", nameEn: "Roadmap Instances", icon: "MapPin" },
@@ -120,8 +117,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
     nameEn: "Call Center & CRM",
     icon: "Phone",
     children: [
-      { id: "unified_workflow", name: "جریان کار یکپارچه", nameEn: "Unified Workflow", icon: "Workflow" },
-      { id: "lead_management", name: "مدیریت سرنخ", nameEn: "Lead Management", icon: "UserPlus" },
+      { id: "unified_workflow", name: "مدیریت سرنخ کال‌سنتر", nameEn: "Callcenter Lead Management", icon: "Workflow" },
       { id: "call_logs", name: "سوابق تماس", nameEn: "Call Logs", icon: "Phone" },
       { id: "prospects", name: "مشتریان احتمالی", nameEn: "Prospects", icon: "Target" },
       { id: "call_campaigns", name: "کمپین‌های تماس", nameEn: "Call Campaigns", icon: "Megaphone" },
@@ -208,12 +204,11 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
   },
   "Call Center Agent": {
     subsystems: [
-      "unified_workflow", "lead_management", "call_logs", "prospects", 
+      "unified_workflow", "call_logs", "prospects", 
       "call_campaigns"
     ],
     actions: {
       "unified_workflow": ["read", "create", "update", "view", "list"],
-      "lead_management": ["read", "create", "update", "view", "list"],
       "call_logs": ["read", "create", "update", "view", "list"],
       "prospects": ["read", "create", "update", "view", "list"],
       "call_campaigns": ["read", "view", "list", "participate"]
@@ -223,9 +218,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     subsystems: [
       "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
       "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
-      "appointment_scheduling", "trial_lesson_coordination",
-      // Also give access to lead management for coordination
-      "lead_management"
+      "appointment_scheduling", "trial_lesson_coordination"
     ],
     actions: {
       "front_desk_dashboard": ["read", "view"],
@@ -237,7 +230,6 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "trial_lesson_coordination": ["read", "create", "update", "view", "list", "schedule"],
       // CRITICAL FIX: Add trial_lessons permissions to match API endpoints
       "trial_lessons": ["read", "create", "update", "view", "list", "checkin", "complete", "waitlist", "analytics"],
-      "lead_management": ["read", "create", "update", "view", "list"],
       // Add front desk resource permissions
       "front_desk_operations": ["read", "create", "update", "view", "list", "delete", "complete", "convert"],
       "phone_call_logs": ["read", "create", "update", "view", "list", "delete"],
@@ -248,8 +240,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     subsystems: [
       "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
       "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
-      "appointment_scheduling", "trial_lesson_coordination",
-      "lead_management"
+      "appointment_scheduling", "trial_lesson_coordination"
     ],
     actions: {
       "front_desk_dashboard": ["read", "view"],
@@ -260,7 +251,6 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "appointment_scheduling": ["read", "create", "update", "view", "list", "cancel"],
       "trial_lesson_coordination": ["read", "create", "update", "view", "list", "schedule"],
       "trial_lessons": ["read", "create", "update", "view", "list", "checkin", "complete", "waitlist", "analytics"],
-      "lead_management": ["read", "create", "update", "view", "list"],
       "front_desk_operations": ["read", "create", "update", "view", "list", "delete", "complete", "convert"],
       "phone_call_logs": ["read", "create", "update", "view", "list", "delete"],
       "front_desk_tasks": ["read", "create", "update", "view", "list", "delete", "complete", "assign", "follow_up"]
@@ -274,7 +264,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "financial_management", "reports_analytics", "communication_center", 
       "quality_assurance", "schedule_review", "sms_management", "mentor_matching",
       // Call Center
-      "unified_workflow", "lead_management", "call_logs", "prospects", "call_campaigns"
+      "unified_workflow", "call_logs", "prospects", "call_campaigns"
     ],
     actions: {}
   },
@@ -299,15 +289,15 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "ai_services", "ai_training", "communication_center", "quality_assurance", 
       "schedule_review", "teacher_payment_management", "white_label", "sms_management",
       "campaign_management", "website_builder",
-      "unified_workflow", "lead_management", "call_logs", "prospects", "call_campaigns",
+      "unified_workflow", "call_logs", "prospects", "call_campaigns",
       "mentor_dashboard", "mentee_management", "mentoring_sessions", "mentoring_progress",
       // Front Desk subsystems
       "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
       "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
       "appointment_scheduling", "trial_lesson_coordination",
       // New subsystems found in backend routes
-      "mst_test_builder", "placement_test", "linguaquest", "ecommerce_system", "book_ecommerce",
-      "shopping_cart", "course_roadmaps", "roadmap_templates", "roadmap_instances", 
+      "mst_test_builder", "placement_test", "linguaquest",
+      "course_roadmaps", "roadmap_templates", "roadmap_instances", 
       "callern_roadmaps", "exam_roadmaps", "ai_study_partner", "enhanced_analytics",
       "tts_system", "tts_pipeline", "3d_content_tools", "third_party_integrations",
       "calendar_settings", "currency_settings"
@@ -425,9 +415,6 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "mst_test_builder": "/admin/mst-test-builder",
   "placement_test": "/admin/placement-test",
   "linguaquest": "/admin/linguaquest",
-  "ecommerce_system": "/admin/ecommerce",
-  "book_ecommerce": "/admin/book-ecommerce",
-  "shopping_cart": "/admin/shopping-cart",
   "course_roadmaps": "/admin/course-roadmaps",
   "roadmap_templates": "/admin/roadmap-templates", 
   "roadmap_instances": "/admin/roadmap-instances",
@@ -444,7 +431,6 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
 
   // Call Center
   "unified_workflow": "/callcenter/unified-workflow",
-  "lead_management": "/admin/leads",
   "call_logs": "/admin/calls",
   "prospects": "/admin/prospects", 
   "call_campaigns": "/admin/campaigns",
