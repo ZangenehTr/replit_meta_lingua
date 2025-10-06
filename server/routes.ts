@@ -18087,6 +18087,140 @@ Return JSON format:
     }
   });
 
+  // ===== AI SALES AGENT ROUTES =====
+  
+  app.post("/api/admin/ai/handle-inquiry", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { aiSalesAgent, LeadInquirySchema } = await import('./services/ai-sales-agent');
+      
+      const validationResult = LeadInquirySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid inquiry data',
+          details: validationResult.error.errors,
+        });
+      }
+
+      const response = await aiSalesAgent.handleInquiry(validationResult.data);
+
+      if (response.requiresHumanEscalation) {
+        await storage.createNotification({
+          userId: req.user.id,
+          type: 'lead_escalation',
+          title: `Hot Lead - ${response.qualification.toUpperCase()}`,
+          message: `Lead score: ${response.leadScore}. Intents: ${response.detectedIntent.join(', ')}`,
+          read: false,
+          createdAt: new Date(),
+        });
+      }
+
+      res.json({
+        success: true,
+        data: response,
+        message: 'Inquiry handled successfully',
+      });
+    } catch (error: any) {
+      console.error('AI sales agent error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/admin/ai/generate-followup", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { aiSalesAgent, LeadInquirySchema } = await import('./services/ai-sales-agent');
+      
+      const { inquiry, previousResponse, context } = req.body;
+
+      if (!inquiry || !previousResponse) {
+        return res.status(400).json({
+          success: false,
+          error: 'inquiry and previousResponse are required',
+        });
+      }
+
+      const validationResult = LeadInquirySchema.safeParse(inquiry);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid inquiry data',
+          details: validationResult.error.errors,
+        });
+      }
+
+      const followUp = await aiSalesAgent.generateFollowUp(
+        validationResult.data,
+        previousResponse,
+        context || 'No additional context'
+      );
+
+      res.json({
+        success: true,
+        data: { followUpMessage: followUp },
+        message: 'Follow-up generated successfully',
+      });
+    } catch (error: any) {
+      console.error('Follow-up generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/api/public/ai/lead-inquiry", async (req: any, res) => {
+    try {
+      const { aiSalesAgent, LeadInquirySchema } = await import('./services/ai-sales-agent');
+      
+      const validationResult = LeadInquirySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid inquiry data',
+          details: validationResult.error.errors,
+        });
+      }
+
+      const response = await aiSalesAgent.handleInquiry(validationResult.data);
+
+      const nameParts = (response.extractedInfo.name || validationResult.data.senderName || 'Unknown').split(' ');
+      const firstName = nameParts[0] || 'Unknown';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      await storage.createLead({
+        firstName,
+        lastName,
+        email: response.extractedInfo.email,
+        phoneNumber: response.extractedInfo.phone || validationResult.data.senderContact,
+        source: validationResult.data.source,
+        status: 'new',
+        priority: response.qualification === 'hot' ? 'high' : response.qualification === 'warm' ? 'medium' : 'low',
+        interestedLanguage: response.extractedInfo.courseInterest?.[0] || 'English',
+        level: response.extractedInfo.proficiencyLevel,
+        notes: `Initial inquiry: ${validationResult.data.message}\n\nAI Response: ${response.message}\n\nDetected Intent: ${response.detectedIntent.join(', ')}\n\nLead Score: ${response.leadScore}`,
+        nextFollowUpDate: response.suggestedFollowUpTime ? new Date(response.suggestedFollowUpTime) : undefined,
+        workflowStatus: response.requiresHumanEscalation ? 'escalated' : 'automated',
+      });
+
+      res.json({
+        success: true,
+        data: {
+          message: response.message,
+          language: response.language,
+        },
+      });
+    } catch (error: any) {
+      console.error('Public lead inquiry error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process inquiry. Please try again.',
+      });
+    }
+  });
+
   // ===== USER MANAGEMENT API =====
   
   // Get all users
