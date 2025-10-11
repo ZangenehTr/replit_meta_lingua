@@ -3820,9 +3820,12 @@ export const placementQuestions = pgTable("placement_questions", {
 // Placement Test Sessions table
 export const placementTestSessions = pgTable("placement_test_sessions", {
   id: serial("id").primaryKey(),
-  testId: integer("test_id").references(() => placementTests.id).notNull(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  sessionToken: varchar("session_token", { length: 255 }).notNull().unique(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  targetLanguage: varchar("target_language", { length: 100 }),
+  learningGoal: text("learning_goal"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  totalDurationSeconds: integer("total_duration_seconds"),
   status: varchar("status", { length: 20 }).default("in_progress"), // scheduled, in_progress, completed, abandoned, expired
   startTime: timestamp("start_time").defaultNow().notNull(),
   endTime: timestamp("end_time"),
