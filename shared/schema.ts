@@ -2800,7 +2800,7 @@ export const studentNotes = pgTable("student_notes", {
 // Course Enrollments table
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
   courseId: integer("course_id").references(() => courses.id).notNull(),
   enrollmentDate: timestamp("enrollment_date").defaultNow().notNull(),
   status: varchar("status", { length: 20 }).default("active"), // active, completed, dropped, transferred, suspended

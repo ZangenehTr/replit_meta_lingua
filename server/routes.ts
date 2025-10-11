@@ -23716,22 +23716,20 @@ Meta Lingua Academy`;
       // Import placementTestSessions (not in top-level imports)
       const { placementTestSessions } = await import("@shared/schema");
       
-      // Get student's ACTIVE enrollments only (using top-level imported tables)
-      const studentEnrollments = await db
-        .select({
-          enrollmentId: enrollments.id,
-          courseId: enrollments.courseId,
-          progress: enrollments.progress,
-          enrolledAt: enrollments.enrolledAt,
-          courseTitle: courses.title,
-          courseLevel: courses.level
-        })
-        .from(enrollments)
-        .leftJoin(courses, eq(enrollments.courseId, courses.id))
-        .where(and(
-          eq(enrollments.userId, studentId),
-          eq(enrollments.status, 'active')
-        ));
+      // SIMPLIFIED: Get student's enrollments using raw SQL to bypass Drizzle issues
+      const studentEnrollments = await db.execute(sql`
+        SELECT 
+          e.id as enrollment_id,
+          e.course_id,
+          e.progress,
+          e.enrolled_at,
+          c.title as course_title,
+          c.level as course_level
+        FROM enrollments e
+        LEFT JOIN courses c ON e.course_id = c.id
+        WHERE e.user_id = ${studentId}
+          AND e.status = 'active'
+      `);
       
       // Check if student has completed placement test
       const placementTests = await db
@@ -23754,14 +23752,16 @@ Meta Lingua Academy`;
         .where(eq(users.id, studentId))
         .limit(1);
       
+      const enrollmentRows = studentEnrollments.rows || [];
+      
       const enrollmentStatus = {
-        isEnrolled: studentEnrollments.length > 0,
-        hasActiveEnrollments: studentEnrollments.length > 0,
-        totalEnrollments: studentEnrollments.length,
-        activeCourses: studentEnrollments.map(enrollment => ({
-          id: enrollment.courseId,
-          title: enrollment.courseTitle || 'Course',
-          level: enrollment.courseLevel || 'beginner',
+        isEnrolled: enrollmentRows.length > 0,
+        hasActiveEnrollments: enrollmentRows.length > 0,
+        totalEnrollments: enrollmentRows.length,
+        activeCourses: enrollmentRows.map((enrollment: any) => ({
+          id: enrollment.course_id,
+          title: enrollment.course_title || 'Course',
+          level: enrollment.course_level || 'beginner',
           progress: enrollment.progress || 0
         })),
         hasCompletedPlacementTest: placementTests.length > 0,
@@ -27223,4 +27223,10 @@ Meta Lingua Academy`;
       }
       res.json(template);
     } catch (error) {
-      console.error('Error updating SMS template:', error)
+      console.error('Error updating SMS template:', error);
+      res.status(500).json({ error: 'Failed to update template' });
+    }
+  });
+
+  return app;
+}
