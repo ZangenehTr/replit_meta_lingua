@@ -2802,7 +2802,9 @@ export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   courseId: integer("course_id").references(() => courses.id).notNull(),
-  enrollmentDate: timestamp("enrollment_date").defaultNow().notNull(),
+  progress: integer("progress").default(0),
+  enrolledAt: timestamp("enrolled_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
   status: varchar("status", { length: 20 }).default("active"), // active, completed, dropped, transferred, suspended
   paymentStatus: varchar("payment_status", { length: 20 }).default("pending"), // pending, paid, partial, overdue, refunded
   enrollmentType: varchar("enrollment_type", { length: 50 }).default("regular"), // regular, trial, scholarship, transfer

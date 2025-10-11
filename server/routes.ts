@@ -23716,20 +23716,14 @@ Meta Lingua Academy`;
       // Import placementTestSessions (not in top-level imports)
       const { placementTestSessions } = await import("@shared/schema");
       
-      // SIMPLIFIED: Get student's enrollments using raw SQL to bypass Drizzle issues
-      const studentEnrollments = await db.execute(sql.raw(`
-        SELECT 
-          e.id as enrollment_id,
-          e.course_id,
-          e.progress,
-          e.enrolled_at,
-          c.title as course_title,
-          c.level as course_level
-        FROM enrollments e
-        LEFT JOIN courses c ON e.course_id = c.id
-        WHERE e.user_id = ${studentId}
-          AND e.status = 'active'
-      `));
+      // Get student's ACTIVE enrollments - using simple select without joins
+      const studentEnrollments = await db
+        .select()
+        .from(enrollments)
+        .where(and(
+          eq(enrollments.userId, studentId),
+          eq(enrollments.status, 'active')
+        ));
       
       // Check if student has completed placement test
       const placementTests = await db
@@ -23752,16 +23746,14 @@ Meta Lingua Academy`;
         .where(eq(users.id, studentId))
         .limit(1);
       
-      const enrollmentRows = studentEnrollments.rows || [];
-      
       const enrollmentStatus = {
-        isEnrolled: enrollmentRows.length > 0,
-        hasActiveEnrollments: enrollmentRows.length > 0,
-        totalEnrollments: enrollmentRows.length,
-        activeCourses: enrollmentRows.map((enrollment: any) => ({
-          id: enrollment.course_id,
-          title: enrollment.course_title || 'Course',
-          level: enrollment.course_level || 'beginner',
+        isEnrolled: studentEnrollments.length > 0,
+        hasActiveEnrollments: studentEnrollments.length > 0,
+        totalEnrollments: studentEnrollments.length,
+        activeCourses: studentEnrollments.map((enrollment: any) => ({
+          id: enrollment.courseId,
+          title: 'Course ' + enrollment.courseId,
+          level: 'beginner',
           progress: enrollment.progress || 0
         })),
         hasCompletedPlacementTest: placementTests.length > 0,
