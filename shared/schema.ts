@@ -3797,7 +3797,7 @@ export const placementQuestions = pgTable("placement_questions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Placement Test Sessions table
+// Placement Test Sessions table - MATCHES ACTUAL DATABASE STRUCTURE
 export const placementTestSessions = pgTable("placement_test_sessions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -3806,33 +3806,26 @@ export const placementTestSessions = pgTable("placement_test_sessions", {
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   totalDurationSeconds: integer("total_duration_seconds"),
-  status: varchar("status", { length: 20 }).default("in_progress"), // scheduled, in_progress, completed, abandoned, expired
-  startTime: timestamp("start_time").defaultNow().notNull(),
-  endTime: timestamp("end_time"),
-  submittedAt: timestamp("submitted_at"),
-  timeSpent: integer("time_spent"), // in seconds
+  status: varchar("status", { length: 20 }).default("in_progress"),
+  currentSkill: varchar("current_skill", { length: 50 }),
   currentQuestionIndex: integer("current_question_index").default(0),
-  totalQuestions: integer("total_questions"),
-  questionsAnswered: integer("questions_answered").default(0),
-  isAdaptive: boolean("is_adaptive").default(false),
-  adaptiveLevel: varchar("adaptive_level", { length: 20 }), // current adaptive level
-  proctored: boolean("proctored").default(false),
-  proctorId: integer("proctor_id").references(() => users.id),
-  deviceInfo: jsonb("device_info"),
-  ipAddress: varchar("ip_address", { length: 45 }),
-  browserInfo: jsonb("browser_info"),
-  responses: jsonb("responses"), // question responses during session
-  violationFlags: text("violation_flags").array().default([]), // cheating detection flags
-  videoRecordingUrl: varchar("video_recording_url", { length: 500 }),
-  screenRecordingUrl: varchar("screen_recording_url", { length: 500 }),
-  pauseCount: integer("pause_count").default(0),
-  resumeCount: integer("resume_count").default(0),
-  warningCount: integer("warning_count").default(0),
+  overallCefrLevel: varchar("overall_cefr_level", { length: 10 }),
+  speakingLevel: varchar("speaking_level", { length: 10 }),
+  listeningLevel: varchar("listening_level", { length: 10 }),
+  readingLevel: varchar("reading_level", { length: 10 }),
+  writingLevel: varchar("writing_level", { length: 10 }),
+  overallScore: decimal("overall_score", { precision: 5, scale: 2 }),
+  speakingScore: decimal("speaking_score", { precision: 5, scale: 2 }),
+  listeningScore: decimal("listening_score", { precision: 5, scale: 2 }),
+  readingScore: decimal("reading_score", { precision: 5, scale: 2 }),
+  writingScore: decimal("writing_score", { precision: 5, scale: 2 }),
+  strengths: text("strengths").array(),
+  weaknesses: text("weaknesses").array(),
+  recommendations: text("recommendations").array(),
   confidenceScore: decimal("confidence_score", { precision: 5, scale: 2 }),
   generatedRoadmapId: integer("generated_roadmap_id"),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Placement Results table
