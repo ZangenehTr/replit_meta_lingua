@@ -23717,7 +23717,7 @@ Meta Lingua Academy`;
       const { placementTestSessions } = await import("@shared/schema");
       
       // SIMPLIFIED: Get student's enrollments using raw SQL to bypass Drizzle issues
-      const studentEnrollments = await db.execute(sql`
+      const studentEnrollments = await db.execute(sql.raw(`
         SELECT 
           e.id as enrollment_id,
           e.course_id,
@@ -23729,7 +23729,7 @@ Meta Lingua Academy`;
         LEFT JOIN courses c ON e.course_id = c.id
         WHERE e.user_id = ${studentId}
           AND e.status = 'active'
-      `);
+      `));
       
       // Check if student has completed placement test
       const placementTests = await db
