@@ -23713,9 +23713,10 @@ Meta Lingua Academy`;
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const { enrollments, courses, users, placementTestSessions } = await import("@shared/schema");
+      // Import placementTestSessions (not in top-level imports)
+      const { placementTestSessions } = await import("@shared/schema");
       
-      // Get student's ACTIVE enrollments only
+      // Get student's ACTIVE enrollments only (using top-level imported tables)
       const studentEnrollments = await db
         .select({
           enrollmentId: enrollments.id,
