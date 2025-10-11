@@ -2797,7 +2797,7 @@ export const studentNotes = pgTable("student_notes", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Course Enrollments table
+// Course Enrollments table - MATCHES ACTUAL DATABASE STRUCTURE
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -2805,27 +2805,7 @@ export const enrollments = pgTable("enrollments", {
   progress: integer("progress").default(0),
   enrolledAt: timestamp("enrolled_at").defaultNow(),
   completedAt: timestamp("completed_at"),
-  status: varchar("status", { length: 20 }).default("active"), // active, completed, dropped, transferred, suspended
-  paymentStatus: varchar("payment_status", { length: 20 }).default("pending"), // pending, paid, partial, overdue, refunded
-  enrollmentType: varchar("enrollment_type", { length: 50 }).default("regular"), // regular, trial, scholarship, transfer
-  startDate: timestamp("start_date"),
-  endDate: timestamp("end_date"),
-  expectedCompletionDate: timestamp("expected_completion_date"),
-  actualCompletionDate: timestamp("actual_completion_date"),
-  grade: varchar("grade", { length: 10 }),
-  certificateIssued: boolean("certificate_issued").default(false),
-  certificateIssuedAt: timestamp("certificate_issued_at"),
-  dropDate: timestamp("drop_date"),
-  dropReason: text("drop_reason"),
-  transferredFrom: integer("transferred_from").references(() => courses.id),
-  transferredTo: integer("transferred_to").references(() => courses.id),
-  scholarshipPercentage: decimal("scholarship_percentage", { precision: 5, scale: 2 }),
-  totalPaid: decimal("total_paid", { precision: 10, scale: 2 }).default("0"),
-  remainingBalance: decimal("remaining_balance", { precision: 10, scale: 2 }).default("0"),
-  enrolledBy: integer("enrolled_by").references(() => users.id),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  status: varchar("status", { length: 20 }).default("active")
 });
 
 // Front Desk Operations table
