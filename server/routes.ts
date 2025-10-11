@@ -23723,9 +23723,7 @@ Meta Lingua Academy`;
           progress: enrollments.progress,
           enrolledAt: enrollments.enrolledAt,
           courseTitle: courses.title,
-          courseLevel: courses.level,
-          deliveryMode: courses.deliveryMode,
-          classFormat: courses.classFormat
+          courseLevel: courses.level
         })
         .from(enrollments)
         .leftJoin(courses, eq(enrollments.courseId, courses.id))
@@ -23763,9 +23761,7 @@ Meta Lingua Academy`;
           id: enrollment.courseId,
           title: enrollment.courseTitle || 'Course',
           level: enrollment.courseLevel || 'beginner',
-          progress: enrollment.progress || 0,
-          deliveryMode: enrollment.deliveryMode || 'online',
-          classFormat: enrollment.classFormat || 'group'
+          progress: enrollment.progress || 0
         })),
         hasCompletedPlacementTest: placementTests.length > 0,
         membershipTier: userDetails?.memberTier || 'bronze',
@@ -27226,10 +27222,4 @@ Meta Lingua Academy`;
       }
       res.json(template);
     } catch (error) {
-      console.error('Error updating SMS template:', error);
-      res.status(500).json({ error: 'Failed to update template' });
-    }
-  });
-
-  return app;
-}
+      console.error('Error updating SMS template:', error)
