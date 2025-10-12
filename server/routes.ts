@@ -5,8 +5,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends } from "@shared/schema";
-import { eq, sql, and, desc, inArray } from "drizzle-orm";
+import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian } from "@shared/schema";
+import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { registerCallernAIRoutes } from "./callern-ai-routes";
@@ -6231,12 +6231,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      // For now, simulate payment success - in production, redirect to Shetab gateway
-      await storage.updateWalletTransactionStatus(transaction.id, 'completed');
+      // Real Shetab gateway integration - redirect user to payment page
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      const userAgent = req.get('User-Agent');
+      
+      const result = await shetabService.initializePayment(
+        req.user.id,
+        paymentRequest,
+        ipAddress,
+        userAgent
+      );
 
       res.json({
         success: true,
-        message: "Wallet topped up successfully",
+        paymentUrl: result.gatewayUrl,
+        transactionId: result.payment.merchantTransactionId,
+        message: "Redirecting to payment gateway",
         transaction
       });
 
@@ -6321,12 +6331,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // For now, simulate payment - in production, redirect to Shetab gateway
-        await storage.updateCoursePaymentStatus(coursePayment.id, 'completed');
+        // Real Shetab gateway integration for course payment
+        const ipAddress = req.ip || req.connection.remoteAddress;
+        const userAgent = req.get('User-Agent');
+        
+        const paymentRequest = {
+          amount: priceData.finalPrice,
+          orderId: coursePayment.merchantTransactionId!,
+          description: `Course Enrollment Payment - ${priceData.finalPrice.toLocaleString('fa-IR')} IRR`,
+          customerEmail: req.user.email,
+          customerPhone: req.user.phoneNumber,
+          metadata: {
+            paymentId: coursePayment.id,
+            courseId,
+            type: 'course_enrollment'
+          }
+        };
+
+        const result = await shetabService.initializePayment(
+          req.user.id,
+          paymentRequest,
+          ipAddress,
+          userAgent
+        );
 
         res.json({
           success: true,
-          message: "Course enrollment successful via Shetab",
+          paymentUrl: result.gatewayUrl,
+          transactionId: result.payment.merchantTransactionId,
+          message: "Redirecting to payment gateway",
           payment: coursePayment
         });
       }
@@ -10463,43 +10496,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Start and end dates are required" });
       }
 
-      // Mock holiday data - would integrate with database
-      const holidays = [
-        {
-          id: 1,
-          holidayName: "Nowruz",
-          holidayNamePersian: "نوروز",
-          holidayType: "cultural",
-          persianDate: "1404/01/01",
-          gregorianDate: "2025-03-21",
-          isOfficialHoliday: true,
-          description: "Persian New Year celebration",
-          descriptionPersian: "جشن سال نو ایرانی",
-          color: "#10B981"
-        },
-        {
-          id: 2,
-          holidayName: "Yalda Night",
-          holidayNamePersian: "شب یلدا",
-          holidayType: "cultural",
-          persianDate: "1403/09/30",
-          gregorianDate: "2024-12-21",
-          isOfficialHoliday: false,
-          description: "Longest night of the year celebration",
-          descriptionPersian: "جشن طولانی‌ترین شب سال",
-          color: "#8B5CF6"
-        }
-      ];
+      // Real database implementation - get holidays from database
+      const holidaysList = await storage.getHolidaysInRange(start as string, end as string);
 
-      // Filter holidays within date range
-      const filteredHolidays = holidays.filter(holiday => {
-        const holidayDate = new Date(holiday.gregorianDate);
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        return holidayDate >= startDate && holidayDate <= endDate;
-      });
-
-      res.json(filteredHolidays);
+      res.json(holidaysList);
     } catch (error) {
       console.error('Error fetching holidays:', error);
       res.status(500).json({ error: "Failed to fetch holidays" });
@@ -10515,40 +10515,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Start and end dates are required" });
       }
 
-      // Mock cultural events - would integrate with database
-      const events = [
-        {
-          id: 1,
-          eventName: "Spring Equinox",
-          eventNamePersian: "آغاز بهار",
-          eventType: "seasonal",
-          persianDate: "1404/01/01",
-          gregorianDate: "2025-03-21",
-          description: "Beginning of spring season",
-          importance: "high",
-          color: "#F59E0B"
-        },
-        {
-          id: 2,
-          eventName: "Ramadan Begins",
-          eventNamePersian: "آغاز ماه رمضان",
-          eventNameArabic: "بداية شهر رمضان",
-          eventType: "religious",
-          gregorianDate: "2025-02-28",
-          description: "Beginning of the holy month of Ramadan",
-          importance: "high",
-          color: "#06B6D4"
-        }
-      ];
+      // Real database implementation - get calendar events from database
+      const eventsList = await db
+        .select()
+        .from(calendarEventsIranian)
+        .where(
+          and(
+            gte(calendarEventsIranian.gregorianDate, start as string),
+            lte(calendarEventsIranian.gregorianDate, end as string)
+          )
+        )
+        .orderBy(calendarEventsIranian.gregorianDate);
 
-      const filteredEvents = events.filter(event => {
-        const eventDate = new Date(event.gregorianDate);
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        return eventDate >= startDate && eventDate <= endDate;
-      });
-
-      res.json(filteredEvents);
+      res.json(eventsList);
     } catch (error) {
       console.error('Error fetching cultural events:', error);
       res.status(500).json({ error: "Failed to fetch cultural events" });
