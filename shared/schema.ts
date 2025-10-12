@@ -5995,9 +5995,29 @@ export type InsertScheduledObservation = z.infer<typeof insertScheduledObservati
 // Real-time scoring events
 
 // Insert schemas for scoring
+export const insertCallernPresenceSchema = createInsertSchema(callernPresence).omit({ 
+  id: true, createdAt: true, updatedAt: true 
+});
+export const insertCallernSpeechSegmentSchema = createInsertSchema(callernSpeechSegments).omit({ 
+  id: true, createdAt: true 
+});
+export const insertCallernScoresStudentSchema = createInsertSchema(callernScoresStudent).omit({ 
+  id: true, createdAt: true, updatedAt: true 
+});
+export const insertCallernScoresTeacherSchema = createInsertSchema(callernScoresTeacher).omit({ 
+  id: true, createdAt: true, updatedAt: true 
+});
+export const insertCallernScoringEventSchema = createInsertSchema(callernScoringEvents).omit({ 
+  id: true, createdAt: true 
+});
 
-
-
+// Teacher authorization insert schemas
+export const insertTeacherCallernAuthorizationSchema = createInsertSchema(teacherCallernAuthorization).omit({ 
+  id: true, createdAt: true, updatedAt: true 
+});
+export const insertTeacherCallernAvailabilitySchema = createInsertSchema(teacherCallernAvailability).omit({ 
+  id: true, createdAt: true, updatedAt: true 
+});
 
 
 // Scoring types
@@ -6011,6 +6031,12 @@ export type CallernScoresTeacher = typeof callernScoresTeacher.$inferSelect;
 export type InsertCallernScoresTeacher = z.infer<typeof insertCallernScoresTeacherSchema>;
 export type CallernScoringEvent = typeof callernScoringEvents.$inferSelect;
 export type InsertCallernScoringEvent = z.infer<typeof insertCallernScoringEventSchema>;
+
+// Teacher authorization types
+export type TeacherCallernAuthorization = typeof teacherCallernAuthorization.$inferSelect;
+export type InsertTeacherCallernAuthorization = z.infer<typeof insertTeacherCallernAuthorizationSchema>;
+export type TeacherCallernAvailability = typeof teacherCallernAvailability.$inferSelect;
+export type InsertTeacherCallernAvailability = z.infer<typeof insertTeacherCallernAvailabilitySchema>;
 
 // ========================
 // CALLERN ROADMAP TEMPLATE SYSTEM (New Implementation)
