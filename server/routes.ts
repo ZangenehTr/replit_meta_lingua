@@ -5,7 +5,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends } from "@shared/schema";
+import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, insertChartOfAccountsSchema, insertAccountingLedgerSchema } from "@shared/schema";
 import { eq, sql, and, desc, inArray } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -2860,6 +2860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid account ID" });
       }
       const validatedData = insertChartOfAccountsSchema.partial().parse(req.body);
+      // Use validatedData (not req.body) to prevent injection of arbitrary columns
       const account = await storage.updateChartOfAccount(id, validatedData);
       if (!account) {
         return res.status(404).json({ message: "Account not found" });
@@ -27224,26 +27225,4 @@ Meta Lingua Academy`;
   });
 
   // Update interaction notes
-  app.put("/api/front-desk/interactions/:id/notes", authenticate, authorizePermission('front_desk_operations', 'update'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { notes, tags, type } = req.body;
-      
-      const updatedInteraction = await storage.updateInteractionNotes(id, type, {
-        notes,
-        tags,
-        updatedBy: req.user.id
-      });
-      
-      res.json(updatedInteraction);
-    } catch (error) {
-      console.error('Error updating interaction notes:', error);
-      res.status(500).json({ error: 'Failed to update notes', message: error.message });
-    }
-  });
-
-  // Create follow-up task from interaction
-  app.post("/api/front-desk/interactions/:id/create-task", authenticate, authorizePermission('front_desk_tasks', 'create'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { type, ...taskDa
+  app.put("/api/front-desk/interactions/:id/notes", auth
