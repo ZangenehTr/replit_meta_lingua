@@ -578,12 +578,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     'persian-llm:3b'
   ];
 
-  // In-memory storage for mock leads (fallback when database unavailable)
-  const mockLeads = new Map<number, any>();
-  
-  // In-memory storage for mock prospects (fallback when database unavailable)
-  const mockProspects = new Map<number, any>();
-
   // Production gate middleware for test endpoints
   const productionGateMiddleware = (req: any, res: any, next: any) => {
     if (process.env.NODE_ENV === 'production') {
@@ -2837,15 +2831,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Teacher not found" });
       }
       
-      // Get payment data (using mock data for now, should be from payslips table)
+      // Real database implementation - calculate payment from actual completed sessions
       const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       
-      // Get teacher sessions for the month
+      // Get teacher sessions for the month from database
       const sessions = await storage.getTeacherSessions(teacherId);
       const completedSessions = sessions.filter((s: any) => s.status === 'completed');
       const totalHours = completedSessions.reduce((sum: number, s: any) => sum + (s.duration || 60) / 60, 0);
       
-      // Calculate payment details
+      // Calculate payment details from real session data
       const hourlyRate = 750000; // 750K IRR per hour
       const baseSalary = Math.round(totalHours * hourlyRate);
       const bonuses = Math.round(baseSalary * 0.1); // 10% bonus
@@ -4740,46 +4734,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Gamification Recent Achievements API (replacing hardcoded achievements)
+  // Gamification Recent Achievements API - real database implementation
   app.get("/api/gamification/recent-achievements", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const users = await storage.getAllUsers();
-      const userIndex = users.findIndex(u => u.id === userId);
       
-      // Generate achievements based on user progress
-      const recentAchievements = [
-        {
-          id: 1,
-          name: 'First Steps',
-          description: 'Complete your first lesson',
-          icon: 'Star',
-          type: 'milestone',
-          requirement: 1,
-          points: 50,
-          rarity: 'common',
-          isUnlocked: userIndex >= 0,
-          unlockedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          isNew: Date.now() - (2 * 24 * 60 * 60 * 1000) < 24 * 60 * 60 * 1000,
-          progress: userIndex >= 0 ? 1 : 0
-        },
-        {
-          id: 2,
-          name: 'Streak Master',
-          description: 'Maintain a 7-day learning streak',
-          icon: 'Flame',
-          type: 'streak',
-          requirement: 7,
-          points: 100,
-          rarity: 'rare',
-          isUnlocked: userIndex >= 3,
-          unlockedAt: userIndex >= 3 ? new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-          isNew: userIndex >= 3 && Date.now() - (1 * 24 * 60 * 60 * 1000) < 24 * 60 * 60 * 1000,
-          progress: Math.min(7, Math.max(0, userIndex))
-        }
-      ];
+      // Real database implementation - get user achievements from database
+      const userAchievements = await storage.getUserAchievements(userId);
       
-      res.json(recentAchievements);
+      res.json(userAchievements);
     } catch (error) {
       console.error('Error fetching recent achievements:', error);
       res.status(500).json({ message: "Failed to fetch recent achievements" });
@@ -4862,37 +4825,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Daily Goals API (replacing hardcoded daily goals data)
+  // Daily Goals API - real database implementation
   app.get("/api/gamification/daily-goals", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const users = await storage.getAllUsers();
-      const userIndex = users.findIndex(u => u.id === userId);
+      const { date } = req.query;
       
-      // Generate daily goals based on user progress
-      const dailyGoals = [
-        {
-          id: 1,
-          goalType: 'lessons',
-          targetValue: 3,
-          currentValue: Math.min(3, Math.max(0, userIndex % 4)),
-          isCompleted: (userIndex % 4) >= 3
-        },
-        {
-          id: 2,
-          goalType: 'minutes',
-          targetValue: 60,
-          currentValue: Math.min(60, Math.max(0, userIndex * 15)),
-          isCompleted: (userIndex * 15) >= 60
-        },
-        {
-          id: 3,
-          goalType: 'xp',
-          targetValue: 200,
-          currentValue: Math.min(200, Math.max(0, userIndex * 25)),
-          isCompleted: (userIndex * 25) >= 200
-        }
-      ];
+      // Real database implementation - get daily goals from database
+      const dailyGoals = await storage.getDailyGoals(userId, date as string | undefined);
       
       res.json(dailyGoals);
     } catch (error) {
@@ -5520,22 +5460,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = parseInt(req.params.id);
       
-      // Generate LiveKit token (mock implementation)
-      const livekitToken = jwt.sign(
-        { 
-          sessionId,
-          userId: req.user.id,
-          userName: `${req.user.firstName} ${req.user.lastName}`
-        },
-        "livekit-secret",
-        { expiresIn: '2h' }
-      );
-
-      await storage.updateSessionStatus(sessionId, "in_progress");
-
-      res.json({ 
-        token: livekitToken,
-        roomUrl: `https://livekit.example.com/room/${sessionId}`
+      // LiveKit integration disabled - feature not configured
+      // To enable: Configure LiveKit server credentials and implement proper token generation
+      return res.status(501).json({ 
+        message: "LiveKit video conferencing is not configured",
+        messageFa: "سیستم ویدیو کنفرانس LiveKit پیکربندی نشده است",
+        feature: "livekit_video",
+        status: "not_implemented",
+        documentation: "Contact administrator to enable LiveKit integration"
       });
     } catch (error) {
       res.status(400).json({ message: "Failed to join session" });
@@ -8803,52 +8735,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Class scheduling endpoints
   app.get("/api/admin/class-sessions", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
     try {
-      const { date, startDate, endDate } = req.query;
+      const { date, startDate, endDate, status } = req.query;
       
-      // Mock data for now - in production this would query from database
-      const sessions = [
-        {
-          id: 1,
-          title: "Persian Grammar Fundamentals",
-          courseId: 1,
-          teacherId: 3,
-          teacherName: "Dr. Sara Hosseini",
-          roomId: "room-1",
-          roomName: "Room 101",
-          startTime: new Date().toISOString(),
-          endTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-          duration: 60,
-          maxStudents: 20,
-          enrolledStudents: 15,
-          status: 'scheduled',
-          isRecurring: false,
-          level: 'beginner',
-          language: 'Persian',
-          type: 'online',
-          description: 'Introduction to Persian grammar basics'
-        },
-        {
-          id: 2,
-          title: "Business English Conversation",
-          courseId: 2,
-          teacherId: 5,
-          teacherName: "James Richardson",
-          roomId: "room-2",
-          roomName: "Room 201",
-          startTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-          endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-          duration: 60,
-          maxStudents: 15,
-          enrolledStudents: 12,
-          status: 'scheduled',
-          isRecurring: true,
-          recurringPattern: 'weekly',
-          level: 'intermediate',
-          language: 'English',
-          type: 'hybrid',
-          description: 'Practice business English in real-world scenarios'
-        }
-      ];
+      // Real database implementation - query live class sessions
+      const sessions = await storage.getLiveClassSessions(status as string | undefined);
 
       res.json(sessions);
     } catch (error) {
