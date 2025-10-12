@@ -903,48 +903,35 @@ export class DatabaseStorage implements IStorage {
       const journalEntryId = `JE-${Date.now()}-${params.sourceType}-${params.sourceId}`;
       const amount = typeof params.amount === 'string' ? params.amount : params.amount.toString();
 
-      // Wrap in transaction to ensure atomic double-entry (debit + credit together or neither)
-      return await db.transaction(async (tx) => {
-        const [debitEntry] = await tx
-          .insert(accountingLedger)
-          .values({
-            accountId: params.debitAccountId,
-            transactionType: 'debit',
-            amount,
-            currency: 'IRR',
-            sourceType: params.sourceType,
-            sourceId: params.sourceId,
-            journalEntryId,
-            description: params.description,
-            referenceNumber: params.referenceNumber,
-            createdBy: params.createdBy,
-            status: 'posted',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          })
-          .returning();
-
-        const [creditEntry] = await tx
-          .insert(accountingLedger)
-          .values({
-            accountId: params.creditAccountId,
-            transactionType: 'credit',
-            amount,
-            currency: 'IRR',
-            sourceType: params.sourceType,
-            sourceId: params.sourceId,
-            journalEntryId,
-            description: params.description,
-            referenceNumber: params.referenceNumber,
-            createdBy: params.createdBy,
-            status: 'posted',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          })
-          .returning();
-
-        return { debit: debitEntry, credit: creditEntry };
+      const debitEntry = await this.createLedgerEntry({
+        accountId: params.debitAccountId,
+        transactionType: 'debit',
+        amount,
+        currency: 'IRR',
+        sourceType: params.sourceType,
+        sourceId: params.sourceId,
+        journalEntryId,
+        description: params.description,
+        referenceNumber: params.referenceNumber,
+        createdBy: params.createdBy,
+        status: 'posted'
       });
+
+      const creditEntry = await this.createLedgerEntry({
+        accountId: params.creditAccountId,
+        transactionType: 'credit',
+        amount,
+        currency: 'IRR',
+        sourceType: params.sourceType,
+        sourceId: params.sourceId,
+        journalEntryId,
+        description: params.description,
+        referenceNumber: params.referenceNumber,
+        createdBy: params.createdBy,
+        status: 'posted'
+      });
+
+      return { debit: debitEntry, credit: creditEntry };
     } catch (error) {
       console.error('Error creating double entry:', error);
       throw error;

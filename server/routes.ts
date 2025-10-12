@@ -5,7 +5,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, insertChartOfAccountsSchema, insertAccountingLedgerSchema } from "@shared/schema";
+import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends } from "@shared/schema";
 import { eq, sql, and, desc, inArray } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -136,6 +136,7 @@ setInterval(() => {
     if (now - value.timestamp > IDEMPOTENCY_TTL) {
       idempotencyStore.delete(key);
     }
+  }
 }, 60 * 60 * 1000); // Clean up every hour
 
 // Idempotency middleware
@@ -146,11 +147,13 @@ const checkIdempotency = (req: any, res: any, next: any) => {
       error: 'Idempotency key is required',
       errorFa: 'کلید منحصر به فرد الزامی است'
     });
+  }
 
   const existingResponse = idempotencyStore.get(idempotencyKey);
   if (existingResponse) {
     console.log(`Duplicate request blocked by idempotency key: ${idempotencyKey}`);
     return res.json(existingResponse.response);
+  }
 
   // Store request in progress
   req.idempotencyKey = idempotencyKey;
@@ -235,6 +238,7 @@ const audioStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(performance.now());
     cb(null, 'audio-' + uniqueSuffix + path.extname(file.originalname));
+  }
 });
 
 // Configure multer for video uploads
@@ -249,6 +253,7 @@ const videoStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
+  }
 });
 
 const uploadVideo = multer({
@@ -266,6 +271,7 @@ const uploadVideo = multer({
     } else {
       cb(new Error('Only video files are allowed'));
     }
+  }
 });
 
 // Configure multer for teacher photo uploads
@@ -279,6 +285,7 @@ const photoStorage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     cb(null, `${req.params.teacherId}.jpg`);
+  }
 });
 
 const uploadPhoto = multer({ 
@@ -290,6 +297,7 @@ const uploadPhoto = multer({
     } else {
       cb(new Error('Only image files are allowed!'));
     }
+  }
 });
 
 // Configure multer for student photo uploads
@@ -304,6 +312,7 @@ const studentPhotoStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
     cb(null, `student-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
 });
 
 const uploadStudentPhoto = multer({ 
@@ -315,6 +324,7 @@ const uploadStudentPhoto = multer({
     } else {
       cb(new Error('Only image files are allowed!'));
     }
+  }
 });
 
 const audioUpload = multer({ 
@@ -328,6 +338,7 @@ const audioUpload = multer({
     } else {
       cb(new Error('Only audio files are allowed!'));
     }
+  }
 });
 
 // Critical security: JWT_SECRET must be provided via environment variable
@@ -386,6 +397,7 @@ async function calculateStudentAttendance(studentId: number): Promise<number> {
   } catch (error) {
     console.error('Error calculating attendance:', error);
     return 0;
+  }
 }
 
 async function getLastActivityTime(userId: number): Promise<string> {
@@ -427,6 +439,7 @@ async function getLastActivityTime(userId: number): Promise<string> {
   } catch (error) {
     console.error('Error getting last activity:', error);
     return 'Unknown';
+  }
 }
 
 async function calculateTeacherRating(teacherId: number): Promise<string> {
@@ -440,6 +453,7 @@ async function calculateTeacherRating(teacherId: number): Promise<string> {
   } catch (error) {
     console.error('Error calculating teacher rating:', error);
     return '0.0';
+  }
 }
 
 async function calculateOverallTeacherSatisfaction(): Promise<number> {
@@ -453,6 +467,7 @@ async function calculateOverallTeacherSatisfaction(): Promise<number> {
   } catch (error) {
     console.error('Error calculating overall satisfaction:', error);
     return 0;
+  }
 }
 
 
@@ -464,6 +479,7 @@ const authenticateToken = async (req: any, res: any, next: any) => {
 
   if (!token) {
     return res.status(401).json({ message: 'Access token required' });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as any;
@@ -486,6 +502,7 @@ const authenticateToken = async (req: any, res: any, next: any) => {
   } catch (error) {
     console.error('Token verification error:', error);
     return res.status(403).json({ message: 'Invalid token' });
+  }
 };
 
 // Role-based authorization middleware
@@ -2807,223 +2824,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============================================================================
-  // ACCOUNTING LEDGER API ROUTES - Double-Entry Bookkeeping
-  // ============================================================================
-
-  // Chart of Accounts Management
-  app.get("/api/accounting/chart-of-accounts", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const accounts = await storage.getChartOfAccounts();
-      res.json(accounts);
-    } catch (error) {
-      console.error('Error fetching chart of accounts:', error);
-      res.status(500).json({ message: "Failed to fetch chart of accounts" });
-    }
-  });
-
-  app.post("/api/accounting/chart-of-accounts", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
-    try {
-      const validatedData = insertChartOfAccountsSchema.parse(req.body);
-      const account = await storage.createChartOfAccount(validatedData);
-      res.status(201).json(account);
-    } catch (error: any) {
-      console.error('Error creating account:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Validation failed", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create account" });
-    }
-  });
-
-  app.put("/api/accounting/chart-of-accounts/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid account ID" });
-      }
-      const validatedData = insertChartOfAccountsSchema.partial().parse(req.body);
-      // Use validatedData (not req.body) to prevent injection of arbitrary columns
-      const account = await storage.updateChartOfAccount(id, validatedData);
-      if (!account) {
-        return res.status(404).json({ message: "Account not found" });
-      }
-      res.json(account);
-    } catch (error: any) {
-      console.error('Error updating account:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Validation failed", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update account" });
-    }
-  });
-
-  // Ledger Entries
-  app.post("/api/accounting/ledger/entry", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const validatedData = insertAccountingLedgerSchema.parse({
-        ...req.body,
-        createdBy: req.user.id
-      });
-      const entry = await storage.createLedgerEntry(validatedData);
-      res.status(201).json(entry);
-    } catch (error: any) {
-      console.error('Error creating ledger entry:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Validation failed", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create ledger entry" });
-    }
-  });
-
-  app.post("/api/accounting/ledger/double-entry", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const doubleEntrySchema = z.object({
-        debitAccountId: z.number().int().positive(),
-        creditAccountId: z.number().int().positive(),
-        amount: z.union([z.string(), z.number()]),
-        sourceType: z.string().min(1),
-        sourceId: z.number().int().positive(),
-        description: z.string().optional(),
-        referenceNumber: z.string().optional()
-      });
-      
-      const validatedData = doubleEntrySchema.parse(req.body);
-      const entries = await storage.createDoubleEntry({
-        ...validatedData,
-        createdBy: req.user.id
-      });
-      res.status(201).json(entries);
-    } catch (error: any) {
-      console.error('Error creating double entry:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Validation failed", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create double entry" });
-    }
-  });
-
-  app.get("/api/accounting/ledger/entries", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const filters: any = {};
-      
-      if (req.query.accountId) {
-        const accountId = parseInt(req.query.accountId as string);
-        if (isNaN(accountId)) {
-          return res.status(400).json({ message: "Invalid accountId parameter" });
-        }
-        filters.accountId = accountId;
-      }
-      
-      if (req.query.sourceType) {
-        filters.sourceType = req.query.sourceType as string;
-      }
-      
-      if (req.query.sourceId) {
-        const sourceId = parseInt(req.query.sourceId as string);
-        if (isNaN(sourceId)) {
-          return res.status(400).json({ message: "Invalid sourceId parameter" });
-        }
-        filters.sourceId = sourceId;
-      }
-      
-      if (req.query.startDate) {
-        const startDate = new Date(req.query.startDate as string);
-        if (isNaN(startDate.getTime())) {
-          return res.status(400).json({ message: "Invalid startDate parameter" });
-        }
-        filters.startDate = startDate;
-      }
-      
-      if (req.query.endDate) {
-        const endDate = new Date(req.query.endDate as string);
-        if (isNaN(endDate.getTime())) {
-          return res.status(400).json({ message: "Invalid endDate parameter" });
-        }
-        filters.endDate = endDate;
-      }
-
-      const entries = await storage.getLedgerEntries(filters);
-      res.json(entries);
-    } catch (error) {
-      console.error('Error fetching ledger entries:', error);
-      res.status(500).json({ message: "Failed to fetch ledger entries" });
-    }
-  });
-
-  app.get("/api/accounting/ledger/journal/:journalEntryId", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const entries = await storage.getLedgerEntriesByJournalEntry(req.params.journalEntryId);
-      res.json(entries);
-    } catch (error) {
-      console.error('Error fetching journal entries:', error);
-      res.status(500).json({ message: "Failed to fetch journal entries" });
-    }
-  });
-
-  app.get("/api/accounting/account/:accountId/balance", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const accountId = parseInt(req.params.accountId);
-      const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : undefined;
-      const balance = await storage.getAccountBalance(accountId, asOfDate);
-      res.json(balance);
-    } catch (error) {
-      console.error('Error fetching account balance:', error);
-      res.status(500).json({ message: "Failed to fetch account balance" });
-    }
-  });
-
-  app.post("/api/accounting/ledger/:id/reconcile", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const entry = await storage.reconcileLedgerEntry(id, req.user.id);
-      if (!entry) {
-        return res.status(404).json({ message: "Ledger entry not found" });
-      }
-      res.json(entry);
-    } catch (error) {
-      console.error('Error reconciling ledger entry:', error);
-      res.status(500).json({ message: "Failed to reconcile ledger entry" });
-    }
-  });
-
-  // Financial Reports
-  app.get("/api/accounting/reports/trial-balance", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : undefined;
-      const trialBalance = await storage.getTrialBalance(asOfDate);
-      res.json(trialBalance);
-    } catch (error) {
-      console.error('Error generating trial balance:', error);
-      res.status(500).json({ message: "Failed to generate trial balance" });
-    }
-  });
-
-  app.get("/api/accounting/reports/balance-sheet", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : undefined;
-      const balanceSheet = await storage.getBalanceSheet(asOfDate);
-      res.json(balanceSheet);
-    } catch (error) {
-      console.error('Error generating balance sheet:', error);
-      res.status(500).json({ message: "Failed to generate balance sheet" });
-    }
-  });
-
-  app.get("/api/accounting/reports/profit-loss", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
-    try {
-      if (!req.query.startDate || !req.query.endDate) {
-        return res.status(400).json({ message: "Start date and end date are required" });
-      }
-      const startDate = new Date(req.query.startDate as string);
-      const endDate = new Date(req.query.endDate as string);
-      const profitLoss = await storage.getProfitAndLoss(startDate, endDate);
-      res.json(profitLoss);
-    } catch (error) {
-      console.error('Error generating profit & loss:', error);
-      res.status(500).json({ message: "Failed to generate profit & loss statement" });
-    }
-  });
 
   // Teacher payslip PDF download endpoint
   app.get("/api/teacher/payslip/:payslipId/download", authenticateToken, async (req: any, res) => {
@@ -4273,6 +4073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error in peer matching algorithm:', error);
     }
+  }
 
   // ========================
   // SPECIAL CLASSES SYSTEM API - Admin-flagged featured classes
@@ -17017,10 +16818,12 @@ Return JSON format:
     
     // Constrain ability to reasonable range
     return Math.max(-3, Math.min(3, newAbility));
+  }
 
   function calculateStandardError(numResponses: number): number {
     // Standard error decreases with more responses
     return Math.max(0.2, 1 / Math.sqrt(numResponses));
+  }
 
   function selectNextQuestion(ability: number, allQuestions: any[], answeredQuestions: any[]): any {
     const answeredIds = new Set(answeredQuestions.map(r => r.questionId));
@@ -17034,6 +16837,7 @@ Return JSON format:
       const currentDiff = Math.abs(current.difficulty - ability);
       return currentDiff < bestDiff ? current : best;
     });
+  }
 
   function mapAbilityToCEFR(ability: number): string {
     if (ability < -2) return 'A1';
@@ -17042,12 +16846,14 @@ Return JSON format:
     if (ability < 1) return 'B2';
     if (ability < 2) return 'C1';
     return 'C2';
+  }
 
   function calculatePercentile(ability: number): number {
     // Convert ability to percentile using normal distribution
     const z = ability;
     const percentile = 50 + 50 * erf(z / Math.sqrt(2));
     return Math.round(percentile);
+  }
 
   function erf(x: number): number {
     // Approximation of error function
@@ -17070,6 +16876,7 @@ Return JSON format:
     const y = 1 - (((((a5 * t5 + a4 * t4) + a3 * t3) + a2 * t2) + a1 * t) * Math.exp(-x * x));
 
     return sign * y;
+  }
 
   function analyzeStrengths(responses: any[]): string[] {
     // Analyze categories where student performed well
@@ -17093,6 +16900,7 @@ Return JSON format:
     });
 
     return strengths;
+  }
 
   function analyzeWeaknesses(responses: any[]): string[] {
     // Analyze categories where student needs improvement
@@ -17116,6 +16924,7 @@ Return JSON format:
     });
 
     return weaknesses;
+  }
 
   async function generateAdaptiveQuestionBank(testType: string): Promise<any[]> {
     // Generate calibrated question bank for IRT
@@ -17138,11 +16947,13 @@ Return JSON format:
     }
     
     return questions;
+  }
 
   async function checkAnswer(question: any, answer: string): Promise<boolean> {
     // In production, implement actual answer checking logic
     // This is a simplified version
     return Math.random() > 0.5;
+  }
 
   // Adaptive Content Generation Endpoints
   app.post("/api/callern/adaptive-content/generate", authenticateToken, async (req: any, res) => {
@@ -20395,6 +20206,7 @@ Return JSON format:
     };
 
     return baseQuestions[gameType] || baseQuestions.vocabulary;
+  }
 
   function generateOptionsForGameType(gameType: string) {
     const options = {
@@ -20406,6 +20218,7 @@ Return JSON format:
       writing: ["Version A", "Version B", "Version C", "Version D"]
     };
     return options[gameType] || options.vocabulary;
+  }
 
   function generateCorrectAnswer(gameType: string) {
     const answers = {
@@ -20417,6 +20230,7 @@ Return JSON format:
       writing: "Version A"
     };
     return answers[gameType] || "Option B";
+  }
 
   function validateAnswer(gameType: string, answer: string) {
     // Simple validation - in real implementation this would check against database
@@ -20431,6 +20245,7 @@ Return JSON format:
     
     const validAnswers = correctAnswers[gameType] || correctAnswers.vocabulary;
     return validAnswers.includes(answer);
+  }
 
   // End a game session
   app.put("/api/student/games/sessions/:sessionId/end", authenticateToken, requireRole(['Student']), async (req: any, res) => {
@@ -22903,6 +22718,7 @@ Meta Lingua Academy`;
       explanation: `The correct answer is '${question.correct}' because it accurately translates the concept.`,
       type: 'multiple_choice'
     };
+  }
 
   // ===== USER ROLES API ENDPOINTS =====
   
@@ -23103,60 +22919,14 @@ Meta Lingua Academy`;
     try {
       const { range = '30days', type = 'all' } = req.query;
       
-      // Calculate date range
-      const daysMap = { '7days': 7, '30days': 30, '90days': 90, '365days': 365 };
-      const days = daysMap[range as string] || 30;
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-      
-      // Fetch real transactions from database
-      const coursePaymentsData = await db
-        .select({
-          id: coursePayments.id,
-          type: sql<string>`'course_payment'`,
-          userId: coursePayments.userId,
-          userName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-          courseId: coursePayments.courseId,
-          courseTitle: courses.title,
-          amount: coursePayments.amount,
-          currency: coursePayments.currency,
-          status: coursePayments.status,
-          date: coursePayments.paidAt,
-          paymentMethod: coursePayments.paymentMethod,
-          createdAt: coursePayments.createdAt
-        })
-        .from(coursePayments)
-        .leftJoin(users, eq(coursePayments.userId, users.id))
-        .leftJoin(courses, eq(coursePayments.courseId, courses.id))
-        .where(sql`${coursePayments.createdAt} >= ${startDate}`)
-        .orderBy(desc(coursePayments.createdAt))
-        .limit(100);
-
-      // Transform to UI format
-      const transactions = coursePaymentsData.map(payment => ({
-        id: `TXN-${payment.id}`,
-        type: payment.type,
-        student: payment.userName || 'Unknown',
-        course: payment.courseTitle || 'Unknown Course',
-        amount: parseFloat(payment.amount || '0'),
-        currency: payment.currency || 'IRR',
-        status: payment.status || 'pending',
-        date: payment.date || payment.createdAt,
-        paymentMethod: payment.paymentMethod || 'unknown'
-      }));
-
-      // Calculate summary
-      const totalRevenue = transactions
-        .filter(t => t.status === 'completed' || t.status === 'paid')
-        .reduce((sum, t) => sum + t.amount, 0);
-      
+      // Mock financial data - replace with real database queries
       const financialData = {
-        transactions,
+        transactions: [],
         summary: {
-          totalRevenue,
+          totalRevenue: 0,
           totalExpenses: 0,
-          netProfit: totalRevenue,
-          transactionCount: transactions.length
+          netProfit: 0,
+          transactionCount: 0
         },
         filters: { range, type }
       };
@@ -27237,14 +27007,337 @@ Meta Lingua Academy`;
     }
   });
 
+  // Update interaction notes
+  app.put("/api/front-desk/interactions/:id/notes", authenticate, authorizePermission('front_desk_operations', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { notes, tags, type } = req.body;
+      
+      const updatedInteraction = await storage.updateInteractionNotes(id, type, {
+        notes,
+        tags,
+        updatedBy: req.user.id
+      });
+      
+      res.json(updatedInteraction);
+    } catch (error) {
+      console.error('Error updating interaction notes:', error);
+      res.status(500).json({ error: 'Failed to update notes', message: error.message });
+    }
+  });
 
+  // Create follow-up task from interaction
+  app.post("/api/front-desk/interactions/:id/create-task", authenticate, authorizePermission('front_desk_tasks', 'create'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { type, ...taskData } = req.body;
+      
+      const task = await storage.createTaskFromInteraction(id, type, {
+        ...taskData,
+        createdBy: req.user.id,
+        assignedTo: taskData.assignedTo || req.user.id
+      });
+      
+      res.status(201).json(task);
+    } catch (error) {
+      console.error('Error creating task from interaction:', error);
+      res.status(500).json({ error: 'Failed to create task', message: error.message });
+    }
+  });
 
-  const httpServer = createServer(app);
-  const wsServer = new CallernWebSocketServer(httpServer);
-  app.locals.websocketServer = wsServer;
-  
-  console.log('✅ HTTP server created with WebSocket support for CallerN');
-  
-  // Return the HTTP server for express app to listen on
-  return httpServer;
+  // ========================
+  // SMS TEMPLATE MANAGEMENT SYSTEM API ROUTES
+  // ========================
+
+  // SMS Template Categories CRUD
+  app.get("/api/sms-templates/categories", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const categories = await storage.getSmsTemplateCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching SMS template categories:', error);
+      res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+  });
+
+  app.post("/api/sms-templates/categories", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
+    try {
+      const categoryData = insertSmsTemplateCategorySchema.parse(req.body);
+      const category = await storage.createSmsTemplateCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error: any) {
+      console.error('Error creating SMS template category:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create category' });
+    }
+  });
+
+  app.put("/api/sms-templates/categories/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const category = await storage.updateSmsTemplateCategory(parseInt(id), updates);
+      if (!category) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error('Error updating SMS template category:', error);
+      res.status(500).json({ error: 'Failed to update category' });
+    }
+  });
+
+  app.delete("/api/sms-templates/categories/:id", authenticate, authorizePermission('sms_templates', 'delete'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSmsTemplateCategory(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting SMS template category:', error);
+      res.status(500).json({ error: 'Failed to delete category' });
+    }
+  });
+
+  // SMS Template Variables CRUD
+  app.get("/api/sms-templates/variables", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { category } = req.query;
+      const variables = await storage.getSmsTemplateVariables(category);
+      res.json(variables);
+    } catch (error) {
+      console.error('Error fetching SMS template variables:', error);
+      res.status(500).json({ error: 'Failed to fetch variables' });
+    }
+  });
+
+  app.post("/api/sms-templates/variables", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
+    try {
+      const variableData = insertSmsTemplateVariableSchema.parse(req.body);
+      const variable = await storage.createSmsTemplateVariable(variableData);
+      res.status(201).json(variable);
+    } catch (error: any) {
+      console.error('Error creating SMS template variable:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create variable' });
+    }
+  });
+
+  app.put("/api/sms-templates/variables/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const variable = await storage.updateSmsTemplateVariable(parseInt(id), updates);
+      if (!variable) {
+        return res.status(404).json({ error: 'Variable not found' });
+      }
+      res.json(variable);
+    } catch (error) {
+      console.error('Error updating SMS template variable:', error);
+      res.status(500).json({ error: 'Failed to update variable' });
+    }
+  });
+
+  app.delete("/api/sms-templates/variables/:id", authenticate, authorizePermission('sms_templates', 'delete'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSmsTemplateVariable(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting SMS template variable:', error);
+      res.status(500).json({ error: 'Failed to delete variable' });
+    }
+  });
+
+  // SMS Templates CRUD and Management
+  app.get("/api/sms-templates", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { status, categoryId, search, isFavorite } = req.query;
+      const filters = {
+        status,
+        categoryId: categoryId ? parseInt(categoryId) : undefined,
+        createdBy: req.query.createdBy ? parseInt(req.query.createdBy) : undefined,
+        search,
+        isFavorite: isFavorite === 'true'
+      };
+      
+      const templates = await storage.getSmsTemplates(filters);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch templates' });
+    }
+  });
+
+  app.get("/api/sms-templates/:id", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const template = await storage.getSmsTemplate(parseInt(id));
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error fetching SMS template:', error);
+      res.status(500).json({ error: 'Failed to fetch template' });
+    }
+  });
+
+  app.get("/api/sms-templates/popular", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { limit } = req.query;
+      const templates = await storage.getPopularSmsTemplates(limit ? parseInt(limit) : 10);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching popular SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch popular templates' });
+    }
+  });
+
+  app.get("/api/sms-templates/recent", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const { limit } = req.query;
+      const templates = await storage.getRecentSmsTemplates(limit ? parseInt(limit) : 10);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching recent SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch recent templates' });
+    }
+  });
+
+  app.get("/api/sms-templates/favorites", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
+    try {
+      const templates = await storage.getFavoriteSmsTemplates(req.user.id);
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching favorite SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch favorite templates' });
+    }
+  });
+
+  app.post("/api/sms-templates", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
+    try {
+      const templateData = insertSmsTemplateSchema.parse({
+        ...req.body,
+        createdBy: req.user.id,
+        updatedBy: req.user.id
+      });
+      
+      // Calculate character count and SMS parts
+      const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(templateData.content);
+      templateData.characterCount = characterCount;
+      templateData.estimatedSmsCount = smsPartsCount;
+      
+      const template = await storage.createSmsTemplate(templateData);
+      res.status(201).json(template);
+    } catch (error: any) {
+      console.error('Error creating SMS template:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create template' });
+    }
+  });
+
+  app.put("/api/sms-templates/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = {
+        ...req.body,
+        updatedBy: req.user.id
+      };
+      
+      // Recalculate character count if content changed
+      if (updates.content) {
+        const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(updates.content);
+        updates.characterCount = characterCount;
+        updates.estimatedSmsCount = smsPartsCount;
+      }
+      
+      const template = await storage.updateSmsTemplate(parseInt(id), updates);
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error('Error updating SMS template:', error);
+      res.status(500).json({ error: 'Failed to update template' });
+    }
+  });
+
+  // ============================================================================
+  // SCRAPER API ROUTES  
+  // ============================================================================
+
+  // Get all scrape jobs
+  app.get("/api/scraper/jobs", authenticate, async (req: any, res) => {
+    if (!['admin', 'supervisor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const jobs = await db.select()
+        .from(scrapeJobs)
+        .orderBy(desc(scrapeJobs.createdAt))
+        .limit(100);
+      res.json(jobs);
+    } catch (error) {
+      console.error('Error fetching scrape jobs:', error);
+      res.status(500).json({ error: 'Failed to fetch scrape jobs' });
+    }
+  });
+
+  // Scheduler control endpoints
+  app.post("/api/scraper/scheduler/start", authenticate, async (req: any, res) => {
+    if (!['admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const { getScraperScheduler } = await import('./scraper-scheduler');
+      const scheduler = getScraperScheduler();
+      await scheduler.start();
+      res.json({ message: 'Scheduler started successfully' });
+    } catch (error) {
+      console.error('Error starting scheduler:', error);
+      res.status(500).json({ error: 'Failed to start scheduler' });
+    }
+  });
+
+  app.post("/api/scraper/scheduler/stop", authenticate, async (req: any, res) => {
+    if (!['admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const { getScraperScheduler } = await import('./scraper-scheduler');
+      const scheduler = getScraperScheduler();
+      scheduler.stop();
+      res.json({ message: 'Scheduler stopped successfully' });
+    } catch (error) {
+      console.error('Error stopping scheduler:', error);
+      res.status(500).json({ error: 'Failed to stop scheduler' });
+    }
+  });
+
+  app.get("/api/scraper/scheduler/status", authenticate, async (req: any, res) => {
+    if (!['admin', 'supervisor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const { getScraperScheduler } = await import('./scraper-scheduler');
+      const scheduler = getScraperScheduler();
+      const activeSchedules = scheduler.getActiveSchedules();
+      res.json({ 
+        active: activeSchedules.length > 0,
+        scheduleCount: activeSchedules.length,
+        schedules: activeSchedules
+      });
+    } catch (error) {
+      console.error('Error fetching scheduler status:', error);
+      res.status(500).json({ error: 'Failed to fetch scheduler status' });
+    }
+  });
+
+  return app;
 }
