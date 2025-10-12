@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,94 +51,50 @@ export function AdminFinancial() {
     })) || []
   });
 
-  // Recent Transactions
-  const transactions = [
-    {
-      id: "TXN-001",
-      type: "course_payment",
-      student: "Sarah Johnson",
-      course: "Persian Fundamentals",
-      amount: 299,
-      currency: "USD",
-      status: "completed",
-      date: "2024-01-25",
-      paymentMethod: "shetab",
-      commission: 59.8
-    },
-    {
-      id: "TXN-002", 
-      type: "teacher_payout",
-      teacher: "Dr. Maryam Hosseini",
-      amount: 2450,
-      currency: "USD",
-      status: "pending",
-      date: "2024-01-24",
-      paymentMethod: "bank_transfer",
-      description: "Monthly teaching payout"
-    },
-    {
-      id: "TXN-003",
-      type: "course_payment",
-      student: "Ahmad Rahman",
-      course: "English Business",
-      amount: 399,
-      currency: "USD", 
-      status: "failed",
-      date: "2024-01-23",
-      paymentMethod: "credit_card",
-      commission: 79.8,
-      failureReason: "Insufficient funds"
-    },
-    {
-      id: "TXN-004",
-      type: "refund",
-      student: "Maria Garcia",
-      course: "Arabic Grammar",
-      amount: -199,
-      currency: "USD",
-      status: "completed",
-      date: "2024-01-22",
-      paymentMethod: "shetab",
-      reason: "Course cancellation"
-    }
-  ];
+  // Calculate stable date range values using useMemo to prevent infinite refetching
+  const { startDate, endDate } = useMemo(() => {
+    const days = dateRange === '7days' ? 7 
+                : dateRange === '30days' ? 30
+                : dateRange === '90days' ? 90 
+                : dateRange === '1year' ? 365
+                : 30; // default to 30 days
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const endDate = new Date().toISOString();
+    return { startDate, endDate };
+  }, [dateRange]);
 
-  // Teacher Payouts
-  const teacherPayouts = [
-    {
-      id: 1,
-      teacher: "Dr. Maryam Hosseini",
-      courses: ["Persian Fundamentals", "Advanced Persian"],
-      studentsCount: 89,
-      totalEarnings: 4580,
-      commission: 20,
-      netPayout: 3664,
-      status: "pending",
-      period: "January 2024"
-    },
-    {
-      id: 2,
-      teacher: "Prof. James Richardson", 
-      courses: ["Business English"],
-      studentsCount: 45,
-      totalEarnings: 2890,
-      commission: 25,
-      netPayout: 2167.5,
-      status: "paid",
-      period: "January 2024"
-    },
-    {
-      id: 3,
-      teacher: "Dr. Ahmed Al-Mansouri",
-      courses: ["Arabic Grammar"],
-      studentsCount: 32,
-      totalEarnings: 1950,
-      commission: 20,
-      netPayout: 1560,
-      status: "scheduled",
-      period: "January 2024"
-    }
-  ];
+  // Fetch REAL transactions from accounting ledger (STABLE query key)
+  const { data: ledgerEntries = [] } = useQuery({
+    queryKey: ['/api/admin/ledger/entries', { startDate, endDate, sourceType: filterType !== 'all' ? filterType : undefined }],
+  });
+
+  // Map ledger entries to transaction format
+  const transactions = ledgerEntries?.map((entry: any) => ({
+    id: `JE-${entry.journalEntryId}`,
+    type: entry.sourceType,
+    amount: parseFloat(entry.amount),
+    currency: entry.currency || 'IRR',
+    status: entry.status,
+    date: new Date(entry.transactionDate).toISOString().split('T')[0],
+    description: entry.description,
+    referenceNumber: entry.referenceNumber,
+    transactionType: entry.transactionType
+  })) || [];
+
+  // Fetch teacher payouts from ledger (STABLE query key)
+  const { data: teacherPayoutEntries = [] } = useQuery({
+    queryKey: ['/api/admin/ledger/entries', { startDate, endDate, sourceType: 'teacher_payout' }],
+  });
+
+  // Map teacher payout entries
+  const teacherPayouts = teacherPayoutEntries?.map((entry: any) => ({
+    id: entry.id,
+    amount: parseFloat(entry.amount),
+    status: entry.status,
+    date: new Date(entry.transactionDate).toISOString().split('T')[0],
+    description: entry.description,
+    referenceNumber: entry.referenceNumber
+  })) || [];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -277,9 +233,9 @@ export function AdminFinancial() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('admin:financial.allTransactions')}</SelectItem>
-            <SelectItem value="payments">{t('admin:financial.coursePayments')}</SelectItem>
-            <SelectItem value="payouts">{t('admin:financial.teacherPayouts')}</SelectItem>
-            <SelectItem value="refunds">{t('admin:financial.refunds')}</SelectItem>
+            <SelectItem value="course_payment">{t('admin:financial.coursePayments')}</SelectItem>
+            <SelectItem value="teacher_payout">{t('admin:financial.teacherPayouts')}</SelectItem>
+            <SelectItem value="refund">{t('admin:financial.refunds')}</SelectItem>
           </SelectContent>
         </Select>
       </div>

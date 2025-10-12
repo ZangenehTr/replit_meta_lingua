@@ -22901,6 +22901,208 @@ Meta Lingua Academy`;
     }
   });
 
+  // ============================================================================
+  // ACCOUNTING LEDGER SYSTEM - Double-Entry Bookkeeping API Routes
+  // ============================================================================
+
+  // Chart of Accounts Routes
+  app.get("/api/admin/chart-of-accounts", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const accounts = await storage.getChartOfAccounts();
+      res.json(accounts);
+    } catch (error) {
+      console.error('Error fetching chart of accounts:', error);
+      res.status(500).json({ error: 'Failed to fetch chart of accounts' });
+    }
+  });
+
+  app.get("/api/admin/chart-of-accounts/type/:accountType", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { accountType } = req.params;
+      const accounts = await storage.getAccountsByType(accountType);
+      res.json(accounts);
+    } catch (error) {
+      console.error('Error fetching accounts by type:', error);
+      res.status(500).json({ error: 'Failed to fetch accounts by type' });
+    }
+  });
+
+  app.get("/api/admin/chart-of-accounts/code/:accountCode", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { accountCode } = req.params;
+      const account = await storage.getAccountByCode(accountCode);
+      if (!account) {
+        return res.status(404).json({ error: 'Account not found' });
+      }
+      res.json(account);
+    } catch (error) {
+      console.error('Error fetching account by code:', error);
+      res.status(500).json({ error: 'Failed to fetch account' });
+    }
+  });
+
+  app.post("/api/admin/chart-of-accounts", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const account = await storage.createChartOfAccount(req.body);
+      res.status(201).json(account);
+    } catch (error: any) {
+      console.error('Error creating chart of account:', error);
+      if (error.code === '23505') { // Unique violation
+        return res.status(409).json({ error: 'Account code already exists' });
+      }
+      res.status(500).json({ error: 'Failed to create account' });
+    }
+  });
+
+  app.put("/api/admin/chart-of-accounts/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const account = await storage.updateChartOfAccount(parseInt(id), req.body);
+      if (!account) {
+        return res.status(404).json({ error: 'Account not found' });
+      }
+      res.json(account);
+    } catch (error) {
+      console.error('Error updating chart of account:', error);
+      res.status(500).json({ error: 'Failed to update account' });
+    }
+  });
+
+  // Accounting Ledger Routes
+  app.get("/api/admin/ledger/entries", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { accountId, sourceType, sourceId, startDate, endDate } = req.query;
+      const filters: any = {};
+      
+      if (accountId) filters.accountId = parseInt(accountId as string);
+      if (sourceType) filters.sourceType = sourceType as string;
+      if (sourceId) filters.sourceId = parseInt(sourceId as string);
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+
+      const entries = await storage.getLedgerEntries(filters);
+      res.json(entries);
+    } catch (error) {
+      console.error('Error fetching ledger entries:', error);
+      res.status(500).json({ error: 'Failed to fetch ledger entries' });
+    }
+  });
+
+  app.get("/api/admin/ledger/journal/:journalEntryId", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { journalEntryId } = req.params;
+      const entries = await storage.getLedgerEntriesByJournalEntry(journalEntryId);
+      res.json(entries);
+    } catch (error) {
+      console.error('Error fetching journal entries:', error);
+      res.status(500).json({ error: 'Failed to fetch journal entries' });
+    }
+  });
+
+  app.post("/api/admin/ledger/double-entry", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { debitAccountId, creditAccountId, amount, sourceType, sourceId, description, referenceNumber } = req.body;
+      
+      if (!debitAccountId || !creditAccountId || !amount || !sourceType || !sourceId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const entries = await storage.createDoubleEntry({
+        debitAccountId: parseInt(debitAccountId),
+        creditAccountId: parseInt(creditAccountId),
+        amount,
+        sourceType,
+        sourceId: parseInt(sourceId),
+        description,
+        referenceNumber,
+        createdBy: req.user.id
+      });
+
+      res.status(201).json(entries);
+    } catch (error) {
+      console.error('Error creating double entry:', error);
+      res.status(500).json({ error: 'Failed to create double entry' });
+    }
+  });
+
+  app.get("/api/admin/ledger/balance/:accountId", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { accountId } = req.params;
+      const { asOfDate } = req.query;
+      
+      const balance = await storage.getAccountBalance(
+        parseInt(accountId),
+        asOfDate ? new Date(asOfDate as string) : undefined
+      );
+      
+      res.json(balance);
+    } catch (error) {
+      console.error('Error fetching account balance:', error);
+      res.status(500).json({ error: 'Failed to fetch account balance' });
+    }
+  });
+
+  app.post("/api/admin/ledger/reconcile/:id", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const entry = await storage.reconcileLedgerEntry(parseInt(id), req.user.id);
+      if (!entry) {
+        return res.status(404).json({ error: 'Ledger entry not found' });
+      }
+      res.json(entry);
+    } catch (error) {
+      console.error('Error reconciling ledger entry:', error);
+      res.status(500).json({ error: 'Failed to reconcile entry' });
+    }
+  });
+
+  // Financial Reports Routes
+  app.get("/api/admin/reports/trial-balance", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { asOfDate } = req.query;
+      const trialBalance = await storage.getTrialBalance(
+        asOfDate ? new Date(asOfDate as string) : undefined
+      );
+      res.json(trialBalance);
+    } catch (error) {
+      console.error('Error fetching trial balance:', error);
+      res.status(500).json({ error: 'Failed to fetch trial balance' });
+    }
+  });
+
+  app.get("/api/admin/reports/balance-sheet", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { asOfDate } = req.query;
+      const balanceSheet = await storage.getBalanceSheet(
+        asOfDate ? new Date(asOfDate as string) : undefined
+      );
+      res.json(balanceSheet);
+    } catch (error) {
+      console.error('Error fetching balance sheet:', error);
+      res.status(500).json({ error: 'Failed to fetch balance sheet' });
+    }
+  });
+
+  app.get("/api/admin/reports/profit-loss", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: 'Start date and end date are required' });
+      }
+
+      const profitLoss = await storage.getProfitAndLoss(
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      
+      res.json(profitLoss);
+    } catch (error) {
+      console.error('Error fetching profit and loss:', error);
+      res.status(500).json({ error: 'Failed to fetch profit and loss' });
+    }
+  });
+
   // ===== FINANCIAL CONFIGURATION API ENDPOINTS =====
   
   // Get chart colors for financial reports
@@ -22914,19 +23116,49 @@ Meta Lingua Academy`;
     }
   });
 
-  // Get financial data endpoint
+  // Get financial data endpoint - REAL LEDGER DATA
   app.get("/api/admin/financial", authenticateToken, async (req: any, res) => {
     try {
       const { range = '30days', type = 'all' } = req.query;
       
-      // Mock financial data - replace with real database queries
+      // Calculate date range
+      const days = range === '7days' ? 7 : range === '90days' ? 90 : 30;
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const endDate = new Date();
+      
+      // Fetch real ledger entries
+      const filters: any = { startDate, endDate };
+      if (type !== 'all') {
+        filters.sourceType = type;
+      }
+      
+      const transactions = await storage.getLedgerEntries(filters);
+      
+      // Get revenue and expense accounts
+      const revenueAccounts = await storage.getAccountsByType('revenue');
+      const expenseAccounts = await storage.getAccountsByType('expense');
+      
+      // Calculate totals from real ledger data
+      let totalRevenue = 0;
+      let totalExpenses = 0;
+      
+      for (const account of revenueAccounts) {
+        const { balance } = await storage.getAccountBalance(account.id, endDate);
+        totalRevenue += balance;
+      }
+      
+      for (const account of expenseAccounts) {
+        const { balance } = await storage.getAccountBalance(account.id, endDate);
+        totalExpenses += balance;
+      }
+      
       const financialData = {
-        transactions: [],
+        transactions,
         summary: {
-          totalRevenue: 0,
-          totalExpenses: 0,
-          netProfit: 0,
-          transactionCount: 0
+          totalRevenue,
+          totalExpenses,
+          netProfit: totalRevenue - totalExpenses,
+          transactionCount: transactions.length
         },
         filters: { range, type }
       };
@@ -22938,44 +23170,76 @@ Meta Lingua Academy`;
     }
   });
 
-  // Get financial overview statistics
+  // Get financial overview statistics - REAL LEDGER DATA
   app.get("/api/admin/financial/overview-stats", authenticateToken, async (req: any, res) => {
     try {
       const { range = '30days' } = req.query;
-      const users = await storage.getAllUsers();
-      const activeStudents = users.filter(user => user.role === 'Student').length;
-      const activeTeachers = users.filter(user => user.role === 'Teacher/Tutor').length;
       
-      // Calculate realistic Iranian market financial stats
+      // Calculate date range
+      const days = range === '7days' ? 7 : range === '90days' ? 90 : 30;
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const endDate = new Date();
+      
+      // Get REAL revenue from ledger
+      const revenueAccounts = await storage.getAccountsByType('revenue');
+      let totalRevenue = 0;
+      for (const account of revenueAccounts) {
+        const { balance } = await storage.getAccountBalance(account.id, endDate);
+        totalRevenue += balance;
+      }
+      
+      // Get pending payments from ledger (entries with status 'pending')
+      const pendingEntries = await storage.getLedgerEntries({ 
+        status: 'draft',
+        sourceType: 'course_payment'
+      });
+      const pendingPayments = pendingEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+      
+      // Get teacher payouts from ledger
+      const teacherPayoutEntries = await storage.getLedgerEntries({
+        sourceType: 'teacher_payout',
+        startDate,
+        endDate
+      });
+      const teacherPayouts = teacherPayoutEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0);
+      
+      // Get platform commission (expense account)
+      const expenseAccounts = await storage.getAccountsByType('expense');
+      let platformExpenses = 0;
+      for (const account of expenseAccounts) {
+        const { balance } = await storage.getAccountBalance(account.id, endDate);
+        platformExpenses += balance;
+      }
+      
       const overviewStats = [
         {
           titleKey: 'totalRevenue',
-          value: `${(activeStudents * 1250000).toLocaleString()} IRR`, // Based on actual student count
-          change: `+${Math.round(activeStudents * 0.3)}%`,
-          trend: "up",
+          value: `${totalRevenue.toLocaleString('fa-IR')} IRR`,
+          change: `+0%`, // Can calculate percentage change if we store historical data
+          trend: totalRevenue > 0 ? "up" : "neutral",
           icon: "DollarSign",
           descriptionKey: 'thisMonth'
         },
         {
           titleKey: 'pendingPayments',
-          value: `${(activeStudents * 125000).toLocaleString()} IRR`, // 10% of revenue pending
-          change: `-${Math.round(activeStudents * 0.1)}%`,
-          trend: "down",
+          value: `${pendingPayments.toLocaleString('fa-IR')} IRR`,
+          change: `0%`,
+          trend: pendingPayments > 0 ? "up" : "down",
           icon: "Clock",
           descriptionKey: 'outstanding'
         },
         {
           titleKey: 'teacherPayouts',
-          value: `${(activeTeachers * 8750000).toLocaleString()} IRR`, // Based on teacher count
-          change: `+${Math.round(activeTeachers * 0.2)}%`,
-          trend: "up",
+          value: `${teacherPayouts.toLocaleString('fa-IR')} IRR`,
+          change: `+0%`,
+          trend: teacherPayouts > 0 ? "up" : "neutral",
           icon: "Users",
           descriptionKey: 'thisMonth'
         },
         {
           titleKey: 'platformCommission',
-          value: `${(activeStudents * 375000).toLocaleString()} IRR`, // 30% platform commission
-          change: `+${Math.round(activeStudents * 0.4)}%`,
+          value: `${(totalRevenue - teacherPayouts - platformExpenses).toLocaleString('fa-IR')} IRR`,
+          change: `+0%`,
           trend: "up",
           icon: "Building",
           descriptionKey: 'netEarnings'
@@ -27011,331 +27275,17 @@ Meta Lingua Academy`;
   app.put("/api/front-desk/interactions/:id/notes", authenticate, authorizePermission('front_desk_operations', 'update'), async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { notes, tags, type } = req.body;
+      const { notes } = req.body;
       
-      const updatedInteraction = await storage.updateInteractionNotes(id, type, {
+      const interaction = await storage.updateFrontDeskInteraction(parseInt(id), {
         notes,
-        tags,
         updatedBy: req.user.id
       });
       
-      res.json(updatedInteraction);
+      res.json(interaction);
     } catch (error) {
       console.error('Error updating interaction notes:', error);
       res.status(500).json({ error: 'Failed to update notes', message: error.message });
-    }
-  });
-
-  // Create follow-up task from interaction
-  app.post("/api/front-desk/interactions/:id/create-task", authenticate, authorizePermission('front_desk_tasks', 'create'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { type, ...taskData } = req.body;
-      
-      const task = await storage.createTaskFromInteraction(id, type, {
-        ...taskData,
-        createdBy: req.user.id,
-        assignedTo: taskData.assignedTo || req.user.id
-      });
-      
-      res.status(201).json(task);
-    } catch (error) {
-      console.error('Error creating task from interaction:', error);
-      res.status(500).json({ error: 'Failed to create task', message: error.message });
-    }
-  });
-
-  // ========================
-  // SMS TEMPLATE MANAGEMENT SYSTEM API ROUTES
-  // ========================
-
-  // SMS Template Categories CRUD
-  app.get("/api/sms-templates/categories", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
-    try {
-      const categories = await storage.getSmsTemplateCategories();
-      res.json(categories);
-    } catch (error) {
-      console.error('Error fetching SMS template categories:', error);
-      res.status(500).json({ error: 'Failed to fetch categories' });
-    }
-  });
-
-  app.post("/api/sms-templates/categories", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
-    try {
-      const categoryData = insertSmsTemplateCategorySchema.parse(req.body);
-      const category = await storage.createSmsTemplateCategory(categoryData);
-      res.status(201).json(category);
-    } catch (error: any) {
-      console.error('Error creating SMS template category:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ error: 'Validation failed', details: error.errors });
-      }
-      res.status(500).json({ error: 'Failed to create category' });
-    }
-  });
-
-  app.put("/api/sms-templates/categories/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      const category = await storage.updateSmsTemplateCategory(parseInt(id), updates);
-      if (!category) {
-        return res.status(404).json({ error: 'Category not found' });
-      }
-      res.json(category);
-    } catch (error) {
-      console.error('Error updating SMS template category:', error);
-      res.status(500).json({ error: 'Failed to update category' });
-    }
-  });
-
-  app.delete("/api/sms-templates/categories/:id", authenticate, authorizePermission('sms_templates', 'delete'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deleteSmsTemplateCategory(parseInt(id));
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting SMS template category:', error);
-      res.status(500).json({ error: 'Failed to delete category' });
-    }
-  });
-
-  // SMS Template Variables CRUD
-  app.get("/api/sms-templates/variables", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
-    try {
-      const { category } = req.query;
-      const variables = await storage.getSmsTemplateVariables(category);
-      res.json(variables);
-    } catch (error) {
-      console.error('Error fetching SMS template variables:', error);
-      res.status(500).json({ error: 'Failed to fetch variables' });
-    }
-  });
-
-  app.post("/api/sms-templates/variables", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
-    try {
-      const variableData = insertSmsTemplateVariableSchema.parse(req.body);
-      const variable = await storage.createSmsTemplateVariable(variableData);
-      res.status(201).json(variable);
-    } catch (error: any) {
-      console.error('Error creating SMS template variable:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ error: 'Validation failed', details: error.errors });
-      }
-      res.status(500).json({ error: 'Failed to create variable' });
-    }
-  });
-
-  app.put("/api/sms-templates/variables/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      const variable = await storage.updateSmsTemplateVariable(parseInt(id), updates);
-      if (!variable) {
-        return res.status(404).json({ error: 'Variable not found' });
-      }
-      res.json(variable);
-    } catch (error) {
-      console.error('Error updating SMS template variable:', error);
-      res.status(500).json({ error: 'Failed to update variable' });
-    }
-  });
-
-  app.delete("/api/sms-templates/variables/:id", authenticate, authorizePermission('sms_templates', 'delete'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deleteSmsTemplateVariable(parseInt(id));
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting SMS template variable:', error);
-      res.status(500).json({ error: 'Failed to delete variable' });
-    }
-  });
-
-  // SMS Templates CRUD and Management
-  app.get("/api/sms-templates", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
-    try {
-      const { status, categoryId, search, isFavorite } = req.query;
-      const filters = {
-        status,
-        categoryId: categoryId ? parseInt(categoryId) : undefined,
-        createdBy: req.query.createdBy ? parseInt(req.query.createdBy) : undefined,
-        search,
-        isFavorite: isFavorite === 'true'
-      };
-      
-      const templates = await storage.getSmsTemplates(filters);
-      res.json(templates);
-    } catch (error) {
-      console.error('Error fetching SMS templates:', error);
-      res.status(500).json({ error: 'Failed to fetch templates' });
-    }
-  });
-
-  app.get("/api/sms-templates/:id", authenticate, authorizePermission('sms_templates', 'read'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const template = await storage.getSmsTemplate(parseInt(id));
-      if (!template) {
-        return res.status(404).json({ error: 'Template not found' });
-      }
-      res.json(template);
-    } catch (error) {
-      console.error('Error fetching SMS template:', error);
-      res.status(500).json({ error: 'Failed to fetch template' });
-    }
-  });
-
-  app.get("/api/sms-templates/popular", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
-    try {
-      const { limit } = req.query;
-      const templates = await storage.getPopularSmsTemplates(limit ? parseInt(limit) : 10);
-      res.json(templates);
-    } catch (error) {
-      console.error('Error fetching popular SMS templates:', error);
-      res.status(500).json({ error: 'Failed to fetch popular templates' });
-    }
-  });
-
-  app.get("/api/sms-templates/recent", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
-    try {
-      const { limit } = req.query;
-      const templates = await storage.getRecentSmsTemplates(limit ? parseInt(limit) : 10);
-      res.json(templates);
-    } catch (error) {
-      console.error('Error fetching recent SMS templates:', error);
-      res.status(500).json({ error: 'Failed to fetch recent templates' });
-    }
-  });
-
-  app.get("/api/sms-templates/favorites", authenticate, authorizePermission('sms_templates', 'list'), async (req: any, res) => {
-    try {
-      const templates = await storage.getFavoriteSmsTemplates(req.user.id);
-      res.json(templates);
-    } catch (error) {
-      console.error('Error fetching favorite SMS templates:', error);
-      res.status(500).json({ error: 'Failed to fetch favorite templates' });
-    }
-  });
-
-  app.post("/api/sms-templates", authenticate, authorizePermission('sms_templates', 'create'), async (req: any, res) => {
-    try {
-      const templateData = insertSmsTemplateSchema.parse({
-        ...req.body,
-        createdBy: req.user.id,
-        updatedBy: req.user.id
-      });
-      
-      // Calculate character count and SMS parts
-      const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(templateData.content);
-      templateData.characterCount = characterCount;
-      templateData.estimatedSmsCount = smsPartsCount;
-      
-      const template = await storage.createSmsTemplate(templateData);
-      res.status(201).json(template);
-    } catch (error: any) {
-      console.error('Error creating SMS template:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ error: 'Validation failed', details: error.errors });
-      }
-      res.status(500).json({ error: 'Failed to create template' });
-    }
-  });
-
-  app.put("/api/sms-templates/:id", authenticate, authorizePermission('sms_templates', 'update'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const updates = {
-        ...req.body,
-        updatedBy: req.user.id
-      };
-      
-      // Recalculate character count if content changed
-      if (updates.content) {
-        const { characterCount, smsPartsCount } = await storage.calculateSmsCharacterCount(updates.content);
-        updates.characterCount = characterCount;
-        updates.estimatedSmsCount = smsPartsCount;
-      }
-      
-      const template = await storage.updateSmsTemplate(parseInt(id), updates);
-      if (!template) {
-        return res.status(404).json({ error: 'Template not found' });
-      }
-      res.json(template);
-    } catch (error) {
-      console.error('Error updating SMS template:', error);
-      res.status(500).json({ error: 'Failed to update template' });
-    }
-  });
-
-  // ============================================================================
-  // SCRAPER API ROUTES  
-  // ============================================================================
-
-  // Get all scrape jobs
-  app.get("/api/scraper/jobs", authenticate, async (req: any, res) => {
-    if (!['admin', 'supervisor'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-    try {
-      const jobs = await db.select()
-        .from(scrapeJobs)
-        .orderBy(desc(scrapeJobs.createdAt))
-        .limit(100);
-      res.json(jobs);
-    } catch (error) {
-      console.error('Error fetching scrape jobs:', error);
-      res.status(500).json({ error: 'Failed to fetch scrape jobs' });
-    }
-  });
-
-  // Scheduler control endpoints
-  app.post("/api/scraper/scheduler/start", authenticate, async (req: any, res) => {
-    if (!['admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-    try {
-      const { getScraperScheduler } = await import('./scraper-scheduler');
-      const scheduler = getScraperScheduler();
-      await scheduler.start();
-      res.json({ message: 'Scheduler started successfully' });
-    } catch (error) {
-      console.error('Error starting scheduler:', error);
-      res.status(500).json({ error: 'Failed to start scheduler' });
-    }
-  });
-
-  app.post("/api/scraper/scheduler/stop", authenticate, async (req: any, res) => {
-    if (!['admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-    try {
-      const { getScraperScheduler } = await import('./scraper-scheduler');
-      const scheduler = getScraperScheduler();
-      scheduler.stop();
-      res.json({ message: 'Scheduler stopped successfully' });
-    } catch (error) {
-      console.error('Error stopping scheduler:', error);
-      res.status(500).json({ error: 'Failed to stop scheduler' });
-    }
-  });
-
-  app.get("/api/scraper/scheduler/status", authenticate, async (req: any, res) => {
-    if (!['admin', 'supervisor'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-    try {
-      const { getScraperScheduler } = await import('./scraper-scheduler');
-      const scheduler = getScraperScheduler();
-      const activeSchedules = scheduler.getActiveSchedules();
-      res.json({ 
-        active: activeSchedules.length > 0,
-        scheduleCount: activeSchedules.length,
-        schedules: activeSchedules
-      });
-    } catch (error) {
-      console.error('Error fetching scheduler status:', error);
-      res.status(500).json({ error: 'Failed to fetch scheduler status' });
     }
   });
 
