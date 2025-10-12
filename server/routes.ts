@@ -16892,32 +16892,36 @@ Return JSON format:
   }
 
   async function generateAdaptiveQuestionBank(testType: string): Promise<any[]> {
-    // Generate calibrated question bank for IRT
-    // In production, these would come from a database of pre-calibrated items
-    const categories = ['Grammar', 'Vocabulary', 'Reading', 'Listening', 'Writing'];
-    const questions = [];
+    // Fetch real calibrated questions from database
+    const questions = await storage.getPlacementTestQuestions();
     
-    for (let i = 0; i < 50; i++) {
-      questions.push({
-        id: `q-${i}`,
-        text: `Sample question ${i + 1}`,
-        type: ['multiple_choice', 'true_false', 'short_answer'][Math.floor(Math.random() * 3)],
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        difficulty: (Math.random() * 6) - 3, // -3 to +3
-        discrimination: 0.5 + Math.random() * 2, // 0.5 to 2.5
-        category: categories[Math.floor(Math.random() * categories.length)],
-        cefrLevel: mapAbilityToCEFR((Math.random() * 6) - 3),
-        timeLimit: Math.random() > 0.5 ? 60 : undefined
-      });
-    }
-    
-    return questions;
+    // Map database questions to IRT format with difficulty estimation
+    return questions.map((q, index) => ({
+      id: q.id.toString(),
+      text: q.prompt || q.title,
+      type: q.questionType,
+      options: q.content?.options?.map((opt: any) => opt.text) || [],
+      difficulty: mapCEFRToAbility(q.cefrLevel), // Convert CEFR to IRT ability scale
+      discrimination: 1.5, // Default discrimination parameter
+      category: q.skill,
+      cefrLevel: q.cefrLevel,
+      timeLimit: q.expectedDurationSeconds,
+      correctAnswers: q.content?.correctAnswers || []
+    }));
   }
 
   async function checkAnswer(question: any, answer: string): Promise<boolean> {
-    // In production, implement actual answer checking logic
-    // This is a simplified version
-    return Math.random() > 0.5;
+    // Real answer checking logic using question's correct answers
+    if (!question.correctAnswers || question.correctAnswers.length === 0) {
+      console.warn(`Question ${question.id} has no correct answers defined`);
+      return false;
+    }
+    
+    // Normalize answer for comparison (trim, lowercase)
+    const normalizedAnswer = answer.trim().toLowerCase();
+    const normalizedCorrect = question.correctAnswers.map((a: string) => a.trim().toLowerCase());
+    
+    return normalizedCorrect.includes(normalizedAnswer);
   }
 
   // Adaptive Content Generation Endpoints
@@ -22625,24 +22629,23 @@ Meta Lingua Academy`;
 
   // ===== GAME QUESTIONS API ENDPOINTS =====
   
-  // Get questions for a specific game
+  // Get questions for a specific game (REAL DATA from database)
   app.get("/api/games/:gameId/questions", authenticateToken, async (req: any, res) => {
     try {
       const gameId = parseInt(req.params.gameId);
-      const game = await storage.getGame(gameId);
+      const { count = 5, difficulty } = req.query;
       
+      const game = await storage.getGameById(gameId);
       if (!game) {
         return res.status(404).json({ message: "Game not found" });
       }
       
-      // Generate realistic questions based on game type and skill focus
-      const questions = [];
-      const skillFocus = game.skillFocus || 'vocabulary';
-      
-      // Generate 5 questions per game session
-      for (let i = 1; i <= 5; i++) {
-        questions.push(generateQuestionForSkill(skillFocus, i, game.level));
-      }
+      // Fetch real questions from database
+      const questions = await storage.getRandomGameQuestions(
+        gameId, 
+        parseInt(count as string), 
+        difficulty as string
+      );
       
       res.json(questions);
     } catch (error) {
@@ -22650,40 +22653,6 @@ Meta Lingua Academy`;
       res.status(500).json({ message: "Failed to fetch game questions" });
     }
   });
-  
-  function generateQuestionForSkill(skillFocus: string, questionNumber: number, level: string) {
-    const questionSets = {
-      vocabulary: {
-        beginner: [
-          { q: "What does 'hello' mean in Persian?", opts: ["سلام", "خوش آمدید", "خداحافظ", "ممنون"], correct: "سلام" },
-          { q: "Which word means 'thank you'?", opts: ["سلام", "ممنون", "بله", "خیر"], correct: "ممنون" },
-          { q: "What is the Persian word for 'water'?", opts: ["آب", "نان", "شیر", "چای"], correct: "آب" }
-        ],
-        intermediate: [
-          { q: "What does 'کتابخانه' mean?", opts: ["library", "bookstore", "school", "office"], correct: "library" },
-          { q: "Which word means 'friendship'?", opts: ["دوستی", "خانواده", "محبت", "کمک"], correct: "دوستی" }
-        ]
-      },
-      grammar: {
-        beginner: [
-          { q: "Which is the correct form of 'I am'?", opts: ["من هستم", "تو هستی", "او است", "ما هستیم"], correct: "من هستم" },
-          { q: "How do you say 'This is a book'?", opts: ["این کتاب است", "آن کتاب است", "کتاب خوب است", "کتاب بزرگ است"], correct: "این کتاب است" }
-        ]
-      }
-    };
-    
-    const questions = questionSets[skillFocus]?.[level] || questionSets.vocabulary.beginner;
-    const question = questions[questionNumber % questions.length];
-    
-    return {
-      id: questionNumber,
-      question: question.q,
-      options: question.opts,
-      correctAnswer: question.correct,
-      explanation: `The correct answer is '${question.correct}' because it accurately translates the concept.`,
-      type: 'multiple_choice'
-    };
-  }
 
   // ===== USER ROLES API ENDPOINTS =====
   
@@ -27195,4 +27164,11 @@ Meta Lingua Academy`;
       }
     } catch (error) {
       console.error('Error exporting interactions:', error);
-      res.s
+      res.status(500).json({ error: 'Failed to export interactions' });
+    }
+  });
+
+  return app;
+}
+
+export default registerRoutes;
