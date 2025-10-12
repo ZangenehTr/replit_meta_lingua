@@ -26,7 +26,7 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: JWT-based with refresh token mechanism, role-based access control (Admin, Teacher, Mentor, Student, Supervisor, Call Center Agent, Accountant).
+- **Authentication**: JWT-based with refresh token mechanism, role-based access control (Admin, Teacher, Mentor, Student, Supervisor, Call Center Agent, Accountant, Front Desk Clerk).
 - **API Design**: RESTful API
 - **Runtime**: Node.js ESM modules
 
@@ -62,7 +62,7 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **Check-First Protocol**: Mandatory validation for data integrity.
 - **Business Logic Consolidation**: Centralized utilities for filtering, calculations, and data integrity.
 - **Complete i18n Implementation**: Comprehensive Persian/Arabic/English translation system with RTL support across all admin dialogs and forms.
-- **Unified Dashboard System**: Role-appropriate content for all 7 user roles landing on `/dashboard`.
+- **Unified Dashboard System**: Role-appropriate content for all 8 user roles (Admin, Teacher, Mentor, Student, Supervisor, Call Center Agent, Accountant, Front Desk Clerk) landing on `/dashboard`.
 - **WebRTC Video Calling**: SimplePeer-based system with WebSocket signaling, dynamic TURN servers, media controls, and AI integration for real-time language assistance (word suggestions, translation, grammar correction, pronunciation guides).
 - **AI Supervisor**: Real-time AI supervision within video calls, featuring audio streaming, vocabulary suggestions, live attention tracking, TTT ratio monitoring, and intelligent fallback for Ollama.
 
