@@ -712,6 +712,7 @@ export class DatabaseStorage implements IStorage {
 
       return authorizations.map(auth => ({
         ...auth.teacher,
+        teacherId: auth.teacher.id, // Explicit teacherId for clarity
         isOnline: auth.availability?.isOnline || false,
         hourlyRate: auth.availability?.hourlyRate || null,
         availableHours: auth.availability?.availableHours || [],

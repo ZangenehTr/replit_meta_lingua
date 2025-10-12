@@ -5190,19 +5190,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin endpoints for Callern teacher authorization
   app.get("/api/admin/callern-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      // Get all teachers and their Callern authorization status
-      const teachers = await storage.getTeachers();
-      const callernAvailability = await storage.getTeacherCallernAvailability();
+      // Get all teachers
+      const allTeachers = await storage.getTeachers();
       
-      const teachersWithCallernStatus = teachers.map(teacher => ({
-        id: teacher.id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        email: teacher.email,
-        isActive: teacher.isActive,
-        isCallernAuthorized: callernAvailability.some(a => a.teacherId === teacher.id),
-        hourlyRate: callernAvailability.find(a => a.teacherId === teacher.id)?.hourlyRate || null
-      }));
+      // Get authorized teachers with enriched data
+      const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
+      
+      // Map all teachers and mark authorization status
+      const teachersWithCallernStatus = allTeachers.map(teacher => {
+        const authTeacher = authorizedTeachers.find(at => at.id === teacher.id);
+        return {
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          email: teacher.email,
+          isActive: teacher.isActive,
+          isCallernAuthorized: !!authTeacher,
+          hourlyRate: authTeacher?.hourlyRate || null,
+          authorizationLevel: authTeacher?.authorizationLevel || null,
+          specializations: authTeacher?.specializations || [],
+          maxSimultaneousCalls: authTeacher?.maxSimultaneousCalls || null
+        };
+      });
       
       res.json(teachersWithCallernStatus);
     } catch (error) {
@@ -5214,13 +5223,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint for frontend Callern management page (uses /callern/ path)
   app.get("/api/admin/callern/available-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      // Get all teachers and their Callern authorization status
-      const teachers = await storage.getTeachers();
-      const callernAvailability = await storage.getTeacherCallernAvailability();
+      // Get all teachers
+      const allTeachers = await storage.getTeachers();
+      
+      // Get authorized teachers with enriched data
+      const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
       
       // Format teachers for the Callern management UI
-      const availableTeachers = teachers.map(teacher => {
-        const availability = callernAvailability.find(a => a.teacherId === teacher.id);
+      const availableTeachers = allTeachers.map(teacher => {
+        const authTeacher = authorizedTeachers.find(at => at.id === teacher.id);
         return {
           id: teacher.id,
           firstName: teacher.firstName,
@@ -5228,11 +5239,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fullName: `${teacher.firstName} ${teacher.lastName}`,
           email: teacher.email,
           isActive: teacher.isActive,
-          isCallernAuthorized: !!availability,
-          hourlyRate: availability?.hourlyRate || null,
-          isOnline: availability?.isOnline || false,
-          availableHours: availability?.availableHours || [],
-          specializations: ["General Language", "Conversation", "Grammar"], // Mock data for now
+          isCallernAuthorized: !!authTeacher,
+          hourlyRate: authTeacher?.hourlyRate || null,
+          isOnline: authTeacher?.isOnline || false,
+          availableHours: authTeacher?.availableHours || [],
+          specializations: authTeacher?.specializations || [],
+          authorizationLevel: authTeacher?.authorizationLevel || null,
+          maxSimultaneousCalls: authTeacher?.maxSimultaneousCalls || null,
           rating: 4.5,
           totalCallMinutes: 0
         };
@@ -5248,7 +5261,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/callern-teachers/:teacherId/authorize", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const teacherId = parseInt(req.params.teacherId);
-      const { hourlyRate } = req.body;
+      const { hourlyRate, notes, authorizationLevel, specializations, maxSimultaneousCalls } = req.body;
+      const authorizedBy = req.user.userId;
       
       // Check if teacher exists and is active
       const teacher = await storage.getUser(teacherId);
@@ -5257,19 +5271,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if already authorized
-      const existing = await storage.getTeacherCallernAvailability();
-      if (existing.some(a => a.teacherId === teacherId)) {
+      const existing = await storage.getTeacherCallernAuthorization(teacherId);
+      if (existing && existing.isAuthorized) {
         return res.status(400).json({ message: "Teacher already authorized for Callern" });
       }
       
-      // Add authorization
-      await storage.setTeacherCallernAvailability({
-        teacherId,
-        isOnline: false,
-        hourlyRate: hourlyRate || 150000,
-        availableHours: [],
-        lastActiveAt: null
-      });
+      // Create or update authorization
+      if (existing) {
+        await storage.updateTeacherCallernAuthorization(teacherId, {
+          isAuthorized: true,
+          authorizedBy,
+          authorizedAt: new Date(),
+          revokedAt: null,
+          notes,
+          authorizationLevel: authorizationLevel || 'standard',
+          specializations: specializations || [],
+          maxSimultaneousCalls: maxSimultaneousCalls || 1
+        });
+      } else {
+        await storage.createTeacherCallernAuthorization({
+          teacherId,
+          authorizedBy,
+          isAuthorized: true,
+          isActive: true,
+          notes,
+          authorizationLevel: authorizationLevel || 'standard',
+          specializations: specializations || [],
+          maxSimultaneousCalls: maxSimultaneousCalls || 1
+        });
+      }
+      
+      // Set hourly rate if provided
+      if (hourlyRate) {
+        await storage.updateTeacherCallernAvailability(teacherId, {
+          hourlyRate: hourlyRate.toString()
+        });
+      }
       
       res.json({ message: "Teacher authorized for Callern successfully" });
     } catch (error) {
@@ -5281,9 +5318,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/callern-teachers/:teacherId/authorize", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const teacherId = parseInt(req.params.teacherId);
+      const { reason } = req.body;
       
-      // Remove authorization (in production, this would delete from database)
-      // For now, we'll mark it as a successful operation
+      // Revoke authorization
+      await storage.updateTeacherCallernAuthorization(teacherId, {
+        isAuthorized: false,
+        revokedAt: new Date(),
+        notes: reason || 'Authorization revoked by admin'
+      });
+      
+      // Set teacher offline
+      await storage.updateTeacherCallernAvailability(teacherId, {
+        isOnline: false
+      });
+      
       res.json({ message: "Teacher Callern authorization removed successfully" });
     } catch (error) {
       console.error('Error removing teacher Callern authorization:', error);
@@ -27292,4 +27340,3 @@ Meta Lingua Academy`;
   });
 
   return app;
-}
