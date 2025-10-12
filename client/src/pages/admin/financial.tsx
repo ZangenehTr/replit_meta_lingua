@@ -713,6 +713,7 @@ export function AdminFinancial() {
                     <p>No data available for selected date range</p>
                   </div>
                 )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

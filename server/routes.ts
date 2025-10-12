@@ -24309,47 +24309,10 @@ Meta Lingua Academy`;
       res.status(500).json({ message: "Failed to fetch learning materials" });
     }
   });
-  
-  // Get assignments for enrolled students - enhanced version
-  app.get("/api/student/assignments", authenticateToken, async (req: any, res) => {
-    try {
-      const studentId = req.user.id;
-      
-      // Only allow students to access this endpoint
-      if (req.user.role !== 'Student') {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      // Mock assignments data
-      const assignments = [
-        {
-          id: 1,
-          title: 'Essay: My Favorite Holiday',
-          courseTitle: 'Writing Skills B1',
-          dueDate: '2024-02-15',
-          status: 'pending',
-          grade: null,
-          feedback: null
-        },
-        {
-          id: 2,
-          title: 'Grammar Quiz Chapter 3',
-          courseTitle: 'Grammar Fundamentals',
-          dueDate: '2024-02-10',
-          status: 'graded',
-          grade: 85,
-          feedback: 'Good work! Pay attention to past perfect tense.'
-        }
-      ];
-      
-      res.json(assignments);
-    } catch (error) {
-      console.error('Error fetching assignments:', error);
-      res.status(500).json({ message: "Failed to fetch assignments" });
-    }
-  });
 
-  // ===== HOMEWORK API ENDPOINTS =====
+  // ===== HOMEWORK/ASSIGNMENTS API ENDPOINTS =====
+  // Note: Assignments are stored in the "homework" table
+  // Routes use "assignments" terminology, homework routes deprecated
   
   // Get homework for a student
   app.get("/api/student/homework", authenticateToken, async (req: any, res) => {
