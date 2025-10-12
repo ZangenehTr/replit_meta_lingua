@@ -7688,6 +7688,73 @@ export type ScrapeSchedule = typeof scrapeSchedules.$inferSelect;
 export type InsertScrapeSchedule = z.infer<typeof insertScrapeScheduleSchema>;
 
 // ============================================================================
+// ACCOUNTING LEDGER SYSTEM - Double-Entry Bookkeeping
+// ============================================================================
+
+// Chart of Accounts - Account definitions
+export const chartOfAccounts = pgTable("chart_of_accounts", {
+  id: serial("id").primaryKey(),
+  accountCode: varchar("account_code", { length: 50 }).unique().notNull(),
+  accountName: varchar("account_name", { length: 255 }).notNull(),
+  accountType: varchar("account_type", { length: 50 }).notNull(), // asset, liability, equity, revenue, expense
+  normalBalance: varchar("normal_balance", { length: 10 }).notNull(), // debit or credit
+  parentAccountId: integer("parent_account_id"),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertChartOfAccountsSchema = createInsertSchema(chartOfAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Accounting Ledger - Double-entry bookkeeping
+export const accountingLedger = pgTable("accounting_ledger", {
+  id: serial("id").primaryKey(),
+  transactionDate: timestamp("transaction_date").defaultNow().notNull(),
+  accountId: integer("account_id").references(() => chartOfAccounts.id).notNull(),
+  transactionType: varchar("transaction_type", { length: 50 }).notNull(), // debit or credit
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("IRR").notNull(),
+  
+  // Reference to original transaction source
+  sourceType: varchar("source_type", { length: 50 }).notNull(), // wallet, course_payment, teacher_payout, book_purchase, refund, etc.
+  sourceId: integer("source_id").notNull(), // ID of the source transaction
+  
+  // Transaction grouping for double-entry pairing
+  journalEntryId: varchar("journal_entry_id", { length: 100 }).notNull(), // Groups debit/credit pairs
+  
+  description: text("description"),
+  referenceNumber: varchar("reference_number", { length: 100 }),
+  
+  // User tracking
+  createdBy: integer("created_by").references(() => users.id),
+  approvedBy: integer("approved_by").references(() => users.id),
+  
+  // Status tracking
+  status: varchar("status", { length: 20 }).default("posted").notNull(), // draft, posted, voided
+  isReconciled: boolean("is_reconciled").default(false),
+  reconciledAt: timestamp("reconciled_at"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertAccountingLedgerSchema = createInsertSchema(accountingLedger).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type ChartOfAccounts = typeof chartOfAccounts.$inferSelect;
+export type InsertChartOfAccounts = z.infer<typeof insertChartOfAccountsSchema>;
+export type AccountingLedger = typeof accountingLedger.$inferSelect;
+export type InsertAccountingLedger = z.infer<typeof insertAccountingLedgerSchema>;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 

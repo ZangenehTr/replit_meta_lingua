@@ -44,6 +44,8 @@ import {
   // Social media & marketing tables
   marketingCampaigns, platformCredentials, scheduledPosts, socialMediaPosts,
   socialMediaAnalytics, emailCampaigns, telegramMessages,
+  // Accounting ledger tables
+  chartOfAccounts, accountingLedger,
 } from "@shared/schema";
 // Unified testing system tables
 import {
@@ -140,6 +142,9 @@ import {
   // 3D lesson types
   type ThreeDLessonContent, type ThreeDLessonContentInsert,
   type ThreeDVideoLesson, type ThreeDVideoLessonInsert,
+  // Accounting ledger types
+  type ChartOfAccounts, type InsertChartOfAccounts,
+  type AccountingLedger, type InsertAccountingLedger,
   type ThreeDLessonProgress, type ThreeDLessonProgressInsert,
   // Social media & marketing types
   type MarketingCampaign, type InsertMarketingCampaign,
@@ -997,6 +1002,42 @@ export interface IStorage {
     endDate?: Date;
   }): Promise<any[]>;
   getTransactionDetails(id: number): Promise<any>;
+  
+  // Accounting Ledger System (Double-Entry Bookkeeping)
+  // Chart of Accounts
+  getChartOfAccounts(): Promise<ChartOfAccounts[]>;
+  getAccountByCode(accountCode: string): Promise<ChartOfAccounts | undefined>;
+  getAccountsByType(accountType: string): Promise<ChartOfAccounts[]>;
+  createChartOfAccount(account: InsertChartOfAccounts): Promise<ChartOfAccounts>;
+  updateChartOfAccount(id: number, updates: Partial<ChartOfAccounts>): Promise<ChartOfAccounts | undefined>;
+  
+  // Accounting Ledger
+  createLedgerEntry(entry: InsertAccountingLedger): Promise<AccountingLedger>;
+  createDoubleEntry(params: {
+    debitAccountId: number;
+    creditAccountId: number;
+    amount: string | number;
+    sourceType: string;
+    sourceId: number;
+    description?: string;
+    referenceNumber?: string;
+    createdBy?: number;
+  }): Promise<{ debit: AccountingLedger; credit: AccountingLedger }>;
+  getLedgerEntries(filters?: {
+    accountId?: number;
+    sourceType?: string;
+    sourceId?: number;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<AccountingLedger[]>;
+  getLedgerEntriesByJournalEntry(journalEntryId: string): Promise<AccountingLedger[]>;
+  getAccountBalance(accountId: number, asOfDate?: Date): Promise<{ balance: number; currency: string }>;
+  reconcileLedgerEntry(id: number, reconciledBy: number): Promise<AccountingLedger | undefined>;
+  
+  // Financial Reports
+  getTrialBalance(asOfDate?: Date): Promise<any[]>;
+  getBalanceSheet(asOfDate?: Date): Promise<any>;
+  getProfitAndLoss(startDate: Date, endDate: Date): Promise<any>;
   
   // PHASE 2: Organizational & Student Management Tables
   

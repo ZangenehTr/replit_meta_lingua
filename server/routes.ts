@@ -27340,3 +27340,4 @@ Meta Lingua Academy`;
   });
 
   return app;
+}

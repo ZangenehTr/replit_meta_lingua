@@ -787,6 +787,389 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // ============================================================================
+  // ACCOUNTING LEDGER SYSTEM - Double-Entry Bookkeeping
+  // ============================================================================
+
+  // Chart of Accounts Methods
+  async getChartOfAccounts(): Promise<ChartOfAccounts[]> {
+    try {
+      const accounts = await db
+        .select()
+        .from(chartOfAccounts)
+        .where(eq(chartOfAccounts.isActive, true))
+        .orderBy(chartOfAccounts.accountCode);
+      return accounts;
+    } catch (error) {
+      console.error('Error getting chart of accounts:', error);
+      return [];
+    }
+  }
+
+  async getAccountByCode(accountCode: string): Promise<ChartOfAccounts | undefined> {
+    try {
+      const [account] = await db
+        .select()
+        .from(chartOfAccounts)
+        .where(and(
+          eq(chartOfAccounts.accountCode, accountCode),
+          eq(chartOfAccounts.isActive, true)
+        ))
+        .limit(1);
+      return account;
+    } catch (error) {
+      console.error('Error getting account by code:', error);
+      return undefined;
+    }
+  }
+
+  async getAccountsByType(accountType: string): Promise<ChartOfAccounts[]> {
+    try {
+      const accounts = await db
+        .select()
+        .from(chartOfAccounts)
+        .where(and(
+          eq(chartOfAccounts.accountType, accountType),
+          eq(chartOfAccounts.isActive, true)
+        ))
+        .orderBy(chartOfAccounts.accountCode);
+      return accounts;
+    } catch (error) {
+      console.error('Error getting accounts by type:', error);
+      return [];
+    }
+  }
+
+  async createChartOfAccount(account: InsertChartOfAccounts): Promise<ChartOfAccounts> {
+    try {
+      const [result] = await db
+        .insert(chartOfAccounts)
+        .values({
+          ...account,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating chart of account:', error);
+      throw error;
+    }
+  }
+
+  async updateChartOfAccount(id: number, updates: Partial<ChartOfAccounts>): Promise<ChartOfAccounts | undefined> {
+    try {
+      const [result] = await db
+        .update(chartOfAccounts)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(chartOfAccounts.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating chart of account:', error);
+      return undefined;
+    }
+  }
+
+  // Accounting Ledger Methods
+  async createLedgerEntry(entry: InsertAccountingLedger): Promise<AccountingLedger> {
+    try {
+      const [result] = await db
+        .insert(accountingLedger)
+        .values({
+          ...entry,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating ledger entry:', error);
+      throw error;
+    }
+  }
+
+  async createDoubleEntry(params: {
+    debitAccountId: number;
+    creditAccountId: number;
+    amount: string | number;
+    sourceType: string;
+    sourceId: number;
+    description?: string;
+    referenceNumber?: string;
+    createdBy?: number;
+  }): Promise<{ debit: AccountingLedger; credit: AccountingLedger }> {
+    try {
+      const journalEntryId = `JE-${Date.now()}-${params.sourceType}-${params.sourceId}`;
+      const amount = typeof params.amount === 'string' ? params.amount : params.amount.toString();
+
+      const debitEntry = await this.createLedgerEntry({
+        accountId: params.debitAccountId,
+        transactionType: 'debit',
+        amount,
+        currency: 'IRR',
+        sourceType: params.sourceType,
+        sourceId: params.sourceId,
+        journalEntryId,
+        description: params.description,
+        referenceNumber: params.referenceNumber,
+        createdBy: params.createdBy,
+        status: 'posted'
+      });
+
+      const creditEntry = await this.createLedgerEntry({
+        accountId: params.creditAccountId,
+        transactionType: 'credit',
+        amount,
+        currency: 'IRR',
+        sourceType: params.sourceType,
+        sourceId: params.sourceId,
+        journalEntryId,
+        description: params.description,
+        referenceNumber: params.referenceNumber,
+        createdBy: params.createdBy,
+        status: 'posted'
+      });
+
+      return { debit: debitEntry, credit: creditEntry };
+    } catch (error) {
+      console.error('Error creating double entry:', error);
+      throw error;
+    }
+  }
+
+  async getLedgerEntries(filters?: {
+    accountId?: number;
+    sourceType?: string;
+    sourceId?: number;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<AccountingLedger[]> {
+    try {
+      const conditions = [];
+
+      if (filters?.accountId) {
+        conditions.push(eq(accountingLedger.accountId, filters.accountId));
+      }
+      if (filters?.sourceType) {
+        conditions.push(eq(accountingLedger.sourceType, filters.sourceType));
+      }
+      if (filters?.sourceId) {
+        conditions.push(eq(accountingLedger.sourceId, filters.sourceId));
+      }
+      if (filters?.startDate) {
+        conditions.push(sql`${accountingLedger.transactionDate} >= ${filters.startDate}`);
+      }
+      if (filters?.endDate) {
+        conditions.push(sql`${accountingLedger.transactionDate} <= ${filters.endDate}`);
+      }
+
+      const entries = await db
+        .select()
+        .from(accountingLedger)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(accountingLedger.transactionDate));
+
+      return entries;
+    } catch (error) {
+      console.error('Error getting ledger entries:', error);
+      return [];
+    }
+  }
+
+  async getLedgerEntriesByJournalEntry(journalEntryId: string): Promise<AccountingLedger[]> {
+    try {
+      const entries = await db
+        .select()
+        .from(accountingLedger)
+        .where(eq(accountingLedger.journalEntryId, journalEntryId))
+        .orderBy(accountingLedger.transactionType);
+      return entries;
+    } catch (error) {
+      console.error('Error getting ledger entries by journal entry:', error);
+      return [];
+    }
+  }
+
+  async getAccountBalance(accountId: number, asOfDate?: Date): Promise<{ balance: number; currency: string }> {
+    try {
+      const [account] = await db
+        .select()
+        .from(chartOfAccounts)
+        .where(eq(chartOfAccounts.id, accountId))
+        .limit(1);
+
+      if (!account) {
+        return { balance: 0, currency: 'IRR' };
+      }
+
+      const conditions = [eq(accountingLedger.accountId, accountId)];
+      if (asOfDate) {
+        conditions.push(sql`${accountingLedger.transactionDate} <= ${asOfDate}`);
+      }
+
+      const entries = await db
+        .select()
+        .from(accountingLedger)
+        .where(and(...conditions));
+
+      let balance = 0;
+      for (const entry of entries) {
+        const amount = parseFloat(entry.amount);
+        if (account.normalBalance === 'debit') {
+          balance += entry.transactionType === 'debit' ? amount : -amount;
+        } else {
+          balance += entry.transactionType === 'credit' ? amount : -amount;
+        }
+      }
+
+      return { balance, currency: 'IRR' };
+    } catch (error) {
+      console.error('Error getting account balance:', error);
+      return { balance: 0, currency: 'IRR' };
+    }
+  }
+
+  async reconcileLedgerEntry(id: number, reconciledBy: number): Promise<AccountingLedger | undefined> {
+    try {
+      const [result] = await db
+        .update(accountingLedger)
+        .set({
+          isReconciled: true,
+          reconciledAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(accountingLedger.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error reconciling ledger entry:', error);
+      return undefined;
+    }
+  }
+
+  // Financial Reports
+  async getTrialBalance(asOfDate?: Date): Promise<any[]> {
+    try {
+      const accounts = await this.getChartOfAccounts();
+      const trialBalance = [];
+
+      for (const account of accounts) {
+        const { balance } = await this.getAccountBalance(account.id, asOfDate);
+        if (balance !== 0) {
+          trialBalance.push({
+            accountCode: account.accountCode,
+            accountName: account.accountName,
+            accountType: account.accountType,
+            debit: account.normalBalance === 'debit' && balance > 0 ? balance : 0,
+            credit: account.normalBalance === 'credit' && balance > 0 ? balance : 0
+          });
+        }
+      }
+
+      return trialBalance;
+    } catch (error) {
+      console.error('Error getting trial balance:', error);
+      return [];
+    }
+  }
+
+  async getBalanceSheet(asOfDate?: Date): Promise<any> {
+    try {
+      const assets = await this.getAccountsByType('asset');
+      const liabilities = await this.getAccountsByType('liability');
+      const equity = await this.getAccountsByType('equity');
+
+      const assetBalances = await Promise.all(
+        assets.map(async (account) => ({
+          ...account,
+          balance: (await this.getAccountBalance(account.id, asOfDate)).balance
+        }))
+      );
+
+      const liabilityBalances = await Promise.all(
+        liabilities.map(async (account) => ({
+          ...account,
+          balance: (await this.getAccountBalance(account.id, asOfDate)).balance
+        }))
+      );
+
+      const equityBalances = await Promise.all(
+        equity.map(async (account) => ({
+          ...account,
+          balance: (await this.getAccountBalance(account.id, asOfDate)).balance
+        }))
+      );
+
+      const totalAssets = assetBalances.reduce((sum, acc) => sum + acc.balance, 0);
+      const totalLiabilities = liabilityBalances.reduce((sum, acc) => sum + acc.balance, 0);
+      const totalEquity = equityBalances.reduce((sum, acc) => sum + acc.balance, 0);
+
+      return {
+        asOfDate: asOfDate || new Date(),
+        assets: { accounts: assetBalances, total: totalAssets },
+        liabilities: { accounts: liabilityBalances, total: totalLiabilities },
+        equity: { accounts: equityBalances, total: totalEquity },
+        balanceCheck: totalAssets - (totalLiabilities + totalEquity)
+      };
+    } catch (error) {
+      console.error('Error getting balance sheet:', error);
+      return null;
+    }
+  }
+
+  async getProfitAndLoss(startDate: Date, endDate: Date): Promise<any> {
+    try {
+      const revenue = await this.getAccountsByType('revenue');
+      const expenses = await this.getAccountsByType('expense');
+
+      // Get entries within date range
+      const revenueEntries = await Promise.all(
+        revenue.map(async (account) => {
+          const entries = await this.getLedgerEntries({
+            accountId: account.id,
+            startDate,
+            endDate
+          });
+          const balance = entries.reduce((sum, entry) => {
+            const amount = parseFloat(entry.amount);
+            return sum + (entry.transactionType === 'credit' ? amount : -amount);
+          }, 0);
+          return { ...account, balance };
+        })
+      );
+
+      const expenseEntries = await Promise.all(
+        expenses.map(async (account) => {
+          const entries = await this.getLedgerEntries({
+            accountId: account.id,
+            startDate,
+            endDate
+          });
+          const balance = entries.reduce((sum, entry) => {
+            const amount = parseFloat(entry.amount);
+            return sum + (entry.transactionType === 'debit' ? amount : -amount);
+          }, 0);
+          return { ...account, balance };
+        })
+      );
+
+      const totalRevenue = revenueEntries.reduce((sum, acc) => sum + acc.balance, 0);
+      const totalExpenses = expenseEntries.reduce((sum, acc) => sum + acc.balance, 0);
+      const netIncome = totalRevenue - totalExpenses;
+
+      return {
+        period: { startDate, endDate },
+        revenue: { accounts: revenueEntries, total: totalRevenue },
+        expenses: { accounts: expenseEntries, total: totalExpenses },
+        netIncome
+      };
+    } catch (error) {
+      console.error('Error getting profit and loss:', error);
+      return null;
+    }
+  }
+
   async getTeachers(): Promise<User[]> {
     const result = await db.select()
       .from(users)
