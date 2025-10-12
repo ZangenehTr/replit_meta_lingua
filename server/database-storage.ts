@@ -39,7 +39,9 @@ import {
   type CommunicationLog, type InsertCommunicationLog, type MentorAssignment, type InsertMentorAssignment,
   type MentoringSession, type InsertMentoringSession,
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
-  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
+  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, 
+  type TeacherCallernAuthorization, type InsertTeacherCallernAuthorization,
+  type CallernCallHistory, type InsertCallernCallHistory,
   type CallernSyllabusTopics, type InsertCallernSyllabusTopics, type StudentCallernProgress, type InsertStudentCallernProgress,
   type CallernPresence, type InsertCallernPresence, type CallernSpeechSegment, type InsertCallernSpeechSegment,
   type CallernScoresStudent, type InsertCallernScoresStudent, type CallernScoresTeacher, type InsertCallernScoresTeacher,
@@ -690,6 +692,100 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  // Teacher CallerN Authorization Methods
+  async getAuthorizedCallernTeachers(): Promise<any[]> {
+    try {
+      const authorizations = await db
+        .select({
+          teacher: users,
+          authorization: teacherCallernAuthorization,
+          availability: teacherCallernAvailability
+        })
+        .from(teacherCallernAuthorization)
+        .innerJoin(users, eq(teacherCallernAuthorization.teacherId, users.id))
+        .leftJoin(teacherCallernAvailability, eq(teacherCallernAuthorization.teacherId, teacherCallernAvailability.teacherId))
+        .where(and(
+          eq(teacherCallernAuthorization.isAuthorized, true),
+          eq(teacherCallernAuthorization.isActive, true),
+          eq(users.isActive, true)
+        ));
+
+      return authorizations.map(auth => ({
+        ...auth.teacher,
+        isOnline: auth.availability?.isOnline || false,
+        hourlyRate: auth.availability?.hourlyRate || null,
+        availableHours: auth.availability?.availableHours || [],
+        isCallernAuthorized: true,
+        authorizationLevel: auth.authorization.authorizationLevel,
+        specializations: auth.authorization.specializations,
+        maxSimultaneousCalls: auth.authorization.maxSimultaneousCalls
+      }));
+    } catch (error) {
+      console.error('Error getting authorized Callern teachers:', error);
+      return [];
+    }
+  }
+
+  async getTeacherCallernAuthorization(teacherId: number): Promise<TeacherCallernAuthorization | undefined> {
+    try {
+      const [result] = await db
+        .select()
+        .from(teacherCallernAuthorization)
+        .where(eq(teacherCallernAuthorization.teacherId, teacherId))
+        .limit(1);
+      return result;
+    } catch (error) {
+      console.error('Error getting teacher Callern authorization:', error);
+      return undefined;
+    }
+  }
+
+  async createTeacherCallernAuthorization(data: InsertTeacherCallernAuthorization): Promise<TeacherCallernAuthorization> {
+    try {
+      const [result] = await db
+        .insert(teacherCallernAuthorization)
+        .values({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating teacher Callern authorization:', error);
+      throw error;
+    }
+  }
+
+  async updateTeacherCallernAuthorization(
+    teacherId: number, 
+    updates: Partial<TeacherCallernAuthorization>
+  ): Promise<TeacherCallernAuthorization | undefined> {
+    try {
+      const [result] = await db
+        .update(teacherCallernAuthorization)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(teacherCallernAuthorization.teacherId, teacherId))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating teacher Callern authorization:', error);
+      return undefined;
+    }
+  }
+
+  async deleteTeacherCallernAuthorization(teacherId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(teacherCallernAuthorization)
+        .where(eq(teacherCallernAuthorization.teacherId, teacherId));
+      return true;
+    } catch (error) {
+      console.error('Error deleting teacher Callern authorization:', error);
+      return false;
+    }
+  }
+
   async getTeachers(): Promise<User[]> {
     const result = await db.select()
       .from(users)
@@ -706,51 +802,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeachersForCallern(): Promise<any[]> {
-    const teachers = await db
-      .select({
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        avatar: users.avatar
-      })
-      .from(users)
-      .where(eq(users.role, 'Teacher/Tutor'));
-    
-    return teachers;
-  }
-
-  async getAuthorizedCallernTeachers(): Promise<any[]> {
-    const result = await db
-      .select({
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        avatar: users.avatar,
-        role: users.role,
-        // Authorization info
-        isAuthorized: teacherCallernAuthorization.isAuthorized,
-        authorizedAt: teacherCallernAuthorization.authorizedAt,
-        // Availability info
-        isOnline: teacherCallernAvailability.isOnline,
-        morningSlot: teacherCallernAvailability.morningSlot,
-        afternoonSlot: teacherCallernAvailability.afternoonSlot,
-        eveningSlot: teacherCallernAvailability.eveningSlot,
-        nightSlot: teacherCallernAvailability.nightSlot
-      })
-      .from(users)
-      .innerJoin(teacherCallernAuthorization, eq(users.id, teacherCallernAuthorization.teacherId))
-      .leftJoin(teacherCallernAvailability, eq(users.id, teacherCallernAvailability.teacherId))
-      .where(
-        and(
-          eq(users.role, 'Teacher'),
-          eq(users.isActive, true),
-          eq(teacherCallernAuthorization.isAuthorized, true)
-        )
-      );
-    
-    return result;
+    // Deprecated: Use getAuthorizedCallernTeachers() instead
+    return this.getAuthorizedCallernTeachers();
   }
 
   async getStudentCallernPackages(studentId: number): Promise<StudentCallernPackage[]> {

@@ -7024,25 +7024,31 @@ export class MemStorage implements IStorage {
   }
 
   async getTeachersForCallern(): Promise<any[]> {
-    // Only return teachers who are authorized for Callern (have entries in teacher_callern_availability table)
-    // This is a mock implementation - in production, this would query the database
-    // Currently returns teachers with IDs 1 and 37 based on actual database entries
-    const authorizedTeacherIds = [1, 37]; // These are the teachers in teacher_callern_availability table
-    try {
-      const result = await this.db.select().from(users)
-        .where(and(
-          or(
-            eq(users.role, 'Teacher'),
-            eq(users.role, 'Teacher/Tutor')
-          ),
-          eq(users.isActive, true),
-          inArray(users.id, authorizedTeacherIds)
-        ));
-      return result;
-    } catch (error) {
-      console.error('Error getting teachers for Callern:', error);
-      return [];
-    }
+    return []; // MemStorage stub
+  }
+
+  // Teacher CallerN Authorization Methods (MemStorage stubs)
+  async getAuthorizedCallernTeachers(): Promise<any[]> {
+    return []; // MemStorage stub - use DatabaseStorage for actual implementation
+  }
+
+  async getTeacherCallernAuthorization(teacherId: number): Promise<TeacherCallernAuthorization | undefined> {
+    return undefined; // MemStorage stub - use DatabaseStorage for actual implementation
+  }
+
+  async createTeacherCallernAuthorization(data: InsertTeacherCallernAuthorization): Promise<TeacherCallernAuthorization> {
+    throw new Error('MemStorage does not support CallerN authorization - use DatabaseStorage');
+  }
+
+  async updateTeacherCallernAuthorization(
+    teacherId: number, 
+    updates: Partial<TeacherCallernAuthorization>
+  ): Promise<TeacherCallernAuthorization | undefined> {
+    return undefined; // MemStorage stub - use DatabaseStorage for actual implementation
+  }
+
+  async deleteTeacherCallernAuthorization(teacherId: number): Promise<boolean> {
+    return false; // MemStorage stub - use DatabaseStorage for actual implementation
   }
 
   async createCallernPackage(pkg: any): Promise<any> {
