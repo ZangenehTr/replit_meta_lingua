@@ -5,7 +5,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons } from "@shared/schema";
+import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends } from "@shared/schema";
 import { eq, sql, and, desc, inArray } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -27217,6 +27217,77 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error updating SMS template:', error);
       res.status(500).json({ error: 'Failed to update template' });
+    }
+  });
+
+  // ============================================================================
+  // SCRAPER API ROUTES  
+  // ============================================================================
+
+  // Get all scrape jobs
+  app.get("/api/scraper/jobs", authenticate, async (req: any, res) => {
+    if (!['admin', 'supervisor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const jobs = await db.select()
+        .from(scrapeJobs)
+        .orderBy(desc(scrapeJobs.createdAt))
+        .limit(100);
+      res.json(jobs);
+    } catch (error) {
+      console.error('Error fetching scrape jobs:', error);
+      res.status(500).json({ error: 'Failed to fetch scrape jobs' });
+    }
+  });
+
+  // Scheduler control endpoints
+  app.post("/api/scraper/scheduler/start", authenticate, async (req: any, res) => {
+    if (!['admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const { getScraperScheduler } = await import('./scraper-scheduler');
+      const scheduler = getScraperScheduler();
+      await scheduler.start();
+      res.json({ message: 'Scheduler started successfully' });
+    } catch (error) {
+      console.error('Error starting scheduler:', error);
+      res.status(500).json({ error: 'Failed to start scheduler' });
+    }
+  });
+
+  app.post("/api/scraper/scheduler/stop", authenticate, async (req: any, res) => {
+    if (!['admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const { getScraperScheduler } = await import('./scraper-scheduler');
+      const scheduler = getScraperScheduler();
+      scheduler.stop();
+      res.json({ message: 'Scheduler stopped successfully' });
+    } catch (error) {
+      console.error('Error stopping scheduler:', error);
+      res.status(500).json({ error: 'Failed to stop scheduler' });
+    }
+  });
+
+  app.get("/api/scraper/scheduler/status", authenticate, async (req: any, res) => {
+    if (!['admin', 'supervisor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    try {
+      const { getScraperScheduler } = await import('./scraper-scheduler');
+      const scheduler = getScraperScheduler();
+      const activeSchedules = scheduler.getActiveSchedules();
+      res.json({ 
+        active: activeSchedules.length > 0,
+        scheduleCount: activeSchedules.length,
+        schedules: activeSchedules
+      });
+    } catch (error) {
+      console.error('Error fetching scheduler status:', error);
+      res.status(500).json({ error: 'Failed to fetch scheduler status' });
     }
   });
 

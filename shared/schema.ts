@@ -7582,6 +7582,26 @@ export const insertMarketTrendSchema = createInsertSchema(marketTrends).omit({
   createdAt: true
 });
 
+export const scrapeSchedules = pgTable("scrape_schedules", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
+  frequency: varchar("frequency", { length: 50 }).notNull(),
+  intervalMinutes: integer("interval_minutes"),
+  config: jsonb("config").notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  lastRun: timestamp("last_run"),
+  nextRun: timestamp("next_run"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertScrapeScheduleSchema = createInsertSchema(scrapeSchedules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 export type ScrapeJob = typeof scrapeJobs.$inferSelect;
 export type InsertScrapeJob = z.infer<typeof insertScrapeJobSchema>;
 export type CompetitorPrice = typeof competitorPrices.$inferSelect;
@@ -7590,6 +7610,8 @@ export type ScrapedLead = typeof scrapedLeads.$inferSelect;
 export type InsertScrapedLead = z.infer<typeof insertScrapedLeadSchema>;
 export type MarketTrend = typeof marketTrends.$inferSelect;
 export type InsertMarketTrend = z.infer<typeof insertMarketTrendSchema>;
+export type ScrapeSchedule = typeof scrapeSchedules.$inferSelect;
+export type InsertScrapeSchedule = z.infer<typeof insertScrapeScheduleSchema>;
 
 // ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
