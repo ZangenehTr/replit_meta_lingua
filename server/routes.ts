@@ -136,7 +136,6 @@ setInterval(() => {
     if (now - value.timestamp > IDEMPOTENCY_TTL) {
       idempotencyStore.delete(key);
     }
-  }
 }, 60 * 60 * 1000); // Clean up every hour
 
 // Idempotency middleware
@@ -147,13 +146,11 @@ const checkIdempotency = (req: any, res: any, next: any) => {
       error: 'Idempotency key is required',
       errorFa: 'کلید منحصر به فرد الزامی است'
     });
-  }
 
   const existingResponse = idempotencyStore.get(idempotencyKey);
   if (existingResponse) {
     console.log(`Duplicate request blocked by idempotency key: ${idempotencyKey}`);
     return res.json(existingResponse.response);
-  }
 
   // Store request in progress
   req.idempotencyKey = idempotencyKey;
@@ -238,7 +235,6 @@ const audioStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(performance.now());
     cb(null, 'audio-' + uniqueSuffix + path.extname(file.originalname));
-  }
 });
 
 // Configure multer for video uploads
@@ -253,7 +249,6 @@ const videoStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
-  }
 });
 
 const uploadVideo = multer({
@@ -271,7 +266,6 @@ const uploadVideo = multer({
     } else {
       cb(new Error('Only video files are allowed'));
     }
-  }
 });
 
 // Configure multer for teacher photo uploads
@@ -285,7 +279,6 @@ const photoStorage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     cb(null, `${req.params.teacherId}.jpg`);
-  }
 });
 
 const uploadPhoto = multer({ 
@@ -297,7 +290,6 @@ const uploadPhoto = multer({
     } else {
       cb(new Error('Only image files are allowed!'));
     }
-  }
 });
 
 // Configure multer for student photo uploads
@@ -312,7 +304,6 @@ const studentPhotoStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
     cb(null, `student-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
 });
 
 const uploadStudentPhoto = multer({ 
@@ -324,7 +315,6 @@ const uploadStudentPhoto = multer({
     } else {
       cb(new Error('Only image files are allowed!'));
     }
-  }
 });
 
 const audioUpload = multer({ 
@@ -338,7 +328,6 @@ const audioUpload = multer({
     } else {
       cb(new Error('Only audio files are allowed!'));
     }
-  }
 });
 
 // Critical security: JWT_SECRET must be provided via environment variable
@@ -397,7 +386,6 @@ async function calculateStudentAttendance(studentId: number): Promise<number> {
   } catch (error) {
     console.error('Error calculating attendance:', error);
     return 0;
-  }
 }
 
 async function getLastActivityTime(userId: number): Promise<string> {
@@ -439,7 +427,6 @@ async function getLastActivityTime(userId: number): Promise<string> {
   } catch (error) {
     console.error('Error getting last activity:', error);
     return 'Unknown';
-  }
 }
 
 async function calculateTeacherRating(teacherId: number): Promise<string> {
@@ -453,7 +440,6 @@ async function calculateTeacherRating(teacherId: number): Promise<string> {
   } catch (error) {
     console.error('Error calculating teacher rating:', error);
     return '0.0';
-  }
 }
 
 async function calculateOverallTeacherSatisfaction(): Promise<number> {
@@ -467,7 +453,6 @@ async function calculateOverallTeacherSatisfaction(): Promise<number> {
   } catch (error) {
     console.error('Error calculating overall satisfaction:', error);
     return 0;
-  }
 }
 
 
@@ -479,7 +464,6 @@ const authenticateToken = async (req: any, res: any, next: any) => {
 
   if (!token) {
     return res.status(401).json({ message: 'Access token required' });
-  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as any;
@@ -502,7 +486,6 @@ const authenticateToken = async (req: any, res: any, next: any) => {
   } catch (error) {
     console.error('Token verification error:', error);
     return res.status(403).json({ message: 'Invalid token' });
-  }
 };
 
 // Role-based authorization middleware
@@ -4290,7 +4273,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error in peer matching algorithm:', error);
     }
-  }
 
   // ========================
   // SPECIAL CLASSES SYSTEM API - Admin-flagged featured classes
@@ -17035,12 +17017,10 @@ Return JSON format:
     
     // Constrain ability to reasonable range
     return Math.max(-3, Math.min(3, newAbility));
-  }
 
   function calculateStandardError(numResponses: number): number {
     // Standard error decreases with more responses
     return Math.max(0.2, 1 / Math.sqrt(numResponses));
-  }
 
   function selectNextQuestion(ability: number, allQuestions: any[], answeredQuestions: any[]): any {
     const answeredIds = new Set(answeredQuestions.map(r => r.questionId));
@@ -17054,7 +17034,6 @@ Return JSON format:
       const currentDiff = Math.abs(current.difficulty - ability);
       return currentDiff < bestDiff ? current : best;
     });
-  }
 
   function mapAbilityToCEFR(ability: number): string {
     if (ability < -2) return 'A1';
@@ -17063,14 +17042,12 @@ Return JSON format:
     if (ability < 1) return 'B2';
     if (ability < 2) return 'C1';
     return 'C2';
-  }
 
   function calculatePercentile(ability: number): number {
     // Convert ability to percentile using normal distribution
     const z = ability;
     const percentile = 50 + 50 * erf(z / Math.sqrt(2));
     return Math.round(percentile);
-  }
 
   function erf(x: number): number {
     // Approximation of error function
@@ -17093,7 +17070,6 @@ Return JSON format:
     const y = 1 - (((((a5 * t5 + a4 * t4) + a3 * t3) + a2 * t2) + a1 * t) * Math.exp(-x * x));
 
     return sign * y;
-  }
 
   function analyzeStrengths(responses: any[]): string[] {
     // Analyze categories where student performed well
@@ -17117,7 +17093,6 @@ Return JSON format:
     });
 
     return strengths;
-  }
 
   function analyzeWeaknesses(responses: any[]): string[] {
     // Analyze categories where student needs improvement
@@ -17141,7 +17116,6 @@ Return JSON format:
     });
 
     return weaknesses;
-  }
 
   async function generateAdaptiveQuestionBank(testType: string): Promise<any[]> {
     // Generate calibrated question bank for IRT
@@ -17164,13 +17138,11 @@ Return JSON format:
     }
     
     return questions;
-  }
 
   async function checkAnswer(question: any, answer: string): Promise<boolean> {
     // In production, implement actual answer checking logic
     // This is a simplified version
     return Math.random() > 0.5;
-  }
 
   // Adaptive Content Generation Endpoints
   app.post("/api/callern/adaptive-content/generate", authenticateToken, async (req: any, res) => {
@@ -20423,7 +20395,6 @@ Return JSON format:
     };
 
     return baseQuestions[gameType] || baseQuestions.vocabulary;
-  }
 
   function generateOptionsForGameType(gameType: string) {
     const options = {
@@ -20435,7 +20406,6 @@ Return JSON format:
       writing: ["Version A", "Version B", "Version C", "Version D"]
     };
     return options[gameType] || options.vocabulary;
-  }
 
   function generateCorrectAnswer(gameType: string) {
     const answers = {
@@ -20447,7 +20417,6 @@ Return JSON format:
       writing: "Version A"
     };
     return answers[gameType] || "Option B";
-  }
 
   function validateAnswer(gameType: string, answer: string) {
     // Simple validation - in real implementation this would check against database
@@ -20462,7 +20431,6 @@ Return JSON format:
     
     const validAnswers = correctAnswers[gameType] || correctAnswers.vocabulary;
     return validAnswers.includes(answer);
-  }
 
   // End a game session
   app.put("/api/student/games/sessions/:sessionId/end", authenticateToken, requireRole(['Student']), async (req: any, res) => {
@@ -22935,7 +22903,6 @@ Meta Lingua Academy`;
       explanation: `The correct answer is '${question.correct}' because it accurately translates the concept.`,
       type: 'multiple_choice'
     };
-  }
 
   // ===== USER ROLES API ENDPOINTS =====
   
@@ -23136,14 +23103,60 @@ Meta Lingua Academy`;
     try {
       const { range = '30days', type = 'all' } = req.query;
       
-      // Mock financial data - replace with real database queries
+      // Calculate date range
+      const daysMap = { '7days': 7, '30days': 30, '90days': 90, '365days': 365 };
+      const days = daysMap[range as string] || 30;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      
+      // Fetch real transactions from database
+      const coursePaymentsData = await db
+        .select({
+          id: coursePayments.id,
+          type: sql<string>`'course_payment'`,
+          userId: coursePayments.userId,
+          userName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          courseId: coursePayments.courseId,
+          courseTitle: courses.title,
+          amount: coursePayments.amount,
+          currency: coursePayments.currency,
+          status: coursePayments.status,
+          date: coursePayments.paidAt,
+          paymentMethod: coursePayments.paymentMethod,
+          createdAt: coursePayments.createdAt
+        })
+        .from(coursePayments)
+        .leftJoin(users, eq(coursePayments.userId, users.id))
+        .leftJoin(courses, eq(coursePayments.courseId, courses.id))
+        .where(sql`${coursePayments.createdAt} >= ${startDate}`)
+        .orderBy(desc(coursePayments.createdAt))
+        .limit(100);
+
+      // Transform to UI format
+      const transactions = coursePaymentsData.map(payment => ({
+        id: `TXN-${payment.id}`,
+        type: payment.type,
+        student: payment.userName || 'Unknown',
+        course: payment.courseTitle || 'Unknown Course',
+        amount: parseFloat(payment.amount || '0'),
+        currency: payment.currency || 'IRR',
+        status: payment.status || 'pending',
+        date: payment.date || payment.createdAt,
+        paymentMethod: payment.paymentMethod || 'unknown'
+      }));
+
+      // Calculate summary
+      const totalRevenue = transactions
+        .filter(t => t.status === 'completed' || t.status === 'paid')
+        .reduce((sum, t) => sum + t.amount, 0);
+      
       const financialData = {
-        transactions: [],
+        transactions,
         summary: {
-          totalRevenue: 0,
+          totalRevenue,
           totalExpenses: 0,
-          netProfit: 0,
-          transactionCount: 0
+          netProfit: totalRevenue,
+          transactionCount: transactions.length
         },
         filters: { range, type }
       };
@@ -27224,5 +27237,14 @@ Meta Lingua Academy`;
     }
   });
 
-  // Update interaction notes
-  app.put("/api/front-desk/interactions/:id/notes", auth
+
+
+  const httpServer = createServer(app);
+  const wsServer = new CallernWebSocketServer(httpServer);
+  app.locals.websocketServer = wsServer;
+  
+  console.log('✅ HTTP server created with WebSocket support for CallerN');
+  
+  // Return the HTTP server for express app to listen on
+  return httpServer;
+}
