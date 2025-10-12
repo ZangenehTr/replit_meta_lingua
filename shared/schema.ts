@@ -69,21 +69,23 @@ export type MSTResponse = typeof mstResponses.$inferSelect;
 // Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  password: varchar("password", { length: 255 }).notNull(),
-  firstName: varchar("first_name", { length: 100 }),
-  lastName: varchar("last_name", { length: 100 }),
-  role: varchar("role", { length: 50 }).notNull().default("Student"),
-  phoneNumber: varchar("phone_number", { length: 20 }),
-  avatar: varchar("avatar", { length: 500 }),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  role: text("role").notNull().default("Student"),
+  phoneNumber: text("phone_number"),
+  avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
   preferences: jsonb("preferences"),
   credits: integer("credits").default(0),
   streakDays: integer("streak_days").default(0),
   totalLessons: integer("total_lessons").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   walletBalance: integer("wallet_balance").default(0),
   totalCredits: integer("total_credits").default(0),
-  memberTier: varchar("member_tier", { length: 50 }).default("bronze"),
+  memberTier: text("member_tier").default("bronze"),
   birthday: date("birthday"),
   nationalId: varchar("national_id", { length: 20 }),
   guardianName: varchar("guardian_name", { length: 255 }),
@@ -91,31 +93,63 @@ export const users = pgTable("users", {
   totalXp: integer("total_xp").default(0),
   currentLevel: integer("current_level").default(1),
   notes: text("notes"),
-  profileImage: varchar("profile_image", { length: 500 }),
-  level: varchar("level", { length: 10 }),
-  status: varchar("status", { length: 50 }).default("active"),
+  profileImage: text("profile_image"),
+  level: text("level"),
+  status: text("status").default("active"),
   gender: varchar("gender", { length: 10 }),
   age: integer("age"),
   isAvailableToSocialize: boolean("is_available_to_socialize").default(false),
-  socializerLevel: varchar("socializer_level", { length: 50 }),
+  socializerLevel: text("socializer_level"),
   socializerSkills: text("socializer_skills").array(),
   isEmailVerified: boolean("is_email_verified").default(false),
-  isPhoneVerified: boolean("is_phone_verified").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  isPhoneVerified: boolean("is_phone_verified").default(false)
 });
 
 // Courses table
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
+  title: text("title").notNull(),
   description: text("description"),
-  category: varchar("category", { length: 100 }).notNull().default("Language Learning"),
-  language: varchar("language", { length: 50 }).notNull().default("en"),
-  level: varchar("level", { length: 20 }),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  language: text("language"),
+  level: text("level"),
+  thumbnail: text("thumbnail"),
+  instructorId: integer("instructor_id").references(() => users.id),
+  price: integer("price"),
+  isActive: boolean("is_active"),
+  createdAt: timestamp("created_at"),
+  duration: integer("duration"),
+  totalLessons: integer("total_lessons"),
+  category: text("category"),
+  tags: text("tags").array(),
+  prerequisites: text("prerequisites").array(),
+  learningObjectives: text("learning_objectives").array(),
+  difficulty: text("difficulty"),
+  certificateTemplate: text("certificate_template"),
+  isFeatured: boolean("is_featured"),
+  updatedAt: timestamp("updated_at"),
+  courseCode: text("course_code"),
+  totalSessions: integer("total_sessions"),
+  sessionDuration: integer("session_duration"),
+  classType: text("class_type"),
+  weekdays: text("weekdays").array(),
+  startTime: time("start_time"),
+  endTime: time("end_time"),
+  autoRecord: boolean("auto_record"),
+  recordingAvailable: boolean("recording_available"),
+  deliveryMode: text("delivery_mode"),
+  targetLanguage: text("target_language"),
+  proficiencyLevel: text("proficiency_level"),
+  classFormat: text("class_format"),
+  maxStudents: integer("max_students"),
+  targetLevel: text("target_level"),
+  firstSessionDate: date("first_session_date"),
+  lastSessionDate: date("last_session_date"),
+  timeZone: text("time_zone"),
+  calendarType: text("calendar_type"),
+  rating: decimal("rating"),
+  accessPeriodMonths: integer("access_period_months"),
+  callernAvailable24h: boolean("callern_available_24h"),
+  callernRoadmapId: integer("callern_roadmap_id")
 });
 
 // Achievements table
@@ -346,28 +380,36 @@ export const aiKnowledgeBase = pgTable("ai_knowledge_base", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Chat Conversations table
+// Chat Conversations table - ALIGNED WITH ACTUAL DB
 export const chatConversations = pgTable("chat_conversations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  title: varchar("title", { length: 255 }),
-  type: varchar("type", { length: 50 }).default("general"), // general, study_partner, tutoring
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  participants: text("participants").array().notNull(),
+  lastMessage: text("last_message"),
+  lastMessageAt: timestamp("last_message_at"),
+  unreadCount: integer("unread_count"),
+  type: text("type").notNull(),
+  title: text("title"),
+  isActive: boolean("is_active"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at")
 });
 
-// Chat Messages table
+// Chat Messages table - ALIGNED WITH ACTUAL DB
 export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
   conversationId: integer("conversation_id").references(() => chatConversations.id).notNull(),
-  senderId: integer("sender_id").references(() => users.id),
-  senderType: varchar("sender_type", { length: 20 }).default("user"), // user, ai, system
-  content: text("content").notNull(),
-  messageType: varchar("message_type", { length: 20 }).default("text"), // text, audio, image
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  senderId: integer("sender_id").references(() => users.id).notNull(),
+  senderName: text("sender_name"),
+  message: text("message").notNull(),
+  messageType: text("message_type"),
+  attachments: text("attachments").array(),
+  isRead: boolean("is_read"),
+  sentAt: timestamp("sent_at"),
+  isEdited: boolean("is_edited"),
+  editedAt: timestamp("edited_at"),
+  replyTo: integer("reply_to"),
+  reactions: jsonb("reactions"),
+  readBy: jsonb("read_by")
 });
 
 // AI Study Partners table
@@ -384,21 +426,31 @@ export const aiStudyPartners = pgTable("ai_study_partners", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Insert schemas for chat and AI study partners
+// Insert schemas for chat - ALIGNED WITH ACTUAL DB
 export const insertChatConversationSchema = z.object({
-  userId: z.number(),
-  title: z.string().max(255).optional(),
-  type: z.string().max(50).default("general"),
-  isActive: z.boolean().default(true)
+  participants: z.array(z.string()),
+  lastMessage: z.string().optional(),
+  lastMessageAt: z.date().optional(),
+  unreadCount: z.number().optional(),
+  type: z.string(),
+  title: z.string().optional(),
+  isActive: z.boolean().optional()
 });
 
 export const insertChatMessageSchema = z.object({
   conversationId: z.number(),
-  senderId: z.number().optional(),
-  senderType: z.string().max(20).default("user"),
-  content: z.string(),
-  messageType: z.string().max(20).default("text"),
-  metadata: z.any().optional()
+  senderId: z.number(),
+  senderName: z.string().optional(),
+  message: z.string(),
+  messageType: z.string().optional(),
+  attachments: z.array(z.string()).optional(),
+  isRead: z.boolean().optional(),
+  sentAt: z.date().optional(),
+  isEdited: z.boolean().optional(),
+  editedAt: z.date().optional(),
+  replyTo: z.number().optional(),
+  reactions: z.any().optional(),
+  readBy: z.any().optional()
 });
 
 export const insertAiStudyPartnerSchema = z.object({
@@ -3036,44 +3088,34 @@ export const messages = pgTable("messages", {
 // Homework table
 export const homework = pgTable("homework", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").references(() => users.id),
-  classId: integer("class_id").references(() => classes.id),
-  courseId: integer("course_id").references(() => courses.id),
+  studentId: integer("student_id").references(() => users.id).notNull(),
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
-  tutorId: integer("tutor_id").references(() => users.id),
-  title: varchar("title", { length: 255 }).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  title: text("title").notNull(),
   description: text("description"),
-  homeworkType: varchar("homework_type", { length: 50 }).default("assignment"), // assignment, reading, writing, listening, speaking
-  difficulty: varchar("difficulty", { length: 20 }).default("medium"),
-  instructions: text("instructions"),
-  resources: text("resources").array().default([]),
-  attachments: jsonb("attachments"),
-  maxScore: integer("max_score").default(100),
-  maxGrade: integer("max_grade"),
-  timeLimit: integer("time_limit"), // in minutes
   dueDate: timestamp("due_date"),
-  assignedDate: timestamp("assigned_date").defaultNow().notNull(),
-  assignedAt: timestamp("assigned_at"),
-  isGraded: boolean("is_graded").default(true),
-  allowLateSubmission: boolean("allow_late_submission").default(false),
-  lateSubmissionPenalty: decimal("late_submission_penalty", { precision: 5, scale: 2 }),
-  latePenaltyPercent: integer("late_penalty_percent"),
   status: text("status"),
   submission: text("submission"),
-  submissionUrl: text("submission_url"),
-  submissionFiles: jsonb("submission_files"),
-  submittedAt: timestamp("submitted_at"),
   grade: integer("grade"),
   feedback: text("feedback"),
+  assignedAt: timestamp("assigned_at"),
+  tutorId: integer("tutor_id").references(() => users.id),
+  instructions: text("instructions"),
+  maxScore: integer("max_score"),
+  submissionUrl: text("submission_url"),
+  submissionFiles: jsonb("submission_files"),
+  maxGrade: integer("max_grade"),
+  difficulty: text("difficulty"),
   estimatedTime: integer("estimated_time"),
   xpReward: integer("xp_reward"),
-  isVisible: boolean("is_visible"),
-  isActive: boolean("is_active").default(true),
+  allowLateSubmission: boolean("allow_late_submission"),
+  latePenaltyPercent: integer("late_penalty_percent"),
+  submittedAt: timestamp("submitted_at"),
+  attachments: jsonb("attachments"),
+  updatedAt: timestamp("updated_at"),
   rubric: jsonb("rubric"),
-  tags: text("tags").array().default([]),
-  skillsTargeted: text("skills_targeted").array().default([]),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  tags: text("tags").array(),
+  isVisible: boolean("is_visible")
 });
 
 // Payments table
@@ -4352,38 +4394,31 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull().unique(),
-  firstName: varchar("first_name", { length: 100 }),
-  lastName: varchar("last_name", { length: 100 }),
-  profilePictureUrl: varchar("profile_picture_url", { length: 500 }),
-  dateOfBirth: date("date_of_birth"),
-  phoneNumber: varchar("phone_number", { length: 20 }),
-  address: text("address"),
-  city: varchar("city", { length: 100 }),
-  country: varchar("country", { length: 100 }),
-  timezone: varchar("timezone", { length: 50 }).default("UTC"),
-  preferredLanguage: varchar("preferred_language", { length: 10 }).default("en"),
-  nativeLanguage: varchar("native_language", { length: 10 }),
-  targetLanguages: text("target_languages").array().default([]),
-  proficiencyLevels: jsonb("proficiency_levels"), // language -> level mapping
-  learningGoals: text("learning_goals").array().default([]),
-  interests: text("interests").array().default([]),
-  occupation: varchar("occupation", { length: 100 }),
-  educationLevel: varchar("education_level", { length: 50 }),
+  culturalBackground: text("cultural_background"),
+  nativeLanguage: text("native_language"),
+  targetLanguages: text("target_languages").array(),
+  proficiencyLevel: text("proficiency_level"),
+  learningGoals: text("learning_goals").array(),
+  learningStyle: text("learning_style"),
+  timezone: text("timezone"),
+  preferredStudyTime: text("preferred_study_time"),
+  weeklyStudyHours: integer("weekly_study_hours"),
+  personalityType: text("personality_type"),
+  motivationFactors: text("motivation_factors").array(),
+  learningChallenges: text("learning_challenges").array(),
+  strengths: text("strengths").array(),
+  interests: text("interests").array(),
   bio: text("bio"),
-  socialLinks: jsonb("social_links"),
-  preferences: jsonb("preferences"), // user preferences and settings
-  notifications: jsonb("notifications"), // notification preferences
-  privacy: jsonb("privacy"), // privacy settings
-  accessibility: jsonb("accessibility"), // accessibility settings
-  theme: varchar("theme", { length: 20 }).default("light"), // light, dark, auto
-  isActive: boolean("is_active").default(true),
-  lastLoginAt: timestamp("last_login_at"),
-  profileCompleteness: integer("profile_completeness").default(0), // percentage
-  verificationStatus: varchar("verification_status", { length: 20 }).default("unverified"), // unverified, pending, verified
-  verifiedAt: timestamp("verified_at"),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  nationalId: text("national_id"),
+  birthday: date("birthday"),
+  guardianName: text("guardian_name"),
+  guardianPhone: text("guardian_phone"),
+  notes: text("notes"),
+  currentLevel: text("current_level"),
+  targetLanguage: text("target_language"),
+  currentProficiency: text("current_proficiency")
 });
 
 // User Sessions table
