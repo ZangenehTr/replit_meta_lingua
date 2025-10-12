@@ -19,7 +19,7 @@ import {
   // AI tracking tables
   aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
   // Callern tables
-  callernPackages, studentCallernPackages, teacherCallernAvailability, callernCallHistory,
+  callernPackages, studentCallernPackages, teacherCallernAvailability, teacherCallernAuthorization, callernCallHistory,
   callernPresence, callernSpeechSegments, callernScoresStudent, callernScoresTeacher, callernScoringEvents,
   // Supervision observation tables
   supervisionObservations, teacherObservationResponses,
@@ -102,7 +102,9 @@ import {
   type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis,
   // Callern types
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
-  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
+  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, 
+  type TeacherCallernAuthorization, type InsertTeacherCallernAuthorization,
+  type CallernCallHistory, type InsertCallernCallHistory,
   type CallernPresence, type InsertCallernPresence, type CallernSpeechSegment, type InsertCallernSpeechSegment,
   type CallernScoresStudent, type InsertCallernScoresStudent, type CallernScoresTeacher, type InsertCallernScoresTeacher,
   type CallernScoringEvent, type InsertCallernScoringEvent,
@@ -286,6 +288,14 @@ export interface IStorage {
     lastActiveAt?: Date;
   }): Promise<any>;
   getTeachersForCallern(): Promise<any[]>;
+  
+  // Teacher CallerN Authorization methods
+  getAuthorizedCallernTeachers(): Promise<any[]>;
+  getTeacherCallernAuthorization(teacherId: number): Promise<TeacherCallernAuthorization | undefined>;
+  createTeacherCallernAuthorization(data: InsertTeacherCallernAuthorization): Promise<TeacherCallernAuthorization>;
+  updateTeacherCallernAuthorization(teacherId: number, updates: Partial<TeacherCallernAuthorization>): Promise<TeacherCallernAuthorization | undefined>;
+  deleteTeacherCallernAuthorization(teacherId: number): Promise<boolean>;
+  
   getStudentCallernPackages(studentId: number): Promise<any[]>;
   createStudentCallernPackage(packageData: any): Promise<any>;
   
