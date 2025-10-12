@@ -94,11 +94,11 @@ export const queryKeys = {
     targets: ['/api/supervisor/targets'] as const,
   },
   
-  // Homework/Assignments
+  // Homework/Assignments (unified - teacher uses assignments route)
   homework: {
     all: ['/api/homework'] as const,
-    teacher: ['/api/teacher/homework'] as const,
-    student: [API_ENDPOINTS.student.homework] as const,
+    teacher: ['/api/teacher/assignments'] as const, // Updated to use unified assignments endpoint
+    student: [API_ENDPOINTS.student.homework] as const, // Student homework is separate
   },
   
   // Session Packages

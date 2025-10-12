@@ -37,7 +37,7 @@ export function CreateAssignmentModal({ children }: CreateAssignmentModalProps) 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/homework'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teacher/assignments'] });
       toast({
         title: "Assignment Created",
         description: "The assignment has been successfully created and assigned to students.",
