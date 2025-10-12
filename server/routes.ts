@@ -10620,64 +10620,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DEPRECATED: Use /api/teacher/assignments instead
   app.get("/api/teacher/homework", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'Teacher/Tutor') {
       return res.status(403).json({ message: "Access denied" });
     }
 
     try {
-      const homework = [
-        {
-          id: 1,
-          title: "Grammar Exercise - Past Tense",
-          course: "Persian Grammar Fundamentals",
-          studentName: "Ahmad Rezaei",
-          submittedAt: "2024-01-14 3:30 PM",
-          status: "submitted",
-          grade: null,
-          feedback: null,
-          dueDate: "2024-01-15"
-        },
-        {
-          id: 2,
-          title: "Poetry Analysis - Hafez",
-          course: "Advanced Persian Literature",
-          studentName: "Maryam Karimi",
-          submittedAt: "2024-01-13 11:45 AM",
-          status: "graded",
-          grade: 92,
-          feedback: "Excellent analysis of metaphors and imagery.",
-          dueDate: "2024-01-14"
-        },
-        {
-          id: 3,
-          title: "Business Email Writing",
-          course: "Business English",
-          studentName: "Hassan Mohammadi",
-          submittedAt: "2024-01-16 9:15 AM",
-          status: "overdue",
-          grade: null,
-          feedback: null,
-          dueDate: "2024-01-15"
-        }
-      ];
-
-      res.json(homework);
+      console.warn('⚠️ DEPRECATED: GET /api/teacher/homework - Use /api/teacher/assignments instead');
+      const teacherId = req.user.id;
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      res.json(assignments || []);
     } catch (error) {
+      console.error('Error fetching teacher homework:', error);
       res.status(500).json({ message: "Failed to get homework" });
     }
   });
 
-  // Get teacher assignments endpoint (simplified to avoid ORM issues)
+  // Get teacher assignments endpoint (REAL data from homework table)
   app.get("/api/teacher/assignments", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
-      
-      // For now, return empty array until database schema issues are resolved
-      // This avoids the Drizzle ORM orderSelectedFields error
-      const assignments = [];
-      
-      res.json(assignments);
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      res.json(assignments || []);
     } catch (error) {
       console.error('Error fetching teacher assignments:', error);
       res.status(500).json({ message: "Failed to fetch teacher assignments" });
@@ -27230,27 +27195,4 @@ Meta Lingua Academy`;
       }
     } catch (error) {
       console.error('Error exporting interactions:', error);
-      res.status(500).json({ error: 'Failed to export data', message: error.message });
-    }
-  });
-
-  // Update interaction notes
-  app.put("/api/front-desk/interactions/:id/notes", authenticate, authorizePermission('front_desk_operations', 'update'), async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { notes } = req.body;
-      
-      const interaction = await storage.updateFrontDeskInteraction(parseInt(id), {
-        notes,
-        updatedBy: req.user.id
-      });
-      
-      res.json(interaction);
-    } catch (error) {
-      console.error('Error updating interaction notes:', error);
-      res.status(500).json({ error: 'Failed to update notes', message: error.message });
-    }
-  });
-
-  return app;
-}
+      res.s
