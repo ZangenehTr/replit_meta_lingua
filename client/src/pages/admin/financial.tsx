@@ -35,6 +35,28 @@ export function AdminFinancial() {
   const { isRTL } = useLanguage();
   const [dateRange, setDateRange] = useState("30days");
   const [filterType, setFilterType] = useState("all");
+  
+  // Financial Reports state
+  const [reportType, setReportType] = useState("trial-balance");
+  const [reportStartDate, setReportStartDate] = useState(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+  const [reportEndDate, setReportEndDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Fetch financial reports from real ledger
+  const { data: reportData, isLoading: reportLoading, error: reportError, isError: reportIsError, refetch: refetchReport } = useQuery({
+    queryKey: ['/api/admin/reports', reportType, reportStartDate, reportEndDate],
+    queryFn: async () => {
+      const endpoint = reportType === 'trial-balance' ? '/api/admin/reports/trial-balance'
+        : reportType === 'balance-sheet' ? '/api/admin/reports/balance-sheet'
+        : '/api/admin/reports/profit-loss';
+      
+      const response = await fetch(`${endpoint}?startDate=${reportStartDate}&endDate=${reportEndDate}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (!response.ok) throw new Error(`Failed to fetch report: ${response.statusText}`);
+      return response.json();
+    },
+    enabled: !!reportStartDate && !!reportEndDate
+  });
 
   // Fetch financial data
   const { data: financialData, isLoading } = useQuery({
@@ -274,6 +296,7 @@ export function AdminFinancial() {
           <TabsTrigger value="transactions">{t('admin:financial.recentTransactions')}</TabsTrigger>
           <TabsTrigger value="payouts">{t('admin:financial.teacherPayoutsTab')}</TabsTrigger>
           <TabsTrigger value="analytics">{t('admin:financial.financialAnalytics')}</TabsTrigger>
+          <TabsTrigger value="reports">{t('admin:financial.financialReports')}</TabsTrigger>
           <TabsTrigger value="settings">{t('admin:financial.paymentSettings')}</TabsTrigger>
         </TabsList>
         
@@ -474,6 +497,224 @@ export function AdminFinancial() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('admin:financial.financialReports')}</CardTitle>
+              <CardDescription>{t('admin:financial.financialReportsDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Report Controls */}
+              <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-[200px]">
+                  <Label>{t('admin:financial.reportType')}</Label>
+                  <Select value={reportType} onValueChange={setReportType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="trial-balance">{t('admin:financial.trialBalance')}</SelectItem>
+                      <SelectItem value="balance-sheet">{t('admin:financial.balanceSheet')}</SelectItem>
+                      <SelectItem value="profit-loss">{t('admin:financial.profitLoss')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex-1 min-w-[150px]">
+                  <Label>{t('admin:financial.startDate')}</Label>
+                  <Input 
+                    type="date" 
+                    value={reportStartDate} 
+                    onChange={(e) => setReportStartDate(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex-1 min-w-[150px]">
+                  <Label>{t('admin:financial.endDate')}</Label>
+                  <Input 
+                    type="date" 
+                    value={reportEndDate} 
+                    onChange={(e) => setReportEndDate(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-end">
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    {t('admin:financial.exportReport')}
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Report Display */}
+              <div className="border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">
+                    {reportType === 'trial-balance' && t('admin:financial.trialBalance')}
+                    {reportType === 'balance-sheet' && t('admin:financial.balanceSheet')}
+                    {reportType === 'profit-loss' && t('admin:financial.profitLoss')}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {reportStartDate} {t('admin:financial.to')} {reportEndDate}
+                  </p>
+                </div>
+                
+                {reportLoading ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Loading report data...</p>
+                  </div>
+                ) : reportIsError ? (
+                  <div className="text-center py-8">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md mx-auto">
+                      <div className="flex items-center gap-2 text-red-800 mb-2">
+                        <AlertCircle className="h-5 w-5" />
+                        <h4 className="font-semibold">Failed to load report</h4>
+                      </div>
+                      <p className="text-sm text-red-600 mb-3">
+                        {reportError?.message || 'Unable to fetch financial report from ledger'}
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => refetchReport()}
+                        className="border-red-300 hover:bg-red-50"
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  </div>
+                ) : reportData ? (
+                  <div className="overflow-x-auto">
+                    {reportType === 'trial-balance' && reportData.accounts && (
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="border p-2 text-left">Account Code</th>
+                            <th className="border p-2 text-left">Account Name</th>
+                            <th className="border p-2 text-right">Debit</th>
+                            <th className="border p-2 text-right">Credit</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.accounts.map((account: any, idx: number) => (
+                            <tr key={idx} className="hover:bg-gray-50">
+                              <td className="border p-2">{account.accountCode}</td>
+                              <td className="border p-2">{account.accountName}</td>
+                              <td className="border p-2 text-right">{account.debit?.toLocaleString('fa-IR') || '-'}</td>
+                              <td className="border p-2 text-right">{account.credit?.toLocaleString('fa-IR') || '-'}</td>
+                            </tr>
+                          ))}
+                          <tr className="bg-gray-100 font-bold">
+                            <td colSpan={2} className="border p-2">Total</td>
+                            <td className="border p-2 text-right">{reportData.totalDebit?.toLocaleString('fa-IR')}</td>
+                            <td className="border p-2 text-right">{reportData.totalCredit?.toLocaleString('fa-IR')}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    )}
+                    
+                    {reportType === 'balance-sheet' && (
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-semibold mb-2">Assets</h4>
+                          <div className="ml-4 space-y-1">
+                            {reportData.assets?.map((asset: any, idx: number) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>{asset.accountName}</span>
+                                <span className="font-mono">{asset.balance?.toLocaleString('fa-IR')} IRR</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between font-bold pt-2 border-t">
+                              <span>Total Assets</span>
+                              <span>{reportData.totalAssets?.toLocaleString('fa-IR')} IRR</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">Liabilities</h4>
+                          <div className="ml-4 space-y-1">
+                            {reportData.liabilities?.map((liability: any, idx: number) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>{liability.accountName}</span>
+                                <span className="font-mono">{liability.balance?.toLocaleString('fa-IR')} IRR</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between font-bold pt-2 border-t">
+                              <span>Total Liabilities</span>
+                              <span>{reportData.totalLiabilities?.toLocaleString('fa-IR')} IRR</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">Equity</h4>
+                          <div className="ml-4 space-y-1">
+                            {reportData.equity?.map((eq: any, idx: number) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>{eq.accountName}</span>
+                                <span className="font-mono">{eq.balance?.toLocaleString('fa-IR')} IRR</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between font-bold pt-2 border-t">
+                              <span>Total Equity</span>
+                              <span>{reportData.totalEquity?.toLocaleString('fa-IR')} IRR</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {reportType === 'profit-loss' && (
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-semibold mb-2">Revenue</h4>
+                          <div className="ml-4 space-y-1">
+                            {reportData.revenue?.map((rev: any, idx: number) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>{rev.accountName}</span>
+                                <span className="font-mono">{rev.balance?.toLocaleString('fa-IR')} IRR</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between font-bold pt-2 border-t">
+                              <span>Total Revenue</span>
+                              <span>{reportData.totalRevenue?.toLocaleString('fa-IR')} IRR</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">Expenses</h4>
+                          <div className="ml-4 space-y-1">
+                            {reportData.expenses?.map((exp: any, idx: number) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>{exp.accountName}</span>
+                                <span className="font-mono">{exp.balance?.toLocaleString('fa-IR')} IRR</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between font-bold pt-2 border-t">
+                              <span>Total Expenses</span>
+                              <span>{reportData.totalExpenses?.toLocaleString('fa-IR')} IRR</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <div className="flex justify-between text-lg font-bold">
+                            <span>Net Profit</span>
+                            <span className={reportData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                              {reportData.netProfit?.toLocaleString('fa-IR')} IRR
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No data available for selected date range</p>
+                  </div>
+                )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
