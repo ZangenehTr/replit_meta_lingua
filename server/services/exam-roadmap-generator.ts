@@ -3,7 +3,7 @@
  * Generates AI-powered personalized learning plans based on MST results for specific exams
  */
 
-import { OpenAIService } from './openai-service';
+import { aiAdapter } from './ai-adapter';
 import { storage } from '../storage';
 import { 
   examScoreToCEFR, 
@@ -96,10 +96,8 @@ export interface SessionPlan {
 }
 
 export class ExamRoadmapGenerator {
-  private openAIService: OpenAIService;
-
-  constructor(openAIService: OpenAIService) {
-    this.openAIService = openAIService;
+  constructor() {
+    // Using AI adapter for all AI operations
   }
 
   /**
@@ -398,24 +396,11 @@ Return JSON array:
 `;
 
     try {
-      const response = await this.openAIService.openai?.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert language teacher specializing in exam preparation. Create detailed, practical session plans that directly address identified skill gaps and include authentic exam practice.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.3,
-        max_tokens: 4000
-      });
+      // Use AI adapter (Ollama) for Iranian self-hosting
+      const systemPrompt = 'You are an expert language teacher specializing in exam preparation. Create detailed, practical session plans that directly address identified skill gaps and include authentic exam practice.';
+      const response = await aiAdapter.chat(systemPrompt, prompt);
 
-      const result = JSON.parse(response?.choices[0].message.content || '{"sessions": []}');
+      const result = JSON.parse(response);
       const sessions = result.sessions || result || [];
       
       // Ensure we return properly structured sessions
@@ -435,7 +420,7 @@ Return JSON array:
       })) : [];
 
     } catch (error) {
-      console.error('OpenAI session generation error:', error);
+      console.error('AI session generation error:', error);
       // Return fallback sessions if AI fails
       return this.getFallbackSessions(weekNumber, sessionsPerWeek, skillGaps, request.exam);
     }

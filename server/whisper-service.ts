@@ -9,7 +9,9 @@ import FormData from 'form-data';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
-import OpenAI from 'openai';
+// TODO: OpenAI Whisper removed for Iranian self-hosting
+// Plan: Deploy local Whisper using faster-whisper or whisper.cpp
+// import OpenAI from 'openai';
 
 export interface WhisperConfig {
   baseUrl: string;
@@ -33,7 +35,8 @@ export interface TranscriptionResult {
 export class WhisperService extends EventEmitter {
   private config: WhisperConfig;
   private isAvailable: boolean = false;
-  private openai?: OpenAI;
+  // TODO: OpenAI Whisper removed for Iranian self-hosting
+  // private openai?: OpenAI;
 
   constructor(config?: Partial<WhisperConfig>) {
     super();
@@ -44,11 +47,12 @@ export class WhisperService extends EventEmitter {
       task: config?.task || 'transcribe'
     };
     
-    // Initialize OpenAI as fallback if API key is available
-    if (process.env.OPENAI_API_KEY) {
-      this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      console.log('✓ OpenAI Whisper fallback initialized');
-    }
+    // TODO: Deploy local Whisper alternative (faster-whisper or whisper.cpp)
+    // OpenAI Whisper not available for Iranian self-hosting
+    // if (process.env.OPENAI_API_KEY) {
+    //   this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    //   console.log('✓ OpenAI Whisper fallback initialized');
+    // }
     
     this.checkAvailability();
   }
@@ -162,34 +166,35 @@ export class WhisperService extends EventEmitter {
       }
     }
 
-    // Fallback to OpenAI Whisper if available
-    if (this.openai) {
-      try {
-        console.log('Using OpenAI Whisper as fallback');
-        
-        // Create a temporary file for OpenAI API (it requires a file, not buffer)
-        const tempFile = path.join('/tmp', `whisper_${Date.now()}_${fileName}`);
-        fs.writeFileSync(tempFile, buffer);
-
-        const transcription = await this.openai.audio.transcriptions.create({
-          file: fs.createReadStream(tempFile) as any,
-          model: 'whisper-1',
-          language: options?.language || (this.config.language === 'fa' ? 'fa' : 'en'),
-        });
-
-        // Clean up temp file
-        fs.unlinkSync(tempFile);
-
-        return {
-          text: transcription.text,
-          language: options?.language || this.config.language || 'fa',
-          duration: 0,
-          confidence: 0.95 // OpenAI generally has high confidence
-        };
-      } catch (error) {
-        console.error('OpenAI Whisper fallback error:', error);
-      }
-    }
+    // TODO: OpenAI Whisper removed for Iranian self-hosting
+    // Deploy local Whisper alternative (faster-whisper or whisper.cpp) instead
+    // if (this.openai) {
+    //   try {
+    //     console.log('Using OpenAI Whisper as fallback');
+    //     
+    //     // Create a temporary file for OpenAI API (it requires a file, not buffer)
+    //     const tempFile = path.join('/tmp', `whisper_${Date.now()}_${fileName}`);
+    //     fs.writeFileSync(tempFile, buffer);
+    //
+    //     const transcription = await this.openai.audio.transcriptions.create({
+    //       file: fs.createReadStream(tempFile) as any,
+    //       model: 'whisper-1',
+    //       language: options?.language || (this.config.language === 'fa' ? 'fa' : 'en'),
+    //     });
+    //
+    //     // Clean up temp file
+    //     fs.unlinkSync(tempFile);
+    //
+    //     return {
+    //       text: transcription.text,
+    //       language: options?.language || this.config.language || 'fa',
+    //       duration: 0,
+    //       confidence: 0.95 // OpenAI generally has high confidence
+    //     };
+    //   } catch (error) {
+    //     console.error('OpenAI Whisper fallback error:', error);
+    //   }
+    // }
 
     // Final fallback
     console.log('All Whisper services unavailable, using fallback transcription');

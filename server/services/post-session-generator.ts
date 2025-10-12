@@ -6,7 +6,7 @@
 
 import { ParsedTranscript, Utterance, ErrorPattern } from './transcript-parser';
 import { OllamaService } from './ollama-service';
-import { OpenAIService } from './openai-service';
+import { aiAdapter } from './ai-adapter';
 
 export interface PostSessionPractice {
   sessionId: string;
@@ -107,8 +107,7 @@ interface SessionSummary {
 
 export class PostSessionGenerator {
   constructor(
-    private ollamaService: OllamaService,
-    private openaiService: OpenAIService
+    private ollamaService: OllamaService
   ) {}
 
   /**

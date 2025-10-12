@@ -9,7 +9,7 @@ import { EventEmitter } from 'events';
 import { LRUCache } from 'lru-cache';
 import pTimeout from 'p-timeout';
 import { OllamaService } from './ollama-service';
-import { openaiService } from './openai-service';
+import { aiAdapter } from './services/ai-adapter';
 import type { 
   EnhancedStudentProgress, 
   MentoringIntervention, 

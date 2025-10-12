@@ -1,8 +1,4 @@
-import OpenAI from "openai";
-import { ollamaService } from './ollama-service';
-
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { aiAdapter } from './services/ai-adapter';
 
 export interface LearningProfile {
   userId: number;
@@ -37,63 +33,9 @@ export class AIPersonalizationService {
     profile: LearningProfile,
     recentActivity: any[]
   ): Promise<PersonalizedRecommendation[]> {
-    // Try Ollama first, fallback to OpenAI
     try {
-      if (await ollamaService.isServiceAvailable()) {
-        console.log('Using Ollama for personalized recommendations');
-        return await ollamaService.generatePersonalizedRecommendations(profile, recentActivity);
-      }
-    } catch (error) {
-      console.log('Ollama failed, falling back to OpenAI:', error.message);
-    }
-
-    // Fallback to OpenAI
-    try {
-      const prompt = `You are an expert Persian language learning advisor with deep knowledge of cross-cultural education.
-
-Student Profile:
-- Native Language: ${profile.nativeLanguage}
-- Target Language: ${profile.targetLanguage}
-- Proficiency Level: ${profile.proficiencyLevel}
-- Learning Goals: ${profile.learningGoals.join(', ')}
-- Cultural Background: ${profile.culturalBackground}
-- Learning Style: ${profile.preferredLearningStyle}
-- Strengths: ${profile.strengths.join(', ')}
-- Weaknesses: ${profile.weaknesses.join(', ')}
-
-Recent Learning Activity: ${JSON.stringify(recentActivity)}
-
-Based on this profile, generate 5 personalized learning recommendations. Focus on:
-1. Addressing specific weaknesses while building on strengths
-2. Cultural bridge-building between native and target language cultures
-3. Appropriate difficulty progression
-4. Learning style preferences
-
-Return a JSON array with this exact structure:
-{
-  "recommendations": [
-    {
-      "type": "course|lesson|practice|cultural_insight",
-      "title": "recommendation title",
-      "description": "detailed description",
-      "reason": "why this is recommended for this specific student",
-      "priority": "high|medium|low",
-      "estimatedTime": number_in_minutes,
-      "difficulty": "beginner|intermediate|advanced",
-      "culturalContext": "cultural insights if applicable"
-    }
-  ]
-}`;
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-        max_tokens: 2000,
-      });
-
-      const result = JSON.parse(response.choices[0].message.content || '{"recommendations": []}');
-      return result.recommendations || [];
+      console.log('Generating personalized recommendations using AI Adapter (Ollama)');
+      return await aiAdapter.generateRecommendations(profile, recentActivity);
     } catch (error) {
       console.error('Error generating personalized recommendations:', error);
       return this.getFallbackRecommendations(profile);
@@ -114,47 +56,9 @@ Return a JSON array with this exact structure:
     nextSteps: string[];
     culturalInsights: string[];
   }> {
-    // Try Ollama first, fallback to OpenAI
     try {
-      if (await ollamaService.isServiceAvailable()) {
-        console.log('Using Ollama for progress analysis');
-        return await ollamaService.analyzeProgressAndProvideFeedback(profile, completedLessons, quizResults);
-      }
-    } catch (error) {
-      console.log('Ollama failed, falling back to OpenAI:', error.message);
-    }
-
-    // Fallback to OpenAI
-    try {
-      const prompt = `You are an expert Persian language instructor analyzing a student's progress.
-
-Student Profile:
-- Native Language: ${profile.nativeLanguage}
-- Proficiency Level: ${profile.proficiencyLevel}
-- Cultural Background: ${profile.culturalBackground}
-
-Completed Lessons: ${JSON.stringify(completedLessons)}
-Quiz Results: ${JSON.stringify(quizResults)}
-
-Provide a comprehensive analysis in JSON format:
-{
-  "progressAnalysis": "overall progress summary",
-  "strengths": ["list of specific strengths demonstrated"],
-  "areasForImprovement": ["specific areas needing work"],
-  "nextSteps": ["actionable next learning steps"],
-  "culturalInsights": ["cultural learning opportunities and connections"]
-}
-
-Focus on Persian language learning nuances and cross-cultural connections.`;
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-        max_tokens: 1500,
-      });
-
-      return JSON.parse(response.choices[0].message.content || '{}');
+      console.log('Analyzing progress using AI Adapter (Ollama)');
+      return await aiAdapter.analyzeProgress(profile, completedLessons, quizResults);
     } catch (error) {
       console.error('Error analyzing progress:', error);
       return this.getFallbackProgressAnalysis();
@@ -188,31 +92,25 @@ Generate a realistic, culturally-appropriate scenario that includes:
 1. A practical conversation situation common in Persian-speaking cultures
 2. Cultural context and etiquette
 3. Key phrases with cultural explanations
-4. Practice questions
+4. Practice questions`;
 
-Return JSON format:
-{
-  "scenario": "detailed scenario description",
-  "culturalContext": "cultural background and etiquette tips",
-  "keyPhrases": [
-    {
-      "persian": "Persian phrase",
-      "english": "English translation",
-      "cultural_note": "cultural significance or usage note"
-    }
-  ],
-  "practiceQuestions": ["list of practice questions"]
-}`;
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-        max_tokens: 1800,
+      const response = await aiAdapter.chat({
+        messages: [
+          { role: 'system', content: 'You are a Persian language and culture expert. Always respond with valid JSON only.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        maxTokens: 1800,
+        responseFormat: 'json',
       });
 
-      return JSON.parse(response.choices[0].message.content || '{}');
-      throw new Error('Invalid response format');
+      const parsed = JSON.parse(response.content);
+      return {
+        scenario: parsed.scenario || '',
+        culturalContext: parsed.culturalContext || '',
+        keyPhrases: parsed.keyPhrases || [],
+        practiceQuestions: parsed.practiceQuestions || []
+      };
     } catch (error) {
       console.error('Error generating conversation scenario:', error);
       return this.getFallbackConversationScenario();
@@ -246,33 +144,25 @@ Respond as a supportive tutor would:
 1. Reply naturally in Persian to continue the conversation
 2. Provide gentle corrections if needed
 3. Offer cultural insights
-4. Give encouraging feedback
+4. Give encouraging feedback`;
 
-Return JSON format:
-{
-  "response": "Your Persian response to continue conversation",
-  "feedback": "Constructive feedback on their Persian",
-  "corrections": [
-    {
-      "original": "student's phrase that needs correction",
-      "corrected": "correct version",
-      "explanation": "why this is better"
-    }
-  ],
-  "encouragement": "Positive, motivating comment"
-}`;
-
-      const message = await anthropic.messages.create({
-        max_tokens: 1200,
-        messages: [{ role: 'user', content: prompt }],
-        model: 'claude-3-7-sonnet-20250219',
+      const aiResponse = await aiAdapter.chat({
+        messages: [
+          { role: 'system', content: 'You are a Persian language tutor. Always respond with valid JSON only.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        maxTokens: 1200,
+        responseFormat: 'json',
       });
 
-      const response = message.content[0];
-      if (response.type === 'text') {
-        return JSON.parse(response.text);
-      }
-      throw new Error('Invalid response format');
+      const parsed = JSON.parse(aiResponse.content);
+      return {
+        response: parsed.response || '',
+        feedback: parsed.feedback || '',
+        corrections: parsed.corrections || [],
+        encouragement: parsed.encouragement || ''
+      };
     } catch (error) {
       console.error('Error generating conversation response:', error);
       return this.getFallbackConversationResponse();
@@ -313,36 +203,23 @@ Generate 5 questions that:
 1. Target the student's weak areas
 2. Include cultural context questions
 3. Vary in difficulty appropriately
-4. Include explanations
+4. Include explanations`;
 
-Return JSON format:
-{
-  "questions": [
-    {
-      "id": 1,
-      "type": "multiple_choice|fill_blank|translation|cultural_context",
-      "question": "question text",
-      "options": ["option1", "option2", "option3", "option4"],
-      "correctAnswer": "correct answer",
-      "explanation": "why this is correct",
-      "culturalNote": "cultural context if applicable",
-      "difficulty": "beginner|intermediate|advanced"
-    }
-  ],
-  "adaptationReason": "why these questions were chosen for this student"
-}`;
-
-      const message = await anthropic.messages.create({
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: prompt }],
-        model: 'claude-3-7-sonnet-20250219',
+      const response = await aiAdapter.chat({
+        messages: [
+          { role: 'system', content: 'You are a Persian language assessment expert. Always respond with valid JSON only.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        maxTokens: 2000,
+        responseFormat: 'json',
       });
 
-      const response = message.content[0];
-      if (response.type === 'text') {
-        return JSON.parse(response.text);
-      }
-      throw new Error('Invalid response format');
+      const parsed = JSON.parse(response.content);
+      return {
+        questions: parsed.questions || [],
+        adaptationReason: parsed.adaptationReason || ''
+      };
     } catch (error) {
       console.error('Error generating adaptive quiz:', error);
       return this.getFallbackQuiz();

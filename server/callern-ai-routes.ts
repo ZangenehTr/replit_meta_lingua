@@ -1,22 +1,13 @@
 import { Express } from "express";
 import { authenticateToken } from "./auth-middleware";
 import { ollamaService } from "./services/ollama-service";
-import { openAIService } from "./services/openai-service";
 
-// Initialize AI services with OpenAI as fallback
-
-// Helper function to get available AI service
+// Helper function to get available AI service (Ollama only for Iranian self-hosting)
 async function getAvailableAIService() {
-  // First try Ollama
+  // Use Ollama exclusively for Iranian self-hosting
   const ollamaHealthy = await ollamaService.healthCheck();
   if (ollamaHealthy) {
     return { service: ollamaService, type: 'ollama' };
-  }
-  
-  // Fallback to OpenAI
-  const openAIHealthy = await openAIService.healthCheck();
-  if (openAIHealthy) {
-    return { service: openAIService, type: 'openai' };
   }
   
   return null;

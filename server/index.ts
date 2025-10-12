@@ -39,6 +39,25 @@ if (fs.existsSync(envPath)) {
       console.log('⚠️  Using development fallback for JWT_SECRET');
     }
   }
+
+  // Validate Ollama configuration for Iranian self-hosting
+  const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
+  const ollamaModel = process.env.OLLAMA_MODEL || 'llama3.2:3b';
+  
+  if (!process.env.OLLAMA_HOST) {
+    process.env.OLLAMA_HOST = ollamaHost;
+    console.log(`⚠️  OLLAMA_HOST not set, using default: ${ollamaHost}`);
+  }
+  
+  if (!process.env.OLLAMA_MODEL) {
+    process.env.OLLAMA_MODEL = ollamaModel;
+    console.log(`⚠️  OLLAMA_MODEL not set, using default: ${ollamaModel}`);
+  }
+  
+  console.log('✅ Ollama configuration:', {
+    host: process.env.OLLAMA_HOST,
+    model: process.env.OLLAMA_MODEL
+  });
 }
 
 const app = express();

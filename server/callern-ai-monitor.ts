@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import OpenAI from 'openai';
+import { aiAdapter } from './services/ai-adapter';
 
 interface ConversationMetrics {
   studentTalkTime: number;
@@ -39,7 +39,6 @@ interface BodyLanguage {
 
 export class CallernAIMonitor {
   private io: Server;
-  private openai: OpenAI;
   private activeMonitors: Map<string, ConversationMetrics> = new Map();
   private conversationTranscripts: Map<string, string[]> = new Map();
   private studentProfiles: Map<number, any> = new Map();
@@ -54,9 +53,6 @@ export class CallernAIMonitor {
 
   constructor(io: Server) {
     this.io = io;
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
   }
 
   startMonitoring(config: AIMonitorConfig): void {
@@ -189,8 +185,7 @@ export class CallernAIMonitor {
     try {
       const transcript = this.conversationTranscripts.get(roomId)?.join('\n') || '';
       
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4',
+      const response = await aiAdapter.chat({
         messages: [
           {
             role: 'system',
@@ -201,12 +196,12 @@ export class CallernAIMonitor {
             content: `Recent conversation:\n${transcript.slice(-500)}\n\nCurrent context: ${context}\n\nSuggest helpful words/phrases:`
           }
         ],
-        max_tokens: 150,
+        maxTokens: 150,
         temperature: 0.7
       });
 
-      const suggestions = response.choices[0].message.content
-        ?.split('\n')
+      const suggestions = response.content
+        .split('\n')
         .filter(s => s.trim())
         .slice(0, 5) || [];
       
@@ -288,8 +283,7 @@ export class CallernAIMonitor {
     if (!metrics) return [];
 
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4',
+      const response = await aiAdapter.chat({
         messages: [
           {
             role: 'system',
@@ -300,12 +294,12 @@ export class CallernAIMonitor {
             content: `Student mood: ${studentMood.emotion}\nBody language: ${bodyLanguage.posture}\nEngagement level: ${Math.round(metrics.engagementLevel * 100)}%\n\nProvide 2-3 teaching tips:`
           }
         ],
-        max_tokens: 150,
+        maxTokens: 150,
         temperature: 0.7
       });
 
-      return response.choices[0].message.content
-        ?.split('\n')
+      return response.content
+        .split('\n')
         .filter(s => s.trim())
         .slice(0, 3) || [];
     } catch (error) {
@@ -320,23 +314,8 @@ export class CallernAIMonitor {
     toLang: string
   ): Promise<string> {
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: `Translate from ${fromLang} to ${toLang}. Provide only the translation.`
-          },
-          {
-            role: 'user',
-            content: text
-          }
-        ],
-        max_tokens: 100,
-        temperature: 0.3
-      });
-
-      return response.choices[0].message.content || '';
+      const result = await aiAdapter.translate(text, toLang, fromLang);
+      return result.translatedText;
     } catch (error) {
       console.error('Error translating:', error);
       return '';
@@ -348,26 +327,11 @@ export class CallernAIMonitor {
     language: string
   ): Promise<{ corrected: string; explanation: string }> {
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: `Correct grammar errors in ${language}. Provide the corrected text and a brief explanation.`
-          },
-          {
-            role: 'user',
-            content: `Text: "${text}"\n\nProvide correction and explanation:`
-          }
-        ],
-        max_tokens: 200,
-        temperature: 0.3
-      });
-
-      const result = response.choices[0].message.content || '';
-      const [corrected, explanation] = result.split('\n').filter(s => s.trim());
-      
-      return { corrected: corrected || text, explanation: explanation || '' };
+      const result = await aiAdapter.correctGrammar(text, language);
+      return {
+        corrected: result.corrected,
+        explanation: result.explanation
+      };
     } catch (error) {
       console.error('Error correcting grammar:', error);
       return { corrected: text, explanation: '' };
@@ -379,28 +343,10 @@ export class CallernAIMonitor {
     language: string
   ): Promise<{ phonetic: string; tips: string[] }> {
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: `Provide pronunciation guide for ${language} words. Include phonetic spelling and tips.`
-          },
-          {
-            role: 'user',
-            content: `Word: "${word}"\n\nProvide phonetic spelling and 2-3 pronunciation tips:`
-          }
-        ],
-        max_tokens: 150,
-        temperature: 0.5
-      });
-
-      const result = response.choices[0].message.content || '';
-      const lines = result.split('\n').filter(s => s.trim());
-      
+      const result = await aiAdapter.generatePronunciationGuide(word, language);
       return {
-        phonetic: lines[0] || '',
-        tips: lines.slice(1, 4)
+        phonetic: result.phonetic,
+        tips: result.tips
       };
     } catch (error) {
       console.error('Error generating pronunciation guide:', error);
@@ -498,8 +444,7 @@ export class CallernAIMonitor {
 
   private async generateRecommendations(metrics: ConversationMetrics): Promise<string[]> {
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4',
+      const response = await aiAdapter.chat({
         messages: [
           {
             role: 'system',
@@ -510,12 +455,12 @@ export class CallernAIMonitor {
             content: `Engagement: ${Math.round(metrics.engagementLevel * 100)}%\nVocabulary used: ${metrics.vocabularyUsed.size} words\nGrammar errors: ${metrics.grammarErrors.length}\nProvide recommendations:`
           }
         ],
-        max_tokens: 200,
+        maxTokens: 200,
         temperature: 0.7
       });
 
-      return response.choices[0].message.content
-        ?.split('\n')
+      return response.content
+        .split('\n')
         .filter(s => s.trim())
         .slice(0, 5) || [];
     } catch (error) {

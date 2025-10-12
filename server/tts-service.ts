@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import gtts from 'node-gtts';
-import OpenAI from 'openai';
 import { spawn } from 'child_process';
 import { 
   TTSMasterPromptService, 
@@ -51,7 +49,6 @@ export interface TTSResponse {
 
 export class MetaLinguaTTSService {
   private outputDir: string;
-  private openai?: OpenAI;
 
   constructor() {
     // Create output directory for audio files
@@ -60,82 +57,17 @@ export class MetaLinguaTTSService {
       fs.mkdirSync(this.outputDir, { recursive: true });
     }
 
-    // Initialize OpenAI TTS as premium fallback
-    if (process.env.OPENAI_API_KEY) {
-      this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      console.log('✓ OpenAI TTS fallback initialized');
-    }
+    // TTS uses Edge TTS exclusively for Iranian self-hosting
+    console.log('✓ TTS Service initialized with Edge TTS (self-hosted)');
   }
 
   /**
-   * Convert text to speech using Google TTS (works offline after initial download)
+   * Convert text to speech using Edge TTS (Iranian self-hosting compatible)
+   * This method now uses Edge TTS exclusively - no Google services
    */
   async generateSpeech(request: TTSRequest): Promise<TTSResponse> {
-    try {
-      const { text, language, speed = 1.0 } = request;
-      
-      // Validate language
-      const langCode = LANGUAGE_CODES[language.toLowerCase()] || language.toLowerCase();
-      if (!SUPPORTED_LANGUAGES.includes(langCode)) {
-        return {
-          success: false,
-          error: `Language '${language}' is not supported. Supported languages: ${SUPPORTED_LANGUAGES.join(', ')}`
-        };
-      }
-
-      // Validate text
-      if (!text || text.trim().length === 0) {
-        return {
-          success: false,
-          error: 'Text cannot be empty'
-        };
-      }
-
-      // Generate filename
-      const timestamp = Date.now();
-      const filename = `tts_${langCode}_${timestamp}.mp3`;
-      const filePath = path.join(this.outputDir, filename);
-
-      // Create TTS instance
-      const speech = gtts(langCode);
-      
-      // Generate speech and save to file
-      await new Promise<void>((resolve, reject) => {
-        speech.save(filePath, text, (err) => {
-          if (err) {
-            reject(new Error(`TTS generation failed: ${err.message}`));
-          } else {
-            resolve();
-          }
-        });
-      });
-
-      // Verify file was created
-      if (!fs.existsSync(filePath)) {
-        return {
-          success: false,
-          error: 'Failed to generate audio file'
-        };
-      }
-
-      // Get file stats for duration estimation
-      const stats = fs.statSync(filePath);
-      const estimatedDuration = Math.ceil(text.length / 10); // Rough estimation
-
-      return {
-        success: true,
-        audioFile: filename,
-        audioUrl: `/uploads/tts/${filename}`,
-        duration: estimatedDuration
-      };
-
-    } catch (error) {
-      console.error('TTS Service Error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown TTS error'
-      };
-    }
+    // All TTS now uses Edge TTS for Iranian self-hosting (Google services blocked)
+    return this.generateSpeechWithEdgeTTS(request);
   }
 
   /**
@@ -405,70 +337,18 @@ export class MetaLinguaTTSService {
   }
 
   /**
-   * Generate high-quality audio using OpenAI TTS with master prompt
+   * REMOVED: OpenAI TTS not available for Iranian self-hosting
+   * Use Edge TTS or local TTS alternatives instead
    */
   private async generateWithOpenAI(request: EnhancedTTSRequest): Promise<TTSResponse> {
-    if (!this.openai) {
-      throw new Error('OpenAI not available');
-    }
-
-    try {
-      // Extract actual content from master prompt
-      const actualContent = this.extractContentFromPrompt(request.text, request);
-      
-      // Choose voice based on exam type and accent requirements
-      const voice = this.selectOpenAIVoice(request.examConfig);
-      
-      // Add SSML-like natural speech patterns
-      const naturalizedContent = this.addNaturalSpeechPatterns(actualContent, request.examConfig);
-      
-      const response = await this.openai.audio.speech.create({
-        model: 'tts-1-hd',
-        voice: voice,
-        input: naturalizedContent,
-        speed: this.calculateNaturalSpeed(request.examConfig)
-      });
-
-      // Save to file
-      const timestamp = Date.now();
-      const audioType = request.audioType || 'speech';
-      const filename = `${audioType}_${request.examConfig?.examType || 'general'}_${timestamp}.mp3`;
-      const filePath = path.join(this.outputDir, filename);
-
-      const buffer = Buffer.from(await response.arrayBuffer());
-      fs.writeFileSync(filePath, buffer);
-
-      return {
-        success: true,
-        audioFile: filename,
-        audioUrl: `/uploads/tts/${filename}`,
-        duration: Math.ceil(naturalizedContent.length / 12) // More accurate estimation
-      };
-
-    } catch (error) {
-      console.error('OpenAI TTS error:', error);
-      throw error;
-    }
+    throw new Error('OpenAI TTS not available - use Edge TTS for Iranian self-hosting');
   }
 
   /**
-   * Select appropriate OpenAI voice based on exam type
+   * REMOVED: OpenAI voices not available for Iranian self-hosting
    */
   private selectOpenAIVoice(examConfig?: TTSExamType): 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' {
-    if (!examConfig) return 'alloy';
-
-    switch (examConfig.examType) {
-      case 'TOEFL':
-        return 'alloy'; // American accent - natural and clear
-      case 'IELTS':
-        return 'echo'; // British-like accent - sophisticated tone
-      case 'PTE':
-        return 'nova'; // Clear, neutral accent - good for academic content
-      case 'Business English':
-        return 'onyx'; // Professional, deeper tone - authoritative
-      default:
-        return 'shimmer'; // Warm, conversational tone for general English
-    }
+    return 'alloy'; // Stub - not used
   }
 
   /**

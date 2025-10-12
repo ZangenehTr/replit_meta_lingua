@@ -6,7 +6,6 @@
 import express from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
-import { openAIService } from '../services/openai-service';
 import { ExamRoadmapGenerator } from '../services/exam-roadmap-generator';
 import { 
   ExamType, 
@@ -19,8 +18,8 @@ import { requireAuth, AuthRequest } from '../auth-middleware';
 
 const router = express.Router();
 
-// Initialize the roadmap generator with OpenAI service
-const roadmapGenerator = new ExamRoadmapGenerator(openAIService);
+// Initialize the roadmap generator (uses AI adapter internally)
+const roadmapGenerator = new ExamRoadmapGenerator();
 
 // Exam-specific targetScore validation schemas
 const ieltsTargetScore = z.number().min(1).max(9, 'IELTS target score must be between 1 and 9 (band scores)');
