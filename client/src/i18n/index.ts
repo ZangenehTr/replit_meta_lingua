@@ -39,6 +39,11 @@ import enAccountant from './locales/en/accountant.json';
 import faAccountant from './locales/fa/accountant.json';
 import arAccountant from './locales/ar/accountant.json';
 
+// Import frontdesk namespace
+import enFrontdesk from './locales/en/frontdesk.json';
+import faFrontdesk from './locales/fa/frontdesk.json';
+import arFrontdesk from './locales/ar/frontdesk.json';
+
 // Import auth namespace
 import enAuth from './locales/en/auth.json';
 import faAuth from './locales/fa/auth.json';
@@ -102,6 +107,7 @@ i18n
         supervisor: enSupervisor,
         callcenter: enCallcenter,
         accountant: enAccountant,
+        frontdesk: enFrontdesk,
         auth: enAuth,
         callern: enCallern,
         coursePlayer: enCoursePlayer,
@@ -118,6 +124,7 @@ i18n
         supervisor: faSupervisor,
         callcenter: faCallcenter,
         accountant: faAccountant,
+        frontdesk: faFrontdesk,
         auth: faAuth,
         callern: faCallern,
         coursePlayer: faCoursePlayer,
@@ -134,6 +141,7 @@ i18n
         supervisor: arSupervisor,
         callcenter: arCallcenter,
         accountant: arAccountant,
+        frontdesk: arFrontdesk,
         auth: arAuth,
         callern: arCallern,
         coursePlayer: arCoursePlayer,
@@ -142,7 +150,7 @@ i18n
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern', 'coursePlayer', 'courses'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'frontdesk', 'auth', 'callern', 'coursePlayer', 'courses'],
   });
 
 // Enhanced RTL detection and document direction management
