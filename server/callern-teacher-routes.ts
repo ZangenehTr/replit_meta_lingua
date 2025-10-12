@@ -18,28 +18,13 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
       const teacherId = req.user.userId;
       console.log(`Checking authorization for teacher ${teacherId}`);
       
-      // Debug: Check what's in the authorization table for this teacher
-      const allRecords = await db
-        .select()
-        .from(teacherCallernAuthorization)
-        .where(eq(teacherCallernAuthorization.teacherId, teacherId));
-      
-      console.log(`Found ${allRecords.length} authorization records for teacher ${teacherId}:`, allRecords);
-      
-      // Check if teacher is authorized for Callern - simplified approach
-      const authorization = await db
-        .select()
-        .from(teacherCallernAuthorization)
-        .where(and(
-          eq(teacherCallernAuthorization.teacherId, teacherId),
-          eq(teacherCallernAuthorization.isAuthorized, true)
-        ))
-        .limit(1);
+      // Use storage layer method
+      const authorization = await storage.getTeacherCallernAuthorization(teacherId);
       
       console.log(`Authorization check result:`, authorization);
       
       // Check if teacher is actually authorized
-      if (authorization.length === 0) {
+      if (!authorization || !authorization.isAuthorized) {
         return res.json({ 
           isAuthorized: false,
           message: 'Teacher not authorized for CallerN access'
@@ -47,12 +32,14 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
       }
 
       // Return actual authorization data
-      const authData = authorization[0];
       return res.json({ 
         isAuthorized: true,
-        authorizedAt: authData.authorizedAt,
-        authorizedBy: authData.authorizedBy,
-        notes: authData.notes
+        authorizedAt: authorization.authorizedAt,
+        authorizedBy: authorization.authorizedBy,
+        notes: authorization.notes,
+        authorizationLevel: authorization.authorizationLevel,
+        specializations: authorization.specializations,
+        maxSimultaneousCalls: authorization.maxSimultaneousCalls
       });
     } catch (error) {
       console.error('Error checking teacher authorization:', error);
@@ -307,73 +294,47 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   // Admin endpoints for managing teacher authorization
   app.post("/api/admin/callern/authorize-teacher", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const { teacherId, hourlyRate, notes } = req.body;
+      const { teacherId, hourlyRate, notes, authorizationLevel, specializations, maxSimultaneousCalls } = req.body;
       const authorizedBy = req.user.userId;
       
       // Check if already authorized
-      const existing = await db
-        .select()
-        .from(teacherCallernAuthorization)
-        .where(eq(teacherCallernAuthorization.teacherId, teacherId))
-        .limit(1);
+      const existing = await storage.getTeacherCallernAuthorization(teacherId);
       
-      if (existing.length > 0 && existing[0].isAuthorized) {
+      if (existing && existing.isAuthorized) {
         return res.status(400).json({ message: 'Teacher already authorized for Callern' });
       }
       
-      if (existing.length > 0) {
+      if (existing) {
         // Update existing record
-        await db
-          .update(teacherCallernAuthorization)
-          .set({
-            isAuthorized: true,
-            authorizedBy,
-            authorizedAt: new Date(),
-            revokedAt: null,
-            notes,
-            updatedAt: new Date()
-          })
-          .where(eq(teacherCallernAuthorization.teacherId, teacherId));
+        await storage.updateTeacherCallernAuthorization(teacherId, {
+          isAuthorized: true,
+          authorizedBy,
+          authorizedAt: new Date(),
+          revokedAt: null,
+          notes,
+          authorizationLevel: authorizationLevel || 'standard',
+          specializations: specializations || [],
+          maxSimultaneousCalls: maxSimultaneousCalls || 1
+        });
       } else {
         // Create new authorization
-        await db.insert(teacherCallernAuthorization).values({
+        await storage.createTeacherCallernAuthorization({
           teacherId,
           authorizedBy,
           isAuthorized: true,
-          notes
+          isActive: true,
+          notes,
+          authorizationLevel: authorizationLevel || 'standard',
+          specializations: specializations || [],
+          maxSimultaneousCalls: maxSimultaneousCalls || 1
         });
       }
       
       // Set hourly rate if provided
       if (hourlyRate) {
-        const availabilityExists = await db
-          .select()
-          .from(teacherCallernAvailability)
-          .where(eq(teacherCallernAvailability.teacherId, teacherId))
-          .limit(1);
-        
-        if (availabilityExists.length > 0) {
-          await db
-            .update(teacherCallernAvailability)
-            .set({
-              hourlyRate: hourlyRate.toString(),
-              updatedAt: new Date()
-            })
-            .where(eq(teacherCallernAvailability.teacherId, teacherId));
-        } else {
-          await db.insert(teacherCallernAvailability).values({
-            teacherId,
-            hourlyRate: hourlyRate.toString(),
-            isOnline: false,
-            morningSlot: false,
-            afternoonSlot: false,
-            eveningSlot: false,
-            nightSlot: false,
-            missedShifts: 0,
-            missedCalls: 0,
-            totalCallsHandled: 0
-          });
-        }
+        await storage.updateTeacherCallernAvailability(teacherId, {
+          hourlyRate: hourlyRate.toString()
+        });
       }
       
       res.json({ message: 'Teacher authorized for Callern successfully' });
@@ -388,24 +349,16 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
     try {
       const { teacherId, reason } = req.body;
       
-      await db
-        .update(teacherCallernAuthorization)
-        .set({
-          isAuthorized: false,
-          revokedAt: new Date(),
-          notes: reason,
-          updatedAt: new Date()
-        })
-        .where(eq(teacherCallernAuthorization.teacherId, teacherId));
+      await storage.updateTeacherCallernAuthorization(teacherId, {
+        isAuthorized: false,
+        revokedAt: new Date(),
+        notes: reason
+      });
       
       // Also set teacher offline
-      await db
-        .update(teacherCallernAvailability)
-        .set({
-          isOnline: false,
-          updatedAt: new Date()
-        })
-        .where(eq(teacherCallernAvailability.teacherId, teacherId));
+      await storage.updateTeacherCallernAvailability(teacherId, {
+        isOnline: false
+      });
       
       res.json({ message: 'Teacher authorization revoked' });
     } catch (error) {
@@ -417,27 +370,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   // Get list of authorized teachers (for admin)
   app.get("/api/admin/callern/authorized-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const authorizedTeachers = await db
-        .select({
-          teacherId: teacherCallernAuthorization.teacherId,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email,
-          authorizedAt: teacherCallernAuthorization.authorizedAt,
-          authorizedBy: teacherCallernAuthorization.authorizedBy,
-          isAuthorized: teacherCallernAuthorization.isAuthorized,
-          hourlyRate: teacherCallernAvailability.hourlyRate,
-          isOnline: teacherCallernAvailability.isOnline,
-          morningSlot: teacherCallernAvailability.morningSlot,
-          afternoonSlot: teacherCallernAvailability.afternoonSlot,
-          eveningSlot: teacherCallernAvailability.eveningSlot,
-          nightSlot: teacherCallernAvailability.nightSlot
-        })
-        .from(teacherCallernAuthorization)
-        .leftJoin(users, eq(teacherCallernAuthorization.teacherId, users.id))
-        .leftJoin(teacherCallernAvailability, eq(teacherCallernAuthorization.teacherId, teacherCallernAvailability.teacherId))
-        .where(eq(teacherCallernAuthorization.isAuthorized, true));
-      
+      const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
       res.json(authorizedTeachers);
     } catch (error) {
       console.error('Error fetching authorized teachers:', error);
