@@ -3050,18 +3050,17 @@ export const gameLeaderboards = pgTable("game_leaderboards", {
 // User Sessions table
 export const sessions = pgTable("sessions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  sessionToken: varchar("session_token", { length: 255 }).notNull().unique(),
-  refreshToken: varchar("refresh_token", { length: 255 }),
-  userAgent: text("user_agent"),
-  ipAddress: varchar("ip_address", { length: 45 }),
-  deviceType: varchar("device_type", { length: 50 }),
-  location: varchar("location", { length: 100 }),
-  isActive: boolean("is_active").default(true),
-  lastActiveAt: timestamp("last_active_at").defaultNow(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  studentId: integer("student_id").references(() => users.id),
+  tutorId: integer("tutor_id").references(() => users.id),
+  courseId: integer("course_id").references(() => courses.id),
+  title: text("title"),
+  description: text("description"),
+  scheduledAt: timestamp("scheduled_at"),
+  duration: integer("duration"),
+  status: text("status"),
+  sessionUrl: text("session_url"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at")
 });
 
 // Messages table
