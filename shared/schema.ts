@@ -910,6 +910,54 @@ export const insertBookOrderSchema = z.object({
   deliveredAt: z.date().optional()
 });
 
+// Insert schema for book assets
+export const insertBookAssetSchema = z.object({
+  bookId: z.number(),
+  assetType: z.string().max(50),
+  assetUrl: z.string().max(500),
+  title: z.string().max(255).optional(),
+  fileSize: z.number().optional(),
+  duration: z.number().optional(),
+  isActive: z.boolean().default(true)
+});
+
+// Insert schema for carts
+export const insertCartSchema = z.object({
+  userId: z.number().optional(),
+  sessionId: z.string().max(255).optional(),
+  status: z.string().max(20).default("active")
+});
+
+// Insert schema for cart items
+export const insertCartItemSchema = z.object({
+  cartId: z.number(),
+  bookId: z.number(),
+  quantity: z.number().default(1),
+  price: z.string().optional() // decimal as string
+});
+
+// Insert schema for orders
+export const insertOrderSchema = z.object({
+  orderNumber: z.string().max(100),
+  userId: z.number(),
+  orderType: z.string().max(30).default("purchase"),
+  orderStatus: z.string().max(30).default("pending"),
+  paymentStatus: z.string().max(30).default("pending"),
+  paymentMethod: z.string().max(50).optional(),
+  paymentGateway: z.string().max(50).optional(),
+  transactionId: z.string().max(100).optional(),
+  subtotal: z.string(), // decimal as string
+  discountTotal: z.string().default("0"),
+  taxTotal: z.string().default("0"),
+  shippingTotal: z.string().default("0"),
+  grandTotal: z.string(), // decimal as string
+  currency: z.string().max(10).default("IRR"),
+  billingAddressId: z.number().optional(),
+  shippingAddressId: z.number().optional(),
+  orderNotes: z.string().optional(),
+  customerNotes: z.string().optional()
+});
+
 // AI Training Jobs table for tracking model training job execution
 export const aiTrainingJobs = pgTable("ai_training_jobs", {
   id: serial("id").primaryKey(),
