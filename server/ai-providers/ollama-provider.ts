@@ -9,7 +9,8 @@ export class OllamaProvider extends BaseAIProvider {
 
   constructor() {
     super();
-    this.baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+    // Support both OLLAMA_HOST and OLLAMA_BASE_URL for backwards compatibility
+    this.baseUrl = process.env.OLLAMA_HOST || process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     this.defaultModel = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
   }
 

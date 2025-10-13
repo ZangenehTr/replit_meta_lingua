@@ -456,7 +456,8 @@ export class HealthMonitoringService extends EventEmitter {
   private async checkOllamaService(): Promise<boolean> {
     try {
       // Simple health check for Ollama service
-      const response = await fetch('http://localhost:11434/api/tags', {
+      const ollamaHost = process.env.OLLAMA_HOST || process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+      const response = await fetch(`${ollamaHost}/api/tags`, {
         method: 'GET',
         timeout: 3000
       });

@@ -17,7 +17,7 @@ export interface OllamaConfiguration {
 
 export class OllamaSetupService {
   private config: OllamaConfiguration = {
-    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+    baseUrl: process.env.OLLAMA_HOST || process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
     modelsPath: process.env.OLLAMA_MODELS || '~/.ollama/models',
     defaultModel: 'llama3.2:1b',
     models: ['llama3.2:1b', 'mistral:7b', 'codellama:7b'],
