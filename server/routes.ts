@@ -10182,21 +10182,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Session Video Progress API
   app.get("/api/sessions/:sessionId/video/progress", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      const userId = req.user.id;
-      
-      // Mock progress data - would fetch from sessionVideoProgress table
-      const progress = {
-        sessionId: parseInt(sessionId),
-        userId,
-        progressSeconds: 2100, // 35 minutes watched
-        totalDuration: 5340, // 89 minutes total
-        completionPercentage: 39.33,
-        completed: false,
-        lastWatchedAt: "2025-09-16T14:30:00Z"
-      };
-      
-      res.json(progress);
+      // Session video progress tracking not configured
+      return res.status(501).json({
+        error: "Session video progress not configured",
+        message: "Session video progress tracking feature requires database table implementation",
+        messageFa: "سیستم پیگیری پیشرفت ویدیو پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error fetching session video progress:', error);
       res.status(500).json({ message: "Failed to get video progress" });
@@ -10205,22 +10196,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sessions/:sessionId/video/progress", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      const { progressSeconds, totalDuration, completed } = req.body;
-      const userId = req.user.id;
-      
-      // Would update sessionVideoProgress table
-      const progress = {
-        sessionId: parseInt(sessionId),
-        userId,
-        progressSeconds,
-        totalDuration,
-        completionPercentage: Math.round((progressSeconds / totalDuration) * 100),
-        completed,
-        lastWatchedAt: new Date().toISOString()
-      };
-      
-      res.json(progress);
+      // Session video progress tracking not configured
+      return res.status(501).json({
+        error: "Session video progress not configured",
+        message: "Session video progress tracking feature requires database table implementation",
+        messageFa: "سیستم پیگیری پیشرفت ویدیو پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error updating session video progress:', error);
       res.status(500).json({ message: "Failed to update video progress" });
@@ -10230,32 +10211,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Session Video Notes API
   app.get("/api/sessions/:sessionId/video/notes", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      const userId = req.user.id;
-      
-      // Mock notes data - would fetch from sessionVideoNotes table
-      const notes = [
-        {
-          id: 1,
-          sessionId: parseInt(sessionId),
-          userId,
-          timestamp: 850,
-          content: "Remember to use pause and emphasis",
-          createdAt: "2025-09-15T09:14:10Z",
-          updatedAt: "2025-09-15T09:14:10Z"
-        },
-        {
-          id: 2,
-          sessionId: parseInt(sessionId),
-          userId,
-          timestamp: 3200,
-          content: "Practice the closing statement",
-          createdAt: "2025-09-15T09:53:20Z",
-          updatedAt: "2025-09-15T09:53:20Z"
-        }
-      ];
-      
-      res.json(notes);
+      // Session video notes not configured
+      return res.status(501).json({
+        error: "Session video notes not configured",
+        message: "Session video notes feature requires database table implementation",
+        messageFa: "یادداشت‌های ویدیو پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error fetching session video notes:', error);
       res.status(500).json({ message: "Failed to get video notes" });
@@ -10264,22 +10225,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sessions/:sessionId/video/notes", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      const { timestamp, content } = req.body;
-      const userId = req.user.id;
-      
-      // Would insert into sessionVideoNotes table
-      const note = {
-        id: Date.now(), // Mock ID
-        sessionId: parseInt(sessionId),
-        userId,
-        timestamp,
-        content,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      res.json(note);
+      // Session video notes not configured
+      return res.status(501).json({
+        error: "Session video notes not configured",
+        message: "Session video notes feature requires database table implementation",
+        messageFa: "یادداشت‌های ویدیو پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error creating session video note:', error);
       res.status(500).json({ message: "Failed to create video note" });
@@ -10289,32 +10240,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Session Video Bookmarks API
   app.get("/api/sessions/:sessionId/video/bookmarks", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      const userId = req.user.id;
-      
-      // Mock bookmarks data - would fetch from sessionVideoBookmarks table
-      const bookmarks = [
-        {
-          id: 1,
-          sessionId: parseInt(sessionId),
-          userId,
-          timestamp: 1200,
-          title: "Slide transitions discussion",
-          createdAt: "2025-09-15T09:20:00Z",
-          updatedAt: "2025-09-15T09:20:00Z"
-        },
-        {
-          id: 2,
-          sessionId: parseInt(sessionId),
-          userId,
-          timestamp: 2800,
-          title: "Q&A techniques",
-          createdAt: "2025-09-15T09:46:40Z",
-          updatedAt: "2025-09-15T09:46:40Z"
-        }
-      ];
-      
-      res.json(bookmarks);
+      // Session video bookmarks not configured
+      return res.status(501).json({
+        error: "Session video bookmarks not configured",
+        message: "Session video bookmarks feature requires database table implementation",
+        messageFa: "نشانک‌های ویدیو پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error fetching session video bookmarks:', error);
       res.status(500).json({ message: "Failed to get video bookmarks" });
@@ -10323,22 +10254,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sessions/:sessionId/video/bookmarks", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      const { timestamp, title } = req.body;
-      const userId = req.user.id;
-      
-      // Would insert into sessionVideoBookmarks table
-      const bookmark = {
-        id: Date.now(), // Mock ID
-        sessionId: parseInt(sessionId),
-        userId,
-        timestamp,
-        title,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      res.json(bookmark);
+      // Session video bookmarks not configured
+      return res.status(501).json({
+        error: "Session video bookmarks not configured",
+        message: "Session video bookmarks feature requires database table implementation",
+        messageFa: "نشانک‌های ویدیو پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error creating session video bookmark:', error);
       res.status(500).json({ message: "Failed to create video bookmark" });
@@ -10348,14 +10269,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Session Video Streaming API
   app.get("/api/videos/stream/session-:sessionId", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      
-      // Mock video streaming - would serve actual video file
-      res.status(200).json({
-        message: "Video streaming endpoint",
-        sessionId: parseInt(sessionId),
-        streamUrl: `/api/videos/stream/session-${sessionId}`,
-        note: "In production, this would stream the actual video file with proper headers for video playback"
+      // Session video streaming not configured
+      return res.status(501).json({
+        error: "Session video streaming not configured",
+        message: "Session video streaming requires video storage and streaming infrastructure",
+        messageFa: "پخش ویدیو جلسه پیکربندی نشده است"
       });
     } catch (error) {
       console.error('Error streaming session video:', error);
@@ -10365,14 +10283,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/videos/thumbnails/session-:sessionId.jpg", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const { sessionId } = req.params;
-      
-      // Mock thumbnail serving - would serve actual thumbnail image
-      res.status(200).json({
-        message: "Video thumbnail endpoint",
-        sessionId: parseInt(sessionId),
-        thumbnailUrl: `/api/videos/thumbnails/session-${sessionId}.jpg`,
-        note: "In production, this would serve the actual thumbnail image file"
+      // Session video thumbnails not configured
+      return res.status(501).json({
+        error: "Session video thumbnails not configured",
+        message: "Session video thumbnail generation requires video processing infrastructure",
+        messageFa: "تصاویر کوچک ویدیو پیکربندی نشده است"
       });
     } catch (error) {
       console.error('Error serving session video thumbnail:', error);
@@ -25453,26 +25368,8 @@ Meta Lingua Academy`;
   // Student upcoming sessions - FIXED VERSION
   app.get("/api/student/sessions/upcoming", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      const sessions = [
-        {
-          id: 1,
-          courseName: 'Business English A2',
-          date: '2025-09-10',
-          time: '14:00',
-          duration: 60,
-          teacher: 'Sarah Johnson',
-          type: 'group'
-        },
-        {
-          id: 2,
-          courseName: 'IELTS Speaking B2', 
-          date: '2025-09-11',
-          time: '16:30',
-          duration: 45,
-          teacher: 'Mike Chen',
-          type: 'individual'
-        }
-      ];
+      // Real database implementation - get upcoming sessions from storage
+      const sessions = await storage.getUpcomingSessions(req.user.id);
       
       res.json(sessions);
     } catch (error) {
