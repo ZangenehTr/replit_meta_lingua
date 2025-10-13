@@ -4780,35 +4780,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mentor Mentees API (replacing hardcoded mentees data)
+  // Mentor Mentees API - REAL DATABASE IMPLEMENTATION
   app.get("/api/mentor/mentees", authenticateToken, requireRole(['Mentor']), async (req: any, res) => {
     try {
-      // Mentor assignment system not configured
-      return res.status(501).json({
-        error: "Mentor assignment system not configured",
-        message: "Mentor-student assignment tracking requires mentorAssignments table implementation",
-        messageFa: "سیستم تخصیص منتور پیکربندی نشده است"
-      });
+      const mentorId = req.user.id;
+      
+      // Get real mentor assignments from database
+      const assignments = await storage.getMentorAssignments(mentorId);
+      
+      // Transform assignments into mentee data with real student information
+      const mentees = await Promise.all(assignments.map(async (assignment: any) => {
+        const student = await storage.getUser(assignment.studentId);
+        if (!student) return null;
+        
+        return {
+          id: student.id,
+          name: `${student.firstName} ${student.lastName}`,
+          avatar: student.profileImage || `/avatars/student-${student.id}.jpg`,
+          level: student.level || 'A1',
+          progress: assignment.progressPercentage || 0,
+          lastActivity: assignment.lastSessionDate || assignment.updatedAt,
+          status: assignment.status || 'active',
+          motivationLevel: assignment.motivationScore || 75,
+          nextGoal: assignment.goals?.[0] || 'Continue learning'
+        };
+      }));
+      
+      // Filter out null values and return
+      res.json(mentees.filter(m => m !== null));
     } catch (error) {
       console.error('Error fetching mentees:', error);
       res.status(500).json({ message: "Failed to fetch mentees" });
     }
   });
 
-  // Mentor Sessions API (replacing hardcoded session data)
-  app.get("/api/mentor/sessions", authenticateToken, requireRole(['Mentor']), async (req: any, res) => {
-    try {
-      // Mentor sessions system not configured
-      return res.status(501).json({
-        error: "Mentor sessions system not configured",
-        message: "Mentor session scheduling requires mentorSessions table implementation",
-        messageFa: "سیستم جلسات منتور پیکربندی نشده است"
-      });
-    } catch (error) {
-      console.error('Error fetching mentor sessions:', error);
-      res.status(500).json({ message: "Failed to fetch mentor sessions" });
-    }
-  });
+  // NOTE: Real mentor sessions endpoint is implemented at line ~14993
+  // This duplicate endpoint has been removed to expose the real implementation
 
   // Daily Goals API - real database implementation
   app.get("/api/gamification/daily-goals", authenticateToken, async (req: any, res) => {
@@ -14514,15 +14521,54 @@ Return JSON format:
     }
   });
 
-  // Mentor Dashboard Stats
+  // Mentor Dashboard Stats - REAL DATABASE IMPLEMENTATION
   app.get("/api/mentor/dashboard-stats", authenticateToken, requireRole(['Mentor', 'Admin']), async (req: any, res) => {
     try {
-      // Mentor dashboard stats not configured
-      return res.status(501).json({
-        error: "Mentor dashboard stats not configured",
-        message: "Mentor dashboard statistics require mentor assignment and session tracking tables",
-        messageFa: "آمار داشبورد منتور پیکربندی نشده است"
-      });
+      const mentorId = req.user.role === 'Mentor' ? req.user.id : parseInt(req.query.mentorId as string);
+      
+      // Get real mentor assignments from database
+      const assignments = await storage.getMentorAssignments(mentorId);
+      const activeAssignments = assignments.filter(a => a.status === 'active');
+      
+      // Get real mentoring sessions from database
+      const allSessions = await storage.getMentoringSessions(mentorId);
+      const completedSessions = allSessions.filter(s => s.status === 'completed');
+      const upcomingSessions = allSessions
+        .filter(s => s.status === 'scheduled' && new Date(s.scheduledDate) > new Date())
+        .slice(0, 5);
+      
+      // Calculate real statistics from database
+      const totalRatings = completedSessions
+        .map(s => s.rating)
+        .filter(r => r !== null && r !== undefined);
+      const averageRating = totalRatings.length > 0 
+        ? totalRatings.reduce((acc, r) => acc + r, 0) / totalRatings.length 
+        : 0;
+      
+      const stats = {
+        totalAssignments: assignments.length,
+        activeStudents: activeAssignments.length,
+        completedSessions: completedSessions.length,
+        averageRating: Math.round(averageRating * 10) / 10,
+        monthlyProgress: activeAssignments.length > 0 
+          ? Math.round(activeAssignments.reduce((acc, a) => acc + (a.progressPercentage || 0), 0) / activeAssignments.length)
+          : 0,
+        upcomingMeetings: await Promise.all(upcomingSessions.map(async (s: any) => {
+          const student = await storage.getUser(s.studentId);
+          return {
+            id: s.id,
+            studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown',
+            sessionTime: s.scheduledDate,
+            subject: s.topic || 'Mentoring Session'
+          };
+        })),
+        totalStudents: assignments.length,
+        sessionHours: Math.round(completedSessions.reduce((acc, s) => acc + (s.duration || 60), 0) / 60 * 10) / 10,
+        totalCourses: new Set(assignments.map(a => a.courseId).filter(Boolean)).size,
+        pendingReviews: allSessions.filter(s => s.status === 'pending').length
+      };
+      
+      res.json(stats);
     } catch (error) {
       console.error('Error fetching mentor dashboard stats:', error);
       res.status(500).json({ message: "Failed to fetch mentor dashboard statistics" });
