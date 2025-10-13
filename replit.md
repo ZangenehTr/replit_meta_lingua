@@ -61,7 +61,13 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **Ollama AI Services**: Local AI processing for multilingual language support and data sovereignty.
 - **Check-First Protocol**: Mandatory validation for data integrity.
 - **Business Logic Consolidation**: Centralized utilities for filtering, calculations, and data integrity.
-- **Complete i18n Implementation**: Comprehensive Persian/Arabic/English translation system with RTL support across all admin dialogs and forms.
+- **Complete i18n Implementation**: Comprehensive Persian/English translation system (Arabic excluded per user decision) with RTL support across all critical components. **Phase 3 i18n Completed (October 2025)**: 
+  - Deduplication: Removed 526 duplicate keys from FA translation files
+  - Critical components fully i18n: lead-management (8 keys), auth OTP field, all student pages (mobile versions with 15-26 translation calls each)
+  - Callern components COMPLETE: LiveSuggestions (10 keys), StudentGlossary (24 keys), VideoCallLayout (8 keys) - Total: 42 callern translation keys (EN + FA)
+  - All hardcoded user-facing strings replaced with t() translation calls using useLanguage hook
+  - Culturally appropriate Persian translations with RTL formatting
+  - Language switching functional (EN↔FA) with proper font families (Inter for EN, Vazir for FA)
 - **Unified Dashboard System**: Role-appropriate content for all 8 user roles (Admin, Teacher, Mentor, Student, Supervisor, Call Center Agent, Accountant, Front Desk Clerk) landing on `/dashboard`.
 - **WebRTC Video Calling**: SimplePeer-based system with WebSocket signaling, dynamic TURN servers, media controls, and AI integration for real-time language assistance (word suggestions, translation, grammar correction, pronunciation guides).
 - **AI Supervisor**: Real-time AI supervision within video calls, featuring audio streaming, vocabulary suggestions, live attention tracking, TTT ratio monitoring, and intelligent fallback for Ollama.
