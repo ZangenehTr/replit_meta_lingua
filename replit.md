@@ -102,6 +102,42 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **File Storage**: Local server filesystem (no AWS S3, Cloudinary, or external storage)
 - **Self-Hosting**: ZERO dependencies on non-Iranian servers - complete independence from all external services
 
+## Recent Work (October 13, 2025)
+
+### OTP Authentication System - COMPLETED ✅
+**Status:** Fully functional with E2E test validation  
+**Changes Made:**
+- Fixed critical schema mismatch between shared/schema.ts and database
+  - Corrected column names: `code` → `codeHash`, `attemptsCount` → `attempts`
+  - Added missing fields: `channel`, `locale`, `phoneNumber`, `email`
+- Added `email` column to otp_codes table via ALTER TABLE
+- Updated OTP service to populate phoneNumber/email fields based on channel type
+- Removed early return blocking OTP creation for non-existent users
+- E2E test PASSED: OTP request flow working end-to-end with database record creation
+
+**Files Modified:**
+- `shared/schema.ts` - otpCodes table definition aligned with database
+- `server/services/otp-service.ts` - Added phoneNumber/email field population
+- `server/routes.ts` - Removed user existence check blocking new user OTP flow
+- Database: Added email column to otp_codes table
+
+### Ollama AI Configuration - DOCUMENTED ⚠️
+**Status:** Configured but requires fixes  
+**Configuration:**
+- Environment: `OLLAMA_HOST=http://45.89.239.250:11434` ✅
+- Model: `OLLAMA_MODEL` currently set to `llama3.2b` ❌ **MUST UPDATE TO** `llama3.2:3b` (correct Ollama tag notation)
+- Connection Status: ❌ Port 11434 closed/unreachable (Connect Timeout Error)
+
+**Behavior:**
+- Application uses "AI fallback mode" when Ollama is unavailable
+- All features function without Ollama (graceful degradation)
+- Logs show: "ℹ️ Using AI fallback mode - external Ollama server not required"
+
+**Action Required:**
+- Check Ollama server at 45.89.239.250 is running
+- Verify firewall allows incoming connections on port 11434
+- Confirm Ollama is configured to bind to 0.0.0.0 (not just localhost)
+
 ## Future Enhancements
 
 ### Lingo Bookstore Mini-Game (Alternative Approach)
