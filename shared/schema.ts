@@ -4497,34 +4497,30 @@ export const userSessions = pgTable("user_sessions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Video Lessons table
+// Video Lessons table - matches actual database structure
 export const videoLessons = pgTable("video_lessons", {
   id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  courseId: integer("course_id").references(() => courses.id),
-  levelId: integer("level_id").references(() => curriculumLevels.id),
   videoUrl: varchar("video_url", { length: 500 }).notNull(),
   thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
   duration: integer("duration"), // in seconds
+  moduleId: integer("module_id"),
+  orderIndex: integer("order_index"),
+  language: varchar("language", { length: 50 }),
+  level: varchar("level", { length: 20 }), // A1, A2, B1, B2, C1, C2
+  skillFocus: varchar("skill_focus", { length: 100 }),
   transcriptUrl: varchar("transcript_url", { length: 500 }),
   subtitlesUrl: varchar("subtitles_url", { length: 500 }),
-  skillsTargeted: text("skills_targeted").array().default([]), // listening, speaking, reading, writing, grammar, vocabulary
-  difficultyLevel: varchar("difficulty_level", { length: 20 }), // A1, A2, B1, B2, C1, C2
-  tags: text("tags").array().default([]),
-  vocabulary: text("vocabulary").array().default([]), // key vocabulary in this lesson
-  objectives: text("objectives").array().default([]),
-  isActive: boolean("is_active").default(true),
-  isPublic: boolean("is_public").default(false),
-  viewCount: integer("view_count").default(0),
-  averageRating: decimal("average_rating", { precision: 3, scale: 2 }),
-  ratingCount: integer("rating_count").default(0),
-  teacherId: integer("teacher_id").references(() => users.id),
-  createdBy: integer("created_by").references(() => users.id),
-  publishedAt: timestamp("published_at"),
-  metadata: jsonb("metadata"),
+  materialsUrl: varchar("materials_url", { length: 500 }),
+  isFree: boolean("is_free").default(false),
+  isPublished: boolean("is_published").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  teacherId: integer("teacher_id").references(() => users.id),
+  viewCount: integer("view_count").default(0),
+  completionRate: decimal("completion_rate", { precision: 5, scale: 2 })
 });
 
 // Video Progress table

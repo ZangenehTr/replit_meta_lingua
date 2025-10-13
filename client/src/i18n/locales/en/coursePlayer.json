@@ -78,5 +78,7 @@
   "reportVideoIssue": "Report Video Issue",
   "networkError": "Network error. Please check your internet connection.",
   "loadingError": "Error loading content",
-  "refreshPage": "Refresh Page"
+  "refreshPage": "Refresh Page",
+  "noLessons": "No Lessons Available",
+  "noLessonsDescription": "This course doesn't have any lessons yet. Please check back later."
 }

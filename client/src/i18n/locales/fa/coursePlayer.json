@@ -78,5 +78,7 @@
   "reportVideoIssue": "گزارش مشکل ویدیو",
   "networkError": "خطای شبکه. لطفاً اتصال اینترنت خود را بررسی کنید.",
   "loadingError": "خطا در بارگذاری محتوا",
-  "refreshPage": "بازخوانی صفحه"
+  "refreshPage": "بازخوانی صفحه",
+  "noLessons": "درس موجود نیست",
+  "noLessonsDescription": "این کلاس هنوز درسی ندارد. لطفاً بعداً بررسی کنید."
 }

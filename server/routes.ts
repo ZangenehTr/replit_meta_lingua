@@ -10709,7 +10709,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : null;
       
       // Get user's progress for this course
-      const enrollment = await storage.getUserEnrollment(req.user.id, courseId);
+      const enrollments = await storage.getUserEnrollments(req.user.id);
+      const enrollment = enrollments.find(e => e.courseId === courseId);
       const progress = enrollment?.progress || 0;
       
       // Calculate completed lessons
@@ -10734,10 +10735,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           videoUrl: lesson.videoUrl || "",
           duration: lesson.duration || 0,
           order: lesson.orderIndex || 0,
-          transcript: lesson.transcript || "",
+          transcript: lesson.transcriptUrl || "",
           notes: "",
-          resources: lesson.resources || [],
-          isPreview: lesson.isPreview || false,
+          resources: lesson.materialsUrl ? [lesson.materialsUrl] : [],
+          isPreview: lesson.isFree || false,
           isCompleted: enrollment && lesson.id <= (enrollment.progress || 0) * lessons.length / 100
         }))
       };

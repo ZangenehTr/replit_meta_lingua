@@ -224,12 +224,43 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (isLoading || !course || !currentLesson) {
+  if (isLoading || !course) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>{t('coursePlayer:loadingCourse')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentLesson || course.lessons.length === 0) {
+    return (
+      <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
+        <div className="border-b p-4">
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <div className="flex items-center space-x-4">
+              <BackButton 
+                href="/dashboard" 
+                label={t('coursePlayer:backToCourse')}
+              />
+              <div>
+                <h1 className="text-xl font-bold">{course.title}</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto p-8">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <BookOpen className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <h2 className="text-2xl font-bold mb-2">{t('coursePlayer:noLessons')}</h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('coursePlayer:noLessonsDescription')}
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
