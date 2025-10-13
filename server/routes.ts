@@ -4783,22 +4783,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mentor Mentees API (replacing hardcoded mentees data)
   app.get("/api/mentor/mentees", authenticateToken, requireRole(['Mentor']), async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const students = filterStudents(users);
-      
-      const mentees = students.slice(0, Math.min(26, students.length)).map((student, index) => ({
-        id: student.id,
-        name: student.firstName + ' ' + student.lastName,
-        avatar: student.profileImage || `/avatars/student-${index + 1}.jpg`,
-        level: student.level || 'A1',
-        progress: Math.min(100, 45 + (index * 3)),
-        lastActivity: new Date(Date.now() - (index * 2 * 60 * 60 * 1000)).toISOString(),
-        status: index < 20 ? 'active' : 'inactive',
-        motivationLevel: Math.max(60, 95 - (index * 2)),
-        nextGoal: 'Complete Grammar Module'
-      }));
-      
-      res.json(mentees);
+      // Mentor assignment system not configured
+      return res.status(501).json({
+        error: "Mentor assignment system not configured",
+        message: "Mentor-student assignment tracking requires mentorAssignments table implementation",
+        messageFa: "سیستم تخصیص منتور پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error fetching mentees:', error);
       res.status(500).json({ message: "Failed to fetch mentees" });
@@ -4808,22 +4798,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mentor Sessions API (replacing hardcoded session data)
   app.get("/api/mentor/sessions", authenticateToken, requireRole(['Mentor']), async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const students = filterStudents(users);
-      
-      const sessions = students.slice(0, 15).map((student, index) => ({
-        id: index + 1,
-        studentName: student.firstName + ' ' + student.lastName,
-        studentAvatar: student.profileImage || `/avatars/student-${index + 1}.jpg`,
-        date: new Date(Date.now() + (index * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-        time: `${10 + (index % 8)}:00`,
-        duration: 60,
-        type: ['review', 'goal-setting', 'progress-check'][index % 3],
-        status: index < 5 ? 'scheduled' : 'completed',
-        notes: index < 5 ? '' : `Session completed. Student progressing in ${student.level} level.`
-      }));
-      
-      res.json(sessions);
+      // Mentor sessions system not configured
+      return res.status(501).json({
+        error: "Mentor sessions system not configured",
+        message: "Mentor session scheduling requires mentorSessions table implementation",
+        messageFa: "سیستم جلسات منتور پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error fetching mentor sessions:', error);
       res.status(500).json({ message: "Failed to fetch mentor sessions" });
@@ -14537,38 +14517,12 @@ Return JSON format:
   // Mentor Dashboard Stats
   app.get("/api/mentor/dashboard-stats", authenticateToken, requireRole(['Mentor', 'Admin']), async (req: any, res) => {
     try {
-      const mentorId = req.user.role === 'Mentor' ? req.user.id : req.query.mentorId;
-      
-      // Get basic statistics using available storage methods
-      const allUsers = await storage.getAllUsers();
-      const courses = await storage.getCourses();
-      const mentorSessions = await storage.getUserSessions(mentorId);
-      
-      // Filter students for this mentor (students who have sessions with this mentor)
-      const students = filterStudents(allUsers);
-      
-      // Calculate statistics with Iranian data standards
-      const stats = {
-        totalAssignments: mentorSessions.length,
-        activeStudents: Math.min(students.length, 25), // Typical Iranian class size
-        completedSessions: mentorSessions.filter(s => s.status === 'completed').length,
-        averageRating: 4.7, // High standard for Iranian Persian language instruction
-        monthlyProgress: 88, // Good progress rate for Persian mentoring
-        upcomingMeetings: mentorSessions
-          .filter(s => s.status === 'scheduled' && new Date(s.startTime) > new Date())
-          .slice(0, 5)
-          .map(s => ({
-            id: s.id,
-            studentName: s.tutorName || 'محصل',
-            sessionTime: s.startTime,
-            subject: 'آموزش زبان فارسی' // Persian Language Teaching
-          })),
-        totalStudents: students.length,
-        sessionHours: mentorSessions.length * 1.5, // Persian lessons typically 1.5 hours
-        totalCourses: courses.length,
-        pendingReviews: mentorSessions.filter(s => s.status === 'pending').length
-      };
-      res.json(stats);
+      // Mentor dashboard stats not configured
+      return res.status(501).json({
+        error: "Mentor dashboard stats not configured",
+        message: "Mentor dashboard statistics require mentor assignment and session tracking tables",
+        messageFa: "آمار داشبورد منتور پیکربندی نشده است"
+      });
     } catch (error) {
       console.error('Error fetching mentor dashboard stats:', error);
       res.status(500).json({ message: "Failed to fetch mentor dashboard statistics" });
