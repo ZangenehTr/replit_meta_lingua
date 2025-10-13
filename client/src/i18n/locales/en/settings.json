@@ -1,0 +1,75 @@
+{
+  "title": "Admin Settings",
+  "description": "Configure system settings, API integrations and security options",
+  "updateSuccess": "Settings Updated",
+  "updateSuccessDescription": "System settings updated successfully",
+  "updateFailed": "Update Failed",
+  "updateFailedDescription": "Failed to update settings",
+  "tabs": {
+    "payment": "Payment Gateway",
+    "sms": "SMS Service",
+    "email": "Email Service",
+    "database": "Database & Backup",
+    "security": "Security",
+    "system": "System"
+  },
+  "payment": {
+    "title": "Shetab Payment Gateway",
+    "description": "Configure Iranian payment gateway settings",
+    "enabled": "Enable Shetab Gateway",
+    "merchantId": "Merchant ID",
+    "terminalId": "Terminal ID",
+    "apiKey": "API Key",
+    "secretKey": "Secret Key",
+    "environment": "Environment",
+    "sandbox": "Sandbox",
+    "production": "Production",
+    "testConnection": "Test Connection"
+  },
+  "sms": {
+    "title": "Kavenegar SMS Service",
+    "description": "Configure SMS notifications",
+    "enabled": "Enable SMS Service",
+    "apiKey": "Kavenegar API Key",
+    "sender": "SMS Sender",
+    "testSms": "Test SMS"
+  },
+  "email": {
+    "title": "Email Configuration",
+    "description": "Configure SMTP settings for email notifications",
+    "enabled": "Enable Email Service",
+    "smtpHost": "SMTP Host",
+    "smtpPort": "SMTP Port",
+    "username": "Username",
+    "password": "Password",
+    "fromAddress": "From Address",
+    "testEmail": "Test Email"
+  },
+  "database": {
+    "title": "Database & Backup",
+    "description": "Manage backups and retention policies",
+    "backupEnabled": "Enable Auto Backup",
+    "backupFrequency": "Backup Frequency",
+    "retentionDays": "Retention (Days)"
+  },
+  "security": {
+    "title": "Security Settings",
+    "description": "Configure authentication and security policies",
+    "jwtSecret": "JWT Secret Key",
+    "sessionTimeout": "Session Timeout (Minutes)",
+    "maxLoginAttempts": "Max Login Attempts",
+    "passwordMinLength": "Minimum Password Length",
+    "requireTwoFactor": "Require Two-Factor Auth"
+  },
+  "system": {
+    "title": "System Configuration",
+    "description": "General system settings and performance",
+    "maintenanceMode": "Maintenance Mode",
+    "debugMode": "Debug Mode",
+    "logLevel": "Log Level",
+    "maxUploadSize": "Max Upload Size (MB)",
+    "apiRateLimit": "API Rate Limit",
+    "rateLimitWindow": "Rate Limit Window (Minutes)",
+    "fileStorageProvider": "File Storage Provider"
+  }
+}

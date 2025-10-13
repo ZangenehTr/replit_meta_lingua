@@ -351,6 +351,19 @@ function LessonManagementDialog({ course, open, onClose }: any) {
     queryClient.invalidateQueries({ queryKey: ['/api/admin/video-courses'] });
   };
 
+  const handleDuplicateLesson = (lesson: any) => {
+    const duplicatedLesson = {
+      title: `${lesson.title} (Copy)`,
+      description: lesson.description,
+      videoUrl: lesson.videoUrl,
+      duration: lesson.duration,
+      orderIndex: (course.lessons?.length || 0) + 1,
+      isFree: lesson.isFree
+    };
+    
+    addLessonMutation.mutate(duplicatedLesson);
+  };
+
   const handleReorderLesson = (lessonId: number, newIndex: number) => {
     // In real app, this would be an API call to update order
     console.log("Reordering lesson:", lessonId, "to index:", newIndex);
@@ -583,7 +596,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                             <Edit3 className="mr-2 h-4 w-4" />
                             {t('common:edit')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {}}>
+                          <DropdownMenuItem onClick={() => handleDuplicateLesson(lesson)}>
                             <Copy className="mr-2 h-4 w-4" />
                             {t('admin:videoCourses.duplicate')}
                           </DropdownMenuItem>
