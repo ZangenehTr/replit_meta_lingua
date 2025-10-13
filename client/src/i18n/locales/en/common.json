@@ -1141,5 +1141,6 @@
   "viewAllTutors": "View All Tutors",
   "noTutorsAvailable": "No tutors available",
   "frontDesk": "Front Desk",
-  "callCenterAgent": "Call Center Agent"
+  "callCenterAgent": "Call Center Agent",
+  "otpPlaceholder": "Enter 6-digit code"
 }

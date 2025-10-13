@@ -523,5 +523,6 @@
     "silence": "ساکت",
     "unsilence": "صدا",
     "silenced": "ساکت شده"
-  }
+  },
+  "otpPlaceholder": "کد ۶ رقمی را وارد کنید"
 }

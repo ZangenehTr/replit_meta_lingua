@@ -353,7 +353,7 @@ export default function Auth() {
                       <Input
                         id="login-otp"
                         type="text"
-                        placeholder="Enter 6-digit code"
+                        placeholder={t('common:otpPlaceholder')}
                         maxLength={6}
                         className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
                         {...loginForm.register("otp")}
