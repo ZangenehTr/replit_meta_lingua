@@ -3216,24 +3216,22 @@ export const notifications = pgTable("notifications", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// OTP Codes table
+// OTP Codes table - matches actual database structure
 export const otpCodes = pgTable("otp_codes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
-  identifier: varchar("identifier", { length: 255 }).notNull(), // email or phone number
+  identifier: text("identifier").notNull(), // email or phone number
   phoneNumber: varchar("phone_number", { length: 20 }),
   email: varchar("email", { length: 255 }),
-  code: varchar("code", { length: 10 }).notNull(),
-  purpose: varchar("purpose", { length: 50 }).notNull(), // login, password_reset, phone_verification, email_verification
-  isUsed: boolean("is_used").default(false),
-  usedAt: timestamp("used_at"),
-  consumedAt: timestamp("consumed_at"), // for OTP service compatibility
+  channel: text("channel"), // 'sms' or 'email'
+  purpose: text("purpose").notNull(), // login, password_reset, phone_verification, email_verification
+  codeHash: text("code_hash").notNull(), // hashed OTP code
   expiresAt: timestamp("expires_at").notNull(),
-  attemptsCount: integer("attempts_count").default(0),
+  consumedAt: timestamp("consumed_at"), // when OTP was used
+  attempts: integer("attempts").default(0),
   maxAttempts: integer("max_attempts").default(3),
-  ip: varchar("ip", { length: 45 }), // for OTP rate limiting
-  ipAddress: varchar("ip_address", { length: 45 }), // legacy field
-  userAgent: text("user_agent"),
+  ip: text("ip"), // for OTP rate limiting
+  locale: text("locale"), // 'fa' or 'en'
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -5489,7 +5487,7 @@ export const trialLessons = pgTable("trial_lessons", {
 
 // Course insert schema - re-enabled for storage layer
 export const insertCourseSchema = createInsertSchema(courses).omit({ id: true, createdAt: true, updatedAt: true });
-export type InsertCourse = z.infer<typeof insertCourseSchema>;
+export type InsertCourse = typeof courses.$inferInsert;
 // export const insertClassSchema = createInsertSchema(classes);
 // export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
 // export const insertHolidaySchema = createInsertSchema(holidays);
@@ -5545,10 +5543,10 @@ export type InsertCourse = z.infer<typeof insertCourseSchema>;
 // AI Model Management schemas - MOVED TO END OF FILE
 
 // AI Training types
-export type InsertAiModel = z.infer<typeof insertAiModelSchema>;
-export type InsertAiTrainingJob = z.infer<typeof insertAiTrainingJobSchema>;
-export type InsertAiTrainingDataset = z.infer<typeof insertAiTrainingDatasetSchema>;
-export type InsertAiDatasetItem = z.infer<typeof insertAiDatasetItemSchema>;
+export type InsertAiModel = typeof aimodels.$inferInsert;
+export type InsertAiTrainingJob = typeof aitrainingjobs.$inferInsert;
+export type InsertAiTrainingDataset = typeof aitrainingdatasets.$inferInsert;
+export type InsertAiDatasetItem = typeof aidatasetitems.$inferInsert;
 export type AiModel = typeof aiModels.$inferSelect;
 export type AiTrainingJob = typeof aiTrainingJobs.$inferSelect;
 export type AiTrainingDataset = typeof aiTrainingDatasets.$inferSelect;
@@ -5562,7 +5560,7 @@ export type AiDatasetItem = typeof aiDatasetItems.$inferSelect;
 
 // Lead types
 export type Lead = typeof leads.$inferSelect;
-export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type InsertLead = typeof leads.$inferInsert;
 
 // COMMUNICATION LOGS (Call Center)
 
@@ -5619,13 +5617,13 @@ export type InsertLead = z.infer<typeof insertLeadSchema>;
 
 // Game system types
 export type GameQuestion = typeof gameQuestions.$inferSelect;
-export type InsertGameQuestion = z.infer<typeof insertGameQuestionSchema>;
+export type InsertGameQuestion = typeof gamequestions.$inferInsert;
 export type GameDailyChallenge = typeof gameDailyChallenges.$inferSelect;
-export type InsertGameDailyChallenge = z.infer<typeof insertGameDailyChallengeSchema>;
+export type InsertGameDailyChallenge = typeof gamedailychallenges.$inferInsert;
 export type UserDailyChallengeProgress = typeof userDailyChallengeProgress.$inferSelect;
-export type InsertUserDailyChallengeProgress = z.infer<typeof insertUserDailyChallengeProgressSchema>;
+export type InsertUserDailyChallengeProgress = typeof userdailychallengeprogresss.$inferInsert;
 export type GameAnswerLog = typeof gameAnswerLogs.$inferSelect;
-export type InsertGameAnswerLog = z.infer<typeof insertGameAnswerLogSchema>;
+export type InsertGameAnswerLog = typeof gameanswerlogs.$inferInsert;
 
 // ===== VIDEO-BASED COURSES SUBSYSTEM =====
 
@@ -5684,86 +5682,86 @@ export type InsertGameAnswerLog = z.infer<typeof insertGameAnswerLogSchema>;
 
 // Types
 export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUser = typeof users.$inferInsert;
 export type UserProfile = typeof userProfiles.$inferSelect;
-export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type InsertUserProfile = typeof userProfiles.$inferInsert;
 export type RolePermission = typeof rolePermissions.$inferSelect;
-export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type InsertRolePermission = typeof rolePermissions.$inferInsert;
 export type UserSession = typeof userSessions.$inferSelect;
-export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type InsertUserSession = typeof userSessions.$inferInsert;
 export type OtpCode = typeof otpCodes.$inferSelect;
-export type InsertOtpCode = z.infer<typeof insertOtpCodeSchema>;
+export type InsertOtpCode = typeof otpCodes.$inferInsert;
 export type Course = typeof courses.$inferSelect;
-export type InsertCourse = z.infer<typeof insertCourseSchema>;
+export type InsertCourse = typeof courses.$inferInsert;
 export type Class = typeof classes.$inferSelect;
-export type InsertClass = z.infer<typeof insertClassSchema>;
+export type InsertClass = typeof classes.$inferInsert;
 export type ClassEnrollment = typeof classEnrollments.$inferSelect;
-export type InsertClassEnrollment = z.infer<typeof insertClassEnrollmentSchema>;
+export type InsertClassEnrollment = typeof classEnrollments.$inferInsert;
 export type Holiday = typeof holidays.$inferSelect;
-export type InsertHoliday = z.infer<typeof insertHolidaySchema>;
+export type InsertHoliday = typeof holidays.$inferInsert;
 export type Enrollment = typeof enrollments.$inferSelect;
-export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
+export type InsertEnrollment = typeof enrollments.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
-export type InsertSession = z.infer<typeof insertSessionSchema>;
+export type InsertSession = typeof sessions.$inferInsert;
 export type SessionVideoProgress = typeof sessionVideoProgress.$inferSelect;
-export type InsertSessionVideoProgress = z.infer<typeof insertSessionVideoProgressSchema>;
+export type InsertSessionVideoProgress = typeof sessionVideoProgress.$inferInsert;
 export type SessionVideoNote = typeof sessionVideoNotes.$inferSelect;
-export type InsertSessionVideoNote = z.infer<typeof insertSessionVideoNotesSchema>;
+export type InsertSessionVideoNote = typeof sessionVideoNotes.$inferInsert;
 export type SessionVideoBookmark = typeof sessionVideoBookmarks.$inferSelect;
-export type InsertSessionVideoBookmark = z.infer<typeof insertSessionVideoBookmarksSchema>;
+export type InsertSessionVideoBookmark = typeof sessionVideoBookmarks.$inferInsert;
 export type Message = typeof messages.$inferSelect;
-export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type InsertMessage = typeof messages.$inferInsert;
 export type Homework = typeof homework.$inferSelect;
-export type InsertHomework = z.infer<typeof insertHomeworkSchema>;
+export type InsertHomework = typeof homework.$inferInsert;
 export type Payment = typeof payments.$inferSelect;
-export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type InsertPayment = typeof payments.$inferInsert;
 export type SessionPackage = typeof sessionPackages.$inferSelect;
-export type InsertSessionPackage = z.infer<typeof insertSessionPackageSchema>;
+export type InsertSessionPackage = typeof sessionPackages.$inferInsert;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
-export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
+export type InsertWalletTransaction = typeof wallettransactions.$inferInsert;
 export type CoursePayment = typeof coursePayments.$inferSelect;
-export type InsertCoursePayment = z.infer<typeof insertCoursePaymentSchema>;
+export type InsertCoursePayment = typeof coursepayments.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
-export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type InsertNotification = typeof notifications.$inferInsert;
 export type Achievement = typeof achievements.$inferSelect;
-export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type InsertAchievement = typeof achievements.$inferInsert;
 export type UserAchievement = typeof userAchievements.$inferSelect;
-export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
+export type InsertUserAchievement = typeof userachievements.$inferInsert;
 export type UserStats = typeof userStats.$inferSelect;
-export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
+export type InsertUserStats = typeof userstatss.$inferInsert;
 export type DailyGoal = typeof dailyGoals.$inferSelect;
-export type InsertDailyGoal = z.infer<typeof insertDailyGoalSchema>;
+export type InsertDailyGoal = typeof dailygoals.$inferInsert;
 export type LevelAssessmentQuestion = typeof levelAssessmentQuestions.$inferSelect;
-export type InsertLevelAssessmentQuestion = z.infer<typeof insertLevelAssessmentQuestionSchema>;
+export type InsertLevelAssessmentQuestion = typeof levelassessmentquestions.$inferInsert;
 export type LevelAssessmentResult = typeof levelAssessmentResults.$inferSelect;
-export type InsertLevelAssessmentResult = z.infer<typeof insertLevelAssessmentResultSchema>;
+export type InsertLevelAssessmentResult = typeof levelassessmentresults.$inferInsert;
 export type CustomRole = typeof customRoles.$inferSelect;
-export type InsertCustomRole = z.infer<typeof insertCustomRoleSchema>;
+export type InsertCustomRole = typeof customroles.$inferInsert;
 
 // CRM Types
 export type Institute = typeof institutes.$inferSelect;
-export type InsertInstitute = z.infer<typeof insertInstituteSchema>;
+export type InsertInstitute = typeof institutes.$inferInsert;
 // Branding type aliases (used in storage layer)
 export type InstituteBranding = Institute;
 export type InsertBranding = InsertInstitute;
 export type Department = typeof departments.$inferSelect;
-export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+export type InsertDepartment = typeof departments.$inferInsert;
 export type StudentGroup = typeof studentGroups.$inferSelect;
-export type InsertStudentGroup = z.infer<typeof insertStudentGroupSchema>;
+export type InsertStudentGroup = typeof studentgroups.$inferInsert;
 export type StudentGroupMember = typeof studentGroupMembers.$inferSelect;
-export type InsertStudentGroupMember = z.infer<typeof insertStudentGroupMemberSchema>;
+export type InsertStudentGroupMember = typeof studentgroupmembers.$inferInsert;
 export type TeacherAssignment = typeof teacherAssignments.$inferSelect;
-export type InsertTeacherAssignment = z.infer<typeof insertTeacherAssignmentSchema>;
+export type InsertTeacherAssignment = typeof teacherassignments.$inferInsert;
 export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
-export type InsertAttendanceRecord = z.infer<typeof insertAttendanceRecordSchema>;
+export type InsertAttendanceRecord = typeof attendancerecords.$inferInsert;
 export type StudentNote = typeof studentNotes.$inferSelect;
-export type InsertStudentNote = z.infer<typeof insertStudentNoteSchema>;
+export type InsertStudentNote = typeof studentnotes.$inferInsert;
 export type ParentGuardian = typeof parentGuardians.$inferSelect;
-export type InsertParentGuardian = z.infer<typeof insertParentGuardianSchema>;
+export type InsertParentGuardian = typeof parentguardians.$inferInsert;
 export type CommunicationLog = typeof communicationLogs.$inferSelect;
-export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
+export type InsertCommunicationLog = typeof communicationlogs.$inferInsert;
 export type StudentReport = typeof studentReports.$inferSelect;
-export type InsertStudentReport = z.infer<typeof insertStudentReportSchema>;
+export type InsertStudentReport = typeof studentreports.$inferInsert;
 
 // Admin Settings table
 
@@ -5772,47 +5770,47 @@ export type InsertStudentReport = z.infer<typeof insertStudentReportSchema>;
 
 // Referral System Types
 export type ReferralSettings = typeof referralSettings.$inferSelect;
-export type InsertReferralSettings = z.infer<typeof insertReferralSettingsSchema>;
+export type InsertReferralSettings = typeof referralsettingss.$inferInsert;
 export type CourseReferral = typeof courseReferrals.$inferSelect;
-export type InsertCourseReferral = z.infer<typeof insertCourseReferralSchema>;
+export type InsertCourseReferral = typeof coursereferrals.$inferInsert;
 export type ReferralCommission = typeof referralCommissions.$inferSelect;
-export type InsertReferralCommission = z.infer<typeof insertReferralCommissionSchema>;
+export type InsertReferralCommission = typeof referralcommissions.$inferInsert;
 export type AdminSettings = typeof adminSettings.$inferSelect;
-export type InsertAdminSettings = z.infer<typeof insertAdminSettingsSchema>;
+export type InsertAdminSettings = typeof adminsettingss.$inferInsert;
 
 // AI Training Data Types
 export type AiTrainingData = typeof aiTrainingData.$inferSelect;
-export type InsertAiTrainingData = z.infer<typeof insertAiTrainingDataSchema>;
+export type InsertAiTrainingData = typeof aitrainingdatas.$inferInsert;
 export type AiKnowledgeBase = typeof aiKnowledgeBase.$inferSelect;
-export type InsertAiKnowledgeBase = z.infer<typeof insertAiKnowledgeBaseSchema>;
+export type InsertAiKnowledgeBase = typeof aiknowledgebases.$inferInsert;
 
 // Skill Assessment Types
 export type SkillAssessment = typeof skillAssessments.$inferSelect;
-export type InsertSkillAssessment = z.infer<typeof insertSkillAssessmentSchema>;
+export type InsertSkillAssessment = typeof skillassessments.$inferInsert;
 export type LearningActivity = typeof learningActivities.$inferSelect;
-export type InsertLearningActivity = z.infer<typeof insertLearningActivitySchema>;
+export type InsertLearningActivity = typeof learningactivitys.$inferInsert;
 export type ProgressSnapshot = typeof progressSnapshots.$inferSelect;
-export type InsertProgressSnapshot = z.infer<typeof insertProgressSnapshotSchema>;
+export type InsertProgressSnapshot = typeof progresssnapshots.$inferInsert;
 
 // Additional Real Data System Types
 export type Invoice = typeof invoices.$inferSelect;
-export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type InsertInvoice = typeof invoices.$inferInsert;
 export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
-export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
+export type InsertPaymentTransaction = typeof paymenttransactions.$inferInsert;
 export type TeacherEvaluation = typeof teacherEvaluations.$inferSelect;
-export type InsertTeacherEvaluation = z.infer<typeof insertTeacherEvaluationSchema>;
+export type InsertTeacherEvaluation = typeof teacherevaluations.$inferInsert;
 export type ClassObservation = typeof classObservations.$inferSelect;
-export type InsertClassObservation = z.infer<typeof insertClassObservationSchema>;
+export type InsertClassObservation = typeof classobservations.$inferInsert;
 export type SystemMetric = typeof systemMetrics.$inferSelect;
-export type InsertSystemMetric = z.infer<typeof insertSystemMetricSchema>;
+export type InsertSystemMetric = typeof systemmetrics.$inferInsert;
 export type Room = typeof rooms.$inferSelect;
-export type InsertRoom = z.infer<typeof insertRoomSchema>;
+export type InsertRoom = typeof rooms.$inferInsert;
 export type MentorAssignment = typeof mentorAssignments.$inferSelect;
-export type InsertMentorAssignment = z.infer<typeof insertMentorAssignmentSchema>;
+export type InsertMentorAssignment = typeof mentorassignments.$inferInsert;
 export type MentoringSession = typeof mentoringSessions.$inferSelect;
-export type InsertMentoringSession = z.infer<typeof insertMentoringSessionSchema>;
+export type InsertMentoringSession = typeof mentoringsessions.$inferInsert;
 export type Branch = typeof branches.$inferSelect;
-export type InsertBranch = z.infer<typeof insertBranchSchema>;
+export type InsertBranch = typeof branchs.$inferInsert;
 
 // Import mood tables from separate schema file to avoid duplication
 export { 
@@ -5865,55 +5863,55 @@ export {
 
 // Types for new subsystem tables
 export type Test = typeof tests.$inferSelect;
-export type InsertTest = z.infer<typeof insertTestSchema>;
+export type InsertTest = typeof tests.$inferInsert;
 export type TestQuestion = typeof testQuestions.$inferSelect;
-export type InsertTestQuestion = z.infer<typeof insertTestQuestionSchema>;
+export type InsertTestQuestion = typeof testquestions.$inferInsert;
 export type TestAttempt = typeof testAttempts.$inferSelect;
-export type InsertTestAttempt = z.infer<typeof insertTestAttemptSchema>;
+export type InsertTestAttempt = typeof testattempts.$inferInsert;
 export type TestAnswer = typeof testAnswers.$inferSelect;
-export type InsertTestAnswer = z.infer<typeof insertTestAnswerSchema>;
+export type InsertTestAnswer = typeof testanswers.$inferInsert;
 
 export type Game = typeof games.$inferSelect;
-export type InsertGame = z.infer<typeof insertGameSchema>;
+export type InsertGame = typeof games.$inferInsert;
 export type GameLevel = typeof gameLevels.$inferSelect;
-export type InsertGameLevel = z.infer<typeof insertGameLevelSchema>;
+export type InsertGameLevel = typeof gamelevels.$inferInsert;
 export type UserGameProgress = typeof userGameProgress.$inferSelect;
-export type InsertUserGameProgress = z.infer<typeof insertUserGameProgressSchema>;
+export type InsertUserGameProgress = typeof usergameprogresss.$inferInsert;
 export type GameSession = typeof gameSessions.$inferSelect;
-export type InsertGameSession = z.infer<typeof insertGameSessionSchema>;
+export type InsertGameSession = typeof gamesessions.$inferInsert;
 export type GameLeaderboard = typeof gameLeaderboards.$inferSelect;
-export type InsertGameLeaderboard = z.infer<typeof insertGameLeaderboardSchema>;
+export type InsertGameLeaderboard = typeof gameleaderboards.$inferInsert;
 
 export type VideoLesson = typeof videoLessons.$inferSelect;
-export type InsertVideoLesson = z.infer<typeof insertVideoLessonSchema>;
+export type InsertVideoLesson = typeof videolessons.$inferInsert;
 export type VideoProgress = typeof videoProgress.$inferSelect;
-export type InsertVideoProgress = z.infer<typeof insertVideoProgressSchema>;
+export type InsertVideoProgress = typeof videoprogresss.$inferInsert;
 export type VideoNote = typeof videoNotes.$inferSelect;
-export type InsertVideoNote = z.infer<typeof insertVideoNoteSchema>;
+export type InsertVideoNote = typeof videonotes.$inferInsert;
 export type VideoBookmark = typeof videoBookmarks.$inferSelect;
-export type InsertVideoBookmark = z.infer<typeof insertVideoBookmarkSchema>;
+export type InsertVideoBookmark = typeof videobookmarks.$inferInsert;
 
 export type ForumCategory = typeof forumCategories.$inferSelect;
-export type InsertForumCategory = z.infer<typeof insertForumCategorySchema>;
+export type InsertForumCategory = typeof forumcategorys.$inferInsert;
 export type ForumThread = typeof forumThreads.$inferSelect;
-export type InsertForumThread = z.infer<typeof insertForumThreadSchema>;
+export type InsertForumThread = typeof forumthreads.$inferInsert;
 export type ForumPost = typeof forumPosts.$inferSelect;
-export type InsertForumPost = z.infer<typeof insertForumPostSchema>;
+export type InsertForumPost = typeof forumposts.$inferInsert;
 export type GradebookEntry = typeof gradebookEntries.$inferSelect;
-export type InsertGradebookEntry = z.infer<typeof insertGradebookEntrySchema>;
+export type InsertGradebookEntry = typeof gradebookentrys.$inferInsert;
 export type ContentLibraryItem = typeof contentLibrary.$inferSelect;
-export type InsertContentLibraryItem = z.infer<typeof insertContentLibrarySchema>;
+export type InsertContentLibraryItem = typeof contentlibraryitems.$inferInsert;
 
 export type AiProgressTracking = typeof aiProgressTracking.$inferSelect;
-export type InsertAiProgressTracking = z.infer<typeof insertAiProgressTrackingSchema>;
+export type InsertAiProgressTracking = typeof aiprogresstrackings.$inferInsert;
 export type AiActivitySession = typeof aiActivitySessions.$inferSelect;
-export type InsertAiActivitySession = z.infer<typeof insertAiActivitySessionSchema>;
+export type InsertAiActivitySession = typeof aiactivitysessions.$inferInsert;
 export type AiVocabularyTracking = typeof aiVocabularyTracking.$inferSelect;
-export type InsertAiVocabularyTracking = z.infer<typeof insertAiVocabularyTrackingSchema>;
+export type InsertAiVocabularyTracking = typeof aivocabularytrackings.$inferInsert;
 export type AiGrammarTracking = typeof aiGrammarTracking.$inferSelect;
-export type InsertAiGrammarTracking = z.infer<typeof insertAiGrammarTrackingSchema>;
+export type InsertAiGrammarTracking = typeof aigrammartrackings.$inferInsert;
 export type AiPronunciationAnalysis = typeof aiPronunciationAnalysis.$inferSelect;
-export type InsertAiPronunciationAnalysis = z.infer<typeof insertAiPronunciationAnalysisSchema>;
+export type InsertAiPronunciationAnalysis = typeof aipronunciationanalysiss.$inferInsert;
 
 // ===== MODERN COMMUNICATION SYSTEM =====
 
@@ -5941,19 +5939,19 @@ export type InsertAiPronunciationAnalysis = z.infer<typeof insertAiPronunciation
 
 // Communication system types
 export type SupportTicket = typeof supportTickets.$inferSelect;
-export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
+export type InsertSupportTicket = typeof supporttickets.$inferInsert;
 export type SupportTicketMessage = typeof supportTicketMessages.$inferSelect;
-export type InsertSupportTicketMessage = z.infer<typeof insertSupportTicketMessageSchema>;
+export type InsertSupportTicketMessage = typeof supportticketmessages.$inferInsert;
 export type ChatConversation = typeof chatConversations.$inferSelect;
-export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
+export type InsertChatConversation = typeof chatconversations.$inferInsert;
 export type ChatMessage = typeof chatMessages.$inferSelect;
-export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type InsertChatMessage = typeof chatmessages.$inferInsert;
 export type AiStudyPartner = typeof aiStudyPartners.$inferSelect;
-export type InsertAiStudyPartner = z.infer<typeof insertAiStudyPartnerSchema>;
+export type InsertAiStudyPartner = typeof aistudypartners.$inferInsert;
 export type PushNotification = typeof pushNotifications.$inferSelect;
-export type InsertPushNotification = z.infer<typeof insertPushNotificationSchema>;
+export type InsertPushNotification = typeof pushnotifications.$inferInsert;
 export type NotificationDeliveryLog = typeof notificationDeliveryLogs.$inferSelect;
-export type InsertNotificationDeliveryLog = z.infer<typeof insertNotificationDeliveryLogSchema>;
+export type InsertNotificationDeliveryLog = typeof notificationdeliverylogs.$inferInsert;
 
 // AI Call Insights Table for CRM Integration
 
@@ -5967,23 +5965,23 @@ export type InsertNotificationDeliveryLog = z.infer<typeof insertNotificationDel
 // Teacher Availability Schema (Legacy)
 
 export type TeacherAvailability = typeof teacherAvailability.$inferSelect;
-export type InsertTeacherAvailability = z.infer<typeof insertTeacherAvailabilitySchema>;
+export type InsertTeacherAvailability = typeof teacheravailabilitys.$inferInsert;
 
 // Enhanced Teacher Availability Periods Schema
 
 export type TeacherAvailabilityPeriod = typeof teacherAvailabilityPeriods.$inferSelect;
-export type InsertTeacherAvailabilityPeriod = z.infer<typeof insertTeacherAvailabilityPeriodSchema>;
+export type InsertTeacherAvailabilityPeriod = typeof teacheravailabilityperiods.$inferInsert;
 
 // AI Call Insights Schema
 
 export type AICallInsight = typeof aiCallInsights.$inferSelect;
-export type InsertAICallInsight = z.infer<typeof insertAICallInsightSchema>;
+export type InsertAICallInsight = typeof aicallinsights.$inferInsert;
 
 // Supervision observation types (continued)
 export type TeacherObservationResponse = typeof teacherObservationResponses.$inferSelect;
-export type InsertTeacherObservationResponse = z.infer<typeof insertTeacherObservationResponseSchema>;
+export type InsertTeacherObservationResponse = typeof teacherobservationresponses.$inferInsert;
 export type ScheduledObservation = typeof scheduledObservations.$inferSelect;
-export type InsertScheduledObservation = z.infer<typeof insertScheduledObservationSchema>;
+export type InsertScheduledObservation = typeof scheduledobservations.$inferInsert;
 
 // ===== CALLERN LIVE SCORING SYSTEM =====
 
@@ -6025,21 +6023,21 @@ export const insertTeacherCallernAvailabilitySchema = createInsertSchema(teacher
 
 // Scoring types
 export type CallernPresence = typeof callernPresence.$inferSelect;
-export type InsertCallernPresence = z.infer<typeof insertCallernPresenceSchema>;
+export type InsertCallernPresence = typeof callernpresences.$inferInsert;
 export type CallernSpeechSegment = typeof callernSpeechSegments.$inferSelect;
-export type InsertCallernSpeechSegment = z.infer<typeof insertCallernSpeechSegmentSchema>;
+export type InsertCallernSpeechSegment = typeof callernspeechsegments.$inferInsert;
 export type CallernScoresStudent = typeof callernScoresStudent.$inferSelect;
-export type InsertCallernScoresStudent = z.infer<typeof insertCallernScoresStudentSchema>;
+export type InsertCallernScoresStudent = typeof callernscoresstudents.$inferInsert;
 export type CallernScoresTeacher = typeof callernScoresTeacher.$inferSelect;
-export type InsertCallernScoresTeacher = z.infer<typeof insertCallernScoresTeacherSchema>;
+export type InsertCallernScoresTeacher = typeof callernscoresteachers.$inferInsert;
 export type CallernScoringEvent = typeof callernScoringEvents.$inferSelect;
-export type InsertCallernScoringEvent = z.infer<typeof insertCallernScoringEventSchema>;
+export type InsertCallernScoringEvent = typeof callernscoringevents.$inferInsert;
 
 // Teacher authorization types
 export type TeacherCallernAuthorization = typeof teacherCallernAuthorization.$inferSelect;
-export type InsertTeacherCallernAuthorization = z.infer<typeof insertTeacherCallernAuthorizationSchema>;
+export type InsertTeacherCallernAuthorization = typeof teachercallernauthorizations.$inferInsert;
 export type TeacherCallernAvailability = typeof teacherCallernAvailability.$inferSelect;
-export type InsertTeacherCallernAvailability = z.infer<typeof insertTeacherCallernAvailabilitySchema>;
+export type InsertTeacherCallernAvailability = typeof teachercallernavailabilitys.$inferInsert;
 
 // ========================
 // CALLERN ROADMAP TEMPLATE SYSTEM (New Implementation)
@@ -6137,47 +6135,47 @@ export type InsertTeacherCallernAvailability = z.infer<typeof insertTeacherCalle
 
 // Roadmap Template System Types
 export type RoadmapTemplate = typeof roadmapTemplate.$inferSelect;
-export type InsertRoadmapTemplate = z.infer<typeof insertRoadmapTemplateSchema>;
+export type InsertRoadmapTemplate = typeof roadmaptemplates.$inferInsert;
 export type RoadmapUnit = typeof roadmapUnit.$inferSelect;
-export type InsertRoadmapUnit = z.infer<typeof insertRoadmapUnitSchema>;
+export type InsertRoadmapUnit = typeof roadmapunits.$inferInsert;
 export type RoadmapLesson = typeof roadmapLesson.$inferSelect;
-export type InsertRoadmapLesson = z.infer<typeof insertRoadmapLessonSchema>;
+export type InsertRoadmapLesson = typeof roadmaplessons.$inferInsert;
 export type RoadmapActivity = typeof roadmapActivity.$inferSelect;
-export type InsertRoadmapActivity = z.infer<typeof insertRoadmapActivitySchema>;
+export type InsertRoadmapActivity = typeof roadmapactivitys.$inferInsert;
 export type RoadmapInstance = typeof roadmapInstance.$inferSelect;
-export type InsertRoadmapInstance = z.infer<typeof insertRoadmapInstanceSchema>;
+export type InsertRoadmapInstance = typeof roadmapinstances.$inferInsert;
 export type ActivityInstance = typeof activityInstance.$inferSelect;
-export type InsertActivityInstance = z.infer<typeof insertActivityInstanceSchema>;
+export type InsertActivityInstance = typeof activityinstances.$inferInsert;
 
 // CallerN Session System Types
 export type CallSession = typeof callSession.$inferSelect;
-export type InsertCallSession = z.infer<typeof insertCallSessionSchema>;
+export type InsertCallSession = typeof callsessions.$inferInsert;
 export type CallPostReport = typeof callPostReport.$inferSelect;
-export type InsertCallPostReport = z.infer<typeof insertCallPostReportSchema>;
+export type InsertCallPostReport = typeof callpostreports.$inferInsert;
 export type SessionRatings = typeof sessionRatings.$inferSelect;
-export type InsertSessionRatings = z.infer<typeof insertSessionRatingsSchema>;
+export type InsertSessionRatings = typeof sessionratingss.$inferInsert;
 export type SrsCard = typeof srsCard.$inferSelect;
-export type InsertSrsCard = z.infer<typeof insertSrsCardSchema>;
+export type InsertSrsCard = typeof srscards.$inferInsert;
 
 // Course Roadmap Progress types (fixed)
 export type CourseRoadmapProgress = typeof courseRoadmapProgress.$inferSelect;
-export type InsertCourseRoadmapProgress = z.infer<typeof insertCourseRoadmapProgressSchema>;
+export type InsertCourseRoadmapProgress = typeof courseroadmapprogresss.$inferInsert;
 
 // Special Classes System Types
 export type SpecialClass = typeof specialClasses.$inferSelect;
-export type InsertSpecialClass = z.infer<typeof insertSpecialClassSchema>;
+export type InsertSpecialClass = typeof specialclasss.$inferInsert;
 
 // Peer Socializer System Types
 export type PeerSocializerGroup = typeof peerSocializerGroups.$inferSelect;
-export type InsertPeerSocializerGroup = z.infer<typeof insertPeerSocializerGroupSchema>;
+export type InsertPeerSocializerGroup = typeof peersocializergroups.$inferInsert;
 export type PeerSocializerParticipant = typeof peerSocializerParticipants.$inferSelect;
-export type InsertPeerSocializerParticipant = z.infer<typeof insertPeerSocializerParticipantSchema>;
+export type InsertPeerSocializerParticipant = typeof peersocializerparticipants.$inferInsert;
 export type PeerMatchingRequest = typeof peerMatchingRequests.$inferSelect;
-export type InsertPeerMatchingRequest = z.infer<typeof insertPeerMatchingRequestSchema>;
+export type InsertPeerMatchingRequest = typeof peermatchingrequests.$inferInsert;
 export type PeerMatchingHistory = typeof peerMatchingHistory.$inferSelect;
-export type InsertPeerMatchingHistory = z.infer<typeof insertPeerMatchingHistorySchema>;
+export type InsertPeerMatchingHistory = typeof peermatchinghistorys.$inferInsert;
 export type PeerSocializerSettings = typeof peerSocializerSettings.$inferSelect;
-export type InsertPeerSocializerSettings = z.infer<typeof insertPeerSocializerSettingsSchema>;
+export type InsertPeerSocializerSettings = typeof peersocializersettingss.$inferInsert;
 
 // Class Group Chats - Telegram-like environment for group classes
 
@@ -6188,9 +6186,9 @@ export type InsertPeerSocializerSettings = z.infer<typeof insertPeerSocializerSe
 
 // Export types
 export type ClassGroupChat = typeof classGroupChats.$inferSelect;
-export type InsertClassGroupChat = z.infer<typeof insertClassGroupChatSchema>;
+export type InsertClassGroupChat = typeof classgroupchats.$inferInsert;
 export type SocializerSession = typeof socializerSessions.$inferSelect;
-export type InsertSocializerSession = z.infer<typeof insertSocializerSessionSchema>;
+export type InsertSocializerSession = typeof socializersessions.$inferInsert;
 
 // ============================================================================
 // EXAM-FOCUSED PERSONALIZED ROADMAP SYSTEM
@@ -6347,7 +6345,7 @@ export function getMinimumScoreForCEFR(examType: ExamTypeValues, cefrLevel: CEFR
 
 // AI Conversation types
 export type AiConversation = typeof aiConversations.$inferSelect;
-export type InsertAiConversation = z.infer<typeof insertAiConversationSchema>;
+export type InsertAiConversation = typeof aiconversations.$inferInsert;
 
 
 // ============================================================================
@@ -6961,13 +6959,13 @@ export type InsertAiConversation = z.infer<typeof insertAiConversationSchema>;
 
 // Types for placement test system
 export type PlacementTest = typeof placementTests.$inferSelect;
-export type InsertPlacementTest = z.infer<typeof insertPlacementTestSchema>;
+export type InsertPlacementTest = typeof placementtests.$inferInsert;
 export type PlacementQuestion = typeof placementQuestions.$inferSelect;
-export type InsertPlacementQuestion = z.infer<typeof insertPlacementQuestionSchema>;
+export type InsertPlacementQuestion = typeof placementquestions.$inferInsert;
 export type PlacementTestSession = typeof placementTestSessions.$inferSelect;
-export type InsertPlacementTestSession = z.infer<typeof insertPlacementTestSessionSchema>;
+export type InsertPlacementTestSession = typeof placementtestsessions.$inferInsert;
 export type PlacementResult = typeof placementResults.$inferSelect;
-export type InsertPlacementResult = z.infer<typeof insertPlacementResultSchema>;
+export type InsertPlacementResult = typeof placementresults.$inferInsert;
 
 // ============================================================================
 // ZOD SCHEMAS FOR EXAM-FOCUSED ROADMAP TABLES
@@ -7503,17 +7501,17 @@ export const insertTrialLessonSchema = createInsertSchema(trialLessons).omit({
 
 // Type exports for trial lesson tables
 export type TrialLesson = typeof trialLessons.$inferSelect;
-export type InsertTrialLesson = z.infer<typeof insertTrialLessonSchema>;
+export type InsertTrialLesson = typeof triallessons.$inferInsert;
 export type TrialLessonOutcome = typeof trialLessonOutcomes.$inferSelect;
-export type InsertTrialLessonOutcome = z.infer<typeof insertTrialLessonOutcomeSchema>;
+export type InsertTrialLessonOutcome = typeof triallessonoutcomes.$inferInsert;
 export type TeacherTrialAvailability = typeof teacherTrialAvailability.$inferSelect;
-export type InsertTeacherTrialAvailability = z.infer<typeof insertTeacherTrialAvailabilitySchema>;
+export type InsertTeacherTrialAvailability = typeof teachertrialavailabilitys.$inferInsert;
 export type TrialLessonConflict = typeof trialLessonConflicts.$inferSelect;
-export type InsertTrialLessonConflict = z.infer<typeof insertTrialLessonConflictSchema>;
+export type InsertTrialLessonConflict = typeof triallessonconflicts.$inferInsert;
 export type TrialLessonAnalytics = typeof trialLessonAnalytics.$inferSelect;
-export type InsertTrialLessonAnalytics = z.infer<typeof insertTrialLessonAnalyticsSchema>;
+export type InsertTrialLessonAnalytics = typeof triallessonanalyticss.$inferInsert;
 export type TrialLessonWaitList = typeof trialLessonWaitList.$inferSelect;
-export type InsertTrialLessonWaitList = z.infer<typeof insertTrialLessonWaitListSchema>;
+export type InsertTrialLessonWaitList = typeof triallessonwaitlists.$inferInsert;
 
 // ============================================================================
 // SMS TEMPLATE SYSTEM INSERT SCHEMAS AND TYPES
@@ -7527,17 +7525,17 @@ export type SmsLogMetadata = z.infer<typeof smsLogMetadataSchema>;
 
 // Type exports for SMS Template tables
 export type SmsTemplateCategory = typeof smsTemplateCategories.$inferSelect;
-export type InsertSmsTemplateCategory = z.infer<typeof insertSmsTemplateCategorySchema>;
+export type InsertSmsTemplateCategory = typeof smstemplatecategorys.$inferInsert;
 export type SmsTemplateVariable = typeof smsTemplateVariables.$inferSelect;
-export type InsertSmsTemplateVariable = z.infer<typeof insertSmsTemplateVariableSchema>;
+export type InsertSmsTemplateVariable = typeof smstemplatevariables.$inferInsert;
 export type SmsTemplate = typeof smsTemplates.$inferSelect;
-export type InsertSmsTemplate = z.infer<typeof insertSmsTemplateSchema>;
+export type InsertSmsTemplate = typeof smstemplates.$inferInsert;
 export type SmsTemplateSendingLog = typeof smsTemplateSendingLogs.$inferSelect;
-export type InsertSmsTemplateSendingLog = z.infer<typeof insertSmsTemplateSendingLogSchema>;
+export type InsertSmsTemplateSendingLog = typeof smstemplatesendinglogs.$inferInsert;
 export type SmsTemplateAnalytics = typeof smsTemplateAnalytics.$inferSelect;
-export type InsertSmsTemplateAnalytics = z.infer<typeof insertSmsTemplateAnalyticsSchema>;
+export type InsertSmsTemplateAnalytics = typeof smstemplateanalyticss.$inferInsert;
 export type SmsTemplateFavorite = typeof smsTemplateFavorites.$inferSelect;
-export type InsertSmsTemplateFavorite = z.infer<typeof insertSmsTemplateFavoriteSchema>;
+export type InsertSmsTemplateFavorite = typeof smstemplatefavorites.$inferInsert;
 
 // ============================================================================
 // WEB SCRAPING INFRASTRUCTURE TABLES
@@ -7680,15 +7678,15 @@ export const insertScrapeScheduleSchema = createInsertSchema(scrapeSchedules).om
 });
 
 export type ScrapeJob = typeof scrapeJobs.$inferSelect;
-export type InsertScrapeJob = z.infer<typeof insertScrapeJobSchema>;
+export type InsertScrapeJob = typeof scrapejobs.$inferInsert;
 export type CompetitorPrice = typeof competitorPrices.$inferSelect;
-export type InsertCompetitorPrice = z.infer<typeof insertCompetitorPriceSchema>;
+export type InsertCompetitorPrice = typeof competitorprices.$inferInsert;
 export type ScrapedLead = typeof scrapedLeads.$inferSelect;
-export type InsertScrapedLead = z.infer<typeof insertScrapedLeadSchema>;
+export type InsertScrapedLead = typeof scrapedleads.$inferInsert;
 export type MarketTrend = typeof marketTrends.$inferSelect;
-export type InsertMarketTrend = z.infer<typeof insertMarketTrendSchema>;
+export type InsertMarketTrend = typeof markettrends.$inferInsert;
 export type ScrapeSchedule = typeof scrapeSchedules.$inferSelect;
-export type InsertScrapeSchedule = z.infer<typeof insertScrapeScheduleSchema>;
+export type InsertScrapeSchedule = typeof scrapeschedules.$inferInsert;
 
 // ============================================================================
 // ACCOUNTING LEDGER SYSTEM - Double-Entry Bookkeeping
@@ -7753,9 +7751,9 @@ export const insertAccountingLedgerSchema = createInsertSchema(accountingLedger)
 });
 
 export type ChartOfAccounts = typeof chartOfAccounts.$inferSelect;
-export type InsertChartOfAccounts = z.infer<typeof insertChartOfAccountsSchema>;
+export type InsertChartOfAccounts = typeof chartofaccountss.$inferInsert;
 export type AccountingLedger = typeof accountingLedger.$inferSelect;
-export type InsertAccountingLedger = z.infer<typeof insertAccountingLedgerSchema>;
+export type InsertAccountingLedger = typeof accountingledgers.$inferInsert;
 
 // ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables

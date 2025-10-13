@@ -129,6 +129,8 @@ export class OtpService {
       const otpData: InsertOtpCode = {
         userId,
         identifier,
+        phoneNumber: channel === 'sms' ? identifier : undefined,
+        email: channel === 'email' ? identifier : undefined,
         channel,
         purpose,
         codeHash,

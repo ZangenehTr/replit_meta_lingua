@@ -1774,18 +1774,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         formattedIdentifier = OtpService.formatIranianPhoneNumber(identifier);
       }
 
-      // Check if user exists for login purpose
+      // Get user ID if exists (but don't block OTP generation for new users)
       let userId;
-      if (purpose === 'login') {
-        const user = await storage.getUserByIdentifier(formattedIdentifier);
-        if (!user) {
-          // Don't reveal if user exists for security
-          return res.json({ 
-            message: locale === 'fa'
-              ? 'اگر این حساب وجود داشته باشد، کد تأیید ارسال شده است'
-              : 'If this account exists, an OTP has been sent'
-          });
-        }
+      const user = await storage.getUserByIdentifier(formattedIdentifier);
+      if (user) {
         userId = user.id;
       }
 
