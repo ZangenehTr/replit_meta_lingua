@@ -64,6 +64,7 @@
   "purchasePackageFirst": "برای شروع تماس، ابتدا یک بسته خریداری کنید",
   "endCall": "پایان تماس",
   "noTeachersAvailable": "در حال حاضر معلمی برای {{language}} موجود نیست. لطفاً بعداً تلاش کنید.",
+  "duration": "مدت زمان",
   "used": "استفاده شده",
   "connected": "متصل شد",
   "connecting": "در حال اتصال...",

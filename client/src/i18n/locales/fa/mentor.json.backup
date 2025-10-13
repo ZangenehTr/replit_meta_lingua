@@ -51,13 +51,7 @@
     "noCohortInsightsAvailable": "بینش گروهی در دسترس نیست",
     "completionRate": "نرخ تکمیل",
     "engagementLevel": "سطح مشارکت",
-    "riskLevel": {
-      "minimal": "حداقل",
-      "low": "پایین",
-      "moderate": "متوسط",
-      "high": "بالا",
-      "critical": "بحرانی"
-    },
+    "riskLevel": "سطح خطر",
     "performanceDistribution": "توزیع عملکرد",
     "interventionSummary": "نمای کلی از فعالیت‌های مداخله اخیر و اثربخشی آن‌ها",
     "recentInterventions": "مداخلات اخیر",
@@ -76,6 +70,13 @@
       "improving": "در حال بهبود",
       "stable": "پایدار",
       "declining": "در حال کاهش"
+    },
+    "riskLevel": {
+      "minimal": "حداقل",
+      "low": "پایین",
+      "moderate": "متوسط",
+      "high": "بالا",
+      "critical": "بحرانی"
     },
     "priority": {
       "high": "اولویت بالا",
