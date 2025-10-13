@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/useLanguage";
 import type { Lead } from "@shared/schema";
 
 interface LeadStats {
@@ -47,6 +48,7 @@ interface LeadStats {
 export default function LeadManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -618,7 +620,7 @@ export default function LeadManagement() {
                       id="firstName"
                       value={newLeadData.firstName}
                       onChange={(e) => setNewLeadData({...newLeadData, firstName: e.target.value})}
-                      placeholder="Enter first name"
+                      placeholder={t('admin:leads.firstNamePlaceholder')}
                     />
                   </div>
                   <div>
@@ -627,7 +629,7 @@ export default function LeadManagement() {
                       id="lastName"
                       value={newLeadData.lastName}
                       onChange={(e) => setNewLeadData({...newLeadData, lastName: e.target.value})}
-                      placeholder="Enter last name"
+                      placeholder={t('admin:leads.lastNamePlaceholder')}
                     />
                   </div>
                   <div>
@@ -653,7 +655,7 @@ export default function LeadManagement() {
                     <Label htmlFor="source">Lead Source</Label>
                     <Select value={newLeadData.source} onValueChange={(value) => setNewLeadData({...newLeadData, source: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select source" />
+                        <SelectValue placeholder={t('admin:leads.selectSource')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="website">Website</SelectItem>
@@ -668,7 +670,7 @@ export default function LeadManagement() {
                     <Label htmlFor="priority">Priority</Label>
                     <Select value={newLeadData.priority} onValueChange={(value) => setNewLeadData({...newLeadData, priority: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select priority" />
+                        <SelectValue placeholder={t('admin:leads.selectPriority')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
@@ -682,7 +684,7 @@ export default function LeadManagement() {
                     <Label htmlFor="interestedLanguage">Interested Language</Label>
                     <Select value={newLeadData.interestedLanguage} onValueChange={(value) => setNewLeadData({...newLeadData, interestedLanguage: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select language" />
+                        <SelectValue placeholder={t('admin:leads.selectLanguage')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="persian">Persian</SelectItem>
@@ -695,7 +697,7 @@ export default function LeadManagement() {
                     <Label htmlFor="interestedLevel">Level</Label>
                     <Select value={newLeadData.interestedLevel} onValueChange={(value) => setNewLeadData({...newLeadData, interestedLevel: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select level" />
+                        <SelectValue placeholder={t('admin:leads.selectLevel')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="beginner">Beginner</SelectItem>
@@ -708,7 +710,7 @@ export default function LeadManagement() {
                     <Label htmlFor="preferredFormat">Preferred Format</Label>
                     <Select value={newLeadData.preferredFormat} onValueChange={(value) => setNewLeadData({...newLeadData, preferredFormat: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select format" />
+                        <SelectValue placeholder={t('admin:leads.selectFormat')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="group">Group</SelectItem>
@@ -734,7 +736,7 @@ export default function LeadManagement() {
                       id="notes"
                       value={newLeadData.notes}
                       onChange={(e) => setNewLeadData({...newLeadData, notes: e.target.value})}
-                      placeholder="Additional notes about the lead..."
+                      placeholder={t('admin:leads.notesPlaceholder')}
                       rows={3}
                     />
                   </div>
