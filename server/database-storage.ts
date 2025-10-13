@@ -159,6 +159,16 @@ export class DatabaseStorage implements IStorage {
     return Promise.resolve();
   }
 
+  // Ping database to check connection health
+  async ping(): Promise<void> {
+    try {
+      await this.db.execute(sql`SELECT 1`);
+    } catch (error) {
+      console.error('❌ Database ping failed:', error);
+      throw new Error('Database connection unhealthy');
+    }
+  }
+
   // User management
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

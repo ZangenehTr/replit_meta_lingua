@@ -3220,16 +3220,19 @@ export const notifications = pgTable("notifications", {
 export const otpCodes = pgTable("otp_codes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
+  identifier: varchar("identifier", { length: 255 }).notNull(), // email or phone number
   phoneNumber: varchar("phone_number", { length: 20 }),
   email: varchar("email", { length: 255 }),
   code: varchar("code", { length: 10 }).notNull(),
   purpose: varchar("purpose", { length: 50 }).notNull(), // login, password_reset, phone_verification, email_verification
   isUsed: boolean("is_used").default(false),
   usedAt: timestamp("used_at"),
+  consumedAt: timestamp("consumed_at"), // for OTP service compatibility
   expiresAt: timestamp("expires_at").notNull(),
   attemptsCount: integer("attempts_count").default(0),
   maxAttempts: integer("max_attempts").default(3),
-  ipAddress: varchar("ip_address", { length: 45 }),
+  ip: varchar("ip", { length: 45 }), // for OTP rate limiting
+  ipAddress: varchar("ip_address", { length: 45 }), // legacy field
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
