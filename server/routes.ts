@@ -484,20 +484,25 @@ const authenticateToken = async (req: any, res: any, next: any) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as any;
     
-    // Bypass database lookup to avoid schema issues - use token data directly
-    req.user = {
-      id: decoded.userId,
-      email: decoded.email || 'student2@test.com', 
-      role: decoded.role || 'Student',
-      firstName: 'Student',
-      lastName: 'User',
-      walletBalance: 2500000,
-      memberTier: 'Gold',
-      totalCredits: 3250,
-      streakDays: 7,
-      totalLessons: 28,
-      isActive: true
-    };
+    // Real database implementation - lookup actual user from database
+    const user = await storage.getUser(decoded.userId);
+    
+    if (!user) {
+      return res.status(401).json({ 
+        message: 'User not found',
+        messageFa: 'کاربر یافت نشد'
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ 
+        message: 'User account is inactive',
+        messageFa: 'حساب کاربری غیرفعال است'
+      });
+    }
+    
+    // Use real user data from database
+    req.user = user;
     next();
   } catch (error) {
     console.error('Token verification error:', error);
