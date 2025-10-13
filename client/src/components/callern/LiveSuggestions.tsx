@@ -34,14 +34,14 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
   // Fetch suggestions for the call
   const { data: suggestions = [], refetch } = useQuery({
     queryKey: [`/api/callern/${callId}/suggestions`],
-    queryFn: async () => apiRequest(`/api/callern/${callId}/suggestions`, 'GET'),
+    queryFn: async () => apiRequest(`/api/callern/${callId}/suggestions`),
     refetchInterval: isLive ? 5000 : false, // Poll every 5 seconds if live
   });
 
   // Add to glossary mutation
   const addToGlossaryMutation = useMutation({
     mutationFn: async (items: any[]) => {
-      return apiRequest('/api/glossary/bulk', 'POST', { items });
+      return apiRequest('/api/glossary/bulk', { method: 'POST', body: { items } });
     },
     onSuccess: () => {
       toast({
