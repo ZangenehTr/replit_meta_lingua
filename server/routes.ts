@@ -2668,10 +2668,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allClasses = await storage.getAllClasses();
       const activeClasses = allClasses.filter(cls => cls.status === 'active').length;
       
-      // Additional stats - using placeholder values for now
-      const monthlyRevenue = 0; // TODO: Implement revenue calculation
-      const newStudentsThisMonth = 0; // TODO: Implement new students this month
-      const completionRate = 0; // TODO: Implement completion rate calculation
+      // Calculate real monthly revenue from payments
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const allPayments = await storage.getAllPayments();
+      const monthlyRevenue = allPayments
+        .filter(p => {
+          const paidAt = new Date(p.paidAt || p.createdAt);
+          return p.status === 'completed' && 
+                 paidAt.getMonth() === currentMonth && 
+                 paidAt.getFullYear() === currentYear;
+        })
+        .reduce((sum, p) => sum + (parseFloat(p.amount as string) || 0), 0);
+      
+      // Calculate new students this month
+      const newStudentsThisMonth = allUsers.filter(user => {
+        if (user.role !== 'Student') return false;
+        const createdAt = new Date(user.createdAt);
+        return createdAt.getMonth() === currentMonth && 
+               createdAt.getFullYear() === currentYear;
+      }).length;
+      
+      // Calculate completion rate from enrollments
+      const allEnrollments = await storage.getEnrollments();
+      const completedEnrollments = allEnrollments.filter(e => e.status === 'completed').length;
+      const completionRate = allEnrollments.length > 0 
+        ? Math.round((completedEnrollments / allEnrollments.length) * 100) 
+        : 0;
       
       const stats = {
         totalStudents,
@@ -5296,53 +5319,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const userProfile = await storage.getUserProfile(userId);
       
-      if (!userProfile || !userProfile.targetLanguage) {
-        // Return sample group courses if no profile
-        return res.json([
-          {
-            id: 1,
-            title: "Persian Language Fundamentals - Group",
-            description: "Master the basics of Persian language with native instructors in a group setting",
-            thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
-            deliveryMode: "online",
-            classFormat: "group",
-            targetLanguage: "persian",
-            targetLevel: ["beginner"],
-            maxStudents: 8,
-            currentStudents: 5,
-            price: 25000,
-            weekdays: ["monday", "wednesday", "friday"],
-            startTime: "18:00",
-            endTime: "19:30",
-            instructorName: "Dr. Sarah Johnson",
-            duration: "8 weeks",
-            isActive: true
-          },
-          {
-            id: 2,
-            title: "English Conversation Group",
-            description: "Improve your English speaking skills in an interactive group environment",
-            thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300&h=200&fit=crop",
-            deliveryMode: "in_person",
-            classFormat: "group",
-            targetLanguage: "english",
-            targetLevel: ["intermediate"],
-            maxStudents: 10,
-            currentStudents: 7,
-            price: 30000,
-            weekdays: ["tuesday", "thursday"],
-            startTime: "19:00",
-            endTime: "20:30",
-            instructorName: "Michael Smith",
-            duration: "10 weeks",
-            isActive: true
-          }
-        ]);
-      }
-
+      // Get all available courses from database
       const availableCourses = await storage.getAvailableCoursesForUser(userId);
       
-      // Filter for group classes (online and in-person) that match student's target language
+      // If no profile exists, return all active group courses
+      if (!userProfile || !userProfile.targetLanguage) {
+        const allGroupCourses = availableCourses.filter(course => 
+          course.classFormat === 'group' && 
+          course.isActive &&
+          (course.deliveryMode === 'online' || course.deliveryMode === 'in_person')
+        );
+        return res.json(allGroupCourses);
+      }
+      
+      // Filter for group classes matching student's target language and level
       const relevantCourses = availableCourses.filter(course => 
         course.classFormat === 'group' && 
         course.targetLanguage === userProfile.targetLanguage &&
@@ -10718,71 +10708,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Course not found" });
       }
 
-      // Mock comprehensive course data with lessons
+      // Get real video lessons from database
+      const lessons = await storage.getVideoLessonsByCourse(courseId);
+      
+      // Get instructor info
+      const instructor = course.instructorId 
+        ? await storage.getUser(course.instructorId) 
+        : null;
+      
+      // Get user's progress for this course
+      const enrollment = await storage.getUserEnrollment(req.user.id, courseId);
+      const progress = enrollment?.progress || 0;
+      
+      // Calculate completed lessons
+      const completedLessons = lessons.filter(l => 
+        enrollment && l.id <= (enrollment.progress || 0) * lessons.length / 100
+      ).length;
+
       const courseData = {
         id: course.id,
         title: course.title,
         description: course.description,
-        instructor: "Dr. Maryam Hosseini",
+        instructor: instructor ? `${instructor.firstName} ${instructor.lastName}` : "Instructor",
         level: course.level,
         language: course.language,
-        totalLessons: 12,
-        completedLessons: 3,
-        progress: 25,
-        lessons: [
-          {
-            id: 1,
-            title: "مقدمه‌ای بر دستور زبان فارسی / Introduction to Persian Grammar",
-            description: "آشنایی با اصول پایه دستور زبان فارسی و ساختار جمله",
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-            duration: 1200, // 20 minutes
-            order: 1,
-            transcript: "در این درس با اصول پایه دستور زبان فارسی آشنا می‌شوید...",
-            notes: "نکات مهم درس",
-            resources: ["Persian Grammar Basics.pdf", "Exercise Sheet 1.pdf"],
-            isPreview: true,
-            isCompleted: true
-          },
-          {
-            id: 2,
-            title: "انواع کلمات در فارسی / Types of Words in Persian",
-            description: "بررسی انواع کلمات: اسم، فعل، صفت، قید",
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-            duration: 900,
-            order: 2,
-            transcript: "در زبان فارسی انواع مختلفی از کلمات وجود دارد...",
-            notes: "",
-            resources: ["Word Types Chart.pdf"],
-            isPreview: false,
-            isCompleted: true
-          },
-          {
-            id: 3,
-            title: "ساختار جمله در فارسی / Sentence Structure in Persian",
-            description: "نحوه تشکیل جملات ساده و مرکب",
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            duration: 1080,
-            order: 3,
-            transcript: "ساختار جمله در فارسی معمولاً فاعل + مفعول + فعل است...",
-            notes: "",
-            resources: ["Sentence Examples.pdf", "Practice Exercises.pdf"],
-            isPreview: false,
-            isCompleted: true
-          },
-          {
-            id: 4,
-            title: "زمان‌های فعل / Verb Tenses",
-            description: "آشنایی با زمان‌های مختلف فعل در فارسی",
-            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-            duration: 1350,
-            order: 4,
-            transcript: "",
-            notes: "",
-            resources: ["Verb Conjugation Table.pdf"],
-            isPreview: false,
-            isCompleted: false
-          }
-        ]
+        totalLessons: lessons.length,
+        completedLessons,
+        progress,
+        lessons: lessons.map(lesson => ({
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description || "",
+          videoUrl: lesson.videoUrl || "",
+          duration: lesson.duration || 0,
+          order: lesson.orderIndex || 0,
+          transcript: lesson.transcript || "",
+          notes: "",
+          resources: lesson.resources || [],
+          isPreview: lesson.isPreview || false,
+          isCompleted: enrollment && lesson.id <= (enrollment.progress || 0) * lessons.length / 100
+        }))
       };
 
       res.json(courseData);
