@@ -6,6 +6,7 @@ import { Lightbulb, Plus, Volume2, BookOpen } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface Suggestion {
   id: number;
@@ -28,6 +29,7 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   // Fetch suggestions for the call
   const { data: suggestions = [], refetch } = useQuery({
@@ -43,8 +45,8 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
     },
     onSuccess: () => {
       toast({
-        title: "Added to Glossary",
-        description: "The term has been added to your personal glossary.",
+        title: t('callern:liveSuggestions.addedToGlossaryTitle'),
+        description: t('callern:liveSuggestions.addedToGlossaryDescription'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/glossary'] });
     },
@@ -53,7 +55,7 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
   const handleAddToGlossary = (suggestion: Suggestion) => {
     const glossaryItem = {
       term: suggestion.term,
-      definition: suggestion.definition || 'No definition provided',
+      definition: suggestion.definition || t('callern:liveSuggestions.noDefinition'),
       partOfSpeech: suggestion.partOfSpeech,
       cefrLevel: suggestion.cefrLevel,
       example: suggestion.example,
@@ -95,12 +97,12 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-yellow-500" />
-            <CardTitle className="text-lg">Live Vocabulary</CardTitle>
+            <CardTitle className="text-lg">{t('callern:liveSuggestions.title')}</CardTitle>
           </div>
           {isLive && (
             <Badge variant="outline" className="animate-pulse">
               <span className="mr-1 h-2 w-2 rounded-full bg-red-500"></span>
-              Live
+              {t('callern:liveSuggestions.live')}
             </Badge>
           )}
         </div>
@@ -109,8 +111,8 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
         {suggestions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <BookOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No suggestions yet</p>
-            <p className="text-xs mt-1">New vocabulary will appear here during the call</p>
+            <p className="text-sm">{t('callern:liveSuggestions.noSuggestionsYet')}</p>
+            <p className="text-xs mt-1">{t('callern:liveSuggestions.newVocabularyAppears')}</p>
           </div>
         ) : (
           suggestions.map((suggestion: Suggestion) => (
@@ -153,7 +155,7 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
                     variant={suggestion.suggestedBy === 'teacher' ? 'default' : 'outline'}
                     className="text-xs"
                   >
-                    {suggestion.suggestedBy === 'teacher' ? '👨‍🏫' : '🤖'} {suggestion.suggestedBy}
+                    {suggestion.suggestedBy === 'teacher' ? '👨‍🏫' : '🤖'} {t(`callern:liveSuggestions.${suggestion.suggestedBy}`)}
                   </Badge>
                 </div>
               </div>
@@ -179,7 +181,7 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
                   disabled={addToGlossaryMutation.isPending}
                 >
                   <Plus className="h-3 w-3 mr-1" />
-                  Add to My Glossary
+                  {t('callern:liveSuggestions.addToGlossary')}
                 </Button>
               )}
             </div>

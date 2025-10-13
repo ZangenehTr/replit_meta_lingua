@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Expand, Move, Volume2, VolumeX } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface VideoCallLayoutProps {
   localVideoRef: React.RefObject<HTMLVideoElement>;
@@ -24,6 +25,7 @@ export function VideoCallLayout({
   userName,
   remoteName,
 }: VideoCallLayoutProps) {
+  const { t } = useLanguage();
   const [pipPosition, setPipPosition] = useState<PipPosition>("top-right");
   const [isDragging, setIsDragging] = useState(false);
   const [isMainLocal, setIsMainLocal] = useState(false); // remote is main by default
@@ -91,17 +93,17 @@ export function VideoCallLayout({
               <span className="text-4xl text-gray-400">
                 {(isMainLocal ? userName : remoteName)
                   ?.charAt(0)
-                  ?.toUpperCase() || "?"}
+                  ?.toUpperCase() || t('callern:videoCallLayout.unknownUser')}
               </span>
             </div>
             <p className="text-white text-lg font-medium">
               {isMainLocal
-                ? userName || "You"
-                : remoteName || (isConnected ? "Remote User" : "Connecting...")}
+                ? userName || t('callern:you')
+                : remoteName || (isConnected ? t('callern:videoCallLayout.remoteUser') : t('callern:connecting'))}
             </p>
             {!isConnected && remoteIsMain && (
               <p className="text-gray-400 text-sm mt-2">
-                Waiting for connection...
+                {t('callern:waitingForConnection')}
               </p>
             )}
           </div>
@@ -112,7 +114,7 @@ export function VideoCallLayout({
           <button
             onClick={() => setRemoteMuted((m) => !m)}
             className="absolute bottom-4 left-4 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-            title={remoteMuted ? "Unmute remote" : "Mute remote"}
+            title={remoteMuted ? t('callern:videoCallLayout.unmuteRemote') : t('callern:videoCallLayout.muteRemote')}
           >
             {remoteMuted ? (
               <VolumeX className="w-5 h-5 text-white" />
@@ -162,7 +164,7 @@ export function VideoCallLayout({
                 <span className="text-xl text-gray-300">
                   {(!isMainLocal ? userName : remoteName)
                     ?.charAt(0)
-                    ?.toUpperCase() || "?"}
+                    ?.toUpperCase() || t('callern:videoCallLayout.unknownUser')}
                 </span>
               </div>
             </div>
@@ -172,7 +174,7 @@ export function VideoCallLayout({
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity">
             <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
               <span className="text-xs text-white font-medium px-2 py-1 bg-black/50 rounded">
-                {!isMainLocal ? "You" : "Remote"}
+                {!isMainLocal ? t('callern:you') : t('callern:videoCallLayout.remote')}
               </span>
               <div className="flex gap-1">
                 {/* Remote volume control on PIP whenever remote is in PiP */}
@@ -183,7 +185,7 @@ export function VideoCallLayout({
                       setRemoteMuted((m) => !m);
                     }}
                     className="p-1 rounded bg-black/50 hover:bg-black/70 transition-colors"
-                    title={remoteMuted ? "Unmute remote" : "Mute remote"}
+                    title={remoteMuted ? t('callern:videoCallLayout.unmuteRemote') : t('callern:videoCallLayout.muteRemote')}
                   >
                     {remoteMuted ? (
                       <VolumeX className="w-3 h-3 text-white" />
@@ -198,7 +200,7 @@ export function VideoCallLayout({
                     handleSwapVideos();
                   }}
                   className="p-1 rounded bg-black/50 hover:bg-black/70 transition-colors"
-                  title="Swap videos"
+                  title={t('callern:videoCallLayout.swapVideos')}
                 >
                   <Expand className="w-3 h-3 text-white" />
                 </button>
@@ -207,7 +209,7 @@ export function VideoCallLayout({
                     e.stopPropagation(); /* reserved for future: snap menu */
                   }}
                   className="p-1 rounded bg-black/50 hover:bg-black/70 transition-colors"
-                  title="Move"
+                  title={t('callern:videoCallLayout.move')}
                 >
                   <Move className="w-3 h-3 text-white" />
                 </button>
@@ -241,7 +243,7 @@ export function VideoCallLayout({
       {!isConnected && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
           <p className="text-white/70 text-sm bg-black/30 px-4 py-2 rounded-lg backdrop-blur-sm">
-            Click the small video to move it • Double-click to swap
+            {t('callern:videoCallLayout.helperText')}
           </p>
         </div>
       )}

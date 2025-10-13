@@ -8,6 +8,7 @@ import { BookOpen, Search, Clock, Brain, TrendingUp, Volume2 } from 'lucide-reac
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface GlossaryItem {
   id: number;
@@ -26,32 +27,36 @@ export function StudentGlossary() {
   const [selectedTab, setSelectedTab] = useState('all');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   // Fetch glossary items
   const { data: glossaryItems = [], isLoading } = useQuery({
     queryKey: ['/api/glossary'],
-    queryFn: async () => apiRequest('/api/glossary', 'GET'),
+    queryFn: async () => apiRequest('/api/glossary'),
   });
 
   // Fetch due items for review
   const { data: dueItems = [] } = useQuery({
     queryKey: ['/api/glossary/due'],
-    queryFn: async () => apiRequest('/api/glossary/due', 'GET'),
+    queryFn: async () => apiRequest('/api/glossary/due'),
   });
 
   // Submit quiz result
   const quizMutation = useMutation({
     mutationFn: async ({ itemId, wasCorrect }: { itemId: number; wasCorrect: boolean }) => {
-      return apiRequest(`/api/glossary/${itemId}/quiz`, 'POST', {
-        questionType: 'definition',
-        wasCorrect,
-        responseTime: 2000, // Mock response time
+      return apiRequest(`/api/glossary/${itemId}/quiz`, {
+        method: 'POST',
+        body: {
+          questionType: 'definition',
+          wasCorrect,
+          responseTime: 2000, // Mock response time
+        },
       });
     },
     onSuccess: (data) => {
       toast({
-        title: data.wasCorrect ? "Correct!" : "Keep practicing!",
-        description: `Next review: ${new Date(data.nextDue).toLocaleDateString()}`,
+        title: data.wasCorrect ? t('callern:studentGlossary.correct') : t('callern:studentGlossary.keepPracticing'),
+        description: t('callern:studentGlossary.nextReviewToast', { date: new Date(data.nextDue).toLocaleDateString() }),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/glossary'] });
       queryClient.invalidateQueries({ queryKey: ['/api/glossary/due'] });
@@ -101,16 +106,16 @@ export function StudentGlossary() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              My Glossary
+              {t('callern:studentGlossary.title')}
             </CardTitle>
             <CardDescription>
-              {glossaryItems.length} terms collected • {dueItems.length} due for review
+              {glossaryItems.length} {t('callern:studentGlossary.termsCollected')} • {dueItems.length} {t('callern:studentGlossary.dueForReview')}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              Streak: 7 days
+              {t('callern:studentGlossary.streakLabel')}: 7 {t('callern:studentGlossary.days')}
             </Badge>
           </div>
         </div>
@@ -119,7 +124,7 @@ export function StudentGlossary() {
         <div className="flex items-center gap-2">
           <Search className="h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search terms..."
+            placeholder={t('callern:studentGlossary.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1"
@@ -129,15 +134,15 @@ export function StudentGlossary() {
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all">
-              All Terms ({filteredItems.length})
+              {t('callern:studentGlossary.allTerms')} ({filteredItems.length})
             </TabsTrigger>
             <TabsTrigger value="due" className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              Due ({dueItems.length})
+              {t('callern:studentGlossary.due')} ({dueItems.length})
             </TabsTrigger>
             <TabsTrigger value="stats">
               <Brain className="h-3 w-3 mr-1" />
-              Stats
+              {t('callern:studentGlossary.stats')}
             </TabsTrigger>
           </TabsList>
 
@@ -167,7 +172,7 @@ export function StudentGlossary() {
                     )}
                     <div
                       className={`h-2 w-12 rounded-full ${getStrengthColor(item.srsStrength)}`}
-                      title={`Strength: ${item.srsStrength || 0}/5`}
+                      title={`${t('callern:studentGlossary.strengthLabel')}: ${item.srsStrength || 0}/5`}
                     />
                   </div>
                 </div>
@@ -181,10 +186,10 @@ export function StudentGlossary() {
                 )}
                 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Reviewed {item.srsReviewCount || 0} times</span>
+                  <span>{t('callern:studentGlossary.reviewed')} {item.srsReviewCount || 0} {t('callern:studentGlossary.times')}</span>
                   {item.srsDueAt && (
                     <span>
-                      Next review: {new Date(item.srsDueAt).toLocaleDateString()}
+                      {t('callern:studentGlossary.nextReview')} {new Date(item.srsDueAt).toLocaleDateString()}
                     </span>
                   )}
                 </div>
@@ -196,9 +201,9 @@ export function StudentGlossary() {
             {dueItems.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="h-12 w-12 mx-auto mb-2 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">No items due for review</p>
+                <p className="text-muted-foreground">{t('callern:studentGlossary.noItemsDue')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Keep learning new vocabulary!
+                  {t('callern:studentGlossary.keepLearning')}
                 </p>
               </div>
             ) : (
@@ -207,7 +212,7 @@ export function StudentGlossary() {
                   <div className="text-center">
                     <h4 className="font-semibold text-xl mb-2">{item.term}</h4>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Do you remember what this means?
+                      {t('callern:studentGlossary.rememberMeaning')}
                     </p>
                   </div>
                   
@@ -217,13 +222,13 @@ export function StudentGlossary() {
                       className="flex-1"
                       onClick={() => quizMutation.mutate({ itemId: item.id, wasCorrect: false })}
                     >
-                      Show Definition
+                      {t('callern:studentGlossary.showDefinition')}
                     </Button>
                     <Button
                       className="flex-1"
                       onClick={() => quizMutation.mutate({ itemId: item.id, wasCorrect: true })}
                     >
-                      I Know It!
+                      {t('callern:studentGlossary.iKnowIt')}
                     </Button>
                   </div>
                 </div>
@@ -236,7 +241,7 @@ export function StudentGlossary() {
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold">{glossaryItems.length}</div>
-                  <p className="text-sm text-muted-foreground">Total Terms</p>
+                  <p className="text-sm text-muted-foreground">{t('callern:studentGlossary.totalTerms')}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -244,14 +249,14 @@ export function StudentGlossary() {
                   <div className="text-2xl font-bold">
                     {glossaryItems.filter((i: GlossaryItem) => (i.srsStrength || 0) >= 3).length}
                   </div>
-                  <p className="text-sm text-muted-foreground">Mastered</p>
+                  <p className="text-sm text-muted-foreground">{t('callern:studentGlossary.mastered')}</p>
                 </CardContent>
               </Card>
             </div>
             
             <Card>
               <CardContent className="p-4">
-                <h4 className="font-semibold mb-2">Level Distribution</h4>
+                <h4 className="font-semibold mb-2">{t('callern:studentGlossary.levelDistribution')}</h4>
                 <div className="space-y-2">
                   {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(level => {
                     const count = glossaryItems.filter((i: GlossaryItem) => i.cefrLevel === level).length;
