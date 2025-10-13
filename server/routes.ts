@@ -11075,59 +11075,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tutorId = parseInt(req.params.tutorId);
       
-      // Mock detailed tutor data
-      const tutor = {
-        id: tutorId,
-        name: "دکتر سارا احمدی / Dr. Sara Ahmadi",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=300",
-        specializations: ["Persian Literature", "Advanced Grammar", "Poetry"],
-        languages: ["Persian", "English"],
-        rating: 4.9,
-        reviewCount: 127,
-        completedSessions: 450,
-        hourlyRate: 350000,
-        availability: "Available Now",
-        experience: "8 years",
-        education: "PhD in Persian Literature, University of Tehran",
-        certifications: ["TESOL Certified", "Persian Language Teaching Certificate"],
-        description: "متخصص ادبیات فارسی با تجربه تدریس بیش از ۸ سال",
-        bio: "I specialize in Persian literature and advanced grammar. My teaching method focuses on practical conversation and cultural context. I have helped over 450 students achieve their Persian language goals.",
-        responseTime: "Usually responds within 1 hour",
-        successRate: 95,
-        teachingStyle: "Interactive and conversation-focused",
-        availableSlots: [
-          { date: "2025-05-29", time: "09:00", available: true },
-          { date: "2025-05-29", time: "14:00", available: true },
-          { date: "2025-05-29", time: "16:00", available: false },
-          { date: "2025-05-30", time: "10:00", available: true },
-          { date: "2025-05-30", time: "15:00", available: true }
-        ],
-        packages: [
-          { sessions: 1, price: 350000, discount: 0, popular: false },
-          { sessions: 5, price: 1575000, discount: 10, popular: true },
-          { sessions: 10, price: 2800000, discount: 20, popular: false }
-        ],
-        reviews: [
-          {
-            id: 1,
-            studentName: "علی محمدی",
-            rating: 5,
-            date: "2025-05-20",
-            comment: "استاد فوق‌العاده‌ای است. روش تدریسش بسیار مؤثر و جذاب است.",
-            lessonTopic: "Persian Poetry Analysis"
-          },
-          {
-            id: 2,
-            studentName: "Sarah Johnson",
-            rating: 5,
-            date: "2025-05-18",
-            comment: "Dr. Ahmadi is an excellent teacher. She explains complex grammar concepts very clearly.",
-            lessonTopic: "Advanced Grammar"
-          }
-        ]
-      };
-
-      res.json(tutor);
+      // Marketplace tutor details feature not configured
+      return res.status(501).json({
+        error: "Marketplace tutor details not configured",
+        message: "Tutor marketplace feature requires additional setup and configuration",
+        messageFa: "بازار معلمان نیاز به راه‌اندازی و پیکربندی دارد",
+        documentation: "Contact administrator to configure marketplace tutor system"
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to get tutor details" });
     }
@@ -11341,35 +11295,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const { title, description, scheduledFor, duration, maxParticipants, features } = req.body;
-      
-      // In a real implementation, this would create a LiveKit room
-      const classroom = {
-        id: Date.now(),
-        title,
-        description,
-        teacherId: req.user.userId,
-        teacherName: "Dr. Maryam Hosseini",
-        scheduledFor,
-        duration,
-        maxParticipants: maxParticipants || 30,
-        currentParticipants: 0,
-        features: features || {
-          screenShare: true,
-          whiteboard: true,
-          breakoutRooms: true,
-          recording: true,
-          chat: true,
-          fileSharing: true
-        },
-        roomUrl: `https://classroom.metalingua.com/room/${Date.now()}`,
-        status: 'scheduled',
-        createdAt: new Date()
-      };
-
-      res.status(201).json({ 
-        message: "Virtual classroom created successfully", 
-        classroom 
+      // WebRTC virtual classroom feature not configured
+      return res.status(501).json({
+        error: "Virtual classroom not configured",
+        message: "LiveKit or WebRTC classroom system is not configured. Please set up WebRTC infrastructure first.",
+        messageFa: "سیستم کلاس مجازی پیکربندی نشده است",
+        documentation: "Configure LiveKit server and credentials to enable virtual classroom feature"
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to create classroom" });
@@ -11379,29 +11310,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Join virtual classroom
   app.post("/api/classroom/:classroomId/join", authenticateToken, async (req: any, res) => {
     try {
-      const classroomId = parseInt(req.params.classroomId);
-      
-      // In a real implementation, this would generate LiveKit access token
-      const accessToken = {
-        token: `lk_${Date.now()}_${req.user.userId}`,
-        roomUrl: `https://classroom.metalingua.com/room/${classroomId}`,
-        permissions: {
-          canPublish: req.user.role === 'Teacher/Tutor',
-          canSubscribe: true,
-          canPublishData: true,
-          canUpdateMetadata: req.user.role === 'Teacher/Tutor'
-        },
-        participantInfo: {
-          userId: req.user.userId,
-          name: req.user.firstName + ' ' + req.user.lastName,
-          role: req.user.role,
-          avatar: req.user.avatar || ""
-        }
-      };
-
-      res.json({ 
-        message: "Classroom access granted", 
-        accessToken 
+      // WebRTC virtual classroom feature not configured
+      return res.status(501).json({
+        error: "Virtual classroom not configured",
+        message: "LiveKit or WebRTC classroom system is not configured",
+        messageFa: "سیستم کلاس مجازی پیکربندی نشده است"
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to join classroom" });
@@ -11411,43 +11324,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get classroom sessions
   app.get("/api/classroom/sessions", authenticateToken, async (req: any, res) => {
     try {
-      const sessions = [
-        {
-          id: 1,
-          title: "Persian Grammar Fundamentals",
-          teacherName: "Dr. Maryam Hosseini",
-          scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          duration: 90,
-          currentParticipants: 12,
-          maxParticipants: 25,
-          status: 'scheduled',
-          features: ['Screen Share', 'Whiteboard', 'Recording']
-        },
-        {
-          id: 2,
-          title: "Persian Poetry Workshop",
-          teacherName: "Prof. Ahmad Mohammadi",
-          scheduledFor: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-          duration: 120,
-          currentParticipants: 8,
-          maxParticipants: 15,
-          status: 'scheduled',
-          features: ['Screen Share', 'Breakout Rooms', 'Chat']
-        },
-        {
-          id: 3,
-          title: "Business Persian Conversation",
-          teacherName: "Ms. Sara Karimi",
-          scheduledFor: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-          duration: 60,
-          currentParticipants: 0,
-          maxParticipants: 20,
-          status: 'completed',
-          features: ['Screen Share', 'Recording', 'Chat']
-        }
-      ];
-
-      res.json(sessions);
+      // WebRTC virtual classroom feature not configured
+      return res.status(501).json({
+        error: "Virtual classroom not configured",
+        message: "LiveKit or WebRTC classroom system is not configured",
+        messageFa: "سیستم کلاس مجازی پیکربندی نشده است"
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to get classroom sessions" });
     }
@@ -21773,62 +21655,8 @@ Meta Lingua Academy`;
     try {
       const teacherId = req.user.id;
       
-      // Mock resources data - in real implementation, get from resources table
-      const resources = [
-        {
-          id: 1,
-          title: "Persian Grammar Workbook",
-          description: "Comprehensive grammar exercises for intermediate learners",
-          type: "document",
-          category: "worksheets",
-          level: "B1",
-          language: "Persian",
-          fileUrl: "/uploads/resources/grammar-workbook.pdf",
-          fileSize: "2.3 MB",
-          downloads: 45,
-          likes: 12,
-          isPublic: true,
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-          tags: ["grammar", "exercises", "intermediate"]
-        },
-        {
-          id: 2,
-          title: "Persian Poetry Analysis",
-          description: "Audio guide for classical Persian poetry interpretation",
-          type: "audio",
-          category: "audio",
-          level: "C1",
-          language: "Persian",
-          fileUrl: "/uploads/resources/poetry-analysis.mp3",
-          fileSize: "15.7 MB",
-          duration: "32:15",
-          downloads: 23,
-          likes: 8,
-          isPublic: false,
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-          tags: ["poetry", "literature", "advanced"]
-        },
-        {
-          id: 3,
-          title: "Conversation Practice Videos",
-          description: "Series of real-life conversation scenarios",
-          type: "video",
-          category: "videos",
-          level: "A2",
-          language: "Persian",
-          fileUrl: "/uploads/resources/conversations.mp4",
-          fileSize: "125.4 MB",
-          duration: "28:42",
-          downloads: 67,
-          likes: 23,
-          isPublic: true,
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date().toISOString(),
-          tags: ["conversation", "speaking", "beginner"]
-        }
-      ];
+      // Real database implementation - get teacher resources from storage
+      const resources = await storage.getTeacherResources(teacherId);
       
       res.json(resources);
     } catch (error) {
@@ -22052,16 +21880,9 @@ Meta Lingua Academy`;
       const teacherId = req.user.id;
       const { dateRange = 'last3months' } = req.query;
       
-      // Mock detailed reports data
-      const detailedReports = [
-        {
-          id: 1,
-          type: 'student-progress',
-          title: 'Student Progress Analysis',
-          generatedAt: new Date().toISOString(),
-          data: {}
-        }
-      ];
+      // Real database implementation - detailed reports feature not yet implemented
+      // Return empty array until report generation system is built
+      const detailedReports: any[] = [];
       
       res.json(detailedReports);
     } catch (error) {
