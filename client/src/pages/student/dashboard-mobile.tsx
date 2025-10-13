@@ -39,7 +39,7 @@ import {
   PlayCircle,
   CheckCircle2
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { StudentLevelBanner } from "@/components/dashboard/StudentLevelBanner";
 
 interface StudentStats {
@@ -71,6 +71,7 @@ interface PlacementTestStatus {
 export default function StudentDashboardMobile() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState('overview');
   const [greeting, setGreeting] = useState('');
 
@@ -460,14 +461,15 @@ export default function StudentDashboardMobile() {
               
               <div className="space-y-2">
                 {upcomingSessions.slice(0, 3).map((session: any, index: number) => (
-                  <ListItem
-                    key={index}
-                    title={session.courseName}
-                    subtitle={`${session.date} at ${session.time}`}
-                    leftIcon={<Video className="w-5 h-5" />}
-                    rightContent={<ChevronRight className="w-5 h-5" />}
-                    onClick={() => console.log('Session clicked')}
-                  />
+                  <Link key={index} href="/student/sessions-mobile">
+                    <ListItem
+                      title={session.courseName}
+                      subtitle={`${session.date} at ${session.time}`}
+                      leftIcon={<Video className="w-5 h-5" />}
+                      rightContent={<ChevronRight className="w-5 h-5" />}
+                      onClick={() => {}}
+                    />
+                  </Link>
                 ))}
               </div>
               
@@ -691,7 +693,7 @@ export default function StudentDashboardMobile() {
       {/* Floating Action Button */}
       <FAB
         icon={<Plus className="w-6 h-6 text-white" />}
-        onClick={() => console.log('FAB clicked')}
+        onClick={() => setLocation('/student/courses-mobile')}
       />
     </GlossyFantasyLayout>
   );

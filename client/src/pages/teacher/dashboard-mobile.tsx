@@ -35,7 +35,7 @@ import {
   Settings,
   Map
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 interface TeacherStats {
   totalStudents: number;
@@ -53,6 +53,7 @@ interface TeacherStats {
 export default function TeacherDashboardMobile() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState('overview');
   const [greeting, setGreeting] = useState('');
 
@@ -185,22 +186,23 @@ export default function TeacherDashboardMobile() {
               
               <div className="space-y-2">
                 {todayClasses.slice(0, 3).map((class_: any, index: number) => (
-                  <ListItem
-                    key={index}
-                    title={class_.name}
-                    subtitle={`${class_.time} • ${class_.students} students`}
-                    leftIcon={
-                      class_.type === 'video' ? 
-                      <Video className="w-5 h-5" /> : 
-                      <Users className="w-5 h-5" />
-                    }
-                    rightContent={
-                      <Badge variant={class_.status === 'upcoming' ? 'warning' : 'success'} size="sm">
-                        {class_.status}
-                      </Badge>
-                    }
-                    onClick={() => console.log('Class clicked')}
-                  />
+                  <Link key={index} href="/teacher/classes">
+                    <ListItem
+                      title={class_.name}
+                      subtitle={`${class_.time} • ${class_.students} students`}
+                      leftIcon={
+                        class_.type === 'video' ? 
+                        <Video className="w-5 h-5" /> : 
+                        <Users className="w-5 h-5" />
+                      }
+                      rightContent={
+                        <Badge variant={class_.status === 'upcoming' ? 'warning' : 'success'} size="sm">
+                          {class_.status}
+                        </Badge>
+                      }
+                      onClick={() => {}}
+                    />
+                  </Link>
                 ))}
               </div>
               
@@ -232,14 +234,15 @@ export default function TeacherDashboardMobile() {
               
               <div className="space-y-2">
                 {pendingAssignments.slice(0, 3).map((assignment: any, index: number) => (
-                  <ListItem
-                    key={index}
-                    title={assignment.studentName}
-                    subtitle={assignment.assignmentTitle}
-                    leftIcon={<AlertCircle className="w-5 h-5 text-yellow-500" />}
-                    rightContent={<ChevronRight className="w-5 h-5" />}
-                    onClick={() => console.log('Assignment clicked')}
-                  />
+                  <Link key={index} href="/teacher/assignments">
+                    <ListItem
+                      title={assignment.studentName}
+                      subtitle={assignment.assignmentTitle}
+                      leftIcon={<AlertCircle className="w-5 h-5 text-yellow-500" />}
+                      rightContent={<ChevronRight className="w-5 h-5" />}
+                      onClick={() => {}}
+                    />
+                  </Link>
                 ))}
               </div>
 
@@ -469,7 +472,7 @@ export default function TeacherDashboardMobile() {
       {/* Floating Action Button */}
       <FAB
         icon={<Plus className="w-6 h-6 text-white" />}
-        onClick={() => console.log('Create new class')}
+        onClick={() => setLocation('/teacher/classes')}
       />
     </GlossyFantasyLayout>
   );
