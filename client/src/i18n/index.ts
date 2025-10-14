@@ -64,6 +64,11 @@ import enCourses from './locales/en/courses.json';
 import faCourses from './locales/fa/courses.json';
 import arCourses from './locales/ar/courses.json';
 
+// Import linguaquest namespace
+import enLinguaquest from './locales/en/linguaquest.json';
+import faLinguaquest from './locales/fa/linguaquest.json';
+import arLinguaquest from './locales/ar/linguaquest.json';
+
 // Language detection options
 const detectionOptions = {
   order: ['localStorage', 'navigator', 'htmlTag'],
@@ -112,6 +117,7 @@ i18n
         callern: enCallern,
         coursePlayer: enCoursePlayer,
         courses: enCourses,
+        linguaquest: enLinguaquest,
       },
       fa: {
         common: faCommon,
@@ -129,6 +135,7 @@ i18n
         callern: faCallern,
         coursePlayer: faCoursePlayer,
         courses: faCourses,
+        linguaquest: faLinguaquest,
       },
       ar: {
         common: arCommon,
@@ -146,11 +153,12 @@ i18n
         callern: arCallern,
         coursePlayer: arCoursePlayer,
         courses: arCourses,
+        linguaquest: arLinguaquest,
       },
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'frontdesk', 'auth', 'callern', 'coursePlayer', 'courses'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'frontdesk', 'auth', 'callern', 'coursePlayer', 'courses', 'linguaquest'],
   });
 
 // Enhanced RTL detection and document direction management

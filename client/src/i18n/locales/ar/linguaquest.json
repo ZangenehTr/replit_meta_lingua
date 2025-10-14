@@ -1,0 +1,126 @@
+{
+  "branding": {
+    "title": "لينغواكويست",
+    "tagline": "مغامرات لغوية مجانية",
+    "loadingMessage": "جارٍ تحميل لينغواكويست..."
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "lessons": "الدروس",
+    "progress": "التقدم",
+    "achievements": "الإنجازات"
+  },
+  "userProgress": {
+    "level": "المستوى {{level}}",
+    "xp": "{{xp}} نقطة خبرة",
+    "streak": "{{days}} يوم متتالي",
+    "lessonsCompleted": "{{count}} درس مكتمل"
+  },
+  "upgrade": {
+    "buttonText": "الترقية إلى النسخة الاحترافية",
+    "bannerMessage": "تقدم رائع! افتح الميزات المتقدمة مع ميتا لينغوا برو",
+    "learnMore": "معرفة المزيد",
+    "ctaTitle": "فتح الميزات المتقدمة",
+    "ctaDescription": "افتح الدروس المتقدمة والتدريس الشخصي مع ميتا لينغوا برو!",
+    "upgradeNow": "ترقية الآن"
+  },
+  "lessons": {
+    "start": "ابدأ",
+    "replay": "إعادة",
+    "continue": "متابعة",
+    "locked": "مقفل",
+    "completed": "مكتمل",
+    "inProgress": "قيد التنفيذ",
+    "recommendedForYou": "موصى به لك",
+    "allLessons": "جميع الدروس",
+    "duration": "{{minutes}} دقيقة",
+    "xpReward": "{{xp}} نقطة",
+    "difficulty": {
+      "beginner": "مبتدئ",
+      "intermediate": "متوسط",
+      "advanced": "متقدم"
+    },
+    "types": {
+      "vocabulary": "المفردات",
+      "pronunciation": "النطق",
+      "listening": "الاستماع",
+      "conversation": "المحادثة",
+      "grammar": "القواعد"
+    }
+  },
+  "gameSteps": {
+    "introduction": "مقدمة",
+    "vocabularyIntroduction": "تعلم كلمات جديدة",
+    "vocabularyFlashcards": "بطاقات المفردات",
+    "matchingGame": "لعبة المطابقة",
+    "memoryGame": "لعبة الذاكرة",
+    "conversationPractice": "تدريب المحادثة",
+    "pronunciationChallenge": "تحدي النطق",
+    "listeningComprehension": "الفهم السماعي",
+    "fillInBlank": "ملء الفراغات",
+    "dragAndDrop": "السحب والإفلات",
+    "quickQuiz": "اختبار سريع",
+    "loadingAudio": "جارٍ تحميل الصوت..."
+  },
+  "feedback": {
+    "correct": "صحيح!",
+    "incorrect": "حاول مرة أخرى!",
+    "excellent": "ممتاز!",
+    "goodJob": "عمل جيد!",
+    "almostThere": "كدت أن تصل!",
+    "keepTrying": "استمر في المحاولة!",
+    "nextStep": "الخطوة التالية",
+    "lessonComplete": "اكتمل الدرس!",
+    "earnedXP": "لقد حصلت على {{xp}} نقطة!",
+    "levelUp": "ارتقاء المستوى!",
+    "tryAgain": "حاول مرة أخرى",
+    "lessonNotCompleted": "الدرس غير مكتمل"
+  },
+  "errors": {
+    "loadLesson": "فشل تحميل الدرس. يرجى المحاولة مرة أخرى.",
+    "saveProgress": "فشل حفظ تقدم الدرس. يرجى المحاولة مرة أخرى.",
+    "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "audioNotAvailable": "الصوت غير متوفر"
+  },
+  "achievements": {
+    "firstLesson": "الخطوات الأولى",
+    "firstLessonDesc": "أكمل درسك الأول",
+    "streak3": "سلسلة 3 أيام",
+    "streak3Desc": "حافظ على سلسلة تعلم لمدة 3 أيام",
+    "perfectScore": "نتيجة مثالية",
+    "perfectScoreDesc": "احصل على 100% في درس",
+    "vocabularyMaster": "سيد المفردات",
+    "vocabularyMasterDesc": "تعلم 50 كلمة جديدة"
+  },
+  "instructions": {
+    "tapToListen": "انقر للاستماع",
+    "selectCorrectAnswer": "اختر الإجابة الصحيحة",
+    "matchPairs": "طابق الأزواج",
+    "fillBlanks": "املأ الفراغات",
+    "speakSentence": "انطق الجملة",
+    "listenAndChoose": "استمع واختر"
+  },
+  "common": {
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "success": "نجاح",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "next": "التالي",
+    "previous": "السابق",
+    "finish": "إنهاء",
+    "skip": "تخطي",
+    "retry": "إعادة المحاولة"
+  },
+  "progress": {
+    "yourProgress": "تقدمك",
+    "completed": "مكتمل",
+    "inProgress": "قيد التنفيذ",
+    "notStarted": "لم يبدأ",
+    "totalXP": "إجمالي النقاط",
+    "currentLevel": "المستوى الحالي",
+    "strongSkills": "المهارات القوية",
+    "weakSkills": "مجالات التحسين"
+  }
+}
