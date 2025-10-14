@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
+import crypto from 'crypto';
 import { 
   TTSMasterPromptService, 
   ListeningPracticeRequest, 
@@ -71,6 +72,55 @@ export class MetaLinguaTTSService {
   }
 
   /**
+   * Generate a deterministic hash for caching audio files
+   */
+  private generateCacheKey(text: string, language: string, speed: number, voice: string): string {
+    const content = `${text.toLowerCase().trim()}_${language}_${speed}_${voice}`;
+    return crypto.createHash('md5').update(content).digest('hex');
+  }
+
+  /**
+   * Check if cached audio exists and return it
+   */
+  private checkCachedAudio(cacheKey: string): TTSResponse | null {
+    const filename = `edge_tts_${cacheKey}.mp3`;
+    const filePath = path.join(this.outputDir, filename);
+    
+    if (fs.existsSync(filePath)) {
+      // Get file stats for duration estimation
+      const stats = fs.statSync(filePath);
+      const duration = Math.ceil(stats.size / 4000); // Rough estimate: 4KB per second
+      
+      console.log(`✓ TTS Cache Hit: ${cacheKey} (${filename})`);
+      
+      return {
+        success: true,
+        audioFile: filename,
+        audioUrl: `/uploads/tts/${filename}`,
+        duration
+      };
+    }
+    
+    return null;
+  }
+
+  /**
+   * Get default voice for a language
+   */
+  private getDefaultVoice(language: string): string {
+    const voiceMap: Record<string, string> = {
+      'en': 'en-US-AriaNeural',       // American English - natural, clear
+      'english': 'en-US-AriaNeural',
+      'fa': 'fa-IR-DilaraNeural',     // Persian female voice
+      'farsi': 'fa-IR-DilaraNeural',
+      'persian': 'fa-IR-DilaraNeural',
+      'ar': 'ar-SA-HamedNeural',      // Arabic
+      'arabic': 'ar-SA-HamedNeural'
+    };
+    return voiceMap[language.toLowerCase()] || 'en-US-AriaNeural';
+  }
+
+  /**
    * Generate speech using Microsoft Edge TTS (Professional Quality)
    */
   async generateSpeechWithEdgeTTS(request: TTSRequest): Promise<TTSResponse> {
@@ -85,27 +135,23 @@ export class MetaLinguaTTSService {
         };
       }
 
-      // Generate filename
-      const timestamp = Date.now();
-      const filename = `edge_tts_${timestamp}.mp3`;
+      // Use requested voice if provided, otherwise use language-based defaults
+      let voice = requestedVoice || this.getDefaultVoice(language);
+
+      // Generate cache key
+      const cacheKey = this.generateCacheKey(text, language, speed, voice);
+      
+      // Check if cached audio exists
+      const cachedResult = this.checkCachedAudio(cacheKey);
+      if (cachedResult) {
+        return cachedResult;
+      }
+
+      // Generate filename with cache key
+      const filename = `edge_tts_${cacheKey}.mp3`;
       const filePath = path.join(this.outputDir, filename);
 
-      // Use requested voice if provided, otherwise use language-based defaults
-      let voice = requestedVoice;
-      
-      if (!voice) {
-        // Voice mapping for Microsoft Edge TTS (fallback when no specific voice requested)
-        const voiceMap: Record<string, string> = {
-          'en': 'en-US-AriaNeural',       // American English - natural, clear
-          'english': 'en-US-AriaNeural',
-          'fa': 'fa-IR-DilaraNeural',     // Persian female voice for Lexi
-          'farsi': 'fa-IR-DilaraNeural',
-          'persian': 'fa-IR-DilaraNeural',
-          'ar': 'ar-SA-HamedNeural',      // Arabic
-          'arabic': 'ar-SA-HamedNeural'
-        };
-        voice = voiceMap[language.toLowerCase()] || 'en-US-AriaNeural';
-      }
+      console.log(`⊙ TTS Cache Miss: Generating audio for "${text.substring(0, 30)}..." (${cacheKey})`);
 
       // Generate TTS using Python edge-tts command
       const success = await this.generateWithEdgeTTSCommand(text, filePath, voice, speed);
