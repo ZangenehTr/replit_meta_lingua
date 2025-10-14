@@ -1872,32 +1872,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if using OTP login
       if (otp) {
-        const storedOtp = otpStore.get(email);
+        // Format identifier (email or phone)
+        const isPhone = !email.includes('@');
+        const formattedIdentifier = isPhone 
+          ? OtpService.formatIranianPhoneNumber(email)
+          : email;
+
+        // Use database-backed OTP service for verification
+        const locale = req.headers['accept-language']?.includes('fa') ? 'fa' : 'en';
+        const otpResult = await OtpService.verifyOtp(formattedIdentifier, otp, 'login', locale);
         
-        if (!storedOtp) {
-          return res.status(401).json({ message: "No OTP requested or OTP expired" });
+        if (!otpResult.success) {
+          return res.status(401).json({ message: otpResult.message });
         }
 
-        // Check expiration
-        if (storedOtp.expiresAt < new Date()) {
-          otpStore.delete(email);
-          return res.status(401).json({ message: "OTP has expired. Please request a new one." });
-        }
-
-        // Check attempts (max 3)
-        if (storedOtp.attempts >= 3) {
-          otpStore.delete(email);
-          return res.status(401).json({ message: "Too many failed attempts. Please request a new OTP." });
-        }
-
-        // Verify OTP
-        if (storedOtp.code !== otp) {
-          storedOtp.attempts++;
-          return res.status(401).json({ message: "Invalid OTP code" });
-        }
-
-        // OTP is valid, delete it (single use)
-        otpStore.delete(email);
         console.log("OTP login successful for:", email);
       } else {
         // Regular password login
