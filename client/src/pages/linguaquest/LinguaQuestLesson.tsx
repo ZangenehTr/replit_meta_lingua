@@ -19,6 +19,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { Three3DLesson } from "@/components/3d-lessons/Three3DLesson";
+import { GameStepRenderer } from "@/components/linguaquest/GameStepRenderer";
 import { guestProgress, type GuestProgressData } from "@/lib/guest-progress";
 import { useToast } from "@/hooks/use-toast";
 
@@ -53,6 +54,11 @@ export function LinguaQuestLesson() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [completionData, setCompletionData] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [gameSteps, setGameSteps] = useState<any[]>([]);
+  const [stepScores, setStepScores] = useState<Record<number, number>>({});
+  const [totalScore, setTotalScore] = useState(0);
+  const [stepKey, setStepKey] = useState(0); // Force re-render for retry
 
   useEffect(() => {
     loadLesson();
@@ -80,6 +86,11 @@ export function LinguaQuestLesson() {
       }
 
       setLesson(result.lesson);
+
+      // Extract game steps from interaction_config
+      if (result.lesson.interactionConfig?.gameSteps) {
+        setGameSteps(result.lesson.interactionConfig.gameSteps);
+      }
 
       // Load guest progress
       const progressData = guestProgress.getProgress();
@@ -311,15 +322,132 @@ export function LinguaQuestLesson() {
       </header>
 
       {/* Main Content */}
-      <main className="h-[calc(100vh-4rem)]">
+      <main className="h-[calc(100vh-4rem)] overflow-hidden">
         {!isCompleted ? (
-          <Three3DLesson
-            lesson={lesson}
-            onComplete={handleLessonComplete}
-            onProgress={handleLessonProgress}
-            onInteraction={handleInteraction}
-            isMobile={isMobile}
-          />
+          <div className="h-full flex flex-col lg:flex-row">
+            {/* 3D Scene - Always render to maintain immersive context */}
+            {lesson.sceneData && (
+              <div className={cn(
+                "bg-gradient-to-br from-gray-900 to-gray-800",
+                gameSteps.length > 0 ? "h-1/3 lg:h-full lg:w-1/2" : "h-full w-full"
+              )}>
+                <Three3DLesson
+                  lesson={lesson}
+                  onComplete={gameSteps.length > 0 ? () => {
+                    // If game steps exist, 3D scene only reports readiness, not completion
+                    // Actual completion is gated by step controller
+                  } : handleLessonComplete}
+                  onProgress={handleLessonProgress}
+                  onInteraction={handleInteraction}
+                  isMobile={isMobile}
+                />
+              </div>
+            )}
+            
+            {/* Game Steps Overlay - Interactive activities */}
+            {gameSteps.length > 0 && (
+              <div className="h-2/3 lg:h-full lg:w-1/2 overflow-y-auto p-4 lg:p-8 bg-white dark:bg-gray-900">
+                <GameStepRenderer
+                  key={`step-${currentStepIndex}-${stepKey}`}
+                  step={gameSteps[currentStepIndex]}
+                  onComplete={(stepScore) => {
+                    const completionReqs = lesson.interactionConfig?.completionRequirements;
+                    const requiredSteps = completionReqs?.requiredSteps || [];
+                    const optionalSteps = completionReqs?.optionalSteps || [];
+                    const currentStepId = gameSteps[currentStepIndex]?.stepId;
+                    const isRequired = requiredSteps.includes(currentStepId);
+                    const isOptional = optionalSteps.includes(currentStepId);
+                    const minimumScore = completionReqs?.minimumScore || 70;
+                    
+                    // Validate required step score BEFORE recording
+                    if (isRequired && stepScore < minimumScore) {
+                      // Do NOT record failing score - show retry option
+                      toast({
+                        title: "Try Again!",
+                        description: `You need at least ${minimumScore}% to pass this required step. You scored ${Math.round(stepScore)}%. Click Retry to try again.`,
+                        variant: "destructive",
+                        duration: 10000,
+                        action: (
+                          <Button 
+                            size="sm" 
+                            onClick={() => {
+                              // Force re-render by incrementing key
+                              setStepKey(prev => prev + 1);
+                            }}
+                          >
+                            Retry
+                          </Button>
+                        )
+                      });
+                      return; // Block progression - do not record score
+                    }
+                    
+                    // Record step score ONLY after validation passes
+                    const newStepScores = { ...stepScores, [currentStepIndex]: stepScore };
+                    setStepScores(newStepScores);
+                    
+                    // Calculate score from REQUIRED steps only (exclude optional from average)
+                    const requiredScores = Object.entries(newStepScores)
+                      .filter(([idx]) => requiredSteps.includes(gameSteps[parseInt(idx)]?.stepId))
+                      .map(([_, score]) => score);
+                    
+                    const avgRequiredScore = requiredScores.length > 0 
+                      ? requiredScores.reduce((a, b) => a + b, 0) / requiredScores.length 
+                      : 0;
+                    
+                    setTotalScore(avgRequiredScore);
+                    
+                    // Move to next step or complete lesson
+                    if (currentStepIndex < gameSteps.length - 1) {
+                      setCurrentStepIndex(prev => prev + 1);
+                      const newProgress = ((currentStepIndex + 1) / gameSteps.length) * 100;
+                      setLessonProgress(newProgress);
+                      handleLessonProgress(newProgress);
+                    } else {
+                      // All steps completed - validate overall completion
+                      
+                      // Handle optional-only lessons (no required steps)
+                      if (requiredSteps.length === 0) {
+                        // No required steps - lesson is complete
+                        handleLessonComplete(lesson.estimatedDurationMinutes || 15);
+                        return;
+                      }
+                      
+                      // Validate required steps completion
+                      const allRequiredCompleted = requiredSteps.every(stepId => 
+                        Object.keys(newStepScores).some(idx => 
+                          gameSteps[parseInt(idx)]?.stepId === stepId
+                        )
+                      );
+                      
+                      if (allRequiredCompleted && avgRequiredScore >= minimumScore) {
+                        handleLessonComplete(lesson.estimatedDurationMinutes || 15);
+                      } else {
+                        toast({
+                          title: "Lesson Not Completed",
+                          description: `You need ${minimumScore}% on required steps to complete this lesson. Current: ${Math.round(avgRequiredScore)}%`,
+                          variant: "destructive"
+                        });
+                      }
+                    }
+                  }}
+                  onProgress={handleLessonProgress}
+                />
+                
+                {/* Score Indicator */}
+                {Object.keys(stepScores).length > 0 && (
+                  <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Current Score:</span>
+                      <span className="text-lg font-bold text-emerald-600">
+                        {Math.round(totalScore)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="h-full flex items-center justify-center p-4">
             <Card className="max-w-2xl w-full">
