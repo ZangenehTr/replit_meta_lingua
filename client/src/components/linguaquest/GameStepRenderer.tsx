@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Volume2, Check, X, Mic, Play, RotateCcw, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTTS } from '@/hooks/useTTS';
 
 interface GameStepProps {
   step: any;
@@ -150,11 +151,31 @@ function IntroductionStep({ step, onComplete }: { step: any; onComplete: (score:
 // Vocabulary Step Component
 function VocabularyStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
   const [listenedWords, setListenedWords] = useState<Set<string>>(new Set());
+  const [wordAudioUrls, setWordAudioUrls] = useState<Record<string, string>>({});
   const words = step.words || [];
+  const language = step.language || 'en';
+  const { generateVocabularyAudio, isLoading } = useTTS(language);
 
-  const handleWordClick = (word: string, audio?: string) => {
-    if (audio) {
-      new Audio(audio).play();
+  // Generate audio for all vocabulary words on mount
+  useEffect(() => {
+    const loadAudio = async () => {
+      const wordTexts = words.map((w: any) => w.word || w.text || w);
+      const audioUrls = await generateVocabularyAudio(wordTexts);
+      setWordAudioUrls(audioUrls);
+    };
+
+    if (words.length > 0) {
+      loadAudio();
+    }
+  }, [words, generateVocabularyAudio]);
+
+  const handleWordClick = (word: string, existingAudio?: string) => {
+    // Use existing audio from step config, or generated audio from TTS
+    const audioUrl = existingAudio || wordAudioUrls[word];
+    if (audioUrl) {
+      new Audio(audioUrl).play().catch(err => {
+        console.error('Audio playback error:', err);
+      });
     }
     setListenedWords(prev => new Set([...prev, word]));
   };
@@ -169,6 +190,9 @@ function VocabularyStep({ step, onComplete }: { step: any; onComplete: (score: n
     <Card className="border-emerald-200">
       <CardHeader>
         <CardTitle className="text-emerald-700">Learn New Words</CardTitle>
+        {isLoading && (
+          <p className="text-sm text-gray-500 mt-2">Loading audio...</p>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -406,6 +430,23 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
 function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
   const [isRecording, setIsRecording] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  const [referenceAudio, setReferenceAudio] = useState<string | null>(step.referenceAudio || null);
+  const language = step.language || 'en';
+  const { generateWordAudio, isLoading } = useTTS(language);
+
+  // Generate reference audio if not provided
+  useEffect(() => {
+    const loadReferenceAudio = async () => {
+      if (!step.referenceAudio && step.targetSentence) {
+        const audioUrl = await generateWordAudio(step.targetSentence);
+        if (audioUrl) {
+          setReferenceAudio(audioUrl);
+        }
+      }
+    };
+
+    loadReferenceAudio();
+  }, [step.referenceAudio, step.targetSentence, generateWordAudio]);
 
   const handleRecord = () => {
     setIsRecording(true);
@@ -418,6 +459,14 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
     }, 2000);
   };
 
+  const playReferenceAudio = () => {
+    if (referenceAudio) {
+      new Audio(referenceAudio).play().catch(err => {
+        console.error('Audio playback error:', err);
+      });
+    }
+  };
+
   return (
     <Card className="border-emerald-200">
       <CardHeader>
@@ -426,14 +475,16 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
       <CardContent className="text-center">
         <div className="mb-6">
           <p className="text-2xl font-bold mb-4">{step.targetSentence}</p>
-          {step.referenceAudio && (
+          {referenceAudio && (
             <Button 
               variant="outline" 
-              onClick={() => new Audio(step.referenceAudio).play()}
+              onClick={playReferenceAudio}
               className="mb-4"
+              disabled={isLoading}
+              data-testid="play-reference-audio"
             >
               <Volume2 className="w-4 h-4 mr-2" />
-              Listen to Example
+              {isLoading ? 'Loading...' : 'Listen to Example'}
             </Button>
           )}
         </div>
