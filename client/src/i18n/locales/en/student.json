@@ -16,7 +16,6 @@
     "nextSession": "Next Session",
     "noSessions": "No sessions",
     "overview": "Overview",
-    "courses": "My Courses",
     "assignments": "Assignments",
     "progress": "Progress",
     "practice": "AI Practice",
@@ -208,26 +207,6 @@
   "noMessages": "No messages found",
   "profile": "Profile",
   "join": "Join",
-  "courses": {
-    "exploreCourses": "Explore Courses",
-    "searchPlaceholder": "Search courses...",
-    "online": "Online",
-    "inPerson": "In-Person",
-    "selfPaced": "Self-Paced",
-    "noCourses": "No courses found",
-    "instructor": "Instructor",
-    "duration": "Duration",
-    "language": "Language",
-    "level": "Level",
-    "schedule": "Schedule",
-    "price": "Price",
-    "enrollNow": "Enroll Now",
-    "viewAllCourses": "View All Courses",
-    "enrollmentSuccess": "Enrollment Successful",
-    "enrollmentSuccessDesc": "You have successfully enrolled in the course!",
-    "enrollmentFailed": "Enrollment Failed",
-    "enrollmentFailedDesc": "Failed to enroll in the course. Please try again."
-  },
   "gamification": {
     "title": "Progress & Achievements",
     "subtitle": "Track your learning journey and earn rewards",
@@ -691,5 +670,9 @@
   "sampleLessons": "Sample Lessons",
   "tryNow": "Try Now",
   "exploreAllLessons": "Explore All Lessons",
-  "fieldsPrePopulated": "Your information has been pre-populated from your profile. You can edit any field as needed."
+  "fieldsPrePopulated": "Your information has been pre-populated from your profile. You can edit any field as needed.",
+  "yearsExp": "Years Exp",
+  "response": "Response Time",
+  "viewProfile": "View Profile",
+  "courses": "Courses"
 }
