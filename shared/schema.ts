@@ -1531,6 +1531,94 @@ export const insertLinguaquestLessonSchema = z.object({
   isActive: z.boolean().default(true)
 });
 
+// Insert schema for Guest Progress Tracking
+export const insertGuestProgressTrackingSchema = z.object({
+  sessionToken: z.string(),
+  fingerprintHash: z.string().optional(),
+  completedLessons: z.array(z.number()).optional(),
+  currentStreak: z.number().default(0),
+  totalXp: z.number().default(0),
+  currentLevel: z.number().default(1),
+  strongSkills: z.array(z.string()).optional(),
+  weakSkills: z.array(z.string()).optional(),
+  preferredDifficulty: z.string().default("beginner"),
+  learningPath: z.array(z.string()).optional(),
+  totalStudyTimeMinutes: z.number().default(0),
+  lastActiveAt: z.date().optional(),
+  deviceInfo: z.any().optional(),
+  hasSeenUpgradePrompt: z.boolean().default(false),
+  upgradePromptCount: z.number().default(0),
+  lastUpgradePromptAt: z.date().optional()
+});
+
+// Insert schema for Voice Exercises Guest
+export const insertVoiceExercisesGuestSchema = z.object({
+  sessionId: z.string().max(255),
+  guestIdentifier: z.string().max(100),
+  exerciseTitle: z.string().max(255),
+  exerciseType: z.string().max(100),
+  targetLanguage: z.string().max(100),
+  difficultyLevel: z.string().max(20),
+  audioPromptUrl: z.string().max(500).optional(),
+  textPrompt: z.string(),
+  expectedPronunciation: z.string().optional(),
+  phonetics: z.string().max(255).optional(),
+  guestRecordingUrl: z.string().max(500).optional(),
+  accuracyScore: z.number().optional(),
+  fluencyScore: z.number().optional(),
+  pronunciationScore: z.number().optional(),
+  overallScore: z.number().optional(),
+  feedback: z.string().optional(),
+  improvementSuggestions: z.array(z.string()).optional(),
+  attemptNumber: z.number().default(1),
+  timeSpent: z.number().optional(),
+  isCompleted: z.boolean().default(false),
+  deviceType: z.string().max(50).optional(),
+  browserType: z.string().max(100).optional(),
+  ipAddress: z.string().max(45).optional(),
+  isActive: z.boolean().default(true)
+});
+
+// Insert schema for Freemium Conversion Tracking
+export const insertFreemiumConversionTrackingSchema = z.object({
+  userId: z.number(),
+  previousTier: z.string().max(50),
+  newTier: z.string().max(50),
+  conversionDate: z.date().optional(),
+  campaignId: z.string().max(100).optional(),
+  conversionMethod: z.string().max(50).optional(),
+  paymentAmount: z.number().optional(),
+  paymentProvider: z.string().max(50).optional(),
+  referralSource: z.string().max(255).optional(),
+  promotionCode: z.string().max(100).optional(),
+  isActive: z.boolean().default(true)
+});
+
+// Insert schema for Visitor Achievements
+export const insertVisitorAchievementSchema = z.object({
+  visitorId: z.string().max(255),
+  achievementType: z.string().max(100),
+  achievementTitle: z.string().max(255),
+  achievementDescription: z.string().optional(),
+  achievementIcon: z.string().max(255).optional(),
+  pointsEarned: z.number().default(0),
+  badgeLevel: z.string().max(50).optional(),
+  unlockCriteria: z.any().optional(),
+  progress: z.number().default(0),
+  progressMax: z.number().default(1),
+  isUnlocked: z.boolean().default(false),
+  unlockedAt: z.date().optional(),
+  languageTarget: z.string().max(100).optional(),
+  difficultyLevel: z.string().max(20).optional(),
+  category: z.string().max(100).optional(),
+  isVisible: z.boolean().default(true),
+  displayOrder: z.number().default(0),
+  ipAddress: z.string().max(45).optional(),
+  deviceType: z.string().max(50).optional(),
+  browserType: z.string().max(100).optional(),
+  isActive: z.boolean().default(true)
+});
+
 // Insert schema for user addresses
 export const insertUserAddressSchema = z.object({
   userId: z.number(),
