@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,7 @@ interface GameStepProps {
 }
 
 export function GameStepRenderer({ step, onComplete, onProgress }: GameStepProps) {
+  const { t } = useTranslation('linguaquest');
   const [stepProgress, setStepProgress] = useState(0);
   const [score, setScore] = useState(0);
   const [attempts, setAttempts] = useState(0);
@@ -89,7 +91,7 @@ export function GameStepRenderer({ step, onComplete, onProgress }: GameStepProps
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold text-emerald-700">{step.title}</h2>
           <Badge variant="outline" className="text-lg">
-            Step {step.stepId}
+            {t('gameSteps.step', { stepId: step.stepId })}
           </Badge>
         </div>
         {step.instruction && (
@@ -104,6 +106,7 @@ export function GameStepRenderer({ step, onComplete, onProgress }: GameStepProps
 
 // Introduction Step Component
 function IntroductionStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [objectClicked, setObjectClicked] = useState(false);
 
   const handleInteraction = () => {
@@ -122,7 +125,7 @@ function IntroductionStep({ step, onComplete }: { step: any; onComplete: (score:
             onClick={() => new Audio(step.audioNarration).play()}
           >
             <Volume2 className="w-4 h-4 mr-2" />
-            Play Audio
+            {t('gameSteps.playAudio')}
           </Button>
         )}
         <div className="text-center py-8">
@@ -133,13 +136,13 @@ function IntroductionStep({ step, onComplete }: { step: any; onComplete: (score:
               className="bg-emerald-600 hover:bg-emerald-700"
               data-testid="interaction-button"
             >
-              {step.interactionRequired || 'Continue'}
+              {step.interactionRequired || t('gameSteps.continue')}
             </Button>
           )}
           {objectClicked && (
             <div className="flex items-center justify-center text-green-600">
               <Check className="w-6 h-6 mr-2" />
-              <span>Great! Moving forward...</span>
+              <span>{t('gameSteps.movingForward')}</span>
             </div>
           )}
         </div>
@@ -150,6 +153,7 @@ function IntroductionStep({ step, onComplete }: { step: any; onComplete: (score:
 
 // Vocabulary Step Component
 function VocabularyStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [listenedWords, setListenedWords] = useState<Set<string>>(new Set());
   const [wordAudioUrls, setWordAudioUrls] = useState<Record<string, string>>({});
   const words = step.words || [];
@@ -189,9 +193,9 @@ function VocabularyStep({ step, onComplete }: { step: any; onComplete: (score: n
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Learn New Words</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.vocabularyIntroduction')}</CardTitle>
         {isLoading && (
-          <p className="text-sm text-gray-500 mt-2">Loading audio...</p>
+          <p className="text-sm text-gray-500 mt-2">{t('gameSteps.loadingAudio')}</p>
         )}
       </CardHeader>
       <CardContent>
@@ -230,7 +234,7 @@ function VocabularyStep({ step, onComplete }: { step: any; onComplete: (score: n
         <div className="mt-4">
           <Progress value={(listenedWords.size / words.length) * 100} className="h-2" />
           <p className="text-sm text-gray-500 mt-2 text-center">
-            {listenedWords.size} / {words.length} words learned
+            {t('gameSteps.wordsLearned', { learned: listenedWords.size, total: words.length })}
           </p>
         </div>
       </CardContent>
@@ -240,6 +244,7 @@ function VocabularyStep({ step, onComplete }: { step: any; onComplete: (score: n
 
 // Matching Game Step Component
 function MatchingGameStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [matches, setMatches] = useState<Record<string, string>>({});
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const items = step.items || step.pairs || [];
@@ -270,8 +275,8 @@ function MatchingGameStep({ step, onComplete }: { step: any; onComplete: (score:
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Match the Items</CardTitle>
-        <p className="text-sm text-gray-600 mt-1">Click a word, then click its matching picture</p>
+        <CardTitle className="text-emerald-700">{t('gameSteps.matchingGame')}</CardTitle>
+        <p className="text-sm text-gray-600 mt-1">{t('gameSteps.matchingInstruction')}</p>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-6">
@@ -325,7 +330,7 @@ function MatchingGameStep({ step, onComplete }: { step: any; onComplete: (score:
         {allMatched && (
           <div className="mt-4 p-3 bg-emerald-50 rounded-lg text-center">
             <p className="text-emerald-700 font-medium">
-              ✓ All matched! Scoring...
+              {t('gameSteps.matchingComplete')}
             </p>
           </div>
         )}
@@ -336,6 +341,7 @@ function MatchingGameStep({ step, onComplete }: { step: any; onComplete: (score:
 
 // Conversation Step Component
 function ConversationStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedResponse, setSelectedResponse] = useState<string | null>(null);
@@ -370,10 +376,10 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Conversation Practice</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.conversationPractice')}</CardTitle>
         <div className="flex items-center justify-between mt-2">
-          <Badge>Dialogue {currentDialogueIndex + 1} / {dialogue.length}</Badge>
-          <Badge variant="outline">Score: {score}</Badge>
+          <Badge>{t('gameSteps.dialogue', { current: currentDialogueIndex + 1, total: dialogue.length })}</Badge>
+          <Badge variant="outline">{t('gameSteps.score', { score })}</Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -395,7 +401,7 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
 
         {currentDialogue.playerResponses && (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600 mb-3">Choose your response:</p>
+            <p className="text-sm text-gray-600 mb-3">{t('gameSteps.chooseResponse')}</p>
             {currentDialogue.playerResponses.map((response: any, index: number) => (
               <Button
                 key={index}
@@ -428,6 +434,7 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
 
 // Pronunciation Step Component
 function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [isRecording, setIsRecording] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [referenceAudio, setReferenceAudio] = useState<string | null>(step.referenceAudio || null);
@@ -470,7 +477,7 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Pronunciation Challenge</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.pronunciationChallenge')}</CardTitle>
       </CardHeader>
       <CardContent className="text-center">
         <div className="mb-6">
@@ -484,7 +491,7 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
               data-testid="play-reference-audio"
             >
               <Volume2 className="w-4 h-4 mr-2" />
-              {isLoading ? 'Loading...' : 'Listen to Example'}
+              {isLoading ? t('gameSteps.loading') : t('gameSteps.listenToExample')}
             </Button>
           )}
         </div>
@@ -500,12 +507,12 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
             {isRecording ? (
               <>
                 <div className="animate-pulse w-4 h-4 bg-white rounded-full mr-2" />
-                Recording...
+                {t('gameSteps.recording')}
               </>
             ) : (
               <>
                 <Mic className="w-5 h-5 mr-2" />
-                Start Recording
+                {t('gameSteps.startRecording')}
               </>
             )}
           </Button>
@@ -515,7 +522,7 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
           <div className="mt-6">
             <div className="text-4xl font-bold text-emerald-600 mb-2">{score}%</div>
             <p className={score >= 80 ? "text-green-600" : "text-yellow-600"}>
-              {score >= 80 ? "Excellent pronunciation!" : "Good try! Practice more!"}
+              {score >= 80 ? t('feedback.excellent') : t('feedback.keepTrying')}
             </p>
           </div>
         )}
@@ -526,6 +533,7 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
 
 // Listening Step Component
 function ListeningStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [played, setPlayed] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const questions = step.comprehensionQuestions || (step.options ? [{ question: step.question, options: step.options, correct: step.options.findIndex((opt: any) => opt.correct) }] : []);
@@ -546,7 +554,7 @@ function ListeningStep({ step, onComplete }: { step: any; onComplete: (score: nu
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Listening Comprehension</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.listeningComprehension')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-center mb-6">
@@ -595,6 +603,7 @@ function ListeningStep({ step, onComplete }: { step: any; onComplete: (score: nu
 
 // Fill in Blank Step Component
 function FillInBlankStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const sentences = step.sentences || [];
 
@@ -615,7 +624,7 @@ function FillInBlankStep({ step, onComplete }: { step: any; onComplete: (score: 
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Fill in the Blanks</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.fillInBlank')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -644,6 +653,7 @@ function FillInBlankStep({ step, onComplete }: { step: any; onComplete: (score: 
 
 // Drag and Drop Step Component
 function DragDropStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [droppedItems, setDroppedItems] = useState<string[]>([]);
   const items = step.draggableItems || step.availableItems || [];
 
@@ -664,12 +674,12 @@ function DragDropStep({ step, onComplete }: { step: any; onComplete: (score: num
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Drag & Drop Challenge</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.dragAndDrop')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <p className="font-medium mb-3">Available Items:</p>
+            <p className="font-medium mb-3">{t('gameSteps.availableItems')}</p>
             {items.map((item: any) => (
               <Button
                 key={item.id}
@@ -684,7 +694,7 @@ function DragDropStep({ step, onComplete }: { step: any; onComplete: (score: num
             ))}
           </div>
           <div className="border-2 border-dashed border-emerald-300 rounded-lg p-4 min-h-[200px]">
-            <p className="font-medium mb-3">Drop Zone:</p>
+            <p className="font-medium mb-3">{t('gameSteps.dropZone')}</p>
             {droppedItems.map((itemId, index) => (
               <Badge key={index} className="mr-2 mb-2">
                 {items.find((i: any) => i.id === itemId)?.name}
@@ -699,6 +709,7 @@ function DragDropStep({ step, onComplete }: { step: any; onComplete: (score: num
 
 // Quiz Step Component
 function QuizStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const questions = step.questions || [];
 
@@ -719,7 +730,7 @@ function QuizStep({ step, onComplete }: { step: any; onComplete: (score: number)
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Quick Quiz</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.quickQuiz')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -749,6 +760,7 @@ function QuizStep({ step, onComplete }: { step: any; onComplete: (score: number)
 
 // Menu Exploration Step Component
 function MenuExplorationStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [exploredItems, setExploredItems] = useState<Set<string>>(new Set());
   const menu = step.menu || { categories: [] };
 
@@ -770,7 +782,7 @@ function MenuExplorationStep({ step, onComplete }: { step: any; onComplete: (sco
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Explore the Menu</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.exploreMenu')}</CardTitle>
         <Progress value={(exploredItems.size / totalItems) * 100} className="mt-2" />
       </CardHeader>
       <CardContent>
@@ -829,7 +841,7 @@ function OrderingPracticeStep({ step, onComplete }: { step: any; onComplete: (sc
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Practice Ordering Phrases</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.orderingPractice')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -866,6 +878,7 @@ function OrderingPracticeStep({ step, onComplete }: { step: any; onComplete: (sc
 
 // Symptom Description Step Component
 function SymptomDescriptionStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [selectedSymptom, setSelectedSymptom] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState('');
   const builder = step.sentenceBuilder || {};
@@ -880,7 +893,7 @@ function SymptomDescriptionStep({ step, onComplete }: { step: any; onComplete: (
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Describe Your Symptoms</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.symptomDescription')}</CardTitle>
       </CardHeader>
       <CardContent>
         <p className="mb-4 text-lg">{builder.template}</p>
@@ -937,6 +950,7 @@ function SymptomDescriptionStep({ step, onComplete }: { step: any; onComplete: (
 
 // Prescription Reading Step Component
 function PrescriptionReadingStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [matches, setMatches] = useState<Record<string, string>>({});
   const task = step.matchingTask || {};
 
@@ -957,7 +971,7 @@ function PrescriptionReadingStep({ step, onComplete }: { step: any; onComplete: 
   return (
     <Card className="border-emerald-200">
       <CardHeader>
-        <CardTitle className="text-emerald-700">Read the Prescription</CardTitle>
+        <CardTitle className="text-emerald-700">{t('gameSteps.prescriptionReading')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-4">
@@ -999,6 +1013,7 @@ function PrescriptionReadingStep({ step, onComplete }: { step: any; onComplete: 
 
 // Default Step Component (fallback)
 function DefaultStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   return (
     <Card className="border-emerald-200">
       <CardContent className="pt-6 text-center">

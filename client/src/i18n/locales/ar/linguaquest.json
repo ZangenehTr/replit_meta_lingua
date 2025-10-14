@@ -4,6 +4,27 @@
     "tagline": "مغامرات لغوية مجانية",
     "loadingMessage": "جارٍ تحميل لينغواكويست..."
   },
+  "home": {
+    "heroTitle": "تعلم اللغات في",
+    "heroHighlight": "الواقع ثلاثي الأبعاد",
+    "heroDescription": "تجربة تعلم لغة غامرة مع دروس تفاعلية ثلاثية الأبعاد، وممارسة صوتية، وتقدم قائم على الإنجازات. لا حاجة للتسجيل للبدء!",
+    "stats": {
+      "lessons": "الدروس",
+      "dayStreak": "أيام متتالية",
+      "totalXP": "إجمالي النقاط"
+    },
+    "whyChoose": "لماذا اختيار لينغواكويست؟",
+    "features": {
+      "interactive3D": "تفاعلي ثلاثي الأبعاد",
+      "interactive3DDesc": "تعلم المفردات والقواعد في بيئات ثلاثية الأبعاد غامرة",
+      "voicePractice": "ممارسة صوتية",
+      "voicePracticeDesc": "أتقن النطق مع تحليل الكلام المدعوم بالذكاء الاصطناعي",
+      "achievements": "الإنجازات",
+      "achievementsDesc": "افتح الشارات وتتبع تقدمك في التعلم",
+      "noRegistration": "بلا تسجيل",
+      "noRegistrationDesc": "ابدأ التعلم فوراً دون إنشاء حساب"
+    }
+  },
   "navigation": {
     "home": "الرئيسية",
     "lessons": "الدروس",
@@ -32,6 +53,7 @@
     "completed": "مكتمل",
     "inProgress": "قيد التنفيذ",
     "recommendedForYou": "موصى به لك",
+    "personalized": "شخصي",
     "allLessons": "جميع الدروس",
     "duration": "{{minutes}} دقيقة",
     "xpReward": "{{xp}} نقطة",
@@ -49,18 +71,44 @@
     }
   },
   "gameSteps": {
+    "step": "الخطوة {{stepId}}",
+    "playAudio": "تشغيل الصوت",
     "introduction": "مقدمة",
     "vocabularyIntroduction": "تعلم كلمات جديدة",
     "vocabularyFlashcards": "بطاقات المفردات",
-    "matchingGame": "لعبة المطابقة",
+    "matchingGame": "طابق العناصر",
+    "matchingInstruction": "انقر على كلمة، ثم انقر على صورتها المطابقة",
     "memoryGame": "لعبة الذاكرة",
     "conversationPractice": "تدريب المحادثة",
+    "dialogue": "حوار {{current}} / {{total}}",
+    "score": "النتيجة: {{score}}",
+    "you": "أنت",
+    "chooseResponse": "اختر ردك:",
     "pronunciationChallenge": "تحدي النطق",
     "listeningComprehension": "الفهم السماعي",
     "fillInBlank": "ملء الفراغات",
-    "dragAndDrop": "السحب والإفلات",
+    "dragAndDrop": "تحدي السحب والإفلات",
+    "availableItems": "العناصر المتاحة:",
+    "dropZone": "منطقة الإسقاط:",
     "quickQuiz": "اختبار سريع",
-    "loadingAudio": "جارٍ تحميل الصوت..."
+    "exploreMenu": "استكشف القائمة",
+    "orderingPractice": "ممارسة الطلب",
+    "symptomDescription": "وصف الأعراض",
+    "selectSymptom": "اختر العرض:",
+    "selectBodyPart": "اختر جزء الجسم:",
+    "prescriptionReading": "قراءة الوصفة",
+    "medicines": "الأدوية:",
+    "instructions": "التعليمات:",
+    "loadingAudio": "جارٍ تحميل الصوت...",
+    "completeStep": "أكمل هذه الخطوة للمتابعة",
+    "movingForward": "رائع! نتقدم...",
+    "loading": "جار التحميل...",
+    "listenToExample": "استمع للمثال",
+    "recording": "جاري التسجيل...",
+    "startRecording": "بدء التسجيل",
+    "wordsLearned": "{{learned}} / {{total}} كلمة مكتسبة",
+    "continue": "استمر",
+    "matchingComplete": "✓ تم المطابقة! جاري التقييم..."
   },
   "feedback": {
     "correct": "صحيح!",

@@ -4,6 +4,27 @@
     "tagline": "Free Language Adventures",
     "loadingMessage": "Loading LinguaQuest..."
   },
+  "home": {
+    "heroTitle": "Learn Languages in",
+    "heroHighlight": "3D Reality",
+    "heroDescription": "Experience immersive language learning with interactive 3D lessons, voice practice, and achievement-based progression. No registration required to start!",
+    "stats": {
+      "lessons": "Lessons",
+      "dayStreak": "Day Streak",
+      "totalXP": "Total XP"
+    },
+    "whyChoose": "Why Choose LinguaQuest?",
+    "features": {
+      "interactive3D": "3D Interactive",
+      "interactive3DDesc": "Learn vocabulary and grammar in immersive 3D environments",
+      "voicePractice": "Voice Practice",
+      "voicePracticeDesc": "Perfect your pronunciation with AI-powered speech analysis",
+      "achievements": "Achievements",
+      "achievementsDesc": "Unlock badges and track your learning progress",
+      "noRegistration": "No Registration",
+      "noRegistrationDesc": "Start learning immediately without creating an account"
+    }
+  },
   "navigation": {
     "home": "Home",
     "lessons": "Lessons",
@@ -32,6 +53,7 @@
     "completed": "Completed",
     "inProgress": "In Progress",
     "recommendedForYou": "Recommended For You",
+    "personalized": "Personalized",
     "allLessons": "All Lessons",
     "duration": "{{minutes}} min",
     "xpReward": "{{xp}} XP",
@@ -49,18 +71,44 @@
     }
   },
   "gameSteps": {
+    "step": "Step {{stepId}}",
+    "playAudio": "Play Audio",
     "introduction": "Introduction",
     "vocabularyIntroduction": "Learn New Words",
     "vocabularyFlashcards": "Vocabulary Flashcards",
-    "matchingGame": "Matching Game",
+    "matchingGame": "Match the Items",
+    "matchingInstruction": "Click a word, then click its matching picture",
     "memoryGame": "Memory Game",
     "conversationPractice": "Conversation Practice",
+    "dialogue": "Dialogue {{current}} / {{total}}",
+    "score": "Score: {{score}}",
+    "you": "You",
+    "chooseResponse": "Choose your response:",
     "pronunciationChallenge": "Pronunciation Challenge",
     "listeningComprehension": "Listening Comprehension",
     "fillInBlank": "Fill in the Blanks",
-    "dragAndDrop": "Drag and Drop",
+    "dragAndDrop": "Drag & Drop Challenge",
+    "availableItems": "Available Items:",
+    "dropZone": "Drop Zone:",
     "quickQuiz": "Quick Quiz",
-    "loadingAudio": "Loading audio..."
+    "exploreMenu": "Explore the Menu",
+    "orderingPractice": "Practice Ordering Phrases",
+    "symptomDescription": "Describe Your Symptoms",
+    "selectSymptom": "Select symptom:",
+    "selectBodyPart": "Select body part:",
+    "prescriptionReading": "Read the Prescription",
+    "medicines": "Medicines:",
+    "instructions": "Instructions:",
+    "loadingAudio": "Loading audio...",
+    "loading": "Loading...",
+    "listenToExample": "Listen to Example",
+    "recording": "Recording...",
+    "startRecording": "Start Recording",
+    "wordsLearned": "{{learned}} / {{total}} words learned",
+    "continue": "Continue",
+    "completeStep": "Complete this step to continue",
+    "movingForward": "Great! Moving forward...",
+    "matchingComplete": "✓ All matched! Scoring..."
   },
   "feedback": {
     "correct": "Correct!",

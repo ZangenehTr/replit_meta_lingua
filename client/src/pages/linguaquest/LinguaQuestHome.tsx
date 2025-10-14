@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ interface LessonPreview {
  * Distinct branding from Meta Lingua with gamified interface
  */
 export function LinguaQuestHome() {
+  const { t } = useTranslation('linguaquest');
   const [progress, setProgress] = useState<GuestProgressData | null>(null);
   const [recommendedLessons, setRecommendedLessons] = useState<LessonPreview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,7 +92,7 @@ export function LinguaQuestHome() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-emerald-700 dark:text-emerald-300">Loading LinguaQuest...</p>
+          <p className="text-emerald-700 dark:text-emerald-300">{t('branding.loadingMessage')}</p>
         </div>
       </div>
     );
@@ -109,9 +111,9 @@ export function LinguaQuestHome() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  LinguaQuest
+                  {t('branding.title')}
                 </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Free Language Adventures</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('branding.tagline')}</p>
               </div>
             </div>
 
@@ -121,7 +123,7 @@ export function LinguaQuestHome() {
                 <div className="hidden sm:flex items-center space-x-3">
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Level {progress.currentLevel}
+                      {t('userProgress.level', { level: progress.currentLevel })}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {progress.totalXp} XP
@@ -141,7 +143,7 @@ export function LinguaQuestHome() {
                 data-testid="button-upgrade-hero"
               >
                 <Crown className="w-4 h-4 mr-2" />
-                Upgrade to Pro
+                {t('upgrade.buttonText')}
               </Button>
             </div>
           </div>
@@ -156,7 +158,7 @@ export function LinguaQuestHome() {
               <div className="flex items-center space-x-3">
                 <Sparkles className="w-5 h-5" />
                 <span className="font-medium">
-                  Great progress! Unlock advanced features with Meta Lingua Pro
+                  {t('upgrade.bannerMessage')}
                 </span>
               </div>
               <Button 
@@ -166,7 +168,7 @@ export function LinguaQuestHome() {
                 className="bg-white text-orange-600 hover:bg-gray-100"
                 data-testid="button-upgrade-banner"
               >
-                Learn More
+                {t('upgrade.learnMore')}
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
@@ -178,31 +180,30 @@ export function LinguaQuestHome() {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-            Learn Languages in{" "}
+            {t('home.heroTitle')}{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              3D Reality
+              {t('home.heroHighlight')}
             </span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-            Experience immersive language learning with interactive 3D lessons, voice practice, 
-            and achievement-based progression. No registration required to start!
+            {t('home.heroDescription')}
           </p>
           
           {progress && (
             <div className="inline-flex items-center space-x-6 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
               <div className="text-center">
                 <div className="text-2xl font-bold text-emerald-600">{progress.completedLessons.length}</div>
-                <div className="text-sm text-gray-500">Lessons</div>
+                <div className="text-sm text-gray-500">{t('home.stats.lessons')}</div>
               </div>
               <div className="h-12 w-px bg-gray-200 dark:bg-gray-600"></div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-teal-600">{progress.currentStreak}</div>
-                <div className="text-sm text-gray-500">Day Streak</div>
+                <div className="text-sm text-gray-500">{t('home.stats.dayStreak')}</div>
               </div>
               <div className="h-12 w-px bg-gray-200 dark:bg-gray-600"></div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-cyan-600">{progress.totalXp}</div>
-                <div className="text-sm text-gray-500">Total XP</div>
+                <div className="text-sm text-gray-500">{t('home.stats.totalXP')}</div>
               </div>
             </div>
           )}
@@ -212,10 +213,10 @@ export function LinguaQuestHome() {
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Recommended for You
+              {t('lessons.recommendedForYou')}
             </h2>
             <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
-              Personalized
+              {t('lessons.personalized')}
             </Badge>
           </div>
 
@@ -241,7 +242,7 @@ export function LinguaQuestHome() {
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {lesson.difficulty}
+                      {t(`lessons.difficulty.${lesson.difficulty}`)}
                     </Badge>
                     {lesson.isCompleted && (
                       <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -287,7 +288,7 @@ export function LinguaQuestHome() {
                           data-testid={`button-start-lesson-${lesson.id}`}
                         >
                           <Play className="w-4 h-4 mr-1" />
-                          {lesson.isCompleted ? 'Replay' : 'Start'}
+                          {lesson.isCompleted ? t('lessons.replay') : t('lessons.start')}
                         </Button>
                       </Link>
                     ) : (
@@ -297,7 +298,7 @@ export function LinguaQuestHome() {
                         disabled
                         data-testid={`button-locked-lesson-${lesson.id}`}
                       >
-                        Locked
+                        {t('lessons.locked')}
                       </Button>
                     )}
                   </div>
@@ -310,7 +311,7 @@ export function LinguaQuestHome() {
         {/* Features Section */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-            Why Choose LinguaQuest?
+            {t('home.whyChoose')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -318,9 +319,9 @@ export function LinguaQuestHome() {
               <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Globe className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">3D Interactive</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('home.features.interactive3D')}</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
-                Learn vocabulary and grammar in immersive 3D environments
+                {t('home.features.interactive3DDesc')}
               </p>
             </Card>
 
@@ -328,9 +329,9 @@ export function LinguaQuestHome() {
               <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Mic className="w-6 h-6 text-teal-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Voice Practice</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('home.features.voicePractice')}</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
-                Perfect your pronunciation with AI-powered speech analysis
+                {t('home.features.voicePracticeDesc')}
               </p>
             </Card>
 
@@ -338,9 +339,9 @@ export function LinguaQuestHome() {
               <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Trophy className="w-6 h-6 text-cyan-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Achievements</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('home.features.achievements')}</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
-                Unlock badges and track your learning progress
+                {t('home.features.achievementsDesc')}
               </p>
             </Card>
 
@@ -348,9 +349,9 @@ export function LinguaQuestHome() {
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Users className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">No Registration</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('home.features.noRegistration')}</h3>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
-                Start learning immediately without creating an account
+                {t('home.features.noRegistrationDesc')}
               </p>
             </Card>
           </div>
@@ -390,7 +391,7 @@ export function LinguaQuestHome() {
                       data-testid="button-upgrade-cta"
                     >
                       <Crown className="w-5 h-5 mr-2" />
-                      Upgrade Now
+                      {t('upgrade.upgradeNow')}
                     </Button>
                   </div>
                 </div>

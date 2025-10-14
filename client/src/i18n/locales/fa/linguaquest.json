@@ -4,6 +4,27 @@
     "tagline": "ماجراجویی‌های رایگان زبان",
     "loadingMessage": "در حال بارگذاری لینگواکوئست..."
   },
+  "home": {
+    "heroTitle": "یادگیری زبان در",
+    "heroHighlight": "واقعیت سه‌بعدی",
+    "heroDescription": "تجربه یادگیری غوطه‌ور زبان با درس‌های تعاملی سه‌بعدی، تمرین صدا، و پیشرفت مبتنی بر دستاوردها. بدون نیاز به ثبت‌نام شروع کنید!",
+    "stats": {
+      "lessons": "درس‌ها",
+      "dayStreak": "روز پیوسته",
+      "totalXP": "کل امتیاز"
+    },
+    "whyChoose": "چرا لینگواکوئست؟",
+    "features": {
+      "interactive3D": "تعامل سه‌بعدی",
+      "interactive3DDesc": "یادگیری واژگان و گرامر در محیط‌های سه‌بعدی غوطه‌ور",
+      "voicePractice": "تمرین صدا",
+      "voicePracticeDesc": "تلفظ خود را با تحلیل گفتاری مبتنی بر هوش مصنوعی کامل کنید",
+      "achievements": "دستاوردها",
+      "achievementsDesc": "نشان‌ها را باز کنید و پیشرفت یادگیری خود را پیگیری کنید",
+      "noRegistration": "بدون ثبت‌نام",
+      "noRegistrationDesc": "بلافاصله بدون ایجاد حساب شروع به یادگیری کنید"
+    }
+  },
   "navigation": {
     "home": "خانه",
     "lessons": "درس‌ها",
@@ -32,6 +53,7 @@
     "completed": "تکمیل شده",
     "inProgress": "در حال انجام",
     "recommendedForYou": "پیشنهاد شده برای شما",
+    "personalized": "شخصی‌سازی شده",
     "allLessons": "همه درس‌ها",
     "duration": "{{minutes}} دقیقه",
     "xpReward": "{{xp}} امتیاز",
@@ -49,18 +71,44 @@
     }
   },
   "gameSteps": {
+    "step": "مرحله {{stepId}}",
+    "playAudio": "پخش صدا",
     "introduction": "معرفی",
     "vocabularyIntroduction": "یادگیری کلمات جدید",
     "vocabularyFlashcards": "فلش کارت‌های واژگان",
-    "matchingGame": "بازی تطبیق",
+    "matchingGame": "تطبیق موارد",
+    "matchingInstruction": "روی یک کلمه کلیک کنید، سپس روی تصویر مطابق آن",
     "memoryGame": "بازی حافظه",
     "conversationPractice": "تمرین مکالمه",
+    "dialogue": "گفتگو {{current}} / {{total}}",
+    "score": "امتیاز: {{score}}",
+    "you": "شما",
+    "chooseResponse": "پاسخ خود را انتخاب کنید:",
     "pronunciationChallenge": "چالش تلفظ",
     "listeningComprehension": "درک مطلب شنیداری",
     "fillInBlank": "پر کردن جاهای خالی",
-    "dragAndDrop": "کشیدن و رها کردن",
+    "dragAndDrop": "چالش کشیدن و رها کردن",
+    "availableItems": "موارد موجود:",
+    "dropZone": "منطقه رها کردن:",
     "quickQuiz": "آزمون سریع",
-    "loadingAudio": "در حال بارگذاری صدا..."
+    "exploreMenu": "کشف منو",
+    "orderingPractice": "تمرین سفارش‌دهی",
+    "symptomDescription": "توضیح علائم",
+    "selectSymptom": "علامت را انتخاب کنید:",
+    "selectBodyPart": "قسمت بدن را انتخاب کنید:",
+    "prescriptionReading": "خواندن نسخه",
+    "medicines": "داروها:",
+    "instructions": "دستورالعمل‌ها:",
+    "loadingAudio": "در حال بارگذاری صدا...",
+    "completeStep": "این مرحله را تکمیل کنید تا ادامه دهید",
+    "movingForward": "عالی! به جلو می‌رویم...",
+    "loading": "در حال بارگذاری...",
+    "listenToExample": "گوش دادن به مثال",
+    "recording": "در حال ضبط...",
+    "startRecording": "شروع ضبط",
+    "wordsLearned": "{{learned}} / {{total}} کلمه یاد گرفته شده",
+    "continue": "ادامه",
+    "matchingComplete": "✓ همه مطابقت داده شدند! در حال امتیازدهی..."
   },
   "feedback": {
     "correct": "صحیح!",

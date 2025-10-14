@@ -234,7 +234,9 @@ export const logMissingKey = (lng: string, ns: string, key: string): void => {
 
 // Runtime validation and missing key detection
 i18n.on('missingKey', (lng, ns, key) => {
-  logMissingKey(lng, ns, key);
+  const language = Array.isArray(lng) ? lng[0] : lng;
+  const namespace = Array.isArray(ns) ? ns[0] : ns;
+  logMissingKey(language, namespace, key);
 });
 
 // Language change handler with RTL support
@@ -248,7 +250,9 @@ i18n.on('initialized', () => {
   const currentLang = i18n.language;
   updateDocumentDirection(currentLang);
   console.log(`🚀 i18n initialized with language: ${currentLang}`);
-  console.log(`📝 Available namespaces: ${i18n.options.ns?.join(', ')}`);
+  const namespaces = i18n.options.ns;
+  const nsString = Array.isArray(namespaces) ? namespaces.join(', ') : namespaces || 'common';
+  console.log(`📝 Available namespaces: ${nsString}`);
   console.log(`🔤 Font family applied: ${getFontFamily(currentLang)}`);
 });
 
