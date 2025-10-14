@@ -1404,24 +1404,25 @@ export const linguaquestLessons = pgTable("linguaquest_lessons", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Guest Progress Tracking table for anonymous users
+// Guest Progress Tracking table for anonymous users (LinguaQuest)
 export const guestProgressTracking = pgTable("guest_progress_tracking", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id", { length: 255 }).notNull().unique(),
-  guestIdentifier: varchar("guest_identifier", { length: 100 }).notNull(),
-  courseId: integer("course_id").references(() => courses.id),
-  lessonId: integer("lesson_id"), // TODO: Add lessons table reference later  
-  quizId: integer("quiz_id"), // TODO: Add quizzes table reference later
-  progressPercentage: integer("progress_percentage").default(0),
-  timeSpent: integer("time_spent").default(0), // seconds
-  lastAccessed: timestamp("last_accessed").defaultNow().notNull(),
-  deviceType: varchar("device_type", { length: 50 }),
-  browserType: varchar("browser_type", { length: 100 }),
-  ipAddress: varchar("ip_address", { length: 45 }),
-  conversionStatus: varchar("conversion_status", { length: 50 }).default("guest"), // guest, registered, paid
-  languageTarget: varchar("language_target", { length: 100 }),
-  completedActivities: integer("completed_activities").default(0),
-  isActive: boolean("is_active").default(true),
+  sessionToken: text("session_token").notNull().unique(),
+  fingerprintHash: text("fingerprint_hash"),
+  completedLessons: integer("completed_lessons").array(),
+  currentStreak: integer("current_streak").default(0),
+  totalXp: integer("total_xp").default(0),
+  currentLevel: integer("current_level").default(1),
+  strongSkills: text("strong_skills").array(),
+  weakSkills: text("weak_skills").array(),
+  preferredDifficulty: text("preferred_difficulty").default("beginner"),
+  learningPath: text("learning_path").array(),
+  totalStudyTimeMinutes: integer("total_study_time_minutes").default(0),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  deviceInfo: jsonb("device_info"),
+  hasSeenUpgradePrompt: boolean("has_seen_upgrade_prompt").default(false),
+  upgradePromptCount: integer("upgrade_prompt_count").default(0),
+  lastUpgradePromptAt: timestamp("last_upgrade_prompt_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

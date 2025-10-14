@@ -224,25 +224,30 @@ function MatchingGameStep({ step, onComplete }: { step: any; onComplete: (score:
     if (!selectedItem) {
       setSelectedItem(itemId);
     } else {
-      setMatches(prev => ({ ...prev, [selectedItem]: itemId }));
+      const newMatches = { ...matches, [selectedItem]: itemId };
+      setMatches(newMatches);
       setSelectedItem(null);
+      
+      // Auto-submit when all matches complete
+      if (Object.keys(newMatches).length === items.length && items.length > 0) {
+        const correctMatches = items.filter((item: any) => {
+          const key = item.word || item.id;
+          const value = item.image || item.id;
+          return newMatches[key] === value || newMatches[item.id] === item.id;
+        }).length;
+        const score = (correctMatches / items.length) * 100;
+        setTimeout(() => onComplete(score), 800);
+      }
     }
   };
 
-  useEffect(() => {
-    if (Object.keys(matches).length === items.length && items.length > 0) {
-      const correctMatches = items.filter((item: any) => 
-        matches[item.id] === item.id || matches[item.word] === item.image
-      ).length;
-      const score = (correctMatches / items.length) * 100;
-      setTimeout(() => onComplete(score), 500);
-    }
-  }, [matches, items, onComplete]);
+  const allMatched = Object.keys(matches).length === items.length && items.length > 0;
 
   return (
     <Card className="border-emerald-200">
       <CardHeader>
         <CardTitle className="text-emerald-700">Match the Items</CardTitle>
+        <p className="text-sm text-gray-600 mt-1">Click a word, then click its matching picture</p>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-6">
@@ -250,8 +255,12 @@ function MatchingGameStep({ step, onComplete }: { step: any; onComplete: (score:
             {items.map((item: any, index: number) => (
               <Button
                 key={index}
-                variant={selectedItem === item.word ? "default" : "outline"}
-                className="w-full justify-start"
+                variant={selectedItem === (item.word || item.id) ? "default" : 
+                        matches[item.word || item.id] ? "outline" : "outline"}
+                className={cn(
+                  "w-full justify-start",
+                  matches[item.word || item.id] && "bg-emerald-50 border-emerald-300"
+                )}
                 onClick={() => handleItemClick(item.word || item.id)}
                 data-testid={`match-word-${item.word || item.id}`}
               >
@@ -260,23 +269,42 @@ function MatchingGameStep({ step, onComplete }: { step: any; onComplete: (score:
             ))}
           </div>
           <div className="space-y-3">
-            {items.map((item: any, index: number) => (
-              <div
-                key={index}
-                className={cn(
-                  "border-2 rounded-lg p-3 cursor-pointer transition-all",
-                  matches[item.word] === item.image && "border-emerald-500 bg-emerald-50"
-                )}
-                onClick={() => handleItemClick(item.image || item.id)}
-                data-testid={`match-image-${item.image || item.id}`}
-              >
-                {item.image && (
-                  <img src={item.image} alt="" className="w-full h-20 object-contain" />
-                )}
-              </div>
-            ))}
+            {items.map((item: any, index: number) => {
+              const matchedWord = Object.keys(matches).find(key => matches[key] === (item.image || item.id));
+              const matchedItem = items.find((i: any) => (i.word || i.id) === matchedWord);
+              
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "border-2 rounded-lg p-3 cursor-pointer transition-all min-h-[100px] flex flex-col items-center justify-center",
+                    matchedWord && "border-emerald-500 bg-emerald-50"
+                  )}
+                  onClick={() => {
+                    if (selectedItem) {
+                      handleItemClick(item.image || item.id);
+                    }
+                  }}
+                  data-testid={`match-image-${item.image || item.id}`}
+                >
+                  {matchedItem && (
+                    <p className="text-sm font-medium text-emerald-700 mb-2">{matchedItem.word}</p>
+                  )}
+                  {item.image && (
+                    <img src={item.image} alt="" className="w-full h-20 object-contain" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
+        {allMatched && (
+          <div className="mt-4 p-3 bg-emerald-50 rounded-lg text-center">
+            <p className="text-emerald-700 font-medium">
+              ✓ All matched! Scoring...
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
