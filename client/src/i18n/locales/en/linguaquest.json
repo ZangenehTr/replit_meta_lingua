@@ -1,0 +1,126 @@
+{
+  "branding": {
+    "title": "LinguaQuest",
+    "tagline": "Free Language Adventures",
+    "loadingMessage": "Loading LinguaQuest..."
+  },
+  "navigation": {
+    "home": "Home",
+    "lessons": "Lessons",
+    "progress": "Progress",
+    "achievements": "Achievements"
+  },
+  "userProgress": {
+    "level": "Level {{level}}",
+    "xp": "{{xp}} XP",
+    "streak": "{{days}} Day Streak",
+    "lessonsCompleted": "{{count}} Lessons Completed"
+  },
+  "upgrade": {
+    "buttonText": "Upgrade to Pro",
+    "bannerMessage": "Great progress! Unlock advanced features with Meta Lingua Pro",
+    "learnMore": "Learn More",
+    "ctaTitle": "Unlock Advanced Features",
+    "ctaDescription": "Unlock advanced lessons and personalized tutoring with Meta Lingua Pro!",
+    "upgradeNow": "Upgrade Now"
+  },
+  "lessons": {
+    "start": "Start",
+    "replay": "Replay",
+    "continue": "Continue",
+    "locked": "Locked",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "recommendedForYou": "Recommended For You",
+    "allLessons": "All Lessons",
+    "duration": "{{minutes}} min",
+    "xpReward": "{{xp}} XP",
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "types": {
+      "vocabulary": "Vocabulary",
+      "pronunciation": "Pronunciation",
+      "listening": "Listening",
+      "conversation": "Conversation",
+      "grammar": "Grammar"
+    }
+  },
+  "gameSteps": {
+    "introduction": "Introduction",
+    "vocabularyIntroduction": "Learn New Words",
+    "vocabularyFlashcards": "Vocabulary Flashcards",
+    "matchingGame": "Matching Game",
+    "memoryGame": "Memory Game",
+    "conversationPractice": "Conversation Practice",
+    "pronunciationChallenge": "Pronunciation Challenge",
+    "listeningComprehension": "Listening Comprehension",
+    "fillInBlank": "Fill in the Blanks",
+    "dragAndDrop": "Drag and Drop",
+    "quickQuiz": "Quick Quiz",
+    "loadingAudio": "Loading audio..."
+  },
+  "feedback": {
+    "correct": "Correct!",
+    "incorrect": "Try Again!",
+    "excellent": "Excellent Work!",
+    "goodJob": "Good Job!",
+    "almostThere": "Almost There!",
+    "keepTrying": "Keep Trying!",
+    "nextStep": "Next Step",
+    "lessonComplete": "Lesson Complete!",
+    "earnedXP": "You earned {{xp}} XP!",
+    "levelUp": "Level Up!",
+    "tryAgain": "Try Again",
+    "lessonNotCompleted": "Lesson Not Completed"
+  },
+  "errors": {
+    "loadLesson": "Failed to load lesson. Please try again.",
+    "saveProgress": "Failed to save lesson progress. Please try again.",
+    "genericError": "Something went wrong. Please try again.",
+    "audioNotAvailable": "Audio not available"
+  },
+  "achievements": {
+    "firstLesson": "First Steps",
+    "firstLessonDesc": "Complete your first lesson",
+    "streak3": "3-Day Streak",
+    "streak3Desc": "Maintain a 3-day learning streak",
+    "perfectScore": "Perfect Score",
+    "perfectScoreDesc": "Get 100% on a lesson",
+    "vocabularyMaster": "Vocabulary Master",
+    "vocabularyMasterDesc": "Learn 50 new words"
+  },
+  "instructions": {
+    "tapToListen": "Tap to listen",
+    "selectCorrectAnswer": "Select the correct answer",
+    "matchPairs": "Match the pairs",
+    "fillBlanks": "Fill in the blanks",
+    "speakSentence": "Speak the sentence",
+    "listenAndChoose": "Listen and choose"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "skip": "Skip",
+    "retry": "Retry"
+  },
+  "progress": {
+    "yourProgress": "Your Progress",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "notStarted": "Not Started",
+    "totalXP": "Total XP",
+    "currentLevel": "Current Level",
+    "strongSkills": "Strong Skills",
+    "weakSkills": "Areas to Improve"
+  }
+}

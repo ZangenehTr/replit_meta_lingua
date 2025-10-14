@@ -1,0 +1,126 @@
+{
+  "branding": {
+    "title": "لینگواکوئست",
+    "tagline": "ماجراجویی‌های رایگان زبان",
+    "loadingMessage": "در حال بارگذاری لینگواکوئست..."
+  },
+  "navigation": {
+    "home": "خانه",
+    "lessons": "درس‌ها",
+    "progress": "پیشرفت",
+    "achievements": "دستاوردها"
+  },
+  "userProgress": {
+    "level": "سطح {{level}}",
+    "xp": "{{xp}} امتیاز تجربه",
+    "streak": "{{days}} روز پیوسته",
+    "lessonsCompleted": "{{count}} درس تکمیل شده"
+  },
+  "upgrade": {
+    "buttonText": "ارتقا به نسخه حرفه‌ای",
+    "bannerMessage": "پیشرفت عالی! ویژگی‌های پیشرفته را با متا لینگوا پرو باز کنید",
+    "learnMore": "بیشتر بدانید",
+    "ctaTitle": "باز کردن ویژگی‌های پیشرفته",
+    "ctaDescription": "درس‌های پیشرفته و آموزش شخصی‌سازی شده را با متا لینگوا پرو باز کنید!",
+    "upgradeNow": "هم‌اکنون ارتقا دهید"
+  },
+  "lessons": {
+    "start": "شروع",
+    "replay": "تکرار",
+    "continue": "ادامه",
+    "locked": "قفل شده",
+    "completed": "تکمیل شده",
+    "inProgress": "در حال انجام",
+    "recommendedForYou": "پیشنهاد شده برای شما",
+    "allLessons": "همه درس‌ها",
+    "duration": "{{minutes}} دقیقه",
+    "xpReward": "{{xp}} امتیاز",
+    "difficulty": {
+      "beginner": "مبتدی",
+      "intermediate": "متوسط",
+      "advanced": "پیشرفته"
+    },
+    "types": {
+      "vocabulary": "واژگان",
+      "pronunciation": "تلفظ",
+      "listening": "گوش دادن",
+      "conversation": "مکالمه",
+      "grammar": "گرامر"
+    }
+  },
+  "gameSteps": {
+    "introduction": "معرفی",
+    "vocabularyIntroduction": "یادگیری کلمات جدید",
+    "vocabularyFlashcards": "فلش کارت‌های واژگان",
+    "matchingGame": "بازی تطبیق",
+    "memoryGame": "بازی حافظه",
+    "conversationPractice": "تمرین مکالمه",
+    "pronunciationChallenge": "چالش تلفظ",
+    "listeningComprehension": "درک مطلب شنیداری",
+    "fillInBlank": "پر کردن جاهای خالی",
+    "dragAndDrop": "کشیدن و رها کردن",
+    "quickQuiz": "آزمون سریع",
+    "loadingAudio": "در حال بارگذاری صدا..."
+  },
+  "feedback": {
+    "correct": "صحیح!",
+    "incorrect": "دوباره تلاش کنید!",
+    "excellent": "عالی!",
+    "goodJob": "کار خوب!",
+    "almostThere": "نزدیک بود!",
+    "keepTrying": "به تلاش ادامه دهید!",
+    "nextStep": "مرحله بعد",
+    "lessonComplete": "درس تکمیل شد!",
+    "earnedXP": "شما {{xp}} امتیاز کسب کردید!",
+    "levelUp": "ارتقای سطح!",
+    "tryAgain": "دوباره تلاش کنید",
+    "lessonNotCompleted": "درس تکمیل نشد"
+  },
+  "errors": {
+    "loadLesson": "بارگذاری درس ناموفق بود. لطفاً دوباره تلاش کنید.",
+    "saveProgress": "ذخیره پیشرفت درس ناموفق بود. لطفاً دوباره تلاش کنید.",
+    "genericError": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید.",
+    "audioNotAvailable": "صدا در دسترس نیست"
+  },
+  "achievements": {
+    "firstLesson": "اولین گام‌ها",
+    "firstLessonDesc": "اولین درس خود را تکمیل کنید",
+    "streak3": "3 روز پیوسته",
+    "streak3Desc": "یادگیری پیوسته به مدت 3 روز",
+    "perfectScore": "امتیاز کامل",
+    "perfectScoreDesc": "100% در یک درس بگیرید",
+    "vocabularyMaster": "استاد واژگان",
+    "vocabularyMasterDesc": "50 کلمه جدید یاد بگیرید"
+  },
+  "instructions": {
+    "tapToListen": "برای گوش دادن ضربه بزنید",
+    "selectCorrectAnswer": "جواب صحیح را انتخاب کنید",
+    "matchPairs": "جفت‌ها را تطبیق دهید",
+    "fillBlanks": "جاهای خالی را پر کنید",
+    "speakSentence": "جمله را بگویید",
+    "listenAndChoose": "گوش دهید و انتخاب کنید"
+  },
+  "common": {
+    "loading": "در حال بارگذاری...",
+    "error": "خطا",
+    "success": "موفقیت",
+    "cancel": "لغو",
+    "confirm": "تأیید",
+    "close": "بستن",
+    "next": "بعدی",
+    "previous": "قبلی",
+    "finish": "پایان",
+    "skip": "رد شدن",
+    "retry": "تلاش مجدد"
+  },
+  "progress": {
+    "yourProgress": "پیشرفت شما",
+    "completed": "تکمیل شده",
+    "inProgress": "در حال انجام",
+    "notStarted": "شروع نشده",
+    "totalXP": "کل امتیاز",
+    "currentLevel": "سطح فعلی",
+    "strongSkills": "مهارت‌های قوی",
+    "weakSkills": "زمینه‌های قابل بهبود"
+  }
+}
