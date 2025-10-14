@@ -141,7 +141,7 @@ export default function StudentProfileMobile() {
 
   if (isLoading) {
     return (
-      <MobileLayout title={t('student:profile')} showBack={false} gradient="primary">
+      <MobileLayout title={t('common:profile')} showBack={false} gradient="primary">
         <div className="space-y-4">
           <div className="glass-card p-6 animate-pulse">
             <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-4" />
@@ -155,7 +155,7 @@ export default function StudentProfileMobile() {
 
   return (
     <MobileLayout
-      title={t('student:profile')}
+      title={t('common:profile')}
       showBack={false}
       gradient="primary"
     >
