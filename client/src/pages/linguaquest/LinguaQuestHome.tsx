@@ -21,6 +21,7 @@ import {
   Zap
 } from "lucide-react";
 import { guestProgress, type GuestProgressData } from "@/lib/guest-progress";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface LessonPreview {
   id: number;
@@ -136,6 +137,8 @@ export function LinguaQuestHome() {
                   </Avatar>
                 </div>
               )}
+              
+              <LanguageSwitcher />
               
               <Button 
                 onClick={handleUpgradeClick}

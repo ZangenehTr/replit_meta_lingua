@@ -21,6 +21,7 @@ import {
 import { Three3DLesson } from "@/components/3d-lessons/Three3DLesson";
 import { GameStepRenderer } from "@/components/linguaquest/GameStepRenderer";
 import { guestProgress, type GuestProgressData } from "@/lib/guest-progress";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -307,6 +308,8 @@ export function LinguaQuestLesson() {
                   <Progress value={lessonProgress} className="h-2" />
                 </div>
               </div>
+              
+              <LanguageSwitcher />
 
               {progress && (
                 <div className="flex items-center space-x-2">

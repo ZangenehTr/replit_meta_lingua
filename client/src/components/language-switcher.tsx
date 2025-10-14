@@ -10,7 +10,7 @@ import { Languages, Globe } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 
 export function LanguageSwitcher() {
-  const { language, changeLanguage, t, isRTL } = useLanguage();
+  const { language, setLanguage, isRTL } = useLanguage();
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -37,7 +37,7 @@ export function LanguageSwitcher() {
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            onClick={() => changeLanguage(lang.code)}
+            onClick={() => setLanguage(lang.code as 'en' | 'fa' | 'ar')}
             className={`flex items-center gap-3 ${
               language === lang.code ? 'bg-primary/10' : ''
             }`}
