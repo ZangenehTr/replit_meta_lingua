@@ -43,7 +43,9 @@ import {
   Eye,
   TrendingUp,
   Users,
-  FileText
+  FileText,
+  Phone,
+  Image
 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +57,10 @@ const PLATFORM_ICONS: Record<string, any> = {
   linkedin: Linkedin,
   youtube: Youtube,
   telegram: MessageCircle,
-  email: Mail
+  email: Mail,
+  whatsapp: Phone,
+  whatsapp_business: Phone,
+  pinterest: Image
 };
 
 export default function SocialMediaScraperAdmin() {
@@ -227,6 +232,8 @@ export default function SocialMediaScraperAdmin() {
             <SelectItem value="linkedin">LinkedIn</SelectItem>
             <SelectItem value="youtube">YouTube</SelectItem>
             <SelectItem value="telegram">Telegram</SelectItem>
+            <SelectItem value="whatsapp_business">WhatsApp Business</SelectItem>
+            <SelectItem value="pinterest">Pinterest</SelectItem>
             <SelectItem value="email">Email</SelectItem>
           </SelectContent>
         </Select>
@@ -409,6 +416,8 @@ function NewJobForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void; is
             <SelectItem value="linkedin">LinkedIn</SelectItem>
             <SelectItem value="youtube">YouTube</SelectItem>
             <SelectItem value="telegram">Telegram</SelectItem>
+            <SelectItem value="whatsapp_business">WhatsApp Business</SelectItem>
+            <SelectItem value="pinterest">Pinterest</SelectItem>
           </SelectContent>
         </Select>
       </div>

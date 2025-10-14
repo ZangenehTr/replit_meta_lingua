@@ -4,7 +4,7 @@
 
 export interface LeadScraperConfig {
   name: string;
-  platform: 'instagram' | 'telegram' | 'linkedin' | 'directory' | 'website';
+  platform: 'instagram' | 'telegram' | 'linkedin' | 'directory' | 'website' | 'whatsapp' | 'pinterest';
   baseUrl: string;
   searchUrl?: string;
   selectors: {
@@ -158,6 +158,124 @@ export const LANGUAGE_INSTITUTE_DIRECTORY: LeadScraperConfig = {
 };
 
 /**
+ * WhatsApp Business scraper config (public business profiles)
+ */
+export const WHATSAPP_BUSINESS_CONFIG: LeadScraperConfig = {
+  name: 'WhatsApp Business',
+  platform: 'whatsapp',
+  baseUrl: 'https://wa.me',
+  searchUrl: 'https://www.google.com/search?q=site:wa.me+{query}',
+  selectors: {
+    name: 'h1',
+    phone: 'a[href^="tel:"]',
+    bio: 'p.description'
+  },
+  customLogic: async (page, query) => {
+    const leads: any[] = [];
+    
+    try {
+      // Wait for search results to load
+      await page.waitForSelector('.g', { timeout: 10000 });
+      
+      // Extract WhatsApp Business links from Google search results
+      const results = await page.$$eval('.g a', (elements: Element[]) => {
+        return elements
+          .filter((el: Element) => (el as HTMLAnchorElement).href.includes('wa.me'))
+          .slice(0, 20)
+          .map((el: Element) => ({
+            url: (el as HTMLAnchorElement).href,
+            phone: (el as HTMLAnchorElement).href.split('wa.me/')[1]?.split('?')[0]
+          }));
+      });
+      
+      // Process each WhatsApp Business link
+      for (const result of results.slice(0, 10)) {
+        if (result.phone) {
+          leads.push({
+            phone: result.phone,
+            profileUrl: result.url,
+            source: 'whatsapp',
+            platform: 'whatsapp_business',
+            interests: [query],
+            contactMethod: 'whatsapp'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('WhatsApp Business scraping error:', error);
+    }
+    
+    return leads;
+  }
+};
+
+/**
+ * Pinterest scraper config (public pins and boards)
+ */
+export const PINTEREST_CONFIG: LeadScraperConfig = {
+  name: 'Pinterest',
+  platform: 'pinterest',
+  baseUrl: 'https://www.pinterest.com',
+  searchUrl: 'https://www.pinterest.com/search/pins/?q={query}',
+  selectors: {
+    profileCard: '[data-test-id="pin"]',
+    name: '[data-test-id="pinner-name"]',
+    username: '[data-test-id="pinner-username"]',
+    bio: '[data-test-id="pin-description"]'
+  },
+  customLogic: async (page, query) => {
+    const leads: any[] = [];
+    
+    try {
+      // Wait for pins to load
+      await page.waitForSelector('[data-test-id="pin"]', { timeout: 10000 });
+      
+      // Scroll to load more pins
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+      await page.waitForTimeout(2000);
+      
+      // Extract pin data
+      const pins = await page.$$eval('[data-test-id="pin"]', (elements: Element[]) => {
+        return elements.slice(0, 30).map((el: Element) => {
+          const linkEl = el.querySelector('a[href*="/pin/"]') as HTMLAnchorElement;
+          const userLinkEl = el.querySelector('a[href*="/"]') as HTMLAnchorElement;
+          const descEl = el.querySelector('[data-test-id="pin-description"]');
+          
+          return {
+            pinUrl: linkEl?.href,
+            userUrl: userLinkEl?.href,
+            username: userLinkEl?.href?.split('/')[3],
+            description: descEl?.textContent?.trim()
+          };
+        }).filter(pin => pin.username);
+      });
+      
+      // Process unique users
+      const uniqueUsers = new Set();
+      for (const pin of pins) {
+        if (pin.username && !uniqueUsers.has(pin.username)) {
+          uniqueUsers.add(pin.username);
+          leads.push({
+            username: pin.username,
+            profileUrl: pin.userUrl,
+            source: 'pinterest',
+            platform: 'pinterest',
+            interests: [query],
+            sampleContent: pin.description
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Pinterest scraping error:', error);
+    }
+    
+    return leads;
+  }
+};
+
+/**
  * Extract email from text using regex
  */
 export function extractEmail(text: string): string | null {
@@ -230,7 +348,9 @@ export const LEAD_SCRAPER_CONFIGS: Record<string, LeadScraperConfig> = {
   instagram: INSTAGRAM_CONFIG,
   telegram: TELEGRAM_CONFIG,
   iranian_directory: IRANIAN_DIRECTORY_CONFIG,
-  language_directory: LANGUAGE_INSTITUTE_DIRECTORY
+  language_directory: LANGUAGE_INSTITUTE_DIRECTORY,
+  whatsapp_business: WHATSAPP_BUSINESS_CONFIG,
+  pinterest: PINTEREST_CONFIG
 };
 
 /**
