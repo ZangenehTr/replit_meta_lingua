@@ -17258,6 +17258,105 @@ Return JSON format:
     }
   });
 
+  // Social Media Scraper Admin Routes
+  app.get("/api/admin/social-media/content", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { platform } = req.query;
+      const filter: any = {};
+      
+      if (platform && platform !== 'all') {
+        filter.platform = platform as string;
+      }
+
+      const posts = await storage.getSocialMediaPosts(filter);
+      res.json(posts);
+    } catch (error) {
+      console.error('Error fetching scraped content:', error);
+      res.status(500).json({ error: 'Failed to fetch scraped content' });
+    }
+  });
+
+  app.get("/api/admin/scraper/jobs", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const jobs = await storage.getAllScrapeJobs();
+      res.json(jobs);
+    } catch (error) {
+      console.error('Error fetching scrape jobs:', error);
+      res.status(500).json({ error: 'Failed to fetch scrape jobs' });
+    }
+  });
+
+  app.get("/api/admin/social-media/analytics", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const dateFrom = new Date();
+      dateFrom.setDate(dateFrom.getDate() - 30);
+      
+      const posts = await storage.getSocialMediaPosts({ 
+        dateFrom,
+        dateTo: new Date() 
+      });
+      
+      const leads = await storage.getScrapedLeads({});
+      const jobs = await storage.getAllScrapeJobs();
+      
+      const totalEngagement = posts.reduce((sum: number, post: any) => 
+        sum + (post.likes || 0) + (post.comments || 0) + (post.shares || 0), 0
+      );
+      const avgEngagement = posts.length > 0 
+        ? ((totalEngagement / posts.length) / (posts.reduce((sum: number, p: any) => sum + (p.likes || 0), 0) || 1) * 100).toFixed(1)
+        : '0';
+
+      res.json({
+        totalPosts: posts.length,
+        leadsGenerated: leads.length,
+        avgEngagement,
+        activeJobs: jobs.filter((j: any) => j.status === 'running').length,
+      });
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
+
+  app.post("/api/admin/scraper/create-job", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { platform, jobType, targetUrl, maxItems } = req.body;
+      
+      const job = await storage.createScrapeJob({
+        name: `${platform} - ${jobType}`,
+        type: jobType,
+        platform: platform,
+        jobType: jobType,
+        targetUrl,
+        status: 'pending',
+        config: {
+          platform,
+          maxItems: maxItems || 100,
+          rateLimit: { requestsPerMinute: 10, delayBetweenRequests: 2000 }
+        },
+        priority: 'medium',
+        attempts: 0,
+        maxRetries: 3
+      });
+
+      res.status(201).json({ success: true, job });
+    } catch (error) {
+      console.error('Error creating scrape job:', error);
+      res.status(500).json({ error: 'Failed to create scrape job' });
+    }
+  });
+
+  app.post("/api/admin/scraper/retry/:jobId", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const jobId = parseInt(req.params.jobId);
+      await storage.updateScrapeJob(jobId, { status: 'pending', attempts: 0 });
+      res.json({ success: true, message: 'Job restarted successfully' });
+    } catch (error) {
+      console.error('Error retrying scrape job:', error);
+      res.status(500).json({ error: 'Failed to retry job' });
+    }
+  });
+
   // Cross-platform Campaign Tools Routes
   app.post("/api/admin/crossplatform-tools/:tool", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
     try {

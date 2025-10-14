@@ -54,6 +54,7 @@ import AdminLeadsPage from "@/pages/admin/leads";
 import AdminCampaignsPage from "@/pages/admin/campaigns";
 import AdminProspectsPage from "@/pages/admin/prospects";
 import AdminCallsPage from "@/pages/admin/calls";
+import SocialMediaScraperAdmin from "@/pages/admin/social-media-scraper";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
@@ -326,6 +327,11 @@ function Router() {
       <Route path="/admin/campaigns">
         <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
           <AdminCampaignsPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/social-media-scraper">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <SocialMediaScraperAdmin />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/prospects">
