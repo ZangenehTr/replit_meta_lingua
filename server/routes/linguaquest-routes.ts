@@ -28,14 +28,18 @@ export function registerLinguaQuestRoutes(app: Express) {
     try {
       const { deviceInfo, fingerprintHash } = req.body;
       
-      if (!deviceInfo) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Device info required for guest session' 
-        });
-      }
+      // Use default device info if not provided
+      const defaultDeviceInfo = {
+        userAgent: req.headers['user-agent'] || 'unknown',
+        platform: 'web',
+        language: req.headers['accept-language']?.split(',')[0] || 'en',
+        timestamp: new Date().toISOString()
+      };
 
-      const sessionToken = await linguaQuestService.createGuestSession(deviceInfo, fingerprintHash);
+      const sessionToken = await linguaQuestService.createGuestSession(
+        deviceInfo || defaultDeviceInfo, 
+        fingerprintHash
+      );
       
       res.json({ 
         success: true, 

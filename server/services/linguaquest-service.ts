@@ -2,7 +2,6 @@ import {
   linguaquestLessons, 
   guestProgressTracking, 
   voiceExercisesGuest, 
-  threeDLessonContent,
   freemiumConversionTracking,
   visitorAchievements,
   type LinguaquestLesson,
@@ -289,16 +288,11 @@ export class LinguaQuestService {
         return null;
       }
 
-      // Get 3D content if available
-      const threeDContent = await db
-        .select()
-        .from(threeDLessonContent)
-        .where(eq(threeDLessonContent.lessonId, lessonId))
-        .limit(1);
-
+      // sceneData and interactionConfig are already in the lesson
+      // No need for separate threeDLessonContent table
       return {
         ...lesson[0],
-        threeDContent: threeDContent.length > 0 ? threeDContent[0] : null
+        threeDContent: lesson[0].sceneData || null
       };
     } catch (error) {
       console.error('Error getting lesson by ID:', error);

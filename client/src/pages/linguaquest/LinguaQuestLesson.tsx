@@ -22,6 +22,7 @@ import { Three3DLesson } from "@/components/3d-lessons/Three3DLesson";
 import { GameStepRenderer } from "@/components/linguaquest/GameStepRenderer";
 import { guestProgress, type GuestProgressData } from "@/lib/guest-progress";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface LessonData {
   id: number;
@@ -210,9 +211,14 @@ export function LinguaQuestLesson() {
   };
 
   const handleRetryLesson = () => {
+    // Reset ALL state for clean retry
     setIsCompleted(false);
     setLessonProgress(0);
     setCompletionData(null);
+    setCurrentStepIndex(0);
+    setStepScores({});
+    setTotalScore(0);
+    setStepKey(prev => prev + 1); // Force GameStepRenderer re-mount
     
     // Track retry event
     guestProgress.trackEvent('engagement', 'lesson_retried', { 
