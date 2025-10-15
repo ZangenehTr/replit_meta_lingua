@@ -58,6 +58,7 @@ export interface NavigationItem {
   badge?: number;
   roles: string[];
   roleColor?: string; // Color indicator for the role(s) that have access to this item
+  order?: number; // Immutable order for stable sorting regardless of translation state
 }
 
 // Student-facing platform navigation
@@ -196,7 +197,8 @@ const convertDynamicToNavigation = (dynamicItems: DynamicNavItem[], t: any): Nav
     path: item.path,
     icon: item.icon,
     label: item.nameEn || item.label || 'Navigation Item',
-    roles: item.roles
+    roles: item.roles,
+    order: item.order || 0
   }));
 };
 
@@ -238,7 +240,8 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
       path: "/dashboard",
       icon: "Home", 
       label: t ? t('common:navigation.dashboard') : 'Dashboard',
-      roles: [mappedRole]
+      roles: [mappedRole],
+      order: -1 // Ensure dashboard is always first
     };
     
     // Remove any existing dashboard item and add it at the beginning

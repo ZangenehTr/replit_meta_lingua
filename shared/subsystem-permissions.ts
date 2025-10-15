@@ -352,6 +352,7 @@ export interface NavigationItem {
   nameEn: string;
   roles: string[];
   badge?: number;
+  order: number; // Required for stable sorting regardless of translation state
 }
 
 // Subsystem ID to route path mapping
@@ -506,6 +507,7 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
 
   const allowedSubsystems = userPermissions.subsystems;
   const navigationItems: NavigationItem[] = [];
+  let orderCounter = 0;
 
   // Collect all leaf subsystems (those without children) from SUBSYSTEM_TREE
   const collectLeafSubsystems = (subsystems: SubsystemPermission[], parentPlatform?: string) => {
@@ -533,7 +535,8 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
             icon: subsystem.icon || "Home",
             label: subsystem.name,
             nameEn: subsystem.nameEn,
-            roles: allRolesWithAccess.length > 0 ? allRolesWithAccess : [userRole]
+            roles: allRolesWithAccess.length > 0 ? allRolesWithAccess : [userRole],
+            order: orderCounter++
           });
         }
       }
@@ -542,8 +545,12 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
 
   collectLeafSubsystems(SUBSYSTEM_TREE);
 
-  // Sort navigation items by nameEn for consistency
-  return navigationItems.sort((a, b) => a.nameEn.localeCompare(b.nameEn));
+  // Sort navigation items by immutable order field for stable positioning regardless of translation state
+  // Fallback to nameEn for deterministic secondary sorting
+  return navigationItems.sort((a, b) => {
+    const orderDiff = a.order - b.order;
+    return orderDiff !== 0 ? orderDiff : a.nameEn.localeCompare(b.nameEn);
+  });
 };
 
 // Get role-specific filtered subsystems
