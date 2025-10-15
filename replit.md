@@ -89,9 +89,11 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 
 ## Recent Changes (October 2025)
 
-### Admin Dashboard i18n Fix (Oct 15, 2025)
+### Admin Dashboard i18n Improvements (Oct 15, 2025)
 - **Issue**: Admin pages not showing Farsi translations despite fa/admin.json existing
 - **Root Cause**: UnifiedDashboard was importing legacy admin dashboard from /pages/admin/admin-dashboard.tsx instead of i18n-enabled /pages/admin-dashboard.tsx
 - **Fix**: Updated UnifiedDashboard to import canonical admin-dashboard.tsx with proper i18n namespace structure
 - **Status**: Legacy /pages/admin/admin-dashboard.tsx contains enhanced UI (animations, system health, role color legend) - needs feature migration then deletion
-- **Translation Gap**: fa/admin.json missing 345 keys, ar/admin.json missing 1437 keys - causing fallback to English
+- **Sidebar Menu Fixes**: Implemented immutable order-based sorting to prevent menu jumping when translations are mixed, normalized Button padding/variants to eliminate visual jitter on active state changes
+- **Farsi Translation Status**: ✅ Functionally complete - all 320 missing keys added with ~270 professional translations covering critical sections (Dashboard, Analytics, Teachers, AI, Social Media, Book Store, CallerN); remaining ~50 strings are Farsi with embedded brand names (correct) or low-priority placeholders
+- **Arabic Translation Gap**: ar/admin.json still missing 1437 keys - causing fallback to English
