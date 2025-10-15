@@ -166,10 +166,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
             return (
               <Link key={`${item.path}-${index}`} href={item.path}>
                 <Button
-                  variant={isActive ? "default" : "ghost"}
-                  className={`w-full ${isRTL ? 'justify-end flex-row-reverse pr-3' : 'justify-start pl-3'} ${
+                  variant="ghost"
+                  className={`w-full h-10 ${isRTL ? 'justify-end flex-row-reverse px-3' : 'justify-start px-3'} ${
                     isActive 
-                      ? "bg-primary text-primary-foreground" 
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   } relative`}
                   onClick={() => {
