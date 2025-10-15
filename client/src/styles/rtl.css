@@ -149,11 +149,30 @@
 
 /* Language-specific font adjustments */
 .lang-fa {
-  font-family: 'Noto Sans Arabic', 'Vazir', 'Tahoma', sans-serif;
+  font-family: 'Vazirmatn', 'Noto Sans Arabic', 'Tahoma', sans-serif;
 }
 
 .lang-ar {
-  font-family: 'Noto Sans Arabic', 'Amiri', 'Tahoma', sans-serif;
+  font-family: 'Noto Kufi Arabic', 'Noto Sans Arabic', 'Almarai', 'Tahoma', sans-serif;
+}
+
+/* Force numbers to be LTR in RTL context - Only for explicitly marked numeric content */
+.rtl [data-number],
+.rtl .number,
+.rtl .numeric-value {
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline-block;
+}
+
+/* Specific numeric context classes */
+.rtl .price-amount,
+.rtl .currency-value,
+.rtl .count-value,
+.rtl .stat-number {
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline-block;
 }
 
 /* Enhanced typography for Persian/Arabic */

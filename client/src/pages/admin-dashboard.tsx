@@ -204,12 +204,14 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="grid w-full lg:w-auto grid-cols-4">
-            <TabsTrigger value="overview">{t('admin:dashboard.overview')}</TabsTrigger>
-            <TabsTrigger value="students">{t('admin:dashboard.students')}</TabsTrigger>
-            <TabsTrigger value="leads">{t('admin:dashboard.leads')}</TabsTrigger>
-            <TabsTrigger value="finance">{t('admin:dashboard.finance')}</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="inline-flex w-full lg:w-auto min-w-max">
+              <TabsTrigger value="overview" className="min-w-[100px]">{t('admin:dashboard.overview')}</TabsTrigger>
+              <TabsTrigger value="students" className="min-w-[100px]">{t('admin:dashboard.students')}</TabsTrigger>
+              <TabsTrigger value="leads" className="min-w-[100px]">{t('admin:dashboard.leads')}</TabsTrigger>
+              <TabsTrigger value="finance" className="min-w-[100px]">{t('admin:dashboard.finance')}</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
@@ -267,23 +269,23 @@ export default function AdminDashboard() {
 
           {/* Students Tab */}
           <TabsContent value="students" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 flex-1">
+                <div className="relative flex-1 sm:flex-initial">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder={t('admin:dashboard.searchStudents')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 w-64"
+                    className="pl-9 w-full sm:w-64"
                   />
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <Filter className="h-4 w-4 mr-2" />
                   {t('admin:dashboard.filter')}
                 </Button>
               </div>
-              <Button>
+              <Button className="w-full sm:w-auto min-h-[44px]">
                 <Plus className="h-4 w-4 mr-2" />
                 {t('admin:dashboard.addStudent')}
               </Button>
@@ -291,7 +293,8 @@ export default function AdminDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <Table>
+                <div className="overflow-x-auto">
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('admin:dashboard.student')}</TableHead>
@@ -353,29 +356,30 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Leads Tab */}
           <TabsContent value="leads" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 flex-1">
+                <div className="relative flex-1 sm:flex-initial">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder={t('admin:dashboard.searchLeads')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 w-64"
+                    className="pl-9 w-full sm:w-64"
                   />
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <Filter className="h-4 w-4 mr-2" />
                   Filter
                 </Button>
               </div>
-              <Button>
+              <Button className="w-full sm:w-auto min-h-[44px]">
                 <Plus className="h-4 w-4 mr-2" />
                 {t('admin:dashboard.addLead')}
               </Button>
@@ -383,7 +387,8 @@ export default function AdminDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <Table>
+                <div className="overflow-x-auto">
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('admin:dashboard.lead')}</TableHead>
@@ -460,29 +465,30 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Finance Tab */}
           <TabsContent value="finance" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 flex-1">
+                <div className="relative flex-1 sm:flex-initial">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search invoices..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 w-64"
+                    className="pl-9 w-full sm:w-64"
                   />
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <Filter className="h-4 w-4 mr-2" />
                   Filter
                 </Button>
               </div>
-              <Button>
+              <Button className="w-full sm:w-auto min-h-[44px]">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invoice
               </Button>
@@ -490,7 +496,8 @@ export default function AdminDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <Table>
+                <div className="overflow-x-auto">
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Invoice</TableHead>
@@ -531,6 +538,7 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
