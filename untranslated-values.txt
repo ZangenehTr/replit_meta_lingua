@@ -1,0 +1,9 @@
+نماذج Ollama
+حالة Ollama
+تثبيت Ollama
+SMS
+إعدادات خط VoIP Isabel
+email@example.com
+{{hours}}س {{minutes}}د
+إدارة CallerN
+باقات CallerN

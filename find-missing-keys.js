@@ -17,23 +17,28 @@ function extractKeys(obj, prefix = '') {
   return keys;
 }
 
+// Get language from command line (default to 'fa')
+const targetLang = process.argv[2] || 'fa';
+const langName = targetLang === 'fa' ? 'Farsi' : targetLang === 'ar' ? 'Arabic' : targetLang;
+
 // Read JSON files
 const enAdmin = JSON.parse(fs.readFileSync('client/src/i18n/locales/en/admin.json', 'utf8'));
-const faAdmin = JSON.parse(fs.readFileSync('client/src/i18n/locales/fa/admin.json', 'utf8'));
+const targetAdmin = JSON.parse(fs.readFileSync(`client/src/i18n/locales/${targetLang}/admin.json`, 'utf8'));
 
 // Extract all keys
 const enKeys = extractKeys(enAdmin);
-const faKeys = extractKeys(faAdmin);
+const targetKeys = extractKeys(targetAdmin);
 
 // Find missing keys
-const missingKeys = enKeys.filter(key => !faKeys.includes(key));
+const missingKeys = enKeys.filter(key => !targetKeys.includes(key));
 
 console.log(`Total English keys: ${enKeys.length}`);
-console.log(`Total Farsi keys: ${faKeys.length}`);
+console.log(`Total ${langName} keys: ${targetKeys.length}`);
 console.log(`Missing keys: ${missingKeys.length}`);
 console.log('\nMissing keys:');
 missingKeys.forEach(key => console.log(key));
 
 // Save to file for reference
-fs.writeFileSync('missing-fa-keys.txt', missingKeys.join('\n'), 'utf8');
-console.log('\nMissing keys saved to missing-fa-keys.txt');
+const outputFile = `missing-${targetLang}-keys.txt`;
+fs.writeFileSync(outputFile, missingKeys.join('\n'), 'utf8');
+console.log(`\nMissing keys saved to ${outputFile}`);

@@ -1,0 +1,50 @@
+Active Chats
+Active this month
+All Tickets
+Automated Questionnaires
+Class Title
+Communication Hub
+Comprehensive quality assurance and teacher observation system
+Create and manage users with different roles
+Create Observation
+Currently in session
+email@example.com
+Failed to create room
+Failed to delete room
+Failed to update room
+{{hours}}س {{minutes}}د
+Live
+Live Chat
+Live Classes Monitoring
+Live Observations
+Manage system configuration, backups, and monitoring
+Manage teacher availability for on-demand video calls
+Modern ticketing, real-time chat, and push notifications
+New Ticket
+No live classes currently in session
+Open Tickets
+Out of
+Questionnaires
+Recorded Sessions
+Response Rate
+Retention Trend
+Room created successfully
+Room deleted successfully
+Room updated successfully
+Self-hosted ready
+Send Notification
+SMS
+stable
+Start Time
+Supervision System
+Support Tickets
+System Administration
+Teacher Evaluations
+Teachers Supervised
+Today's Notifications
+User
+إدارة CallerN
+إعدادات خط VoIP Isabel
+تثبيت Ollama
+حالة Ollama
+نماذج Ollama

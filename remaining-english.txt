@@ -1,0 +1,50 @@
+Add First Lesson
+Add video lessons to get started
+   ... and 263 more
+Auto-detected
+Class Scheduling
+Class Utilization
+Conversions
+Course Created
+Create First Course
+Create New User
+Create User
+Duplicate
+Efficiency
+email@example.com
+Enter video path or URL. Duration will be detected automatically.
+Failed to add lesson. Please try again.
+Fill in user information
+Hide Lessons
+{{hours}}h {{minutes}}m
+lessons
+Lesson successfully added to the course
+Lesson successfully removed from the course
+Manage all system users
+Manage classrooms, labs, and meeting rooms
+Manage teacher compensation and payroll
+New This Month
+No courses found
+No Instructor
+NPS Score
+Operational Metrics
+Published Courses
+Recent Class Observations
+Registrations
+Retention Rate
+Room Management
+Schedule and manage class sessions across the institute
+Search courses...
+Show Lessons
+SMS
+Start by creating your first video course
+Student Satisfaction
+Teacher Payments
+Teacher Utilization
+This course has no lessons yet
+Video course successfully created
+Video duration detected
+إعدادات خط VoIP Isabel
+تثبيت Ollama
+حالة Ollama
+نماذج Ollama
