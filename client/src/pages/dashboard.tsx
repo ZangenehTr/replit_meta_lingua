@@ -28,7 +28,6 @@ import { Link, useLocation, Redirect } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
-import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
 
 export default function Dashboard() {
   const { user } = useAuth();

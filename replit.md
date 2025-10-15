@@ -86,3 +86,12 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem
 - **Self-Hosting**: ZERO dependencies on non-Iranian external services
+
+## Recent Changes (October 2025)
+
+### Admin Dashboard i18n Fix (Oct 15, 2025)
+- **Issue**: Admin pages not showing Farsi translations despite fa/admin.json existing
+- **Root Cause**: UnifiedDashboard was importing legacy admin dashboard from /pages/admin/admin-dashboard.tsx instead of i18n-enabled /pages/admin-dashboard.tsx
+- **Fix**: Updated UnifiedDashboard to import canonical admin-dashboard.tsx with proper i18n namespace structure
+- **Status**: Legacy /pages/admin/admin-dashboard.tsx contains enhanced UI (animations, system health, role color legend) - needs feature migration then deletion
+- **Translation Gap**: fa/admin.json missing 345 keys, ar/admin.json missing 1437 keys - causing fallback to English

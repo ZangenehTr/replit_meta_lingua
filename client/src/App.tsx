@@ -29,7 +29,6 @@ import GamificationProgress from "@/pages/gamification-progress";
 import UserProfile from "@/pages/user-profile";
 import CRMDashboard from "@/pages/crm-dashboard";
 import StudentInformationSystem from "@/pages/student-information-system";
-import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
 import AdminVideoCourses from "@/pages/admin/video-courses";

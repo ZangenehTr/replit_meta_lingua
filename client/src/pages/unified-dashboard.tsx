@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useIsMobile } from "@/hooks/useMediaQuery";
 
 // Role-specific dashboard imports
-import { AdminDashboard } from "@/pages/admin/admin-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
 import TeacherDashboard from "@/pages/teacher/dashboard";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
