@@ -93,13 +93,13 @@ export default function AdminDashboard() {
   });
 
   const filteredStudents = students?.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())
+    student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const filteredLeads = leads?.filter(lead =>
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+    lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const getStatusColor = (status: string) => {
