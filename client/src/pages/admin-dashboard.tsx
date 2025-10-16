@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +74,7 @@ interface InvoiceSummary {
 
 export default function AdminDashboard() {
   const { t } = useTranslation(['admin', 'common']);
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("overview");
 
@@ -285,7 +287,11 @@ export default function AdminDashboard() {
                   {t('admin:dashboard.filter')}
                 </Button>
               </div>
-              <Button className="w-full sm:w-auto min-h-[44px]">
+              <Button 
+                className="w-full sm:w-auto min-h-[44px]"
+                onClick={() => setLocation('/admin/students')}
+                data-testid="button-add-student"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 {t('admin:dashboard.addStudent')}
               </Button>
@@ -344,10 +350,20 @@ export default function AdminDashboard() {
                         <TableCell>{student.lastActivity}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setLocation(`/admin/students?view=${student.id}`)}
+                              data-testid={`button-view-student-${student.id}`}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setLocation(`/admin/students?edit=${student.id}`)}
+                              data-testid={`button-edit-student-${student.id}`}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
@@ -379,7 +395,11 @@ export default function AdminDashboard() {
                   Filter
                 </Button>
               </div>
-              <Button className="w-full sm:w-auto min-h-[44px]">
+              <Button 
+                className="w-full sm:w-auto min-h-[44px]"
+                onClick={() => setLocation('/admin/leads')}
+                data-testid="button-add-lead"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 {t('admin:dashboard.addLead')}
               </Button>
@@ -450,13 +470,28 @@ export default function AdminDashboard() {
                         <TableCell>{lead.followUpDate}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => window.location.href = `tel:${lead.phone}`}
+                              data-testid={`button-call-lead-${lead.id}`}
+                            >
                               <Phone className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => window.location.href = `mailto:${lead.email}`}
+                              data-testid={`button-email-lead-${lead.id}`}
+                            >
                               <Mail className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setLocation(`/admin/leads?edit=${lead.id}`)}
+                              data-testid={`button-edit-lead-${lead.id}`}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
@@ -488,7 +523,11 @@ export default function AdminDashboard() {
                   Filter
                 </Button>
               </div>
-              <Button className="w-full sm:w-auto min-h-[44px]">
+              <Button 
+                className="w-full sm:w-auto min-h-[44px]"
+                onClick={() => setLocation('/admin/financial')}
+                data-testid="button-create-invoice"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invoice
               </Button>
@@ -526,10 +565,20 @@ export default function AdminDashboard() {
                         <TableCell>{invoice.dueDate}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setLocation(`/admin/financial?view=${invoice.id}`)}
+                              data-testid={`button-view-invoice-${invoice.id}`}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setLocation(`/admin/financial?edit=${invoice.id}`)}
+                              data-testid={`button-edit-invoice-${invoice.id}`}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
