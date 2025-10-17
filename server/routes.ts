@@ -21,6 +21,7 @@ import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
 import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
 import { setupContentBankRoutes } from "./routes/content-bank-routes";
 import { registerLinguaQuestRoutes } from "./routes/linguaquest-routes";
+import linguaquestAudioRoutes from "./routes/linguaquest-audio-routes";
 import searchRoutes from "./routes/search-routes";
 import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes";
 import tttRoutes from "./ttt-routes";
@@ -23674,6 +23675,10 @@ Meta Lingua Academy`;
 
   // LinguaQuest Free Learning Platform Routes
   registerLinguaQuestRoutes(app);
+  
+  // LinguaQuest Audio Generation Routes
+  app.use('/api/linguaquest/audio', linguaquestAudioRoutes);
+  console.log('✅ LinguaQuest Audio Generation routes registered successfully');
   
   setupBookEcommerceRoutes(app);
   console.log('✅ Book E-Commerce routes registered successfully');

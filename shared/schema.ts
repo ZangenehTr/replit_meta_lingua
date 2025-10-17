@@ -1572,6 +1572,26 @@ export const linguaquestContentBank = pgTable("linguaquest_content_bank", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// LinguaQuest Audio Generation Jobs table - Track batch audio generation progress
+export const linguaquestAudioJobs = pgTable("linguaquest_audio_jobs", {
+  id: serial("id").primaryKey(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, running, completed, failed
+  totalItems: integer("total_items").default(0),
+  processedItems: integer("processed_items").default(0),
+  generatedItems: integer("generated_items").default(0),
+  cachedItems: integer("cached_items").default(0),
+  failedItems: integer("failed_items").default(0),
+  errors: jsonb("errors"), // Array of {contentId, error}
+  contentIds: text("content_ids").array(), // Specific content IDs to process (null = all)
+  regenerateAll: boolean("regenerate_all").default(false),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  durationMs: integer("duration_ms"),
+  triggeredBy: integer("triggered_by"), // Admin user ID who triggered the job
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Freemium Conversion Tracking table
 export const freemiumConversionTracking = pgTable("freemium_conversion_tracking", {
   id: serial("id").primaryKey(),
@@ -7682,6 +7702,12 @@ export const insertLinguaquestAudioAssetSchema = createInsertSchema(linguaquestA
   updatedAt: true
 });
 
+export const insertLinguaquestAudioJobSchema = createInsertSchema(linguaquestAudioJobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 export const insertLinguaquestLeaderboardEntrySchema = createInsertSchema(linguaquestLeaderboardEntries).omit({
   id: true,
   createdAt: true,
@@ -7705,6 +7731,8 @@ export type LinguaquestCefrLevel = typeof linguaquestCefrLevels.$inferSelect;
 export type LinguaquestCefrLevelInsert = z.infer<typeof insertLinguaquestCefrLevelSchema>;
 export type LinguaquestAudioAsset = typeof linguaquestAudioAssets.$inferSelect;
 export type LinguaquestAudioAssetInsert = z.infer<typeof insertLinguaquestAudioAssetSchema>;
+export type LinguaquestAudioJob = typeof linguaquestAudioJobs.$inferSelect;
+export type LinguaquestAudioJobInsert = z.infer<typeof insertLinguaquestAudioJobSchema>;
 export type LinguaquestLeaderboardEntry = typeof linguaquestLeaderboardEntries.$inferSelect;
 export type LinguaquestLeaderboardEntryInsert = z.infer<typeof insertLinguaquestLeaderboardEntrySchema>;
 export type LinguaquestContentBank = typeof linguaquestContentBank.$inferSelect;
