@@ -1,0 +1,38 @@
+Tasks:
+
+Expanding Existing Games:
+
+Add more levels to the existing games, ensuring they progress from beginner to advanced (A1 to C2).
+
+For each game, implement pre-generated audio files for word pronunciations, sentence pronunciations, and question/answer interactions. These should be generated using Microsoft TTS (Text-to-Speech) and stored for efficient retrieval during gameplay.
+
+LinguaQuest Leaderboard: Ensure the leaderboard is activated in all games, tracking users' progress, scores, and ranks.
+
+Immediate Feedback for Incorrect Answers: For each wrong answer, display the correct answer immediately along with a brief explanation (via text and audio if applicable). This will help users understand their mistakes in real-time and improve their learning.
+
+Creating New Games:
+Please create the following new games for different levels and purposes (language learning, IELTS, TOEFL, PTE, and GRE prep):
+
+Vocabulary Matching: Users match words with their definitions or images. Pre-recorded TTS audio should be linked to the words and definitions, allowing users to hear the pronunciation upon selecting an answer.
+
+Sentence Scramble: Present scrambled words that users need to arrange into correct sentences. Pre-recorded TTS audio should read out the correct sentences when the user completes the arrangement.
+
+Multiple-Choice Quizzes: Design quizzes with grammar, vocabulary, and comprehension questions. For each question and answer, provide pre-recorded audio (using TTS) and text-based feedback for both correct and incorrect answers.
+
+Word Formation Game: Users create words from a set of letters or prefixes/suffixes. Pre-recorded TTS audio should pronounce each word as it's formed, allowing learners to reinforce pronunciation.
+
+Listening Comprehension (Text-Based): Present reading passages with corresponding questions. Pre-recorded audio should read out the passage aloud (via TTS) to simulate listening test practice.
+
+Synonym/Antonym Match: Users match words with their synonyms or antonyms. Each word pair will be linked to pre-recorded audio, offering pronunciation practice as users select correct pairs.
+
+Grammar Battles: A turn-based game where users answer grammar questions. The TTS audio should pronounce the questions and answers, and feedback should be provided immediately after an incorrect answer.
+
+Timed Vocabulary Blitz: Users match words with definitions within a time limit. Pre-recorded TTS audio should pronounce each word and definition, with time-based challenges to add excitement.
+
+Notes:
+
+Ensure that all audio files (for words, sentences, questions, and explanations) are pre-generated and stored for quick access during gameplay.
+
+Implement real-time feedback for incorrect answers, with audio and text explanations.
+
+Keep the overall user experience smooth and engaging, ensuring that the leaderboard and game progress tracking are working efficiently.

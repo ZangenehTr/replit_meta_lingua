@@ -892,6 +892,23 @@ export const book_orders = pgTable("book_orders", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Book Reviews table - user ratings and reviews for books
+export const bookReviews = pgTable("book_reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  bookId: integer("book_id").references(() => books.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  title: varchar("title", { length: 255 }),
+  reviewText: text("review_text"),
+  isVerifiedPurchase: boolean("is_verified_purchase").default(false), // True if user bought the book
+  helpfulCount: integer("helpful_count").default(0), // Number of users who found review helpful
+  reportCount: integer("report_count").default(0), // Number of spam reports
+  isApproved: boolean("is_approved").default(true),
+  isVisible: boolean("is_visible").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Insert schema for book orders
 export const insertBookOrderSchema = z.object({
   userId: z.number(),
@@ -1423,6 +1440,70 @@ export const guestProgressTracking = pgTable("guest_progress_tracking", {
   hasSeenUpgradePrompt: boolean("has_seen_upgrade_prompt").default(false),
   upgradePromptCount: integer("upgrade_prompt_count").default(0),
   lastUpgradePromptAt: timestamp("last_upgrade_prompt_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// LinguaQuest CEFR Levels table - metadata for A1-C2 levels
+export const linguaquestCefrLevels = pgTable("linguaquest_cefr_levels", {
+  id: serial("id").primaryKey(),
+  levelCode: varchar("level_code", { length: 10 }).notNull().unique(), // A1, A2, B1, B2, C1, C2
+  levelName: varchar("level_name", { length: 100 }).notNull(), // Beginner, Elementary, etc.
+  description: text("description"),
+  vocabularySize: integer("vocabulary_size"), // Expected vocabulary size for this level
+  grammarTopics: text("grammar_topics").array(),
+  canDoStatements: text("can_do_statements").array(), // CEFR "can do" descriptors
+  minXpRequired: integer("min_xp_required").default(0),
+  maxXpRequired: integer("max_xp_required"),
+  estimatedHours: integer("estimated_hours"), // Estimated study hours needed
+  color: varchar("color", { length: 20 }), // UI color for level badge
+  icon: varchar("icon", { length: 100 }),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// LinguaQuest Audio Assets table - TTS audio file mappings
+export const linguaquestAudioAssets = pgTable("linguaquest_audio_assets", {
+  id: serial("id").primaryKey(),
+  contentType: varchar("content_type", { length: 50 }).notNull(), // word, sentence, question, explanation, feedback
+  contentText: text("content_text").notNull(), // The text that was converted to speech
+  contentHash: varchar("content_hash", { length: 64 }).notNull().unique(), // SHA-256 hash of contentText for deduplication
+  language: varchar("language", { length: 10 }).notNull(), // en, fa, ar, etc.
+  voice: varchar("voice", { length: 100 }), // TTS voice used (e.g., "en-US-JennyNeural")
+  filePath: varchar("file_path", { length: 500 }).notNull(), // uploads/tts/audio_hash.mp3
+  fileSize: integer("file_size"), // File size in bytes
+  duration: integer("duration"), // Audio duration in milliseconds
+  cefrLevel: varchar("cefr_level", { length: 10 }), // A1, A2, B1, B2, C1, C2
+  gameType: varchar("game_type", { length: 50 }), // vocabulary_matching, sentence_scramble, etc.
+  metadata: jsonb("metadata"), // Additional metadata (speed, pitch, etc.)
+  usageCount: integer("usage_count").default(0), // Track how often this audio is used
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// LinguaQuest Leaderboard Entries table - global and level-specific rankings
+export const linguaquestLeaderboardEntries = pgTable("linguaquest_leaderboard_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id), // NULL for guest users
+  guestSessionToken: text("guest_session_token"), // For anonymous users
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  avatar: varchar("avatar", { length: 255 }),
+  totalXp: integer("total_xp").default(0),
+  totalScore: integer("total_score").default(0),
+  gamesPlayed: integer("games_played").default(0),
+  gamesWon: integer("games_won").default(0),
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  cefrLevel: varchar("cefr_level", { length: 10 }), // Current CEFR level
+  language: varchar("language", { length: 10 }).notNull(), // Target language
+  globalRank: integer("global_rank"), // Updated periodically
+  levelRank: integer("level_rank"), // Rank within same CEFR level
+  countryCode: varchar("country_code", { length: 10 }), // For country leaderboards
+  weeklyXp: integer("weekly_xp").default(0), // Reset weekly
+  monthlyXp: integer("monthly_xp").default(0), // Reset monthly
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -7490,6 +7571,29 @@ export type LinguaQuestSceneType = typeof LINGUAQUEST_SCENE_TYPE[keyof typeof LI
 // ============================================================================
 
 // Insert schemas for LinguaQuest tables
+export const insertLinguaquestCefrLevelSchema = createInsertSchema(linguaquestCefrLevels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertLinguaquestAudioAssetSchema = createInsertSchema(linguaquestAudioAssets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertLinguaquestLeaderboardEntrySchema = createInsertSchema(linguaquestLeaderboardEntries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertBookReviewSchema = createInsertSchema(bookReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
 
 // Insert schemas for Enhanced Analytics tables
 
@@ -7498,6 +7602,14 @@ export type LinguaquestLesson = typeof linguaquestLessons.$inferSelect;
 export type LinguaquestLessonInsert = z.infer<typeof insertLinguaquestLessonSchema>;
 export type GuestProgressTracking = typeof guestProgressTracking.$inferSelect;
 export type GuestProgressTrackingInsert = z.infer<typeof insertGuestProgressTrackingSchema>;
+export type LinguaquestCefrLevel = typeof linguaquestCefrLevels.$inferSelect;
+export type LinguaquestCefrLevelInsert = z.infer<typeof insertLinguaquestCefrLevelSchema>;
+export type LinguaquestAudioAsset = typeof linguaquestAudioAssets.$inferSelect;
+export type LinguaquestAudioAssetInsert = z.infer<typeof insertLinguaquestAudioAssetSchema>;
+export type LinguaquestLeaderboardEntry = typeof linguaquestLeaderboardEntries.$inferSelect;
+export type LinguaquestLeaderboardEntryInsert = z.infer<typeof insertLinguaquestLeaderboardEntrySchema>;
+export type BookReview = typeof bookReviews.$inferSelect;
+export type BookReviewInsert = z.infer<typeof insertBookReviewSchema>;
 export type VoiceExercisesGuest = typeof voiceExercisesGuest.$inferSelect;
 export type VoiceExercisesGuestInsert = z.infer<typeof insertVoiceExercisesGuestSchema>;
 export type ThreeDLessonContent = typeof threeDLessonContent.$inferSelect;

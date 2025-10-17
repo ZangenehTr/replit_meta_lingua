@@ -21852,9 +21852,9 @@ Meta Lingua Academy`;
   // Call center prospects endpoints
   app.get("/api/callcenter/prospects", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
-      // Return mock prospects for testing (database methods not implemented yet)
-      const mockProspectsArray = Array.from(mockProspects.values());
-      res.json(mockProspectsArray);
+      // Get real prospects from leads table
+      const prospects = await storage.getAllLeads();
+      res.json(prospects || []);
     } catch (error) {
       console.error('Error fetching prospects:', error);
       res.status(500).json({ message: "Failed to fetch prospects" });
@@ -21863,19 +21863,10 @@ Meta Lingua Academy`;
 
   app.post("/api/callcenter/prospects", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
-      // Create prospect with fallback approach (database methods not implemented yet)
+      // Create real prospect in leads table
       const prospectData = req.body;
-      
-      const mockProspect = {
-        id: Math.floor(Math.random() * 1000000),
-        ...prospectData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      // Store in memory for retrieval by GET endpoints
-      mockProspects.set(mockProspect.id, mockProspect);
-      res.status(201).json(mockProspect);
+      const newProspect = await storage.createLead(prospectData);
+      res.status(201).json(newProspect);
     } catch (error) {
       console.error('Error creating prospect:', error);
       res.status(500).json({ message: "Failed to create prospect" });
@@ -23932,27 +23923,30 @@ Meta Lingua Academy`;
         return res.status(403).json({ message: "Access denied" });
       }
       
-      // Mock upcoming sessions data
-      const upcomingSessions = [
-        {
-          id: 1,
-          courseTitle: 'General English A2',
-          teacherName: 'Sarah Johnson',
-          startTime: 'Today 14:00',
-          duration: 60,
-          type: 'group',
-          joinUrl: '/callern/video/session-1'
-        },
-        {
-          id: 2,
-          courseTitle: 'Conversation Practice',
-          teacherName: 'Mike Smith',
-          startTime: 'Tomorrow 16:30',
-          duration: 45,
-          type: 'individual',
-          location: 'Room 201'
-        }
-      ];
+      // Get real upcoming sessions for the student
+      const now = new Date();
+      const studentEnrollments = await storage.getEnrollmentsByUserId(studentId);
+      
+      const upcomingSessions = await Promise.all(
+        studentEnrollments.map(async (enrollment) => {
+          const course = await storage.getCourse(enrollment.courseId);
+          const sessions = await storage.getSessionsByCourseId(enrollment.courseId);
+          
+          // Filter for future sessions
+          return sessions
+            .filter(s => new Date(s.sessionDate) > now)
+            .map(s => ({
+              id: s.id,
+              courseTitle: course?.title || 'Unknown Course',
+              teacherName: 'Teacher', // Can be enhanced by joining with users table
+              startTime: s.sessionDate,
+              duration: s.duration || 60,
+              type: s.isOnline ? 'online' : 'in-person',
+              location: s.location,
+              joinUrl: s.isOnline ? `/callern/video/session-${s.id}` : undefined
+            }));
+        })
+      ).then(results => results.flat());
       
       res.json(upcomingSessions);
     } catch (error) {
@@ -23971,25 +23965,24 @@ Meta Lingua Academy`;
         return res.status(403).json({ message: "Access denied" });
       }
       
-      // Mock learning materials data
-      const materials = [
-        {
-          id: 1,
-          title: 'Unit 5 Vocabulary List',
-          type: 'pdf',
-          courseTitle: 'General English A2',
-          size: '2.5 MB',
-          downloadUrl: '/api/materials/download/1'
-        },
-        {
-          id: 2,
-          title: 'Grammar Exercise Audio',
-          type: 'audio',
-          courseTitle: 'Grammar Fundamentals',
-          size: '15.2 MB',
-          downloadUrl: '/api/materials/download/2'
-        }
-      ];
+      // Get real learning materials from enrollments and homework/content library
+      const studentEnrollments = await storage.getEnrollmentsByUserId(studentId);
+      
+      const materials = await Promise.all(
+        studentEnrollments.map(async (enrollment) => {
+          const course = await storage.getCourse(enrollment.courseId);
+          const homework = await storage.getHomeworkForCourse(enrollment.courseId);
+          
+          return homework.map(hw => ({
+            id: hw.id,
+            title: hw.title,
+            type: hw.attachmentUrl?.includes('.pdf') ? 'pdf' : hw.attachmentUrl?.includes('.mp3') ? 'audio' : 'document',
+            courseTitle: course?.title || 'Unknown Course',
+            size: 'N/A', // Can be enhanced with file metadata
+            downloadUrl: hw.attachmentUrl || `/api/materials/download/${hw.id}`
+          }));
+        })
+      ).then(results => results.flat());
       
       res.json(materials);
     } catch (error) {
@@ -25331,23 +25324,32 @@ Meta Lingua Academy`;
     try {
       const userId = req.user?.id;
       
-      // Mock LinguaQuest progress data - replace with real implementation later
+      // Get real LinguaQuest progress from guestProgressTracking or userStats
+      const userProgress = await db.select()
+        .from(guestProgressTracking)
+        .where(sql`${guestProgressTracking.sessionToken} = ${userId.toString()}`)
+        .limit(1);
+      
+      const allLessons = await db.select().from(linguaquestLessons).where(eq(linguaquestLessons.isActive, true));
+      const completedLessons = userProgress[0]?.completedLessons || [];
+      const userAchievements = await db.select().from(achievements).limit(10);
+      
       const progressData = {
-        totalLessons: 48,
-        completedLessons: 12,
-        currentLevel: "A2",
-        streakDays: 7,
-        experiencePoints: 1250,
-        badges: [
-          { id: 1, name: "Grammar Master", earned: true },
-          { id: 2, name: "Vocabulary Builder", earned: true },
-          { id: 3, name: "Speaking Champion", earned: false }
-        ],
-        recentActivities: [
-          { lesson: "Present Tense Practice", completed: true, date: new Date().toISOString() },
-          { lesson: "Vocabulary: Daily Routines", completed: true, date: new Date().toISOString() },
-          { lesson: "Listening Exercise 3", completed: false, date: new Date().toISOString() }
-        ]
+        totalLessons: allLessons.length,
+        completedLessons: completedLessons.length,
+        currentLevel: userProgress[0]?.preferredDifficulty || "A1",
+        streakDays: userProgress[0]?.currentStreak || 0,
+        experiencePoints: userProgress[0]?.totalXp || 0,
+        badges: userAchievements.map(a => ({
+          id: a.id,
+          name: a.name,
+          earned: false // Can be enhanced with userAchievements join
+        })),
+        recentActivities: completedLessons.slice(-3).map((lessonId: number) => ({
+          lesson: `Lesson ${lessonId}`,
+          completed: true,
+          date: new Date().toISOString()
+        }))
       };
       
       res.json(progressData);
@@ -25405,15 +25407,37 @@ Meta Lingua Academy`;
     try {
       const userId = req.user?.id;
       
-      // Mock Callern status data - replace with real session package data later
-      const callernStatus = {
+      // Get real Callern package status from studentCallernPackages table
+      const activePackages = await db.select()
+        .from(studentCallernPackages)
+        .where(and(
+          eq(studentCallernPackages.studentId, userId),
+          eq(studentCallernPackages.isActive, true)
+        ));
+      
+      const callHistory = await db.select()
+        .from(callernCallHistory)
+        .where(eq(callernCallHistory.studentId, userId));
+      
+      const totalMinutesUsed = callHistory.reduce((sum, call) => sum + (call.duration || 0), 0);
+      const activePackage = activePackages[0];
+      
+      const callernStatus = activePackage ? {
         hasActivePackage: true,
-        remainingMinutes: 120,
-        packageType: "Premium",
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-        totalMinutesUsed: 180,
-        totalMinutesPurchased: 300,
-        usagePercent: 60
+        remainingMinutes: (activePackage.totalMinutes || 0) - totalMinutesUsed,
+        packageType: "Package",
+        expiresAt: activePackage.expiryDate?.toISOString(),
+        totalMinutesUsed,
+        totalMinutesPurchased: activePackage.totalMinutes || 0,
+        usagePercent: activePackage.totalMinutes ? Math.round((totalMinutesUsed / activePackage.totalMinutes) * 100) : 0
+      } : {
+        hasActivePackage: false,
+        remainingMinutes: 0,
+        packageType: null,
+        expiresAt: null,
+        totalMinutesUsed: 0,
+        totalMinutesPurchased: 0,
+        usagePercent: 0
       };
       
       res.json(callernStatus);
@@ -25426,12 +25450,23 @@ Meta Lingua Academy`;
   // Teacher availability for Live Hub
   app.get("/api/student/teacher-availability", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      // Mock teacher availability data - replace with real online teacher count later
+      // Get real teacher availability from teacherCallernAvailability and callernPresence tables
+      const authorizedTeachers = await db.select()
+        .from(teacherCallernAuthorization)
+        .where(eq(teacherCallernAuthorization.isAuthorized, true));
+      
+      const onlineTeachers = await db.select()
+        .from(callernPresence)
+        .where(and(
+          eq(callernPresence.status, 'online'),
+          sql`${callernPresence.lastHeartbeat} > NOW() - INTERVAL '5 minutes'`
+        ));
+      
       const availability = {
-        available: 5,
-        total: 12,
-        averageWaitTime: "2-3 minutes",
-        qualityScore: 4.8,
+        available: onlineTeachers.length,
+        total: authorizedTeachers.length,
+        averageWaitTime: onlineTeachers.length > 3 ? "1-2 minutes" : onlineTeachers.length > 0 ? "3-5 minutes" : "Not available",
+        qualityScore: 4.7, // Can be calculated from callernScoresTeacher table
         availableTeachers: [
           { id: 1, name: "Sarah M.", specialties: ["Business English"], rating: 4.9 },
           { id: 2, name: "John D.", specialties: ["IELTS Prep"], rating: 4.7 },
@@ -26466,21 +26501,26 @@ Meta Lingua Academy`;
         return res.status(404).json({ error: 'Teacher not found' });
       }
 
-      // Provide mock time slots for now (since database tables might not be initialized)
-      const defaultTimes = [
-        '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', 
-        '16:00', '17:00', '18:00', '19:00', '20:00'
-      ];
-      
-      const mockTimeSlots = defaultTimes.map((time, index) => ({
-        time,
-        available: index % 4 !== 3, // Make some slots unavailable for realism
-        date: date as string,
-        startTime: `${time}:00`,
-        endTime: `${parseInt(time.split(':')[0]) + 1}:00:00`
+      // Get real teacher availability from teacherTrialAvailability table
+      const availability = await db.select()
+        .from(teacherTrialAvailability)
+        .where(and(
+          eq(teacherTrialAvailability.teacherId, teacherIdInt),
+          eq(teacherTrialAvailability.availableDate, date as string),
+          eq(teacherTrialAvailability.isAvailable, true)
+        ))
+        .orderBy(teacherTrialAvailability.startTime);
+
+      // If no slots found, return empty array (no mock data)
+      const timeSlots = availability.map(slot => ({
+        time: slot.startTime?.substring(0, 5) || '00:00',
+        available: slot.isAvailable,
+        date: slot.availableDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime
       }));
 
-      res.json(mockTimeSlots);
+      res.json(timeSlots);
     } catch (error) {
       console.error('Error fetching trial slots:', error);
       // Fallback to default slots even on error
