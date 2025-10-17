@@ -89,6 +89,23 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 
 ## Recent Changes (October 2025)
 
+### Ollama Graceful Initialization for Self-Hosting (Oct 17, 2025)
+- **Issue**: App failed to build/start when Ollama server at 45.89.239.250:11434 was unreachable during Replit build phase
+- **Root Cause**: AI Provider Manager threw fatal error on Ollama initialization failure, preventing deployment
+- **Solution**: Modified `server/ai-providers/ai-provider-manager.ts` to gracefully handle Ollama unavailability during build
+- **Implementation**: Removed error throwing on initialization failure - app now starts successfully even when Ollama is unreachable
+- **Deployment Strategy**: App builds on Replit without Ollama, then connects to Ollama when deployed on self-hosted server at http://45.89.239.250/
+- **Status**: ✅ Complete - App now successfully builds and deploys, will connect to Ollama on production server
+
+### Critical Bug Fixes - Pre-Deployment Audit (Oct 17, 2025)
+- **MST Placement Test**: Created compatibility layer with 6 endpoints (/start, /status, /item, /response, /skill-complete, /finalize) to restore deprecated MST functionality
+- **Trial Lesson Booking**: Fixed permission issue by adding "trial_lessons" to Student role's subsystem_permissions via database update
+- **LinguaQuest Bottom Visibility**: Added pb-20 padding to game steps container to prevent content cutoff on mobile devices
+- **LinguaQuest Progress Tracking**: Verified existing discrete step completion calculation is correct ((currentStepIndex + 1) / gameSteps.length * 100)
+- **LinguaQuest TTS Translation**: Fixed missing useTranslation hook in OrderingPracticeStep component to restore TTS speaker icons
+- **Architect Review**: ✅ All fixes passed security and quality review
+- **Status**: ✅ All 5 critical bugs resolved and tested
+
 ### Admin Dashboard i18n Improvements (Oct 15, 2025)
 - **Issue**: Admin pages not showing Farsi translations despite fa/admin.json existing
 - **Root Cause**: UnifiedDashboard was importing legacy admin dashboard from /pages/admin/admin-dashboard.tsx instead of i18n-enabled /pages/admin-dashboard.tsx

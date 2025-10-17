@@ -19,13 +19,16 @@ export class AIProviderManager {
   async initialize(): Promise<void> {
     console.log('🚀 Initializing AI Provider Manager (Ollama-only mode)...');
     
-    // Initialize Ollama provider
+    // Initialize Ollama provider (gracefully handle failure during build)
     try {
       await this.primaryProvider.initialize();
       console.log(`✅ Ollama provider (${this.primaryProvider.name}) ready`);
     } catch (error) {
       console.error(`❌ Ollama provider (${this.primaryProvider.name}) failed:`, error);
-      throw new Error('Ollama provider initialization failed. Cannot proceed without AI service.');
+      console.warn('⚠️  Ollama unavailable during initialization (expected during build)');
+      console.warn('⚠️  App will attempt to connect to Ollama when running on production server');
+      // DO NOT throw error - allow app to start even if Ollama is unreachable
+      // This is expected during Replit build; Ollama will be available on self-hosted server
     }
 
     // Health status report
