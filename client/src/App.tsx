@@ -172,6 +172,7 @@ import AIPracticePage from "@/pages/ai-practice";
 // LinguaQuest Free Learning Platform
 import { LinguaQuestHome } from "@/pages/linguaquest/LinguaQuestHome";
 import { LinguaQuestLesson } from "@/pages/linguaquest/LinguaQuestLesson";
+import { LinguaQuestDashboard } from "@/pages/linguaquest/LinguaQuestDashboard";
 
 // Language provider removed - using useLanguage hook directly
 
@@ -223,6 +224,7 @@ function Router() {
     <Switch>
       {/* LinguaQuest Free Learning Platform Routes */}
       <Route path="/linguaquest" component={LinguaQuestHome} />
+      <Route path="/linguaquest/dashboard" component={LinguaQuestDashboard} />
       <Route path="/linguaquest/lesson/:lessonId" component={LinguaQuestLesson} />
       
       {/* Meta Lingua Complete Implementation Testing */}

@@ -121,21 +121,34 @@ export function LinguaQuestHome() {
             {/* User Progress & Upgrade */}
             <div className="flex items-center space-x-4">
               {progress && (
-                <div className="hidden sm:flex items-center space-x-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('userProgress.level', { level: progress.currentLevel })}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {progress.totalXp} XP
-                    </p>
+                <>
+                  <div className="hidden sm:flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t('userProgress.level', { level: progress.currentLevel })}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {progress.totalXp} XP
+                      </p>
+                    </div>
+                    <Avatar className="h-8 w-8 border-2 border-emerald-500">
+                      <AvatarFallback className="bg-emerald-100 text-emerald-700 text-sm">
+                        L{progress.currentLevel}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
-                  <Avatar className="h-8 w-8 border-2 border-emerald-500">
-                    <AvatarFallback className="bg-emerald-100 text-emerald-700 text-sm">
-                      L{progress.currentLevel}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
+                  <Link href="/linguaquest/dashboard">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="hidden lg:flex border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                      data-testid="button-view-dashboard"
+                    >
+                      <Trophy className="w-4 h-4 mr-2" />
+                      {t('navigation.dashboard')}
+                    </Button>
+                  </Link>
+                </>
               )}
               
               <LanguageSwitcher />

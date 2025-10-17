@@ -29,7 +29,31 @@
     "home": "خانه",
     "lessons": "درس‌ها",
     "progress": "پیشرفت",
-    "achievements": "دستاوردها"
+    "achievements": "دستاوردها",
+    "dashboard": "داشبورد"
+  },
+  "dashboard": {
+    "title": "سفر یادگیری شما",
+    "subtitle": "پیشرفت و دستاوردهای خود را پیگیری کنید",
+    "backToLessons": "بازگشت به درس‌ها",
+    "totalXP": "کل امتیاز",
+    "currentStreak": "روزهای پیوسته",
+    "lessonsCompleted": "درس‌های تکمیل شده",
+    "timeSpent": "زمان صرف شده",
+    "days": "روز",
+    "keepItGoing": "ادامه دهید!",
+    "greatProgress": "پیشرفت عالی!",
+    "learningTime": "زمان یادگیری",
+    "levelProgress": "پیشرفت سطح",
+    "achievements": "دستاوردها",
+    "recentLessons": "درس‌های اخیر",
+    "strongSkills": "مهارت‌های قوی",
+    "areasToImprove": "نقاط قابل بهبود",
+    "noAchievements": "درس‌ها را تکمیل کنید تا دستاوردها را باز کنید!",
+    "noRecentLessons": "هنوز هیچ درسی تکمیل نشده است. اولین درس خود را شروع کنید!",
+    "noProgress": "پیشرفتی یافت نشد",
+    "startLearningPrompt": "برای پیگیری پیشرفت خود، یادگیری را شروع کنید",
+    "startLearning": "شروع یادگیری"
   },
   "userProgress": {
     "level": "سطح {{level}}",

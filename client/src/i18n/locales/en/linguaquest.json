@@ -29,7 +29,31 @@
     "home": "Home",
     "lessons": "Lessons",
     "progress": "Progress",
-    "achievements": "Achievements"
+    "achievements": "Achievements",
+    "dashboard": "Dashboard"
+  },
+  "dashboard": {
+    "title": "Your Learning Journey",
+    "subtitle": "Track your progress and achievements",
+    "backToLessons": "Back to Lessons",
+    "totalXP": "Total XP",
+    "currentStreak": "Current Streak",
+    "lessonsCompleted": "Lessons Completed",
+    "timeSpent": "Time Spent",
+    "days": "days",
+    "keepItGoing": "Keep it going!",
+    "greatProgress": "Great progress!",
+    "learningTime": "Learning time",
+    "levelProgress": "Level Progress",
+    "achievements": "Achievements",
+    "recentLessons": "Recent Lessons",
+    "strongSkills": "Strong Skills",
+    "areasToImprove": "Areas to Improve",
+    "noAchievements": "Complete lessons to unlock achievements!",
+    "noRecentLessons": "No lessons completed yet. Start your first lesson!",
+    "noProgress": "No Progress Found",
+    "startLearningPrompt": "Start learning to track your progress",
+    "startLearning": "Start Learning"
   },
   "userProgress": {
     "level": "Level {{level}}",
