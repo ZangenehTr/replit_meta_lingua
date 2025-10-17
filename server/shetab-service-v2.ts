@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { db } from './db';
 import { walletTransactions, paymentIdempotency, users } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 export interface ShetabConfig {
   merchantId: string;
@@ -175,21 +175,96 @@ export class ShetabPaymentServiceV2 {
       } catch (error: any) {
         // Check if this is a unique constraint violation
         if (error.code === '23505') { // PostgreSQL unique violation
-          console.warn(`Duplicate callback detected and ignored: ${callbackId}`);
-          
-          // Fetch existing record to return the already-processed transaction
+          // Fetch existing record to check its status
           const [existing] = await db.select()
             .from(paymentIdempotency)
             .where(eq(paymentIdempotency.callbackId, callbackId))
             .limit(1);
 
-          return {
-            success: true,
-            alreadyProcessed: true,
-            error: 'Callback already processed',
-          };
+          // Handle based on existing record status
+          if (existing && existing.status === 'processing') {
+            // Another callback is currently processing - check if stale
+            // Use updatedAt (not createdAt) so only ONE retry can detect staleness
+            const processingTimeMs = Date.now() - new Date(existing.updatedAt).getTime();
+            const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+            
+            if (processingTimeMs > STALE_THRESHOLD_MS) {
+              // ATOMIC STALE CLAIM: Use optimistic locking to ensure only ONE retry proceeds
+              // Update WHERE old updatedAt matches - if someone else claimed it, this returns 0 rows
+              const claimResult = await db.execute(sql`
+                UPDATE payment_idempotency
+                SET status = 'processing', updated_at = NOW()
+                WHERE id = ${existing.id}
+                  AND status = 'processing'
+                  AND updated_at = ${existing.updatedAt}
+                RETURNING *
+              `);
+
+              if (claimResult.rows.length === 0) {
+                // Someone else claimed it - we lost the race
+                console.warn(`Lost stale-claim race for callback: ${callbackId}`);
+                return {
+                  success: false,
+                  error: 'Callback claimed by another process',
+                  errorCode: 'PROCESSING_IN_PROGRESS',
+                };
+              }
+
+              // We won the race - we can retry
+              console.warn(`Stale callback claimed for retry: ${callbackId} (stuck for ${Math.round(processingTimeMs / 1000)}s)`);
+              idempotencyRecord = claimResult.rows[0];
+            } else {
+              // Still actively processing - return conflict to prevent double-credit
+              console.warn(`Callback already processing: ${callbackId} (started ${Math.round(processingTimeMs / 1000)}s ago)`);
+              return {
+                success: false,
+                error: 'Callback already being processed',
+                errorCode: 'PROCESSING_IN_PROGRESS',
+              };
+            }
+          } else if (existing && existing.status === 'failed') {
+            // ATOMIC FAILED CLAIM: Use optimistic locking to ensure only ONE retry proceeds
+            // Update WHERE status is still 'failed' - if someone else claimed it, this returns 0 rows
+            const claimResult = await db.execute(sql`
+              UPDATE payment_idempotency
+              SET status = 'processing', updated_at = NOW()
+              WHERE id = ${existing.id}
+                AND status = 'failed'
+              RETURNING *
+            `);
+
+            if (claimResult.rows.length === 0) {
+              // Someone else claimed it - we lost the race
+              console.warn(`Lost failed-claim race for callback: ${callbackId}`);
+              return {
+                success: false,
+                error: 'Callback claimed by another process',
+                errorCode: 'PROCESSING_IN_PROGRESS',
+              };
+            }
+
+            // We won the race - we can retry
+            console.warn(`Failed callback claimed for retry: ${callbackId}`);
+            idempotencyRecord = claimResult.rows[0];
+          } else if (existing && existing.status === 'completed') {
+            // Already successfully processed - safe to ignore
+            console.warn(`Duplicate callback ignored - already completed: ${callbackId}`);
+            return {
+              success: true,
+              alreadyProcessed: true,
+              error: 'Callback already processed successfully',
+            };
+          } else {
+            // Unexpected state
+            console.error(`Unexpected idempotency state for ${callbackId}:`, existing);
+            return {
+              success: false,
+              error: 'Unexpected callback state',
+            };
+          }
+        } else {
+          throw error; // Re-throw if it's not a duplicate
         }
-        throw error; // Re-throw if it's not a duplicate
       }
 
       // ========================================
@@ -225,8 +300,13 @@ export class ShetabPaymentServiceV2 {
       const finalStatus = verifyResponse.success ? 'completed' : 'failed';
 
       // ========================================
-      // STEP 5: Process Payment in Transaction
+      // STEP 5: Process Payment + Credit Wallet in SINGLE TRANSACTION
+      // This ensures atomicity - either both succeed or both fail
       // ========================================
+      // Store the updatedAt timestamp for ownership verification
+      // Handle both camelCase (from Drizzle) and snake_case (from raw SQL)
+      const claimedUpdatedAt = (idempotencyRecord as any).updatedAt ?? (idempotencyRecord as any).updated_at;
+
       await db.transaction(async (tx) => {
         // Update wallet transaction
         await tx.update(walletTransactions)
@@ -240,23 +320,49 @@ export class ShetabPaymentServiceV2 {
           })
           .where(eq(walletTransactions.id, walletTxn.id));
 
-        // Credit wallet balance ONLY if payment was successful
+        // Credit wallet balance ATOMICALLY (inside same transaction)
         if (verifyResponse.success) {
-          // Use atomic SQL to prevent race conditions
-          await tx.execute(`
+          // Lock user row
+          const userResult = await tx.execute(sql`
+            SELECT id, wallet_balance 
+            FROM users 
+            WHERE id = ${walletTxn.userId} 
+            FOR UPDATE
+          `);
+
+          const user = userResult.rows[0];
+
+          if (!user) {
+            throw new Error('USER_NOT_FOUND');
+          }
+
+          const currentBalance = Number(user.wallet_balance) || 0;
+          const newBalance = currentBalance + parseInt(walletTxn.amount);
+
+          // Update wallet balance
+          await tx.execute(sql`
             UPDATE users 
-            SET wallet_balance = wallet_balance + ${parseInt(walletTxn.amount)}
+            SET wallet_balance = ${newBalance}, updated_at = NOW()
             WHERE id = ${walletTxn.userId}
           `);
         }
 
-        // Mark idempotency record as completed
-        await tx.update(paymentIdempotency)
-          .set({
-            status: finalStatus,
-            processedAt: new Date(),
-          })
-          .where(eq(paymentIdempotency.id, idempotencyRecord.id));
+        // OWNERSHIP CHECK: Mark idempotency as completed ONLY if we still own it
+        // This prevents the original handler from finishing after being reclaimed
+        const ownershipResult = await tx.execute(sql`
+          UPDATE payment_idempotency
+          SET status = ${finalStatus}, processed_at = NOW()
+          WHERE id = ${idempotencyRecord.id}
+            AND status = 'processing'
+            AND updated_at = ${claimedUpdatedAt}
+          RETURNING *
+        `);
+
+        if (ownershipResult.rows.length === 0) {
+          // We lost ownership - another handler reclaimed this callback
+          console.error(`Lost ownership of callback ${callbackId} - aborting to prevent double-credit`);
+          throw new Error('OWNERSHIP_LOST');
+        }
       });
 
       return {
@@ -266,14 +372,31 @@ export class ShetabPaymentServiceV2 {
     } catch (error) {
       console.error('Shetab callback handling error:', error);
       
-      // Try to mark idempotency record as failed
+      // Special handling for ownership loss - don't overwrite completed status
+      if (error instanceof Error && error.message === 'OWNERSHIP_LOST') {
+        console.warn(`Handler lost ownership of callback ${callbackId} - another process completed it`);
+        return {
+          success: false,
+          error: 'Callback claimed by another process',
+          errorCode: 'OWNERSHIP_LOST',
+        };
+      }
+
+      // For other errors, try to mark idempotency record as failed
+      // ONLY if it's still in processing state (don't overwrite completed status)
       try {
-        await db.update(paymentIdempotency)
-          .set({ 
-            status: 'failed',
-            processedAt: new Date(),
-          })
-          .where(eq(paymentIdempotency.callbackId, callbackId));
+        // Conditional update - only mark failed if we still own it
+        const failResult = await db.execute(sql`
+          UPDATE payment_idempotency
+          SET status = 'failed', processed_at = NOW()
+          WHERE callback_id = ${callbackId}
+            AND status = 'processing'
+          RETURNING *
+        `);
+
+        if (failResult.rows.length === 0) {
+          console.warn(`Could not mark callback ${callbackId} as failed - already completed by another process`);
+        }
       } catch (updateError) {
         console.error('Failed to update idempotency record:', updateError);
       }
