@@ -637,6 +637,189 @@ export class LinguaQuestService {
       };
     }
   }
+
+  // ====================================================================
+  // LEADERBOARD SYSTEM
+  // ====================================================================
+
+  /**
+   * Get global leaderboard (all users across all levels)
+   */
+  async getGlobalLeaderboard(limit: number = 50): Promise<any[]> {
+    try {
+      const leaderboard = await db
+        .select({
+          sessionToken: guestProgressTracking.sessionToken,
+          totalXp: guestProgressTracking.totalXp,
+          currentLevel: guestProgressTracking.currentLevel,
+          currentStreak: guestProgressTracking.currentStreak,
+          completedLessons: guestProgressTracking.completedLessons,
+          lastActiveAt: guestProgressTracking.lastActiveAt
+        })
+        .from(guestProgressTracking)
+        .orderBy(desc(guestProgressTracking.totalXp), desc(guestProgressTracking.currentStreak))
+        .limit(limit);
+
+      return leaderboard.map((entry, index) => ({
+        rank: index + 1,
+        sessionToken: entry.sessionToken,
+        totalXp: entry.totalXp || 0,
+        level: entry.currentLevel || 1,
+        streak: entry.currentStreak || 0,
+        lessonsCompleted: (entry.completedLessons as number[])?.length || 0,
+        lastActive: entry.lastActiveAt
+      }));
+    } catch (error) {
+      console.error('Error getting global leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get level-specific leaderboard (filtered by CEFR level)
+   */
+  async getLevelLeaderboard(level: string, limit: number = 50): Promise<any[]> {
+    try {
+      // Map CEFR level to difficulty (A1/A2 -> beginner, B1/B2 -> intermediate, C1/C2 -> advanced)
+      const difficultyMap: Record<string, string> = {
+        'A1': 'beginner',
+        'A2': 'beginner', 
+        'B1': 'intermediate',
+        'B2': 'intermediate',
+        'C1': 'advanced',
+        'C2': 'advanced'
+      };
+
+      const difficulty = difficultyMap[level] || 'beginner';
+
+      const leaderboard = await db
+        .select({
+          sessionToken: guestProgressTracking.sessionToken,
+          totalXp: guestProgressTracking.totalXp,
+          currentLevel: guestProgressTracking.currentLevel,
+          currentStreak: guestProgressTracking.currentStreak,
+          completedLessons: guestProgressTracking.completedLessons,
+          preferredDifficulty: guestProgressTracking.preferredDifficulty
+        })
+        .from(guestProgressTracking)
+        .where(eq(guestProgressTracking.preferredDifficulty, difficulty))
+        .orderBy(desc(guestProgressTracking.totalXp), desc(guestProgressTracking.currentStreak))
+        .limit(limit);
+
+      return leaderboard.map((entry, index) => ({
+        rank: index + 1,
+        sessionToken: entry.sessionToken,
+        totalXp: entry.totalXp || 0,
+        level: entry.currentLevel || 1,
+        streak: entry.currentStreak || 0,
+        lessonsCompleted: (entry.completedLessons as number[])?.length || 0,
+        difficulty: entry.preferredDifficulty
+      }));
+    } catch (error) {
+      console.error('Error getting level leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get nearby leaderboard (users around your rank - competitive comparison)
+   */
+  async getNearbyLeaderboard(sessionToken: string, range: number = 5): Promise<any[]> {
+    try {
+      // First get user's rank
+      const rankData = await this.getUserRank(sessionToken);
+      if (!rankData || rankData.rank === 0) {
+        return [];
+      }
+
+      const userRank = rankData.rank;
+      const startRank = Math.max(1, userRank - range);
+      const endRank = userRank + range;
+
+      // Get all users sorted by XP
+      const allUsers = await db
+        .select({
+          sessionToken: guestProgressTracking.sessionToken,
+          totalXp: guestProgressTracking.totalXp,
+          currentLevel: guestProgressTracking.currentLevel,
+          currentStreak: guestProgressTracking.currentStreak,
+          completedLessons: guestProgressTracking.completedLessons
+        })
+        .from(guestProgressTracking)
+        .orderBy(desc(guestProgressTracking.totalXp), desc(guestProgressTracking.currentStreak));
+
+      // Slice to get nearby users
+      const nearbyUsers = allUsers.slice(startRank - 1, endRank);
+
+      return nearbyUsers.map((entry, index) => ({
+        rank: startRank + index,
+        sessionToken: entry.sessionToken,
+        totalXp: entry.totalXp || 0,
+        level: entry.currentLevel || 1,
+        streak: entry.currentStreak || 0,
+        lessonsCompleted: (entry.completedLessons as number[])?.length || 0,
+        isCurrentUser: entry.sessionToken === sessionToken
+      }));
+    } catch (error) {
+      console.error('Error getting nearby leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get user's rank on the global leaderboard
+   */
+  async getUserRank(sessionToken: string): Promise<any> {
+    try {
+      const userProgress = await db
+        .select()
+        .from(guestProgressTracking)
+        .where(eq(guestProgressTracking.sessionToken, sessionToken))
+        .limit(1);
+
+      if (!userProgress || userProgress.length === 0) {
+        return {
+          rank: 0,
+          totalUsers: 0,
+          percentile: 0,
+          message: 'User not found'
+        };
+      }
+
+      const user = userProgress[0];
+
+      // Count users with higher XP
+      const higherRanked = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(guestProgressTracking)
+        .where(sql`${guestProgressTracking.totalXp} > ${user.totalXp || 0}`);
+
+      const totalUsers = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(guestProgressTracking);
+
+      const rank = higherRanked[0].count + 1;
+      const total = totalUsers[0].count;
+      const percentile = total > 0 ? Math.round((1 - (rank / total)) * 100) : 0;
+
+      return {
+        rank,
+        totalUsers: total,
+        percentile,
+        userXp: user.totalXp || 0,
+        userLevel: user.currentLevel || 1,
+        userStreak: user.currentStreak || 0
+      };
+    } catch (error) {
+      console.error('Error getting user rank:', error);
+      return {
+        rank: 0,
+        totalUsers: 0,
+        percentile: 0,
+        error: 'Failed to get user rank'
+      };
+    }
+  }
 }
 
 export const linguaQuestService = new LinguaQuestService();

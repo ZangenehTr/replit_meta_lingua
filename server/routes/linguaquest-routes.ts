@@ -461,6 +461,112 @@ export function registerLinguaQuestRoutes(app: Express) {
     }
   });
 
+  // ====================================================================
+  // LEADERBOARD SYSTEM
+  // ====================================================================
+
+  /**
+   * Get global leaderboard (all users, all levels)
+   * GET /api/linguaquest/leaderboard/global
+   */
+  app.get('/api/linguaquest/leaderboard/global', async (req, res) => {
+    try {
+      const { limit = '50' } = req.query;
+      
+      const leaderboard = await linguaQuestService.getGlobalLeaderboard(parseInt(limit as string));
+      
+      res.json({ 
+        success: true, 
+        leaderboard,
+        message: 'Global leaderboard retrieved successfully'
+      });
+    } catch (error) {
+      console.error('Error getting global leaderboard:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get global leaderboard' 
+      });
+    }
+  });
+
+  /**
+   * Get level-specific leaderboard (filtered by CEFR level)
+   * GET /api/linguaquest/leaderboard/level/:level
+   */
+  app.get('/api/linguaquest/leaderboard/level/:level', async (req, res) => {
+    try {
+      const { level } = req.params;
+      const { limit = '50' } = req.query;
+      
+      const leaderboard = await linguaQuestService.getLevelLeaderboard(
+        level.toUpperCase(),
+        parseInt(limit as string)
+      );
+      
+      res.json({ 
+        success: true, 
+        leaderboard,
+        level: level.toUpperCase(),
+        message: `${level.toUpperCase()} leaderboard retrieved successfully`
+      });
+    } catch (error) {
+      console.error('Error getting level leaderboard:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get level leaderboard' 
+      });
+    }
+  });
+
+  /**
+   * Get nearby leaderboard (users around your rank - "friends" equivalent for guest system)
+   * GET /api/linguaquest/leaderboard/nearby/:sessionToken
+   */
+  app.get('/api/linguaquest/leaderboard/nearby/:sessionToken', async (req, res) => {
+    try {
+      const { sessionToken } = req.params;
+      const { range = '5' } = req.query; // Show +/- N ranks around user
+      
+      const nearby = await linguaQuestService.getNearbyLeaderboard(sessionToken, parseInt(range as string));
+      
+      res.json({ 
+        success: true, 
+        leaderboard: nearby,
+        message: 'Nearby leaderboard retrieved successfully'
+      });
+    } catch (error) {
+      console.error('Error getting nearby leaderboard:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get nearby leaderboard' 
+      });
+    }
+  });
+
+  /**
+   * Get user rank and position on leaderboard
+   * GET /api/linguaquest/leaderboard/rank/:sessionToken
+   */
+  app.get('/api/linguaquest/leaderboard/rank/:sessionToken', async (req, res) => {
+    try {
+      const { sessionToken } = req.params;
+      
+      const rank = await linguaQuestService.getUserRank(sessionToken);
+      
+      res.json({ 
+        success: true, 
+        rank,
+        message: 'User rank retrieved successfully'
+      });
+    } catch (error) {
+      console.error('Error getting user rank:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get user rank' 
+      });
+    }
+  });
+
   /**
    * Health check endpoint for LinguaQuest service
    * GET /api/linguaquest/health
@@ -477,7 +583,8 @@ export function registerLinguaQuestRoutes(app: Express) {
         'Voice Exercises',
         'Achievement System',
         'Conversion Tracking',
-        'Analytics'
+        'Analytics',
+        'Leaderboards'
       ]
     });
   });
