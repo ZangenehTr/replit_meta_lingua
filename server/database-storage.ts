@@ -1818,11 +1818,38 @@ export class DatabaseStorage implements IStorage {
     totalResponses: number;
   } | undefined> {
     try {
-      // For now, return mock data - will integrate with actual IRT tables later
+      // Calculate real IRT ability from student test/assessment responses
+      const assessmentResults = await db.select({
+        correct: skillAssessments.passedLevel,
+        difficulty: skillAssessments.level,
+        count: sql<number>`COUNT(*)`
+      })
+      .from(skillAssessments)
+      .where(eq(skillAssessments.studentId, studentId))
+      .groupBy(skillAssessments.passedLevel, skillAssessments.level);
+      
+      if (assessmentResults.length === 0) {
+        return undefined; // No data available for this student
+      }
+      
+      // Calculate theta (ability) using simple IRT approximation
+      const correctCount = assessmentResults.filter(r => r.correct).reduce((sum, r) => sum + (r.count || 0), 0);
+      const totalCount = assessmentResults.reduce((sum, r) => sum + (r.count || 0), 0);
+      const rawAccuracy = totalCount > 0 ? correctCount / totalCount : 0.5;
+      
+      // Clamp accuracy to safe range [0.01, 0.99] to prevent -Infinity/+Infinity
+      // This preserves sign: low ability → negative theta, high ability → positive theta
+      const accuracy = Math.max(0.01, Math.min(0.99, rawAccuracy));
+      
+      // Convert accuracy to theta using logit transformation (simplified IRT)
+      // theta ≈ -2.2 for 10% accuracy, 0 for 50%, +2.2 for 90%
+      const theta = Math.log(accuracy / (1 - accuracy));
+      const standardError = 1 / Math.sqrt(totalCount || 1); // SE decreases with more responses
+      
       return {
-        theta: 0,
-        standardError: 1,
-        totalResponses: 0
+        theta, // Always finite due to clamping
+        standardError,
+        totalResponses: totalCount
       };
     } catch (error) {
       console.error('Error getting student IRT ability:', error);
@@ -10190,31 +10217,8 @@ export class DatabaseStorage implements IStorage {
       }));
     } catch (error) {
       console.error('Error fetching recent observations:', error);
-      // Return mock data for development
-      return [
-        {
-          id: 1,
-          teacherName: 'Sarah Johnson',
-          sessionDate: new Date().toISOString().split('T')[0],
-          overallScore: 4.2,
-          observationType: 'live_online',
-          status: 'completed',
-          followUpRequired: false,
-          strengths: 'Excellent engagement with students',
-          improvements: 'Could improve time management'
-        },
-        {
-          id: 2,
-          teacherName: 'Ahmad Nazemi',
-          sessionDate: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-          overallScore: 4.8,
-          observationType: 'live_in_person',
-          status: 'follow_up_required',
-          followUpRequired: true,
-          strengths: 'Outstanding lesson preparation',
-          improvements: 'Technical issues with equipment'
-        }
-      ];
+      // Return empty array on error (no mock data)
+      return [];
     }
   }
 
@@ -10249,29 +10253,8 @@ export class DatabaseStorage implements IStorage {
       }));
     } catch (error) {
       console.error('Error fetching teacher performance:', error);
-      // Return mock data for development
-      return [
-        {
-          teacherId: 1,
-          teacherName: 'Sarah Johnson',
-          averageScore: 4.2,
-          totalObservations: 8,
-          lastObservationDate: new Date().toISOString(),
-          trend: 'improving',
-          strengths: ['Student engagement', 'Clear explanations'],
-          improvements: ['Time management', 'Use of technology']
-        },
-        {
-          teacherId: 2,
-          teacherName: 'Ahmad Nazemi',
-          averageScore: 4.8,
-          totalObservations: 12,
-          lastObservationDate: new Date(Date.now() - 86400000).toISOString(),
-          trend: 'stable',
-          strengths: ['Excellent preparation', 'Cultural sensitivity'],
-          improvements: ['Student participation', 'Feedback delivery']
-        }
-      ];
+      // Return empty array on error (no mock data)
+      return [];
     }
   }
 
