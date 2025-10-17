@@ -2789,10 +2789,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Recent activities (empty array - real data would come from activity log)
       const recentActivities: any[] = [];
       
+      // Fetch unified testing analytics
+      let testingStats = {
+        totalQuestions: 0,
+        totalSessions: 0,
+        questionTypeDistribution: {} as Record<string, number>
+      };
+      
+      try {
+        const unifiedStorage = req.app.get('unifiedTestingStorage');
+        if (unifiedStorage) {
+          const analytics = await unifiedStorage.getSystemAnalytics();
+          testingStats = {
+            totalQuestions: analytics.totalQuestions,
+            totalSessions: analytics.totalSessions,
+            questionTypeDistribution: analytics.questionsByType || {}
+          };
+        }
+      } catch (error) {
+        console.log('Note: Unified testing storage not available:', error);
+      }
+      
       // Platform metrics
       const platformMetrics = {
         callernMinutes: 0,
-        totalTests: 0,
+        totalTests: testingStats.totalSessions,
+        totalQuestions: testingStats.totalQuestions,
+        questionTypeDistribution: testingStats.questionTypeDistribution,
         walletTransactions: allPayments.filter(p => p.status === 'completed').length,
         smssSent: 0,
         aiRequests: 0

@@ -88,6 +88,8 @@ interface AdminStats {
   platformMetrics: {
     callernMinutes: number;
     totalTests: number;
+    totalQuestions?: number;
+    questionTypeDistribution?: Record<string, number>;
     walletTransactions: number;
     smssSent: number;
     aiRequests: number;
@@ -497,6 +499,55 @@ export const AdminDashboard = () => {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Question Bank Statistics - NEW */}
+        {stats?.platformMetrics?.questionTypeDistribution && Object.keys(stats.platformMetrics.questionTypeDistribution).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+          >
+            <Card className="shadow-xl">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-indigo-500" />
+                    {t('admin:questionBankStatistics', 'آمار بانک سوالات')}
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {stats.platformMetrics.totalQuestions || 0} {t('admin:totalQuestions', 'سوال')}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-64 overflow-y-auto">
+                  {Object.entries(stats.platformMetrics.questionTypeDistribution)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([type, count], index) => {
+                      const colors = [
+                        'bg-blue-50 text-blue-700 border-blue-200',
+                        'bg-purple-50 text-purple-700 border-purple-200',
+                        'bg-green-50 text-green-700 border-green-200',
+                        'bg-orange-50 text-orange-700 border-orange-200',
+                        'bg-pink-50 text-pink-700 border-pink-200'
+                      ];
+                      const colorClass = colors[index % colors.length];
+                      
+                      return (
+                        <div key={type} className={`text-center p-2 rounded-lg border ${colorClass}`}>
+                          <p className="text-lg font-bold">{count}</p>
+                          <p className="text-xs leading-tight mt-1" title={type}>
+                            {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).substring(0, 20)}
+                            {type.length > 20 && '...'}
+                          </p>
+                        </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Course Distribution & Teacher Performance */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
