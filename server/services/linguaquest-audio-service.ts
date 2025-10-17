@@ -160,7 +160,7 @@ export class LinguaquestAudioService {
         .set({
           usageCount: (existing[0].usageCount || 0) + 1,
           updatedAt: new Date()
-        })
+        } as any)
         .where(eq(linguaquestAudioAssets.id, existing[0].id));
 
       return existing[0];
@@ -181,7 +181,7 @@ export class LinguaquestAudioService {
         cefrLevel: data.cefrLevel,
         gameType: data.gameType,
         usageCount: 1
-      })
+      } as any)
       .returning();
 
     return newAsset;
@@ -197,7 +197,7 @@ export class LinguaquestAudioService {
         audioHash: audioHash,
         hasAudio: true,
         updatedAt: new Date()
-      })
+      } as any)
       .where(eq(linguaquestContentBank.id, contentId));
   }
 

@@ -9,7 +9,7 @@ const router = Router();
 
 // All audio generation endpoints require authentication and admin permissions
 router.use(authenticate);
-router.use(authorizePermission('admin_dashboard'));
+router.use(authorizePermission('linguaquest_audio', 'manage'));
 
 /**
  * Trigger batch audio generation
