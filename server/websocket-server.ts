@@ -13,6 +13,7 @@ interface CallRoom {
   startTime: Date;
   participants: Set<string>;
   minutesUsed?: number;
+  lastActivity?: Date; // Track activity for abandoned room detection
 }
 
 interface TeacherSocket {
@@ -36,12 +37,19 @@ export class CallernWebSocketServer {
   private studentSockets: Map<number, string> = new Map();
   private userSockets: Map<string, UserSocket> = new Map(); // socketId -> user info
   private supervisorHandlers: CallernSupervisorHandlers;
+  private roomTimers: Map<string, NodeJS.Timeout> = new Map();
+  private roomCleanupTimers: Map<string, NodeJS.Timeout> = new Map();
+  
+  // Memory leak prevention constants
+  private readonly ROOM_MAX_DURATION = 60 * 60 * 1000; // 60 minutes max call duration
+  private readonly ABANDONED_ROOM_TIMEOUT = 5 * 60 * 1000; // 5 minutes no activity
+  private readonly MEMORY_WARNING_THRESHOLD = 0.8; // 80% of heap
+  private readonly MEMORY_CRITICAL_THRESHOLD = 0.9; // 90% of heap
   
   // Public method to get connected teachers
   public getConnectedTeachers(): number[] {
     return Array.from(this.teacherSockets.keys());
   }
-  private roomTimers: Map<string, NodeJS.Timeout> = new Map();
 
   constructor(httpServer: Server) {
     this.io = new SocketIOServer(httpServer, {
@@ -60,7 +68,12 @@ export class CallernWebSocketServer {
     this.clearAllTeachersOnlineStatus();
     
     this.setupEventHandlers();
-    console.log('Callern WebSocket server with AI Supervisor initialized');
+    
+    // Start monitoring systems
+    this.startAbandonedRoomMonitor();
+    this.startMemoryMonitor();
+    
+    console.log('Callern WebSocket server with AI Supervisor and memory leak protection initialized');
   }
   
   private async clearAllTeachersOnlineStatus() {
@@ -189,23 +202,17 @@ export class CallernWebSocketServer {
           currentRoom: roomId
         });
         
-        // Create room if it doesn't exist - this is temporary room for join
+        // Create room if it doesn't exist - use safeguarded creation
         if (!this.activeRooms.has(roomId)) {
-          // Create a temporary room structure
-          const tempRoom: any = {
-            roomId: roomId,
-            studentId: role === 'student' ? userId : 0,
-            teacherId: role === 'teacher' ? userId : 0,
-            packageId: 0,
-            startTime: new Date(),
-            participants: new Set()
-          };
-          this.activeRooms.set(roomId, tempRoom);
+          const studentId = role === 'student' ? userId : 0;
+          const teacherId = role === 'teacher' ? userId : 0;
+          this.createRoomWithSafeguards(roomId, studentId, teacherId, 0);
         }
         
         // Add to room participants
         const room = this.activeRooms.get(roomId)!;
         room.participants.add(socket.id);
+        room.lastActivity = new Date(); // Update activity
         
         // Notify other participants that someone joined
         socket.to(roomId).emit('user-joined', {
@@ -239,6 +246,9 @@ export class CallernWebSocketServer {
           return;
         }
         
+        // Update room activity
+        this.updateRoomActivity(roomId);
+        
         console.log(`[SIGNAL] From ${socket.id} signal type: ${signal?.type} in room ${roomId}`);
         
         // If 'to' is specified, send to specific peer
@@ -259,6 +269,7 @@ export class CallernWebSocketServer {
       // Handle WebRTC offer
       socket.on('offer', (data) => {
         const { roomId, offer, to } = data;
+        this.updateRoomActivity(roomId);
         console.log(`[OFFER] From ${socket.id} in room ${roomId} to ${to}`);
         
         if (to && this.io.sockets.sockets.has(to)) {
@@ -276,6 +287,7 @@ export class CallernWebSocketServer {
       // Handle WebRTC answer
       socket.on('answer', (data) => {
         const { roomId, answer, to } = data;
+        this.updateRoomActivity(roomId);
         console.log(`[ANSWER] From ${socket.id} in room ${roomId} to ${to}`);
         
         if (to && this.io.sockets.sockets.has(to)) {
@@ -293,6 +305,9 @@ export class CallernWebSocketServer {
       // Handle ICE candidates
       socket.on('ice-candidate', (data) => {
         const { roomId, candidate, to } = data;
+        if (roomId) {
+          this.updateRoomActivity(roomId);
+        }
         console.log(`[ICE] From ${socket.id} in room ${roomId}`);
         
         if (to && this.io.sockets.sockets.has(to)) {
@@ -428,7 +443,7 @@ export class CallernWebSocketServer {
               if (minutesElapsed > 30) {
                 // If the call is older than 30 minutes, clean it up
                 console.log(`Cleaning up stale call: ${teacherSocket.currentCall}`);
-                this.activeRooms.delete(teacherSocket.currentCall);
+                this.cleanupRoom(teacherSocket.currentCall, 'stale_call_cleanup');
                 teacherSocket.currentCall = undefined;
                 teacherSocket.isAvailable = true;
               }
@@ -445,16 +460,12 @@ export class CallernWebSocketServer {
             }
           }
 
-          // Create room
-          const room: CallRoom = {
-            roomId,
-            studentId,
-            teacherId: assignedTeacherId,
-            packageId,
-            startTime: new Date(),
-            participants: new Set([socket.id]),
-          };
-          this.activeRooms.set(roomId, room);
+          // Create room with safeguards
+          this.createRoomWithSafeguards(roomId, studentId, assignedTeacherId, packageId);
+          
+          // Add student socket to participants
+          const room = this.activeRooms.get(roomId)!;
+          room.participants.add(socket.id);
 
           // Notify teacher
           const teacher = this.teacherSockets.get(assignedTeacherId);
@@ -512,7 +523,7 @@ export class CallernWebSocketServer {
             if (oldRoom) {
               oldRoom.participants.delete(teacherSocket.socketId);
               if (oldRoom.participants.size === 0) {
-                this.activeRooms.delete(teacherSocket.currentCall);
+                this.cleanupRoom(teacherSocket.currentCall, 'teacher_switching_rooms');
               }
             }
           }
@@ -563,8 +574,8 @@ export class CallernWebSocketServer {
           });
         }
 
-        // Clean up room
-        this.activeRooms.delete(roomId);
+        // Clean up room with all timers
+        this.cleanupRoom(roomId, `teacher_rejected: ${reason || 'unspecified'}`);
         
         // Update call status
         await this.updateCallStatus(roomId, 'rejected');
@@ -592,8 +603,8 @@ export class CallernWebSocketServer {
           });
         }
 
-        // Clean up room
-        this.activeRooms.delete(roomId);
+        // Clean up room with all timers
+        this.cleanupRoom(roomId, `call_rejected: ${reason || 'unspecified'}`);
         
         // Update call status
         await this.updateCallStatus(roomId, 'rejected');
@@ -721,6 +732,18 @@ export class CallernWebSocketServer {
       socket.on('disconnect', async () => {
         console.log(`Socket disconnected: ${socket.id}`);
         
+        // Find and clean up rooms this socket was in
+        this.activeRooms.forEach((room, roomId) => {
+          if (room.participants.has(socket.id)) {
+            room.participants.delete(socket.id);
+            
+            // If room is now empty, cleanup
+            if (room.participants.size === 0) {
+              this.cleanupRoom(roomId, 'all_participants_disconnected');
+            }
+          }
+        });
+        
         // Find and clean up user's resources
         for (const [teacherId, teacherSocket] of this.teacherSockets) {
           if (teacherSocket.socketId === socket.id) {
@@ -756,6 +779,9 @@ export class CallernWebSocketServer {
             break;
           }
         }
+
+        // Clean up user socket info
+        this.userSockets.delete(socket.id);
       });
     });
   }
@@ -1010,8 +1036,8 @@ export class CallernWebSocketServer {
         await this.updateTeacherAvailability(room.teacherId, true);
       }
 
-      // Clean up room
-      this.activeRooms.delete(roomId);
+      // Clean up room with all timers
+      this.cleanupRoom(roomId, reason || 'call_ended');
       
       console.log(`Call ended - Room: ${roomId}, Duration: ${minutes} minutes, Reason: ${reason}`);
     } catch (error) {
@@ -1153,5 +1179,148 @@ export class CallernWebSocketServer {
 
   public getOnlineStudents(): number {
     return this.studentSockets.size;
+  }
+
+  /**
+   * Update room activity timestamp
+   */
+  private updateRoomActivity(roomId: string) {
+    const room = this.activeRooms.get(roomId);
+    if (room) {
+      room.lastActivity = new Date();
+    }
+  }
+
+  /**
+   * Clean up room and all associated resources
+   */
+  private cleanupRoom(roomId: string, reason: string) {
+    const room = this.activeRooms.get(roomId);
+    if (!room) {
+      console.log(`Room ${roomId} already cleaned up`);
+      return;
+    }
+
+    console.log(`🧹 Cleaning up room ${roomId} - Reason: ${reason}`);
+
+    // Clear max duration timer
+    const maxTimer = this.roomCleanupTimers.get(roomId);
+    if (maxTimer) {
+      clearTimeout(maxTimer);
+      this.roomCleanupTimers.delete(roomId);
+    }
+
+    // Clear any other timers
+    const roomTimer = this.roomTimers.get(roomId);
+    if (roomTimer) {
+      clearTimeout(roomTimer);
+      this.roomTimers.delete(roomId);
+    }
+
+    // Notify participants
+    this.io.to(roomId).emit('room-closed', {
+      roomId,
+      reason,
+    });
+
+    // Remove from active rooms
+    this.activeRooms.delete(roomId);
+
+    console.log(`✅ Room cleaned up: ${roomId} (Total active rooms: ${this.activeRooms.size})`);
+  }
+
+  /**
+   * Create room with automatic cleanup safeguards
+   */
+  private createRoomWithSafeguards(roomId: string, studentId: number, teacherId: number, packageId: number) {
+    const room: CallRoom = {
+      roomId,
+      studentId,
+      teacherId,
+      packageId,
+      startTime: new Date(),
+      participants: new Set<string>(),
+      minutesUsed: 0,
+      lastActivity: new Date(),
+    };
+
+    this.activeRooms.set(roomId, room);
+
+    // Safeguard 1: Max duration timeout (60 minutes)
+    const maxDurationTimer = setTimeout(() => {
+      console.warn(`⚠️  Room ${roomId} exceeded max duration (60min), forcing cleanup`);
+      this.cleanupRoom(roomId, 'max_duration_exceeded');
+    }, this.ROOM_MAX_DURATION);
+
+    this.roomCleanupTimers.set(roomId, maxDurationTimer);
+
+    console.log(`✅ Room created with safeguards: ${roomId} (Total active rooms: ${this.activeRooms.size})`);
+
+    // Monitor room count
+    if (this.activeRooms.size > 100) {
+      console.error(`🚨 HIGH MEMORY: ${this.activeRooms.size} active rooms`);
+    }
+  }
+
+  /**
+   * Start abandoned room monitor (runs every minute)
+   */
+  private startAbandonedRoomMonitor() {
+    setInterval(() => {
+      const now = new Date();
+      const abandonedRooms: string[] = [];
+
+      // Find rooms with no activity for > 5 minutes
+      this.activeRooms.forEach((room, roomId) => {
+        if (room.lastActivity) {
+          const inactiveMs = now.getTime() - room.lastActivity.getTime();
+          if (inactiveMs > this.ABANDONED_ROOM_TIMEOUT) {
+            abandonedRooms.push(roomId);
+          }
+        }
+
+        // Also check for rooms with no participants
+        if (room.participants.size === 0) {
+          abandonedRooms.push(roomId);
+        }
+      });
+
+      if (abandonedRooms.length > 0) {
+        console.warn(`⚠️  Cleaning ${abandonedRooms.length} abandoned rooms`);
+        abandonedRooms.forEach(roomId => {
+          this.cleanupRoom(roomId, 'abandoned_inactive');
+        });
+      }
+
+      // Log stats every minute
+      const roomCount = this.activeRooms.size;
+      const timerCount = this.roomTimers.size + this.roomCleanupTimers.size;
+      console.log(`📊 CallerN stats: ${roomCount} active rooms, ${timerCount} timers`);
+    }, 60 * 1000); // Check every minute
+  }
+
+  /**
+   * Start memory monitor (runs every minute)
+   */
+  private startMemoryMonitor() {
+    setInterval(() => {
+      const usage = process.memoryUsage();
+      const heapUsedPercent = usage.heapUsed / usage.heapTotal;
+
+      if (heapUsedPercent > this.MEMORY_CRITICAL_THRESHOLD) {
+        console.error(`🚨 CRITICAL MEMORY: ${(heapUsedPercent * 100).toFixed(1)}% heap used`);
+        console.error(`   Heap: ${(usage.heapUsed / 1024 / 1024).toFixed(2)} MB / ${(usage.heapTotal / 1024 / 1024).toFixed(2)} MB`);
+        console.error(`   Active rooms: ${this.activeRooms.size}`);
+        console.error(`   Active timers: ${this.roomTimers.size + this.roomCleanupTimers.size}`);
+
+        // Emergency: Force garbage collection if available
+        if (global.gc) {
+          console.log('🗑️  Forcing garbage collection');
+          global.gc();
+        }
+      } else if (heapUsedPercent > this.MEMORY_WARNING_THRESHOLD) {
+        console.warn(`⚠️  HIGH MEMORY: ${(heapUsedPercent * 100).toFixed(1)}% heap used`);
+      }
+    }, 60 * 1000); // Check every minute
   }
 }
