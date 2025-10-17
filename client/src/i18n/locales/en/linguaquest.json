@@ -213,5 +213,31 @@
     "currentLevel": "Current Level",
     "strongSkills": "Strong Skills",
     "weakSkills": "Areas to Improve"
+  },
+  "feedback": {
+    "title": "How was this lesson?",
+    "description": "Your feedback helps us improve the learning experience",
+    "rating": "Your Rating",
+    "difficulty": "Difficulty Level",
+    "tooEasy": "Too Easy",
+    "justRight": "Just Right",
+    "tooHard": "Too Hard",
+    "helpful": "Was this lesson helpful?",
+    "yes": "Yes",
+    "no": "No",
+    "comments": "Comments (Optional)",
+    "commentsPlaceholder": "Share your thoughts about this lesson...",
+    "characters": "characters",
+    "cancel": "Cancel",
+    "submit": "Submit Feedback",
+    "submitting": "Submitting...",
+    "submitted": "Feedback Submitted",
+    "thankYou": "Thank you for your feedback!",
+    "error": "Error",
+    "submitError": "Failed to submit feedback",
+    "ratingRequired": "Rating Required",
+    "pleaseRate": "Please select a star rating",
+    "averageRating": "Average Rating",
+    "reviews": "reviews"
   }
 }

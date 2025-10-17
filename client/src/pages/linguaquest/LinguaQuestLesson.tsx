@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Three3DLesson } from "@/components/3d-lessons/Three3DLesson";
 import { GameStepRenderer } from "@/components/linguaquest/GameStepRenderer";
+import { LessonFeedbackModal } from "@/components/linguaquest/LessonFeedbackModal";
 import { guestProgress, type GuestProgressData } from "@/lib/guest-progress";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useToast } from "@/hooks/use-toast";
@@ -65,6 +66,11 @@ export function LinguaQuestLesson() {
   const [stepScores, setStepScores] = useState<Record<number, number>>({});
   const [totalScore, setTotalScore] = useState(0);
   const [stepKey, setStepKey] = useState(0); // Force re-render for retry
+  
+  // Feedback modal state
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [lessonStartTime, setLessonStartTime] = useState<number>(Date.now());
+  const [completionTimeSeconds, setCompletionTimeSeconds] = useState<number>(0);
 
   useEffect(() => {
     loadLesson();
@@ -81,6 +87,29 @@ export function LinguaQuestLesson() {
       if (!lessonId) {
         setLocation("/linguaquest");
         return;
+      }
+
+      // Ensure session token exists for feedback tracking
+      let sessionToken = localStorage.getItem('linguaquest_session_token');
+      if (!sessionToken) {
+        // Create a guest session if one doesn't exist
+        const sessionResponse = await fetch('/api/linguaquest/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deviceInfo: {
+              userAgent: navigator.userAgent,
+              platform: 'web',
+              language: navigator.language,
+              timestamp: new Date().toISOString()
+            }
+          })
+        });
+        const sessionResult = await sessionResponse.json();
+        if (sessionResult.success && sessionResult.sessionToken) {
+          localStorage.setItem('linguaquest_session_token', sessionResult.sessionToken);
+          sessionToken = sessionResult.sessionToken;
+        }
       }
 
       // Load lesson data
@@ -140,6 +169,10 @@ export function LinguaQuestLesson() {
     try {
       if (!lesson) return;
 
+      // Calculate completion time in seconds
+      const completionTime = Math.round((Date.now() - lessonStartTime) / 1000);
+      setCompletionTimeSeconds(completionTime);
+
       // Complete lesson through guest progress
       const result = await guestProgress.completeLesson(
         lesson.id, 
@@ -166,11 +199,16 @@ export function LinguaQuestLesson() {
         levelUp: result.levelUp
       });
 
+      // Show feedback modal after a short delay
+      setTimeout(() => {
+        setShowFeedbackModal(true);
+      }, 3000);
+
       // Show upgrade prompt if applicable
       if (result.shouldShowUpgradePrompt) {
         setTimeout(() => {
           showUpgradePrompt();
-        }, 2000);
+        }, 5000); // Delay upgrade prompt to show after feedback modal
       }
 
     } catch (error) {
@@ -682,6 +720,20 @@ export function LinguaQuestLesson() {
           </div>
           <Progress value={lessonProgress} className="w-full" />
         </div>
+      )}
+
+      {/* Lesson Feedback Modal */}
+      {lesson && (
+        <LessonFeedbackModal
+          open={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+          lessonId={lesson.id}
+          sessionToken={localStorage.getItem('linguaquest_session_token')}
+          userId={null}
+          completionTimeSeconds={completionTimeSeconds}
+          scorePercentage={totalScore}
+          attemptNumber={1}
+        />
       )}
     </div>
   );

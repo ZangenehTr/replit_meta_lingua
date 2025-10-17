@@ -49,6 +49,28 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 ### Database Design
 - **ORM**: Drizzle
 - **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress tracking, and LinguaQuest lessons.
+- **Migration Notes**: For fresh deployments, the following table must be created:
+
+```sql
+-- LinguaQuest Lesson Feedback Table (added Oct 2025)
+CREATE TABLE IF NOT EXISTS linguaquest_lesson_feedback (
+  id SERIAL PRIMARY KEY,
+  lesson_id INTEGER NOT NULL REFERENCES linguaquest_lessons(id),
+  guest_session_token TEXT,
+  user_id INTEGER REFERENCES users(id),
+  star_rating INTEGER NOT NULL CHECK (star_rating >= 1 AND star_rating <= 5),
+  difficulty_rating VARCHAR(20),
+  text_feedback TEXT,
+  was_helpful BOOLEAN,
+  completion_time_seconds INTEGER,
+  score_percentage INTEGER CHECK (score_percentage >= 0 AND score_percentage <= 100),
+  attempt_number INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+```
+
+Alternative: Run `npm run db:push --force` during deployment to sync schema changes.
 
 ### Deployment Strategy
 - **Development**: Replit hosting with Neon PostgreSQL.

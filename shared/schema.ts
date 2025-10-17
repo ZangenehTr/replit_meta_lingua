@@ -1592,6 +1592,30 @@ export const linguaquestAudioJobs = pgTable("linguaquest_audio_jobs", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// LinguaQuest Lesson Feedback table - User ratings and reviews for lessons
+export const linguaquestLessonFeedback = pgTable("linguaquest_lesson_feedback", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => linguaquestLessons.id).notNull(),
+  guestSessionToken: text("guest_session_token"), // For guest users
+  userId: integer("user_id").references(() => users.id), // For registered users
+  
+  // Ratings
+  starRating: integer("star_rating").notNull(), // 1-5 stars
+  difficultyRating: varchar("difficulty_rating", { length: 20 }), // too_easy, just_right, too_hard
+  
+  // Feedback
+  textFeedback: text("text_feedback"),
+  wasHelpful: boolean("was_helpful"),
+  
+  // Metadata
+  completionTimeSeconds: integer("completion_time_seconds"), // Time spent on lesson
+  scorePercentage: integer("score_percentage"), // User's score on the lesson (0-100)
+  attemptNumber: integer("attempt_number").default(1), // Which attempt this feedback is for
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Freemium Conversion Tracking table
 export const freemiumConversionTracking = pgTable("freemium_conversion_tracking", {
   id: serial("id").primaryKey(),
@@ -1714,6 +1738,21 @@ export const insertGuestProgressTrackingSchema = z.object({
   hasSeenUpgradePrompt: z.boolean().default(false),
   upgradePromptCount: z.number().default(0),
   lastUpgradePromptAt: z.date().optional()
+});
+
+// Insert schema for LinguaQuest Lesson Feedback
+export const insertLinguaquestLessonFeedbackSchema = createInsertSchema(linguaquestLessonFeedback).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+}).extend({
+  starRating: z.number().min(1).max(5),
+  difficultyRating: z.enum(['too_easy', 'just_right', 'too_hard']).optional(),
+  textFeedback: z.string().max(1000).optional(),
+  wasHelpful: z.boolean().optional(),
+  completionTimeSeconds: z.number().optional(),
+  scorePercentage: z.number().min(0).max(100).optional(),
+  attemptNumber: z.number().min(1).default(1)
 });
 
 // Insert schema for Voice Exercises Guest
@@ -7737,6 +7776,8 @@ export type LinguaquestLeaderboardEntry = typeof linguaquestLeaderboardEntries.$
 export type LinguaquestLeaderboardEntryInsert = z.infer<typeof insertLinguaquestLeaderboardEntrySchema>;
 export type LinguaquestContentBank = typeof linguaquestContentBank.$inferSelect;
 export type LinguaquestContentBankInsert = z.infer<typeof insertLinguaquestContentBankSchema>;
+export type LinguaquestLessonFeedback = typeof linguaquestLessonFeedback.$inferSelect;
+export type LinguaquestLessonFeedbackInsert = z.infer<typeof insertLinguaquestLessonFeedbackSchema>;
 export type BookReview = typeof bookReviews.$inferSelect;
 export type BookReviewInsert = z.infer<typeof insertBookReviewSchema>;
 export type VoiceExercisesGuest = typeof voiceExercisesGuest.$inferSelect;

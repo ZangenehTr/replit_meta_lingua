@@ -4,6 +4,7 @@ import {
   voiceExercisesGuest, 
   freemiumConversionTracking,
   visitorAchievements,
+  linguaquestLessonFeedback,
   type LinguaquestLesson,
   type LinguaquestLessonInsert,
   type GuestProgressTracking,
@@ -12,6 +13,7 @@ import {
   type VoiceExercisesGuestInsert,
   type FreemiumConversionTrackingInsert,
   type VisitorAchievementInsert,
+  type LinguaquestLessonFeedbackInsert,
   LINGUAQUEST_DIFFICULTY,
   LINGUAQUEST_LESSON_TYPE,
   LINGUAQUEST_SCENE_TYPE
@@ -818,6 +820,129 @@ export class LinguaQuestService {
         percentile: 0,
         error: 'Failed to get user rank'
       };
+    }
+  }
+
+  // ====================================================================
+  // LESSON FEEDBACK & RATINGS
+  // ====================================================================
+
+  /**
+   * Submit feedback/rating for a lesson
+   */
+  async submitLessonFeedback(feedbackData: LinguaquestLessonFeedbackInsert) {
+    try {
+      // Validate required fields
+      if (!feedbackData.lessonId) {
+        throw new Error('Lesson ID is required');
+      }
+      if (!feedbackData.starRating || feedbackData.starRating < 1 || feedbackData.starRating > 5) {
+        throw new Error('Star rating must be between 1 and 5');
+      }
+      if (!feedbackData.guestSessionToken && !feedbackData.userId) {
+        throw new Error('Either guest session token or user ID is required');
+      }
+
+      const [feedback] = await db
+        .insert(linguaquestLessonFeedback)
+        .values({
+          ...feedbackData,
+          updatedAt: new Date()
+        })
+        .returning();
+
+      return feedback;
+    } catch (error) {
+      console.error('Error submitting lesson feedback:', error);
+      throw new Error('Failed to submit lesson feedback');
+    }
+  }
+
+  /**
+   * Get all feedback for a specific lesson
+   */
+  async getLessonFeedback(lessonId: number) {
+    try {
+      const feedback = await db
+        .select()
+        .from(linguaquestLessonFeedback)
+        .where(eq(linguaquestLessonFeedback.lessonId, lessonId))
+        .orderBy(desc(linguaquestLessonFeedback.createdAt));
+
+      return feedback;
+    } catch (error) {
+      console.error('Error getting lesson feedback:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get lesson statistics including average rating, feedback count, and difficulty distribution
+   */
+  async getLessonStats(lessonId: number) {
+    try {
+      const feedback = await this.getLessonFeedback(lessonId);
+
+      if (feedback.length === 0) {
+        return {
+          lessonId,
+          feedbackCount: 0,
+          averageRating: 0,
+          ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+          difficultyDistribution: { too_easy: 0, just_right: 0, too_hard: 0 },
+          helpfulPercentage: 0,
+          averageCompletionTime: 0,
+          averageScore: 0
+        };
+      }
+
+      // Calculate average rating
+      const totalRating = feedback.reduce((sum, f) => sum + (f.starRating || 0), 0);
+      const averageRating = totalRating / feedback.length;
+
+      // Calculate rating distribution
+      const ratingDistribution = feedback.reduce((dist, f) => {
+        const rating = f.starRating || 0;
+        dist[rating] = (dist[rating] || 0) + 1;
+        return dist;
+      }, {} as Record<number, number>);
+
+      // Calculate difficulty distribution
+      const difficultyDistribution = feedback.reduce((dist, f) => {
+        const difficulty = f.difficultyRating || 'just_right';
+        dist[difficulty] = (dist[difficulty] || 0) + 1;
+        return dist;
+      }, {} as Record<string, number>);
+
+      // Calculate helpful percentage
+      const helpfulCount = feedback.filter(f => f.wasHelpful === true).length;
+      const helpfulPercentage = (helpfulCount / feedback.length) * 100;
+
+      // Calculate average completion time
+      const completionTimes = feedback.filter(f => f.completionTimeSeconds).map(f => f.completionTimeSeconds as number);
+      const averageCompletionTime = completionTimes.length > 0 
+        ? completionTimes.reduce((sum, time) => sum + time, 0) / completionTimes.length 
+        : 0;
+
+      // Calculate average score
+      const scores = feedback.filter(f => f.scorePercentage).map(f => f.scorePercentage as number);
+      const averageScore = scores.length > 0 
+        ? scores.reduce((sum, score) => sum + score, 0) / scores.length 
+        : 0;
+
+      return {
+        lessonId,
+        feedbackCount: feedback.length,
+        averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+        ratingDistribution,
+        difficultyDistribution,
+        helpfulPercentage: Math.round(helpfulPercentage),
+        averageCompletionTime: Math.round(averageCompletionTime),
+        averageScore: Math.round(averageScore)
+      };
+    } catch (error) {
+      console.error('Error getting lesson stats:', error);
+      throw new Error('Failed to get lesson stats');
     }
   }
 }

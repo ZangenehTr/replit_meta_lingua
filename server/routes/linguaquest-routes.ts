@@ -6,7 +6,8 @@ import {
   insertGuestProgressTrackingSchema,
   insertVoiceExercisesGuestSchema,
   insertFreemiumConversionTrackingSchema,
-  insertVisitorAchievementSchema
+  insertVisitorAchievementSchema,
+  insertLinguaquestLessonFeedbackSchema
 } from "@shared/schema";
 
 /**
@@ -567,6 +568,81 @@ export function registerLinguaQuestRoutes(app: Express) {
     }
   });
 
+  // ====================================================================
+  // LESSON FEEDBACK & RATINGS
+  // ====================================================================
+
+  /**
+   * Submit feedback/rating for a lesson
+   * POST /api/linguaquest/feedback
+   */
+  app.post('/api/linguaquest/feedback', async (req, res) => {
+    try {
+      const feedbackData = insertLinguaquestLessonFeedbackSchema.parse(req.body);
+      
+      const feedback = await linguaQuestService.submitLessonFeedback(feedbackData);
+      
+      res.json({ 
+        success: true, 
+        feedback,
+        message: 'Feedback submitted successfully'
+      });
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      res.status(400).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to submit feedback' 
+      });
+    }
+  });
+
+  /**
+   * Get all feedback for a specific lesson
+   * GET /api/linguaquest/feedback/:lessonId
+   */
+  app.get('/api/linguaquest/feedback/:lessonId', async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      
+      const feedback = await linguaQuestService.getLessonFeedback(lessonId);
+      
+      res.json({ 
+        success: true, 
+        feedback,
+        count: feedback.length
+      });
+    } catch (error) {
+      console.error('Error getting lesson feedback:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get lesson feedback' 
+      });
+    }
+  });
+
+  /**
+   * Get lesson statistics including average rating
+   * GET /api/linguaquest/lessons/:lessonId/stats
+   */
+  app.get('/api/linguaquest/lessons/:lessonId/stats', async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      
+      const stats = await linguaQuestService.getLessonStats(lessonId);
+      
+      res.json({ 
+        success: true, 
+        stats
+      });
+    } catch (error) {
+      console.error('Error getting lesson stats:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get lesson stats' 
+      });
+    }
+  });
+
   /**
    * Health check endpoint for LinguaQuest service
    * GET /api/linguaquest/health
@@ -584,7 +660,8 @@ export function registerLinguaQuestRoutes(app: Express) {
         'Achievement System',
         'Conversion Tracking',
         'Analytics',
-        'Leaderboards'
+        'Leaderboards',
+        'Lesson Feedback & Ratings'
       ]
     });
   });
