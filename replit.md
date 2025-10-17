@@ -3,6 +3,20 @@
 ## Overview
 Meta Lingua is an AI-enhanced multilingual language learning and institute management platform designed for self-hosting. It provides a comprehensive solution for language institutes globally, enabling effective language education and efficient operations. The platform supports teaching any language, offers extensive admin and student management, course enrollment, VoIP integration, and a wallet-based payment system. Its core purpose is to empower language institutes with a powerful, customizable, and independent platform, especially in regions requiring self-hosted solutions.
 
+## Documentation
+- **System Workflow Documentation**: `METALINGUA_SYSTEM_WORKFLOW.md` - Complete text-based workflow with 150+ production error points identified
+- **Visual Diagrams**: `METALINGUA_VISUAL_DIAGRAMS.md` - 10 comprehensive Mermaid diagrams covering all system flows
+  - System Architecture Overview
+  - Authentication & Authorization Flow
+  - LinguaQuest Platform Flow (19 activity types)
+  - CallerN Video Tutoring Flow (WebRTC + AI)
+  - Unified Testing System (21 question types)
+  - Payment & Wallet System
+  - AI Services Integration (7 use cases)
+  - External Services Integration (Iranian providers)
+  - Database Schema Relationships (50+ tables)
+  - Production Error Points Map (Critical/High/Medium/Low)
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.
