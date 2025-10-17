@@ -341,6 +341,19 @@ export const walletTransactions = pgTable("wallet_transactions", {
   completedAt: timestamp("completed_at")
 });
 
+// Payment Idempotency table - Prevents duplicate payment processing
+export const paymentIdempotency = pgTable("payment_idempotency", {
+  id: serial("id").primaryKey(),
+  callbackId: varchar("callback_id", { length: 255 }).notNull().unique(), // Shetab gateway transaction ID
+  merchantTransactionId: varchar("merchant_transaction_id", { length: 255 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull(), // processing, completed, failed
+  requestSignature: varchar("request_signature", { length: 512 }), // HMAC signature for verification
+  requestPayload: jsonb("request_payload"), // Original callback data for debugging
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Course Payments table
 export const coursePayments = pgTable("course_payments", {
   id: serial("id").primaryKey(),
@@ -6042,9 +6055,11 @@ export type InsertPayment = typeof payments.$inferInsert;
 export type SessionPackage = typeof sessionPackages.$inferSelect;
 export type InsertSessionPackage = typeof sessionPackages.$inferInsert;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
-export type InsertWalletTransaction = typeof wallettransactions.$inferInsert;
+export type InsertWalletTransaction = typeof walletTransactions.$inferInsert;
+export type PaymentIdempotency = typeof paymentIdempotency.$inferSelect;
+export type InsertPaymentIdempotency = typeof paymentIdempotency.$inferInsert;
 export type CoursePayment = typeof coursePayments.$inferSelect;
-export type InsertCoursePayment = typeof coursepayments.$inferInsert;
+export type InsertCoursePayment = typeof coursePayments.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
 export type Achievement = typeof achievements.$inferSelect;

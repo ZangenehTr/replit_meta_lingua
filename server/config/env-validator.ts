@@ -12,11 +12,13 @@ const envSchema = z.object({
   // AI Services (Optional but recommended)
   OLLAMA_HOST: z.string().url().optional(),
   
-  // Iranian External Services (Optional)
+  // Iranian External Services (Optional but recommended for production)
   KAVENEGAR_API_KEY: z.string().optional(),
   SHETAB_MERCHANT_ID: z.string().optional(),
   SHETAB_TERMINAL_ID: z.string().optional(),
-  SHETAB_SECRET_KEY: z.string().min(32).optional(),
+  SHETAB_SECRET_KEY: z.string().min(32, 'SHETAB_SECRET_KEY must be at least 32 characters for secure signature verification').optional(),
+  SHETAB_GATEWAY_URL: z.string().url().optional(),
+  SHETAB_CALLBACK_URL: z.string().url().optional(),
   ISABEL_VOIP_API_KEY: z.string().optional(),
   
   // Server Instance (for multi-server deployments)
