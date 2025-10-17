@@ -89,6 +89,19 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 
 ## Recent Changes (October 2025)
 
+### LinguaQuest TTS Audio Pre-Generation Pipeline (Oct 17, 2025)
+- **Purpose**: Pre-generate TTS audio for all LinguaQuest content items to eliminate runtime generation delays and ensure consistent pronunciation
+- **Architecture**: Service layer with batch processing, real-time job tracking, hash-based deduplication (MD5), admin-only authentication
+- **Implementation**:
+  - Service Layer: `server/services/linguaquest-audio-service.ts` - generateAudioForContent(), batchGenerateAudio() with real-time progress updates
+  - CLI Script: `server/scripts/generate-linguaquest-audio.ts` - batch generation with content filtering
+  - Database Tables: `linguaquestAudioJobs` (job tracking), `linguaquestAudioAssets` (audio manifest with metadata)
+  - API Endpoints: POST /batch (trigger), GET /jobs/:id (real-time status), GET /jobs (list), GET /stats (analytics)
+  - Security: All endpoints protected with authenticate + authorizePermission('admin_dashboard')
+- **Results**: 30/30 content items processed successfully, 100% success rate, 54s execution time, audio stored at uploads/tts/edge_tts_{hash}.mp3
+- **Production Ready**: Real-time progress tracking, incremental status updates, error handling, hash-based caching, admin-only access
+- **Status**: ✅ Complete - Architect approved, all audio assets generated and linked to content bank
+
 ### Ollama Graceful Initialization for Self-Hosting (Oct 17, 2025)
 - **Issue**: App failed to build/start when Ollama server at 45.89.239.250:11434 was unreachable during Replit build phase
 - **Root Cause**: AI Provider Manager threw fatal error on Ollama initialization failure, preventing deployment
