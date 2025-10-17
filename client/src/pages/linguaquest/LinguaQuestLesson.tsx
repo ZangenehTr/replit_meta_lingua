@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ArrowLeft, 
   Trophy, 
@@ -16,7 +17,9 @@ import {
   Mic,
   Volume2,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Three3DLesson } from "@/components/3d-lessons/Three3DLesson";
 import { GameStepRenderer } from "@/components/linguaquest/GameStepRenderer";
@@ -24,6 +27,7 @@ import { guestProgress, type GuestProgressData } from "@/lib/guest-progress";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 
 interface LessonData {
   id: number;
@@ -229,10 +233,34 @@ export function LinguaQuestLesson() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-emerald-700 dark:text-emerald-300">Loading 3D lesson...</p>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
+        {/* Header Skeleton */}
+        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-emerald-200 dark:border-gray-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-9 w-32" />
+                <Skeleton className="hidden sm:block h-10 w-48" />
+              </div>
+              <Skeleton className="h-8 w-24" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Content Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="p-6">
+            <div className="space-y-6">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-5/6" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Skeleton className="h-40 w-full" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </Card>
         </div>
       </div>
     );
@@ -355,11 +383,64 @@ export function LinguaQuestLesson() {
             
             {/* Game Steps Overlay - Interactive activities */}
             {gameSteps.length > 0 && (
-              <div className="h-2/3 lg:h-full lg:w-1/2 overflow-y-auto p-4 lg:p-8 pb-20 bg-white dark:bg-gray-900">
-                <GameStepRenderer
-                  key={`step-${currentStepIndex}-${stepKey}`}
-                  step={gameSteps[currentStepIndex]}
-                  onComplete={(stepScore) => {
+              <div className="h-2/3 lg:h-full lg:w-1/2 overflow-hidden p-4 lg:p-8 pb-20 bg-white dark:bg-gray-900 relative">
+                {/* Step Navigation Buttons - Desktop */}
+                {gameSteps.length > 1 && (
+                  <>
+                    {currentStepIndex > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800"
+                        onClick={() => {
+                          if (currentStepIndex > 0) {
+                            setCurrentStepIndex(prev => prev - 1);
+                            setStepKey(prev => prev + 1);
+                          }
+                        }}
+                        data-testid="button-previous-step"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </Button>
+                    )}
+                    <div className="hidden lg:block absolute right-2 top-4 text-sm text-gray-500 dark:text-gray-400">
+                      Step {currentStepIndex + 1} of {gameSteps.length}
+                    </div>
+                  </>
+                )}
+
+                {/* Swipeable Game Step Container */}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={`motion-step-${currentStepIndex}-${stepKey}`}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 300, 
+                      damping: 30,
+                      opacity: { duration: 0.2 }
+                    }}
+                    drag={isMobile ? "x" : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={(e, { offset, velocity }) => {
+                      const swipeThreshold = 50;
+                      if (Math.abs(offset.x) > swipeThreshold) {
+                        if (offset.x > 0 && currentStepIndex > 0) {
+                          // Swipe right - go to previous step
+                          setCurrentStepIndex(prev => prev - 1);
+                          setStepKey(prev => prev + 1);
+                        }
+                      }
+                    }}
+                    className="h-full overflow-y-auto"
+                  >
+                    <GameStepRenderer
+                      key={`step-${currentStepIndex}-${stepKey}`}
+                      step={gameSteps[currentStepIndex]}
+                      onComplete={(stepScore) => {
                     const completionReqs = lesson.interactionConfig?.completionRequirements;
                     const requiredSteps = completionReqs?.requiredSteps || [];
                     const optionalSteps = completionReqs?.optionalSteps || [];
@@ -451,6 +532,17 @@ export function LinguaQuestLesson() {
                       <span className="text-lg font-bold text-emerald-600">
                         {Math.round(totalScore)}%
                       </span>
+                    </div>
+                  </div>
+                )}
+                  </motion.div>
+                </AnimatePresence>
+                
+                {/* Mobile Swipe Indicator */}
+                {isMobile && currentStepIndex > 0 && (
+                  <div className="absolute bottom-24 left-0 right-0 flex justify-center pointer-events-none">
+                    <div className="bg-gray-900/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+                      Swipe right to go back
                     </div>
                   </div>
                 )}
