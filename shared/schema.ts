@@ -1508,6 +1508,70 @@ export const linguaquestLeaderboardEntries = pgTable("linguaquest_leaderboard_en
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// LinguaQuest Content Bank - Reusable vocabulary, grammar, and questions for all game types
+export const linguaquestContentBank = pgTable("linguaquest_content_bank", {
+  id: serial("id").primaryKey(),
+  contentType: varchar("content_type", { length: 50 }).notNull(), // vocabulary, grammar, question, sentence, phrase
+  gameTypes: text("game_types").array(), // Which games can use this content: vocabulary_matching, sentence_scramble, etc.
+  cefrLevel: varchar("cefr_level", { length: 10 }).notNull(), // A1, A2, B1, B2, C1, C2
+  language: varchar("language", { length: 10 }).notNull().default("en"), // Target language
+  
+  // Primary content
+  primaryText: text("primary_text").notNull(), // Main word/phrase/question
+  translation: text("translation"), // Translation in native language
+  phonetic: varchar("phonetic", { length: 255 }), // IPA pronunciation
+  
+  // Context and examples
+  exampleSentences: text("example_sentences").array(), // Usage examples
+  contextNotes: text("context_notes"), // When/how to use this
+  
+  // For vocabulary items
+  partOfSpeech: varchar("part_of_speech", { length: 50 }), // noun, verb, adjective, etc.
+  synonyms: text("synonyms").array(),
+  antonyms: text("antonyms").array(),
+  relatedWords: text("related_words").array(),
+  wordFamily: text("word_family").array(), // teach, teacher, teaching, taught
+  
+  // For grammar items
+  grammarRule: text("grammar_rule"), // Explanation of grammar point
+  grammarExamples: text("grammar_examples").array(),
+  commonMistakes: text("common_mistakes").array(),
+  
+  // For questions (multiple choice, fill-in-blank, etc.)
+  questionText: text("question_text"),
+  correctAnswer: text("correct_answer"),
+  wrongAnswers: text("wrong_answers").array(),
+  explanation: text("explanation"), // Why this answer is correct
+  hint: text("hint"), // Optional hint for learners
+  
+  // Difficulty and categorization
+  difficultyScore: integer("difficulty_score").default(1), // 1-10 scale within CEFR level
+  topicCategory: varchar("topic_category", { length: 100 }), // travel, business, daily_life, etc.
+  tags: text("tags").array(), // Searchable tags
+  
+  // Audio references
+  audioHash: varchar("audio_hash", { length: 64 }), // References linguaquestAudioAssets.contentHash
+  hasAudio: boolean("has_audio").default(false),
+  
+  // Usage tracking
+  usageCount: integer("usage_count").default(0),
+  successRate: decimal("success_rate", { precision: 5, scale: 2 }), // % of correct answers
+  averageTimeSeconds: integer("average_time_seconds"), // Average time to answer
+  
+  // Quality control
+  isVerified: boolean("is_verified").default(false), // Reviewed by language expert
+  verifiedBy: integer("verified_by"), // Admin user ID
+  verifiedAt: timestamp("verified_at"),
+  reportCount: integer("report_count").default(0), // User reports of errors
+  
+  // Metadata
+  sourceReference: varchar("source_reference", { length: 500 }), // Where content came from
+  contributorNotes: text("contributor_notes"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Freemium Conversion Tracking table
 export const freemiumConversionTracking = pgTable("freemium_conversion_tracking", {
   id: serial("id").primaryKey(),
@@ -1672,6 +1736,41 @@ export const insertFreemiumConversionTrackingSchema = z.object({
   paymentProvider: z.string().max(50).optional(),
   referralSource: z.string().max(255).optional(),
   promotionCode: z.string().max(100).optional(),
+  isActive: z.boolean().default(true)
+});
+
+// Insert schema for LinguaQuest Content Bank
+export const insertLinguaquestContentBankSchema = z.object({
+  contentType: z.enum(['vocabulary', 'grammar', 'question', 'sentence', 'phrase']),
+  gameTypes: z.array(z.string()).optional(),
+  cefrLevel: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
+  language: z.string().max(10).default('en'),
+  primaryText: z.string(),
+  translation: z.string().optional(),
+  phonetic: z.string().max(255).optional(),
+  exampleSentences: z.array(z.string()).optional(),
+  contextNotes: z.string().optional(),
+  partOfSpeech: z.string().max(50).optional(),
+  synonyms: z.array(z.string()).optional(),
+  antonyms: z.array(z.string()).optional(),
+  relatedWords: z.array(z.string()).optional(),
+  wordFamily: z.array(z.string()).optional(),
+  grammarRule: z.string().optional(),
+  grammarExamples: z.array(z.string()).optional(),
+  commonMistakes: z.array(z.string()).optional(),
+  questionText: z.string().optional(),
+  correctAnswer: z.string().optional(),
+  wrongAnswers: z.array(z.string()).optional(),
+  explanation: z.string().optional(),
+  hint: z.string().optional(),
+  difficultyScore: z.number().min(1).max(10).default(1),
+  topicCategory: z.string().max(100).optional(),
+  tags: z.array(z.string()).optional(),
+  audioHash: z.string().max(64).optional(),
+  hasAudio: z.boolean().default(false),
+  isVerified: z.boolean().default(false),
+  sourceReference: z.string().max(500).optional(),
+  contributorNotes: z.string().optional(),
   isActive: z.boolean().default(true)
 });
 
@@ -7608,6 +7707,8 @@ export type LinguaquestAudioAsset = typeof linguaquestAudioAssets.$inferSelect;
 export type LinguaquestAudioAssetInsert = z.infer<typeof insertLinguaquestAudioAssetSchema>;
 export type LinguaquestLeaderboardEntry = typeof linguaquestLeaderboardEntries.$inferSelect;
 export type LinguaquestLeaderboardEntryInsert = z.infer<typeof insertLinguaquestLeaderboardEntrySchema>;
+export type LinguaquestContentBank = typeof linguaquestContentBank.$inferSelect;
+export type LinguaquestContentBankInsert = z.infer<typeof insertLinguaquestContentBankSchema>;
 export type BookReview = typeof bookReviews.$inferSelect;
 export type BookReviewInsert = z.infer<typeof insertBookReviewSchema>;
 export type VoiceExercisesGuest = typeof voiceExercisesGuest.$inferSelect;
