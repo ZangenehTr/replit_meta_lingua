@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import { healthRouter } from './health-monitoring.js';
+import { validateEnvironment } from './config/env-validator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,41 +25,45 @@ if (fs.existsSync(envPath)) {
     }
   });
   console.log('Environment variables loaded from .env file');
-  
-  // Verify critical variables in production
-  if (process.env.NODE_ENV === 'production') {
-    if (!process.env.JWT_SECRET) {
-      console.error('❌ CRITICAL: JWT_SECRET not found in environment');
-      process.exit(1);
-    }
-    console.log('✅ Production environment variables validated');
-  } else {
-    // Development fallback for JWT_SECRET
-    if (!process.env.JWT_SECRET) {
-      process.env.JWT_SECRET = 'dev-fallback-secret-key-change-in-production';
-      console.log('⚠️  Using development fallback for JWT_SECRET');
-    }
-  }
+}
 
-  // Validate Ollama configuration for Iranian self-hosting
-  const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-  const ollamaModel = process.env.OLLAMA_MODEL || 'llama3.2:3b';
+// ============================================
+// CRITICAL: Validate environment before ANY initialization
+// This prevents startup with invalid configuration
+// ============================================
+console.log('');
+console.log('🔍 Validating environment configuration...');
+const envValidation = validateEnvironment();
+
+// In production, exit immediately if validation fails
+if (process.env.NODE_ENV === 'production' && !envValidation.success) {
+  console.error('');
+  console.error('❌ FATAL: Cannot start server - environment validation failed');
+  process.exit(1);
+}
+
+// In development, apply safe fallbacks ONLY after validation
+if (process.env.NODE_ENV !== 'production') {
+  // Development fallback for JWT_SECRET (ONLY in development)
+  if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = 'dev-fallback-secret-key-change-in-production-INSECURE';
+    console.warn('⚠️  Using INSECURE development fallback for JWT_SECRET');
+    console.warn('⚠️  Generate a secure secret with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+  }
   
+  // Development fallback for Ollama
   if (!process.env.OLLAMA_HOST) {
-    process.env.OLLAMA_HOST = ollamaHost;
-    console.log(`⚠️  OLLAMA_HOST not set, using default: ${ollamaHost}`);
+    process.env.OLLAMA_HOST = 'http://localhost:11434';
+    console.log('⚠️  OLLAMA_HOST not set, using default: http://localhost:11434');
   }
   
   if (!process.env.OLLAMA_MODEL) {
-    process.env.OLLAMA_MODEL = ollamaModel;
-    console.log(`⚠️  OLLAMA_MODEL not set, using default: ${ollamaModel}`);
+    process.env.OLLAMA_MODEL = 'llama3.2:3b';
+    console.log('⚠️  OLLAMA_MODEL not set, using default: llama3.2:3b');
   }
-  
-  console.log('✅ Ollama configuration:', {
-    host: process.env.OLLAMA_HOST,
-    model: process.env.OLLAMA_MODEL
-  });
 }
+
+console.log('');
 
 const app = express();
 app.use(express.json());
