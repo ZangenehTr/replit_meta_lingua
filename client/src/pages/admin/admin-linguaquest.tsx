@@ -54,7 +54,11 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  Save
+  Save,
+  Volume2,
+  PlayCircle,
+  FileAudio,
+  RefreshCw
 } from "lucide-react";
 
 interface LessonFormData {
@@ -98,6 +102,21 @@ export function AdminLinguaQuest() {
   // Fetch all feedback
   const { data: feedbackData, isLoading: feedbackLoading } = useQuery({
     queryKey: ['/api/linguaquest/admin/feedback'],
+  });
+
+  // Fetch audio generation stats
+  const { data: audioStatsData, isLoading: audioStatsLoading } = useQuery({
+    queryKey: ['/api/linguaquest/audio/stats'],
+  });
+
+  // Fetch audio generation jobs
+  const { data: audioJobsData, isLoading: audioJobsLoading, refetch: refetchJobs } = useQuery({
+    queryKey: ['/api/linguaquest/audio/jobs'],
+    refetchInterval: (data) => {
+      // Poll every 2 seconds if there are running jobs
+      const hasRunningJobs = data?.jobs?.some((j: any) => j.status === 'running' || j.status === 'pending');
+      return hasRunningJobs ? 2000 : false;
+    }
   });
 
   // Create lesson mutation
@@ -205,6 +224,32 @@ export function AdminLinguaQuest() {
       toast({
         title: t('common:error'),
         description: error instanceof Error ? error.message : 'Failed to update status',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Trigger batch audio generation
+  const triggerAudioGenerationMutation = useMutation({
+    mutationFn: async ({ contentIds, regenerateAll }: { contentIds?: number[]; regenerateAll?: boolean }) => {
+      return apiRequest('/api/linguaquest/audio/batch', {
+        method: 'POST',
+        body: JSON.stringify({ contentIds, regenerateAll })
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/linguaquest/audio/jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/linguaquest/audio/stats'] });
+      refetchJobs(); // Start polling immediately
+      toast({
+        title: t('common:success'),
+        description: `Audio generation job started (Job ID: ${data.jobId})`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t('common:error'),
+        description: error instanceof Error ? error.message : 'Failed to start audio generation',
         variant: 'destructive',
       });
     }
@@ -485,6 +530,7 @@ export function AdminLinguaQuest() {
           <TabsTrigger value="lessons">Lessons</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="audio">Audio Generation</TabsTrigger>
         </TabsList>
 
         {/* Lessons Tab */}
@@ -812,6 +858,219 @@ export function AdminLinguaQuest() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Audio Generation Tab */}
+        <TabsContent value="audio" className="space-y-4">
+          {/* Audio Generation Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FileAudio className="h-4 w-4" />
+                  Content with Audio
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-audio-with-audio">
+                  {audioStatsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : audioStatsData?.stats?.withAudio || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  / {audioStatsData?.stats?.totalContent || 0} total items
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Volume2 className="h-4 w-4" />
+                  Audio Assets
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-audio-assets">
+                  {audioStatsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : audioStatsData?.stats?.audioAssets || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {audioStatsData?.stats?.totalFileSizeMB || 0} MB total
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Total Duration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold" data-testid="text-audio-duration">
+                  {audioStatsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : audioStatsData?.stats?.totalDurationMinutes || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">minutes of audio</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <TrendingDown className="h-4 w-4" />
+                  Missing Audio
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600" data-testid="text-audio-missing">
+                  {audioStatsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : audioStatsData?.stats?.withoutAudio || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">items need generation</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Batch Generation Controls */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Batch Audio Generation</CardTitle>
+              <CardDescription>
+                Generate TTS audio for content bank items. The system uses content hashing to avoid duplicate generation.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => triggerAudioGenerationMutation.mutate({})}
+                  disabled={triggerAudioGenerationMutation.isPending || (audioStatsData?.stats?.withoutAudio || 0) === 0}
+                  data-testid="button-generate-missing"
+                >
+                  {triggerAudioGenerationMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Starting...
+                    </>
+                  ) : (
+                    <>
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Generate Missing Audio
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => triggerAudioGenerationMutation.mutate({ regenerateAll: true })}
+                  disabled={triggerAudioGenerationMutation.isPending}
+                  data-testid="button-regenerate-all"
+                >
+                  {triggerAudioGenerationMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Starting...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Regenerate All
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p>• Generate Missing: Only creates audio for items without audio hash</p>
+                <p>• Regenerate All: Processes all active content items (uses cache when possible)</p>
+                <p>• Jobs run in background - monitor progress below</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Job List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Generation Jobs</CardTitle>
+              <CardDescription>
+                Recent and active audio generation jobs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {audioJobsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : !audioJobsData?.jobs || audioJobsData.jobs.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No generation jobs yet. Click "Generate Missing Audio" to start.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Job ID</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Generated</TableHead>
+                      <TableHead>Cached</TableHead>
+                      <TableHead>Failed</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {audioJobsData.jobs.slice().reverse().map((job: any) => {
+                      const progress = job.totalItems > 0 ? Math.round((job.processedItems / job.totalItems) * 100) : 0;
+                      const duration = job.durationMs ? `${(job.durationMs / 1000).toFixed(1)}s` : '-';
+                      
+                      return (
+                        <TableRow key={job.id} data-testid={`row-job-${job.id}`}>
+                          <TableCell className="font-medium">#{job.id}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                job.status === 'completed' ? 'default' :
+                                job.status === 'running' ? 'secondary' :
+                                job.status === 'failed' ? 'destructive' :
+                                'outline'
+                              }
+                              data-testid={`badge-status-${job.id}`}
+                            >
+                              {job.status === 'running' && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                              {job.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-secondary h-2 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all ${
+                                    job.status === 'completed' ? 'bg-green-500' :
+                                    job.status === 'failed' ? 'bg-red-500' :
+                                    'bg-blue-500'
+                                  }`}
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-muted-foreground min-w-[3rem]">
+                                {progress}%
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-green-600 font-medium">{job.generatedItems || 0}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-blue-600 font-medium">{job.cachedItems || 0}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-red-600 font-medium">{job.failedItems || 0}</span>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{duration}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {new Date(job.createdAt).toLocaleTimeString()}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
