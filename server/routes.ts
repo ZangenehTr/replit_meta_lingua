@@ -19,6 +19,7 @@ import examRoadmapRoutes from "./routes/exam-roadmap-routes";
 import { createAiStudyPartnerRoutes } from "./routes/ai-study-partner-routes";
 import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
 import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
+import { setupContentBankRoutes } from "./routes/content-bank-routes";
 import { registerLinguaQuestRoutes } from "./routes/linguaquest-routes";
 import searchRoutes from "./routes/search-routes";
 import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes";
@@ -23676,6 +23677,9 @@ Meta Lingua Academy`;
   
   setupBookEcommerceRoutes(app);
   console.log('✅ Book E-Commerce routes registered successfully');
+  
+  setupContentBankRoutes(app);
+  console.log('✅ Content Bank routes registered successfully');
   
   console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
   console.log('✅ Exam-focused roadmap routes registered successfully');
