@@ -18,8 +18,7 @@ import courseRoadmapRoutes from "./routes/course-roadmap-routes";
 import examRoadmapRoutes from "./routes/exam-roadmap-routes";
 import { createAiStudyPartnerRoutes } from "./routes/ai-study-partner-routes";
 import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
-// E-commerce temporarily disabled for system stabilization
-// import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
+import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
 import { registerLinguaQuestRoutes } from "./routes/linguaquest-routes";
 import searchRoutes from "./routes/search-routes";
 import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes";
@@ -23675,8 +23674,8 @@ Meta Lingua Academy`;
   // LinguaQuest Free Learning Platform Routes
   registerLinguaQuestRoutes(app);
   
-  // E-commerce temporarily disabled for system stabilization
-  // setupBookEcommerceRoutes(app);
+  setupBookEcommerceRoutes(app);
+  console.log('✅ Book E-Commerce routes registered successfully');
   
   console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
   console.log('✅ Exam-focused roadmap routes registered successfully');
