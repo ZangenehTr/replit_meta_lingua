@@ -822,6 +822,7 @@ function MenuExplorationStep({ step, onComplete }: { step: any; onComplete: (sco
 
 // Ordering Practice Step Component
 function OrderingPracticeStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
   const [completedPhrases, setCompletedPhrases] = useState<Set<string>>(new Set());
   const phrases = step.orderingPhrases || step.requestTemplates || [];
 

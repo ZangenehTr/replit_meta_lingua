@@ -355,7 +355,7 @@ export function LinguaQuestLesson() {
             
             {/* Game Steps Overlay - Interactive activities */}
             {gameSteps.length > 0 && (
-              <div className="h-2/3 lg:h-full lg:w-1/2 overflow-y-auto p-4 lg:p-8 bg-white dark:bg-gray-900">
+              <div className="h-2/3 lg:h-full lg:w-1/2 overflow-y-auto p-4 lg:p-8 pb-20 bg-white dark:bg-gray-900">
                 <GameStepRenderer
                   key={`step-${currentStepIndex}-${stepKey}`}
                   step={gameSteps[currentStepIndex]}

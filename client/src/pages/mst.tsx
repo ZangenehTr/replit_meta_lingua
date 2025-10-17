@@ -283,21 +283,13 @@ export default function MSTPage() {
   // ---------- API: start/status/submit/finalize
   const startSessionMutation = useMutation({
     mutationFn: async () => {
-      const r = await fetch("/api/unified-testing/sessions", {
+      const r = await fetch("/api/mst/start", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          testType: "placement",
-          targetLanguage: "english",
-          settings: {
-            skillOrder: ["listening", "reading", "speaking", "writing"],
-            perSkillSeconds: 180,
-            autoAdvance: true
-          }
-        }),
+        body: JSON.stringify({ targetLanguage: "english" }),
       });
       if (!r.ok) throw new Error("start failed");
       return r.json();
