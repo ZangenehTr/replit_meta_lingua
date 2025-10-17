@@ -102,6 +102,22 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **Production Ready**: Real-time progress tracking, incremental status updates, error handling, hash-based caching, admin-only access
 - **Status**: ✅ Complete - Architect approved, all audio assets generated and linked to content bank
 
+### LinguaQuest Game Types Expansion (Oct 17, 2025)
+- **Goal**: Expand LinguaQuest interactive learning platform with 4 missing game engine types identified in audit
+- **Implementation**: Added SentenceReorderingStep, ImageSelectionStep, TrueFalseStep, and SpellingStep components
+- **Features**:
+  - **Sentence Reordering**: Users arrange scrambled words to form correct sentences, index-based tracking to handle duplicate words (e.g., "the cat and the dog")
+  - **Image Selection**: Users select correct image based on audio/text prompt, grid layout with visual feedback
+  - **True/False Quiz**: Multi-question true/false quiz with explanations, instant feedback, progress tracking
+  - **Spelling Challenge**: Users spell words by arranging scrambled letters, hint text/image support
+- **Audio Integration**: All 4 game types use Edge TTS via useTTS hook for auto-generated audio playback
+- **i18n Support**: Full Persian/English translations for all game step UI elements (18 new translation keys per language)
+- **Mobile-First Design**: Touch-optimized interactions, responsive grid layouts, proper test IDs for E2E testing
+- **Critical Fix**: Resolved duplicate word bug in sentence reordering using {word, index} object array instead of string array filtering
+- **GameStepRenderer**: Added routing for 8 new aliases (sentence_reordering, word_order, image_selection, picture_choice, true_false, true_or_false, spelling_challenge, spell_word)
+- **Scoring**: All game types use consistent 0-100 scoring scale matching existing game types
+- **Status**: ✅ Complete - Architect approved, 19 total game types now available (was 15), production ready with full audio and i18n
+
 ### Ollama Graceful Initialization for Self-Hosting (Oct 17, 2025)
 - **Issue**: App failed to build/start when Ollama server at 45.89.239.250:11434 was unreachable during Replit build phase
 - **Root Cause**: AI Provider Manager threw fatal error on Ollama initialization failure, preventing deployment
