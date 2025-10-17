@@ -75,6 +75,22 @@ export function GameStepRenderer({ step, onComplete, onProgress }: GameStepProps
       case 'prescription_reading':
         return <PrescriptionReadingStep step={step} onComplete={handleStepComplete} />;
       
+      case 'sentence_reordering':
+      case 'word_order':
+        return <SentenceReorderingStep step={step} onComplete={handleStepComplete} />;
+      
+      case 'image_selection':
+      case 'picture_choice':
+        return <ImageSelectionStep step={step} onComplete={handleStepComplete} />;
+      
+      case 'true_false':
+      case 'true_or_false':
+        return <TrueFalseStep step={step} onComplete={handleStepComplete} />;
+      
+      case 'spelling_challenge':
+      case 'spell_word':
+        return <SpellingStep step={step} onComplete={handleStepComplete} />;
+      
       default:
         return <DefaultStep step={step} onComplete={handleStepComplete} />;
     }
@@ -1006,6 +1022,479 @@ function PrescriptionReadingStep({ step, onComplete }: { step: any; onComplete: 
               </Button>
             ))}
           </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Sentence Reordering Step Component
+function SentenceReorderingStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [orderedWords, setOrderedWords] = useState<string[]>([]);
+  const [availableWords, setAvailableWords] = useState<Array<{word: string, index: number}>>(
+    [...(step.scrambledWords || step.words || [])]
+      .map((word, index) => ({ word, index }))
+      .sort(() => Math.random() - 0.5)
+  );
+  const correctSentence = step.correctOrder || step.sentence || '';
+  const { generateWordAudio } = useTTS(step.language || 'en');
+  const [sentenceAudio, setSentenceAudio] = useState<string | null>(step.audio || null);
+
+  // Generate audio for correct sentence
+  useEffect(() => {
+    const loadAudio = async () => {
+      if (!step.audio && correctSentence) {
+        const audioUrl = await generateWordAudio(correctSentence);
+        if (audioUrl) {
+          setSentenceAudio(audioUrl);
+        }
+      }
+    };
+    loadAudio();
+  }, [step.audio, correctSentence, generateWordAudio]);
+
+  const addWord = (wordObj: {word: string, index: number}) => {
+    setOrderedWords(prev => [...prev, wordObj.word]);
+    setAvailableWords(prev => prev.filter(w => w.index !== wordObj.index));
+  };
+
+  const removeWord = (word: string, orderedIndex: number) => {
+    // Restore word to available pool with original index
+    const removedWord = orderedWords[orderedIndex];
+    setOrderedWords(prev => prev.filter((_, i) => i !== orderedIndex));
+    setAvailableWords(prev => [...prev, { word: removedWord, index: Date.now() + orderedIndex }]);
+  };
+
+  const checkAnswer = () => {
+    const userSentence = orderedWords.join(' ');
+    const isCorrect = userSentence.toLowerCase() === correctSentence.toLowerCase();
+    const score = isCorrect ? 100 : 0;
+    setTimeout(() => onComplete(score), 500);
+  };
+
+  const playAudio = () => {
+    if (sentenceAudio) {
+      new Audio(sentenceAudio).play().catch(err => console.error('Audio playback error:', err));
+    }
+  };
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.sentenceReordering')}</CardTitle>
+        <p className="text-sm text-gray-600 mt-1">{step.instruction || t('gameSteps.reorderInstruction')}</p>
+      </CardHeader>
+      <CardContent>
+        {sentenceAudio && (
+          <Button variant="outline" size="sm" onClick={playAudio} className="mb-4" data-testid="play-sentence-audio">
+            <Volume2 className="w-4 h-4 mr-2" />
+            {t('gameSteps.listenToSentence')}
+          </Button>
+        )}
+        
+        {/* Ordered sentence area */}
+        <div className="min-h-[80px] border-2 border-dashed border-emerald-300 rounded-lg p-4 mb-4">
+          <p className="text-xs text-gray-500 mb-2">{t('gameSteps.yourSentence')}</p>
+          <div className="flex flex-wrap gap-2">
+            {orderedWords.map((word, index) => (
+              <Badge 
+                key={index} 
+                className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1"
+                onClick={() => removeWord(word, index)}
+                data-testid={`ordered-word-${index}`}
+              >
+                {word}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Available words */}
+        <div className="mb-4">
+          <p className="text-xs text-gray-500 mb-2">{t('gameSteps.availableWords')}</p>
+          <div className="flex flex-wrap gap-2">
+            {availableWords.map((wordObj) => (
+              <Button
+                key={wordObj.index}
+                variant="outline"
+                size="sm"
+                onClick={() => addWord(wordObj)}
+                data-testid={`available-word-${wordObj.word}-${wordObj.index}`}
+              >
+                {wordObj.word}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {orderedWords.length === (step.scrambledWords || step.words || []).length && availableWords.length === 0 && (
+          <Button 
+            onClick={checkAnswer} 
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            data-testid="check-sentence"
+          >
+            {t('gameSteps.checkAnswer')}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Image Selection Step Component
+function ImageSelectionStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const images = step.images || step.options || [];
+  const correctImage = step.correctImage || step.answer;
+  const { generateWordAudio } = useTTS(step.language || 'en');
+  const [promptAudio, setPromptAudio] = useState<string | null>(step.audio || null);
+
+  // Generate audio for prompt
+  useEffect(() => {
+    const loadAudio = async () => {
+      if (!step.audio && step.prompt) {
+        const audioUrl = await generateWordAudio(step.prompt);
+        if (audioUrl) {
+          setPromptAudio(audioUrl);
+        }
+      }
+    };
+    loadAudio();
+  }, [step.audio, step.prompt, generateWordAudio]);
+
+  const handleImageSelect = (imageId: string) => {
+    setSelectedImage(imageId);
+    const isCorrect = imageId === correctImage;
+    const score = isCorrect ? 100 : 0;
+    setTimeout(() => onComplete(score), 800);
+  };
+
+  const playPrompt = () => {
+    if (promptAudio) {
+      new Audio(promptAudio).play().catch(err => console.error('Audio playback error:', err));
+    }
+  };
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.imageSelection')}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center mb-6">
+          <p className="text-lg font-medium mb-3">{step.prompt || step.question}</p>
+          {promptAudio && (
+            <Button variant="outline" size="sm" onClick={playPrompt} data-testid="play-prompt-audio">
+              <Volume2 className="w-4 h-4 mr-2" />
+              {t('gameSteps.playPrompt')}
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {images.map((image: any, index: number) => (
+            <Card
+              key={index}
+              className={cn(
+                "cursor-pointer transition-all hover:shadow-lg border-2",
+                selectedImage === (image.id || image.url) && (
+                  image.id === correctImage || image.url === correctImage
+                    ? "border-green-500 bg-green-50"
+                    : "border-red-500 bg-red-50"
+                )
+              )}
+              onClick={() => handleImageSelect(image.id || image.url)}
+              data-testid={`image-option-${index}`}
+            >
+              <CardContent className="p-3">
+                <img 
+                  src={image.url || image.image || image} 
+                  alt={image.alt || `Option ${index + 1}`} 
+                  className="w-full h-32 object-cover rounded mb-2" 
+                />
+                {image.label && <p className="text-sm text-center">{image.label}</p>}
+                {selectedImage === (image.id || image.url) && (
+                  <div className="mt-2 text-center">
+                    {image.id === correctImage || image.url === correctImage ? (
+                      <Check className="w-5 h-5 text-green-600 mx-auto" />
+                    ) : (
+                      <X className="w-5 h-5 text-red-600 mx-auto" />
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// True/False Step Component
+function TrueFalseStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, boolean>>({});
+  const [showResult, setShowResult] = useState(false);
+  const questions = step.questions || (step.statement ? [{ statement: step.statement, answer: step.answer }] : []);
+  const { generateWordAudio } = useTTS(step.language || 'en');
+  const [questionAudio, setQuestionAudio] = useState<Record<number, string>>({});
+
+  // Generate audio for all questions
+  useEffect(() => {
+    const loadAudio = async () => {
+      const audioMap: Record<number, string> = {};
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        if (!q.audio && q.statement) {
+          const audioUrl = await generateWordAudio(q.statement);
+          if (audioUrl) {
+            audioMap[i] = audioUrl;
+          }
+        } else if (q.audio) {
+          audioMap[i] = q.audio;
+        }
+      }
+      setQuestionAudio(audioMap);
+    };
+    loadAudio();
+  }, [questions, generateWordAudio]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+
+  const handleAnswer = (answer: boolean) => {
+    const newAnswers = { ...answers, [currentQuestionIndex]: answer };
+    setAnswers(newAnswers);
+    setShowResult(true);
+
+    setTimeout(() => {
+      setShowResult(false);
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      } else {
+        // Calculate final score
+        const correct = questions.filter((q: any, index: number) => 
+          newAnswers[index] === q.answer
+        ).length;
+        const score = (correct / questions.length) * 100;
+        onComplete(score);
+      }
+    }, 1500);
+  };
+
+  const playQuestionAudio = () => {
+    const audioUrl = questionAudio[currentQuestionIndex];
+    if (audioUrl) {
+      new Audio(audioUrl).play().catch(err => console.error('Audio playback error:', err));
+    }
+  };
+
+  if (!currentQuestion) return null;
+
+  const isCorrect = showResult && answers[currentQuestionIndex] === currentQuestion.answer;
+  const isWrong = showResult && answers[currentQuestionIndex] !== currentQuestion.answer;
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.trueFalse')}</CardTitle>
+        <div className="flex items-center justify-between mt-2">
+          <Badge>{t('gameSteps.question', { current: currentQuestionIndex + 1, total: questions.length })}</Badge>
+          <Badge variant="outline">
+            {t('gameSteps.correct', { count: Object.values(answers).filter((a, i) => a === questions[i]?.answer).length })}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center mb-6">
+          <p className="text-xl font-medium mb-4">{currentQuestion.statement}</p>
+          {questionAudio[currentQuestionIndex] && (
+            <Button variant="outline" size="sm" onClick={playQuestionAudio} data-testid="play-question-audio">
+              <Volume2 className="w-4 h-4 mr-2" />
+              {t('gameSteps.listenToQuestion')}
+            </Button>
+          )}
+        </div>
+
+        {!showResult && (
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              onClick={() => handleAnswer(true)}
+              className="h-20 text-lg bg-green-600 hover:bg-green-700"
+              data-testid="answer-true"
+            >
+              <Check className="w-6 h-6 mr-2" />
+              {t('gameSteps.true')}
+            </Button>
+            <Button
+              onClick={() => handleAnswer(false)}
+              className="h-20 text-lg bg-red-600 hover:bg-red-700"
+              data-testid="answer-false"
+            >
+              <X className="w-6 h-6 mr-2" />
+              {t('gameSteps.false')}
+            </Button>
+          </div>
+        )}
+
+        {showResult && (
+          <div className={cn(
+            "p-6 rounded-lg text-center",
+            isCorrect ? "bg-green-50" : "bg-red-50"
+          )}>
+            <div className="flex items-center justify-center mb-2">
+              {isCorrect ? (
+                <Check className="w-8 h-8 text-green-600" />
+              ) : (
+                <X className="w-8 h-8 text-red-600" />
+              )}
+            </div>
+            <p className={cn("text-lg font-medium", isCorrect ? "text-green-700" : "text-red-700")}>
+              {isCorrect ? t('feedback.correct') : t('feedback.incorrect')}
+            </p>
+            {currentQuestion.explanation && (
+              <p className="text-sm text-gray-600 mt-2">{currentQuestion.explanation}</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Spelling Step Component
+function SpellingStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [userSpelling, setUserSpelling] = useState<string[]>([]);
+  const [availableLetters, setAvailableLetters] = useState<string[]>(
+    [...(step.letters || step.word.split(''))].sort(() => Math.random() - 0.5)
+  );
+  const correctWord = step.word || step.answer || '';
+  const { generateWordAudio } = useTTS(step.language || 'en');
+  const [wordAudio, setWordAudio] = useState<string | null>(step.audio || null);
+
+  // Generate audio for the word
+  useEffect(() => {
+    const loadAudio = async () => {
+      if (!step.audio && correctWord) {
+        const audioUrl = await generateWordAudio(correctWord);
+        if (audioUrl) {
+          setWordAudio(audioUrl);
+        }
+      }
+    };
+    loadAudio();
+  }, [step.audio, correctWord, generateWordAudio]);
+
+  const addLetter = (letter: string, index: number) => {
+    setUserSpelling(prev => [...prev, letter]);
+    setAvailableLetters(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeLetter = (index: number) => {
+    const letter = userSpelling[index];
+    setUserSpelling(prev => prev.filter((_, i) => i !== index));
+    setAvailableLetters(prev => [...prev, letter]);
+  };
+
+  const checkSpelling = () => {
+    const userWord = userSpelling.join('');
+    const isCorrect = userWord.toLowerCase() === correctWord.toLowerCase();
+    const score = isCorrect ? 100 : 0;
+    setTimeout(() => onComplete(score), 500);
+  };
+
+  const resetSpelling = () => {
+    setUserSpelling([]);
+    setAvailableLetters([...(step.letters || step.word.split(''))].sort(() => Math.random() - 0.5));
+  };
+
+  const playWordAudio = () => {
+    if (wordAudio) {
+      new Audio(wordAudio).play().catch(err => console.error('Audio playback error:', err));
+    }
+  };
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.spelling')}</CardTitle>
+        <p className="text-sm text-gray-600 mt-1">{step.instruction || t('gameSteps.spellingInstruction')}</p>
+      </CardHeader>
+      <CardContent>
+        {/* Word hint */}
+        <div className="text-center mb-6">
+          {step.hint && <p className="text-lg mb-3">{step.hint}</p>}
+          {step.image && (
+            <div className="w-40 h-40 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
+              <img src={step.image} alt="Word hint" className="w-32 h-32 object-contain" />
+            </div>
+          )}
+          {wordAudio && (
+            <Button variant="outline" size="sm" onClick={playWordAudio} data-testid="play-word-audio">
+              <Volume2 className="w-4 h-4 mr-2" />
+              {t('gameSteps.listenToWord')}
+            </Button>
+          )}
+        </div>
+
+        {/* User's spelling */}
+        <div className="min-h-[80px] border-2 border-dashed border-emerald-300 rounded-lg p-4 mb-4 bg-emerald-50">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {userSpelling.map((letter, index) => (
+              <div
+                key={index}
+                className="w-12 h-12 bg-white border-2 border-emerald-500 rounded-lg flex items-center justify-center text-2xl font-bold cursor-pointer hover:bg-emerald-100"
+                onClick={() => removeLetter(index)}
+                data-testid={`spelling-letter-${index}`}
+              >
+                {letter}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Available letters */}
+        <div className="mb-4">
+          <p className="text-xs text-gray-500 mb-2 text-center">{t('gameSteps.tapLetters')}</p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {availableLetters.map((letter, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="w-12 h-12 text-xl font-bold"
+                onClick={() => addLetter(letter, index)}
+                data-testid={`available-letter-${letter}-${index}`}
+              >
+                {letter}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          <Button 
+            onClick={resetSpelling} 
+            variant="outline" 
+            className="flex-1"
+            data-testid="reset-spelling"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            {t('gameSteps.reset')}
+          </Button>
+          {userSpelling.length === correctWord.length && (
+            <Button 
+              onClick={checkSpelling} 
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              data-testid="check-spelling"
+            >
+              {t('gameSteps.checkAnswer')}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
