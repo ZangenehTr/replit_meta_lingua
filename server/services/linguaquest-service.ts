@@ -945,6 +945,156 @@ export class LinguaQuestService {
       throw new Error('Failed to get lesson stats');
     }
   }
+
+  // ====================================================================
+  // ADMIN MANAGEMENT METHODS
+  // ====================================================================
+
+  /**
+   * Create a new lesson (Admin)
+   */
+  async createLesson(lessonData: LinguaquestLessonInsert) {
+    try {
+      const [lesson] = await db
+        .insert(linguaquestLessons)
+        .values(lessonData)
+        .returning();
+
+      return lesson;
+    } catch (error) {
+      console.error('Error creating lesson:', error);
+      throw new Error('Failed to create lesson');
+    }
+  }
+
+  /**
+   * Update a lesson (Admin)
+   */
+  async updateLesson(lessonId: number, updates: Partial<LinguaquestLessonInsert>) {
+    try {
+      const [lesson] = await db
+        .update(linguaquestLessons)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(linguaquestLessons.id, lessonId))
+        .returning();
+
+      if (!lesson) {
+        throw new Error('Lesson not found');
+      }
+
+      return lesson;
+    } catch (error) {
+      console.error('Error updating lesson:', error);
+      throw new Error('Failed to update lesson');
+    }
+  }
+
+  /**
+   * Delete a lesson (Admin)
+   */
+  async deleteLesson(lessonId: number) {
+    try {
+      await db
+        .delete(linguaquestLessons)
+        .where(eq(linguaquestLessons.id, lessonId));
+    } catch (error) {
+      console.error('Error deleting lesson:', error);
+      throw new Error('Failed to delete lesson');
+    }
+  }
+
+  /**
+   * Get admin analytics dashboard data
+   */
+  async getAdminAnalytics() {
+    try {
+      // Get all lessons
+      const lessons = await db.select().from(linguaquestLessons);
+
+      // Get all progress tracking
+      const progressRecords = await db.select().from(guestProgressTracking);
+
+      // Get all feedback
+      const allFeedback = await db.select().from(linguaquestLessonFeedback);
+
+      // Calculate stats
+      const totalLessons = lessons.length;
+      const publishedLessons = lessons.filter(l => l.isPublished).length;
+      const totalGuests = progressRecords.length;
+      const totalFeedback = allFeedback.length;
+
+      // Calculate average rating across all lessons
+      const avgRating = allFeedback.length > 0
+        ? allFeedback.reduce((sum, f) => sum + (f.starRating || 0), 0) / allFeedback.length
+        : 0;
+
+      // Get difficulty distribution
+      const difficultyDist = lessons.reduce((dist, lesson) => {
+        const diff = lesson.difficulty || 'beginner';
+        dist[diff] = (dist[diff] || 0) + 1;
+        return dist;
+      }, {} as Record<string, number>);
+
+      // Get lesson type distribution
+      const lessonTypeDist = lessons.reduce((dist, lesson) => {
+        const type = lesson.lessonType || 'interactive';
+        dist[type] = (dist[type] || 0) + 1;
+        return dist;
+      }, {} as Record<string, number>);
+
+      // Get feedback difficulty distribution
+      const feedbackDiffDist = allFeedback.reduce((dist, f) => {
+        const diff = f.difficultyRating || 'just_right';
+        dist[diff] = (dist[diff] || 0) + 1;
+        return dist;
+      }, {} as Record<string, number>);
+
+      return {
+        totalLessons,
+        publishedLessons,
+        draftLessons: totalLessons - publishedLessons,
+        totalGuests,
+        totalFeedback,
+        averageRating: Math.round(avgRating * 10) / 10,
+        difficultyDistribution: difficultyDist,
+        lessonTypeDistribution: lessonTypeDist,
+        feedbackDifficultyDistribution: feedbackDiffDist,
+        lessons: lessons.map(lesson => ({
+          id: lesson.id,
+          title: lesson.title,
+          difficulty: lesson.difficulty,
+          lessonType: lesson.lessonType,
+          isPublished: lesson.isPublished,
+          language: lesson.language
+        }))
+      };
+    } catch (error) {
+      console.error('Error getting admin analytics:', error);
+      throw new Error('Failed to get admin analytics');
+    }
+  }
+
+  /**
+   * Get all feedback (Admin)
+   */
+  async getAllFeedback(lessonId?: number, limit: number = 100) {
+    try {
+      let query = db.select().from(linguaquestLessonFeedback);
+
+      if (lessonId) {
+        query = query.where(eq(linguaquestLessonFeedback.lessonId, lessonId)) as any;
+      }
+
+      const feedback = await query
+        .orderBy(desc(linguaquestLessonFeedback.createdAt))
+        .limit(limit);
+
+      return feedback;
+    } catch (error) {
+      console.error('Error getting all feedback:', error);
+      throw new Error('Failed to get all feedback');
+    }
+  }
 }
 
 export const linguaQuestService = new LinguaQuestService();

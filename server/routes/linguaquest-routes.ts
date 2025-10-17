@@ -444,20 +444,114 @@ export function registerLinguaQuestRoutes(app: Express) {
    */
   app.post('/api/linguaquest/admin/lessons', async (req, res) => {
     try {
-      // Validate lesson data
       const lessonData = insertLinguaquestLessonSchema.parse(req.body);
+      const lesson = await linguaQuestService.createLesson(lessonData);
       
-      // For now, return success message - actual implementation would create lesson
       res.json({ 
         success: true, 
-        message: 'Lesson creation endpoint ready - admin implementation pending',
-        lessonData
+        lesson,
+        message: 'Lesson created successfully'
       });
     } catch (error) {
       console.error('Error creating lesson:', error);
+      res.status(400).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to create lesson' 
+      });
+    }
+  });
+
+  /**
+   * Update existing LinguaQuest lesson (Admin only)
+   * PUT /api/linguaquest/admin/lessons/:lessonId
+   */
+  app.put('/api/linguaquest/admin/lessons/:lessonId', async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const updates = req.body;
+      
+      const lesson = await linguaQuestService.updateLesson(lessonId, updates);
+      
+      res.json({ 
+        success: true, 
+        lesson,
+        message: 'Lesson updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating lesson:', error);
+      res.status(400).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to update lesson' 
+      });
+    }
+  });
+
+  /**
+   * Delete LinguaQuest lesson (Admin only)
+   * DELETE /api/linguaquest/admin/lessons/:lessonId
+   */
+  app.delete('/api/linguaquest/admin/lessons/:lessonId', async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      
+      await linguaQuestService.deleteLesson(lessonId);
+      
+      res.json({ 
+        success: true,
+        message: 'Lesson deleted successfully'
+      });
+    } catch (error) {
+      console.error('Error deleting lesson:', error);
+      res.status(400).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to delete lesson' 
+      });
+    }
+  });
+
+  /**
+   * Get admin analytics dashboard data
+   * GET /api/linguaquest/admin/analytics
+   */
+  app.get('/api/linguaquest/admin/analytics', async (req, res) => {
+    try {
+      const analytics = await linguaQuestService.getAdminAnalytics();
+      
+      res.json({ 
+        success: true, 
+        analytics
+      });
+    } catch (error) {
+      console.error('Error getting admin analytics:', error);
       res.status(500).json({ 
         success: false, 
-        error: 'Failed to create lesson' 
+        error: 'Failed to get admin analytics' 
+      });
+    }
+  });
+
+  /**
+   * Get all feedback with aggregated stats (Admin only)
+   * GET /api/linguaquest/admin/feedback
+   */
+  app.get('/api/linguaquest/admin/feedback', async (req, res) => {
+    try {
+      const { lessonId, limit = '100' } = req.query;
+      
+      const feedback = await linguaQuestService.getAllFeedback(
+        lessonId ? parseInt(lessonId as string) : undefined,
+        parseInt(limit as string)
+      );
+      
+      res.json({ 
+        success: true, 
+        feedback
+      });
+    } catch (error) {
+      console.error('Error getting admin feedback:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to get feedback' 
       });
     }
   });
