@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import { healthRouter } from './health-monitoring.js';
 import { validateEnvironment } from './config/env-validator.js';
+import { metricsMiddleware } from './monitoring/metrics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -68,6 +69,9 @@ console.log('');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Add metrics middleware for performance tracking
+app.use(metricsMiddleware);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -473,6 +477,11 @@ app.use((req, res, next) => {
   // Register health monitoring endpoints
   app.use('/api', healthRouter);
   console.log('✅ Health monitoring endpoints registered');
+  
+  // Register telemetry endpoints
+  const telemetryRouter = (await import('./routes/telemetry-routes.js')).default;
+  app.use('/api/admin/telemetry', telemetryRouter);
+  console.log('✅ Telemetry endpoints registered');
   
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
