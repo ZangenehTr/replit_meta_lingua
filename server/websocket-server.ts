@@ -1,8 +1,8 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server } from 'http';
 import { db } from './db';
-import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users } from '../shared/schema';
-import { eq, and, like, sql } from 'drizzle-orm';
+import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus } from '../shared/schema';
+import { eq, and, like, sql, inArray } from 'drizzle-orm';
 import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
 
 interface CallRoom {
@@ -46,6 +46,10 @@ export class CallernWebSocketServer {
   private readonly MEMORY_WARNING_THRESHOLD = 0.8; // 80% of heap
   private readonly MEMORY_CRITICAL_THRESHOLD = 0.9; // 90% of heap
   
+  // WebSocket state sync constants
+  private readonly HEARTBEAT_INTERVAL = 30 * 1000; // 30 seconds
+  private readonly HEARTBEAT_TIMEOUT = 60 * 1000; // 60 seconds (2x interval)
+  
   // Public method to get connected teachers
   public getConnectedTeachers(): number[] {
     return Array.from(this.teacherSockets.keys());
@@ -72,6 +76,7 @@ export class CallernWebSocketServer {
     // Start monitoring systems
     this.startAbandonedRoomMonitor();
     this.startMemoryMonitor();
+    this.startHeartbeatMonitor();
     
     console.log('Callern WebSocket server with AI Supervisor and memory leak protection initialized');
   }
@@ -79,9 +84,12 @@ export class CallernWebSocketServer {
   private async clearAllTeachersOnlineStatus() {
     try {
       // Clear teacher socket connections on server start
-      // Online status is managed in memory via teacherSockets Map
       this.teacherSockets.clear();
-      console.log('Cleared all teachers online status on server start');
+      
+      // Clear database entries (server restart invalidates all connections)
+      await db.delete(teacherOnlineStatus);
+      
+      console.log('Cleared all teachers online status on server start (memory + database)');
     } catch (error) {
       console.error('Error clearing teacher online status:', error);
     }
@@ -107,11 +115,8 @@ export class CallernWebSocketServer {
         const roleLower = role.toLowerCase();
         
         if (roleLower === 'teacher') {
-          this.teacherSockets.set(userId, {
-            socketId: socket.id,
-            teacherId: userId,
-            isAvailable: enableCallern || false,
-          });
+          // Register teacher with database persistence
+          await this.registerTeacher(socket, userId, enableCallern || false);
           console.log('Teacher registered:', userId);
           console.log('Current teacher sockets after registration:', Array.from(this.teacherSockets.keys()));
           
@@ -151,6 +156,12 @@ export class CallernWebSocketServer {
           
           await this.updateTeacherAvailability(teacherId, true);
           
+          // Update database
+          await db
+            .update(teacherOnlineStatus)
+            .set({ isAvailable: true, lastHeartbeat: new Date() })
+            .where(eq(teacherOnlineStatus.teacherId, teacherId));
+          
           this.io.emit('teacher-status-update', {
             teacherId,
             status: 'online'
@@ -176,6 +187,12 @@ export class CallernWebSocketServer {
           }
           
           await this.updateTeacherAvailability(teacherId, false);
+          
+          // Update database
+          await db
+            .update(teacherOnlineStatus)
+            .set({ isAvailable: false, lastHeartbeat: new Date() })
+            .where(eq(teacherOnlineStatus.teacherId, teacherId));
           
           this.io.emit('teacher-status-update', {
             teacherId,
@@ -755,7 +772,8 @@ export class CallernWebSocketServer {
               await this.endCall(teacherSocket.currentCall, 'Teacher disconnected');
             }
             
-            this.teacherSockets.delete(teacherId);
+            // Unregister teacher (cleans up memory + database)
+            await this.unregisterTeacher(teacherId);
             
             // Notify admin dashboard
             this.io.emit('teacher-status-update', {
@@ -1322,5 +1340,175 @@ export class CallernWebSocketServer {
         console.warn(`⚠️  HIGH MEMORY: ${(heapUsedPercent * 100).toFixed(1)}% heap used`);
       }
     }, 60 * 1000); // Check every minute
+  }
+
+  /**
+   * Register teacher with database persistence
+   */
+  private async registerTeacher(socket: any, userId: number, enableCallern: boolean) {
+    try {
+      // Update memory cache
+      this.teacherSockets.set(userId, {
+        socketId: socket.id,
+        teacherId: userId,
+        isAvailable: enableCallern,
+      });
+
+      // Persist to database
+      await db.transaction(async (tx) => {
+        // Remove any existing entries for this teacher
+        await tx
+          .delete(teacherOnlineStatus)
+          .where(eq(teacherOnlineStatus.teacherId, userId));
+
+        // Insert new status
+        await tx.insert(teacherOnlineStatus).values({
+          teacherId: userId,
+          socketId: socket.id,
+          isAvailable: enableCallern,
+          lastHeartbeat: new Date(),
+          serverInstance: process.env.SERVER_INSTANCE_ID || 'default',
+        });
+      });
+
+      console.log(`✅ Teacher registered: ${userId} (Available: ${enableCallern})`);
+      
+      // Broadcast updated teacher list
+      await this.broadcastOnlineTeachers();
+      
+    } catch (error) {
+      console.error('Error registering teacher:', error);
+    }
+  }
+
+  /**
+   * Unregister teacher and cleanup
+   */
+  private async unregisterTeacher(teacherId: number) {
+    try {
+      // Remove from memory
+      this.teacherSockets.delete(teacherId);
+
+      // Remove from database
+      await db
+        .delete(teacherOnlineStatus)
+        .where(eq(teacherOnlineStatus.teacherId, teacherId));
+
+      console.log(`✅ Teacher unregistered: ${teacherId}`);
+      
+      // Broadcast updated teacher list
+      await this.broadcastOnlineTeachers();
+      
+    } catch (error) {
+      console.error('Error unregistering teacher:', error);
+    }
+  }
+
+  /**
+   * Get online teachers (hybrid memory + database)
+   */
+  async getOnlineTeachers(): Promise<number[]> {
+    try {
+      // Primary: Use memory cache for speed
+      const memoryTeachers = Array.from(this.teacherSockets.keys()).filter(teacherId => {
+        const teacher = this.teacherSockets.get(teacherId);
+        return teacher?.isAvailable;
+      });
+
+      // Secondary: Verify with database and cleanup stale entries
+      const dbTeachers = await db
+        .select()
+        .from(teacherOnlineStatus)
+        .where(eq(teacherOnlineStatus.isAvailable, true));
+
+      const now = new Date();
+      const staleTeachers: number[] = [];
+
+      dbTeachers.forEach(teacher => {
+        const lastHeartbeat = new Date(teacher.lastHeartbeat);
+        const timeSinceHeartbeat = now.getTime() - lastHeartbeat.getTime();
+
+        // If no heartbeat for 60 seconds, mark as stale
+        if (timeSinceHeartbeat > this.HEARTBEAT_TIMEOUT) {
+          staleTeachers.push(teacher.teacherId);
+        }
+      });
+
+      // Cleanup stale entries
+      if (staleTeachers.length > 0) {
+        console.warn(`⚠️  Cleaning ${staleTeachers.length} stale teacher connections`);
+        await db
+          .delete(teacherOnlineStatus)
+          .where(inArray(teacherOnlineStatus.teacherId, staleTeachers));
+      }
+
+      // Return union of memory and fresh database entries
+      const dbFreshTeachers = dbTeachers
+        .filter(t => !staleTeachers.includes(t.teacherId))
+        .map(t => t.teacherId);
+
+      const allTeachers = Array.from(new Set([...memoryTeachers, ...dbFreshTeachers]));
+
+      return allTeachers;
+      
+    } catch (error) {
+      console.error('Error getting online teachers:', error);
+      // Fallback to memory only
+      return Array.from(this.teacherSockets.keys());
+    }
+  }
+
+  /**
+   * Heartbeat mechanism to detect disconnects
+   */
+  private startHeartbeatMonitor() {
+    setInterval(async () => {
+      // Send heartbeat request to all connected teachers
+      this.teacherSockets.forEach(async (teacher, teacherId) => {
+        const socket = this.io.sockets.sockets.get(teacher.socketId);
+
+        if (socket) {
+          socket.emit('heartbeat-request');
+
+          // Set timeout to mark as offline if no response
+          setTimeout(async () => {
+            const stillConnected = this.io.sockets.sockets.has(teacher.socketId);
+            if (!stillConnected) {
+              console.warn(`⚠️  Teacher ${teacherId} failed heartbeat, removing`);
+              await this.unregisterTeacher(teacherId);
+            }
+          }, 5000); // 5 second timeout for heartbeat response
+        } else {
+          // Socket not found, cleanup
+          console.warn(`⚠️  Teacher ${teacherId} socket not found, cleaning up`);
+          await this.unregisterTeacher(teacherId);
+        }
+      });
+
+      // Update database heartbeats for all connected teachers
+      const teacherIds = Array.from(this.teacherSockets.keys());
+      if (teacherIds.length > 0) {
+        try {
+          await db
+            .update(teacherOnlineStatus)
+            .set({ lastHeartbeat: new Date() })
+            .where(inArray(teacherOnlineStatus.teacherId, teacherIds));
+        } catch (error) {
+          console.error('Error updating heartbeats:', error);
+        }
+      }
+    }, this.HEARTBEAT_INTERVAL);
+  }
+
+  /**
+   * Broadcast online teachers to all clients
+   */
+  private async broadcastOnlineTeachers() {
+    try {
+      const onlineTeachers = await this.getOnlineTeachers();
+      this.io.emit('online-teachers-updated', { teachers: onlineTeachers });
+    } catch (error) {
+      console.error('Error broadcasting online teachers:', error);
+    }
   }
 }

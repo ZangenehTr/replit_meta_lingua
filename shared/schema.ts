@@ -2655,6 +2655,17 @@ export const teacherCallernAvailability = pgTable("teacher_callern_availability"
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Teacher Online Status - Database-backed real-time status with heartbeat
+export const teacherOnlineStatus = pgTable("teacher_online_status", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  socketId: varchar("socket_id", { length: 255 }).notNull(),
+  isAvailable: boolean("is_available").default(false).notNull(),
+  lastHeartbeat: timestamp("last_heartbeat").defaultNow().notNull(),
+  connectedAt: timestamp("connected_at").defaultNow().notNull(),
+  serverInstance: varchar("server_instance", { length: 255 })
+});
+
 // Teacher CallerN Authorization table
 export const teacherCallernAuthorization = pgTable("teacher_callern_authorization", {
   id: serial("id").primaryKey(),
@@ -6358,6 +6369,9 @@ export const insertTeacherCallernAuthorizationSchema = createInsertSchema(teache
 export const insertTeacherCallernAvailabilitySchema = createInsertSchema(teacherCallernAvailability).omit({ 
   id: true, createdAt: true, updatedAt: true 
 });
+export const insertTeacherOnlineStatusSchema = createInsertSchema(teacherOnlineStatus).omit({ 
+  id: true 
+});
 
 
 // Scoring types
@@ -6377,6 +6391,8 @@ export type TeacherCallernAuthorization = typeof teacherCallernAuthorization.$in
 export type InsertTeacherCallernAuthorization = typeof teachercallernauthorizations.$inferInsert;
 export type TeacherCallernAvailability = typeof teacherCallernAvailability.$inferSelect;
 export type InsertTeacherCallernAvailability = typeof teachercallernavailabilitys.$inferInsert;
+export type TeacherOnlineStatus = typeof teacherOnlineStatus.$inferSelect;
+export type InsertTeacherOnlineStatus = z.infer<typeof insertTeacherOnlineStatusSchema>;
 
 // ========================
 // CALLERN ROADMAP TEMPLATE SYSTEM (New Implementation)
