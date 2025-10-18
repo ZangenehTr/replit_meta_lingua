@@ -483,6 +483,11 @@ app.use((req, res, next) => {
   app.use('/api/admin/telemetry', telemetryRouter);
   console.log('✅ Telemetry endpoints registered');
   
+  // Register disk monitoring endpoints
+  const diskRouter = (await import('./routes/disk-routes.js')).default;
+  app.use('/api/admin/disk', diskRouter);
+  console.log('✅ Disk monitoring endpoints registered');
+  
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
