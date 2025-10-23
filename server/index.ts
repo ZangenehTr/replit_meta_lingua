@@ -492,6 +492,45 @@ app.use((req, res, next) => {
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
   
+  // Initialize Isabel VoIP service from environment variables
+  if (process.env.ISABEL_VOIP_ENABLED === 'true' && process.env.ISABEL_VOIP_SERVER) {
+    try {
+      const { isabelVoipService } = await import('./isabel-voip-service.js');
+      const connected = await isabelVoipService.configure({
+        serverAddress: process.env.ISABEL_VOIP_SERVER,
+        port: parseInt(process.env.ISABEL_VOIP_PORT || '5038'),
+        username: process.env.ISABEL_VOIP_USERNAME || '',
+        password: process.env.ISABEL_VOIP_PASSWORD || '',
+        enabled: true,
+        callRecordingEnabled: process.env.ISABEL_VOIP_RECORDING_ENABLED === 'true',
+        recordingStoragePath: process.env.ISABEL_VOIP_RECORDING_PATH || '/var/recordings'
+      });
+      
+      if (connected) {
+        console.log(`✅ Isabel VoIP connected to real server: ${process.env.ISABEL_VOIP_SERVER}:${process.env.ISABEL_VOIP_PORT || '5038'}`);
+      } else {
+        // Only possible in development (production throws error)
+        console.warn(`⚠️  Isabel VoIP configured but connection failed: ${process.env.ISABEL_VOIP_SERVER}:${process.env.ISABEL_VOIP_PORT || '5038'}`);
+        console.log('   VoIP calls will use simulation mode. Check server connectivity and credentials.');
+      }
+    } catch (error) {
+      console.error('❌ Isabel VoIP initialization error:', error.message);
+      
+      // In production, halt startup if VoIP is configured but cannot connect
+      if (process.env.NODE_ENV === 'production') {
+        console.error('');
+        console.error('❌ FATAL: Cannot start in production with Isabel VoIP enabled but unreachable');
+        console.error('Either fix the VoIP server connection or set ISABEL_VOIP_ENABLED=false');
+        process.exit(1);
+      }
+      
+      // In development, continue with simulation mode
+      console.log('   VoIP calls will use simulation mode until configured via admin panel');
+    }
+  } else {
+    console.log('ℹ️  Isabel VoIP not configured - set ISABEL_VOIP_ENABLED=true and ISABEL_VOIP_SERVER to enable');
+  }
+  
   // Initialize SMS reminder worker
   const { smsReminderWorker } = await import('./workers/sms-reminder.worker.js');
   smsReminderWorker.start();

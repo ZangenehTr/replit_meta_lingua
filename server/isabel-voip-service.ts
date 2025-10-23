@@ -41,18 +41,21 @@ export class IsabelVoipService extends EventEmitter {
 
   /**
    * Configure Isabel VoIP service with server settings
+   * Returns true if real connection established, false if using simulation/failed
    */
-  async configure(settings: VoipSettings): Promise<void> {
+  async configure(settings: VoipSettings): Promise<boolean> {
     this.settings = settings;
     console.log(`Isabel VoIP configured: ${settings.serverAddress}:${settings.port} (${settings.username})`);
     
     if (settings.enabled) {
-      await this.connect();
+      return await this.connect();
     }
+    return false;
   }
 
   /**
    * Connect to Isabel VoIP server via SIP protocol
+   * In production, throws error if connection fails (no simulation)
    */
   async connect(): Promise<boolean> {
     if (!this.settings) {
@@ -82,13 +85,19 @@ export class IsabelVoipService extends EventEmitter {
     } catch (error) {
       console.error('Isabel VoIP connection failed:', error);
       this.isConnected = false;
+      this.emit('connectionFailed', error);
       
+      // In production, throw error (no simulation fallback)
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error(`Isabel VoIP connection failed in production: ${error.message || error}`);
+      }
+      
+      // In development, allow retry and eventual simulation fallback
       if (this.connectionAttempts < this.maxConnectionAttempts) {
         console.log(`Retrying Isabel VoIP connection in 5 seconds...`);
         setTimeout(() => this.connect(), 5000);
-      } else {
-        this.emit('connectionFailed', error);
       }
+      
       return false;
     }
   }
@@ -259,9 +268,15 @@ export class IsabelVoipService extends EventEmitter {
         return httpResult.data;
       }
 
-      // If both fail, use development simulation
+      // Both real connections failed
       throw new Error('Both SIP and HTTP connection attempts failed');
     } catch (error) {
+      // In production, propagate the error (no simulation)
+      if (process.env.NODE_ENV === 'production') {
+        throw error;
+      }
+      
+      // In development, use simulation as fallback
       console.log(`Isabel VoIP server not accessible - using development simulation for ${action}`);
       return this.getSimulatedResponse(action, params);
     }

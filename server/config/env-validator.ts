@@ -19,7 +19,15 @@ const envSchema = z.object({
   SHETAB_SECRET_KEY: z.string().min(32, 'SHETAB_SECRET_KEY must be at least 32 characters for secure signature verification').optional(),
   SHETAB_GATEWAY_URL: z.string().url().optional(),
   SHETAB_CALLBACK_URL: z.string().url().optional(),
-  ISABEL_VOIP_API_KEY: z.string().optional(),
+  
+  // Isabel VoIP Configuration
+  ISABEL_VOIP_ENABLED: z.string().optional(),
+  ISABEL_VOIP_SERVER: z.string().optional(),
+  ISABEL_VOIP_PORT: z.string().optional(),
+  ISABEL_VOIP_USERNAME: z.string().optional(),
+  ISABEL_VOIP_PASSWORD: z.string().optional(),
+  ISABEL_VOIP_RECORDING_ENABLED: z.string().optional(),
+  ISABEL_VOIP_RECORDING_PATH: z.string().optional(),
   
   // Server Instance (for multi-server deployments)
   SERVER_INSTANCE_ID: z.string().optional(),
@@ -70,7 +78,7 @@ export function validateEnvironment() {
     console.log(`   - Ollama: ${config.OLLAMA_HOST || 'not configured'}`);
     console.log(`   - Kavenegar SMS: ${config.KAVENEGAR_API_KEY ? 'configured' : 'not configured'}`);
     console.log(`   - Shetab Payment: ${config.SHETAB_MERCHANT_ID ? 'configured' : 'not configured'}`);
-    console.log(`   - Isabel VoIP: ${config.ISABEL_VOIP_API_KEY ? 'configured' : 'not configured'}`);
+    console.log(`   - Isabel VoIP: ${config.ISABEL_VOIP_SERVER ? `${config.ISABEL_VOIP_SERVER}:${config.ISABEL_VOIP_PORT || '5038'} (${config.ISABEL_VOIP_ENABLED === 'true' ? 'enabled' : 'disabled'})` : 'not configured'}`);
   }
   
   return result;
