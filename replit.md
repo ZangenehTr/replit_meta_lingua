@@ -41,6 +41,14 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
     - LinguaQuest interactive game system with 19 activity types (e.g., Sentence Reordering, Image Selection, Spelling, True/False)
     - LinguaQuest Progress Dashboard with real-time stats (XP, streaks, achievements, lesson history)
     - TTS audio pre-generation pipeline for LinguaQuest content
+    - **Front Desk Clerk Pages** (Oct 2025): Fully internationalized with comprehensive i18n support
+      - Dashboard: 92+ translation calls, quick actions, stats cards, task management, trial scheduling
+      - Walk-in Intake: 200+ translations, multi-step form with memoized validation schema, RTL-aware navigation
+      - Call Logging: 80+ translations, call timer, quick templates, internationalized validation
+      - Caller History: Full i18n for filters, search, timeline view, export functionality
+      - All pages support English/Farsi/Arabic with proper RTL layouts
+      - Validation messages fully internationalized using useMemo pattern
+      - Language toggle integrated for seamless switching
 
 ### Backend
 - **Framework**: Express.js with TypeScript
