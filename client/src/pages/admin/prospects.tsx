@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Target, Plus, UserCheck, Clock, TrendingUp } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ import { apiRequest } from '@/lib/queryClient';
 
 export default function AdminProspectsPage() {
   const { t } = useTranslation(['callcenter', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
@@ -132,7 +134,7 @@ export default function AdminProspectsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('callcenter:prospects.title')}</h1>
         <Button onClick={() => setIsAddDialogOpen(true)}>

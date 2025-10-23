@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Phone, PhoneIncoming, PhoneOutgoing, Clock, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ import { Label } from '@/components/ui/label';
 
 export default function AdminCallsPage() {
   const { t } = useTranslation(['callcenter', 'common']);
+  const { isRTL } = useLanguage();
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
 
@@ -154,7 +156,7 @@ export default function AdminCallsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('callcenter:calls.title')}</h1>
         <Button onClick={() => setIsCallModalOpen(true)} data-testid="button-start-call">
