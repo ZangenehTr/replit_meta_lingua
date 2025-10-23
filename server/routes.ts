@@ -26605,7 +26605,35 @@ Meta Lingua Academy`;
         return res.status(400).json({ error: 'Invalid data', details: validation.error.issues });
       }
       
-      const operation = await storage.createFrontDeskOperation(validation.data);
+      let operation = await storage.createFrontDeskOperation(validation.data);
+      
+      // AUTO-CONVERT walk-in and inquiry operations to leads for Call Center follow-up
+      if ((operation.operationType === 'walk_in' || operation.operationType === 'inquiry') && 
+          operation.visitorName && operation.visitorPhone) {
+        try {
+          const nameParts = operation.visitorName.split(' ');
+          const leadData = {
+            firstName: nameParts[0] || 'Walk-in',
+            lastName: nameParts.slice(1).join(' ') || 'Visitor',
+            phoneNumber: operation.visitorPhone,
+            leadSource: 'front_desk',
+            status: 'new',
+            priority: operation.priority || 'medium',
+            notes: `Auto-created from front desk operation #${operation.id}. Purpose: ${operation.purpose || 'Not specified'}. ${operation.description || ''}`,
+            createdBy: req.user.id
+          };
+          
+          const result = await storage.convertFrontDeskOperationToLead(operation.id, leadData);
+          // Use the updated operation from conversion (has leadId, convertedToLead fields)
+          operation = result.operation;
+          console.log(`✅ Auto-converted front desk operation #${operation.id} to lead #${result.lead.id}`);
+        } catch (conversionError) {
+          console.error('⚠️ Auto-conversion to lead failed:', conversionError);
+          // Continue with original operation - frontend still receives valid response
+        }
+      }
+      
+      // Always return operation object (maintains frontend contract)
       res.status(201).json(operation);
     } catch (error) {
       console.error('Error creating front desk operation:', error);
