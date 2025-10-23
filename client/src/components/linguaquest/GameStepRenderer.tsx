@@ -26,25 +26,30 @@ export function GameStepRenderer({ step, onComplete, onProgress }: GameStepProps
       case 'introduction':
       case 'scenario_intro':
       case 'scenario_introduction':
+      case 'cultural_context':
         return <IntroductionStep step={step} onComplete={handleStepComplete} />;
       
       case 'vocabulary_introduction':
       case 'vocabulary_flashcards':
       case 'vocabulary_gallery':
       case 'vocabulary_body_parts':
+      case 'word_building':
         return <VocabularyStep step={step} onComplete={handleStepComplete} />;
       
       case 'matching_game':
       case 'memory_game':
+      case 'idiom_matching':
         return <MatchingGameStep step={step} onComplete={handleStepComplete} />;
       
       case 'conversation_practice':
+      case 'conversation_builder':
       case 'dialogue_roleplay':
       case 'dialogue_doctor':
       case 'waiter_dialogue':
         return <ConversationStep step={step} onComplete={handleStepComplete} />;
       
       case 'pronunciation_challenge':
+      case 'pronunciation_practice':
         return <PronunciationStep step={step} onComplete={handleStepComplete} />;
       
       case 'listening_comprehension':
@@ -52,6 +57,7 @@ export function GameStepRenderer({ step, onComplete, onProgress }: GameStepProps
         return <ListeningStep step={step} onComplete={handleStepComplete} />;
       
       case 'fill_in_blank':
+      case 'story_completion':
         return <FillInBlankStep step={step} onComplete={handleStepComplete} />;
       
       case 'drag_and_drop':
