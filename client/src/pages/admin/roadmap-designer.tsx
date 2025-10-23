@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { 
   Plus, 
   Edit, 
@@ -74,6 +75,7 @@ interface RoadmapStep {
 
 export default function RoadmapDesigner() {
   const { t } = useTranslation(['admin']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   
   const [selectedRoadmap, setSelectedRoadmap] = useState<Roadmap | null>(null);
@@ -268,7 +270,7 @@ export default function RoadmapDesigner() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header - Mobile First */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

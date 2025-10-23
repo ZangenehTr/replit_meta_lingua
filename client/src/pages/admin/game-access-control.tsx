@@ -11,10 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Trash2, Plus, Edit, Users, BookOpen, Settings } from 'lucide-react';
 
 export function GameAccessControl() {
   const { t } = useTranslation(['admin']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
@@ -127,7 +129,7 @@ export function GameAccessControl() {
   });
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">{t('admin:gameAccess.title', 'Game Access Control')}</h1>
         <p className="text-muted-foreground">{t('admin:gameAccess.description', 'Manage which students can access which games')}</p>

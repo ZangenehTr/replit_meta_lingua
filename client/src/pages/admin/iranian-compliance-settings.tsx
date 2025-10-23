@@ -13,10 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, CheckCircle, AlertCircle, Info, Eye, EyeOff, Brain, Video, Cpu } from "lucide-react";
 
 export function IranianComplianceSettings() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"voip" | "shetab" | "sms" | "general" | "ai">("voip");
@@ -167,7 +169,7 @@ export function IranianComplianceSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t('admin:iranianCompliance.title')}</h1>

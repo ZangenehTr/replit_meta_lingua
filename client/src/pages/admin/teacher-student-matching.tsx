@@ -28,6 +28,7 @@ import {
   CheckCircle
 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface TimeSlot {
   day: string;
@@ -101,6 +102,7 @@ function isTimeOverlap(slot1: any, slot2: any): boolean {
 
 export default function TeacherStudentMatchingPage() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("one-on-one"); // "one-on-one" or "group-classes"
   const [searchTerm, setSearchTerm] = useState("");
@@ -298,7 +300,7 @@ export default function TeacherStudentMatchingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">

@@ -45,6 +45,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Campaign {
   id: number;
@@ -68,6 +69,7 @@ interface Campaign {
 
 export default function CampaignManagementPage() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -400,7 +402,7 @@ export default function CampaignManagementPage() {
   };
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">

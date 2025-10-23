@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,7 @@ interface GameStats {
 
 export default function EnhancedGamesManagement() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -487,7 +489,7 @@ export default function EnhancedGamesManagement() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Games Management</h1>

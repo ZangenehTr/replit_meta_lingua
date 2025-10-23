@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdvancedRoadmapEditor from '@/components/admin/AdvancedRoadmapEditor';
 import { 
@@ -50,6 +51,7 @@ interface Package {
 
 export default function CallernRoadmapManager() {
   const { t } = useTranslation(['admin']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   
   const [showEditor, setShowEditor] = useState(false);
@@ -177,7 +179,7 @@ export default function CallernRoadmapManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="animated-bg-overlay" />
       
       {/* Header */}

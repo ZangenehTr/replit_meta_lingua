@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { 
   Bot, 
   Server, 
@@ -66,6 +67,7 @@ const RECOMMENDED_MODELS = (t: any) => [
 
 export default function AIServicesManagement() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedModel, setSelectedModel] = useState<string>("");
@@ -191,7 +193,7 @@ export default function AIServicesManagement() {
   const isOllamaReady = ollamaStatus?.isInstalled && ollamaStatus?.isRunning;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Ollama Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

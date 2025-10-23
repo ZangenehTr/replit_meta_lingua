@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Badge } from '@/components/ui/badge';
 import { 
   Phone, 
@@ -67,6 +68,7 @@ const defaultPermissions: CallCenterPermissions = {
 
 export default function CallCenterAccessControl() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<CallCenterUser | null>(null);
   const [editingPermissions, setEditingPermissions] = useState<CallCenterPermissions>(defaultPermissions);
@@ -147,7 +149,7 @@ export default function CallCenterAccessControl() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto p-6" data-testid="callcenter-access-control">
+      <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'} data-testid="callcenter-access-control">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">{t('admin:callCenterAccessControl.title', 'Call Center Access Control')}</h1>
           <p className="text-muted-foreground mt-2">

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -140,8 +141,8 @@ const NotificationsContent = () => {
 
 export const AdminDashboard = () => {
   const { user } = useAuth();
-  const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'fa';
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -183,7 +184,7 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50", isRTL && "rtl")}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Professional Admin Header */}
       <motion.header 
         className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm"

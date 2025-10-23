@@ -28,6 +28,7 @@ import {
   UserPlus
 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface TeacherStudentBundle {
   id: string;
@@ -82,6 +83,7 @@ interface MentorAssignment {
 
 export default function MentorMatchingPage() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
@@ -173,7 +175,7 @@ export default function MentorMatchingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 sm:p-6 space-y-4 sm:space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header - Mobile First */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>

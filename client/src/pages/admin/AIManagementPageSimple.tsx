@@ -2,13 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 export function AIManagementPageSimple() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   console.log("Simple AI Management page loading...");
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t('admin:aiServices.title')}</h1>

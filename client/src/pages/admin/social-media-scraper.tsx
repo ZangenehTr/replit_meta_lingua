@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const PLATFORM_ICONS: Record<string, any> = {
   instagram: Instagram,
@@ -64,6 +65,7 @@ const PLATFORM_ICONS: Record<string, any> = {
 };
 
 export default function SocialMediaScraperAdmin() {
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [newJobOpen, setNewJobOpen] = useState(false);
@@ -135,7 +137,7 @@ export default function SocialMediaScraperAdmin() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Social Media Scraper Management</h1>
         <Dialog open={newJobOpen} onOpenChange={setNewJobOpen}>

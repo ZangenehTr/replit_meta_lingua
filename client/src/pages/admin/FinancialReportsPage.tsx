@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Users, Calendar, CreditCard } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface FinancialSummary {
   success: boolean;
@@ -38,6 +39,7 @@ interface FinancialSummary {
 
 export function FinancialReportsPage() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   // Fetch chart colors from API
   const { data: COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'] } = useQuery({
     queryKey: ['/api/admin/financial/chart-colors'],
@@ -79,7 +81,7 @@ export function FinancialReportsPage() {
   ].filter(item => item.value > 0) : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t('admin:financialReports.title')}</h1>

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,7 @@ interface TrainingFile {
 
 export function ComprehensiveAIManagement() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const [selectedModel, setSelectedModel] = useState("");
   const [testPrompt, setTestPrompt] = useState('');
   const [testResponse, setTestResponse] = useState('');
@@ -784,7 +786,7 @@ export function ComprehensiveAIManagement() {
   const totalRequests = tokenUsage?.reduce((sum, usage) => sum + usage.requestCount, 0) || 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">AI Services Management</h1>
