@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -145,6 +146,8 @@ interface AnalyticsData {
 }
 
 export default function CallerHistoryDashboard() {
+  const { t, i18n } = useTranslation(['frontdesk', 'common']);
+  const isRTL = i18n.dir() === 'rtl';
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -288,14 +291,14 @@ export default function CallerHistoryDashboard() {
       URL.revokeObjectURL(url);
       
       toast({
-        title: "Export Successful",
-        description: `Your ${format.toUpperCase()} file has been downloaded.`
+        title: t('common:success'),
+        description: t('frontdesk:callerHistory.exportSuccess', { format: format.toUpperCase() })
       });
     },
     onError: () => {
       toast({
-        title: "Export Failed",
-        description: "There was an error exporting your data. Please try again.",
+        title: t('common:error'),
+        description: t('frontdesk:callerHistory.exportFailed'),
         variant: "destructive"
       });
     }
@@ -416,7 +419,7 @@ export default function CallerHistoryDashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900" data-testid="caller-history-dashboard">
+    <div className={cn("flex h-screen bg-gray-50 dark:bg-gray-900", isRTL && "rtl")} data-testid="caller-history-dashboard" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
@@ -424,34 +427,34 @@ export default function CallerHistoryDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Caller History Dashboard
+                {t('frontdesk:callerHistory.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Comprehensive customer interaction tracking and analytics
+                {t('frontdesk:callerHistory.subtitle')}
               </p>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className={cn("flex items-center space-x-4", isRTL && "space-x-reverse")}>
               {/* View Mode Toggle */}
               <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
                 <TabsList>
                   <TabsTrigger value="list" data-testid="view-list">
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    List
+                    <BarChart3 className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    {t('common:list')}
                   </TabsTrigger>
                   <TabsTrigger value="timeline" data-testid="view-timeline">
-                    <History className="h-4 w-4 mr-2" />
-                    Timeline
+                    <History className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    {t('common:timeline')}
                   </TabsTrigger>
                   <TabsTrigger value="analytics" data-testid="view-analytics">
-                    <PieChart className="h-4 w-4 mr-2" />
-                    Analytics
+                    <PieChart className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    {t('common:analytics')}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
 
               {/* Export Options */}
-              <div className="flex items-center space-x-2">
+              <div className={cn("flex items-center space-x-2", isRTL && "space-x-reverse")}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -459,7 +462,7 @@ export default function CallerHistoryDashboard() {
                   disabled={exportMutation.isPending}
                   data-testid="export-csv"
                 >
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
                   CSV
                 </Button>
                 <Button
@@ -469,7 +472,7 @@ export default function CallerHistoryDashboard() {
                   disabled={exportMutation.isPending}
                   data-testid="export-pdf"
                 >
-                  <FileText className="h-4 w-4 mr-2" />
+                  <FileText className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
                   PDF
                 </Button>
               </div>
@@ -479,29 +482,29 @@ export default function CallerHistoryDashboard() {
 
         {/* Search and Filters Bar */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="flex items-center space-x-4">
+          <div className={cn("flex items-center space-x-4", isRTL && "space-x-reverse")}>
             {/* Main Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className={cn("absolute top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4", isRTL ? "right-3" : "left-3")} />
               <Input
-                placeholder="Search by name, phone, email, or notes..."
+                placeholder={t('frontdesk:callerHistory.searchCalls')}
                 value={searchFilters.query}
                 onChange={(e) => updateFilter('query', e.target.value)}
-                className="pl-10"
+                className={cn(isRTL ? "pr-10" : "pl-10")}
                 data-testid="search-input"
               />
               
               {/* Recent Searches Dropdown */}
               {recentSearches.length > 0 && (
-                <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md mt-1 z-10 shadow-lg">
+                <div className={cn("absolute top-full z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md mt-1 shadow-lg", isRTL ? "right-0 left-0" : "left-0 right-0")}>
                   <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                    Recent Searches
+                    {t('common:recentSearches')}
                   </div>
                   {recentSearches.map((search, index) => (
                     <button
                       key={index}
                       onClick={() => updateFilter('query', search)}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className={cn("w-full px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700", isRTL ? "text-right" : "text-left")}
                       data-testid={`recent-search-${index}`}
                     >
                       {search}
@@ -514,7 +517,7 @@ export default function CallerHistoryDashboard() {
             {/* Phone Number Search */}
             <div className="w-48">
               <Input
-                placeholder="Phone (09xxxxxxxxx)"
+                placeholder={t('frontdesk:callLogging.callerPhone')}
                 value={searchFilters.phoneNumber}
                 onChange={(e) => updateFilter('phoneNumber', e.target.value)}
                 data-testid="phone-search"
@@ -524,7 +527,7 @@ export default function CallerHistoryDashboard() {
             {/* Email Search */}
             <div className="w-48">
               <Input
-                placeholder="Email address"
+                placeholder={t('frontdesk:callLogging.callerEmail')}
                 value={searchFilters.email}
                 onChange={(e) => updateFilter('email', e.target.value)}
                 data-testid="email-search"
@@ -532,12 +535,12 @@ export default function CallerHistoryDashboard() {
             </div>
 
             {/* Date Range */}
-            <div className="flex items-center space-x-2">
+            <div className={cn("flex items-center space-x-2", isRTL && "space-x-reverse")}>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" data-testid="date-from">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    {searchFilters.dateFrom ? format(searchFilters.dateFrom, 'MMM dd') : 'From'}
+                    <CalendarIcon className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    {searchFilters.dateFrom ? format(searchFilters.dateFrom, 'MMM dd') : t('frontdesk:callerHistory.from')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -553,8 +556,8 @@ export default function CallerHistoryDashboard() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" data-testid="date-to">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    {searchFilters.dateTo ? format(searchFilters.dateTo, 'MMM dd') : 'To'}
+                    <CalendarIcon className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    {searchFilters.dateTo ? format(searchFilters.dateTo, 'MMM dd') : t('frontdesk:callerHistory.to')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -575,8 +578,8 @@ export default function CallerHistoryDashboard() {
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               data-testid="toggle-advanced-filters"
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
+              <Filter className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+              {t('frontdesk:callerHistory.filterBy')}
               {(searchFilters.callType.length > 0 || 
                 searchFilters.outcome.length > 0 || 
                 searchFilters.urgencyLevel.length > 0 ||
@@ -584,7 +587,7 @@ export default function CallerHistoryDashboard() {
                 searchFilters.handledBy.length > 0 ||
                 searchFilters.tags.length > 0 ||
                 searchFilters.conversionStatus.length > 0) && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className={cn(isRTL ? "mr-2" : "ml-2")}>
                   {[
                     ...searchFilters.callType,
                     ...searchFilters.outcome,
@@ -615,7 +618,7 @@ export default function CallerHistoryDashboard() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Call Type Filter */}
                 <div>
-                  <Label className="text-sm font-medium">Call Type</Label>
+                  <Label className="text-sm font-medium">{t('frontdesk:callLogging.callType')}</Label>
                   <div className="mt-2 space-y-2">
                     {['incoming', 'outgoing', 'missed'].map(type => (
                       <div key={type} className="flex items-center space-x-2">
@@ -631,9 +634,9 @@ export default function CallerHistoryDashboard() {
                           }}
                           data-testid={`filter-call-type-${type}`}
                         />
-                        <Label htmlFor={`call-type-${type}`} className="text-sm capitalize">
-                          {type.replace('_', ' ')}
-                        </Label>
+                        <label htmlFor={`call-type-${type}`} className="text-sm">
+                          {t(`frontdesk:callerHistory.${type}`)}
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -641,9 +644,9 @@ export default function CallerHistoryDashboard() {
 
                 {/* Outcome Filter */}
                 <div>
-                  <Label className="text-sm font-medium">Outcome</Label>
+                  <Label className="text-sm font-medium">{t('frontdesk:callerHistory.outcome')}</Label>
                   <div className="mt-2 space-y-2">
-                    {['successful', 'voicemail', 'no_answer', 'busy', 'callback'].map(outcome => (
+                    {['successful', 'voicemail', 'callback', 'no_answer'].map(outcome => (
                       <div key={outcome} className="flex items-center space-x-2">
                         <Checkbox
                           id={`outcome-${outcome}`}
@@ -657,9 +660,9 @@ export default function CallerHistoryDashboard() {
                           }}
                           data-testid={`filter-outcome-${outcome}`}
                         />
-                        <Label htmlFor={`outcome-${outcome}`} className="text-sm capitalize">
-                          {outcome.replace('_', ' ')}
-                        </Label>
+                        <label htmlFor={`outcome-${outcome}`} className="text-sm">
+                          {t(`frontdesk:callLogging.${outcome}`)}
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -667,51 +670,25 @@ export default function CallerHistoryDashboard() {
 
                 {/* Urgency Level Filter */}
                 <div>
-                  <Label className="text-sm font-medium">Urgency</Label>
+                  <Label className="text-sm font-medium">{t('frontdesk:callLogging.urgencyLevel')}</Label>
                   <div className="mt-2 space-y-2">
-                    {['low', 'medium', 'high', 'urgent'].map(level => (
-                      <div key={level} className="flex items-center space-x-2">
+                    {['low', 'medium', 'high', 'urgent'].map(urgency => (
+                      <div key={urgency} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`urgency-${level}`}
-                          checked={searchFilters.urgencyLevel.includes(level)}
+                          id={`urgency-${urgency}`}
+                          checked={searchFilters.urgencyLevel.includes(urgency)}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              updateFilter('urgencyLevel', [...searchFilters.urgencyLevel, level]);
+                              updateFilter('urgencyLevel', [...searchFilters.urgencyLevel, urgency]);
                             } else {
-                              updateFilter('urgencyLevel', searchFilters.urgencyLevel.filter(l => l !== level));
+                              updateFilter('urgencyLevel', searchFilters.urgencyLevel.filter(u => u !== urgency));
                             }
                           }}
-                          data-testid={`filter-urgency-${level}`}
+                          data-testid={`filter-urgency-${urgency}`}
                         />
-                        <Label htmlFor={`urgency-${level}`} className="text-sm capitalize">
-                          {level}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Interaction Type Filter */}
-                <div>
-                  <Label className="text-sm font-medium">Type</Label>
-                  <div className="mt-2 space-y-2">
-                    {['phone_call', 'walk_in', 'email', 'sms', 'task'].map(type => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`interaction-${type}`}
-                          checked={searchFilters.interactionType.includes(type)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              updateFilter('interactionType', [...searchFilters.interactionType, type]);
-                            } else {
-                              updateFilter('interactionType', searchFilters.interactionType.filter(t => t !== type));
-                            }
-                          }}
-                          data-testid={`filter-type-${type}`}
-                        />
-                        <Label htmlFor={`interaction-${type}`} className="text-sm capitalize">
-                          {type.replace('_', ' ')}
-                        </Label>
+                        <label htmlFor={`urgency-${urgency}`} className="text-sm">
+                          {t(`frontdesk:callLogging.urgency${urgency.charAt(0).toUpperCase() + urgency.slice(1)}`)}
+                        </label>
                       </div>
                     ))}
                   </div>
@@ -721,256 +698,128 @@ export default function CallerHistoryDashboard() {
           )}
         </div>
 
-        {/* Results Summary */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-              <span data-testid="results-count">
-                {interactionsLoading ? 'Loading...' : `${interactions.length} interactions found`}
-              </span>
-              {Object.keys(customerGroups).length > 0 && (
-                <span data-testid="customers-count">
-                  {Object.keys(customerGroups).length} unique customers
-                </span>
-              )}
-              {analytics && (
-                <span data-testid="conversion-rate">
-                  {analytics.conversionRate}% conversion rate
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {interactionsLoading && (
-                <RefreshCw className="h-4 w-4 animate-spin text-gray-400" />
-              )}
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Last updated: {format(new Date(), 'HH:mm:ss')}
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* Main Content Area */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto p-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>{t('frontdesk:callerHistory.totalCalls')}</CardDescription>
+                <CardTitle className="text-3xl">{analytics?.totalInteractions || 0}</CardTitle>
+              </CardHeader>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>{t('frontdesk:callerHistory.avgDuration')}</CardDescription>
+                <CardTitle className="text-3xl">
+                  {analytics?.averageResponseTime ? `${Math.round(analytics.averageResponseTime)}s` : '--'}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>{t('frontdesk:callerHistory.conversionRate')}</CardDescription>
+                <CardTitle className="text-3xl">
+                  {analytics?.conversionRate ? `${(analytics.conversionRate * 100).toFixed(1)}%` : '--'}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription>{t('frontdesk:callerHistory.followUpRequired')}</CardDescription>
+                <CardTitle className="text-3xl">
+                  {interactions.filter((i: CustomerInteraction) => i.followUpRequired).length}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+
+          {/* Content based on view mode */}
           {viewMode === 'list' && (
-            <div className="p-6">
-              {interactionsLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[...Array(6)].map((_, i) => (
-                    <Card key={i} className="animate-pulse">
-                      <CardHeader>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {Object.entries(customerGroups).map(([customerKey, interactions]) => {
-                    const latestInteraction = interactions[0];
-                    const totalInteractions = interactions.length;
-                    const conversions = interactions.filter(i => i.convertedToLead || i.convertedToStudent).length;
-                    
-                    return (
-                      <Card 
-                        key={customerKey} 
-                        className="hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => setSelectedCustomer(customerKey)}
-                        data-testid={`customer-card-${customerKey}`}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('frontdesk:callerHistory.callDetails')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {interactionsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-gray-500">{t('common:loading')}</div>
+                  </div>
+                ) : interactions.length === 0 ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-gray-500">{t('common:noData')}</div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {interactions.map((interaction: CustomerInteraction) => (
+                      <div
+                        key={interaction.id}
+                        className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                        onClick={() => setSelectedInteraction(interaction)}
+                        data-testid={`interaction-${interaction.id}`}
                       >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-lg font-semibold">
-                                {latestInteraction.customerName}
-                              </CardTitle>
-                              <CardDescription className="mt-1">
-                                <div className="flex items-center space-x-4">
-                                  {latestInteraction.customerPhone && (
-                                    <span className="flex items-center">
-                                      <Phone className="h-3 w-3 mr-1" />
-                                      {latestInteraction.customerPhone}
-                                    </span>
-                                  )}
-                                  {latestInteraction.customerEmail && (
-                                    <span className="flex items-center">
-                                      <Mail className="h-3 w-3 mr-1" />
-                                      {latestInteraction.customerEmail}
-                                    </span>
-                                  )}
-                                </div>
-                              </CardDescription>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Badge 
-                                variant="outline" 
-                                className={getStatusColor(latestInteraction.status)}
-                                data-testid={`status-${latestInteraction.status}`}
-                              >
-                                {latestInteraction.status.replace('_', ' ')}
-                              </Badge>
-                              
-                              <Badge 
-                                variant="outline" 
-                                className={getUrgencyColor(latestInteraction.urgencyLevel)}
-                                data-testid={`urgency-${latestInteraction.urgencyLevel}`}
-                              >
-                                {latestInteraction.urgencyLevel}
-                              </Badge>
+                        <div className={cn("flex items-center space-x-4", isRTL && "space-x-reverse")}>
+                          {getInteractionIcon(interaction.type)}
+                          <div>
+                            <div className="font-medium">{interaction.customerName}</div>
+                            <div className="text-sm text-gray-500">
+                              {format(parseISO(interaction.interactionTime), 'MMM dd, yyyy HH:mm')}
                             </div>
                           </div>
-                        </CardHeader>
+                        </div>
                         
-                        <CardContent>
-                          <div className="space-y-3">
-                            {/* Latest Interaction Summary */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                {getInteractionIcon(latestInteraction.type)}
-                                <span className="text-sm font-medium capitalize">
-                                  {latestInteraction.type.replace('_', ' ')}
-                                </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                  {format(parseISO(latestInteraction.interactionTime), 'MMM dd, HH:mm')}
-                                </span>
-                              </div>
-                              
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
-                                by {latestInteraction.handlerName}
-                              </div>
-                            </div>
-
-                            {/* Interaction Stats */}
-                            <div className="grid grid-cols-3 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-                              <div className="text-center">
-                                <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                                  {totalInteractions}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Interactions
-                                </div>
-                              </div>
-                              
-                              <div className="text-center">
-                                <div className="text-lg font-semibold text-green-600 dark:text-green-400">
-                                  {conversions}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Conversions
-                                </div>
-                              </div>
-                              
-                              <div className="text-center">
-                                <div className="text-lg font-semibold text-purple-600 dark:text-purple-400">
-                                  {conversions > 0 ? Math.round((conversions / totalInteractions) * 100) : 0}%
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Rate
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Recent Notes Preview */}
-                            {latestInteraction.notes && (
-                              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                  {latestInteraction.notes}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Tags */}
-                            {latestInteraction.tags && latestInteraction.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {latestInteraction.tags.slice(0, 3).map((tag, index) => (
-                                  <Badge 
-                                    key={index} 
-                                    variant="secondary" 
-                                    className="text-xs"
-                                    data-testid={`tag-${tag}`}
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))}
-                                {latestInteraction.tags.length > 3 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    +{latestInteraction.tags.length - 3} more
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Mini Timeline */}
-                            <div className="pt-2">
-                              <div className="flex items-center space-x-1">
-                                {interactions.slice(0, 5).map((interaction, index) => (
-                                  <div
-                                    key={index}
-                                    className={cn(
-                                      "w-3 h-3 rounded-full",
-                                      interaction.type === 'phone_call' ? 'bg-blue-400' :
-                                      interaction.type === 'walk_in' ? 'bg-green-400' :
-                                      interaction.type === 'email' ? 'bg-purple-400' :
-                                      interaction.type === 'sms' ? 'bg-yellow-400' :
-                                      'bg-gray-400'
-                                    )}
-                                    title={`${interaction.type} - ${format(parseISO(interaction.interactionTime), 'MMM dd')}`}
-                                    data-testid={`timeline-dot-${index}`}
-                                  />
-                                ))}
-                                {interactions.length > 5 && (
-                                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                    +{interactions.length - 5} more
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                        <div className={cn("flex items-center space-x-2", isRTL && "space-x-reverse")}>
+                          {interaction.callDuration && (
+                            <Badge variant="outline">
+                              {Math.floor(interaction.callDuration / 60)}:{(interaction.callDuration % 60).toString().padStart(2, '0')}
+                            </Badge>
+                          )}
+                          <Badge className={cn("text-xs", getStatusColor(interaction.status))}>
+                            {interaction.status}
+                          </Badge>
+                          {interaction.urgencyLevel && (
+                            <Badge className={cn("text-xs", getUrgencyColor(interaction.urgencyLevel))}>
+                              {interaction.urgencyLevel}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {viewMode === 'timeline' && (
-            <InteractionTimeline
+            <TimelineView
               interactions={interactions}
-              onInteractionClick={setSelectedInteraction}
-              className="m-6"
+              customerGroups={customerGroups}
+              selectedCustomer={selectedCustomer}
+              timelineZoom={timelineZoom}
+              onZoomChange={setTimelineZoom}
+              onInteractionSelect={setSelectedInteraction}
+              t={t}
+              isRTL={isRTL}
+              getStatusColor={getStatusColor}
+              getUrgencyColor={getUrgencyColor}
             />
           )}
 
-          {viewMode === 'analytics' && (
-            <div className="p-6">
-              <AnalyticsCharts 
-                analytics={analytics}
-                interactions={interactions}
-                loading={analyticsLoading}
-                dateRange={{ from: searchFilters.dateFrom, to: searchFilters.dateTo }}
-              />
-            </div>
+          {viewMode === 'analytics' && analytics && (
+            <AnalyticsView analytics={analytics} />
           )}
         </div>
       </div>
 
       {/* Customer Detail Sidebar */}
-      {selectedCustomer && (
+      {selectedCustomer && customerProfile && (
         <CustomerDetailSidebar
-          customerKey={selectedCustomer}
+          customer={customerProfile}
           interactions={customerGroups[selectedCustomer] || []}
-          customerProfile={customerProfile}
           onClose={() => setSelectedCustomer(null)}
           onInteractionSelect={setSelectedInteraction}
         />
@@ -998,6 +847,10 @@ interface TimelineViewProps {
   timelineZoom: 'day' | 'week' | 'month' | 'year';
   onZoomChange: (zoom: 'day' | 'week' | 'month' | 'year') => void;
   onInteractionSelect: (interaction: CustomerInteraction) => void;
+  t: any;
+  isRTL: boolean;
+  getStatusColor: (status: string) => string;
+  getUrgencyColor: (urgency: string) => string;
 }
 
 function TimelineView({ 
@@ -1006,7 +859,11 @@ function TimelineView({
   selectedCustomer, 
   timelineZoom, 
   onZoomChange, 
-  onInteractionSelect 
+  onInteractionSelect,
+  t,
+  isRTL,
+  getStatusColor,
+  getUrgencyColor
 }: TimelineViewProps) {
   const relevantInteractions = selectedCustomer 
     ? customerGroups[selectedCustomer] || []
@@ -1054,18 +911,18 @@ function TimelineView({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Timeline View</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Label className="text-sm">Zoom:</Label>
+            <CardTitle>{t('common:timeline')}</CardTitle>
+            <div className={cn("flex items-center space-x-2", isRTL && "space-x-reverse")}>
+              <Label className="text-sm">{t('common:zoom')}:</Label>
               <Select value={timelineZoom} onValueChange={onZoomChange}>
                 <SelectTrigger className="w-24">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
-                  <SelectItem value="year">Year</SelectItem>
+                  <SelectItem value="day">{t('common:day')}</SelectItem>
+                  <SelectItem value="week">{t('common:week')}</SelectItem>
+                  <SelectItem value="month">{t('common:month')}</SelectItem>
+                  <SelectItem value="year">{t('common:year')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1086,7 +943,7 @@ function TimelineView({
                 )}
               </CardTitle>
               <CardDescription>
-                {dayInteractions.length} interaction{dayInteractions.length !== 1 ? 's' : ''}
+                {dayInteractions.length} {t('common:interaction')}{dayInteractions.length !== 1 ? 's' : ''}
               </CardDescription>
             </CardHeader>
             
@@ -1134,7 +991,7 @@ function TimelineView({
                             </p>
                           </div>
                           
-                          <div className="flex items-center space-x-2">
+                          <div className={cn("flex items-center space-x-2", isRTL && "space-x-reverse")}>
                             <Badge className={cn("text-xs", getStatusColor(interaction.status))}>
                               {interaction.status.replace('_', ' ')}
                             </Badge>

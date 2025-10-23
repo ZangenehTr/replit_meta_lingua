@@ -134,6 +134,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { TrialLessonCalendar } from "@/components/trial-lessons/TrialLessonCalendar";
 import { AnalyticsView } from "@/components/frontdesk/AnalyticsView";
 import { CustomerDetailSidebar } from "@/components/frontdesk/CustomerDetailSidebar";
@@ -385,6 +386,8 @@ export default function FrontDeskDashboard() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation(['frontdesk', 'common']);
+  const isRTL = i18n.dir() === 'rtl';
 
   // Dashboard state management
   const [selectedView, setSelectedView] = useState<
@@ -399,7 +402,6 @@ export default function FrontDeskDashboard() {
   >([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isRTL, setIsRTL] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     sound: true,
     desktop: true,
@@ -646,64 +648,58 @@ export default function FrontDeskDashboard() {
     () => [
       {
         id: "new-walk-in",
-        label: isRTL ? "ورودی جدید" : "New Walk-in",
+        label: t('frontdesk:quickActions.newWalkIn'),
         icon: UserPlus,
         action: () => setLocation("/frontdesk/walk-in-intake"),
         category: "walk_in",
-        description: isRTL ? "ثبت مراجع جدید" : "Register new walk-in visitor",
+        description: t('frontdesk:quickActions.registerNewWalkInVisitor'),
         shortcut: "Ctrl+N",
       },
       {
         id: "log-call",
-        label: isRTL ? "ثبت تماس" : "Log Call",
+        label: t('frontdesk:quickActions.logCall'),
         icon: PhoneCall,
         action: () => setLocation("/frontdesk/call-logging"),
         category: "call",
-        description: isRTL ? "ثبت تماس تلفنی" : "Log phone call interaction",
+        description: t('frontdesk:quickActions.logPhoneCallInteraction'),
         shortcut: "Ctrl+C",
       },
       {
         id: "sms-templates",
-        label: isRTL ? "قالب‌های پیامک" : "SMS Templates",
+        label: t('frontdesk:quickActions.sendSMS'),
         icon: MessageSquare,
         action: () => setLocation("/frontdesk/sms-templates"),
         category: "sms",
-        description: isRTL ? "مدیریت قالب‌های پیامک" : "Manage SMS templates",
+        description: t('frontdesk:quickActions.manageSmsTemplates'),
       },
       {
         id: "schedule-trial",
-        label: isRTL ? "کلاس آزمایشی" : "Schedule Trial",
+        label: t('frontdesk:quickActions.scheduleTrial'),
         icon: Calendar,
         action: () => setLocation("/frontdesk/trial-scheduling"),
         category: "trial",
-        description: isRTL
-          ? "برنامه‌ریزی کلاس آزمایشی"
-          : "Schedule trial lesson",
+        description: t('frontdesk:quickActions.scheduleTrialLesson'),
       },
       {
         id: "create-task",
-        label: isRTL ? "وظیفه جدید" : "New Task",
+        label: t('frontdesk:quickActions.newTask'),
         icon: Plus,
         action: () => setShowQuickActions(true),
         category: "task",
-        description: isRTL ? "ایجاد وظیفه جدید" : "Create new task",
+        description: t('frontdesk:quickActions.createNewTask'),
       },
       {
         id: "emergency",
-        label: isRTL ? "اضطراری" : "Emergency",
+        label: t('frontdesk:quickActions.emergency'),
         icon: AlertCircle,
         action: () =>
           toast({
-            title: isRTL ? "ارتباط اضطراری" : "Emergency Contact",
-            description: isRTL
-              ? "مدیر اطلاع داده شد"
-              : "Supervisor has been notified",
+            title: t('frontdesk:quickActions.emergencyContact'),
+            description: t('frontdesk:quickActions.supervisorNotified'),
             variant: "destructive",
           }),
         category: "emergency",
-        description: isRTL
-          ? "ارتباط اضطراری با مدیر"
-          : "Emergency supervisor contact",
+        description: t('frontdesk:quickActions.emergencySupervisorContact'),
       },
     ],
     [isRTL, setLocation, toast],
@@ -795,7 +791,7 @@ export default function FrontDeskDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/front-desk/tasks"] });
       toast({
-        title: isRTL ? "وضعیت وظیفه به‌روزرسانی شد" : "Task Status Updated",
+        title: t('frontdesk:common.success'),
         description: isRTL
           ? "وضعیت وظیفه با موفقیت تغییر یافت"
           : "Task status has been updated successfully",
@@ -817,7 +813,7 @@ export default function FrontDeskDashboard() {
             <div className="flex items-center space-x-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {isRTL ? "مرکز فرمان پذیرش" : "Front Desk Command Center"}
+                  {t('frontdesk:dashboard.title')}
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {isRTL
@@ -835,7 +831,7 @@ export default function FrontDeskDashboard() {
                   id="search-input"
                   type="text"
                   placeholder={
-                    isRTL ? "جستجو در سیستم..." : "Search across systems..."
+                    t('frontdesk:common.search')
                   }
                   className="pl-10 bg-gray-100 dark:bg-gray-700 border-0"
                   value={searchQuery}
@@ -850,11 +846,11 @@ export default function FrontDeskDashboard() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsRTL(!isRTL)}
+                onClick={() => i18n.changeLanguage(i18n.language === 'fa' ? 'en' : 'fa')}
                 className="hidden sm:flex"
               >
                 <Languages className="h-4 w-4" />
-                <span className="ml-2">{isRTL ? "EN" : "فا"}</span>
+                <span className="ml-2">{i18n.language === 'fa' ? "EN" : "فا"}</span>
               </Button>
 
               {/* Quick actions */}
@@ -863,13 +859,13 @@ export default function FrontDeskDashboard() {
                   <Button variant="ghost" size="sm">
                     <Zap className="h-4 w-4" />
                     <span className="hidden sm:inline ml-2">
-                      {isRTL ? "اقدامات سریع" : "Quick Actions"}
+                      {t('frontdesk:quickActions.title')}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel>
-                    {isRTL ? "اقدامات سریع" : "Quick Actions"}
+                    {t('frontdesk:quickActions.title')}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {Array.isArray(quickActions) && quickActions.slice(0, 4).map((action) => {
@@ -919,7 +915,7 @@ export default function FrontDeskDashboard() {
                   <SheetHeader>
                     <div className="flex items-center justify-between">
                       <SheetTitle>
-                        {isRTL ? "اعلان‌ها" : "Notifications"}
+                        {t('frontdesk:notifications.title')}
                       </SheetTitle>
                       {dashboardStats.unreadNotifications > 0 && (
                         <Button
@@ -997,7 +993,7 @@ export default function FrontDeskDashboard() {
                         <div className="text-center py-8 text-gray-500">
                           <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
                           <p>
-                            {isRTL ? "اعلانی موجود نیست" : "No notifications"}
+                            {t('frontdesk:emptyStates.noNotifications')}
                           </p>
                         </div>
                       )}
@@ -1025,27 +1021,27 @@ export default function FrontDeskDashboard() {
                 {[
                   {
                     id: "overview",
-                    label: isRTL ? "نمای کلی" : "Overview",
+                    label: t('frontdesk:navigation.overview'),
                     icon: Home,
                   },
                   {
                     id: "tasks",
-                    label: isRTL ? "وظایف" : "Tasks",
+                    label: t('frontdesk:navigation.tasks'),
                     icon: ClipboardList,
                   },
                   {
                     id: "followups",
-                    label: isRTL ? "پیگیری‌ها" : "Follow-ups",
+                    label: t('frontdesk:navigation.followUps'),
                     icon: Phone,
                   },
                   {
                     id: "trials",
-                    label: isRTL ? "کلاس‌های آزمایشی" : "Trial Lessons",
+                    label: t('frontdesk:navigation.trialLessons'),
                     icon: Calendar,
                   },
                   {
                     id: "analytics",
-                    label: isRTL ? "تحلیل‌ها" : "Analytics",
+                    label: t('frontdesk:navigation.analytics'),
                     icon: BarChart3,
                   },
                 ].map((item) => {
@@ -1118,7 +1114,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "عملیات در انتظار" : "Pending Operations"}
+                {t('frontdesk:stats.pendingOperations')}
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -1130,7 +1126,7 @@ export default function FrontDeskDashboard() {
                 {dashboardStats.pendingOperations}
               </div>
               <p className="text-xs text-muted-foreground">
-                {isRTL ? "مراجعان نیازمند توجه" : "Walk-ins needing attention"}
+                {t('frontdesk:stats.walkInsNeedingAttention')}
               </p>
               <div className="mt-2">
                 <Progress
@@ -1144,7 +1140,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "تماس‌های امروز" : "Today's Calls"}
+                {t('frontdesk:stats.todaysCalls')}
               </CardTitle>
               <Phone className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -1156,7 +1152,7 @@ export default function FrontDeskDashboard() {
                 {dashboardStats.callsToday}
               </div>
               <p className="text-xs text-muted-foreground">
-                {isRTL ? "تماس‌های انجام شده" : "Phone calls handled"}
+                {t('frontdesk:stats.phoneCallsHandled')}
               </p>
               <div className="flex items-center mt-2">
                 {dashboardStats.callsToday > 20 ? (
@@ -1165,7 +1161,7 @@ export default function FrontDeskDashboard() {
                   <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
                 )}
                 <span className="text-xs text-gray-500">
-                  {isRTL ? "نسبت به دیروز" : "vs yesterday"}
+                  {t('frontdesk:stats.vsYesterday')}
                 </span>
               </div>
             </CardContent>
@@ -1174,7 +1170,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "پیگیری‌های فوری" : "Urgent Follow-ups"}
+                {t('frontdesk:stats.urgentFollowUps')}
               </CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -1186,7 +1182,7 @@ export default function FrontDeskDashboard() {
                 {dashboardStats.urgentFollowUps}
               </div>
               <p className="text-xs text-muted-foreground">
-                {isRTL ? "نیازمند اقدام فوری" : "Require immediate action"}
+                {t('frontdesk:stats.requireImmediateAction')}
               </p>
               {dashboardStats.urgentFollowUps > 0 && (
                 <Button
@@ -1194,7 +1190,7 @@ export default function FrontDeskDashboard() {
                   className="mt-2 w-full"
                   onClick={() => setSelectedView("followups")}
                 >
-                  {isRTL ? "مشاهده همه" : "View All"}
+                  {t('frontdesk:stats.viewAll')}
                 </Button>
               )}
             </CardContent>
@@ -1203,7 +1199,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {isRTL ? "کلاس‌های آزمایشی امروز" : "Today's Trials"}
+                {t('frontdesk:stats.todaysTrials')}
               </CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -1216,7 +1212,7 @@ export default function FrontDeskDashboard() {
                 {dashboardStats.todayTrialsCount}
               </div>
               <p className="text-xs text-muted-foreground">
-                {isRTL ? "تأیید شده از کل" : "Confirmed of total"}
+                {t('frontdesk:stats.confirmedOfTotal')}
               </p>
               <div className="mt-2">
                 <Progress
@@ -1241,7 +1237,7 @@ export default function FrontDeskDashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>
-                  {isRTL ? "عملیات اخیر" : "Recent Operations"}
+                  {t('frontdesk:views.recentOperations')}
                 </CardTitle>
                 <Button
                   variant="outline"
@@ -1249,7 +1245,7 @@ export default function FrontDeskDashboard() {
                   onClick={() => setLocation("/frontdesk/walk-in-intake")}
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
-                  {isRTL ? "ورودی جدید" : "New Walk-in"}
+                  {t('frontdesk:quickActions.newWalkIn')}
                 </Button>
               </div>
             </CardHeader>
@@ -1288,7 +1284,7 @@ export default function FrontDeskDashboard() {
                       </Badge>
                       {operation.priority === "high" && (
                         <Badge variant="destructive" className="text-xs">
-                          {isRTL ? "فوری" : "Urgent"}
+                          {t('frontdesk:followUps.urgent')}
                         </Badge>
                       )}
                       <ChevronRight className="h-4 w-4 text-gray-400" />
@@ -1313,13 +1309,13 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isRTL ? "عملکرد امروز" : "Today's Performance"}
+                {t('frontdesk:views.todaysPerformance')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>{isRTL ? "نرخ تبدیل" : "Conversion Rate"}</span>
+                  <span>{t('frontdesk:stats.conversionRate')}</span>
                   <span className="font-medium">
                     {dashboardStats.conversionRate.toFixed(1)}%
                   </span>
@@ -1332,10 +1328,10 @@ export default function FrontDeskDashboard() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>{isRTL ? "پاسخ‌گویی متوسط" : "Avg Response"}</span>
+                  <span>{t('frontdesk:stats.avgResponse')}</span>
                   <span className="font-medium">
                     {Math.round(dashboardStats.averageResponseTime)}{" "}
-                    {isRTL ? "ثانیه" : "sec"}
+                    {t('frontdesk:stats.sec')}
                   </span>
                 </div>
                 <Progress
@@ -1349,7 +1345,7 @@ export default function FrontDeskDashboard() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>{isRTL ? "تکمیل وظایف" : "Task Completion"}</span>
+                  <span>{t('frontdesk:stats.taskCompletion')}</span>
                   <span className="font-medium">
                     {dashboardStats.totalTasks > 0
                       ? Math.round(
@@ -1379,12 +1375,12 @@ export default function FrontDeskDashboard() {
 
               <div className="space-y-3">
                 <h4 className="font-medium text-sm">
-                  {isRTL ? "اهداف روزانه" : "Daily Goals"}
+                  {t('frontdesk:stats.dailyGoals')}
                 </h4>
                 {performanceMetrics?.targets && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
-                      <span>{isRTL ? "عملیات" : "Operations"}</span>
+                      <span>{t('frontdesk:stats.operations')}</span>
                       <span>
                         {dashboardStats.completedToday}/
                         {performanceMetrics.targets.dailyOperations}
@@ -1420,12 +1416,10 @@ export default function FrontDeskDashboard() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold">
-              {isRTL ? "مدیریت وظایف" : "Task Management"}
+              {t('frontdesk:views.taskManagement')}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {isRTL
-                ? "مدیریت و پیگیری وظایف روزانه"
-                : "Manage and track daily tasks"}
+              {t('frontdesk:views.manageDailyTasks')}
             </p>
           </div>
 
@@ -1438,22 +1432,22 @@ export default function FrontDeskDashboard() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{isRTL ? "همه" : "All"}</SelectItem>
+                <SelectItem value="all">{t('frontdesk:common.all')}</SelectItem>
                 <SelectItem value="pending">
-                  {isRTL ? "در انتظار" : "Pending"}
+                  {t('frontdesk:tasks.pending')}
                 </SelectItem>
                 <SelectItem value="overdue">
-                  {isRTL ? "عقب‌افتاده" : "Overdue"}
+                  {t('frontdesk:tasks.overdue')}
                 </SelectItem>
                 <SelectItem value="completed">
-                  {isRTL ? "تکمیل شده" : "Completed"}
+                  {t('frontdesk:tasks.completed')}
                 </SelectItem>
               </SelectContent>
             </Select>
 
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              {isRTL ? "وظیفه جدید" : "New Task"}
+              {t('frontdesk:tasks.newTask')}
             </Button>
           </div>
         </div>
@@ -1463,7 +1457,7 @@ export default function FrontDeskDashboard() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>{isRTL ? "وظایف امروز" : "Today's Tasks"}</CardTitle>
+                <CardTitle>{t('frontdesk:tasks.todaysTasks')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -1510,11 +1504,11 @@ export default function FrontDeskDashboard() {
                           </p>
                           {task.contactName && (
                             <p className="text-xs text-gray-500 mt-1">
-                              {isRTL ? "تماس:" : "Contact:"} {task.contactName}
+                              {t('frontdesk:tasks.contact')}: {task.contactName}
                             </p>
                           )}
                           <p className="text-xs text-gray-500 mt-1">
-                            {isRTL ? "مهلت:" : "Due:"}{" "}
+                            {t('frontdesk:tasks.due')}:{" "}
                             {formatDate(task.dueDate)}
                           </p>
                         </div>
@@ -1531,13 +1525,13 @@ export default function FrontDeskDashboard() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
                             <DropdownMenuItem>
-                              {isRTL ? "ویرایش" : "Edit"}
+                              {t('frontdesk:common.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              {isRTL ? "تخصیص مجدد" : "Reassign"}
+                              {t('frontdesk:tasks.reassign')}
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-red-600">
-                              {isRTL ? "حذف" : "Delete"}
+                              {t('frontdesk:common.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1547,7 +1541,7 @@ export default function FrontDeskDashboard() {
                   {filteredTasks.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>{isRTL ? "وظیفه‌ای موجود نیست" : "No tasks found"}</p>
+                      <p>{t('frontdesk:emptyStates.noTasksFound')}</p>
                     </div>
                   )}
                 </div>
@@ -1559,12 +1553,12 @@ export default function FrontDeskDashboard() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{isRTL ? "خلاصه وظایف" : "Task Summary"}</CardTitle>
+                <CardTitle>{t('frontdesk:tasks.taskSummary')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">
-                    {isRTL ? "کل وظایف" : "Total Tasks"}
+                    {t('frontdesk:tasks.totalTasks')}
                   </span>
                   <span className="font-bold text-lg">
                     {dashboardStats.totalTasks}
@@ -1573,13 +1567,13 @@ export default function FrontDeskDashboard() {
                 <Separator />
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>{isRTL ? "تکمیل شده" : "Completed"}</span>
+                    <span>{t('frontdesk:tasks.completed')}</span>
                     <span className="text-green-600 font-medium">
                       {dashboardStats.totalTasks - dashboardStats.overdueTasks}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>{isRTL ? "عقب‌افتاده" : "Overdue"}</span>
+                    <span>{t('frontdesk:tasks.overdue')}</span>
                     <span className="text-red-600 font-medium">
                       {dashboardStats.overdueTasks}
                     </span>
@@ -1592,7 +1586,7 @@ export default function FrontDeskDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {isRTL ? "اقدامات سریع" : "Quick Actions"}
+                  {t('frontdesk:quickActions.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -1626,12 +1620,10 @@ export default function FrontDeskDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">
-              {isRTL ? "پیگیری مشتریان" : "Follow-up Tracking"}
+              {t('frontdesk:views.followUpTracking')}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {isRTL
-                ? "مدیریت و پیگیری مشتریان بالقوه"
-                : "Manage and track potential customers"}
+              {t('frontdesk:views.managePotentialCustomers')}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1643,15 +1635,15 @@ export default function FrontDeskDashboard() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{isRTL ? "همه" : "All"}</SelectItem>
+                <SelectItem value="all">{t('frontdesk:common.all')}</SelectItem>
                 <SelectItem value="urgent">
-                  {isRTL ? "فوری" : "Urgent"}
+                  {t('frontdesk:followUps.urgent')}
                 </SelectItem>
                 <SelectItem value="today">
-                  {isRTL ? "امروز" : "Today"}
+                  {t('frontdesk:followUps.today')}
                 </SelectItem>
                 <SelectItem value="this_week">
-                  {isRTL ? "این هفته" : "This Week"}
+                  {t('frontdesk:followUps.thisWeek')}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -1662,7 +1654,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">
-                {isRTL ? "پیگیری‌های فوری" : "Urgent Follow-ups"}
+                {t('frontdesk:stats.urgentFollowUps')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1675,7 +1667,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">
-                {isRTL ? "پیگیری‌های امروز" : "Today's Follow-ups"}
+                {t('frontdesk:followUps.todaysFollowUps')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1692,7 +1684,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">
-                {isRTL ? "نرخ موفقیت" : "Success Rate"}
+                {t('frontdesk:followUps.successRate')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1714,7 +1706,7 @@ export default function FrontDeskDashboard() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">
-                {isRTL ? "میانگین امتیاز" : "Avg Lead Score"}
+                {t('frontdesk:followUps.avgLeadScore')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1734,7 +1726,7 @@ export default function FrontDeskDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{isRTL ? "لیست پیگیری‌ها" : "Follow-up List"}</CardTitle>
+            <CardTitle>{t('frontdesk:followUps.followUpList')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -1762,7 +1754,7 @@ export default function FrontDeskDashboard() {
                           {followUp.priority}
                         </Badge>
                         <span className="text-xs text-gray-500">
-                          {isRTL ? "امتیاز:" : "Score:"} {followUp.leadScore}
+                          {t('frontdesk:followUps.score')}: {followUp.leadScore}
                           /100
                         </span>
                       </div>
@@ -1774,7 +1766,7 @@ export default function FrontDeskDashboard() {
                         {formatDate(followUp.dueDate)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {isRTL ? "تلاش:" : "Attempts:"}{" "}
+                        {t('frontdesk:followUps.attempts')}:{" "}
                         {followUp.contactAttempts}/{followUp.maxAttempts}
                       </p>
                     </div>
@@ -1791,7 +1783,7 @@ export default function FrontDeskDashboard() {
                 <div className="text-center py-8 text-gray-500">
                   <Target className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>
-                    {isRTL ? "پیگیری‌ای موجود نیست" : "No follow-ups available"}
+                    {t('frontdesk:emptyStates.noFollowUpsAvailable')}
                   </p>
                 </div>
               )}
@@ -1808,17 +1800,15 @@ export default function FrontDeskDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">
-              {isRTL ? "کلاس‌های آزمایشی" : "Trial Lessons"}
+              {t('frontdesk:trials.trialLessons')}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {isRTL
-                ? "مدیریت برنامه کلاس‌های آزمایشی"
-                : "Manage trial lesson schedule"}
+              {t('frontdesk:trials.manageTrialSchedule')}
             </p>
           </div>
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            {isRTL ? "کلاس آزمایشی جدید" : "New Trial Lesson"}
+            {t('frontdesk:trials.newTrialLesson')}
           </Button>
         </div>
 
@@ -1829,7 +1819,7 @@ export default function FrontDeskDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">
-                    {isRTL ? "کل امروز" : "Total Today"}
+                    {t('frontdesk:trials.totalToday')}
                   </p>
                   <p className="text-2xl font-bold">
                     {dashboardStats.todayTrialsCount}
@@ -1845,7 +1835,7 @@ export default function FrontDeskDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">
-                    {isRTL ? "تأیید شده" : "Confirmed"}
+                    {t('frontdesk:trials.confirmed')}
                   </p>
                   <p className="text-2xl font-bold text-green-600">
                     {dashboardStats.confirmedTrials}
@@ -1861,7 +1851,7 @@ export default function FrontDeskDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">
-                    {isRTL ? "در انتظار" : "Pending"}
+                    {t('frontdesk:tasks.pending')}
                   </p>
                   <p className="text-2xl font-bold text-yellow-600">
                     {
@@ -1881,7 +1871,7 @@ export default function FrontDeskDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">
-                    {isRTL ? "نرخ حضور" : "Attendance Rate"}
+                    {t('frontdesk:trials.attendanceRate')}
                   </p>
                   <p className="text-2xl font-bold text-purple-600">
                     {todayTrials.length > 0
@@ -1912,7 +1902,7 @@ export default function FrontDeskDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {isRTL ? "کلاس‌های امروز" : "Today's Lessons"}
+                  {t('frontdesk:trials.todaysLessons')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1949,9 +1939,7 @@ export default function FrontDeskDashboard() {
                     <div className="text-center py-8 text-gray-500">
                       <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>
-                        {isRTL
-                          ? "کلاس آزمایشی امروز نداریم"
-                          : "No trials scheduled for today"}
+                        {t('frontdesk:emptyStates.noTrialsToday')}
                       </p>
                     </div>
                   )}
@@ -2008,22 +1996,20 @@ export default function FrontDeskDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">
-              {isRTL ? "تحلیل‌ها و گزارش‌ها" : "Analytics & Reports"}
+              {t('frontdesk:views.analyticsAndReports')}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {isRTL
-                ? "تحلیل عملکرد و آمار دقیق"
-                : "Performance analysis and detailed metrics"}
+              {t('frontdesk:views.performanceAnalysis')}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
-              {isRTL ? "دانلود گزارش" : "Export Report"}
+              {t('frontdesk:views.exportReport')}
             </Button>
             <Button variant="outline">
               <Printer className="h-4 w-4 mr-2" />
-              {isRTL ? "چاپ" : "Print"}
+              {t('frontdesk:views.print')}
             </Button>
           </div>
         </div>

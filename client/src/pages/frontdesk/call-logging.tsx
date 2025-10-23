@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,109 +42,6 @@ import { apiRequest } from '@/lib/queryClient';
 // Iranian phone number validation
 const iranianPhoneRegex = /^(\+98|0098|98|0)?9\d{9}$/;
 
-// Validation schema
-const callLoggingSchema = z.object({
-  // Call Details
-  callType: z.enum(['incoming', 'outgoing'], {
-    required_error: 'Please select call type',
-  }),
-  callerName: z.string().min(1, 'Caller name is required'),
-  callerPhone: z.string().regex(iranianPhoneRegex, 'Please enter a valid Iranian phone number (e.g., 09123456789)'),
-  callerEmail: z.string().email('Invalid email format').optional().or(z.literal('')),
-  callPurpose: z.enum(['inquiry', 'follow_up', 'complaint', 'booking', 'general'], {
-    required_error: 'Please select call purpose',
-  }),
-  callResult: z.enum(['successful', 'voicemail', 'no_answer', 'busy', 'scheduled_callback'], {
-    required_error: 'Please select call outcome',
-  }),
-  
-  // Call timing (for internal use, not form fields)
-  callStartTime: z.string().optional(),
-  callEndTime: z.string().optional(), 
-  callDuration: z.number().optional(),
-  
-  // Call Content & Notes
-  callNotes: z.string().min(10, 'Please provide at least 10 characters of conversation summary'),
-  actionItems: z.string().optional(),
-  nextSteps: z.string().optional(),
-  customerSatisfaction: z.number().min(1).max(5).optional(),
-  urgencyLevel: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-  
-  // Integration Fields
-  studentId: z.number().optional(),
-  relatedWalkInId: z.number().optional(),
-  needsFollowUp: z.boolean().default(false),
-  followUpDate: z.string().optional(),
-  followUpMethod: z.enum(['call', 'email', 'sms', 'whatsapp']).optional(),
-  assignFollowUpTo: z.number().optional(),
-  
-  // Language and course interest
-  inquiryType: z.enum(['course_info', 'pricing', 'schedule', 'teacher_info', 'level_assessment']).optional(),
-  interestedLanguage: z.string().optional(),
-  currentLevel: z.string().optional(),
-  
-  // Tags
-  tags: z.array(z.string()).default([]),
-});
-
-type CallLoggingFormData = z.infer<typeof callLoggingSchema>;
-
-// Call templates
-const CALL_TEMPLATES = {
-  new_inquiry: {
-    name: 'New Inquiry Call',
-    data: {
-      callType: 'incoming' as const,
-      callPurpose: 'inquiry' as const,
-      inquiryType: 'course_info' as const,
-      urgencyLevel: 'medium' as const,
-      needsFollowUp: true,
-      followUpMethod: 'call' as const,
-      tags: ['new-inquiry'],
-    }
-  },
-  trial_followup: {
-    name: 'Trial Lesson Follow-up',
-    data: {
-      callType: 'outgoing' as const,
-      callPurpose: 'follow_up' as const,
-      inquiryType: 'level_assessment' as const,
-      urgencyLevel: 'high' as const,
-      tags: ['trial-followup'],
-    }
-  },
-  payment_reminder: {
-    name: 'Payment Reminder',
-    data: {
-      callType: 'outgoing' as const,
-      callPurpose: 'booking' as const,
-      urgencyLevel: 'high' as const,
-      tags: ['payment-reminder'],
-    }
-  },
-  schedule_change: {
-    name: 'Schedule Change Request',
-    data: {
-      callType: 'incoming' as const,
-      callPurpose: 'booking' as const,
-      urgencyLevel: 'medium' as const,
-      needsFollowUp: true,
-      tags: ['schedule-change'],
-    }
-  },
-  complaint_handling: {
-    name: 'Complaint Handling',
-    data: {
-      callType: 'incoming' as const,
-      callPurpose: 'complaint' as const,
-      urgencyLevel: 'urgent' as const,
-      needsFollowUp: true,
-      followUpMethod: 'call' as const,
-      tags: ['complaint'],
-    }
-  }
-};
-
 interface CallTimer {
   isActive: boolean;
   startTime: Date | null;
@@ -157,6 +55,100 @@ export default function CallLogging() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation(['frontdesk', 'common']);
+  const isRTL = i18n.dir() === 'rtl';
+
+  // Validation schema with i18n
+  const callLoggingSchema = z.object({
+    callType: z.enum(['incoming', 'outgoing'], {
+      required_error: t('frontdesk:callLogging.validations.selectCallType'),
+    }),
+    callerName: z.string().min(1, t('frontdesk:callLogging.validations.callerNameRequired')),
+    callerPhone: z.string().regex(iranianPhoneRegex, t('frontdesk:callLogging.validations.phoneInvalid')),
+    callerEmail: z.string().email(t('frontdesk:callLogging.validations.emailInvalid')).optional().or(z.literal('')),
+    callPurpose: z.enum(['inquiry', 'follow_up', 'complaint', 'booking', 'general'], {
+      required_error: t('frontdesk:callLogging.validations.selectCallPurpose'),
+    }),
+    callResult: z.enum(['successful', 'voicemail', 'no_answer', 'busy', 'scheduled_callback'], {
+      required_error: t('frontdesk:callLogging.validations.selectCallOutcome'),
+    }),
+    callStartTime: z.string().optional(),
+    callEndTime: z.string().optional(), 
+    callDuration: z.number().optional(),
+    callNotes: z.string().min(10, t('frontdesk:callLogging.validations.notesMinLength')),
+    actionItems: z.string().optional(),
+    nextSteps: z.string().optional(),
+    customerSatisfaction: z.number().min(1).max(5).optional(),
+    urgencyLevel: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
+    studentId: z.number().optional(),
+    relatedWalkInId: z.number().optional(),
+    needsFollowUp: z.boolean().default(false),
+    followUpDate: z.string().optional(),
+    followUpMethod: z.enum(['call', 'email', 'sms', 'whatsapp']).optional(),
+    assignFollowUpTo: z.number().optional(),
+    inquiryType: z.enum(['course_info', 'pricing', 'schedule', 'teacher_info', 'level_assessment']).optional(),
+    interestedLanguage: z.string().optional(),
+    currentLevel: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+  });
+
+  type CallLoggingFormData = z.infer<typeof callLoggingSchema>;
+
+  // Call templates
+  const CALL_TEMPLATES = {
+    new_inquiry: {
+      name: t('frontdesk:callLogging.templateNewInquiry'),
+      data: {
+        callType: 'incoming' as const,
+        callPurpose: 'inquiry' as const,
+        inquiryType: 'course_info' as const,
+        urgencyLevel: 'medium' as const,
+        needsFollowUp: true,
+        followUpMethod: 'call' as const,
+        tags: ['new-inquiry'],
+      }
+    },
+    trial_followup: {
+      name: t('frontdesk:callLogging.templateTrialFollowup'),
+      data: {
+        callType: 'outgoing' as const,
+        callPurpose: 'follow_up' as const,
+        inquiryType: 'level_assessment' as const,
+        urgencyLevel: 'high' as const,
+        tags: ['trial-followup'],
+      }
+    },
+    payment_reminder: {
+      name: t('frontdesk:callLogging.templatePaymentReminder'),
+      data: {
+        callType: 'outgoing' as const,
+        callPurpose: 'booking' as const,
+        urgencyLevel: 'high' as const,
+        tags: ['payment-reminder'],
+      }
+    },
+    schedule_change: {
+      name: t('frontdesk:callLogging.templateScheduleChange'),
+      data: {
+        callType: 'incoming' as const,
+        callPurpose: 'booking' as const,
+        urgencyLevel: 'medium' as const,
+        needsFollowUp: true,
+        tags: ['schedule-change'],
+      }
+    },
+    complaint_handling: {
+      name: t('frontdesk:callLogging.templateComplaintHandling'),
+      data: {
+        callType: 'incoming' as const,
+        callPurpose: 'complaint' as const,
+        urgencyLevel: 'urgent' as const,
+        needsFollowUp: true,
+        followUpMethod: 'call' as const,
+        tags: ['complaint'],
+      }
+    }
+  };
 
   // Call timer state
   const [timer, setTimer] = useState<CallTimer>({
@@ -210,7 +202,7 @@ export default function CallLogging() {
     if (hasUnsavedChanges && timer.isActive) {
       const autoSaveTimer = setTimeout(() => {
         autoSave();
-      }, 30000); // Auto-save every 30 seconds during active call
+      }, 30000);
 
       return () => clearTimeout(autoSaveTimer);
     }
@@ -244,8 +236,8 @@ export default function CallLogging() {
     }),
     onSuccess: () => {
       toast({
-        title: 'Call Logged Successfully',
-        description: 'The call has been saved to the system.',
+        title: t('frontdesk:callLogging.callLoggedSuccess'),
+        description: t('frontdesk:callLogging.callLoggedSuccessDesc'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/front-desk/calls'] });
       setHasUnsavedChanges(false);
@@ -260,8 +252,8 @@ export default function CallLogging() {
     },
     onError: (error) => {
       toast({
-        title: 'Error',
-        description: 'Failed to save call log. Please try again.',
+        title: t('frontdesk:callLogging.error'),
+        description: t('frontdesk:callLogging.saveError'),
         variant: 'destructive',
       });
     },
@@ -292,7 +284,6 @@ export default function CallLogging() {
       endTime: now,
       isPaused: false
     }));
-    // Note: callEndTime and callDuration will be set during form submission
   };
 
   // Template functions
@@ -302,8 +293,8 @@ export default function CallLogging() {
       form.setValue(key as any, value as any);
     });
     toast({
-      title: 'Template Applied',
-      description: `Applied "${template.name}" template to the form.`,
+      title: t('frontdesk:callLogging.templateApplied'),
+      description: t('frontdesk:callLogging.templateAppliedDesc', { name: template.name }),
     });
   };
 
@@ -311,7 +302,6 @@ export default function CallLogging() {
   const autoSave = async () => {
     try {
       const formData = form.getValues();
-      // Save as draft (implement draft API endpoint)
       await apiRequest('/api/front-desk/calls/draft', {
         method: 'POST',
         body: JSON.stringify({ ...formData, isDraft: true }),
@@ -336,18 +326,17 @@ export default function CallLogging() {
 
     createCallLogMutation.mutate(submitData);
 
-    // Create follow-up task if needed
     if (data.needsFollowUp && data.assignFollowUpTo) {
       try {
         await apiRequest('/api/front-desk/tasks', {
           method: 'POST',
           body: JSON.stringify({
-            title: `Follow-up call: ${data.callerName}`,
-            description: `Follow-up for call regarding: ${data.callPurpose}`,
+            title: `${t('frontdesk:callLogging.followUp')}: ${data.callerName}`,
+            description: `${t('frontdesk:callLogging.followUp')} for call regarding: ${data.callPurpose}`,
             taskType: 'follow_up_call',
             assignedTo: data.assignFollowUpTo,
             priority: data.urgencyLevel,
-            relatedCall: null, // Will be set after call is created
+            relatedCall: null,
             contactName: data.callerName,
             contactPhone: data.callerPhone,
             dueDate: data.followUpDate,
@@ -356,8 +345,8 @@ export default function CallLogging() {
         });
       } catch (error) {
         toast({
-          title: 'Warning',
-          description: 'Call saved but failed to create follow-up task.',
+          title: t('frontdesk:callLogging.warning'),
+          description: t('frontdesk:callLogging.followUpTaskError'),
           variant: 'destructive',
         });
       }
@@ -374,32 +363,30 @@ export default function CallLogging() {
   // Emergency escalation
   const handleEmergencyEscalation = () => {
     toast({
-      title: 'Emergency Escalation',
-      description: 'Supervisor has been notified of the situation.',
+      title: t('frontdesk:callLogging.emergencyNotification'),
+      description: t('frontdesk:callLogging.supervisorNotified'),
     });
-    // Implement emergency escalation logic
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6" data-testid="call-logging-form">
-      <div className="flex justify-between items-center">
+    <div className={`container mx-auto p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} data-testid="call-logging-form">
+      <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
         <div>
-          <h1 className="text-3xl font-bold">Phone Call Logging</h1>
-          <p className="text-muted-foreground">Log and manage phone calls efficiently</p>
+          <h1 className="text-3xl font-bold">{t('frontdesk:callLogging.pageTitle')}</h1>
+          <p className="text-muted-foreground">{t('frontdesk:callLogging.pageSubtitle')}</p>
         </div>
         <Button variant="outline" onClick={() => setLocation('/frontdesk/dashboard')}>
-          Back to Dashboard
+          {t('frontdesk:callLogging.backToDashboard')}
         </Button>
       </div>
 
-      {/* Auto-save indicator */}
       {hasUnsavedChanges && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 text-yellow-600 mr-2" />
+        <div className={`bg-yellow-50 border-l-4 border-yellow-400 p-4 ${isRTL ? 'border-r-4 border-l-0' : ''}`}>
+          <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Clock className={`h-4 w-4 text-yellow-600 ${isRTL ? 'ml-2' : 'mr-2'}`} />
             <p className="text-sm text-yellow-700">
-              Unsaved changes detected
-              {lastAutoSave && ` • Last auto-saved: ${lastAutoSave.toLocaleTimeString()}`}
+              {t('frontdesk:callLogging.unsavedChanges')}
+              {lastAutoSave && ` • ${t('frontdesk:callLogging.lastAutoSaved')}: ${lastAutoSave.toLocaleTimeString()}`}
             </p>
           </div>
         </div>
@@ -410,9 +397,9 @@ export default function CallLogging() {
         <div className="lg:col-span-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Timer className="h-5 w-5" />
-                Call Timer
+                {t('frontdesk:callLogging.callTimer')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -422,7 +409,7 @@ export default function CallLogging() {
                 </div>
                 <div className="flex items-center justify-center gap-2 mt-2">
                   <Badge variant={timer.isActive ? 'default' : 'secondary'}>
-                    {timer.isActive ? (timer.isPaused ? 'PAUSED' : 'ACTIVE') : 'INACTIVE'}
+                    {timer.isActive ? (timer.isPaused ? t('frontdesk:callLogging.timerPaused') : t('frontdesk:callLogging.timerActive')) : t('frontdesk:callLogging.timerInactive')}
                   </Badge>
                 </div>
               </div>
@@ -430,18 +417,18 @@ export default function CallLogging() {
               <div className="flex gap-2">
                 {!timer.isActive ? (
                   <Button onClick={startCall} className="flex-1" data-testid="start-call">
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Call
+                    <Play className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('frontdesk:callLogging.startCall')}
                   </Button>
                 ) : (
                   <>
                     <Button onClick={pauseCall} variant="outline" className="flex-1" data-testid="pause-call">
-                      {timer.isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
-                      {timer.isPaused ? 'Resume' : 'Pause'}
+                      {timer.isPaused ? <Play className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> : <Pause className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                      {timer.isPaused ? t('frontdesk:callLogging.resumeCall') : t('frontdesk:callLogging.pauseCall')}
                     </Button>
                     <Button onClick={endCall} variant="destructive" className="flex-1" data-testid="end-call">
-                      <Square className="h-4 w-4 mr-2" />
-                      End Call
+                      <Square className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('frontdesk:callLogging.endCall')}
                     </Button>
                   </>
                 )}
@@ -454,8 +441,8 @@ export default function CallLogging() {
                   className="w-full border-red-200 text-red-600 hover:bg-red-50"
                   data-testid="emergency-escalation"
                 >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Emergency Escalation
+                  <AlertTriangle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('frontdesk:callLogging.emergencyEscalation')}
                 </Button>
               )}
             </CardContent>
@@ -464,9 +451,9 @@ export default function CallLogging() {
           {/* Quick Call Templates */}
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Zap className="h-5 w-5" />
-                Quick Templates
+                {t('frontdesk:callLogging.quickTemplates')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -475,11 +462,11 @@ export default function CallLogging() {
                   key={key}
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start"
+                  className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}
                   onClick={() => applyTemplate(key as keyof typeof CALL_TEMPLATES)}
                   data-testid={`template-${key}`}
                 >
-                  <FileText className="h-4 w-4 mr-2" />
+                  <FileText className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {template.name}
                 </Button>
               ))}
@@ -493,8 +480,8 @@ export default function CallLogging() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Call Details</CardTitle>
-                  <CardDescription>Basic information about the call</CardDescription>
+                  <CardTitle>{t('frontdesk:callLogging.callDetails')}</CardTitle>
+                  <CardDescription>{t('frontdesk:callLogging.callDetailsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -504,20 +491,20 @@ export default function CallLogging() {
                       name="callType"
                       render={({ field }) => (
                         <FormItem className="space-y-3" data-testid="field-call-type">
-                          <FormLabel>Call Type *</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.callType')} {t('frontdesk:callLogging.required')}</FormLabel>
                           <FormControl>
                             <RadioGroup
                               onValueChange={field.onChange}
                               value={field.value}
-                              className="flex gap-4"
+                              className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}
                             >
-                              <div className="flex items-center space-x-2">
+                              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                                 <RadioGroupItem value="incoming" id="incoming" />
-                                <Label htmlFor="incoming">Incoming</Label>
+                                <Label htmlFor="incoming">{t('frontdesk:callLogging.incoming')}</Label>
                               </div>
-                              <div className="flex items-center space-x-2">
+                              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                                 <RadioGroupItem value="outgoing" id="outgoing" />
-                                <Label htmlFor="outgoing">Outgoing</Label>
+                                <Label htmlFor="outgoing">{t('frontdesk:callLogging.outgoing')}</Label>
                               </div>
                             </RadioGroup>
                           </FormControl>
@@ -532,19 +519,19 @@ export default function CallLogging() {
                       name="callPurpose"
                       render={({ field }) => (
                         <FormItem data-testid="field-call-purpose">
-                          <FormLabel>Call Purpose *</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.callPurpose')} {t('frontdesk:callLogging.required')}</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select purpose" />
+                                <SelectValue placeholder={t('frontdesk:callLogging.selectPurpose')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="inquiry">Inquiry</SelectItem>
-                              <SelectItem value="follow_up">Follow-up</SelectItem>
-                              <SelectItem value="complaint">Complaint</SelectItem>
-                              <SelectItem value="booking">Booking</SelectItem>
-                              <SelectItem value="general">General</SelectItem>
+                              <SelectItem value="inquiry">{t('frontdesk:callLogging.inquiry')}</SelectItem>
+                              <SelectItem value="follow_up">{t('frontdesk:callLogging.followUp')}</SelectItem>
+                              <SelectItem value="complaint">{t('frontdesk:callLogging.complaint')}</SelectItem>
+                              <SelectItem value="booking">{t('frontdesk:callLogging.booking')}</SelectItem>
+                              <SelectItem value="general">{t('frontdesk:callLogging.general')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -560,9 +547,9 @@ export default function CallLogging() {
                       name="callerName"
                       render={({ field }) => (
                         <FormItem data-testid="field-caller-name">
-                          <FormLabel>Caller Name *</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.callerName')} {t('frontdesk:callLogging.required')}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter caller's full name" {...field} />
+                            <Input placeholder={t('frontdesk:callLogging.callerNamePlaceholder')} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -575,17 +562,17 @@ export default function CallLogging() {
                       name="callerPhone"
                       render={({ field }) => (
                         <FormItem data-testid="field-caller-phone">
-                          <FormLabel>Phone Number *</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.callerPhone')} {t('frontdesk:callLogging.required')}</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="09123456789" 
+                              placeholder={t('frontdesk:callLogging.callerPhonePlaceholder')} 
                               {...field} 
                               dir="ltr"
                               className="font-mono"
                             />
                           </FormControl>
                           <FormDescription>
-                            Iranian format (e.g., 09123456789)
+                            {t('frontdesk:callLogging.phoneFormat')}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -600,11 +587,11 @@ export default function CallLogging() {
                       name="callerEmail"
                       render={({ field }) => (
                         <FormItem data-testid="field-caller-email">
-                          <FormLabel>Email Address</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.callerEmail')}</FormLabel>
                           <FormControl>
                             <Input 
                               type="email" 
-                              placeholder="caller@example.com" 
+                              placeholder={t('frontdesk:callLogging.callerEmailPlaceholder')} 
                               {...field} 
                             />
                           </FormControl>
@@ -619,19 +606,19 @@ export default function CallLogging() {
                       name="callResult"
                       render={({ field }) => (
                         <FormItem data-testid="field-call-result">
-                          <FormLabel>Call Outcome *</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.callOutcome')} {t('frontdesk:callLogging.required')}</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select outcome" />
+                                <SelectValue placeholder={t('frontdesk:callLogging.selectOutcome')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="successful">Successful</SelectItem>
-                              <SelectItem value="voicemail">Voicemail</SelectItem>
-                              <SelectItem value="no_answer">No Answer</SelectItem>
-                              <SelectItem value="busy">Busy</SelectItem>
-                              <SelectItem value="scheduled_callback">Scheduled Callback</SelectItem>
+                              <SelectItem value="successful">{t('frontdesk:callLogging.successful')}</SelectItem>
+                              <SelectItem value="voicemail">{t('frontdesk:callLogging.voicemail')}</SelectItem>
+                              <SelectItem value="no_answer">{t('frontdesk:callLogging.noAnswer')}</SelectItem>
+                              <SelectItem value="busy">{t('frontdesk:callLogging.busy')}</SelectItem>
+                              <SelectItem value="scheduled_callback">{t('frontdesk:callLogging.scheduledCallback')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -644,8 +631,8 @@ export default function CallLogging() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Call Content & Notes</CardTitle>
-                  <CardDescription>Detailed information about the conversation</CardDescription>
+                  <CardTitle>{t('frontdesk:callLogging.callContentNotes')}</CardTitle>
+                  <CardDescription>{t('frontdesk:callLogging.callContentDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Conversation Summary */}
@@ -654,16 +641,16 @@ export default function CallLogging() {
                     name="callNotes"
                     render={({ field }) => (
                       <FormItem data-testid="field-call-notes">
-                        <FormLabel>Conversation Summary *</FormLabel>
+                        <FormLabel>{t('frontdesk:callLogging.conversationSummary')} {t('frontdesk:callLogging.required')}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Provide a detailed summary of the conversation..."
+                            placeholder={t('frontdesk:callLogging.conversationPlaceholder')}
                             rows={4}
                             {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          Include key points discussed, questions asked, and information provided
+                          {t('frontdesk:callLogging.conversationDescription')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -677,10 +664,10 @@ export default function CallLogging() {
                       name="actionItems"
                       render={({ field }) => (
                         <FormItem data-testid="field-action-items">
-                          <FormLabel>Action Items & Commitments</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.actionItems')}</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="List any commitments made during the call..."
+                              placeholder={t('frontdesk:callLogging.actionItemsPlaceholder')}
                               rows={3}
                               {...field}
                             />
@@ -696,10 +683,10 @@ export default function CallLogging() {
                       name="nextSteps"
                       render={({ field }) => (
                         <FormItem data-testid="field-next-steps">
-                          <FormLabel>Next Steps & Recommendations</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.nextSteps')}</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Recommended actions and next steps..."
+                              placeholder={t('frontdesk:callLogging.nextStepsPlaceholder')}
                               rows={3}
                               {...field}
                             />
@@ -717,9 +704,9 @@ export default function CallLogging() {
                       name="customerSatisfaction"
                       render={({ field }) => (
                         <FormItem data-testid="field-customer-satisfaction">
-                          <FormLabel>Customer Mood/Satisfaction</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.customerSatisfaction')}</FormLabel>
                           <FormControl>
-                            <div className="flex items-center gap-2">
+                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <button
                                   key={star}
@@ -730,7 +717,7 @@ export default function CallLogging() {
                                   <Star className="h-6 w-6 fill-current" />
                                 </button>
                               ))}
-                              <span className="ml-2 text-sm text-muted-foreground">
+                              <span className={`text-sm text-muted-foreground ${isRTL ? 'mr-2' : 'ml-2'}`}>
                                 {field.value || 0}/5
                               </span>
                             </div>
@@ -746,18 +733,18 @@ export default function CallLogging() {
                       name="urgencyLevel"
                       render={({ field }) => (
                         <FormItem data-testid="field-urgency-level">
-                          <FormLabel>Follow-up Urgency</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.urgencyLevel')}</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select urgency" />
+                                <SelectValue placeholder={t('frontdesk:callLogging.selectUrgency')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="low">Low</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="urgent">Urgent</SelectItem>
+                              <SelectItem value="low">{t('frontdesk:callLogging.urgencyLow')}</SelectItem>
+                              <SelectItem value="medium">{t('frontdesk:callLogging.urgencyMedium')}</SelectItem>
+                              <SelectItem value="high">{t('frontdesk:callLogging.urgencyHigh')}</SelectItem>
+                              <SelectItem value="urgent">{t('frontdesk:callLogging.urgencyUrgent')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -770,8 +757,8 @@ export default function CallLogging() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Integration & Follow-up</CardTitle>
-                  <CardDescription>Link to existing records and schedule follow-ups</CardDescription>
+                  <CardTitle>{t('frontdesk:callLogging.integrationFollowUp')}</CardTitle>
+                  <CardDescription>{t('frontdesk:callLogging.integrationDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -781,11 +768,11 @@ export default function CallLogging() {
                       name="studentId"
                       render={({ field }) => (
                         <FormItem data-testid="field-student-link">
-                          <FormLabel>Link to Student Record</FormLabel>
+                          <FormLabel>{t('frontdesk:callLogging.linkToStudent')}</FormLabel>
                           <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString()}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select existing student" />
+                                <SelectValue placeholder={t('frontdesk:callLogging.selectStudent')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -797,7 +784,7 @@ export default function CallLogging() {
                             </SelectContent>
                           </Select>
                           <FormDescription>
-                            Link this call to an existing student record
+                            {t('frontdesk:callLogging.linkDescription')}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -810,11 +797,11 @@ export default function CallLogging() {
                         control={form.control}
                         name="needsFollowUp"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3" data-testid="field-needs-followup">
+                          <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-3 ${isRTL ? 'flex-row-reverse' : ''}`} data-testid="field-needs-followup">
                             <div className="space-y-0.5">
-                              <FormLabel>Needs Follow-up</FormLabel>
+                              <FormLabel>{t('frontdesk:callLogging.needsFollowUp')}</FormLabel>
                               <FormDescription>
-                                Schedule a follow-up task for this call
+                                {t('frontdesk:callLogging.scheduleFollowUp')}
                               </FormDescription>
                             </div>
                             <FormControl>
@@ -839,7 +826,7 @@ export default function CallLogging() {
                         name="followUpDate"
                         render={({ field }) => (
                           <FormItem data-testid="field-followup-date">
-                            <FormLabel>Follow-up Date</FormLabel>
+                            <FormLabel>{t('frontdesk:callLogging.followUpDate')}</FormLabel>
                             <FormControl>
                               <Input
                                 type="datetime-local"
@@ -857,18 +844,18 @@ export default function CallLogging() {
                         name="followUpMethod"
                         render={({ field }) => (
                           <FormItem data-testid="field-followup-method">
-                            <FormLabel>Follow-up Method</FormLabel>
+                            <FormLabel>{t('frontdesk:callLogging.followUpMethod')}</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select method" />
+                                  <SelectValue placeholder={t('frontdesk:callLogging.selectMethod')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="call">Phone Call</SelectItem>
-                                <SelectItem value="email">Email</SelectItem>
-                                <SelectItem value="sms">SMS</SelectItem>
-                                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                                <SelectItem value="call">{t('frontdesk:callLogging.methodCall')}</SelectItem>
+                                <SelectItem value="email">{t('frontdesk:callLogging.methodEmail')}</SelectItem>
+                                <SelectItem value="sms">{t('frontdesk:callLogging.methodSMS')}</SelectItem>
+                                <SelectItem value="whatsapp">{t('frontdesk:callLogging.methodWhatsApp')}</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -882,11 +869,11 @@ export default function CallLogging() {
                         name="assignFollowUpTo"
                         render={({ field }) => (
                           <FormItem data-testid="field-followup-assignee">
-                            <FormLabel>Assign Follow-up To</FormLabel>
+                            <FormLabel>{t('frontdesk:callLogging.assignFollowUpTo')}</FormLabel>
                             <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString()}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select staff member" />
+                                  <SelectValue placeholder={t('frontdesk:callLogging.selectStaff')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -907,7 +894,7 @@ export default function CallLogging() {
               </Card>
 
               {/* Submit Actions */}
-              <div className="flex gap-4">
+              <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Button
                   type="submit"
                   disabled={createCallLogMutation.isPending}
@@ -915,11 +902,11 @@ export default function CallLogging() {
                   data-testid="submit-call-log"
                 >
                   {createCallLogMutation.isPending ? (
-                    'Saving...'
+                    t('frontdesk:callLogging.saving')
                   ) : (
                     <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Complete Call Log
+                      <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('frontdesk:callLogging.completeCallLog')}
                     </>
                   )}
                 </Button>
@@ -931,8 +918,8 @@ export default function CallLogging() {
                   disabled={!hasUnsavedChanges}
                   data-testid="save-draft"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Draft
+                  <Save className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('frontdesk:callLogging.saveDraft')}
                 </Button>
 
                 <Button
@@ -944,8 +931,8 @@ export default function CallLogging() {
                   }}
                   data-testid="schedule-callback"
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Callback
+                  <Calendar className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('frontdesk:callLogging.scheduleCallback')}
                 </Button>
               </div>
             </form>

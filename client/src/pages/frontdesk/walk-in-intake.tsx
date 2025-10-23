@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLocation } from 'wouter';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,112 +40,143 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { cn } from '@/lib/utils';
 import type { InsertFrontDeskOperation } from '@shared/schema';
 
 // Iranian phone validation
 const iranianPhoneRegex = /^(\+98|0)?9\d{9}$/;
 
-// Comprehensive intake form schema
-const intakeFormSchema = z.object({
-  // Contact Information
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+// Type definition for intake form data (for type inference)
+// The actual schema with validation messages is created inside the component
+const baseIntakeFormSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
   middleName: z.string().optional(),
-  visitorPhone: z.string().regex(iranianPhoneRegex, 'Please enter a valid Iranian mobile number'),
-  secondaryPhone: z.string().regex(iranianPhoneRegex, 'Please enter a valid Iranian mobile number').optional().or(z.literal('')),
-  visitorEmail: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
+  visitorPhone: z.string(),
+  secondaryPhone: z.string().optional().or(z.literal('')),
+  visitorEmail: z.string().optional().or(z.literal('')),
   preferredContactMethod: z.enum(['phone', 'email', 'sms']),
-  
-  // Language Learning Details
-  targetLanguages: z.array(z.string()).min(1, 'Please select at least one target language'),
+  targetLanguages: z.array(z.string()),
   proficiencyLevel: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'beginner', 'intermediate', 'advanced']),
-  learningGoals: z.array(z.enum(['conversation', 'business', 'academic', 'exam_prep', 'travel', 'other'])).min(1, 'Please select at least one learning goal'),
+  learningGoals: z.array(z.enum(['conversation', 'business', 'academic', 'exam_prep', 'travel', 'other'])),
   previousExperience: z.string().optional(),
   urgencyLevel: z.enum(['immediate', 'within_month', 'flexible']),
-  
-  // Schedule Preferences
-  preferredDays: z.array(z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])).min(1, 'Please select at least one preferred day'),
-  preferredTimeSlots: z.array(z.enum(['morning', 'afternoon', 'evening'])).min(1, 'Please select at least one time slot'),
+  preferredDays: z.array(z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])),
+  preferredTimeSlots: z.array(z.enum(['morning', 'afternoon', 'evening'])),
   frequencyPreference: z.enum(['1x_week', '2x_week', '3x_week', 'flexible']),
   classTypePreference: z.enum(['group', 'private', 'both']),
-  budgetRange: z.string().min(1, 'Please specify a budget range'),
-  
-  // Additional Information
-  emergencyContactName: z.string().min(2, 'Emergency contact name is required'),
-  emergencyContactPhone: z.string().regex(iranianPhoneRegex, 'Please enter a valid Iranian mobile number'),
-  howHeardAbout: z.string().min(1, 'Please specify how you heard about us'),
+  budgetRange: z.string(),
+  emergencyContactName: z.string(),
+  emergencyContactPhone: z.string(),
+  howHeardAbout: z.string(),
   specialRequirements: z.string().optional(),
   accessibilityNeeds: z.string().optional(),
   clerkObservations: z.string().optional(),
 });
 
-type IntakeFormData = z.infer<typeof intakeFormSchema>;
-
-// Form sections for progress tracking
-const FORM_SECTIONS = [
-  { id: 'contact', label: 'Contact Information', icon: Phone },
-  { id: 'language', label: 'Language Learning', icon: Languages },
-  { id: 'schedule', label: 'Schedule Preferences', icon: Calendar },
-  { id: 'additional', label: 'Additional Information', icon: MessageSquare },
-];
-
-// Options for form fields
-const LANGUAGE_OPTIONS = [
-  { value: 'english', label: 'English' },
-  { value: 'french', label: 'French' },
-  { value: 'german', label: 'German' },
-  { value: 'spanish', label: 'Spanish' },
-  { value: 'italian', label: 'Italian' },
-  { value: 'portuguese', label: 'Portuguese' },
-  { value: 'russian', label: 'Russian' },
-  { value: 'arabic', label: 'Arabic' },
-  { value: 'chinese', label: 'Chinese' },
-  { value: 'japanese', label: 'Japanese' },
-  { value: 'korean', label: 'Korean' },
-];
-
-const LEARNING_GOALS = [
-  { value: 'conversation', label: 'General Conversation' },
-  { value: 'business', label: 'Business Communication' },
-  { value: 'academic', label: 'Academic Studies' },
-  { value: 'exam_prep', label: 'Exam Preparation (IELTS, TOEFL, etc.)' },
-  { value: 'travel', label: 'Travel & Tourism' },
-  { value: 'other', label: 'Other' },
-];
-
-const DAYS_OF_WEEK = [
-  { value: 'monday', label: 'Monday' },
-  { value: 'tuesday', label: 'Tuesday' },
-  { value: 'wednesday', label: 'Wednesday' },
-  { value: 'thursday', label: 'Thursday' },
-  { value: 'friday', label: 'Friday' },
-  { value: 'saturday', label: 'Saturday' },
-  { value: 'sunday', label: 'Sunday' },
-];
-
-const TIME_SLOTS = [
-  { value: 'morning', label: 'Morning (8:00 - 12:00)' },
-  { value: 'afternoon', label: 'Afternoon (12:00 - 17:00)' },
-  { value: 'evening', label: 'Evening (17:00 - 21:00)' },
-];
-
-const HOW_HEARD_OPTIONS = [
-  'Google Search',
-  'Social Media (Instagram, Telegram)',
-  'Friend/Family Recommendation',
-  'Walking by the Institute',
-  'Online Advertisement',
-  'Local Newspaper',
-  'University/School Reference',
-  'Previous Student',
-  'Other',
-];
+type IntakeFormData = z.infer<typeof baseIntakeFormSchema>;
 
 export default function WalkInIntake() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation(['frontdesk', 'common']);
+  const isRTL = i18n.dir() === 'rtl';
+
+  // Memoized schema with internationalized validation messages
+  const intakeFormSchema = useMemo(() => z.object({
+    // Contact Information
+    firstName: z.string().min(2, t('frontdesk:walkIn.intake.validations.firstNameMin')),
+    lastName: z.string().min(2, t('frontdesk:walkIn.intake.validations.lastNameMin')),
+    middleName: z.string().optional(),
+    visitorPhone: z.string().regex(iranianPhoneRegex, t('frontdesk:walkIn.intake.validations.invalidPhone')),
+    secondaryPhone: z.string().regex(iranianPhoneRegex, t('frontdesk:walkIn.intake.validations.invalidPhone')).optional().or(z.literal('')),
+    visitorEmail: z.string().email(t('frontdesk:walkIn.intake.validations.invalidEmail')).optional().or(z.literal('')),
+    preferredContactMethod: z.enum(['phone', 'email', 'sms']),
+    
+    // Language Learning Details
+    targetLanguages: z.array(z.string()).min(1, t('frontdesk:walkIn.intake.validations.targetLanguagesMin')),
+    proficiencyLevel: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'beginner', 'intermediate', 'advanced']),
+    learningGoals: z.array(z.enum(['conversation', 'business', 'academic', 'exam_prep', 'travel', 'other'])).min(1, t('frontdesk:walkIn.intake.validations.learningGoalsMin')),
+    previousExperience: z.string().optional(),
+    urgencyLevel: z.enum(['immediate', 'within_month', 'flexible']),
+    
+    // Schedule Preferences
+    preferredDays: z.array(z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])).min(1, t('frontdesk:walkIn.intake.validations.preferredDaysMin')),
+    preferredTimeSlots: z.array(z.enum(['morning', 'afternoon', 'evening'])).min(1, t('frontdesk:walkIn.intake.validations.preferredTimeSlotsMin')),
+    frequencyPreference: z.enum(['1x_week', '2x_week', '3x_week', 'flexible']),
+    classTypePreference: z.enum(['group', 'private', 'both']),
+    budgetRange: z.string().min(1, t('frontdesk:walkIn.intake.validations.budgetRequired')),
+    
+    // Additional Information
+    emergencyContactName: z.string().min(2, t('frontdesk:walkIn.intake.validations.emergencyContactNameRequired')),
+    emergencyContactPhone: z.string().regex(iranianPhoneRegex, t('frontdesk:walkIn.intake.validations.emergencyContactPhoneInvalid')),
+    howHeardAbout: z.string().min(1, t('frontdesk:walkIn.intake.validations.howHeardRequired')),
+    specialRequirements: z.string().optional(),
+    accessibilityNeeds: z.string().optional(),
+    clerkObservations: z.string().optional(),
+  }), [t]);
+
+  // Form sections for progress tracking
+  const FORM_SECTIONS = [
+    { id: 'contact', label: t('frontdesk:walkIn.intake.contactInfo'), icon: Phone },
+    { id: 'language', label: t('frontdesk:walkIn.intake.languageLearning'), icon: Languages },
+    { id: 'schedule', label: t('frontdesk:walkIn.intake.schedulePrefs'), icon: Calendar },
+    { id: 'additional', label: t('frontdesk:walkIn.intake.additionalInfo'), icon: MessageSquare },
+  ];
+
+  // Options for form fields
+  const LANGUAGE_OPTIONS = [
+    { value: 'english', label: t('frontdesk:walkIn.intake.english') },
+    { value: 'french', label: t('frontdesk:walkIn.intake.french') },
+    { value: 'german', label: t('frontdesk:walkIn.intake.german') },
+    { value: 'spanish', label: t('frontdesk:walkIn.intake.spanish') },
+    { value: 'italian', label: t('frontdesk:walkIn.intake.italian') },
+    { value: 'portuguese', label: t('frontdesk:walkIn.intake.portuguese') },
+    { value: 'russian', label: t('frontdesk:walkIn.intake.russian') },
+    { value: 'arabic', label: t('frontdesk:walkIn.intake.arabic') },
+    { value: 'chinese', label: t('frontdesk:walkIn.intake.chinese') },
+    { value: 'japanese', label: t('frontdesk:walkIn.intake.japanese') },
+    { value: 'korean', label: t('frontdesk:walkIn.intake.korean') },
+  ];
+
+  const LEARNING_GOALS = [
+    { value: 'conversation', label: t('frontdesk:walkIn.intake.goalConversation') },
+    { value: 'business', label: t('frontdesk:walkIn.intake.goalBusiness') },
+    { value: 'academic', label: t('frontdesk:walkIn.intake.goalAcademic') },
+    { value: 'exam_prep', label: t('frontdesk:walkIn.intake.goalExamPrep') },
+    { value: 'travel', label: t('frontdesk:walkIn.intake.goalTravel') },
+    { value: 'other', label: t('frontdesk:walkIn.intake.goalOther') },
+  ];
+
+  const DAYS_OF_WEEK = [
+    { value: 'monday', label: t('frontdesk:walkIn.intake.monday') },
+    { value: 'tuesday', label: t('frontdesk:walkIn.intake.tuesday') },
+    { value: 'wednesday', label: t('frontdesk:walkIn.intake.wednesday') },
+    { value: 'thursday', label: t('frontdesk:walkIn.intake.thursday') },
+    { value: 'friday', label: t('frontdesk:walkIn.intake.friday') },
+    { value: 'saturday', label: t('frontdesk:walkIn.intake.saturday') },
+    { value: 'sunday', label: t('frontdesk:walkIn.intake.sunday') },
+  ];
+
+  const TIME_SLOTS = [
+    { value: 'morning', label: t('frontdesk:walkIn.intake.morning') },
+    { value: 'afternoon', label: t('frontdesk:walkIn.intake.afternoon') },
+    { value: 'evening', label: t('frontdesk:walkIn.intake.evening') },
+  ];
+
+  const HOW_HEARD_OPTIONS = [
+    t('frontdesk:walkIn.intake.howHeardGoogle'),
+    t('frontdesk:walkIn.intake.howHeardSocial'),
+    t('frontdesk:walkIn.intake.howHeardFriend'),
+    t('frontdesk:walkIn.intake.howHeardWalkBy'),
+    t('frontdesk:walkIn.intake.howHeardAd'),
+    t('frontdesk:walkIn.intake.howHeardNewspaper'),
+    t('frontdesk:walkIn.intake.howHeardSchool'),
+    t('frontdesk:walkIn.intake.howHeardStudent'),
+    t('frontdesk:walkIn.intake.howHeardOther'),
+  ];
   
   const [currentSection, setCurrentSection] = useState(0);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -302,8 +334,8 @@ export default function WalkInIntake() {
       queryClient.invalidateQueries({ queryKey: ['/api/front-desk/tasks/overdue'] });
       
       toast({
-        title: 'Intake Form Submitted Successfully',
-        description: `Walk-in intake #${data.id} has been recorded and follow-up task automatically created.`,
+        title: t('frontdesk:walkIn.intake.submissionSuccess'),
+        description: t('frontdesk:walkIn.intake.submissionSuccessDesc', { id: data.id }),
       });
       
       // Navigate back to dashboard using wouter
@@ -312,8 +344,8 @@ export default function WalkInIntake() {
     onError: (error: any) => {
       console.error('Form submission error:', error);
       toast({
-        title: 'Submission Failed',
-        description: error?.message || 'Failed to submit intake form. Please try again.',
+        title: t('frontdesk:walkIn.intake.submissionFailed'),
+        description: error?.message || t('frontdesk:walkIn.intake.submissionFailedDesc'),
         variant: 'destructive',
       });
     },
@@ -341,8 +373,8 @@ export default function WalkInIntake() {
     setDraftId(null);
     setAutoSaveStatus('idle');
     toast({
-      title: 'Form Cleared',
-      description: 'All form data has been cleared.',
+      title: t('frontdesk:walkIn.intake.formCleared'),
+      description: t('frontdesk:walkIn.intake.formClearedDesc'),
     });
   };
 
@@ -352,41 +384,41 @@ export default function WalkInIntake() {
     <div className="container mx-auto py-6 px-4 max-w-4xl" data-testid="walk-in-intake-form">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className={cn("text-3xl font-bold text-gray-900 flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <UserPlus className="h-8 w-8 text-blue-600" />
-              Walk-in Student Intake
+              {t('frontdesk:walkIn.intake.pageTitle')}
             </h1>
-            <p className="text-gray-600 mt-1">Comprehensive student information collection form</p>
+            <p className="text-gray-600 mt-1">{t('frontdesk:walkIn.intake.pageSubtitle')}</p>
           </div>
           <Button variant="outline" onClick={() => setLocation('/frontdesk')} data-testid="btn-back-dashboard">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            <ArrowLeft className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+            {t('frontdesk:walkIn.intake.backToDashboard')}
           </Button>
         </div>
 
         {/* Progress Indicator */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Progress: Step {currentSection + 1} of {FORM_SECTIONS.length}</span>
+            <span>{t('frontdesk:walkIn.intake.progressStep', { current: currentSection + 1, total: FORM_SECTIONS.length })}</span>
             <div className="flex items-center gap-2">
               {autoSaveStatus === 'saving' && (
                 <div className="flex items-center text-blue-600">
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                  Saving...
+                  <Loader2 className={cn("h-3 w-3 animate-spin", isRTL ? "ml-1" : "mr-1")} />
+                  {t('frontdesk:walkIn.intake.saving')}
                 </div>
               )}
               {autoSaveStatus === 'saved' && (
                 <div className="flex items-center text-green-600">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Draft saved
+                  <CheckCircle className={cn("h-3 w-3", isRTL ? "ml-1" : "mr-1")} />
+                  {t('frontdesk:walkIn.intake.draftSaved')}
                 </div>
               )}
               {autoSaveStatus === 'error' && (
                 <div className="flex items-center text-red-600">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Save failed
+                  <AlertCircle className={cn("h-3 w-3", isRTL ? "ml-1" : "mr-1")} />
+                  {t('frontdesk:walkIn.intake.saveFailed')}
                 </div>
               )}
             </div>
@@ -422,10 +454,10 @@ export default function WalkInIntake() {
                 {FORM_SECTIONS[currentSection].label}
               </CardTitle>
               <CardDescription>
-                {currentSection === 0 && 'Basic contact information and preferred communication method'}
-                {currentSection === 1 && 'Language learning goals and current proficiency level'}
-                {currentSection === 2 && 'Schedule preferences and class type requirements'}
-                {currentSection === 3 && 'Emergency contact and additional requirements'}
+                {currentSection === 0 && t('frontdesk:walkIn.intake.contactInfoDesc')}
+                {currentSection === 1 && t('frontdesk:walkIn.intake.languageLearningDesc')}
+                {currentSection === 2 && t('frontdesk:walkIn.intake.schedulePrefsDesc')}
+                {currentSection === 3 && t('frontdesk:walkIn.intake.additionalInfoDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -437,7 +469,7 @@ export default function WalkInIntake() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.firstName')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <FormControl>
                           <Input {...field} data-testid="input-first-name" />
                         </FormControl>
@@ -451,7 +483,7 @@ export default function WalkInIntake() {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.lastName')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <FormControl>
                           <Input {...field} data-testid="input-last-name" />
                         </FormControl>
@@ -465,7 +497,7 @@ export default function WalkInIntake() {
                     name="middleName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Middle Name</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.middleName')}</FormLabel>
                         <FormControl>
                           <Input {...field} data-testid="input-middle-name" />
                         </FormControl>
@@ -479,15 +511,15 @@ export default function WalkInIntake() {
                     name="visitorPhone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Primary Phone Number *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.primaryPhone')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <FormControl>
                           <Input 
                             {...field} 
-                            placeholder="09123456789"
+                            placeholder={t('frontdesk:walkIn.intake.phonePlaceholder')}
                             data-testid="input-primary-phone"
                           />
                         </FormControl>
-                        <FormDescription>Iranian mobile number format</FormDescription>
+                        <FormDescription>{t('frontdesk:walkIn.intake.phoneFormat')}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -498,11 +530,11 @@ export default function WalkInIntake() {
                     name="secondaryPhone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Secondary Phone Number</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.secondaryPhone')}</FormLabel>
                         <FormControl>
                           <Input 
                             {...field} 
-                            placeholder="09123456789"
+                            placeholder={t('frontdesk:walkIn.intake.phonePlaceholder')}
                             data-testid="input-secondary-phone"
                           />
                         </FormControl>
@@ -516,12 +548,12 @@ export default function WalkInIntake() {
                     name="visitorEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email Address</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.emailAddress')}</FormLabel>
                         <FormControl>
                           <Input 
                             {...field} 
                             type="email"
-                            placeholder="example@email.com"
+                            placeholder={t('frontdesk:walkIn.intake.emailPlaceholder')}
                             data-testid="input-email"
                           />
                         </FormControl>
@@ -535,7 +567,7 @@ export default function WalkInIntake() {
                     name="preferredContactMethod"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Preferred Contact Method *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.preferredContact')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
@@ -545,15 +577,15 @@ export default function WalkInIntake() {
                           >
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="phone" id="phone" />
-                              <Label htmlFor="phone">Phone Call</Label>
+                              <Label htmlFor="phone">{t('frontdesk:walkIn.intake.phoneCall')}</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="email" id="email" />
-                              <Label htmlFor="email">Email</Label>
+                              <Label htmlFor="email">{t('frontdesk:walkIn.intake.email')}</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="sms" id="sms" />
-                              <Label htmlFor="sms">SMS</Label>
+                              <Label htmlFor="sms">{t('frontdesk:walkIn.intake.sms')}</Label>
                             </div>
                           </RadioGroup>
                         </FormControl>
@@ -572,8 +604,8 @@ export default function WalkInIntake() {
                     name="targetLanguages"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Target Language(s) to Learn *</FormLabel>
-                        <FormDescription>Select all languages you want to learn</FormDescription>
+                        <FormLabel>{t('frontdesk:walkIn.intake.targetLanguages')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
+                        <FormDescription>{t('frontdesk:walkIn.intake.targetLanguagesDesc')}</FormDescription>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                           {LANGUAGE_OPTIONS.map((language) => (
                             <div key={language.value} className="flex items-center space-x-2">
@@ -608,23 +640,23 @@ export default function WalkInIntake() {
                     name="proficiencyLevel"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Current Proficiency Level *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.proficiencyLevel')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="select-proficiency-level">
-                              <SelectValue placeholder="Select current level" />
+                              <SelectValue placeholder={t('frontdesk:walkIn.intake.proficiencyLevel')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="beginner">Beginner</SelectItem>
-                            <SelectItem value="A1">A1 - Beginner</SelectItem>
-                            <SelectItem value="A2">A2 - Elementary</SelectItem>
-                            <SelectItem value="intermediate">Intermediate</SelectItem>
-                            <SelectItem value="B1">B1 - Intermediate</SelectItem>
-                            <SelectItem value="B2">B2 - Upper Intermediate</SelectItem>
-                            <SelectItem value="advanced">Advanced</SelectItem>
-                            <SelectItem value="C1">C1 - Advanced</SelectItem>
-                            <SelectItem value="C2">C2 - Proficient</SelectItem>
+                            <SelectItem value="beginner">{t('frontdesk:walkIn.intake.beginner')}</SelectItem>
+                            <SelectItem value="A1">{t('frontdesk:walkIn.intake.proficiencyA1')}</SelectItem>
+                            <SelectItem value="A2">{t('frontdesk:walkIn.intake.proficiencyA2')}</SelectItem>
+                            <SelectItem value="intermediate">{t('frontdesk:walkIn.intake.intermediate')}</SelectItem>
+                            <SelectItem value="B1">{t('frontdesk:walkIn.intake.proficiencyB1')}</SelectItem>
+                            <SelectItem value="B2">{t('frontdesk:walkIn.intake.proficiencyB2')}</SelectItem>
+                            <SelectItem value="advanced">{t('frontdesk:walkIn.intake.advanced')}</SelectItem>
+                            <SelectItem value="C1">{t('frontdesk:walkIn.intake.proficiencyC1')}</SelectItem>
+                            <SelectItem value="C2">{t('frontdesk:walkIn.intake.proficiencyC2')}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -637,8 +669,8 @@ export default function WalkInIntake() {
                     name="learningGoals"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Learning Goals *</FormLabel>
-                        <FormDescription>What do you want to achieve with language learning?</FormDescription>
+                        <FormLabel>{t('frontdesk:walkIn.intake.learningGoals')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
+                        <FormDescription>{t('frontdesk:walkIn.intake.learningGoalsDesc')}</FormDescription>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                           {LEARNING_GOALS.map((goal) => (
                             <div key={goal.value} className="flex items-center space-x-2">
@@ -673,11 +705,12 @@ export default function WalkInIntake() {
                     name="previousExperience"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Previous Language Learning Experience</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.previousExperience')}</FormLabel>
+                        <FormDescription>{t('frontdesk:walkIn.intake.previousExperienceDesc')}</FormDescription>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Describe any previous language learning experience, courses taken, or self-study methods..."
+                            placeholder={t('frontdesk:walkIn.intake.previousExperiencePlaceholder')}
                             rows={3}
                             data-testid="textarea-previous-experience"
                           />
@@ -692,7 +725,7 @@ export default function WalkInIntake() {
                     name="urgencyLevel"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Urgency Level *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.urgencyLevel')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
@@ -702,15 +735,15 @@ export default function WalkInIntake() {
                           >
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="immediate" id="immediate" />
-                              <Label htmlFor="immediate">Immediate (start this week)</Label>
+                              <Label htmlFor="immediate">{t('frontdesk:walkIn.intake.urgencyImmediate')}</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="within_month" id="within_month" />
-                              <Label htmlFor="within_month">Within a month</Label>
+                              <Label htmlFor="within_month">{t('frontdesk:walkIn.intake.urgencyMonth')}</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="flexible" id="flexible" />
-                              <Label htmlFor="flexible">Flexible timing</Label>
+                              <Label htmlFor="flexible">{t('frontdesk:walkIn.intake.urgencyFlexible')}</Label>
                             </div>
                           </RadioGroup>
                         </FormControl>
@@ -729,8 +762,8 @@ export default function WalkInIntake() {
                     name="preferredDays"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preferred Days of Week *</FormLabel>
-                        <FormDescription>Select all days you're available for classes</FormDescription>
+                        <FormLabel>{t('frontdesk:walkIn.intake.preferredDays')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
+                        <FormDescription>{t('frontdesk:walkIn.intake.preferredDaysDesc')}</FormDescription>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                           {DAYS_OF_WEEK.map((day) => (
                             <div key={day.value} className="flex items-center space-x-2">
@@ -765,8 +798,8 @@ export default function WalkInIntake() {
                     name="preferredTimeSlots"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preferred Time Slots *</FormLabel>
-                        <FormDescription>Select all time periods that work for you</FormDescription>
+                        <FormLabel>{t('frontdesk:walkIn.intake.preferredTime')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
+                        <FormDescription>{t('frontdesk:walkIn.intake.preferredTimeDesc')}</FormDescription>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
                           {TIME_SLOTS.map((slot) => (
                             <div key={slot.value} className="flex items-center space-x-2">
@@ -802,18 +835,18 @@ export default function WalkInIntake() {
                       name="frequencyPreference"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Frequency Preference *</FormLabel>
+                          <FormLabel>{t('frontdesk:walkIn.intake.frequency')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger data-testid="select-frequency">
-                                <SelectValue placeholder="How often per week?" />
+                                <SelectValue placeholder={t('frontdesk:walkIn.intake.frequency')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="1x_week">Once per week</SelectItem>
-                              <SelectItem value="2x_week">Twice per week</SelectItem>
-                              <SelectItem value="3x_week">Three times per week</SelectItem>
-                              <SelectItem value="flexible">Flexible</SelectItem>
+                              <SelectItem value="1x_week">{t('frontdesk:walkIn.intake.frequency1x')}</SelectItem>
+                              <SelectItem value="2x_week">{t('frontdesk:walkIn.intake.frequency2x')}</SelectItem>
+                              <SelectItem value="3x_week">{t('frontdesk:walkIn.intake.frequency3x')}</SelectItem>
+                              <SelectItem value="flexible">{t('frontdesk:walkIn.intake.frequencyFlexible')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -826,17 +859,17 @@ export default function WalkInIntake() {
                       name="classTypePreference"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Class Type Preference *</FormLabel>
+                          <FormLabel>{t('frontdesk:walkIn.intake.classType')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger data-testid="select-class-type">
-                                <SelectValue placeholder="Select class type" />
+                                <SelectValue placeholder={t('frontdesk:walkIn.intake.classType')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="group">Group Classes</SelectItem>
-                              <SelectItem value="private">Private Tutoring</SelectItem>
-                              <SelectItem value="both">Both Group and Private</SelectItem>
+                              <SelectItem value="group">{t('frontdesk:walkIn.intake.classGroup')}</SelectItem>
+                              <SelectItem value="private">{t('frontdesk:walkIn.intake.classPrivate')}</SelectItem>
+                              <SelectItem value="both">{t('frontdesk:walkIn.intake.classBoth')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -850,15 +883,14 @@ export default function WalkInIntake() {
                     name="budgetRange"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Budget Range for Lessons *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.budgetRange')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <FormControl>
                           <Input 
                             {...field} 
-                            placeholder="e.g., 2,000,000 - 3,000,000 IRR per month"
+                            placeholder={t('frontdesk:walkIn.intake.budgetPlaceholder')}
                             data-testid="input-budget-range"
                           />
                         </FormControl>
-                        <FormDescription>Please specify your monthly budget for language lessons</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -875,7 +907,7 @@ export default function WalkInIntake() {
                       name="emergencyContactName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Emergency Contact Name *</FormLabel>
+                          <FormLabel>{t('frontdesk:walkIn.intake.emergencyContact')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                           <FormControl>
                             <Input {...field} data-testid="input-emergency-name" />
                           </FormControl>
@@ -889,11 +921,11 @@ export default function WalkInIntake() {
                       name="emergencyContactPhone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Emergency Contact Phone *</FormLabel>
+                          <FormLabel>{t('frontdesk:walkIn.intake.emergencyPhone')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                           <FormControl>
                             <Input 
                               {...field} 
-                              placeholder="09123456789"
+                              placeholder={t('frontdesk:walkIn.intake.phonePlaceholder')}
                               data-testid="input-emergency-phone"
                             />
                           </FormControl>
@@ -908,11 +940,11 @@ export default function WalkInIntake() {
                     name="howHeardAbout"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>How did you hear about our institute? *</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.howHeard')} {t('frontdesk:walkIn.intake.required')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="select-how-heard">
-                              <SelectValue placeholder="Select an option" />
+                              <SelectValue placeholder={t('frontdesk:walkIn.intake.howHeardPlaceholder')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -933,11 +965,11 @@ export default function WalkInIntake() {
                     name="specialRequirements"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Special Requirements</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.specialRequirements')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Any special requirements for your learning experience..."
+                            placeholder={t('frontdesk:walkIn.intake.specialRequirementsPlaceholder')}
                             rows={3}
                             data-testid="textarea-special-requirements"
                           />
@@ -952,11 +984,11 @@ export default function WalkInIntake() {
                     name="accessibilityNeeds"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Accessibility Needs</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.accessibilityNeeds')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Any accessibility requirements or accommodations needed..."
+                            placeholder={t('frontdesk:walkIn.intake.accessibilityPlaceholder')}
                             rows={3}
                             data-testid="textarea-accessibility-needs"
                           />
@@ -971,17 +1003,17 @@ export default function WalkInIntake() {
                     name="clerkObservations"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Front Desk Clerk Observations</FormLabel>
+                        <FormLabel>{t('frontdesk:walkIn.intake.clerkObservations')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Notes about the student's demeanor, specific interests, concerns, or other observations..."
+                            placeholder={t('frontdesk:walkIn.intake.clerkObservationsPlaceholder')}
                             rows={4}
                             data-testid="textarea-clerk-observations"
                           />
                         </FormControl>
                         <FormDescription>
-                          Internal notes about the walk-in interaction, student's attitude, specific needs mentioned, etc.
+                          {t('frontdesk:walkIn.intake.clerkObservationsDesc')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -993,7 +1025,7 @@ export default function WalkInIntake() {
           </Card>
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between">
+          <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
             <div className="flex gap-2">
               {currentSection > 0 && (
                 <Button 
@@ -1002,8 +1034,8 @@ export default function WalkInIntake() {
                   onClick={prevSection}
                   data-testid="btn-previous-section"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Previous
+                  <ArrowLeft className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                  {t('frontdesk:walkIn.intake.previous')}
                 </Button>
               )}
               
@@ -1013,7 +1045,7 @@ export default function WalkInIntake() {
                 onClick={clearForm}
                 data-testid="btn-clear-form"
               >
-                Clear Form
+                {t('frontdesk:walkIn.intake.clearForm')}
               </Button>
             </div>
 
@@ -1024,8 +1056,8 @@ export default function WalkInIntake() {
                   onClick={nextSection}
                   data-testid="btn-next-section"
                 >
-                  Next
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  {t('frontdesk:walkIn.intake.next')}
+                  <ArrowRight className={cn("h-4 w-4", isRTL ? "mr-2" : "ml-2")} />
                 </Button>
               ) : (
                 <Button 
@@ -1035,13 +1067,13 @@ export default function WalkInIntake() {
                 >
                   {submitIntakeMutation.isPending ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Submitting...
+                      <Loader2 className={cn("h-4 w-4 animate-spin", isRTL ? "ml-2" : "mr-2")} />
+                      {t('frontdesk:walkIn.intake.submitting')}
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Submit Intake Form
+                      <Send className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                      {t('frontdesk:walkIn.intake.submitForm')}
                     </>
                   )}
                 </Button>
