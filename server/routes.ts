@@ -11294,15 +11294,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // WebRTC virtual classroom feature not configured
-      return res.status(501).json({
-        error: "Virtual classroom not configured",
-        message: "LiveKit or WebRTC classroom system is not configured. Please set up WebRTC infrastructure first.",
-        messageFa: "سیستم کلاس مجازی پیکربندی نشده است",
-        documentation: "Configure LiveKit server and credentials to enable virtual classroom feature"
+      const { getWebRTCConfig } = await import('./webrtc-config');
+      const { classTitle, maxParticipants = 50, duration = 60 } = req.body;
+      
+      // Generate unique room ID for virtual classroom
+      const roomId = `classroom_${crypto.randomUUID()}`;
+      const teacherId = req.user.id;
+      
+      // Get WebRTC configuration for client
+      const webrtcConfig = getWebRTCConfig();
+      
+      // Register classroom with WebSocket server
+      const websocketServer = req.app.locals.websocketServer;
+      if (websocketServer) {
+        // Pre-create room in WebSocket server's activeRooms Map
+        // Parameters: roomId, studentId (0 for multi-user), teacherId, packageId (0 for free classroom)
+        websocketServer.createRoomWithSafeguards(roomId, 0, teacherId, 0);
+        console.log(`✅ Room registered with WebSocket server: ${roomId} (max: ${maxParticipants} participants)`);
+      } else {
+        console.warn('⚠️  WebSocket server not available - room will be created on first join');
+      }
+      
+      // Create classroom session data
+      const classroom = {
+        roomId,
+        title: classTitle || `Virtual Classroom by ${req.user.firstName} ${req.user.lastName}`,
+        teacherId,
+        teacherName: `${req.user.firstName} ${req.user.lastName}`,
+        createdAt: new Date().toISOString(),
+        maxParticipants,
+        durationMinutes: duration,
+        status: 'active',
+        participants: []
+      };
+      
+      console.log(`✅ Virtual classroom created: ${roomId} by teacher ${teacherId}`);
+      
+      // Return classroom details and WebRTC config
+      res.status(201).json({
+        success: true,
+        message: "Virtual classroom created successfully",
+        messageFa: "کلاس مجازی با موفقیت ایجاد شد",
+        classroom: {
+          roomId,
+          title: classroom.title,
+          teacherId,
+          teacherName: classroom.teacherName,
+          joinUrl: `/classroom/${roomId}`,
+          webSocketUrl: process.env.NODE_ENV === 'production' 
+            ? `wss://${req.get('host')}`
+            : 'ws://localhost:5000',
+          maxParticipants,
+          createdAt: classroom.createdAt
+        },
+        webrtcConfig
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to create classroom" });
+      console.error('❌ Failed to create virtual classroom:', error);
+      res.status(500).json({ message: "Failed to create classroom", error: error.message });
     }
   });
 
