@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Settings, 
@@ -18,6 +18,7 @@ import {
 
 export function AdminSystem() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -52,7 +53,7 @@ export function AdminSystem() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div>
         <h1 className="text-3xl font-bold">{t('admin:system.title')}</h1>
         <p className="text-gray-600">{t('admin:system.description')}</p>

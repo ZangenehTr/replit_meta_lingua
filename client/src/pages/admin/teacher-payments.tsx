@@ -300,7 +300,7 @@ export default function TeacherPaymentsPage() {
   };
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Enhanced Header Section */}
           <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-lg border border-gray-200/50 backdrop-blur-sm p-8 mb-10">

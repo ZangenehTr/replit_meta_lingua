@@ -35,7 +35,7 @@ export default function TTSSystem() {
   const [testText, setTestText] = useState("Hello, this is a test of the text-to-speech system.");
 
   return (
-    <div className={`container mx-auto p-6 space-y-6 ${isRTL ? 'rtl' : ''}`}>
+    <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
           <BackButton />

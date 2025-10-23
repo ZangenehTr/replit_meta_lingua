@@ -83,7 +83,7 @@ export function MobileAdminDashboard() {
   );
 
   return (
-    <div className={`min-h-screen bg-background p-4 pb-20 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className="min-h-screen bg-background p-4 pb-20" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Mobile Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-1">Admin Dashboard</h1>

@@ -462,7 +462,7 @@ export function AdminSystem() {
   };
 
   return (
-    <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className="p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

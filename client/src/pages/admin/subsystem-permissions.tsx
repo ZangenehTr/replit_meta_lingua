@@ -215,7 +215,7 @@ export default function SubsystemPermissions() {
   }
 
   return (
-      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 admin-ltr">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">

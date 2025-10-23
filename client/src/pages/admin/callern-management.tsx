@@ -351,7 +351,7 @@ export function CallernManagement() {
   const normalizedRole = user?.role?.toLowerCase();
   if (user && !['admin', 'supervisor'].includes(normalizedRole)) {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 p-4 sm:p-6 flex items-center justify-center ${isRTL ? 'rtl' : 'ltr'}`}>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 p-4 sm:p-6 flex items-center justify-center" dir={isRTL ? 'rtl' : 'ltr'}>
         <Card className="max-w-md text-center">
           <CardHeader>
             <CardTitle className="text-red-600">{t('admin:callernManagement.accessDenied')}</CardTitle>
@@ -377,7 +377,7 @@ export function CallernManagement() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>

@@ -34,7 +34,7 @@ export default function EnhancedAnalytics() {
   const [timeRange, setTimeRange] = useState("30d");
 
   return (
-    <div className={`container mx-auto p-6 space-y-6 ${isRTL ? 'rtl' : ''}`}>
+    <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
           <BackButton />
