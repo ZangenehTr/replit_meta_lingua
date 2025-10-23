@@ -220,7 +220,7 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className={`container max-w-6xl mx-auto p-6 space-y-8 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className="container max-w-6xl mx-auto p-6 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-6">
           <BackButton href="/dashboard" />

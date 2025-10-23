@@ -655,7 +655,7 @@ export function AdminStudents() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header - Mobile-first redesign */}
       <div className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">

@@ -150,7 +150,7 @@ export function AdminFinancial() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
