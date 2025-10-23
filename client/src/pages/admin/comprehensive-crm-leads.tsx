@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { 
   UserPlus, Phone, Mail, Target, Clock, CheckCircle, XCircle, AlertCircle,
   Filter, Search, Download, Calendar, MessageSquare, User, ChevronDown,
@@ -92,6 +93,7 @@ interface CommunicationLog {
 
 export default function ComprehensiveCRMLeads() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   
   // State management
   const [searchTerm, setSearchTerm] = useState('');
@@ -329,7 +331,7 @@ export default function ComprehensiveCRMLeads() {
   };
 
   return (
-    <div className="space-y-6 p-6" dir="rtl">
+    <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

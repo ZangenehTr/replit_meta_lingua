@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Edit, Trash2, UserPlus, Shield, Mail, Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface User {
   id: number;
@@ -27,6 +28,7 @@ interface User {
 
 export default function UserManagement() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   // Fetch roles dynamically from API
   const { data: ROLES = [] } = useQuery({
     queryKey: ['/api/admin/user-roles'],
@@ -203,10 +205,10 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="space-y-6" style={{direction: 'inherit', textAlign: 'inherit'}}>
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="flex justify-between items-center" style={{direction: 'inherit'}}>
-        <div style={{textAlign: 'inherit', direction: 'inherit'}}>
+      <div className="flex justify-between items-center">
+        <div>
           <h1 className="text-3xl font-bold" style={{textAlign: 'inherit', direction: 'inherit'}}>{t('admin:users.title')}</h1>
           <p className="text-gray-600 dark:text-gray-300" style={{textAlign: 'inherit', direction: 'inherit'}}>
             {t('admin:users.subtitle')}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Megaphone, Plus, TrendingUp, Users, Target, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import {
 
 export default function AdminCampaignsPage() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
 
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['/api/admin/campaigns'],
@@ -100,7 +102,7 @@ export default function AdminCampaignsPage() {
   // Real data from API - no mock data
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('admin:campaigns.title')}</h1>
         <Button>
