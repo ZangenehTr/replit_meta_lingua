@@ -34,7 +34,12 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **State Management**: TanStack React Query
 - **Routing**: Wouter
 - **Build Tool**: Vite
-- **Localization**: Multi-language support with RTL/LTR layout handling and comprehensive i18n (Persian/English).
+- **Localization**: Multi-language support with RTL/LTR layout handling and comprehensive i18n (Persian/English/Arabic).
+  - **RTL Implementation** (Oct 2025): Progressive RTL support rollout using verified pattern
+    - **Verified RTL Pattern**: Import `useLanguage` hook, extract `isRTL`, add `dir={isRTL ? 'rtl' : 'ltr'}` to main container (semantic approach, not className)
+    - **Progress**: 17/64 admin pages (26.6%) with proper RTL support
+    - **Completed Pages**: user-management, classes, teacher-management, campaigns, leads, comprehensive-crm-leads, video-courses, reports, AIManagementPage, calls, communications, prospects, room-management, courses, financial, settings, students
+    - **Remaining**: 47 admin pages, teacher pages, accountant pages, supervisor pages, mentor pages, call center pages
 - **UI/UX**: Modern gradient backgrounds, professional layouts, responsive (mobile-first), touch-optimized components, role-based UI, resizable panels, and bottom navigation for mobile.
 - **Specific Implementations**: 
     - Unified Dashboard for 8 user roles
