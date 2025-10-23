@@ -1438,6 +1438,7 @@ export const linguaquestLessons = pgTable("linguaquest_lessons", {
 export const guestProgressTracking = pgTable("guest_progress_tracking", {
   id: serial("id").primaryKey(),
   sessionToken: text("session_token").notNull().unique(),
+  userId: integer("user_id").references(() => users.id),
   fingerprintHash: text("fingerprint_hash"),
   completedLessons: integer("completed_lessons").array(),
   currentStreak: integer("current_streak").default(0),

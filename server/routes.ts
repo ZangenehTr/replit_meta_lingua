@@ -1700,6 +1700,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: "student"
       });
 
+      // GUEST → USER MIGRATION: Link guest LinguaQuest progress to new user account
+      const { guestSessionToken } = req.body;
+      if (guestSessionToken) {
+        try {
+          await db.update(guestProgressTracking)
+            .set({ userId: user.id, updatedAt: new Date() })
+            .where(eq(guestProgressTracking.sessionToken, guestSessionToken));
+          console.log(`✅ Migrated guest progress from session ${guestSessionToken} to user ${user.id}`);
+        } catch (migrationError) {
+          console.error('⚠️ Guest progress migration failed:', migrationError);
+          // Don't fail registration if migration fails
+        }
+      }
+
       // Generate JWT token
       const token = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
@@ -1898,6 +1912,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!isValidPassword) {
           console.log("Authentication failed for user ID:", user.id);
           return res.status(401).json({ message: "Invalid credentials" });
+        }
+      }
+
+      // GUEST → USER MIGRATION: Link guest LinguaQuest progress to logged-in user
+      const { guestSessionToken } = req.body;
+      if (guestSessionToken) {
+        try {
+          await db.update(guestProgressTracking)
+            .set({ userId: user.id, updatedAt: new Date() })
+            .where(eq(guestProgressTracking.sessionToken, guestSessionToken));
+          console.log(`✅ Migrated guest progress from session ${guestSessionToken} to user ${user.id}`);
+        } catch (migrationError) {
+          console.error('⚠️ Guest progress migration failed:', migrationError);
+          // Don't fail login if migration fails
         }
       }
 
@@ -25355,10 +25383,10 @@ Meta Lingua Academy`;
     try {
       const userId = req.user?.id;
       
-      // Get real LinguaQuest progress from guestProgressTracking or userStats
+      // Get real LinguaQuest progress - check if user has migrated guest progress
       const userProgress = await db.select()
         .from(guestProgressTracking)
-        .where(sql`${guestProgressTracking.sessionToken} = ${userId.toString()}`)
+        .where(eq(guestProgressTracking.userId, userId))
         .limit(1);
       
       const allLessons = await db.select().from(linguaquestLessons).where(eq(linguaquestLessons.isActive, true));
