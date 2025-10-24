@@ -143,7 +143,10 @@ import {
   // Web scraping tables and types
   scrapeJobs, competitorPrices, scrapedLeads, marketTrends,
   type ScrapeJob, type InsertScrapeJob, type CompetitorPrice, type InsertCompetitorPrice,
-  type ScrapedLead, type InsertScrapedLead, type MarketTrend, type InsertMarketTrend
+  type ScrapedLead, type InsertScrapedLead, type MarketTrend, type InsertMarketTrend,
+  // Form management tables and types
+  formDefinitions, formSubmissions,
+  type FormDefinition, type InsertFormDefinition, type FormSubmission, type InsertFormSubmission
 } from "@shared/schema";
 
 // Placement test tables imported from main schema above
@@ -17675,5 +17678,139 @@ export class DatabaseStorage implements IStorage {
       .where(gte(marketTrends.impactScore, 70))
       .orderBy(desc(marketTrends.impactScore), desc(marketTrends.scrapedAt))
       .limit(20);
+  }
+
+  // ========================================================================
+  // FORM MANAGEMENT METHODS
+  // ========================================================================
+
+  async createForm(form: InsertFormDefinition): Promise<FormDefinition> {
+    const [created] = await db.insert(formDefinitions).values(form).returning();
+    return created;
+  }
+
+  async updateForm(id: number, updates: Partial<InsertFormDefinition>): Promise<FormDefinition | undefined> {
+    const [updated] = await db.update(formDefinitions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(formDefinitions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteForm(id: number): Promise<void> {
+    await db.delete(formDefinitions).where(eq(formDefinitions.id, id));
+  }
+
+  async getForms(filters?: {
+    category?: string;
+    isActive?: boolean;
+    createdBy?: number;
+  }): Promise<FormDefinition[]> {
+    let query = db.select().from(formDefinitions);
+
+    const conditions = [];
+    if (filters?.category) {
+      conditions.push(eq(formDefinitions.category, filters.category));
+    }
+    if (filters?.isActive !== undefined) {
+      conditions.push(eq(formDefinitions.isActive, filters.isActive));
+    }
+    if (filters?.createdBy) {
+      conditions.push(eq(formDefinitions.createdBy, filters.createdBy));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(formDefinitions.createdAt));
+  }
+
+  async getFormById(id: number): Promise<FormDefinition | undefined> {
+    const [form] = await db.select().from(formDefinitions).where(eq(formDefinitions.id, id));
+    return form;
+  }
+
+  async createSubmission(submission: InsertFormSubmission): Promise<FormSubmission> {
+    const [created] = await db.insert(formSubmissions).values(submission).returning();
+    return created;
+  }
+
+  async getFormSubmissions(formId: number, filters?: {
+    status?: string;
+    submittedBy?: number;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<FormSubmission[]> {
+    let query = db.select().from(formSubmissions).where(eq(formSubmissions.formId, formId));
+
+    const conditions = [eq(formSubmissions.formId, formId)];
+    if (filters?.status) {
+      conditions.push(eq(formSubmissions.status, filters.status));
+    }
+    if (filters?.submittedBy) {
+      conditions.push(eq(formSubmissions.submittedBy, filters.submittedBy));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(formSubmissions.submittedAt, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(formSubmissions.submittedAt, filters.endDate));
+    }
+
+    if (conditions.length > 1) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query.orderBy(desc(formSubmissions.submittedAt));
+  }
+
+  async getSubmissionById(id: number): Promise<FormSubmission | undefined> {
+    const [submission] = await db.select().from(formSubmissions).where(eq(formSubmissions.id, id));
+    return submission;
+  }
+
+  async updateSubmissionStatus(
+    id: number,
+    status: string,
+    approvedBy?: number,
+    rejectionReason?: string
+  ): Promise<FormSubmission | undefined> {
+    const updates: any = {
+      status,
+      updatedAt: new Date()
+    };
+
+    if (status === 'approved' && approvedBy) {
+      updates.approvedBy = approvedBy;
+      updates.approvedAt = new Date();
+    }
+
+    if (status === 'rejected' && rejectionReason) {
+      updates.rejectionReason = rejectionReason;
+    }
+
+    const [updated] = await db.update(formSubmissions)
+      .set(updates)
+      .where(eq(formSubmissions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getSubmissionStats(formId: number): Promise<{
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  }> {
+    const submissions = await db.select().from(formSubmissions)
+      .where(eq(formSubmissions.formId, formId));
+
+    return {
+      total: submissions.length,
+      pending: submissions.filter(s => s.status === 'pending').length,
+      approved: submissions.filter(s => s.status === 'approved').length,
+      rejected: submissions.filter(s => s.status === 'rejected').length
+    };
   }
 }
