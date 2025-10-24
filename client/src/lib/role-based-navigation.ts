@@ -193,10 +193,19 @@ export const getMentorNavigation = (t: any): NavigationItem[] => [
 
 // Convert dynamic navigation items to component-compatible format
 const convertDynamicToNavigation = (dynamicItems: DynamicNavItem[], t: any): NavigationItem[] => {
+  // Get current language from i18n
+  const currentLang = t?.i18n?.language || 'en';
+  const usePersian = currentLang === 'fa';
+  const useArabic = currentLang === 'ar';
+  
   return dynamicItems.map(item => ({
     path: item.path,
     icon: item.icon,
-    label: item.nameEn || item.label || 'Navigation Item',
+    // item.label already contains Persian text (from subsystem.name)
+    // item.nameEn contains English text
+    // Use label (Persian) for fa/ar, nameEn for English
+    label: (usePersian || useArabic) ? (item.label || item.nameEn || 'Navigation Item') : 
+           (item.nameEn || item.label || 'Navigation Item'),
     roles: item.roles,
     order: item.order || 0
   }));
