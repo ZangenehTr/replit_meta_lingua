@@ -454,14 +454,14 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {lead.interestedCourses.slice(0, 2).map((course, index) => (
+                            {lead.interestedCourses?.slice(0, 2).map((course, index) => (
                               <Badge key={index} variant="secondary" className="text-xs">
                                 {course}
                               </Badge>
                             ))}
-                            {lead.interestedCourses.length > 2 && (
+                            {(lead.interestedCourses?.length || 0) > 2 && (
                               <Badge variant="secondary" className="text-xs">
-                                +{lead.interestedCourses.length - 2}
+                                +{(lead.interestedCourses?.length || 0) - 2}
                               </Badge>
                             )}
                           </div>
