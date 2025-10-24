@@ -381,7 +381,7 @@ export default function WalkInIntake() {
   const progress = ((currentSection + 1) / FORM_SECTIONS.length) * 100;
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-4xl" data-testid="walk-in-intake-form">
+    <div className="container mx-auto py-6 px-4 max-w-4xl" dir={isRTL ? 'rtl' : 'ltr'} data-testid="walk-in-intake-form">
       {/* Header */}
       <div className="mb-6">
         <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>

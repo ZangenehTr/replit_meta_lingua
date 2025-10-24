@@ -452,7 +452,7 @@ export default function SmsTemplatesPage() {
   }
 
   return (
-    <div className={cn("min-h-screen bg-gray-50 dark:bg-gray-900", isRTL && "rtl")} data-testid="sms-templates-page">
+    <div className={cn("min-h-screen bg-gray-50 dark:bg-gray-900", isRTL && "rtl")} dir={isRTL ? 'rtl' : 'ltr'} data-testid="sms-templates-page">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 sm:px-6 lg:px-8">

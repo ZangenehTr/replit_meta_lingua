@@ -456,6 +456,7 @@ export default function TrialLessonScheduling() {
         "min-h-screen bg-gray-50 dark:bg-gray-900 p-6",
         isRTL && "rtl"
       )} 
+      dir={isRTL ? 'rtl' : 'ltr'}
       data-testid="trial-lesson-scheduling"
     >
       {/* Header Section */}
