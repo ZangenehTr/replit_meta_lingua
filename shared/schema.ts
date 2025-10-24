@@ -8155,6 +8155,66 @@ export type AccountingLedger = typeof accountingLedger.$inferSelect;
 export type InsertAccountingLedger = typeof accountingledgers.$inferInsert;
 
 // ============================================================================
+// FORM MANAGEMENT SYSTEM
+// ============================================================================
+
+// Form Definitions - Templates for dynamic forms
+export const formDefinitions = pgTable("form_definitions", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  formSchema: jsonb("form_schema").notNull(), // JSON schema defining fields, validation, etc.
+  category: varchar("category", { length: 100 }), // e.g., "student_intake", "feedback", "survey"
+  isActive: boolean("is_active").default(true).notNull(),
+  allowAnonymous: boolean("allow_anonymous").default(false), // Allow submissions without login
+  requiresApproval: boolean("requires_approval").default(false), // Admin must approve submissions
+  notificationEmails: text("notification_emails").array(), // Emails to notify on submission
+  successMessage: text("success_message"), // Custom message after successful submission
+  redirectUrl: text("redirect_url"), // Optional redirect after submission
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Form Submissions - User responses to forms
+export const formSubmissions = pgTable("form_submissions", {
+  id: serial("id").primaryKey(),
+  formId: integer("form_id").references(() => formDefinitions.id).notNull(),
+  submittedBy: integer("submitted_by").references(() => users.id), // Null if anonymous
+  submissionData: jsonb("submission_data").notNull(), // Actual form data submitted
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, approved, rejected
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  ipAddress: varchar("ip_address", { length: 50 }),
+  userAgent: text("user_agent"),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schemas for form management
+export const insertFormDefinitionSchema = createInsertSchema(formDefinitions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertFormSubmissionSchema = createInsertSchema(formSubmissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  submittedAt: true
+});
+
+// Types for form management
+export type FormDefinition = typeof formDefinitions.$inferSelect;
+export type InsertFormDefinition = z.infer<typeof insertFormDefinitionSchema>;
+export type FormSubmission = typeof formSubmissions.$inferSelect;
+export type InsertFormSubmission = z.infer<typeof insertFormSubmissionSchema>;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 
