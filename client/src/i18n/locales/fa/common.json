@@ -194,7 +194,9 @@
     "messages": "پیام‌ها",
     "myDashboard": "داشبورد من",
     "myCourses": "کلاس‌های من",
-    "paymentCredits": "پرداخت و اعتبارات"
+    "paymentCredits": "پرداخت و اعتبارات",
+    "subsystemPermissions": "مجوزهای زیرسیستم",
+    "unifiedWorkflow": "گردش کار یکپارچه"
   },
   "dashboard": {
     "title": "داشبورد مدیریت",
