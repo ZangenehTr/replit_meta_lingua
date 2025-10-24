@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,7 @@ interface ActiveCall {
 
 export default function VoIPCenter() {
   const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
@@ -327,7 +329,7 @@ export default function VoIPCenter() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>

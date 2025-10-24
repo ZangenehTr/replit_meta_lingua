@@ -135,6 +135,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { TrialLessonCalendar } from "@/components/trial-lessons/TrialLessonCalendar";
 import { AnalyticsView } from "@/components/frontdesk/AnalyticsView";
 import { CustomerDetailSidebar } from "@/components/frontdesk/CustomerDetailSidebar";

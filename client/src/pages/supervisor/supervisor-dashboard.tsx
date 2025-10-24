@@ -19,6 +19,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
+import { useLanguage } from "@/hooks/useLanguage";
 import { 
   Users, 
   GraduationCap, 
@@ -184,6 +185,7 @@ const targetSchema = z.object({
 export default function SupervisorDashboard() {
   const { t } = useTranslation(['supervisor', 'common']);
   const { user } = useAuth();
+  const { isRTL } = useLanguage();
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
   const [teachersAttentionDialogOpen, setTeachersAttentionDialogOpen] = useState(false);
@@ -486,7 +488,7 @@ export default function SupervisorDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -502,7 +504,7 @@ export default function SupervisorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Welcome Banner */}
         <motion.div

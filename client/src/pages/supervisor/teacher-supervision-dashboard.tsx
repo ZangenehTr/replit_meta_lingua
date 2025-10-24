@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useSocket } from "@/hooks/use-socket";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/hooks/useLanguage";
 import { 
   Users, 
   Clock, 
@@ -109,6 +110,7 @@ const REMINDER_TEMPLATES = {
 };
 
 export default function TeacherSupervisionDashboard() {
+  const { isRTL } = useLanguage();
   const [selectedSession, setSelectedSession] = useState<ActiveSession | null>(null);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<number | null>(null);
@@ -265,7 +267,7 @@ export default function TeacherSupervisionDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
