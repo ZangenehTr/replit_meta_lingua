@@ -1,0 +1,103 @@
+ rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+vite v5.4.14 building for production...
+
+transforming...
+
+✓ 4348 modules transformed.
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                                                                                                                                                                                       0.82 kB │ gzip:     0.48 kB
+
+../dist/public/assets/_s_970235333_-_gs_7_-_is_25_-_u_0_-_oi_0_-_m_flux1_-__beautiful_woman__blonde_hair__dressed_in_latex_like_women_in_matrix_movie_with_her_name_Lexi_print_1758759656942-CEsHXaqo.jpeg    137.85 kB
+
+../dist/public/assets/index-DV6hvRkQ.css                                                                                                                                                                      242.53 kB │ gzip:    35.69 kB
+
+../dist/public/assets/index-CiyZp8GG.js                                                                                                                                                                     6,626.21 kB │ gzip: 1,594.88 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 31.91s
+
+▲ [WARNING] Duplicate member "getSystemPerformanceMetrics" in class body [duplicate-class-member]
+
+    server/enhanced-mentoring-storage.ts:2515:8:
+      2515 │   async getSystemPerformanceMetrics(): Promise<{
+           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The original member "getSystemPerformanceMetrics" is here:
+
+    server/enhanced-mentoring-storage.ts:1680:8:
+      1680 │   async getSystemPerformanceMetrics(): Promise<any> { throw new ...
+           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Cannot assign to "remainingAttempts" because it is a constant
+
+    server/routes.ts:24978:12:
+      24978 │             remainingAttempts = 1; // Reset to allow retake
+            ╵             ~~~~~~~~~~~~~~~~~
+
+  The symbol "remainingAttempts" was declared a constant here:
+
+    server/routes.ts:24957:12:
+      24957 │       const remainingAttempts = Math.max(0, maxAttempts - attem...
+            ╵             ~~~~~~~~~~~~~~~~~
+
+
+▲ [WARNING] Duplicate member "updateVideoProgress" in class body [duplicate-class-member]
+
+    server/database-storage.ts:6654:8:
+      6654 │   async updateVideoProgress(arg1: any, arg2?: any, arg3?: any): ...
+           ╵         ~~~~~~~~~~~~~~~~~~~
+
+  The original member "updateVideoProgress" is here:
+
+    server/database-storage.ts:6630:8:
+      6630 │   async updateVideoProgress(userId: number, videoId: number, pro...
+           ╵         ~~~~~~~~~~~~~~~~~~~
+
+
+✘ [ERROR] Could not resolve "./ollama.js"
+
+    server/services/adaptive-content-generator.ts:1:30:
+      1 │ import { OllamaService } from './ollama.js';
+        ╵                               ~~~~~~~~~~~~~
+
+
+✘ [ERROR] Could not resolve "./ollamaService"
+
+    server/services/lesson-kit-generator.ts:1:30:
+      1 │ import { ollamaService } from './ollamaService';
+        ╵                               ~~~~~~~~~~~~~~~~~
+
+
+▲ [WARNING] Duplicate member "getVideoNotes" in class body [duplicate-class-member]
+
+    server/database-storage.ts:6891:8:
+      6891 │   async getVideoNotes(studentId: number, lessonId: number): Prom...
+           ╵         ~~~~~~~~~~~~~
+
+  The original member "getVideoNotes" is here:
+
+    server/database-storage.ts:6705:8:
+      6705 │   async getVideoNotes(studentId: number, videoId: number): Promi...
+           ╵         ~~~~~~~~~~~~~
+
+3 of 137 warnings and all 3 errors shown (disable the message limit with --log-limit=0)
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.6.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+npm notice To update run: npm install -g npm@11.6.2
+npm notice
+
