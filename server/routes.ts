@@ -27308,7 +27308,231 @@ Meta Lingua Academy`;
     }
   });
 
-  return app;
+
+  // ========================================================================
+  // FORM MANAGEMENT ENDPOINTS
+  // ========================================================================
+
+  // Get all forms (admin only)
+  app.get("/api/admin/forms", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { category, isActive, createdBy } = req.query;
+      const forms = await storage.getForms({
+        category: category || undefined,
+        isActive: isActive !== undefined ? isActive === 'true' : undefined,
+        createdBy: createdBy ? parseInt(createdBy) : undefined
+      });
+      res.json(forms);
+    } catch (error) {
+      console.error('Error fetching forms:', error);
+      res.status(500).json({ error: 'Failed to fetch forms' });
+    }
+  });
+
+  // Get form by ID (admin only)
+  app.get("/api/admin/forms/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const form = await storage.getFormById(parseInt(id));
+      
+      if (!form) {
+        return res.status(404).json({ error: 'Form not found' });
+      }
+      
+      res.json(form);
+    } catch (error) {
+      console.error('Error fetching form:', error);
+      res.status(500).json({ error: 'Failed to fetch form' });
+    }
+  });
+
+  // Create new form (admin only)
+  app.post("/api/admin/forms", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const formData = {
+        ...req.body,
+        createdBy: req.user.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const form = await storage.createForm(formData);
+      res.status(201).json(form);
+    } catch (error) {
+      console.error('Error creating form:', error);
+      res.status(500).json({ error: 'Failed to create form' });
+    }
+  });
+
+  // Update form (admin only)
+  app.patch("/api/admin/forms/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+
+      const form = await storage.updateForm(parseInt(id), updates);
+      
+      if (!form) {
+        return res.status(404).json({ error: 'Form not found' });
+      }
+      
+      res.json(form);
+    } catch (error) {
+      console.error('Error updating form:', error);
+      res.status(500).json({ error: 'Failed to update form' });
+    }
+  });
+
+  // Delete form (admin only)
+  app.delete("/api/admin/forms/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteForm(parseInt(id));
+      res.json({ message: 'Form deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting form:', error);
+      res.status(500).json({ error: 'Failed to delete form' });
+    }
+  });
+
+  // Get form submissions (admin only)
+  app.get("/api/admin/forms/:id/submissions", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status, submittedBy, startDate, endDate } = req.query;
+
+      const submissions = await storage.getFormSubmissions(parseInt(id), {
+        status: status || undefined,
+        submittedBy: submittedBy ? parseInt(submittedBy) : undefined,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined
+      });
+
+      res.json(submissions);
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      res.status(500).json({ error: 'Failed to fetch submissions' });
+    }
+  });
+
+  // Get submission by ID (admin only)
+  app.get("/api/admin/submissions/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const submission = await storage.getSubmissionById(parseInt(id));
+      
+      if (!submission) {
+        return res.status(404).json({ error: 'Submission not found' });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      console.error('Error fetching submission:', error);
+      res.status(500).json({ error: 'Failed to fetch submission' });
+    }
+  });
+
+  // Update submission status (admin only)
+  app.patch("/api/admin/submissions/:id/status", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status, rejectionReason } = req.body;
+
+      const submission = await storage.updateSubmissionStatus(
+        parseInt(id),
+        status,
+        req.user.id,
+        rejectionReason
+      );
+      
+      if (!submission) {
+        return res.status(404).json({ error: 'Submission not found' });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      console.error('Error updating submission status:', error);
+      res.status(500).json({ error: 'Failed to update submission status' });
+    }
+  });
+
+  // Get submission statistics (admin only)
+  app.get("/api/admin/forms/:id/stats", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const stats = await storage.getSubmissionStats(parseInt(id));
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching submission stats:', error);
+      res.status(500).json({ error: 'Failed to fetch submission stats' });
+    }
+  });
+
+  // Submit form (authenticated users or guest with token)
+  app.post("/api/forms/:id/submit", async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { data, guestToken } = req.body;
+
+      // Verify form exists and is active
+      const form = await storage.getFormById(parseInt(id));
+      if (!form) {
+        return res.status(404).json({ error: 'Form not found' });
+      }
+      if (!form.isActive) {
+        return res.status(400).json({ error: 'Form is not currently accepting submissions' });
+      }
+
+      // Create submission
+      const submission = await storage.createSubmission({
+        formId: parseInt(id),
+        submittedBy: req.user?.id || null,
+        guestToken: guestToken || null,
+        data,
+        status: 'pending',
+        submittedAt: new Date()
+      });
+
+      res.status(201).json({
+        message: 'Form submitted successfully',
+        submissionId: submission.id
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      res.status(500).json({ error: 'Failed to submit form' });
+    }
+  });
+
+  // Get public form by ID (no authentication required)
+  app.get("/api/forms/:id", async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const form = await storage.getFormById(parseInt(id));
+      
+      if (!form) {
+        return res.status(404).json({ error: 'Form not found' });
+      }
+
+      if (!form.isActive) {
+        return res.status(400).json({ error: 'Form is not currently available' });
+      }
+
+      // Return only public-facing information
+      res.json({
+        id: form.id,
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        fields: form.fields,
+        submitButtonText: form.submitButtonText || 'Submit'
+      });
+    } catch (error) {
+      console.error('Error fetching public form:', error);
+      res.status(500).json({ error: 'Failed to fetch form' });
+    }
+  });
+
+
 }
 
 export default registerRoutes;
