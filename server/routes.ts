@@ -24954,7 +24954,7 @@ Meta Lingua Academy`;
       
       const attemptsCount = await storage.getMSTAttemptCountForPeriod(userId, period);
       const maxAttempts = 3; // Configurable - could be moved to admin settings
-      const remainingAttempts = Math.max(0, maxAttempts - attemptsCount);
+      let remainingAttempts = Math.max(0, maxAttempts - attemptsCount);
       
       // FIXED: Calculate next available date based on LAST attempt + period (not now + period)
       let nextAvailableDate = null;

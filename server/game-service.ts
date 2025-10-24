@@ -1,14 +1,14 @@
 import { db } from './db';
 import { 
   games, gameLevels, gameQuestions, gameSessions, gameLeaderboards,
-  userGameProgress, gameDailyChallenges, userDailyChallengeProgress,
+  userGameProgress, // gameDailyChallenges, userDailyChallengeProgress, // TODO: Add these tables to schema
   gameAnswerLogs, users
 } from '@shared/schema';
 import { eq, and, desc, sql, gte, lte, or, inArray } from 'drizzle-orm';
 import type {
   Game, GameLevel, GameQuestion, GameSession, GameLeaderboard,
-  UserGameProgress, GameDailyChallenge, UserDailyChallengeProgress,
-  GameAnswerLog, InsertGameQuestion, InsertGameDailyChallenge
+  UserGameProgress, // GameDailyChallenge, UserDailyChallengeProgress, // TODO: Add these types to schema
+  GameAnswerLog, InsertGameQuestion, // InsertGameDailyChallenge // TODO: Add this type to schema
 } from '@shared/schema';
 
 export class GameService {
@@ -807,75 +807,9 @@ export class GameService {
   }
 
   // Generate daily challenge based on user activity
-  async generateDailyChallenge(): Promise<GameDailyChallenge> {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Check if today's challenge already exists
-    const [existing] = await db.select()
-      .from(gameDailyChallenges)
-      .where(eq(gameDailyChallenges.challengeDate, today));
-    
-    if (existing) {
-      return existing;
-    }
-
-    // Analyze recent user activity to determine challenge type
-    const recentActivity = await this.analyzeRecentActivity();
-    const challengeType = this.determineChallengeType(recentActivity);
-    
-    // Get popular games for the challenge
-    const [popularGame] = await db.select()
-      .from(games)
-      .where(eq(games.isActive, true))
-      .orderBy(sql`${games.id} DESC`)
-      .limit(1);
-
-    if (!popularGame) {
-      throw new Error('No active games found');
-    }
-
-    // Generate challenge based on type
-    const challenge: InsertGameDailyChallenge = {
-      challengeDate: today,
-      challengeName: this.generateChallengeName(challengeType),
-      description: this.generateChallengeDescription(challengeType),
-      challengeType,
-      targetGameId: popularGame.id,
-      targetScore: this.calculateTargetScore(challengeType, recentActivity),
-      targetTime: challengeType === 'time_based' ? 300 : null,
-      targetAccuracy: challengeType === 'accuracy_based' ? '80' : null,
-      targetStreak: challengeType === 'streak_based' ? 5 : null,
-      difficulty: this.determineDifficulty(recentActivity),
-      xpReward: 150,
-      coinsReward: 75,
-      featuredQuestions: await this.selectFeaturedQuestions(popularGame.id),
-      bonusMultiplier: '2.0',
-      isActive: true
-    };
-
-    const [created] = await db.insert(gameDailyChallenges).values(challenge).returning();
-    return created;
-  }
-
-  // Analyze recent user activity
-  private async analyzeRecentActivity(): Promise<any> {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
-    const recentSessions = await db.select({
-      avgScore: sql<number>`AVG(${gameSessions.score})`,
-      avgAccuracy: sql<number>`AVG(${gameSessions.accuracy})`,
-      totalSessions: sql<number>`COUNT(*)`,
-      avgDuration: sql<number>`AVG(${gameSessions.duration})`
-    })
-    .from(gameSessions)
-    .where(gte(gameSessions.startedAt, oneDayAgo));
-    
-    return recentSessions[0] || {
-      avgScore: 0,
-      avgAccuracy: 0,
-      totalSessions: 0,
-      avgDuration: 0
-    };
+    async generateDailyChallenge(): Promise<any> {
+    // TODO: Implement daily challenge feature - requires gameDailyChallenges table in schema
+    throw new Error('Daily challenge feature not yet implemented - missing database schema');
   }
 
   // Determine challenge type based on activity

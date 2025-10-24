@@ -1677,7 +1677,6 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
   async deleteAnalytics(id: number): Promise<boolean> { throw new Error('Not implemented'); }
   async generateSystemAnalytics(period: 'daily' | 'weekly' | 'monthly', date: Date): Promise<MentoringAnalytics> { throw new Error('Not implemented'); }
   async getDashboardMetrics(mentorId?: number): Promise<any> { throw new Error('Not implemented'); }
-  async getSystemPerformanceMetrics(): Promise<any> { throw new Error('Not implemented'); }
   
   async linkTestSessionToProgress(testSessionId: number, studentId: number): Promise<void> { throw new Error('Not implemented'); }
   async analyzeTestProgressImpact(testSessionId: number): Promise<any> { throw new Error('Not implemented'); }

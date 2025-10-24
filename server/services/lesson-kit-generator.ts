@@ -1,4 +1,4 @@
-import { ollamaService } from './ollamaService';
+import { ollamaService } from '../ollama-service';
 import type { DatabaseStorage } from '../database-storage';
 
 export interface LessonKit {

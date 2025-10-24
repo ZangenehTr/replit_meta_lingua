@@ -6627,17 +6627,6 @@ export class DatabaseStorage implements IStorage {
     return newProgress;
   }
 
-  async updateVideoProgress(userId: number, videoId: number, progress: Partial<InsertVideoProgress>): Promise<VideoProgress | undefined> {
-    const [updated] = await db.update(videoProgress)
-      .set({ ...progress, updatedAt: new Date() })
-      .where(and(
-        eq(videoProgress.userId, userId),
-        eq(videoProgress.videoId, videoId)
-      ))
-      .returning();
-    return updated;
-  }
-
   async getUserVideoProgress(userId: number): Promise<VideoProgress[]> {
     return await db.select().from(videoProgress)
       .where(eq(videoProgress.userId, userId));
@@ -6888,14 +6877,6 @@ export class DatabaseStorage implements IStorage {
 
 
 
-  async getVideoNotes(studentId: number, lessonId: number): Promise<VideoNote[]> {
-    return await db.select().from(videoNotes)
-      .where(and(
-        eq(videoNotes.studentId, studentId),
-        eq(videoNotes.videoLessonId, lessonId)
-      ))
-      .orderBy(videoNotes.timestamp);
-  }
 
 
 
