@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface SupervisionObservation {
   id: number;
@@ -89,6 +90,7 @@ interface TeacherObservationResponse {
 
 export default function TeacherObservationsPage() {
   const { t } = useTranslation(['teacher', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedObservation, setSelectedObservation] = useState<SupervisionObservation | null>(null);
@@ -268,7 +270,7 @@ export default function TeacherObservationsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{t('teacher:observations.title')}</h1>

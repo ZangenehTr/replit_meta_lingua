@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Calendar, Clock, Video, MessageSquare, FileText, Settings, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 
@@ -39,6 +40,7 @@ interface TeacherClass {
 export default function TeacherClassesPage() {
   const { user } = useAuth();
   const { t } = useTranslation(['teacher', 'common']);
+  const { isRTL } = useLanguage();
   const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState("active");
 
@@ -62,7 +64,7 @@ export default function TeacherClassesPage() {
   const completedClasses = classes?.filter((cls: TeacherClass) => cls.status === 'completed') || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

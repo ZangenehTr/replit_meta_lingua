@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface ClassInfo {
   id: number;
@@ -71,6 +72,7 @@ interface Attachment {
 export default function ClassCommunication() {
   const { classId } = useParams<{ classId: string }>();
   const { t } = useTranslation(['teacher', 'common']);
+  const { isRTL } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -176,7 +178,7 @@ export default function ClassCommunication() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col">
+    <div className="h-[calc(100vh-8rem)] flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Class Header */}
       <Card className="mb-4">
         <CardHeader>

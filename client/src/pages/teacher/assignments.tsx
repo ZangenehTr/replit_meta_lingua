@@ -21,6 +21,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -45,6 +46,7 @@ type AssignmentFormData = z.infer<typeof assignmentSchema>;
 
 export default function TeacherAssignmentsPage() {
   const { t } = useTranslation(['teacher', 'common']);
+  const { isRTL } = useLanguage();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
@@ -588,7 +590,7 @@ export default function TeacherAssignmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Debug Info - Hidden in production */}
         

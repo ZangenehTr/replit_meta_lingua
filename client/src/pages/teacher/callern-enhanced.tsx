@@ -8,6 +8,7 @@ import { VideoCall } from "@/components/callern/VideoCallFinal";
 import { useAuth } from "@/hooks/use-auth";
 import { useSocket } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { TeacherIncomingCall } from "@/components/callern/teacher-incoming-call";
 import { TeacherOnlineToggle } from "@/components/callern/teacher-online-toggle";
 import { TeacherRingtoneSettings } from "@/components/callern/teacher-ringtone-settings";
@@ -175,6 +176,7 @@ export default function EnhancedTeacherCallernSystem() {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
   const { t } = useTranslation(['callern', 'teacher', 'common']);
+  const { isRTL } = useLanguage();
   const [isInCall, setIsInCall] = useState(false);
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'analytics' | 'leaderboard'>('dashboard');
@@ -372,7 +374,7 @@ export default function EnhancedTeacherCallernSystem() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Incoming Call Handler */}
       <TeacherIncomingCall />
       

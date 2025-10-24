@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,8 +62,8 @@ interface TeacherStats {
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
-  const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'fa';
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -139,7 +140,7 @@ export default function TeacherDashboard() {
     ((stats.performanceData[2].earnings - stats.performanceData[0].earnings) / stats.performanceData[0].earnings * 100).toFixed(1) : 0;
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50", isRTL && "rtl")}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Professional Mobile Header */}
       <motion.header 
         className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-blue-100 shadow-sm"

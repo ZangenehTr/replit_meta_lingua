@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -53,6 +54,7 @@ interface TeacherStats {
 export default function TeacherDashboardMobile() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState('overview');
   const [greeting, setGreeting] = useState('');
@@ -115,11 +117,12 @@ export default function TeacherDashboardMobile() {
   ];
 
   return (
-    <GlossyFantasyLayout 
-      title={`${greeting}, ${user?.firstName}!`}
-      showSearch={true}
-      showNotifications={true}
-    >
+    <div dir={isRTL ? 'rtl' : 'ltr'}>
+      <GlossyFantasyLayout 
+        title={`${greeting}, ${user?.firstName}!`}
+        showSearch={true}
+        showNotifications={true}
+      >
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard
@@ -475,5 +478,6 @@ export default function TeacherDashboardMobile() {
         onClick={() => setLocation('/teacher/classes')}
       />
     </GlossyFantasyLayout>
+    </div>
   );
 }
