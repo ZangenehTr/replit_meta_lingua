@@ -408,6 +408,7 @@ export interface IStorage {
   getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]>;
   getUpcomingSessions(userId: number): Promise<(Session & { tutorName: string, tutorAvatar: string })[]>;
   getAllSessions(): Promise<Session[]>;
+  getSessions(): Promise<Session[]>;
   createSession(session: InsertSession): Promise<Session>;
 
   // Teacher-specific methods (teachers only set availability, admin assigns them to classes)

@@ -24484,6 +24484,147 @@ Meta Lingua Academy`;
     }
   });
 
+  // ===== STUDENT TESTS & ASSESSMENTS =====
+  
+  // Get available tests for student
+  app.get("/api/student/tests", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      const { filter = 'all' } = req.query;
+      
+      const unifiedStorage = req.app.get('unifiedTestingStorage');
+      if (!unifiedStorage) {
+        return res.status(500).json({ message: "Testing system not initialized" });
+      }
+      
+      // Get all test sessions for this student
+      const allSessions = await unifiedStorage.getStudentSessions(studentId);
+      
+      // Filter based on query parameter
+      let filteredSessions = allSessions;
+      if (filter === 'upcoming') {
+        filteredSessions = allSessions.filter((s: any) => s.status === 'not_started' || s.status === 'in_progress');
+      } else if (filter === 'completed') {
+        filteredSessions = allSessions.filter((s: any) => s.status === 'completed');
+      }
+      
+      res.json(filteredSessions);
+    } catch (error) {
+      console.error('Error fetching student tests:', error);
+      res.status(500).json({ message: "Failed to fetch tests" });
+    }
+  });
+  
+  // Start a test
+  app.post("/api/student/tests/:testId/start", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      const testId = parseInt(req.params.testId);
+      
+      const unifiedStorage = req.app.get('unifiedTestingStorage');
+      if (!unifiedStorage) {
+        return res.status(500).json({ message: "Testing system not initialized" });
+      }
+      
+      // Update session status to in_progress
+      const session = await unifiedStorage.getSession(testId);
+      if (!session || session.studentId !== studentId) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      await unifiedStorage.updateSessionStatus(testId, 'in_progress');
+      
+      res.json({ success: true, sessionId: testId });
+    } catch (error) {
+      console.error('Error starting test:', error);
+      res.status(500).json({ message: "Failed to start test" });
+    }
+  });
+  
+  // Submit an answer
+  app.post("/api/student/tests/:testId/answer", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      const testId = parseInt(req.params.testId);
+      const { questionId, answer } = req.body;
+      
+      const unifiedStorage = req.app.get('unifiedTestingStorage');
+      if (!unifiedStorage) {
+        return res.status(500).json({ message: "Testing system not initialized" });
+      }
+      
+      // Verify session belongs to student
+      const session = await unifiedStorage.getSession(testId);
+      if (!session || session.studentId !== studentId) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Save the response
+      await unifiedStorage.saveResponse({
+        sessionId: testId,
+        questionId: questionId,
+        answer: answer,
+        isCorrect: null, // Will be evaluated later
+        pointsEarned: 0
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      res.status(500).json({ message: "Failed to submit answer" });
+    }
+  });
+  
+  // Finish a test
+  app.post("/api/student/tests/:testId/finish", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      const testId = parseInt(req.params.testId);
+      
+      const unifiedStorage = req.app.get('unifiedTestingStorage');
+      if (!unifiedStorage) {
+        return res.status(500).json({ message: "Testing system not initialized" });
+      }
+      
+      // Verify session belongs to student
+      const session = await unifiedStorage.getSession(testId);
+      if (!session || session.studentId !== studentId) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Update session status to completed
+      await unifiedStorage.updateSessionStatus(testId, 'completed');
+      
+      // Calculate score
+      const responses = await unifiedStorage.getSessionResponses(testId);
+      const totalPoints = responses.reduce((sum: number, r: any) => sum + (r.pointsEarned || 0), 0);
+      
+      res.json({ 
+        success: true, 
+        score: totalPoints,
+        totalPoints: session.totalPoints || 100
+      });
+    } catch (error) {
+      console.error('Error finishing test:', error);
+      res.status(500).json({ message: "Failed to finish test" });
+    }
+  });
+  
+  // ===== ADMIN LEADS =====
+  
+  // Get admin leads
+  app.get("/api/admin/leads", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { leads } = await import("@shared/schema");
+      
+      const allLeads = await db.select().from(leads).orderBy(desc(leads.createdAt));
+      
+      res.json(allLeads);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+      res.status(500).json({ message: "Failed to fetch leads" });
+    }
+  });
   // TTS (Text-to-Speech) API Routes for pronunciation practice
   
   // Generate speech from text

@@ -1966,6 +1966,10 @@ export class DatabaseStorage implements IStorage {
     return allSessions;
   }
 
+  async getSessions(): Promise<Session[]> {
+    return this.getAllSessions();
+  }
+
   async getStudentSessionPackages(studentId: number) {
     const packages = await db.select().from(sessionPackages)
       .where(eq(sessionPackages.studentId, studentId))
