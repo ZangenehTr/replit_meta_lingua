@@ -31,6 +31,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -69,6 +70,7 @@ interface SessionDetail {
 
 export default function TeacherPayments() {
   const { t } = useTranslation(['teacher', 'common']);
+  const { isRTL } = useLanguage();
   const [selectedPayslip, setSelectedPayslip] = useState<PayslipDetail | null>(null);
 
   const { data: payslips, isLoading } = useQuery<PayslipDetail[]>({
@@ -139,14 +141,14 @@ export default function TeacherPayments() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
+      <div className="flex items-center justify-center min-h-64" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{t('teacher.payments')}</h1>

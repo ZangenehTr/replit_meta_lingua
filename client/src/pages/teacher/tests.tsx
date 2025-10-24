@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 import {
   Card,
   CardContent,
@@ -47,6 +48,7 @@ import type { Test, Course } from "@shared/schema";
 
 export default function TeacherTests() {
   const { user } = useAuth();
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const { t } = useTranslation(['teacher', 'common']);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -140,7 +142,7 @@ export default function TeacherTests() {
 
   if (testsLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-96" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Loading tests...</p>
@@ -150,7 +152,7 @@ export default function TeacherTests() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Test Management</h1>

@@ -17,6 +17,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { API_ENDPOINTS } from '@/services/endpoints';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface TeachingStats {
   totalStudents: number;
@@ -39,6 +40,7 @@ interface TeachingStats {
 
 export default function TeacherReportsPage() {
   const { t } = useTranslation(['teacher', 'common']);
+  const { isRTL } = useLanguage();
   const [dateRange, setDateRange] = useState("last3months");
   const [reportType, setReportType] = useState("overview");
 
@@ -58,7 +60,7 @@ export default function TeacherReportsPage() {
 
   if (isLoading || reportsLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -70,7 +72,7 @@ export default function TeacherReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>

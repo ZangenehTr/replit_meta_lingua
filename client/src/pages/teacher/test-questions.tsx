@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Upload, Volume2, Trash2, Edit, Save } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface TestQuestion {
   id: number;
@@ -57,6 +58,7 @@ interface TestQuestion {
 export default function TestQuestions() {
   const { testId } = useParams() as { testId: string };
   const { user } = useAuth();
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const { t } = useTranslation(['teacher', 'common']);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -256,7 +258,7 @@ export default function TestQuestions() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Test Questions</h1>
