@@ -1,6 +1,8 @@
 // This page redirects to the enhanced Callern dashboard
+import { useLanguage } from "@/hooks/useLanguage";
 import EnhancedTeacherCallernSystem from "./callern-enhanced";
 
 export default function TeacherCallernSystem() {
-  return <EnhancedTeacherCallernSystem />;
+  const { isRTL } = useLanguage();
+  return <div dir={isRTL ? 'rtl' : 'ltr'}><EnhancedTeacherCallernSystem /></div>;
 }
