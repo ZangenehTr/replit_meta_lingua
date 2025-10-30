@@ -27533,6 +27533,8 @@ Meta Lingua Academy`;
   });
 
 
+
+  return app;
 }
 
 export default registerRoutes;

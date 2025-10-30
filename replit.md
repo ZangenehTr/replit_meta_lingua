@@ -24,7 +24,7 @@ Critical requirement: Self-hosting in Iran with zero external dependencies. Must
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
 Code quality: Always avoid duplications - no duplicate code, methods, or logic. Prefer composition and reuse over duplication.
 Language preference: Default language set to Farsi (fa) for Iranian users.
-CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded data, NO fake/mock data, NO non-functional buttons, NO duplications, comprehensive tests required, replace OpenAI with Ollama (user's server).
+CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid duplication. NO hardcoded data, NO fake/mock data, NO non-functional buttons, always use real API calls and working e2e business logic.
 
 ## System Architecture
 
@@ -53,6 +53,17 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
     - LinguaQuest interactive game system with 19 activity types (e.g., Sentence Reordering, Image Selection, Spelling, True/False)
     - LinguaQuest Progress Dashboard with real-time stats (XP, streaks, achievements, lesson history)
     - TTS audio pre-generation pipeline for LinguaQuest content
+    - **Form Management System** (Oct 2025): Dynamic form builder for creating custom forms without code changes
+      - Drag-and-drop form builder with 10 field types (text, email, phone, number, textarea, select, radio, checkbox, date, file)
+      - Multi-language support (English/Persian/Arabic) for all form elements
+      - Dynamic validation rules (required, min/max length, patterns, custom messages)
+      - Form submission management with approval workflow
+      - Export functionality for submissions (CSV/JSON)
+      - Real-time form rendering from JSON schema
+      - Admin-only access with role-based permissions
+      - Database: form_definitions & form_submissions tables
+      - Components: FormBuilder.tsx, DynamicForm.tsx
+      - API: /api/admin/forms, /api/forms/:id/submit
     - **Front Desk Clerk Pages** (Oct 2025): Fully internationalized with comprehensive i18n support
       - Dashboard: 92+ translation calls, quick actions, stats cards, task management, trial scheduling
       - Walk-in Intake: 200+ translations, multi-step form with memoized validation schema, RTL-aware navigation
