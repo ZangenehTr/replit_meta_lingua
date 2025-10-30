@@ -52,6 +52,17 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress tracking, LinguaQuest lessons, and dynamic form definitions/submissions.
 - **Migration**: `npm run db:push --force` for schema synchronization or manual SQL for fresh deployments.
 
+### Dynamic Form System
+- **Total Forms in Platform**: 19 forms across authentication, admin, teacher, supervisor, call center, and front desk categories
+- **Migrated to DynamicForm**: 6 forms (32% migration rate)
+  - ✅ Forgot Password (ID:1), Reset Password (ID:4), Course Creation (ID:10), Target Setting (ID:6), Communication Log (ID:7), Teacher Availability (ID:8)
+- **Migration Boundaries Established**:
+  - **DynamicForm Sweet Spot**: Simple embedded dialog forms with 3-7 basic fields (text, number, select, textarea, boolean)
+  - **Cannot Migrate Without Enhancements**: Forms requiring file uploads (Student Management ID:20, Assignment Creation ID:9), rich text editors (TipTap), audio recording, custom UI widgets (SMS Template variable insertion ID:13), programmatic field manipulation, conditional logic, multi-step flows, or 20+ fields
+- **Forms Catalog** (19 total):
+  1. Forgot Password ✅, 2. Login, 3. Register, 4. Reset Password ✅, 5. User Profile Update, 6. Target Setting ✅, 7. Communication Log ✅, 8. Teacher Availability ✅, 9. Assignment Creation (⛔ file upload), 10. Course Creation ✅, 11. Video Lesson (⛔ auto-fill), 12. New Lead Intake (⛔ conditional fields), 13. SMS Template (⛔ variable insertion UI), 14. Call Logging (⛔ 20+ fields), 15. Video Course (⛔ file upload), 16. Class Observation, 17. Teacher Management, 19. Lead Management, 20. Student Management (⛔ profile image upload, 11 fields)
+- **Strategic Approach**: Balanced hybrid - DynamicForm for simple forms, custom implementations for complex features to avoid feature regression
+
 ### Deployment Strategy
 - **Development**: Replit hosting with Neon PostgreSQL.
 - **Production**: Replit Deploy, downloadable as ZIP, Docker containerization. Designed for Iranian hosting, requiring PostgreSQL 14+, Node.js 18+, Nginx, and Docker (optional).
