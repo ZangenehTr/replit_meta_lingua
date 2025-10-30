@@ -77,8 +77,19 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
         - **Call Center Forms**: New Lead Intake (ID:12)
         - **Front Desk Forms**: SMS Template (ID:13), Call Logging (ID:14)
         - **Verification** (Oct 30, 2025): ✅ 100% field coverage vs Zod schemas, ✅ 100% EN/FA/AR label coverage (spot-checked IDs 8, 12, 19), ✅ Architect approved
-        - **Status**: 1 migrated (Forgot Password), 17 pending migration, 4 deferred (require DynamicForm enhancements)
-        - **Deferred Forms**: Observation Questionnaire (nested arrays), Walk-in Intake (multi-step), Learning Profile (array fields), Checkout/Payment (payment processing)
+        - **Migration Progress** (Oct 30, 2025): **6 of 18 forms migrated (33%)** ✅
+          - **Completed Migrations**: Forgot Password (ID:1), Reset Password (ID:4), Course Creation (ID:10), Target Setting (ID:6), Communication Log (ID:7), Teacher Availability (ID:8)
+          - **Pending Migration**: 8 forms (User Profile, Assignment Creation, Video Lesson, Video Course, SMS Template, Call Logging, Teacher Management, Lead Management, New Lead Intake, Class Observation)
+          - **Deferred Forms**: 4 forms requiring DynamicForm enhancements (Observation Questionnaire - nested arrays, Walk-in Intake - multi-step, Learning Profile - array fields, Checkout/Payment - payment processing)
+          - **Excluded from Migration**: Login (ID:2), Register (ID:3) - Complex custom logic (OTP toggle, conditional fields, custom action buttons)
+        - **Migration Pattern Established** (Oct 30, 2025):
+          1. Add FormDefinition interface and DynamicForm import
+          2. Fetch form definition with useQuery (enabled only when dialog/form is visible)
+          3. Create async submit handlers using mutateAsync() and returning promises
+          4. Replace hard-coded form JSX with DynamicForm component (disabled={mutation.isPending}, showTitle={false})
+          5. For edit dialogs: Pass initialValues with date strings converted to Date objects (e.g., `new Date(record.dateField)`)
+          6. Remove unused schemas, form instances, and reset() calls
+          7. Proper error handling and cache invalidation with queryClient.invalidateQueries()
     - **Front Desk Clerk Pages** (Oct 2025): Fully internationalized with comprehensive i18n support
       - Dashboard: 92+ translation calls, quick actions, stats cards, task management, trial scheduling
       - Walk-in Intake: 200+ translations, multi-step form with memoized validation schema, RTL-aware navigation
