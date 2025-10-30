@@ -371,9 +371,12 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ```
 
 **Form ID Registry** (updated as migrations complete):
-- ID 1: Forgot Password (Authentication)
-- ID 2: [Reserved for next migration]
-- ID 3: [Reserved for next migration]
+- ID 1: Forgot Password (Authentication) ✅ MIGRATED
+- ID 2: Login (Authentication) - Created, pending migration
+- ID 3: Register (Authentication) - Created, pending migration
+- ID 4: Reset Password (Authentication) - Created, pending migration
+- ID 5: User Profile Update (User) - Created, pending migration
+- ID 6: [Reserved for next migration]
 - ...
 
 ## Support & Troubleshooting
