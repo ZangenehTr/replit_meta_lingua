@@ -27517,14 +27517,23 @@ Meta Lingua Academy`;
         return res.status(400).json({ error: 'Form is not currently available' });
       }
 
-      // Return only public-facing information
+      // Return only public-facing information (including multi-language fields)
       res.json({
         id: form.id,
         title: form.title,
+        titleEn: form.titleEn,
+        titleFa: form.titleFa,
+        titleAr: form.titleAr,
         description: form.description,
+        descriptionEn: form.descriptionEn,
+        descriptionFa: form.descriptionFa,
+        descriptionAr: form.descriptionAr,
         category: form.category,
         fields: form.fields,
-        submitButtonText: form.submitButtonText || 'Submit'
+        submitButtonText: form.submitButtonText || 'Submit',
+        submitButtonTextEn: form.submitButtonTextEn,
+        submitButtonTextFa: form.submitButtonTextFa,
+        submitButtonTextAr: form.submitButtonTextAr
       });
     } catch (error) {
       console.error('Error fetching public form:', error);
