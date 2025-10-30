@@ -386,12 +386,12 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 - ID 16: Class Observation - Created, pending migration
 
 **Admin Forms:**
-- ID 7: Communication Log - Created, pending migration
-- ID 10: Course Creation - Created, pending migration
-- ID 11: Video Lesson - Created, pending migration
-- ID 15: Video Course - Created, pending migration
-- ID 17: Teacher Management - Created, pending migration
-- ID 18: Lead Management - Created, pending migration
+- ID 7: Communication Log - Created, pending migration (4 fields)
+- ID 10: Course Creation - Created, pending migration (5 fields)
+- ID 11: Video Lesson - Created, pending migration (5 fields)
+- ID 15: Video Course - Created, pending migration (9 fields)
+- ID 17: Teacher Management - Created, pending migration (10 fields)
+- ID 19: Lead Management - Created, pending migration (18 fields) ✅ COMPLETE FIELD COVERAGE
 
 **Teacher Forms:**
 - ID 8: Teacher Availability - Created, pending migration
