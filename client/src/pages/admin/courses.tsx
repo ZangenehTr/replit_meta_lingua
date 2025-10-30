@@ -27,43 +27,31 @@ import {
   Edit3, 
   Users,
   Star,
-  Upload
+  Upload,
+  Loader2
 } from "lucide-react";
+import DynamicForm from "@/components/forms/DynamicForm";
 
-// Schema for course creation - aligned with database schema
-const courseSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  category: z.string().default("Language Learning"),
-  language: z.string().default("English"),
-  level: z.string().default("Beginner"),
-  isActive: z.boolean().default(true)
-});
+interface FormDefinition {
+  id: number;
+  title: string;
+  fields: any[];
+  [key: string]: any;
+}
 
 // Create Course Dialog Component
 function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   const { t } = useTranslation(['admin', 'common']);
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Fetch available roadmaps for Callern courses
-  const { data: availableRoadmaps = [] } = useQuery({
-    queryKey: [API_ENDPOINTS.admin.courseRoadmaps],
-    enabled: isOpen // Only fetch when dialog is open
-  });
-  const form = useForm<z.infer<typeof courseSchema>>({
-    resolver: zodResolver(courseSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      category: "Language Learning",
-      language: "English",
-      level: "Beginner",
-      isActive: true
-    }
+
+  // Fetch Course Creation form definition (Form ID 10)
+  const { data: formDefinition, isLoading: formLoading } = useQuery<FormDefinition>({
+    queryKey: ['/api/forms', 10],
+    enabled: isOpen
   });
 
   const createCourseMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof courseSchema>) => {
+    mutationFn: async (data: any) => {
       return await apiRequest(API_ENDPOINTS.admin.courses, {
         method: 'POST',
         body: JSON.stringify(data)
@@ -73,7 +61,6 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
       toast({ title: t('admin:courses.createdSuccessfully') });
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.courses] });
       setIsOpen(false);
-      form.reset();
     },
     onError: (error: any) => {
       console.error('Error creating course:', error);
@@ -85,7 +72,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
     }
   });
 
-  const onSubmit = (data: z.infer<typeof courseSchema>) => {
+  const handleSubmit = async (data: Record<string, any>) => {
     createCourseMutation.mutate(data);
   };
 
@@ -105,152 +92,29 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Course Information - aligned with database schema */}
-            <div className="grid grid-cols-1 gap-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('admin:courses.courseTitle')}</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder={t('admin:courses.courseTitlePlaceholder')} 
-                        data-testid="course-title-input" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('admin:courses.description')}</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder={t('admin:courses.descriptionPlaceholder')} 
-                        data-testid="course-description-input"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('admin:courses.category')}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="category-select-trigger">
-                            <SelectValue placeholder={t('admin:courses.selectCategory')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent data-testid="category-select-content">
-                          <SelectItem value="Language Learning" data-testid="category-option-language-learning">Language Learning</SelectItem>
-                          <SelectItem value="Persian Language" data-testid="category-option-persian">Persian Language</SelectItem>
-                          <SelectItem value="English Language" data-testid="category-option-english">English Language</SelectItem>
-                          <SelectItem value="Arabic Language" data-testid="category-option-arabic">Arabic Language</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="language"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('admin:courses.courseLanguage')}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="language-select-trigger">
-                            <SelectValue placeholder={t('admin:courses.selectLanguage')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="English">{t('admin:courses.english')}</SelectItem>
-                          <SelectItem value="Persian">{t('admin:courses.persian')}</SelectItem>
-                          <SelectItem value="Arabic">{t('admin:courses.arabic')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="level"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('admin:courses.level')}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="level-select-trigger">
-                            <SelectValue placeholder={t('admin:courses.selectLevel')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Beginner">{t('admin:courses.beginner')}</SelectItem>
-                          <SelectItem value="Intermediate">{t('admin:courses.intermediate')}</SelectItem>
-                          <SelectItem value="Advanced">{t('admin:courses.advanced')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">{t('admin:courses.activeCourse')}</FormLabel>
-                      <div className="text-sm text-muted-foreground">
-                        {t('admin:courses.activeCourseDescription')}
-                      </div>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        data-testid="is-active-switch"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            
-            <div className="flex justify-end gap-2">
+        {formLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin" />
+          </div>
+        ) : formDefinition ? (
+          <>
+            <DynamicForm
+              formDefinition={formDefinition}
+              onSubmit={handleSubmit}
+              disabled={createCourseMutation.isPending}
+              showTitle={false}
+            />
+            <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 {t('admin:courses.cancel')}
               </Button>
-              <Button type="submit" disabled={createCourseMutation.isPending} data-testid="submit-course-button">
-                {createCourseMutation.isPending ? "Creating..." : t('admin:courses.save')}
-              </Button>
             </div>
-          </form>
-        </Form>
+          </>
+        ) : (
+          <div className="text-center text-gray-500">
+            {t('common:formNotFound', 'Form definition not found')}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
