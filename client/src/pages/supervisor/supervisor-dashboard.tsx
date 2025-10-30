@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from "@/hooks/useLanguage";
+import DynamicForm from "@/components/forms/DynamicForm";
 import { 
   Users, 
   GraduationCap, 
@@ -121,6 +122,13 @@ interface RecentObservation {
   notes?: string;
 }
 
+interface FormDefinition {
+  id: number;
+  title: string;
+  fields: any[];
+  [key: string]: any;
+}
+
 interface TeacherPerformance {
   teacherId: number;
   name: string;
@@ -174,13 +182,7 @@ const observationSchema = z.object({
   followUpRequired: z.boolean().default(false),
 });
 
-// Target setting schema for monthly/seasonal goals
-const targetSchema = z.object({
-  period: z.enum(['monthly', 'quarterly', 'seasonal']),
-  targetType: z.enum(['observations', 'quality_score', 'teacher_retention', 'student_satisfaction']),
-  targetValue: z.number().min(1),
-  description: z.string().optional(),
-});
+// Target setting schema removed - now using dynamic form (Form ID: 6)
 
 export default function SupervisorDashboard() {
   const { t } = useTranslation(['supervisor', 'common']);
@@ -260,6 +262,12 @@ export default function SupervisorDashboard() {
     queryKey: ['/api/supervisor/business-intelligence'],
   });
 
+  // Fetch Target Setting form definition (Form ID: 6)
+  const { data: targetFormDefinition, isLoading: targetFormLoading } = useQuery<FormDefinition>({
+    queryKey: ['/api/forms', 6],
+    enabled: targetDialogOpen,
+  });
+
   // Fetch dialog teacher classes when teacher is selected in dialog
 
 
@@ -330,15 +338,7 @@ export default function SupervisorDashboard() {
     },
   });
 
-  const targetForm = useForm({
-    resolver: zodResolver(targetSchema),
-    defaultValues: {
-      period: 'monthly' as const,
-      targetType: 'observations' as const,
-      targetValue: 10,
-      description: '',
-    },
-  });
+  // targetForm removed - now using DynamicForm with Form ID: 6
 
   // Check-First Protocol: Auto-populate session details when session is selected
   const handleSessionSelection = (sessionId: string) => {
@@ -407,7 +407,6 @@ export default function SupervisorDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/supervisor/targets'] });
       setTargetDialogOpen(false);
-      targetForm.reset();
       toast({ 
         title: "Target Set", 
         description: "Monthly/seasonal target has been configured successfully" 
@@ -475,7 +474,7 @@ export default function SupervisorDashboard() {
   };
 
   // Target submission handler
-  const onTargetSubmit = (data: any) => {
+  const handleTargetSubmit = async (data: any) => {
     const targetData = {
       ...data,
       supervisorId: 46, // Current supervisor
@@ -483,7 +482,7 @@ export default function SupervisorDashboard() {
       status: 'active',
     };
     
-    setTargetMutation.mutate(targetData);
+    return setTargetMutation.mutateAsync(targetData);
   };
 
   if (isLoading) {
@@ -1210,91 +1209,17 @@ export default function SupervisorDashboard() {
             <DialogHeader>
               <DialogTitle>Set Monthly/Seasonal Targets</DialogTitle>
             </DialogHeader>
-            <Form {...targetForm}>
-              <form onSubmit={targetForm.handleSubmit(onTargetSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={targetForm.control}
-                    name="period"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Target Period</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select period" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="seasonal">Seasonal</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={targetForm.control}
-                    name="targetType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Target Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select target type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="observations">Number of Observations</SelectItem>
-                            <SelectItem value="quality_score">Average Quality Score</SelectItem>
-                            <SelectItem value="teacher_retention">Teacher Retention Rate</SelectItem>
-                            <SelectItem value="student_satisfaction">Student Satisfaction Score</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={targetForm.control}
-                    name="targetValue"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Target Value</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            placeholder="Enter target value"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={targetForm.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description (Optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Target description" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            {targetFormLoading ? (
+              <div className="py-8 text-center">Loading form...</div>
+            ) : targetFormDefinition ? (
+              <>
+                <DynamicForm
+                  formDefinition={targetFormDefinition}
+                  onSubmit={handleTargetSubmit}
+                  disabled={setTargetMutation.isPending}
+                  showTitle={false}
+                />
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
                   <div className="flex items-start space-x-3">
                     <Target className="h-5 w-5 text-green-600 mt-0.5" />
                     <div>
@@ -1306,21 +1231,10 @@ export default function SupervisorDashboard() {
                     </div>
                   </div>
                 </div>
-
-                <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline" onClick={() => setTargetDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={setTargetMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {setTargetMutation.isPending ? 'Setting...' : 'Set Target'}
-                  </Button>
-                </div>
-              </form>
-            </Form>
+              </>
+            ) : (
+              <div className="py-8 text-center text-red-600">Failed to load form definition</div>
+            )}
           </DialogContent>
         </Dialog>
 

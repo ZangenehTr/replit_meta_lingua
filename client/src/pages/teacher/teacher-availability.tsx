@@ -19,32 +19,16 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/useLanguage";
+import DynamicForm from "@/components/forms/DynamicForm";
 
-const availabilityPeriodSchema = z.object({
-  periodStartDate: z.date().refine(
-    (date) => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const inputDate = new Date(date);
-      inputDate.setHours(0, 0, 0, 0);
-      return inputDate >= today;
-    },
-    "Start date cannot be in the past"
-  ),
-  periodEndDate: z.date(),
-  dayOfWeek: z.string().min(1, 'Day of week is required'),
-  timeDivision: z.string().min(1, 'Time division is required'),
-  classFormat: z.string().min(1, 'Class format is required'),
-  specificHours: z.string().optional()
-}).refine(
-  (data) => data.periodEndDate > data.periodStartDate,
-  {
-    message: "End date must be after start date",
-    path: ["periodEndDate"]
-  }
-);
+interface FormDefinition {
+  id: number;
+  title: string;
+  fields: any[];
+  [key: string]: any;
+}
 
-type AvailabilityPeriodFormData = z.infer<typeof availabilityPeriodSchema>;
+// Schema removed - now using dynamic form (Form ID: 8)
 
 export default function TeacherAvailabilityPage() {
   const { t } = useTranslation(['teacher', 'common']);
@@ -55,29 +39,7 @@ export default function TeacherAvailabilityPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<any>(null);
 
-  const form = useForm<AvailabilityPeriodFormData>({
-    resolver: zodResolver(availabilityPeriodSchema),
-    defaultValues: {
-      periodStartDate: new Date(),
-      periodEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      dayOfWeek: '',
-      timeDivision: '',
-      classFormat: '',
-      specificHours: ''
-    }
-  });
-
-  const editForm = useForm<AvailabilityPeriodFormData>({
-    resolver: zodResolver(availabilityPeriodSchema),
-    defaultValues: {
-      periodStartDate: new Date(),
-      periodEndDate: new Date(),
-      dayOfWeek: '',
-      timeDivision: '',
-      classFormat: '',
-      specificHours: ''
-    }
-  });
+  // form and editForm removed - now using DynamicForm (Form ID: 8)
 
   // Fetch availability periods
   const { data: availabilityPeriods = [], isLoading } = useQuery({
@@ -92,9 +54,15 @@ export default function TeacherAvailabilityPage() {
     }
   });
 
+  // Fetch Teacher Availability form definition (Form ID: 8)
+  const { data: availabilityFormDefinition, isLoading: availabilityFormLoading } = useQuery<FormDefinition>({
+    queryKey: ['/api/forms', 8],
+    enabled: createDialogOpen || editDialogOpen,
+  });
+
   // Create availability period mutation
   const createPeriodMutation = useMutation({
-    mutationFn: async (data: AvailabilityPeriodFormData) => {
+    mutationFn: async (data: any) => {
       return await apiRequest('/api/teacher/availability-periods', {
         method: 'POST',
         body: JSON.stringify(data)
@@ -107,7 +75,6 @@ export default function TeacherAvailabilityPage() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/teacher/availability-periods'] });
       setCreateDialogOpen(false);
-      form.reset();
     },
     onError: (error: any) => {
       toast({
@@ -120,7 +87,7 @@ export default function TeacherAvailabilityPage() {
 
   // Update availability period mutation
   const updatePeriodMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<AvailabilityPeriodFormData> }) => {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
       return await apiRequest(`/api/teacher/availability-periods/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data)
@@ -167,26 +134,18 @@ export default function TeacherAvailabilityPage() {
     }
   });
 
-  const onCreatePeriod = (data: AvailabilityPeriodFormData) => {
-    createPeriodMutation.mutate(data);
+  // Async handlers for DynamicForm
+  const handleCreatePeriod = async (data: any) => {
+    return createPeriodMutation.mutateAsync(data);
   };
 
-  const onUpdatePeriod = (data: AvailabilityPeriodFormData) => {
-    if (selectedPeriod) {
-      updatePeriodMutation.mutate({ id: selectedPeriod.id, data });
-    }
+  const handleUpdatePeriod = async (data: any) => {
+    if (!selectedPeriod) throw new Error("No period selected");
+    return updatePeriodMutation.mutateAsync({ id: selectedPeriod.id, data });
   };
 
   const handleEdit = (period: any) => {
     setSelectedPeriod(period);
-    editForm.reset({
-      periodStartDate: new Date(period.periodStartDate),
-      periodEndDate: new Date(period.periodEndDate),
-      dayOfWeek: period.dayOfWeek,
-      timeDivision: period.timeDivision,
-      classFormat: period.classFormat,
-      specificHours: period.specificHours || ''
-    });
     setEditDialogOpen(true);
   };
 
@@ -560,11 +519,18 @@ export default function TeacherAvailabilityPage() {
                 Set your availability period to inform supervisors when you're available for teaching assignments.
               </DialogDescription>
             </DialogHeader>
-            <AvailabilityForm 
-              form={form} 
-              onSubmit={onCreatePeriod} 
-              isLoading={createPeriodMutation.isPending}
-            />
+            {availabilityFormLoading ? (
+              <div className="py-8 text-center">Loading form...</div>
+            ) : availabilityFormDefinition ? (
+              <DynamicForm
+                formDefinition={availabilityFormDefinition}
+                onSubmit={handleCreatePeriod}
+                disabled={createPeriodMutation.isPending}
+                showTitle={false}
+              />
+            ) : (
+              <div className="py-8 text-center text-red-600">Failed to load form definition</div>
+            )}
           </DialogContent>
         </Dialog>
 
@@ -577,11 +543,26 @@ export default function TeacherAvailabilityPage() {
                 Update your availability period details and settings.
               </DialogDescription>
             </DialogHeader>
-            <AvailabilityForm 
-              form={editForm} 
-              onSubmit={onUpdatePeriod} 
-              isLoading={updatePeriodMutation.isPending}
-            />
+            {availabilityFormLoading ? (
+              <div className="py-8 text-center">Loading form...</div>
+            ) : availabilityFormDefinition ? (
+              <DynamicForm
+                formDefinition={availabilityFormDefinition}
+                onSubmit={handleUpdatePeriod}
+                disabled={updatePeriodMutation.isPending}
+                showTitle={false}
+                initialValues={selectedPeriod ? {
+                  periodStartDate: new Date(selectedPeriod.periodStartDate),
+                  periodEndDate: new Date(selectedPeriod.periodEndDate),
+                  dayOfWeek: selectedPeriod.dayOfWeek,
+                  timeDivision: selectedPeriod.timeDivision,
+                  classFormat: selectedPeriod.classFormat,
+                  specificHours: selectedPeriod.specificHours || ''
+                } : undefined}
+              />
+            ) : (
+              <div className="py-8 text-center text-red-600">Failed to load form definition</div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

@@ -56,6 +56,15 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import DynamicForm from "@/components/forms/DynamicForm";
+
+// Type definitions for forms
+interface FormDefinition {
+  id: number;
+  title: string;
+  fields: any[];
+  [key: string]: any;
+}
 
 // Type definitions for leads
 interface Lead {
@@ -129,12 +138,7 @@ export default function ComprehensiveCRMLeads() {
     nextFollowUpDate: undefined as Date | undefined
   });
 
-  const [communicationData, setCommunicationData] = useState({
-    type: 'call',
-    subject: '',
-    content: '',
-    scheduledFor: undefined as Date | undefined
-  });
+  // communicationData state removed - now using DynamicForm (Form ID: 7)
 
   // Fetch leads with filters
   const buildFilterParams = () => {
@@ -161,6 +165,12 @@ export default function ComprehensiveCRMLeads() {
   const { data: agents = [] } = useQuery({
     queryKey: ['/api/users/agents'],
     queryFn: () => apiRequest('/api/users?role=Call Center Agent,Admin')
+  });
+
+  // Fetch Communication Log form definition (Form ID: 7)
+  const { data: communicationFormDefinition, isLoading: communicationFormLoading } = useQuery<FormDefinition>({
+    queryKey: ['/api/forms', 7],
+    enabled: showCommunicationForm,
   });
 
   // Create lead mutation
@@ -219,18 +229,23 @@ export default function ComprehensiveCRMLeads() {
     },
     onSuccess: () => {
       setShowCommunicationForm(false);
-      setCommunicationData({
-        type: 'call',
-        subject: '',
-        content: '',
-        scheduledFor: undefined
-      });
       toast({
         title: "موفقیت",
         description: "ارتباط ثبت شد",
       });
     }
   });
+
+  // Communication form submit handler for DynamicForm
+  const handleCommunicationSubmit = async (data: any) => {
+    if (!selectedLead) {
+      throw new Error("No lead selected");
+    }
+    return createCommunicationMutation.mutateAsync({
+      leadId: selectedLead.id,
+      communication: data
+    });
+  };
 
   const resetNewLeadForm = () => {
     setNewLeadData({
@@ -853,73 +868,18 @@ export default function ComprehensiveCRMLeads() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="type">نوع ارتباط</Label>
-              <Select value={communicationData.type} onValueChange={(value) => setCommunicationData({...communicationData, type: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="call">تماس تلفنی</SelectItem>
-                  <SelectItem value="email">ایمیل</SelectItem>
-                  <SelectItem value="sms">پیامک</SelectItem>
-                  <SelectItem value="meeting">جلسه</SelectItem>
-                  <SelectItem value="note">یادداشت</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="subject">موضوع</Label>
-              <Input
-                id="subject"
-                value={communicationData.subject}
-                onChange={(e) => setCommunicationData({...communicationData, subject: e.target.value})}
-                placeholder="موضوع ارتباط"
-                dir="rtl"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="content">محتوا</Label>
-              <Textarea
-                id="content"
-                value={communicationData.content}
-                onChange={(e) => setCommunicationData({...communicationData, content: e.target.value})}
-                placeholder="جزئیات ارتباط..."
-                rows={4}
-                dir="rtl"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="scheduledFor">زمان‌بندی شده برای</Label>
-              <DatePicker
-                date={communicationData.scheduledFor}
-                onDateChange={(date) => setCommunicationData({...communicationData, scheduledFor: date})}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCommunicationForm(false)}>
-              انصراف
-            </Button>
-            <Button 
-              onClick={() => {
-                if (selectedLead) {
-                  createCommunicationMutation.mutate({
-                    leadId: selectedLead.id,
-                    communication: communicationData
-                  });
-                }
-              }}
+          {communicationFormLoading ? (
+            <div className="py-8 text-center">در حال بارگذاری فرم...</div>
+          ) : communicationFormDefinition ? (
+            <DynamicForm
+              formDefinition={communicationFormDefinition}
+              onSubmit={handleCommunicationSubmit}
               disabled={createCommunicationMutation.isPending}
-            >
-              {createCommunicationMutation.isPending ? 'در حال ثبت...' : 'ثبت ارتباط'}
-            </Button>
-          </DialogFooter>
+              showTitle={false}
+            />
+          ) : (
+            <div className="py-8 text-center text-red-600">خطا در بارگذاری فرم</div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
