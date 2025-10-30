@@ -1,36 +1,18 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLocation } from "wouter";
 import { 
   Loader2, 
   GraduationCap, 
-  Lock,
   ChevronLeft,
   CheckCircle,
-  AlertCircle,
-  Eye,
-  EyeOff
+  AlertCircle
 } from "lucide-react";
-
-const resetPasswordSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Password confirmation is required"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+import DynamicForm from "@/components/forms/DynamicForm";
 
 export default function ResetPassword() {
   const { t } = useTranslation(['auth', 'common']);
@@ -40,8 +22,6 @@ export default function ResetPassword() {
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [token, setToken] = useState<string>("");
 
   // Get token from URL parameters
@@ -55,15 +35,12 @@ export default function ResetPassword() {
     }
   }, [t]);
 
-  const form = useForm<ResetPasswordFormData>({
-    resolver: zodResolver(resetPasswordSchema),
-    defaultValues: {
-      password: "",
-      confirmPassword: "",
-    },
+  // Fetch Reset Password form definition (Form ID 4)
+  const { data: formDefinition, isLoading: formLoading } = useQuery({
+    queryKey: ['/api/forms/4'],
   });
 
-  const handleSubmit = async (data: ResetPasswordFormData) => {
+  const handleSubmit = async (data: Record<string, any>) => {
     if (!token) {
       setError(t('auth:invalidResetToken', 'Invalid or missing reset token'));
       return;
@@ -191,85 +168,25 @@ export default function ResetPassword() {
               )}
 
               {!isSuccess && token ? (
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-white/90 text-sm font-medium">
-                      {t('auth:newPassword', 'New Password')}
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder={t('auth:passwordPlaceholder')}
-                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                        {...form.register("password")}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                    {form.formState.errors.password && (
-                      <p className="text-sm text-red-300">
-                        {form.formState.errors.password.message}
-                      </p>
-                    )}
+                formLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-8 h-8 text-white animate-spin" />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-white/90 text-sm font-medium">
-                      {t('auth:confirmPassword', 'Confirm New Password')}
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder={t('auth:confirmPasswordPlaceholder', 'Re-enter your new password')}
-                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                        {...form.register("confirmPassword")}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70"
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                    {form.formState.errors.confirmPassword && (
-                      <p className="text-sm text-red-300">
-                        {form.formState.errors.confirmPassword.message}
-                      </p>
-                    )}
+                ) : formDefinition ? (
+                  <DynamicForm
+                    formDefinition={formDefinition}
+                    onSubmit={handleSubmit}
+                    isSubmitting={isLoading}
+                    submitButtonClassName="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]"
+                    fieldClassName="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                    labelClassName="text-white/90 text-sm font-medium"
+                    errorClassName="text-sm text-red-300"
+                  />
+                ) : (
+                  <div className="text-center text-white/80 text-sm">
+                    {t('common:formNotFound', 'Form definition not found')}
                   </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                        {t('auth:resetting', 'Resetting...')}
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-5 h-5 mr-2" />
-                        {t('auth:resetPassword', 'Reset Password')}
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="text-center text-white/70 text-sm">
-                    <p>{t('auth:passwordRequirements', 'Password must be at least 6 characters long.')}</p>
-                  </div>
-                </form>
+                )
               ) : !isSuccess && !token ? (
                 <div className="text-center space-y-4">
                   <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
