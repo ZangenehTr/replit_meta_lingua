@@ -8158,19 +8158,25 @@ export type InsertAccountingLedger = typeof accountingledgers.$inferInsert;
 // FORM MANAGEMENT SYSTEM
 // ============================================================================
 
-// Form Definitions - Templates for dynamic forms
+// Form Definitions - Templates for dynamic forms (Multi-language support)
 export const formDefinitions = pgTable("form_definitions", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(), // Default title
+  titleEn: varchar("title_en", { length: 255 }),
+  titleFa: varchar("title_fa", { length: 255 }),
+  titleAr: varchar("title_ar", { length: 255 }),
   description: text("description"),
-  formSchema: jsonb("form_schema").notNull(), // JSON schema defining fields, validation, etc.
-  category: varchar("category", { length: 100 }), // e.g., "student_intake", "feedback", "survey"
+  descriptionEn: text("description_en"),
+  descriptionFa: text("description_fa"),
+  descriptionAr: text("description_ar"),
+  category: varchar("category", { length: 100 }), // e.g., "student_intake", "authentication", "survey"
+  fields: jsonb("fields").notNull(), // Array of field definitions with multi-language support
   isActive: boolean("is_active").default(true).notNull(),
-  allowAnonymous: boolean("allow_anonymous").default(false), // Allow submissions without login
-  requiresApproval: boolean("requires_approval").default(false), // Admin must approve submissions
-  notificationEmails: text("notification_emails").array(), // Emails to notify on submission
-  successMessage: text("success_message"), // Custom message after successful submission
-  redirectUrl: text("redirect_url"), // Optional redirect after submission
+  allowAnonymous: boolean("allow_anonymous").default(false),
+  requiresApproval: boolean("requires_approval").default(false),
+  submitButtonTextEn: varchar("submit_button_text_en", { length: 100 }),
+  submitButtonTextFa: varchar("submit_button_text_fa", { length: 100 }),
+  submitButtonTextAr: varchar("submit_button_text_ar", { length: 100 }),
   createdBy: integer("created_by").references(() => users.id).notNull(),
   updatedBy: integer("updated_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -8181,15 +8187,13 @@ export const formDefinitions = pgTable("form_definitions", {
 export const formSubmissions = pgTable("form_submissions", {
   id: serial("id").primaryKey(),
   formId: integer("form_id").references(() => formDefinitions.id).notNull(),
-  submittedBy: integer("submitted_by").references(() => users.id), // Null if anonymous
-  submissionData: jsonb("submission_data").notNull(), // Actual form data submitted
+  data: jsonb("data").notNull(), // Submitted form field data
   status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, approved, rejected
-  approvedBy: integer("approved_by").references(() => users.id),
-  approvedAt: timestamp("approved_at"),
-  rejectionReason: text("rejection_reason"),
-  ipAddress: varchar("ip_address", { length: 50 }),
-  userAgent: text("user_agent"),
+  submittedBy: varchar("submitted_by", { length: 255 }), // Email or identifier (for guest submissions)
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
