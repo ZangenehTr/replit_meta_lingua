@@ -37,7 +37,7 @@ export default function ResetPassword() {
 
   // Fetch Reset Password form definition (Form ID 4)
   const { data: formDefinition, isLoading: formLoading } = useQuery({
-    queryKey: ['/api/forms/4'],
+    queryKey: ['/api/forms', 4],
   });
 
   const handleSubmit = async (data: Record<string, any>) => {
