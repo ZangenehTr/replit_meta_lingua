@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import DynamicForm from '@/components/forms/DynamicForm';
 import { 
   Card, 
   CardContent, 
@@ -159,7 +158,15 @@ interface SendSmsRequest {
   idempotencyKey: string;
 }
 
-// Schema removed - now using dynamic form (Form ID: 13)
+const templateFormSchema = z.object({
+  name: z.string().min(1, 'Template name is required'),
+  content: z.string().min(1, 'Template content is required'),
+  categoryId: z.number().min(1, 'Category is required'),
+  tags: z.array(z.string()).default([]),
+  status: z.enum(['active', 'inactive', 'draft']).default('draft'),
+});
+
+type TemplateFormData = z.infer<typeof templateFormSchema>;
 
 const sendSmsSchema = z.object({
   recipients: z.string().min(1, 'Recipients are required'),
@@ -215,15 +222,12 @@ export default function SmsTemplatesPage() {
     queryFn: () => apiRequest('/api/sms-templates/analytics')
   });
 
-  // Fetch SMS Template form definition (ID: 13)
-  const { data: smsTemplateFormDefinition, isLoading: smsTemplateFormLoading } = useQuery({
-    queryKey: ['/api/forms', 13],
-    enabled: showCreateDialog || showEditDialog,
-  });
+  // Ref for content textarea (for variable insertion)
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Mutations
   const createTemplateMutation = useMutation({
-    mutationFn: (data: any) => 
+    mutationFn: (data: TemplateFormData) => 
       apiRequest('/api/sms-templates', {
         method: 'POST',
         body: JSON.stringify(data)
@@ -246,7 +250,7 @@ export default function SmsTemplatesPage() {
   });
 
   const updateTemplateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: number; data: TemplateFormData }) =>
       apiRequest(`/api/sms-templates/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data)
@@ -299,7 +303,27 @@ export default function SmsTemplatesPage() {
     }
   });
 
-  // createForm and editForm removed - now using DynamicForm (Form ID: 13)
+  const createForm = useForm<TemplateFormData>({
+    resolver: zodResolver(templateFormSchema),
+    defaultValues: {
+      name: '',
+      content: '',
+      categoryId: 0,
+      tags: [],
+      status: 'draft',
+    }
+  });
+
+  const editForm = useForm<TemplateFormData>({
+    resolver: zodResolver(templateFormSchema),
+    defaultValues: {
+      name: '',
+      content: '',
+      categoryId: 0,
+      tags: [],
+      status: 'draft',
+    }
+  });
 
   const sendForm = useForm<SendSmsFormData>({
     resolver: zodResolver(sendSmsSchema),
@@ -362,26 +386,22 @@ export default function SmsTemplatesPage() {
     });
   }, [templates, searchQuery, selectedCategory, selectedStatus]);
 
-  // Event handlers - Async handlers for DynamicForm
-  const handleCreateTemplate = async (data: any) => {
-    return createTemplateMutation.mutateAsync({
+  // Event handlers
+  const handleCreateTemplate = (data: TemplateFormData) => {
+    createTemplateMutation.mutate({
       ...data,
-      categoryId: parseInt(data.categoryId),
-      tags: data.tags ? data.tags.split(',').map((tag: string) => tag.trim()) : [],
       variables: extractVariables(data.content)
     });
   };
 
-  const handleEditTemplate = async (data: any) => {
-    if (!selectedTemplate) throw new Error("No template selected");
-    return updateTemplateMutation.mutateAsync({ 
+  const handleEditTemplate = (data: TemplateFormData) => {
+    if (!selectedTemplate) return;
+    updateTemplateMutation.mutate({ 
       id: selectedTemplate.id, 
       data: {
         ...data,
-        categoryId: parseInt(data.categoryId),
-        tags: data.tags ? data.tags.split(',').map((tag: string) => tag.trim()) : [],
         variables: extractVariables(data.content)
-      } 
+      }
     });
   };
 
@@ -415,12 +435,47 @@ export default function SmsTemplatesPage() {
     sendSmsMutation.mutate({ templateId: selectedTemplate.id, data: sendData });
   };
 
+  const handleEditButtonClick = (template: SmsTemplate) => {
+    setSelectedTemplate(template);
+    editForm.reset({
+      name: template.name,
+      content: template.content,
+      categoryId: template.categoryId,
+      tags: template.tags,
+      status: template.status as 'active' | 'inactive' | 'draft',
+    });
+    setShowEditDialog(true);
+  };
+
   const handlePreviewTemplate = (template: SmsTemplate) => {
     setSelectedTemplate(template);
     setShowPreviewDialog(true);
   };
 
-  // handleInsertVariable removed - no longer needed with DynamicForm
+  const handleInsertVariable = (variableName: string, formName: 'create' | 'edit') => {
+    if (!contentTextareaRef.current) return;
+    
+    const textarea = contentTextareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentValue = formName === 'create' ? createForm.getValues('content') : editForm.getValues('content');
+    const variableText = `{{${variableName}}}`;
+    
+    const newValue = currentValue.substring(0, start) + variableText + currentValue.substring(end);
+    
+    if (formName === 'create') {
+      createForm.setValue('content', newValue);
+    } else {
+      editForm.setValue('content', newValue);
+    }
+    
+    // Set focus and cursor position after variable
+    setTimeout(() => {
+      textarea.focus();
+      const newPosition = start + variableText.length;
+      textarea.setSelectionRange(newPosition, newPosition);
+    }, 0);
+  };
 
   if (templatesLoading || categoriesLoading) {
     return (
@@ -574,10 +629,7 @@ export default function SmsTemplatesPage() {
                               <Eye className="h-4 w-4 mr-2" />
                               {isRTL ? 'پیش‌نمایش' : 'Preview'}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedTemplate(template);
-                              setShowEditDialog(true);
-                            }}>
+                            <DropdownMenuItem onClick={() => handleEditButtonClick(template)}>
                               <Edit className="h-4 w-4 mr-2" />
                               {isRTL ? 'ویرایش' : 'Edit'}
                             </DropdownMenuItem>
@@ -787,18 +839,151 @@ export default function SmsTemplatesPage() {
             </DialogDescription>
           </DialogHeader>
           
-          {smsTemplateFormLoading ? (
-            <div className="py-8 text-center">Loading form...</div>
-          ) : smsTemplateFormDefinition ? (
-            <DynamicForm
-              formDefinition={smsTemplateFormDefinition}
-              onSubmit={handleCreateTemplate}
-              disabled={createTemplateMutation.isPending}
-              showTitle={false}
-            />
-          ) : (
-            <div className="py-8 text-center text-red-600">Failed to load form definition</div>
-          )}
+          <Form {...createForm}>
+            <form onSubmit={createForm.handleSubmit(handleCreateTemplate)} className="space-y-4">
+              <FormField
+                control={createForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'نام قالب' : 'Template Name'}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={isRTL ? 'نام قالب را وارد کنید' : 'Enter template name'} {...field} data-testid="input-template-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={createForm.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'دسته‌بندی' : 'Category'}</FormLabel>
+                    <Select
+                      value={field.value.toString()}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-category">
+                          <SelectValue placeholder={isRTL ? 'یک دسته‌بندی انتخاب کنید' : 'Select a category'} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((category: SmsTemplateCategory) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.displayName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={createForm.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'محتوای پیامک' : 'Message Content'}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        ref={contentTextareaRef}
+                        placeholder={isRTL ? 'محتوای پیامک را وارد کنید' : 'Enter message content'}
+                        className="min-h-[120px]"
+                        {...field}
+                        data-testid="textarea-content"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {isRTL ? 'از {{متغیر}} برای قرار دادن متغیرها استفاده کنید' : 'Use {{variable}} to insert variables'}
+                    </FormDescription>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {['firstName', 'lastName', 'courseName', 'date', 'time'].map((varName) => (
+                        <Button
+                          key={varName}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleInsertVariable(varName, 'create')}
+                          data-testid={`button-insert-${varName}`}
+                        >
+                          {isRTL ? `درج {{${varName}}}` : `Insert {{${varName}}}`}
+                        </Button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={createForm.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'برچسب‌ها' : 'Tags'}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={isRTL ? 'برچسب‌ها (با کاما جدا شوند)' : 'Tags (comma-separated)'}
+                        value={field.value.join(', ')}
+                        onChange={(e) => {
+                          const tags = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                          field.onChange(tags);
+                        }}
+                        data-testid="input-tags"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={createForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'وضعیت' : 'Status'}</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">{isRTL ? 'پیش‌نویس' : 'Draft'}</SelectItem>
+                        <SelectItem value="active">{isRTL ? 'فعال' : 'Active'}</SelectItem>
+                        <SelectItem value="inactive">{isRTL ? 'غیرفعال' : 'Inactive'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowCreateDialog(false)}
+                  data-testid="button-cancel-create"
+                >
+                  {isRTL ? 'انصراف' : 'Cancel'}
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createTemplateMutation.isPending}
+                  data-testid="button-submit-create"
+                >
+                  {createTemplateMutation.isPending ? (isRTL ? 'در حال ایجاد...' : 'Creating...') : (isRTL ? 'ایجاد' : 'Create')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
@@ -812,25 +997,151 @@ export default function SmsTemplatesPage() {
             </DialogDescription>
           </DialogHeader>
           
-          {smsTemplateFormLoading ? (
-            <div className="py-8 text-center">Loading form...</div>
-          ) : smsTemplateFormDefinition ? (
-            <DynamicForm
-              formDefinition={smsTemplateFormDefinition}
-              onSubmit={handleEditTemplate}
-              disabled={updateTemplateMutation.isPending}
-              showTitle={false}
-              initialValues={selectedTemplate ? {
-                name: selectedTemplate.name,
-                content: selectedTemplate.content,
-                categoryId: selectedTemplate.categoryId.toString(),
-                tags: selectedTemplate.tags.join(', '),
-                status: selectedTemplate.status
-              } : undefined}
-            />
-          ) : (
-            <div className="py-8 text-center text-red-600">Failed to load form definition</div>
-          )}
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditTemplate)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'نام قالب' : 'Template Name'}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={isRTL ? 'نام قالب را وارد کنید' : 'Enter template name'} {...field} data-testid="input-edit-template-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'دسته‌بندی' : 'Category'}</FormLabel>
+                    <Select
+                      value={field.value.toString()}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-category">
+                          <SelectValue placeholder={isRTL ? 'یک دسته‌بندی انتخاب کنید' : 'Select a category'} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((category: SmsTemplateCategory) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.displayName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'محتوای پیامک' : 'Message Content'}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        ref={contentTextareaRef}
+                        placeholder={isRTL ? 'محتوای پیامک را وارد کنید' : 'Enter message content'}
+                        className="min-h-[120px]"
+                        {...field}
+                        data-testid="textarea-edit-content"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {isRTL ? 'از {{متغیر}} برای قرار دادن متغیرها استفاده کنید' : 'Use {{variable}} to insert variables'}
+                    </FormDescription>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {['firstName', 'lastName', 'courseName', 'date', 'time'].map((varName) => (
+                        <Button
+                          key={varName}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleInsertVariable(varName, 'edit')}
+                          data-testid={`button-edit-insert-${varName}`}
+                        >
+                          {isRTL ? `درج {{${varName}}}` : `Insert {{${varName}}}`}
+                        </Button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'برچسب‌ها' : 'Tags'}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={isRTL ? 'برچسب‌ها (با کاما جدا شوند)' : 'Tags (comma-separated)'}
+                        value={field.value.join(', ')}
+                        onChange={(e) => {
+                          const tags = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                          field.onChange(tags);
+                        }}
+                        data-testid="input-edit-tags"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isRTL ? 'وضعیت' : 'Status'}</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-status">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">{isRTL ? 'پیش‌نویس' : 'Draft'}</SelectItem>
+                        <SelectItem value="active">{isRTL ? 'فعال' : 'Active'}</SelectItem>
+                        <SelectItem value="inactive">{isRTL ? 'غیرفعال' : 'Inactive'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowEditDialog(false)}
+                  data-testid="button-cancel-edit"
+                >
+                  {isRTL ? 'انصراف' : 'Cancel'}
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateTemplateMutation.isPending}
+                  data-testid="button-submit-edit"
+                >
+                  {updateTemplateMutation.isPending ? (isRTL ? 'در حال به‌روزرسانی...' : 'Updating...') : (isRTL ? 'به‌روزرسانی' : 'Update')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
