@@ -54,7 +54,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
     - LinguaQuest Progress Dashboard with real-time stats (XP, streaks, achievements, lesson history)
     - TTS audio pre-generation pipeline for LinguaQuest content
     - **Form Management System** (Oct 2025): Dynamic form builder for creating custom forms without code changes
-      - Drag-and-drop form builder with 10 field types (text, email, phone, number, textarea, select, radio, checkbox, date, file)
+      - Drag-and-drop form builder with 9 field types (text, email, phone, number, textarea, select, radio, checkbox, date)
       - Multi-language support (English/Persian/Arabic) for all form elements
       - Dynamic validation rules (required, min/max length, patterns, custom messages)
       - Form submission management with approval workflow
@@ -64,6 +64,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
       - Database: form_definitions & form_submissions tables
       - Components: FormBuilder.tsx, DynamicForm.tsx
       - API: /api/admin/forms, /api/forms/:id/submit
+      - Note: File upload field type deferred until multipart file handling is implemented
     - **Front Desk Clerk Pages** (Oct 2025): Fully internationalized with comprehensive i18n support
       - Dashboard: 92+ translation calls, quick actions, stats cards, task management, trial scheduling
       - Walk-in Intake: 200+ translations, multi-step form with memoized validation schema, RTL-aware navigation

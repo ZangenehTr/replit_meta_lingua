@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Field type definitions
+// Note: File upload type removed until proper multipart file handling is implemented
 const FIELD_TYPES = [
   { id: "text", label: "Text Input", icon: Type, description: "Single line text" },
   { id: "email", label: "Email", icon: Mail, description: "Email address" },
@@ -30,7 +31,6 @@ const FIELD_TYPES = [
   { id: "radio", label: "Radio Buttons", icon: Circle, description: "Choose one option" },
   { id: "checkbox", label: "Checkboxes", icon: CheckSquare, description: "Multiple choices" },
   { id: "date", label: "Date Picker", icon: Calendar, description: "Date selection" },
-  { id: "file", label: "File Upload", icon: Upload, description: "Upload files" },
 ];
 
 interface FieldValidation {
