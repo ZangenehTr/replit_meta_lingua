@@ -370,14 +370,72 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
   http://localhost:5000/api/admin/forms/999
 ```
 
-**Form ID Registry** (updated as migrations complete):
-- ID 1: Forgot Password (Authentication) ✅ MIGRATED
-- ID 2: Login (Authentication) - Created, pending migration
-- ID 3: Register (Authentication) - Created, pending migration
-- ID 4: Reset Password (Authentication) - Created, pending migration
-- ID 5: User Profile Update (User) - Created, pending migration
-- ID 6: [Reserved for next migration]
-- ...
+**Form ID Registry** (updated Oct 30, 2025):
+
+**Authentication Forms:**
+- ID 1: Forgot Password ✅ **MIGRATED** (client/src/pages/forgot-password.tsx)
+- ID 2: Login - Created, migration deferred (requires password visibility toggle)
+- ID 3: Register - Created, migration deferred (requires password visibility toggle)
+- ID 4: Reset Password - Created, migration deferred (requires password visibility toggle)
+
+**User Forms:**
+- ID 5: User Profile Update - Created, pending migration
+
+**Supervisor Forms:**
+- ID 6: Target Setting - Created, pending migration
+- ID 16: Class Observation - Created, pending migration
+
+**Admin Forms:**
+- ID 7: Communication Log - Created, pending migration
+- ID 10: Course Creation - Created, pending migration
+- ID 11: Video Lesson - Created, pending migration
+- ID 15: Video Course - Created, pending migration
+- ID 17: Teacher Management - Created, pending migration
+- ID 18: Lead Management - Created, pending migration
+
+**Teacher Forms:**
+- ID 8: Teacher Availability - Created, pending migration
+- ID 9: Assignment Creation - Created, pending migration
+
+**Call Center Forms:**
+- ID 12: New Lead Intake - Created, pending migration
+
+**Front Desk Forms:**
+- ID 13: SMS Template - Created, pending migration
+- ID 14: Call Logging - Created, pending migration
+
+**TOTAL CREATED: 18 form definitions** (1 migrated, 17 pending migration)
+
+---
+
+## Deferred Forms (Require DynamicForm Enhancements)
+
+The following forms cannot be migrated using the current DynamicForm component and require enhancements:
+
+### 1. **Observation Questionnaire** (Supervisor)
+**Reason:** Requires nested array support
+- Schema includes `questions` array with complex objects (id, text, type, options, required)
+- Current DynamicForm doesn't support array fields or nested object structures
+- **Enhancement needed:** Array field type with dynamic row addition/removal
+
+### 2. **Walk-in Intake** (Front Desk)
+**Reason:** Multi-step form with complex workflow
+- Multi-step wizard interface with validation per step
+- Complex state management across steps
+- **Enhancement needed:** Multi-step form support in DynamicForm
+
+### 3. **Learning Profile** (User)
+**Reason:** Requires array and checkbox group support
+- Multiple array fields: targetLanguages[], learningGoals[], motivationFactors[], learningChallenges[], strengths[], interests[]
+- Checkbox groups for multi-select options
+- **Enhancement needed:** Array field type, checkbox group field type
+
+### 4. **Checkout/Payment** (Student)
+**Reason:** Payment processing and sensitive data handling
+- Payment gateway integration (Stripe/Shetab)
+- Sensitive financial data
+- Complex validation and security requirements
+- **Enhancement needed:** Secure payment field handling, PCI compliance considerations
 
 ## Support & Troubleshooting
 
