@@ -1,31 +1,20 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Loader2, 
   GraduationCap, 
-  Mail,
   ChevronLeft,
   CheckCircle,
   AlertCircle,
-  Phone
 } from "lucide-react";
+import DynamicForm from "@/components/forms/DynamicForm";
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
-});
-
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+const FORGOT_PASSWORD_FORM_ID = 1;
 
 export default function ForgotPassword() {
   const { t } = useTranslation(['auth', 'common']);
@@ -36,14 +25,12 @@ export default function ForgotPassword() {
   const [error, setError] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const form = useForm<ForgotPasswordFormData>({
-    resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: {
-      email: "",
-    },
+  // Fetch form definition
+  const { data: formDefinition, isLoading: formLoading } = useQuery({
+    queryKey: ['/api/forms', FORGOT_PASSWORD_FORM_ID],
   });
 
-  const handleSubmit = async (data: ForgotPasswordFormData) => {
+  const handleSubmit = async (data: any) => {
     setIsLoading(true);
     setError("");
     setMessage("");
@@ -158,50 +145,29 @@ export default function ForgotPassword() {
               )}
 
               {!isSuccess ? (
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white/90 text-sm font-medium">
-                      {t('auth:email')}
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder={t('auth:emailPlaceholder')}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                        {...form.register("email")}
-                      />
+                formLoading ? (
+                  <div className="text-center text-white/70">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                    <p className="text-sm">{t('common:loading', 'Loading...')}</p>
+                  </div>
+                ) : formDefinition ? (
+                  <div className="[&_input]:bg-white/10 [&_input]:border-white/20 [&_input]:text-white [&_input]:placeholder:text-white/50 [&_input]:h-12 [&_input]:rounded-xl [&_input]:focus:bg-white/15 [&_input]:focus:border-white/30 [&_label]:text-white/90 [&_label]:text-sm [&_label]:font-medium [&_button[type=submit]]:w-full [&_button[type=submit]]:h-12 [&_button[type=submit]]:bg-gradient-to-r [&_button[type=submit]]:from-purple-500 [&_button[type=submit]]:to-pink-500 hover:[&_button[type=submit]]:from-purple-600 hover:[&_button[type=submit]]:to-pink-600 [&_button[type=submit]]:text-white [&_button[type=submit]]:font-semibold [&_button[type=submit]]:rounded-xl [&_button[type=submit]]:shadow-lg [&_button[type=submit]]:shadow-purple-500/25 [&_.error-message]:text-red-300 [&_.error-message]:text-sm">
+                    <DynamicForm 
+                      formDefinition={formDefinition}
+                      onSubmit={handleSubmit}
+                      disabled={isLoading}
+                      showTitle={false}
+                    />
+                    <div className="text-center text-white/70 text-sm mt-6">
+                      <p>{t('auth:resetInstructions', 'You will receive password reset instructions via email and SMS.')}</p>
                     </div>
-                    {form.formState.errors.email && (
-                      <p className="text-sm text-red-300">
-                        {form.formState.errors.email.message}
-                      </p>
-                    )}
                   </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                        {t('auth:sending', 'Sending...')}
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="w-5 h-5 mr-2" />
-                        {t('auth:sendResetLink', 'Send Reset Link')}
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="text-center text-white/70 text-sm">
-                    <p>{t('auth:resetInstructions', 'You will receive password reset instructions via email and SMS.')}</p>
+                ) : (
+                  <div className="text-center text-white/70">
+                    <AlertCircle className="w-6 h-6 mx-auto mb-2 text-red-300" />
+                    <p className="text-sm">{t('common:errorLoading', 'Error loading form')}</p>
                   </div>
-                </form>
+                )
               ) : (
                 <div className="text-center space-y-4">
                   <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
