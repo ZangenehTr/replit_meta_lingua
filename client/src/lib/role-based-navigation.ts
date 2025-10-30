@@ -101,6 +101,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     // User Management
     { path: "/admin/user-management", icon: "UserCog", label: t('common:navigation.userManagement'), roles: ["Admin"] },
     
+    // Form Management
+    { path: "/admin/form-management", icon: "FileText", label: t('common:navigation.formManagement'), roles: ["Admin"] },
+    
     // Course & Curriculum Management
     { path: "/admin/courses", icon: "BookOpen", label: t('common:navigation.courseManagement'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
     
