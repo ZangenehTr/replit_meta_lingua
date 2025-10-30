@@ -8219,6 +8219,275 @@ export type FormSubmission = typeof formSubmissions.$inferSelect;
 export type InsertFormSubmission = z.infer<typeof insertFormSubmissionSchema>;
 
 // ============================================================================
+// CMS (CONTENT MANAGEMENT SYSTEM) - Website Builder, Blog, Video Gallery
+// ============================================================================
+
+// CMS Pages - Website pages with multi-language support
+export const cmsPages = pgTable("cms_pages", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  titleEn: varchar("title_en", { length: 255 }),
+  titleFa: varchar("title_fa", { length: 255 }),
+  titleAr: varchar("title_ar", { length: 255 }),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  template: varchar("template", { length: 100 }), // Template type (landing, course_showcase, etc.)
+  status: varchar("status", { length: 20 }).default("draft").notNull(), // draft, published, archived
+  locale: varchar("locale", { length: 10 }).default("en"), // en, fa, ar, both
+  direction: varchar("direction", { length: 10 }).default("ltr"), // ltr, rtl, auto
+  isHomepage: boolean("is_homepage").default(false),
+  metaTitle: varchar("meta_title", { length: 255 }),
+  metaDescription: text("meta_description"),
+  metaKeywords: text("meta_keywords"),
+  ogImage: text("og_image"),
+  publishedAt: timestamp("published_at"),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CMS Page Sections - Individual sections within pages
+export const cmsPageSections = pgTable("cms_page_sections", {
+  id: serial("id").primaryKey(),
+  pageId: integer("page_id").references(() => cmsPages.id).notNull(),
+  sectionType: varchar("section_type", { length: 100 }).notNull(), // hero, features, blog_grid, video_gallery, testimonials, cta, etc.
+  title: varchar("title", { length: 255 }),
+  titleEn: varchar("title_en", { length: 255 }),
+  titleFa: varchar("title_fa", { length: 255 }),
+  titleAr: varchar("title_ar", { length: 255 }),
+  content: jsonb("content").notNull(), // Flexible content structure per section type
+  styles: jsonb("styles"), // Section styling (direction, alignment, colors, etc.)
+  sortOrder: integer("sort_order").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CMS Blog Categories
+export const cmsBlogCategories = pgTable("cms_blog_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  nameEn: varchar("name_en", { length: 255 }),
+  nameFa: varchar("name_fa", { length: 255 }),
+  nameAr: varchar("name_ar", { length: 255 }),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  descriptionEn: text("description_en"),
+  descriptionFa: text("description_fa"),
+  descriptionAr: text("description_ar"),
+  parentId: integer("parent_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CMS Blog Tags
+export const cmsBlogTags = pgTable("cms_blog_tags", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  nameEn: varchar("name_en", { length: 100 }),
+  nameFa: varchar("name_fa", { length: 100 }),
+  nameAr: varchar("name_ar", { length: 100 }),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// CMS Blog Posts
+export const cmsBlogPosts = pgTable("cms_blog_posts", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  titleEn: varchar("title_en", { length: 255 }),
+  titleFa: varchar("title_fa", { length: 255 }),
+  titleAr: varchar("title_ar", { length: 255 }),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  excerpt: text("excerpt"),
+  excerptEn: text("excerpt_en"),
+  excerptFa: text("excerpt_fa"),
+  excerptAr: text("excerpt_ar"),
+  content: text("content").notNull(),
+  contentEn: text("content_en"),
+  contentFa: text("content_fa"),
+  contentAr: text("content_ar"),
+  featuredImage: text("featured_image"),
+  authorId: integer("author_id").references(() => users.id).notNull(),
+  categoryId: integer("category_id").references(() => cmsBlogCategories.id),
+  status: varchar("status", { length: 20 }).default("draft").notNull(), // draft, published, archived
+  locale: varchar("locale", { length: 10 }).default("en"), // en, fa, ar
+  metaTitle: varchar("meta_title", { length: 255 }),
+  metaDescription: text("meta_description"),
+  metaKeywords: text("meta_keywords"),
+  ogImage: text("og_image"),
+  viewCount: integer("view_count").default(0),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CMS Blog Post Tags Junction Table
+export const cmsBlogPostTags = pgTable("cms_blog_post_tags", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").references(() => cmsBlogPosts.id).notNull(),
+  tagId: integer("tag_id").references(() => cmsBlogTags.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// CMS Blog Comments
+export const cmsBlogComments = pgTable("cms_blog_comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").references(() => cmsBlogPosts.id).notNull(),
+  authorName: varchar("author_name", { length: 255 }).notNull(),
+  authorEmail: varchar("author_email", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected, spam
+  parentId: integer("parent_id"), // For nested comments
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CMS Videos - Video gallery
+export const cmsVideos = pgTable("cms_videos", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  titleEn: varchar("title_en", { length: 255 }),
+  titleFa: varchar("title_fa", { length: 255 }),
+  titleAr: varchar("title_ar", { length: 255 }),
+  description: text("description"),
+  descriptionEn: text("description_en"),
+  descriptionFa: text("description_fa"),
+  descriptionAr: text("description_ar"),
+  videoUrl: text("video_url").notNull(), // Local path or embed URL
+  videoType: varchar("video_type", { length: 20 }).notNull(), // local, youtube, vimeo
+  thumbnail: text("thumbnail"),
+  duration: integer("duration"), // Duration in seconds
+  category: varchar("category", { length: 100 }),
+  locale: varchar("locale", { length: 10 }).default("en"),
+  viewCount: integer("view_count").default(0),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CMS Media Assets - Unified media library
+export const cmsMediaAssets = pgTable("cms_media_assets", {
+  id: serial("id").primaryKey(),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  filePath: text("file_path").notNull(),
+  fileType: varchar("file_type", { length: 50 }).notNull(), // image, video, document, audio
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: bigint("file_size", { mode: "number" }).notNull(), // Size in bytes
+  width: integer("width"),
+  height: integer("height"),
+  alt: text("alt"),
+  altEn: text("alt_en"),
+  altFa: text("alt_fa"),
+  altAr: text("alt_ar"),
+  caption: text("caption"),
+  captionEn: text("caption_en"),
+  captionFa: text("caption_fa"),
+  captionAr: text("caption_ar"),
+  uploadedBy: integer("uploaded_by").references(() => users.id).notNull(),
+  usageCount: integer("usage_count").default(0), // Track where media is used
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CMS Page Analytics - Track page views and conversions
+export const cmsPageAnalytics = pgTable("cms_page_analytics", {
+  id: serial("id").primaryKey(),
+  pageId: integer("page_id").references(() => cmsPages.id),
+  blogPostId: integer("blog_post_id").references(() => cmsBlogPosts.id),
+  videoId: integer("video_id").references(() => cmsVideos.id),
+  eventType: varchar("event_type", { length: 50 }).notNull(), // view, cta_click, conversion
+  userId: integer("user_id").references(() => users.id),
+  sessionId: varchar("session_id", { length: 255 }),
+  referrer: text("referrer"),
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schemas for CMS
+export const insertCmsPageSchema = createInsertSchema(cmsPages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsPageSectionSchema = createInsertSchema(cmsPageSections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsBlogCategorySchema = createInsertSchema(cmsBlogCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsBlogTagSchema = createInsertSchema(cmsBlogTags).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCmsBlogPostSchema = createInsertSchema(cmsBlogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsBlogPostTagSchema = createInsertSchema(cmsBlogPostTags).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCmsBlogCommentSchema = createInsertSchema(cmsBlogComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsVideoSchema = createInsertSchema(cmsVideos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsMediaAssetSchema = createInsertSchema(cmsMediaAssets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsPageAnalyticsSchema = createInsertSchema(cmsPageAnalytics).omit({
+  id: true,
+  createdAt: true
+});
+
+// Types for CMS
+export type CmsPage = typeof cmsPages.$inferSelect;
+export type InsertCmsPage = z.infer<typeof insertCmsPageSchema>;
+export type CmsPageSection = typeof cmsPageSections.$inferSelect;
+export type InsertCmsPageSection = z.infer<typeof insertCmsPageSectionSchema>;
+export type CmsBlogCategory = typeof cmsBlogCategories.$inferSelect;
+export type InsertCmsBlogCategory = z.infer<typeof insertCmsBlogCategorySchema>;
+export type CmsBlogTag = typeof cmsBlogTags.$inferSelect;
+export type InsertCmsBlogTag = z.infer<typeof insertCmsBlogTagSchema>;
+export type CmsBlogPost = typeof cmsBlogPosts.$inferSelect;
+export type InsertCmsBlogPost = z.infer<typeof insertCmsBlogPostSchema>;
+export type CmsBlogPostTag = typeof cmsBlogPostTags.$inferSelect;
+export type InsertCmsBlogPostTag = z.infer<typeof insertCmsBlogPostTagSchema>;
+export type CmsBlogComment = typeof cmsBlogComments.$inferSelect;
+export type InsertCmsBlogComment = z.infer<typeof insertCmsBlogCommentSchema>;
+export type CmsVideo = typeof cmsVideos.$inferSelect;
+export type InsertCmsVideo = z.infer<typeof insertCmsVideoSchema>;
+export type CmsMediaAsset = typeof cmsMediaAssets.$inferSelect;
+export type InsertCmsMediaAsset = z.infer<typeof insertCmsMediaAssetSchema>;
+export type CmsPageAnalytics = typeof cmsPageAnalytics.$inferSelect;
+export type InsertCmsPageAnalytics = z.infer<typeof insertCmsPageAnalyticsSchema>;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 

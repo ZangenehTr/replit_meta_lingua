@@ -46,6 +46,9 @@ import {
   socialMediaAnalytics, emailCampaigns, telegramMessages,
   // Accounting ledger tables
   chartOfAccounts, accountingLedger,
+  // CMS tables
+  cmsPages, cmsPageSections, cmsBlogCategories, cmsBlogTags, cmsBlogPosts,
+  cmsBlogPostTags, cmsBlogComments, cmsVideos, cmsMediaAssets, cmsPageAnalytics,
 } from "@shared/schema";
 // Unified testing system tables
 import {
@@ -157,7 +160,18 @@ import {
   type ScrapeJob, type InsertScrapeJob,
   type CompetitorPrice, type InsertCompetitorPrice,
   type ScrapedLead, type InsertScrapedLead,
-  type MarketTrend, type InsertMarketTrend
+  type MarketTrend, type InsertMarketTrend,
+  // CMS types
+  type CmsPage, type InsertCmsPage,
+  type CmsPageSection, type InsertCmsPageSection,
+  type CmsBlogCategory, type InsertCmsBlogCategory,
+  type CmsBlogTag, type InsertCmsBlogTag,
+  type CmsBlogPost, type InsertCmsBlogPost,
+  type CmsBlogPostTag, type InsertCmsBlogPostTag,
+  type CmsBlogComment, type InsertCmsBlogComment,
+  type CmsVideo, type InsertCmsVideo,
+  type CmsMediaAsset, type InsertCmsMediaAsset,
+  type CmsPageAnalytics, type InsertCmsPageAnalytics
 } from "@shared/schema";
 // Unified testing system types
 import {
@@ -1562,6 +1576,62 @@ export interface IStorage {
   createMarketTrend(trend: InsertMarketTrend): Promise<MarketTrend>;
   getMarketTrends(filters?: { category?: string; source?: string; scrapeJobId?: number }): Promise<MarketTrend[]>;
   getTrendingTopics(): Promise<MarketTrend[]>;
+
+  // ============================================================================
+  // CMS (CONTENT MANAGEMENT SYSTEM) METHODS
+  // ============================================================================
+  
+  // CMS Pages methods
+  getCmsPages(filters?: { status?: string; locale?: string; isHomepage?: boolean }): Promise<any[]>;
+  getCmsPage(id: number): Promise<any | undefined>;
+  getCmsPageBySlug(slug: string): Promise<any | undefined>;
+  createCmsPage(page: any): Promise<any>;
+  updateCmsPage(id: number, updates: any): Promise<any | undefined>;
+  deleteCmsPage(id: number): Promise<void>;
+  publishCmsPage(id: number): Promise<any | undefined>;
+  
+  // CMS Page Sections methods
+  getCmsPageSections(pageId: number): Promise<any[]>;
+  getCmsPageSection(id: number): Promise<any | undefined>;
+  createCmsPageSection(section: any): Promise<any>;
+  updateCmsPageSection(id: number, updates: any): Promise<any | undefined>;
+  deleteCmsPageSection(id: number): Promise<void>;
+  
+  // CMS Blog Categories methods
+  getBlogCategories(): Promise<any[]>;
+  getBlogCategory(id: number): Promise<any | undefined>;
+  createBlogCategory(category: any): Promise<any>;
+  updateBlogCategory(id: number, updates: any): Promise<any | undefined>;
+  deleteBlogCategory(id: number): Promise<void>;
+  
+  // CMS Blog Tags methods
+  getBlogTags(): Promise<any[]>;
+  getBlogTag(id: number): Promise<any | undefined>;
+  createBlogTag(tag: any): Promise<any>;
+  
+  // CMS Blog Posts methods
+  getBlogPosts(filters?: { status?: string; locale?: string; categoryId?: number; authorId?: number }): Promise<any[]>;
+  getBlogPost(id: number): Promise<any | undefined>;
+  getBlogPostBySlug(slug: string): Promise<any | undefined>;
+  createBlogPost(post: any): Promise<any>;
+  updateBlogPost(id: number, updates: any): Promise<any | undefined>;
+  deleteBlogPost(id: number): Promise<void>;
+  
+  // CMS Videos methods
+  getVideos(filters?: { isActive?: boolean; locale?: string; category?: string }): Promise<any[]>;
+  getVideo(id: number): Promise<any | undefined>;
+  createVideo(video: any): Promise<any>;
+  updateVideo(id: number, updates: any): Promise<any | undefined>;
+  deleteVideo(id: number): Promise<void>;
+  
+  // CMS Media Assets methods
+  getMediaAssets(filters?: { fileType?: string; uploadedBy?: number }): Promise<any[]>;
+  getMediaAsset(id: number): Promise<any | undefined>;
+  createMediaAsset(asset: any): Promise<any>;
+  
+  // CMS Page Analytics methods
+  trackPageAnalytics(eventData: any): Promise<any>;
+  getPageAnalytics(filters?: { pageId?: number; blogPostId?: number; videoId?: number; dateFrom?: Date; dateTo?: Date }): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {

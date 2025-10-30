@@ -146,7 +146,20 @@ import {
   type ScrapedLead, type InsertScrapedLead, type MarketTrend, type InsertMarketTrend,
   // Form management tables and types
   formDefinitions, formSubmissions,
-  type FormDefinition, type InsertFormDefinition, type FormSubmission, type InsertFormSubmission
+  type FormDefinition, type InsertFormDefinition, type FormSubmission, type InsertFormSubmission,
+  // CMS tables and types
+  cmsPages, cmsPageSections, cmsBlogCategories, cmsBlogTags, cmsBlogPosts,
+  cmsBlogPostTags, cmsBlogComments, cmsVideos, cmsMediaAssets, cmsPageAnalytics,
+  type CmsPage, type InsertCmsPage,
+  type CmsPageSection, type InsertCmsPageSection,
+  type CmsBlogCategory, type InsertCmsBlogCategory,
+  type CmsBlogTag, type InsertCmsBlogTag,
+  type CmsBlogPost, type InsertCmsBlogPost,
+  type CmsBlogPostTag, type InsertCmsBlogPostTag,
+  type CmsBlogComment, type InsertCmsBlogComment,
+  type CmsVideo, type InsertCmsVideo,
+  type CmsMediaAsset, type InsertCmsMediaAsset,
+  type CmsPageAnalytics, type InsertCmsPageAnalytics
 } from "@shared/schema";
 
 // Placement test tables imported from main schema above
@@ -17812,5 +17825,309 @@ export class DatabaseStorage implements IStorage {
       approved: submissions.filter(s => s.status === 'approved').length,
       rejected: submissions.filter(s => s.status === 'rejected').length
     };
+  }
+
+  // ========================================================================
+  // CMS (CONTENT MANAGEMENT SYSTEM) METHODS
+  // ========================================================================
+
+  // CMS Pages methods
+  async getCmsPages(filters?: { status?: string; locale?: string; isHomepage?: boolean }): Promise<CmsPage[]> {
+    let query = db.select().from(cmsPages);
+    
+    const conditions = [];
+    if (filters?.status) {
+      conditions.push(eq(cmsPages.status, filters.status));
+    }
+    if (filters?.locale) {
+      conditions.push(eq(cmsPages.locale, filters.locale));
+    }
+    if (filters?.isHomepage !== undefined) {
+      conditions.push(eq(cmsPages.isHomepage, filters.isHomepage));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(cmsPages.createdAt));
+  }
+
+  async getCmsPage(id: number): Promise<CmsPage | undefined> {
+    const [page] = await db.select().from(cmsPages).where(eq(cmsPages.id, id));
+    return page;
+  }
+
+  async getCmsPageBySlug(slug: string): Promise<CmsPage | undefined> {
+    const [page] = await db.select().from(cmsPages).where(eq(cmsPages.slug, slug));
+    return page;
+  }
+
+  async createCmsPage(page: InsertCmsPage): Promise<CmsPage> {
+    const [created] = await db.insert(cmsPages).values(page).returning();
+    return created;
+  }
+
+  async updateCmsPage(id: number, updates: Partial<CmsPage>): Promise<CmsPage | undefined> {
+    const [updated] = await db.update(cmsPages)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(cmsPages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCmsPage(id: number): Promise<void> {
+    await db.delete(cmsPageSections).where(eq(cmsPageSections.pageId, id));
+    await db.delete(cmsPages).where(eq(cmsPages.id, id));
+  }
+
+  async publishCmsPage(id: number): Promise<CmsPage | undefined> {
+    const [published] = await db.update(cmsPages)
+      .set({ 
+        status: 'published',
+        publishedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(cmsPages.id, id))
+      .returning();
+    return published;
+  }
+
+  // CMS Page Sections methods
+  async getCmsPageSections(pageId: number): Promise<CmsPageSection[]> {
+    return await db.select()
+      .from(cmsPageSections)
+      .where(eq(cmsPageSections.pageId, pageId))
+      .orderBy(cmsPageSections.sortOrder);
+  }
+
+  async getCmsPageSection(id: number): Promise<CmsPageSection | undefined> {
+    const [section] = await db.select().from(cmsPageSections).where(eq(cmsPageSections.id, id));
+    return section;
+  }
+
+  async createCmsPageSection(section: InsertCmsPageSection): Promise<CmsPageSection> {
+    const [created] = await db.insert(cmsPageSections).values(section).returning();
+    return created;
+  }
+
+  async updateCmsPageSection(id: number, updates: Partial<CmsPageSection>): Promise<CmsPageSection | undefined> {
+    const [updated] = await db.update(cmsPageSections)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(cmsPageSections.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCmsPageSection(id: number): Promise<void> {
+    await db.delete(cmsPageSections).where(eq(cmsPageSections.id, id));
+  }
+
+  // CMS Blog Categories methods
+  async getBlogCategories(): Promise<CmsBlogCategory[]> {
+    return await db.select().from(cmsBlogCategories).orderBy(cmsBlogCategories.name);
+  }
+
+  async getBlogCategory(id: number): Promise<CmsBlogCategory | undefined> {
+    const [category] = await db.select().from(cmsBlogCategories).where(eq(cmsBlogCategories.id, id));
+    return category;
+  }
+
+  async createBlogCategory(category: InsertCmsBlogCategory): Promise<CmsBlogCategory> {
+    const [created] = await db.insert(cmsBlogCategories).values(category).returning();
+    return created;
+  }
+
+  async updateBlogCategory(id: number, updates: Partial<CmsBlogCategory>): Promise<CmsBlogCategory | undefined> {
+    const [updated] = await db.update(cmsBlogCategories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(cmsBlogCategories.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBlogCategory(id: number): Promise<void> {
+    await db.delete(cmsBlogCategories).where(eq(cmsBlogCategories.id, id));
+  }
+
+  // CMS Blog Tags methods
+  async getBlogTags(): Promise<CmsBlogTag[]> {
+    return await db.select().from(cmsBlogTags).orderBy(cmsBlogTags.name);
+  }
+
+  async getBlogTag(id: number): Promise<CmsBlogTag | undefined> {
+    const [tag] = await db.select().from(cmsBlogTags).where(eq(cmsBlogTags.id, id));
+    return tag;
+  }
+
+  async createBlogTag(tag: InsertCmsBlogTag): Promise<CmsBlogTag> {
+    const [created] = await db.insert(cmsBlogTags).values(tag).returning();
+    return created;
+  }
+
+  // CMS Blog Posts methods
+  async getBlogPosts(filters?: { status?: string; locale?: string; categoryId?: number; authorId?: number }): Promise<CmsBlogPost[]> {
+    let query = db.select().from(cmsBlogPosts);
+    
+    const conditions = [];
+    if (filters?.status) {
+      conditions.push(eq(cmsBlogPosts.status, filters.status));
+    }
+    if (filters?.locale) {
+      conditions.push(eq(cmsBlogPosts.locale, filters.locale));
+    }
+    if (filters?.categoryId) {
+      conditions.push(eq(cmsBlogPosts.categoryId, filters.categoryId));
+    }
+    if (filters?.authorId) {
+      conditions.push(eq(cmsBlogPosts.authorId, filters.authorId));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(cmsBlogPosts.createdAt));
+  }
+
+  async getBlogPost(id: number): Promise<CmsBlogPost | undefined> {
+    const [post] = await db.select().from(cmsBlogPosts).where(eq(cmsBlogPosts.id, id));
+    return post;
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<CmsBlogPost | undefined> {
+    const [post] = await db.select().from(cmsBlogPosts).where(eq(cmsBlogPosts.slug, slug));
+    return post;
+  }
+
+  async createBlogPost(post: InsertCmsBlogPost): Promise<CmsBlogPost> {
+    const [created] = await db.insert(cmsBlogPosts).values(post).returning();
+    return created;
+  }
+
+  async updateBlogPost(id: number, updates: Partial<CmsBlogPost>): Promise<CmsBlogPost | undefined> {
+    const [updated] = await db.update(cmsBlogPosts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(cmsBlogPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBlogPost(id: number): Promise<void> {
+    await db.delete(cmsBlogPostTags).where(eq(cmsBlogPostTags.postId, id));
+    await db.delete(cmsBlogComments).where(eq(cmsBlogComments.postId, id));
+    await db.delete(cmsBlogPosts).where(eq(cmsBlogPosts.id, id));
+  }
+
+  // CMS Videos methods
+  async getVideos(filters?: { isActive?: boolean; locale?: string; category?: string }): Promise<CmsVideo[]> {
+    let query = db.select().from(cmsVideos);
+    
+    const conditions = [];
+    if (filters?.isActive !== undefined) {
+      conditions.push(eq(cmsVideos.isActive, filters.isActive));
+    }
+    if (filters?.locale) {
+      conditions.push(eq(cmsVideos.locale, filters.locale));
+    }
+    if (filters?.category) {
+      conditions.push(eq(cmsVideos.category, filters.category));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(cmsVideos.createdAt));
+  }
+
+  async getVideo(id: number): Promise<CmsVideo | undefined> {
+    const [video] = await db.select().from(cmsVideos).where(eq(cmsVideos.id, id));
+    return video;
+  }
+
+  async createVideo(video: InsertCmsVideo): Promise<CmsVideo> {
+    const [created] = await db.insert(cmsVideos).values(video).returning();
+    return created;
+  }
+
+  async updateVideo(id: number, updates: Partial<CmsVideo>): Promise<CmsVideo | undefined> {
+    const [updated] = await db.update(cmsVideos)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(cmsVideos.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteVideo(id: number): Promise<void> {
+    await db.delete(cmsVideos).where(eq(cmsVideos.id, id));
+  }
+
+  // CMS Media Assets methods
+  async getMediaAssets(filters?: { fileType?: string; uploadedBy?: number }): Promise<CmsMediaAsset[]> {
+    let query = db.select().from(cmsMediaAssets);
+    
+    const conditions = [];
+    if (filters?.fileType) {
+      conditions.push(eq(cmsMediaAssets.fileType, filters.fileType));
+    }
+    if (filters?.uploadedBy) {
+      conditions.push(eq(cmsMediaAssets.uploadedBy, filters.uploadedBy));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(cmsMediaAssets.createdAt));
+  }
+
+  async getMediaAsset(id: number): Promise<CmsMediaAsset | undefined> {
+    const [asset] = await db.select().from(cmsMediaAssets).where(eq(cmsMediaAssets.id, id));
+    return asset;
+  }
+
+  async createMediaAsset(asset: InsertCmsMediaAsset): Promise<CmsMediaAsset> {
+    const [created] = await db.insert(cmsMediaAssets).values(asset).returning();
+    return created;
+  }
+
+  // CMS Page Analytics methods
+  async trackPageAnalytics(eventData: InsertCmsPageAnalytics): Promise<CmsPageAnalytics> {
+    const [tracked] = await db.insert(cmsPageAnalytics).values(eventData).returning();
+    return tracked;
+  }
+
+  async getPageAnalytics(filters?: { 
+    pageId?: number; 
+    blogPostId?: number; 
+    videoId?: number; 
+    dateFrom?: Date; 
+    dateTo?: Date 
+  }): Promise<CmsPageAnalytics[]> {
+    let query = db.select().from(cmsPageAnalytics);
+    
+    const conditions = [];
+    if (filters?.pageId) {
+      conditions.push(eq(cmsPageAnalytics.pageId, filters.pageId));
+    }
+    if (filters?.blogPostId) {
+      conditions.push(eq(cmsPageAnalytics.blogPostId, filters.blogPostId));
+    }
+    if (filters?.videoId) {
+      conditions.push(eq(cmsPageAnalytics.videoId, filters.videoId));
+    }
+    if (filters?.dateFrom) {
+      conditions.push(gte(cmsPageAnalytics.createdAt, filters.dateFrom));
+    }
+    if (filters?.dateTo) {
+      conditions.push(lte(cmsPageAnalytics.createdAt, filters.dateTo));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(cmsPageAnalytics.createdAt));
   }
 }
