@@ -391,7 +391,7 @@ export default function SmsTemplatesPage() {
     createTemplateMutation.mutate({
       ...data,
       variables: extractVariables(data.content)
-    });
+    } as any);
   };
 
   const handleEditTemplate = (data: TemplateFormData) => {
@@ -401,7 +401,7 @@ export default function SmsTemplatesPage() {
       data: {
         ...data,
         variables: extractVariables(data.content)
-      }
+      } as any
     });
   };
 
