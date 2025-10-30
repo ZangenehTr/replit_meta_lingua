@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,6 +116,9 @@ function buildValidationSchema(fields: FormField[]) {
         break;
       case 'checkbox':
         fieldSchema = z.array(z.string());
+        break;
+      case 'boolean':
+        fieldSchema = z.boolean();
         break;
       case 'file':
         fieldSchema = z.any();
@@ -433,6 +437,24 @@ export default function DynamicForm({
                             </Label>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  />
+                )}
+
+                {field.type === 'boolean' && (
+                  <Controller
+                    name={field.id}
+                    control={control}
+                    defaultValue={field.defaultValue !== undefined ? field.defaultValue : false}
+                    render={({ field: controllerField }) => (
+                      <div className="flex items-center space-x-2" data-testid={`boolean-${field.id}`}>
+                        <Switch
+                          id={field.id}
+                          checked={controllerField.value ?? false}
+                          onCheckedChange={controllerField.onChange}
+                          disabled={disabled || submitting}
+                        />
                       </div>
                     )}
                   />
