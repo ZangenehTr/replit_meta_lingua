@@ -488,6 +488,11 @@ app.use((req, res, next) => {
   app.use('/api/admin/disk', diskRouter);
   console.log('✅ Disk monitoring endpoints registered');
   
+  // Register form file upload routes (using existing authenticateToken middleware)
+  const { registerFormFileRoutes } = await import('./routes/form-file-routes.js');
+  registerFormFileRoutes(app, authenticateToken);
+  console.log('✅ Form file upload routes registered');
+  
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);

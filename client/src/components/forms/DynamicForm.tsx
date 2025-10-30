@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CalendarIcon, Upload, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { hasWidget, getWidget } from "./widgets";
 
 interface FieldValidation {
   required?: boolean;
@@ -296,13 +297,35 @@ export default function DynamicForm({
 
             const fieldError = errors[field.id]?.message as string | undefined;
 
+            // Check for custom registered widget first
+            const Widget = hasWidget(field.type) ? getWidget(field.type) : null;
+
             return (
               <div key={field.id} className="space-y-2" data-testid={`field-${field.id}`}>
                 <Label htmlFor={field.id} className={field.validation?.required ? 'after:content-["*"] after:ml-1 after:text-red-500' : ''}>
                   {fieldLabel}
                 </Label>
 
-                {field.type === 'text' && (
+                {/* Render custom widget if registered */}
+                {Widget && (
+                  <Controller
+                    name={field.id}
+                    control={control}
+                    render={({ field: controllerField }) => (
+                      <Widget
+                        field={field}
+                        value={controllerField.value}
+                        onChange={controllerField.onChange}
+                        error={fieldError}
+                        disabled={disabled || submitting}
+                        language={i18n.language}
+                      />
+                    )}
+                  />
+                )}
+
+                {/* Default built-in field types */}
+                {!Widget && field.type === 'text' && (
                   <Input
                     id={field.id}
                     {...register(field.id)}
@@ -313,7 +336,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'email' && (
+                {!Widget && field.type === 'email' && (
                   <Input
                     id={field.id}
                     type="email"
@@ -325,7 +348,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'phone' && (
+                {!Widget && field.type === 'phone' && (
                   <Input
                     id={field.id}
                     type="tel"
@@ -337,7 +360,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'number' && (
+                {!Widget && field.type === 'number' && (
                   <Input
                     id={field.id}
                     type="number"
@@ -349,7 +372,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'textarea' && (
+                {!Widget && field.type === 'textarea' && (
                   <Textarea
                     id={field.id}
                     {...register(field.id)}
@@ -361,7 +384,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'select' && (
+                {!Widget && field.type === 'select' && (
                   <Controller
                     name={field.id}
                     control={control}
@@ -386,7 +409,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'radio' && (
+                {!Widget && field.type === 'radio' && (
                   <Controller
                     name={field.id}
                     control={control}
@@ -410,7 +433,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'checkbox' && (
+                {!Widget && field.type === 'checkbox' && (
                   <Controller
                     name={field.id}
                     control={control}
@@ -442,7 +465,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'boolean' && (
+                {!Widget && field.type === 'boolean' && (
                   <Controller
                     name={field.id}
                     control={control}
@@ -460,7 +483,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'date' && (
+                {!Widget && field.type === 'date' && (
                   <Controller
                     name={field.id}
                     control={control}
@@ -498,7 +521,7 @@ export default function DynamicForm({
                   />
                 )}
 
-                {field.type === 'file' && (
+                {!Widget && field.type === 'file' && (
                   <div className="flex items-center gap-2">
                     <Input
                       id={field.id}
