@@ -63,8 +63,12 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
       - Admin-only access with role-based permissions
       - Database: form_definitions & form_submissions tables
       - Components: FormBuilder.tsx, DynamicForm.tsx
-      - API: /api/admin/forms, /api/forms/:id/submit
+      - API: /api/admin/forms, /api/forms/:id/submit, /api/forms/:id (public endpoint with full multi-language support)
       - Note: File upload field type deferred until multipart file handling is implemented
+      - **Pilot Migration** (Oct 30, 2025): Forgot Password form successfully migrated from hard-coded to dynamic (Form ID: 1)
+        - Migration Pattern: Fetch form definition → Use DynamicForm component → Preserve custom styling → Keep original submission endpoint
+        - Verified: Multi-language support, custom styling preservation, submission logic maintained, no regressions
+        - Ready to migrate remaining 22+ forms using this proven pattern
     - **Front Desk Clerk Pages** (Oct 2025): Fully internationalized with comprehensive i18n support
       - Dashboard: 92+ translation calls, quick actions, stats cards, task management, trial scheduling
       - Walk-in Intake: 200+ translations, multi-step form with memoized validation schema, RTL-aware navigation
