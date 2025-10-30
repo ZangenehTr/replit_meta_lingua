@@ -77,10 +77,15 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
         - **Call Center Forms**: New Lead Intake (ID:12)
         - **Front Desk Forms**: SMS Template (ID:13), Call Logging (ID:14)
         - **Verification** (Oct 30, 2025): ✅ 100% field coverage vs Zod schemas, ✅ 100% EN/FA/AR label coverage (spot-checked IDs 8, 12, 19), ✅ Architect approved
-        - **Migration Progress** (Oct 30, 2025): **6 of 18 forms migrated (33%)** ✅
+        - **Migration Progress** (Oct 30, 2025 Session 2): **6 of 18 forms migrated (33%), 1 attempted with feature loss** 
           - **Completed Migrations**: Forgot Password (ID:1), Reset Password (ID:4), Course Creation (ID:10), Target Setting (ID:6), Communication Log (ID:7), Teacher Availability (ID:8)
-          - **Pending Migration**: 8 forms (User Profile, Assignment Creation, Video Lesson, Video Course, SMS Template, Call Logging, Teacher Management, Lead Management, New Lead Intake, Class Observation)
-          - **Deferred Forms**: 4 forms requiring DynamicForm enhancements (Observation Questionnaire - nested arrays, Walk-in Intake - multi-step, Learning Profile - array fields, Checkout/Payment - payment processing)
+          - **Attempted - Feature Loss Identified**: SMS Template (ID:13) - Basic CRUD migrated but lost variable insertion UI feature
+          - **Migration Challenges Identified**:
+            - **SMS Template (ID:13)**: Variable insertion button UI removed (users can still type {{variable}} manually)
+            - **Assignment Creation (ID:9)**: Requires TipTap rich text editor, audio recording, file uploads - beyond DynamicForm capabilities
+            - **Call Logging (ID:14)**: 20+ fields with call timer, auto-save, complex conditional logic - too complex for current DynamicForm
+            - **Pattern Discovered**: Simple embedded dialog forms migrate well, complex feature-rich forms need DynamicForm enhancements or custom implementations
+          - **Recommended Deferred**: Assignment Creation (ID:9), Call Logging (ID:14), forms with rich text editors, file uploads, or custom UI widgets
           - **Excluded from Migration**: Login (ID:2), Register (ID:3) - Complex custom logic (OTP toggle, conditional fields, custom action buttons)
         - **Migration Pattern Established** (Oct 30, 2025):
           1. Add FormDefinition interface and DynamicForm import
