@@ -141,6 +141,7 @@ import AdminCommunicationsPage from "@/pages/admin/communications";
 import AdminSupervisionPage from "@/pages/admin/supervision";
 import MentorMatchingPage from "@/pages/admin/mentor-matching";
 import UserManagement from "@/pages/admin/user-management";
+import FormManagement from "@/pages/admin/form-management";
 import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
@@ -1018,6 +1019,11 @@ function Router() {
       <Route path="/admin/user-management">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <UserManagement />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/form-management">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <FormManagement />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/teacher-student-matching">
