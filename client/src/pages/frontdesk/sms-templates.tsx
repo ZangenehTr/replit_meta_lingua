@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import DynamicForm from '@/components/forms/DynamicForm';
 import { 
   Card, 
   CardContent, 
@@ -158,21 +159,13 @@ interface SendSmsRequest {
   idempotencyKey: string;
 }
 
-// Form validation schemas
-const templateFormSchema = z.object({
-  name: z.string().min(1, 'Template name is required').max(100, 'Name too long'),
-  content: z.string().min(1, 'Template content is required').max(1000, 'Content exceeds SMS limit'),
-  categoryId: z.string().min(1, 'Category is required'),
-  tags: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'archived']).default('active'),
-});
+// Schema removed - now using dynamic form (Form ID: 13)
 
 const sendSmsSchema = z.object({
   recipients: z.string().min(1, 'Recipients are required'),
   variableData: z.record(z.string()).optional(),
 });
 
-type TemplateFormData = z.infer<typeof templateFormSchema>;
 type SendSmsFormData = z.infer<typeof sendSmsSchema>;
 
 export default function SmsTemplatesPage() {
@@ -222,17 +215,18 @@ export default function SmsTemplatesPage() {
     queryFn: () => apiRequest('/api/sms-templates/analytics')
   });
 
+  // Fetch SMS Template form definition (ID: 13)
+  const { data: smsTemplateFormDefinition, isLoading: smsTemplateFormLoading } = useQuery({
+    queryKey: ['/api/forms', 13],
+    enabled: showCreateDialog || showEditDialog,
+  });
+
   // Mutations
   const createTemplateMutation = useMutation({
-    mutationFn: (data: TemplateFormData) => 
+    mutationFn: (data: any) => 
       apiRequest('/api/sms-templates', {
         method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          categoryId: parseInt(data.categoryId),
-          tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
-          variables: extractVariables(data.content)
-        })
+        body: JSON.stringify(data)
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sms-templates'] });
@@ -252,15 +246,10 @@ export default function SmsTemplatesPage() {
   });
 
   const updateTemplateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<TemplateFormData> }) =>
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
       apiRequest(`/api/sms-templates/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({
-          ...data,
-          categoryId: data.categoryId ? parseInt(data.categoryId) : undefined,
-          tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : undefined,
-          variables: data.content ? extractVariables(data.content) : undefined
-        })
+        body: JSON.stringify(data)
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sms-templates'] });
@@ -310,21 +299,7 @@ export default function SmsTemplatesPage() {
     }
   });
 
-  // Forms
-  const createForm = useForm<TemplateFormData>({
-    resolver: zodResolver(templateFormSchema),
-    defaultValues: {
-      name: '',
-      content: '',
-      categoryId: '',
-      tags: '',
-      status: 'active'
-    }
-  });
-
-  const editForm = useForm<TemplateFormData>({
-    resolver: zodResolver(templateFormSchema),
-  });
+  // createForm and editForm removed - now using DynamicForm (Form ID: 13)
 
   const sendForm = useForm<SendSmsFormData>({
     resolver: zodResolver(sendSmsSchema),
@@ -387,15 +362,27 @@ export default function SmsTemplatesPage() {
     });
   }, [templates, searchQuery, selectedCategory, selectedStatus]);
 
-  // Event handlers
-  const handleCreateTemplate = (data: TemplateFormData) => {
-    createTemplateMutation.mutate(data);
+  // Event handlers - Async handlers for DynamicForm
+  const handleCreateTemplate = async (data: any) => {
+    return createTemplateMutation.mutateAsync({
+      ...data,
+      categoryId: parseInt(data.categoryId),
+      tags: data.tags ? data.tags.split(',').map((tag: string) => tag.trim()) : [],
+      variables: extractVariables(data.content)
+    });
   };
 
-  const handleEditTemplate = (data: TemplateFormData) => {
-    if (selectedTemplate) {
-      updateTemplateMutation.mutate({ id: selectedTemplate.id, data });
-    }
+  const handleEditTemplate = async (data: any) => {
+    if (!selectedTemplate) throw new Error("No template selected");
+    return updateTemplateMutation.mutateAsync({ 
+      id: selectedTemplate.id, 
+      data: {
+        ...data,
+        categoryId: parseInt(data.categoryId),
+        tags: data.tags ? data.tags.split(',').map((tag: string) => tag.trim()) : [],
+        variables: extractVariables(data.content)
+      } 
+    });
   };
 
   const handleDeleteTemplate = (template: SmsTemplate) => {
@@ -433,12 +420,7 @@ export default function SmsTemplatesPage() {
     setShowPreviewDialog(true);
   };
 
-  const handleInsertVariable = (variableName: string, formName: 'create' | 'edit') => {
-    const form = formName === 'create' ? createForm : editForm;
-    const currentContent = form.getValues('content');
-    const newContent = currentContent + `{{${variableName}}}`;
-    form.setValue('content', newContent);
-  };
+  // handleInsertVariable removed - no longer needed with DynamicForm
 
   if (templatesLoading || categoriesLoading) {
     return (
@@ -594,13 +576,6 @@ export default function SmsTemplatesPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
                               setSelectedTemplate(template);
-                              editForm.reset({
-                                name: template.name,
-                                content: template.content,
-                                categoryId: template.categoryId.toString(),
-                                tags: template.tags.join(', '),
-                                status: template.status
-                              });
                               setShowEditDialog(true);
                             }}>
                               <Edit className="h-4 w-4 mr-2" />
@@ -812,163 +787,18 @@ export default function SmsTemplatesPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <Form {...createForm}>
-            <form onSubmit={createForm.handleSubmit(handleCreateTemplate)} className="space-y-4">
-              <FormField
-                control={createForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{isRTL ? 'نام قالب' : 'Template Name'}</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder={isRTL ? 'نام قالب را وارد کنید' : 'Enter template name'} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={createForm.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{isRTL ? 'دسته‌بندی' : 'Category'}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={isRTL ? 'دسته‌بندی را انتخاب کنید' : 'Select a category'} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category: SmsTemplateCategory) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.displayName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={createForm.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{isRTL ? 'محتوای پیامک' : 'SMS Content'}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder={isRTL ? 'محتوای پیامک را وارد کنید...' : 'Enter SMS content...'}
-                        className="min-h-[120px]"
-                      />
-                    </FormControl>
-                    <FormDescription className="flex justify-between">
-                      <span>
-                        {isRTL ? 'متغیرها: {{نام}}, {{تلفن}}, {{تاریخ}}' : 'Variables: {{name}}, {{phone}}, {{date}}'}
-                      </span>
-                      <span>
-                        {getCharacterCount(field.value)}/1000 | {getSmsCount(field.value)} SMS
-                      </span>
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Variable insertion helper */}
-              <div className="space-y-2">
-                <Label>{isRTL ? 'متغیرهای موجود' : 'Available Variables'}</Label>
-                <div className="flex flex-wrap gap-2">
-                  {variables.map((variable: SmsTemplateVariable) => (
-                    <Button
-                      key={variable.id}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleInsertVariable(variable.variableName, 'create')}
-                      className="text-xs"
-                    >
-                      <Hash className="h-3 w-3 mr-1" />
-                      {variable.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={createForm.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{isRTL ? 'برچسب‌ها' : 'Tags'}</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder={isRTL ? 'برچسب1, برچسب2' : 'tag1, tag2'} />
-                      </FormControl>
-                      <FormDescription>
-                        {isRTL ? 'برچسب‌ها را با کاما جدا کنید' : 'Separate tags with commas'}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={createForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{isRTL ? 'وضعیت' : 'Status'}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={isRTL ? 'وضعیت را انتخاب کنید' : 'Select status'} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">{isRTL ? 'فعال' : 'Active'}</SelectItem>
-                          <SelectItem value="inactive">{isRTL ? 'غیرفعال' : 'Inactive'}</SelectItem>
-                          <SelectItem value="archived">{isRTL ? 'آرشیو شده' : 'Archived'}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCreateDialog(false)}
-                >
-                  {isRTL ? 'لغو' : 'Cancel'}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createTemplateMutation.isPending}
-                  data-testid="button-submit-template"
-                >
-                  {createTemplateMutation.isPending ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      {isRTL ? 'در حال ایجاد...' : 'Creating...'}
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      {isRTL ? 'ایجاد قالب' : 'Create Template'}
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          {smsTemplateFormLoading ? (
+            <div className="py-8 text-center">Loading form...</div>
+          ) : smsTemplateFormDefinition ? (
+            <DynamicForm
+              formDefinition={smsTemplateFormDefinition}
+              onSubmit={handleCreateTemplate}
+              disabled={createTemplateMutation.isPending}
+              showTitle={false}
+            />
+          ) : (
+            <div className="py-8 text-center text-red-600">Failed to load form definition</div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -982,162 +812,25 @@ export default function SmsTemplatesPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditTemplate)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{isRTL ? 'نام قالب' : 'Template Name'}</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder={isRTL ? 'نام قالب را وارد کنید' : 'Enter template name'} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={editForm.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{isRTL ? 'دسته‌بندی' : 'Category'}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={isRTL ? 'دسته‌بندی را انتخاب کنید' : 'Select a category'} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category: SmsTemplateCategory) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.displayName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={editForm.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{isRTL ? 'محتوای پیامک' : 'SMS Content'}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder={isRTL ? 'محتوای پیامک را وارد کنید...' : 'Enter SMS content...'}
-                        className="min-h-[120px]"
-                      />
-                    </FormControl>
-                    <FormDescription className="flex justify-between">
-                      <span>
-                        {isRTL ? 'متغیرها: {{نام}}, {{تلفن}}, {{تاریخ}}' : 'Variables: {{name}}, {{phone}}, {{date}}'}
-                      </span>
-                      <span>
-                        {getCharacterCount(field.value || '')}/1000 | {getSmsCount(field.value || '')} SMS
-                      </span>
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Variable insertion helper */}
-              <div className="space-y-2">
-                <Label>{isRTL ? 'متغیرهای موجود' : 'Available Variables'}</Label>
-                <div className="flex flex-wrap gap-2">
-                  {variables.map((variable: SmsTemplateVariable) => (
-                    <Button
-                      key={variable.id}
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleInsertVariable(variable.variableName, 'edit')}
-                      className="text-xs"
-                    >
-                      <Hash className="h-3 w-3 mr-1" />
-                      {variable.displayName}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{isRTL ? 'برچسب‌ها' : 'Tags'}</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder={isRTL ? 'برچسب1, برچسب2' : 'tag1, tag2'} />
-                      </FormControl>
-                      <FormDescription>
-                        {isRTL ? 'برچسب‌ها را با کاما جدا کنید' : 'Separate tags with commas'}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{isRTL ? 'وضعیت' : 'Status'}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={isRTL ? 'وضعیت را انتخاب کنید' : 'Select status'} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">{isRTL ? 'فعال' : 'Active'}</SelectItem>
-                          <SelectItem value="inactive">{isRTL ? 'غیرفعال' : 'Inactive'}</SelectItem>
-                          <SelectItem value="archived">{isRTL ? 'آرشیو شده' : 'Archived'}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowEditDialog(false)}
-                >
-                  {isRTL ? 'لغو' : 'Cancel'}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={updateTemplateMutation.isPending}
-                >
-                  {updateTemplateMutation.isPending ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      {isRTL ? 'در حال به‌روزرسانی...' : 'Updating...'}
-                    </>
-                  ) : (
-                    <>
-                      <Edit className="h-4 w-4 mr-2" />
-                      {isRTL ? 'به‌روزرسانی قالب' : 'Update Template'}
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          {smsTemplateFormLoading ? (
+            <div className="py-8 text-center">Loading form...</div>
+          ) : smsTemplateFormDefinition ? (
+            <DynamicForm
+              formDefinition={smsTemplateFormDefinition}
+              onSubmit={handleEditTemplate}
+              disabled={updateTemplateMutation.isPending}
+              showTitle={false}
+              initialValues={selectedTemplate ? {
+                name: selectedTemplate.name,
+                content: selectedTemplate.content,
+                categoryId: selectedTemplate.categoryId.toString(),
+                tags: selectedTemplate.tags.join(', '),
+                status: selectedTemplate.status
+              } : undefined}
+            />
+          ) : (
+            <div className="py-8 text-center text-red-600">Failed to load form definition</div>
+          )}
         </DialogContent>
       </Dialog>
 
