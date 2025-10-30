@@ -14,6 +14,13 @@ import {
 } from "lucide-react";
 import DynamicForm from "@/components/forms/DynamicForm";
 
+interface FormDefinition {
+  id: number;
+  title: string;
+  fields: any[];
+  [key: string]: any;
+}
+
 export default function ResetPassword() {
   const { t } = useTranslation(['auth', 'common']);
   const { isRTL } = useLanguage();
@@ -36,7 +43,7 @@ export default function ResetPassword() {
   }, [t]);
 
   // Fetch Reset Password form definition (Form ID 4)
-  const { data: formDefinition, isLoading: formLoading } = useQuery({
+  const { data: formDefinition, isLoading: formLoading } = useQuery<FormDefinition>({
     queryKey: ['/api/forms', 4],
   });
 
@@ -173,15 +180,14 @@ export default function ResetPassword() {
                     <Loader2 className="w-8 h-8 text-white animate-spin" />
                   </div>
                 ) : formDefinition ? (
-                  <DynamicForm
-                    formDefinition={formDefinition}
-                    onSubmit={handleSubmit}
-                    isSubmitting={isLoading}
-                    submitButtonClassName="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]"
-                    fieldClassName="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                    labelClassName="text-white/90 text-sm font-medium"
-                    errorClassName="text-sm text-red-300"
-                  />
+                  <div className="[&_input]:bg-white/10 [&_input]:border-white/20 [&_input]:text-white [&_input]:placeholder:text-white/50 [&_input]:h-12 [&_input]:rounded-xl [&_input]:focus:bg-white/15 [&_input]:focus:border-white/30 [&_label]:text-white/90 [&_label]:text-sm [&_label]:font-medium [&_button[type=submit]]:w-full [&_button[type=submit]]:h-12 [&_button[type=submit]]:bg-gradient-to-r [&_button[type=submit]]:from-purple-500 [&_button[type=submit]]:to-pink-500 hover:[&_button[type=submit]]:from-purple-600 hover:[&_button[type=submit]]:to-pink-600 [&_button[type=submit]]:text-white [&_button[type=submit]]:font-semibold [&_button[type=submit]]:rounded-xl [&_button[type=submit]]:shadow-lg [&_button[type=submit]]:shadow-purple-500/25 [&_button[type=submit]]:transition-all [&_button[type=submit]]:duration-200 hover:[&_button[type=submit]]:scale-[1.02] [&_.error-message]:text-red-300 [&_.error-message]:text-sm">
+                    <DynamicForm
+                      formDefinition={formDefinition}
+                      onSubmit={handleSubmit}
+                      disabled={isLoading}
+                      showTitle={false}
+                    />
+                  </div>
                 ) : (
                   <div className="text-center text-white/80 text-sm">
                     {t('common:formNotFound', 'Form definition not found')}

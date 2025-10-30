@@ -16,6 +16,13 @@ import DynamicForm from "@/components/forms/DynamicForm";
 
 const FORGOT_PASSWORD_FORM_ID = 1;
 
+interface FormDefinition {
+  id: number;
+  title: string;
+  fields: any[];
+  [key: string]: any;
+}
+
 export default function ForgotPassword() {
   const { t } = useTranslation(['auth', 'common']);
   const { isRTL } = useLanguage();
@@ -26,7 +33,7 @@ export default function ForgotPassword() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Fetch form definition
-  const { data: formDefinition, isLoading: formLoading } = useQuery({
+  const { data: formDefinition, isLoading: formLoading } = useQuery<FormDefinition>({
     queryKey: ['/api/forms', FORGOT_PASSWORD_FORM_ID],
   });
 
