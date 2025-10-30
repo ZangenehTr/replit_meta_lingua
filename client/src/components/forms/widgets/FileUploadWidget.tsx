@@ -63,7 +63,7 @@ export function FileUploadWidget({ field, value, onChange, error, disabled, lang
         formData.append('file', fileArray[0]);
       }
 
-      formData.append('subfolder', config.uploadPath || field.id);
+      formData.append('subfolder', config.subfolder || config.uploadPath || field.id);
       if (config.accept) {
         formData.append('allowedTypes', JSON.stringify(config.accept));
       }
