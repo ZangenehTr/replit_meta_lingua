@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -1089,7 +1090,12 @@ function Router() {
           
           // If not authenticated, show public homepage
           if (!user) {
-            return <div>Public Homepage - Coming Soon</div>;
+            const PublicHome = lazy(() => import("@/pages/public/home"));
+            return (
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+                <PublicHome />
+              </Suspense>
+            );
           }
           
           // Role-based redirects for authenticated users
