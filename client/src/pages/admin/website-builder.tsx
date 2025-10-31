@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import type { CmsPage, CmsPageSection, InsertCmsPage } from "@shared/schema";
 import { 
   Globe, 
   Layout, 
@@ -56,54 +58,9 @@ import {
   Plus
 } from "lucide-react";
 
-interface WebsiteTemplate {
-  id: number;
-  name: string;
-  nameEn: string;
-  nameFa: string;
-  category: 'landing' | 'course_showcase' | 'institute_profile' | 'campaign';
-  preview: string;
-  features: string[];
-  featuresEn: string[];
-  featuresFa: string[];
-  isResponsive: boolean;
-  isConverted: boolean;
-  isRtlSupported: boolean;
-}
-
-interface WebsitePage {
-  id: number;
-  title: string;
-  titleEn: string;
-  titleFa: string;
-  slug: string;
-  template: string;
-  status: 'draft' | 'published' | 'archived';
-  language: 'en' | 'fa' | 'both';
-  direction: 'ltr' | 'rtl' | 'auto';
-  visits: number;
-  conversions: number;
-  lastModified: string;
-  content: {
-    sections: WebsiteSection[];
-  };
-}
-
-interface WebsiteSection {
-  id: string;
-  type: string;
-  label: string;
-  labelEn: string;
-  labelFa: string;
-  content: {
-    en: any;
-    fa: any;
-  };
-  styles: {
-    direction: 'ltr' | 'rtl' | 'auto';
-    textAlign: 'left' | 'right' | 'center';
-    fontFamily: string;
-  };
+// Extend CmsPage with sections for UI display
+interface CmsPageWithSections extends CmsPage {
+  sections?: CmsPageSection[];
 }
 
 export default function WebsiteBuilderPage() {
@@ -111,37 +68,40 @@ export default function WebsiteBuilderPage() {
   const { toast } = useToast();
   const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
-  const [selectedTemplate, setSelectedTemplate] = useState<WebsiteTemplate | null>(null);
+  const { user } = useAuth();
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [activeSection, setActiveSection] = useState('hero');
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'fa'>('en');
-  const [isRtlMode, setIsRtlMode] = useState(false);
-  const [editingPage, setEditingPage] = useState<WebsitePage | null>(null);
+  const [editingPage, setEditingPage] = useState<CmsPage | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newPageData, setNewPageData] = useState({
     title: '',
-    titleEn: '',
-    titleFa: '',
     slug: '',
-    template: '',
-    language: 'en',
-    direction: 'ltr'
+    locale: 'en',
+    direction: 'ltr',
+    isHomepage: false
   });
 
-  // Fetch website pages from API
-  const { data: websitePages = [], isLoading: pagesLoading } = useQuery<WebsitePage[]>({
-    queryKey: ['/api/website-pages']
+  // Fetch CMS pages from API
+  const { data: cmsPages = [], isLoading: pagesLoading } = useQuery<CmsPage[]>({
+    queryKey: ['/api/cms/pages']
   });
 
-  // Fetch website templates from API
-  const { data: websiteTemplates = [], isLoading: templatesLoading } = useQuery<WebsiteTemplate[]>({
-    queryKey: ['/api/website-templates']
-  });
+  // Stub for websiteTemplates - templates tab will be phased out in favor of section management
+  const websiteTemplates: any[] = [];
+  const selectedTemplate: any = null;
+  const handleTemplateSelection = (template: any) => {
+    // Stub function - templates are being phased out
+    toast({
+      title: "Templates Deprecated",
+      description: "Templates are being replaced with flexible section management. Please use the page builder instead.",
+      variant: "default"
+    });
+  };
 
-  // Create new website page mutation
+  // Create new CMS page mutation
   const createPageMutation = useMutation({
-    mutationFn: async (pageData: any) => {
-      return apiRequest('/api/website-pages', {
+    mutationFn: async (pageData: Partial<InsertCmsPage>) => {
+      return apiRequest('/api/cms/pages', {
         method: 'POST',
         body: pageData
       });
@@ -149,19 +109,17 @@ export default function WebsiteBuilderPage() {
     onSuccess: () => {
       toast({
         title: t('common:toast.pageCreated'),
-        description: "New website page has been created successfully.",
+        description: "New CMS page has been created successfully.",
       });
       setIsCreateDialogOpen(false);
       setNewPageData({
         title: '',
-        titleEn: '',
-        titleFa: '',
         slug: '',
-        template: '',
-        language: 'en',
-        direction: 'ltr'
+        locale: 'en',
+        direction: 'ltr',
+        isHomepage: false
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cms/pages'] });
     },
     onError: (error) => {
       toast({
@@ -172,20 +130,47 @@ export default function WebsiteBuilderPage() {
     }
   });
 
-  // Update website page mutation
+  // Update CMS page mutation
   const updatePageMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: any }) => {
-      return apiRequest(`/api/website-pages/${id}`, {
+    mutationFn: async ({ id, data }: { id: number, data: Partial<CmsPage> }) => {
+      // Filter to only include editable fields (InsertCmsPage schema)
+      const updateData: Partial<InsertCmsPage> = {
+        title: data.title,
+        titleEn: data.titleEn,
+        titleFa: data.titleFa,
+        titleAr: data.titleAr,
+        slug: data.slug,
+        template: data.template,
+        status: data.status,
+        locale: data.locale,
+        direction: data.direction,
+        isHomepage: data.isHomepage,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
+        metaKeywords: data.metaKeywords,
+        ogImage: data.ogImage,
+        publishedAt: data.publishedAt,
+        createdBy: data.createdBy,
+        updatedBy: user?.id
+      };
+      
+      // Remove undefined fields
+      Object.keys(updateData).forEach(key => 
+        updateData[key as keyof InsertCmsPage] === undefined && delete updateData[key as keyof InsertCmsPage]
+      );
+      
+      return apiRequest(`/api/cms/pages/${id}`, {
         method: 'PUT',
-        body: data
+        body: updateData
       });
     },
     onSuccess: () => {
       toast({
         title: t('common:toast.pageUpdated'),
-        description: "Website page has been updated successfully.",
+        description: "CMS page has been updated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
+      setEditingPage(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/cms/pages'] });
     },
     onError: (error) => {
       toast({
@@ -219,163 +204,65 @@ export default function WebsiteBuilderPage() {
     }
   });
 
-  // Handle template selection
-  const handleTemplateSelection = (template: WebsiteTemplate) => {
-    setSelectedTemplate(template);
-    setIsRtlMode(template.isRtlSupported);
-  };
-
   // Handle page creation
   const handleCreatePage = async () => {
-    if (!selectedTemplate) {
+    if (!newPageData.title || !newPageData.slug) {
       toast({
         title: t('common:toast.error'),
-        description: "Please select a template first.",
+        description: "Please provide title and slug for the page.",
         variant: "destructive",
       });
       return;
     }
 
-    const fullPageData = {
-      ...newPageData,
-      template: selectedTemplate.id,
+    if (!user?.id) {
+      toast({
+        title: t('common:toast.error'),
+        description: "User not authenticated.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const cmsPageData: Partial<InsertCmsPage> = {
+      title: newPageData.title,
+      slug: newPageData.slug,
+      locale: newPageData.locale as any,
+      direction: newPageData.direction as any,
+      isHomepage: newPageData.isHomepage,
       status: 'draft',
-      content: {
-        sections: generateDefaultSections(selectedTemplate)
-      }
+      createdBy: user.id
     };
 
-    createPageMutation.mutate(fullPageData);
+    createPageMutation.mutate(cmsPageData);
   };
 
-  // Generate default sections based on template
-  const generateDefaultSections = (template: WebsiteTemplate): WebsiteSection[] => {
-    const sections: WebsiteSection[] = [];
-    
-    // Hero section
-    sections.push({
-      id: 'hero',
-      type: 'hero',
-      label: 'Hero Section',
-      labelEn: 'Hero Section',
-      labelFa: 'بخش اصلی',
-      content: {
-        en: {
-          title: 'Learn English with Expert Teachers',
-          subtitle: 'Join our comprehensive English learning program',
-          buttonText: 'Start Learning',
-          backgroundImage: '/api/placeholder/1200/600'
-        },
-        fa: {
-          title: 'یادگیری انگلیسی با اساتید متخصص',
-          subtitle: 'به برنامه جامع آموزش انگلیسی ما بپیوندید',
-          buttonText: 'شروع یادگیری',
-          backgroundImage: '/api/placeholder/1200/600'
-        }
-      },
-      styles: {
-        direction: isRtlMode ? 'rtl' : 'ltr',
-        textAlign: isRtlMode ? 'right' : 'left',
-        fontFamily: isRtlMode ? 'Vazir' : 'Inter'
-      }
-    });
-
-    // Courses section
-    sections.push({
-      id: 'courses',
-      type: 'courses',
-      label: 'Courses Section',
-      labelEn: 'Courses Section',
-      labelFa: 'بخش دوره‌ها',
-      content: {
-        en: {
-          title: 'Our Courses',
-          subtitle: 'Choose from our wide range of English courses',
-          showPricing: true,
-          showOnlinePayment: true,
-          coursesDisplayMode: 'cards'
-        },
-        fa: {
-          title: 'دوره‌های ما',
-          subtitle: 'از میان طیف گسترده‌ای از دوره‌های انگلیسی انتخاب کنید',
-          showPricing: true,
-          showOnlinePayment: true,
-          coursesDisplayMode: 'cards'
-        }
-      },
-      styles: {
-        direction: isRtlMode ? 'rtl' : 'ltr',
-        textAlign: isRtlMode ? 'right' : 'left',
-        fontFamily: isRtlMode ? 'Vazir' : 'Inter'
-      }
-    });
-
-    return sections;
-  };
-
-  // Handle page deployment
-  const handleDeployment = async (pageId: number) => {
-    const page = websitePages.find(p => p.id === pageId);
-    if (!page) return;
-
-    const deploymentData = {
-      pageId: pageId,
-      domain: `${page.slug}.iranlearn.ir`,
-      customDomain: null,
-      sslEnabled: true,
-      seoSettings: {
-        title: page.title,
-        description: `${page.title} - Professional English Learning`,
-        keywords: ['english', 'learning', 'courses', 'iran', 'language'],
-        ogImage: '/api/placeholder/1200/630'
-      },
-      analytics: {
-        googleAnalytics: '',
-        facebookPixel: '',
-        hotjar: ''
-      },
-      integrations: {
-        paymentGateway: 'shetab',
-        smsProvider: 'kavenegar',
-        emailProvider: 'internal'
-      }
-    };
-
-    deployWebsiteMutation.mutate(deploymentData);
+  const handleDeployment = (pageId: number) => {
+    deployWebsiteMutation.mutate({ pageId });
   };
 
   return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="max-w-7xl mx-auto">
-          {/* Header - Mobile First */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
-                {t('admin:websiteBuilder.title')}
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                {t('admin:websiteBuilder.subtitle')}
-              </p>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button 
-                onClick={() => setCurrentLanguage(currentLanguage === 'en' ? 'fa' : 'en')}
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs sm:text-sm"
-              >
-                <Languages className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                {currentLanguage === 'en' ? 'English' : 'فارسی'}
-              </Button>
-              <Button 
-                onClick={() => setIsRtlMode(!isRtlMode)}
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs sm:text-sm"
-              >
-                <AlignRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                {isRtlMode ? 'RTL' : 'LTR'}
-              </Button>
+    <AppLayout>
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              CMS Page Builder
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Create and manage website pages with multi-language support
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={() => setCurrentLanguage(currentLanguage === 'en' ? 'fa' : 'en')}
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs sm:text-sm"
+            >
+              <Languages className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              {currentLanguage === 'en' ? 'English' : 'فارسی'}
+            </Button>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="h-8 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700">
@@ -411,35 +298,25 @@ export default function WebsiteBuilderPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="titleEn">Title (English)</Label>
-                      <Input
-                        id="titleEn"
-                        value={newPageData.titleEn}
-                        onChange={(e) => setNewPageData({ ...newPageData, titleEn: e.target.value })}
-                        placeholder="English title"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="titleFa">Title (Persian)</Label>
-                      <Input
-                        id="titleFa"
-                        value={newPageData.titleFa}
-                        onChange={(e) => setNewPageData({ ...newPageData, titleFa: e.target.value })}
-                        placeholder="عنوان فارسی"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="language">Language</Label>
-                      <Select value={newPageData.language} onValueChange={(value) => setNewPageData({ ...newPageData, language: value })}>
+                      <Label htmlFor="locale">Language/Locale</Label>
+                      <Select value={newPageData.locale} onValueChange={(value) => setNewPageData({ ...newPageData, locale: value })}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select language" />
+                          <SelectValue placeholder="Select locale" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="en">English</SelectItem>
                           <SelectItem value="fa">فارسی</SelectItem>
-                          <SelectItem value="both">Both</SelectItem>
+                          <SelectItem value="ar">العربية</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="isHomepage">Set as Homepage</Label>
+                      <Switch
+                        id="isHomepage"
+                        checked={newPageData.isHomepage}
+                        onCheckedChange={(checked) => setNewPageData({ ...newPageData, isHomepage: checked })}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="direction">Text Direction</Label>
@@ -485,7 +362,7 @@ export default function WebsiteBuilderPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {websitePages.map((page) => (
+                {cmsPages.map((page) => (
                   <Card key={page.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -502,12 +379,12 @@ export default function WebsiteBuilderPage() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
-                            <Eye className="w-4 h-4" />
-                            {page.visits} visits
+                            <Languages className="w-4 h-4" />
+                            {page.locale || 'en'}
                           </div>
                           <div className="flex items-center gap-1">
-                            <Target className="w-4 h-4" />
-                            {((page.conversions / page.visits) * 100 || 0).toFixed(1)}% conversion
+                            <CheckCircle className="w-4 h-4" />
+                            {page.isHomepage ? 'Homepage' : 'Page'}
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -536,7 +413,7 @@ export default function WebsiteBuilderPage() {
                 ))}
               </div>
 
-              {websitePages.length === 0 && (
+              {cmsPages.length === 0 && (
                 <div className="text-center py-12">
                   <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -764,7 +641,7 @@ export default function WebsiteBuilderPage() {
                           deployWebsiteMutation.mutate({
                             domain: 'main-site.iranlearn.ir',
                             sslEnabled: true,
-                            pages: websitePages.filter(p => p.status === 'published')
+                            pages: cmsPages.filter(p => p.status === 'published')
                           });
                         }}
                         disabled={deployWebsiteMutation.isPending}
@@ -784,6 +661,6 @@ export default function WebsiteBuilderPage() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
+      </AppLayout>
   );
 }
