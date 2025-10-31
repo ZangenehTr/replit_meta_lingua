@@ -493,6 +493,11 @@ app.use((req, res, next) => {
   registerFormFileRoutes(app, authenticateToken);
   console.log('✅ Form file upload routes registered');
   
+  // Register CMS routes (Content Management System)
+  const { registerCmsRoutes } = await import('./routes/cms-routes.js');
+  registerCmsRoutes(app);
+  console.log('✅ CMS routes registered (Pages, Blog, Videos, Media)');
+  
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
