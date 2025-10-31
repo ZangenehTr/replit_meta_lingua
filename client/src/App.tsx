@@ -1063,6 +1063,15 @@ function Router() {
           <UnifiedDashboard />
         </ProtectedRoute>
       </Route>
+      
+      {/* Public CMS Routes - Must come before authenticated root route */}
+      <Route path="/blog/:slug" component={() => <div>Blog Post Detail - Coming Soon</div>} />
+      <Route path="/blog" component={() => <div>Blog Listing - Coming Soon</div>} />
+      <Route path="/videos/:id" component={() => <div>Video Detail - Coming Soon</div>} />
+      <Route path="/videos" component={() => <div>Video Gallery - Coming Soon</div>} />
+      <Route path="/about" component={() => <div>About Page - Coming Soon</div>} />
+      <Route path="/contact" component={() => <div>Contact Page - Coming Soon</div>} />
+      
       <Route path="/">
         {(() => {
           const { user, isLoading } = useAuth();
@@ -1078,11 +1087,12 @@ function Router() {
             );
           }
           
+          // If not authenticated, show public homepage
           if (!user) {
-            return <Redirect to="/auth" />;
+            return <div>Public Homepage - Coming Soon</div>;
           }
           
-          // Role-based redirects to ensure students use mobile components
+          // Role-based redirects for authenticated users
           if (user.role === 'student') {
             return <Redirect to="/student" />;
           }
