@@ -18092,6 +18092,15 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  async updateMediaAsset(id: number, data: Partial<CmsMediaAsset>): Promise<CmsMediaAsset | undefined> {
+    const [updated] = await db
+      .update(cmsMediaAssets)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(cmsMediaAssets.id, id))
+      .returning();
+    return updated;
+  }
+
   // CMS Page Analytics methods
   async trackPageAnalytics(eventData: InsertCmsPageAnalytics): Promise<CmsPageAnalytics> {
     const [tracked] = await db.insert(cmsPageAnalytics).values(eventData).returning();

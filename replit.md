@@ -3,6 +3,13 @@
 ## Overview
 Meta Lingua is an AI-enhanced, multilingual language learning and institute management platform designed for self-hosting. It offers a comprehensive solution for language institutes globally, supporting teaching various languages, extensive administration, student management, course enrollment, VoIP integration, and a wallet-based payment system. Its primary goal is to provide institutes with a powerful, customizable, and independent platform, especially in regions requiring self-hosted solutions.
 
+## Recent Changes (CMS Platform Development)
+- **Phase 1 Complete (Architect-Approved)**: Website builder successfully retrofitted to CMS schema with proper API integration, payload filtering for InsertCmsPage compliance, and full type safety.
+- **Phase 2 Complete (Architect-Approved)**: All three CMS admin dashboards fully implemented:
+  - **Phase 2A**: Blog management dashboard with RichTextWidget for content editing, category/tag selectors, featured image upload, draft/publish workflow, multi-language support, and SEO metadata fields.
+  - **Phase 2B**: Video management dashboard supporting local uploads and YouTube/Vimeo embeds, with grid view, thumbnails, and comprehensive metadata editing.
+  - **Phase 2C**: Media library dashboard with grid/list view toggle, file upload via FileUploadWidget, filtering by type, search functionality, statistics dashboard, and metadata editing. Backend PUT /api/cms/media/:id endpoint implemented for persisting alt text and captions.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.

@@ -476,6 +476,33 @@ export function registerCmsRoutes(app: Express) {
       res.status(500).json({ message: 'Failed to fetch media' });
     }
   });
+
+  app.put('/api/cms/media/:id', async (req: Request, res: Response) => {
+    try {
+      const assetId = parseInt(req.params.id);
+      const { alt, caption, altEn, altFa, altAr, captionEn, captionFa, captionAr } = req.body;
+      
+      const updated = await storage.updateMediaAsset(assetId, {
+        alt,
+        caption,
+        altEn,
+        altFa,
+        altAr,
+        captionEn,
+        captionFa,
+        captionAr
+      });
+      
+      if (!updated) {
+        return res.status(404).json({ message: 'Media asset not found' });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating media asset:', error);
+      res.status(500).json({ message: 'Failed to update media asset' });
+    }
+  });
   
   // Note: Media upload will be handled by form-file-routes.ts
   

@@ -1628,6 +1628,7 @@ export interface IStorage {
   getMediaAssets(filters?: { fileType?: string; uploadedBy?: number }): Promise<any[]>;
   getMediaAsset(id: number): Promise<any | undefined>;
   createMediaAsset(asset: any): Promise<any>;
+  updateMediaAsset(id: number, data: Partial<any>): Promise<any | undefined>;
   
   // CMS Page Analytics methods
   trackPageAnalytics(eventData: any): Promise<any>;
