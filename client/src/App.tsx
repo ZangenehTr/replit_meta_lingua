@@ -1066,12 +1066,42 @@ function Router() {
       </Route>
       
       {/* Public CMS Routes - Must come before authenticated root route */}
-      <Route path="/blog/:slug" component={() => <div>Blog Post Detail - Coming Soon</div>} />
-      <Route path="/blog" component={() => <div>Blog Listing - Coming Soon</div>} />
-      <Route path="/videos/:id" component={() => <div>Video Detail - Coming Soon</div>} />
-      <Route path="/videos" component={() => <div>Video Gallery - Coming Soon</div>} />
-      <Route path="/about" component={() => <div>About Page - Coming Soon</div>} />
-      <Route path="/contact" component={() => <div>Contact Page - Coming Soon</div>} />
+      <Route path="/blog/:slug">
+        {() => {
+          const BlogDetail = lazy(() => import("@/pages/public/blog-detail"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><BlogDetail /></Suspense>;
+        }}
+      </Route>
+      <Route path="/blog">
+        {() => {
+          const BlogListing = lazy(() => import("@/pages/public/blog-listing"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><BlogListing /></Suspense>;
+        }}
+      </Route>
+      <Route path="/videos/:id">
+        {() => {
+          const VideoDetail = lazy(() => import("@/pages/public/video-detail"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><VideoDetail /></Suspense>;
+        }}
+      </Route>
+      <Route path="/videos">
+        {() => {
+          const VideoGallery = lazy(() => import("@/pages/public/video-gallery"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><VideoGallery /></Suspense>;
+        }}
+      </Route>
+      <Route path="/about">
+        {() => {
+          const About = lazy(() => import("@/pages/public/about"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><About /></Suspense>;
+        }}
+      </Route>
+      <Route path="/contact">
+        {() => {
+          const Contact = lazy(() => import("@/pages/public/contact"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><Contact /></Suspense>;
+        }}
+      </Route>
       
       <Route path="/">
         {(() => {

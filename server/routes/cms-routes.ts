@@ -601,4 +601,39 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
     res.header('Content-Type', 'text/plain');
     res.send(robotsTxt);
   });
+  
+  // ============================================================================
+  // CONTACT FORM ENDPOINT
+  // ============================================================================
+  
+  app.post('/api/contact', async (req: Request, res: Response) => {
+    try {
+      const contactSchema = z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        subject: z.string().min(1),
+        message: z.string().min(10),
+      });
+      
+      const data = contactSchema.parse(req.body);
+      
+      // In production, this would:
+      // 1. Send email notification to admin
+      // 2. Store in database for tracking
+      // 3. Send confirmation email to user
+      // For now, we'll log and return success
+      console.log('📧 Contact form submission:', data);
+      
+      res.status(200).json({ 
+        success: true, 
+        message: 'Thank you for contacting us. We will get back to you soon!' 
+      });
+    } catch (error) {
+      console.error('Error processing contact form:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid form data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to send message' });
+    }
+  });
 }

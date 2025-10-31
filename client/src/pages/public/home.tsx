@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { PublicLayout } from '@/components/layout/public-layout';
+import { SEOHead } from '@/components/seo-head';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -86,6 +87,11 @@ export default function PublicHome() {
 
   return (
     <PublicLayout>
+      <SEOHead
+        title={t('home.seoTitle', 'Meta Lingua - AI-Powered Language Learning')}
+        description={t('home.seoDescription', 'Learn languages with AI-powered tutoring, interactive courses, and a supportive global community. Start your language learning journey today!')}
+        keywords="language learning, AI tutoring, online courses, language academy"
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
