@@ -1143,5 +1143,66 @@
   "noTutorsAvailable": "No tutors available",
   "frontDesk": "Front Desk",
   "callCenterAgent": "Call Center Agent",
-  "otpPlaceholder": "Enter 6-digit code"
+  "otpPlaceholder": "Enter 6-digit code",
+  "hero": {
+    "badge": "New: AI Study Partner Now Available",
+    "title1": "Learn Languages",
+    "title2": "The Smart Way",
+    "description": "Master any language with AI-powered lessons, interactive exercises, and personalized feedback. Join thousands of learners worldwide."
+  },
+  "features": {
+    "heading": "Why Choose Meta Lingua?",
+    "subheading": "Experience the next generation of language learning with cutting-edge technology and proven methodologies.",
+    "multilingual": {
+      "title": "Multilingual Platform",
+      "desc": "Learn in English, Persian, or Arabic with full RTL support"
+    },
+    "ai": {
+      "title": "AI-Powered Learning",
+      "desc": "Personalized lessons adapted to your learning style and pace"
+    },
+    "community": {
+      "title": "Global Community",
+      "desc": "Connect with learners and native speakers worldwide"
+    },
+    "certified": {
+      "title": "Certified Courses",
+      "desc": "Earn recognized certificates upon course completion"
+    }
+  },
+  "stats": {
+    "students": "Active Students",
+    "courses": "Courses",
+    "satisfaction": "Satisfaction",
+    "languages": "Languages"
+  },
+  "blog": {
+    "heading": "Latest Articles",
+    "subheading": "Tips, insights, and stories from our community"
+  },
+  "videos": {
+    "heading": "Featured Videos",
+    "subheading": "Watch and learn from our expert instructors"
+  },
+  "cta": {
+    "startLearning": "Start Learning Free",
+    "browseCourses": "Browse Free Courses",
+    "viewAll": "View All",
+    "watchNow": "Watch Now",
+    "readMore": "Read More",
+    "getStarted": "Get Started Today",
+    "startFree": "Start Free Trial",
+    "learnMore": "Learn More",
+    "final": {
+      "title": "Ready to Transform Your Language Skills?",
+      "description": "Join thousands of successful learners. Start your free trial today and experience the future of language learning."
+    }
+  },
+  "limitedTimeOffer": "Limited Time Offer",
+  "category": "Category",
+  "views": "views",
+  "home": {
+    "seoTitle": "Meta Lingua - AI-Powered Language Learning",
+    "seoDescription": "Learn languages with AI-powered tutoring, interactive courses, and a supportive global community. Start your language learning journey today!"
+  }
 }

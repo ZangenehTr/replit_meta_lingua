@@ -242,7 +242,7 @@ export default function PublicHome() {
                   <CardHeader>
                     <div className="flex gap-2 mb-2">
                       <Badge variant="secondary">{post.locale}</Badge>
-                      {post.categoryId && <Badge>Category</Badge>}
+                      {post.categoryId && <Badge>{t('category')}</Badge>}
                     </div>
                     <CardTitle className="line-clamp-2">
                       <Link href={`/blog/${post.slug}`}>
@@ -337,7 +337,7 @@ export default function PublicHome() {
                       {video.viewCount && (
                         <div className="flex items-center gap-1">
                           <TrendingUp className="h-4 w-4" />
-                          {video.viewCount} views
+                          {video.viewCount} {t('views')}
                         </div>
                       )}
                     </div>
@@ -355,7 +355,7 @@ export default function PublicHome() {
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-6">
             <Sparkles className="h-4 w-4 animate-pulse" />
-            <span className="text-sm font-medium">Limited Time Offer</span>
+            <span className="text-sm font-medium">{t('limitedTimeOffer')}</span>
           </div>
           
           <h2 className="text-4xl font-bold mb-6">
