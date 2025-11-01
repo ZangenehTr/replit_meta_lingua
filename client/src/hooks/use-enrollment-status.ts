@@ -3,6 +3,19 @@ import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import apiClient from "@/lib/apiClient";
 
+export interface PublicFeatures {
+  courseCatalog: boolean;
+  placementTest: boolean;
+  teacherDirectory: boolean;
+  liveClasses: boolean;
+  progressTracking: boolean;
+  linguaquestGames: boolean;
+  certificates: boolean;
+  oneOnOneSessions: boolean;
+  blogPosts: boolean;
+  videoCourses: boolean;
+}
+
 export interface EnrollmentStatus {
   isEnrolled: boolean;
   hasActiveEnrollments: boolean;
@@ -20,6 +33,7 @@ export interface EnrollmentStatus {
   membershipTier: string;
   walletBalance: number;
   totalCredits: number;
+  publicFeatures?: PublicFeatures;
 }
 
 export function useEnrollmentStatus() {

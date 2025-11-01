@@ -3145,6 +3145,34 @@ export const courseGames = pgTable("course_games", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Institute Settings Type (for JSONB settings field)
+export const institutePublicFeaturesSchema = z.object({
+  courseCatalog: z.boolean().default(true),
+  placementTest: z.boolean().default(true),
+  teacherDirectory: z.boolean().default(true),
+  liveClasses: z.boolean().default(false),
+  progressTracking: z.boolean().default(false),
+  linguaquestGames: z.boolean().default(false),
+  certificates: z.boolean().default(false),
+  oneOnOneSessions: z.boolean().default(true),
+  blogPosts: z.boolean().default(true),
+  videoCourses: z.boolean().default(true)
+});
+
+export const instituteSettingsSchema = z.object({
+  publicFeatures: institutePublicFeaturesSchema.optional(),
+  branding: z.object({
+    primaryColor: z.string().default("#3B82F6"),
+    secondaryColor: z.string().default("#8B5CF6"),
+    subdomain: z.string().optional(),
+    customDomain: z.string().optional()
+  }).optional(),
+  subscriptionPlan: z.enum(['basic', 'professional', 'enterprise']).default('basic').optional()
+});
+
+export type InstitutePublicFeatures = z.infer<typeof institutePublicFeaturesSchema>;
+export type InstituteSettings = z.infer<typeof instituteSettingsSchema>;
+
 // Institutes table
 export const institutes = pgTable("institutes", {
   id: serial("id").primaryKey(),

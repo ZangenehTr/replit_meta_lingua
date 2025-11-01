@@ -27,6 +27,7 @@ import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes
 import tttRoutes from "./ttt-routes";
 import { registerCmsRoutes } from "./cms-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
+import publicFeaturesRoutes from "./routes/public-features-routes";
 import mstRoutes from "./modules/mst/routes/mstRoutes";
 import { 
   filterTeachers, 
@@ -23551,6 +23552,7 @@ Meta Lingua Academy`;
   app.use('/api', callernFlowRoutes);
   
   // Register exam-focused roadmap routes
+  app.use('/api/public-features', publicFeaturesRoutes);
   app.use('/api/roadmap', examRoadmapRoutes);
   
   // Register AI study partner routes
