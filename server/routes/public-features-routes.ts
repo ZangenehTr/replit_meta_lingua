@@ -7,6 +7,7 @@ import express from 'express';
 import { storage } from '../storage';
 import { requireAuth, requireRole, AuthRequest } from '../auth-middleware';
 import { institutePublicFeaturesSchema } from '@shared/schema';
+import { DEFAULT_PUBLIC_FEATURES } from '@shared/public-features-defaults';
 
 const router = express.Router();
 
@@ -18,35 +19,13 @@ router.get("/", async (req, res) => {
     const institute = await storage.getInstituteById(1);
     const settings = institute?.settings as any;
     
-    const publicFeatures = settings?.publicFeatures || {
-      courseCatalog: true,
-      placementTest: true,
-      teacherDirectory: true,
-      liveClasses: false,
-      progressTracking: false,
-      linguaquestGames: false,
-      certificates: false,
-      oneOnOneSessions: true,
-      blogPosts: true,
-      videoCourses: true
-    };
+    const publicFeatures = settings?.publicFeatures || DEFAULT_PUBLIC_FEATURES;
     
     res.json(publicFeatures);
   } catch (error) {
     console.error('Error fetching public features:', error);
-    // Return safe defaults on error
-    res.json({
-      courseCatalog: true,
-      placementTest: true,
-      teacherDirectory: true,
-      liveClasses: false,
-      progressTracking: false,
-      linguaquestGames: false,
-      certificates: false,
-      oneOnOneSessions: true,
-      blogPosts: true,
-      videoCourses: true
-    });
+    // Return all-true defaults on error (admins must explicitly opt-out)
+    res.json(DEFAULT_PUBLIC_FEATURES);
   }
 });
 

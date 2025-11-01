@@ -6,6 +6,7 @@
 import { usePublicFeatures } from "@/hooks/use-public-features";
 import { EnrolledStudentDashboard } from "./EnrolledStudentDashboard";
 import type { EnrollmentStatus } from "@/hooks/use-enrollment-status";
+import type { User } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ import {
 
 interface Props {
   enrollmentStatus: EnrollmentStatus | undefined;
-  user: any;
+  user: User | null;
 }
 
 export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
@@ -54,15 +55,15 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
               <div className="max-w-3xl mx-auto text-center space-y-6">
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-medium">
                   <Sparkles className="h-4 w-4" />
-                  {t('student:freeAssessment')}
+                  {t('student:unifiedDashboard.freeAssessment')}
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                  {t('student:discoverYourLevel')}
+                  {t('student:unifiedDashboard.discoverYourLevel')}
                 </h1>
                 
                 <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                  {t('student:placementTestDescription')}
+                  {t('student:unifiedDashboard.placementTestDescription')}
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
@@ -73,7 +74,7 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
                     data-testid="button-take-placement-test"
                   >
                     <Trophy className="mr-2 h-5 w-5" />
-                    {t('student:takePlacementTest')}
+                    {t('student:unifiedDashboard.takePlacementTest')}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   
@@ -85,22 +86,22 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
                     data-testid="button-browse-courses"
                   >
                     <BookOpen className="mr-2 h-5 w-5" />
-                    {t('student:browseCourses')}
+                    {t('student:unifiedDashboard.browseCourses')}
                   </Button>
                 </div>
                 
                 <div className="flex flex-wrap gap-6 justify-center pt-8 text-white/80">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5" />
-                    <span>{t('student:aiPowered')}</span>
+                    <span>{t('student:unifiedDashboard.aiPowered')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5" />
-                    <span>{t('student:15MinutesOnly')}</span>
+                    <span>{t('student:unifiedDashboard.15MinutesOnly')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5" />
-                    <span>{t('student:instantResults')}</span>
+                    <span>{t('student:unifiedDashboard.instantResults')}</span>
                   </div>
                 </div>
               </div>
@@ -114,7 +115,7 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
                 <Trophy className="h-6 w-6 text-yellow-500" />
-                {t('student:yourPlacementResults')}
+                {t('student:unifiedDashboard.yourPlacementResults')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -124,17 +125,17 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {t('student:intermediateLevel')}
+                    {t('student:unifiedDashboard.intermediateLevel')}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300">
-                    {t('student:greatFoundation')}
+                    {t('student:unifiedDashboard.greatFoundation')}
                   </p>
                 </div>
               </div>
               
               <div className="pt-4">
                 <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-                  {t('student:recommendedCourses')}
+                  {t('student:unifiedDashboard.recommendedCourses')}
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Course recommendations will be loaded from API */}
@@ -144,7 +145,7 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
                       <h5 className="font-semibold mb-1">Intermediate English Course</h5>
                       <p className="text-sm text-gray-600">Perfect for your B1 level</p>
                       <Button size="sm" className="mt-3 w-full">
-                        {t('student:enrollNow')}
+                        {t('student:unifiedDashboard.enrollNow')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -160,8 +161,8 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
           {publicFeatures.courseCatalog && (
             <FeatureCard
               icon={BookOpen}
-              title={t('student:courseCatalog')}
-              description={t('student:browseCoursesCTA')}
+              title={t('student:unifiedDashboard.courseCatalog')}
+              description={t('student:unifiedDashboard.browseCoursesCTA')}
               isUnlocked={true}
               onClick={() => setLocation('/courses')}
               testId="feature-course-catalog"
@@ -172,8 +173,8 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
           {publicFeatures.teacherDirectory && (
             <FeatureCard
               icon={Users}
-              title={t('student:expertTeachers')}
-              description={t('student:browseTeachersCTA')}
+              title={t('student:unifiedDashboard.expertTeachers')}
+              description={t('student:unifiedDashboard.browseTeachersCTA')}
               isUnlocked={true}
               onClick={() => setLocation('/teachers')}
               testId="feature-teacher-directory"
@@ -184,8 +185,8 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
           {publicFeatures.videoCourses && (
             <FeatureCard
               icon={Video}
-              title={t('student:videoCourses')}
-              description={t('student:videoLibraryCTA')}
+              title={t('student:unifiedDashboard.videoCourses')}
+              description={t('student:unifiedDashboard.videoLibraryCTA')}
               isUnlocked={true}
               onClick={() => setLocation('/videos')}
               testId="feature-video-courses"
@@ -196,8 +197,8 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
           {!publicFeatures.liveClasses && (
             <FeatureCard
               icon={Users}
-              title={t('student:liveClasses')}
-              description={t('student:joinLiveClassesCTA')}
+              title={t('student:unifiedDashboard.liveClasses')}
+              description={t('student:unifiedDashboard.joinLiveClassesCTA')}
               isUnlocked={false}
               onClick={() => setLocation('/enroll')}
               testId="feature-live-classes-locked"
@@ -207,8 +208,8 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
           {!publicFeatures.progressTracking && (
             <FeatureCard
               icon={Trophy}
-              title={t('student:progressTracking')}
-              description={t('student:trackYourProgressCTA')}
+              title={t('student:unifiedDashboard.progressTracking')}
+              description={t('student:unifiedDashboard.trackYourProgressCTA')}
               isUnlocked={false}
               onClick={() => setLocation('/enroll')}
               testId="feature-progress-locked"
@@ -218,8 +219,8 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
           {!publicFeatures.linguaquestGames && (
             <FeatureCard
               icon={GraduationCap}
-              title={t('student:linguaquestGames')}
-              description={t('student:funLearningGamesCTA')}
+              title={t('student:unifiedDashboard.linguaquestGames')}
+              description={t('student:unifiedDashboard.funLearningGamesCTA')}
               isUnlocked={false}
               onClick={() => setLocation('/enroll')}
               testId="feature-linguaquest-locked"
@@ -231,10 +232,10 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
         <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <CardContent className="py-8 px-6 text-center">
             <h2 className="text-3xl font-bold mb-4">
-              {t('student:readyToStartLearning')}
+              {t('student:unifiedDashboard.readyToStartLearning')}
             </h2>
             <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-              {t('student:enrollTodayUnlockFeatures')}
+              {t('student:unifiedDashboard.enrollTodayUnlockFeatures')}
             </p>
             <Button 
               size="lg" 
@@ -243,7 +244,7 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
               data-testid="button-enroll-cta"
             >
               <Sparkles className="mr-2 h-5 w-5" />
-              {t('student:enrollNow')}
+              {t('student:unifiedDashboard.enrollNow')}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </CardContent>
