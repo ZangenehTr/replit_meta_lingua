@@ -1,8 +1,7 @@
 import { useEnrollmentStatus } from "@/hooks/use-enrollment-status";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
-import { EnrolledStudentDashboard } from "./EnrolledStudentDashboard";
-import { NonEnrolledStudentDashboard } from "./NonEnrolledStudentDashboard";
+import { UnifiedStudentDashboard } from "./UnifiedStudentDashboard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
@@ -35,14 +34,9 @@ export function ConditionalDashboard() {
     return null;
   }
 
-  // Route to appropriate dashboard based on enrollment status
-  return enrollmentStatus?.isEnrolled ? (
-    <EnrolledStudentDashboard 
-      enrollmentStatus={enrollmentStatus}
-      user={user}
-    />
-  ) : (
-    <NonEnrolledStudentDashboard 
+  // Unified dashboard handles both enrolled and non-enrolled states
+  return (
+    <UnifiedStudentDashboard 
       enrollmentStatus={enrollmentStatus}
       user={user}
     />
