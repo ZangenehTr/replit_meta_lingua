@@ -3,13 +3,34 @@
 ## Overview
 Meta Lingua is an AI-enhanced, multilingual language learning and institute management platform designed for self-hosting. It offers a comprehensive solution for language institutes globally, supporting teaching various languages, extensive administration, student management, course enrollment, VoIP integration, and a wallet-based payment system. Its primary goal is to provide institutes with a powerful, customizable, and independent platform, especially in regions requiring self-hosted solutions.
 
-## Recent Changes (CMS Platform Development)
-- **Phase 1 Complete (Architect-Approved)**: Website builder successfully retrofitted to CMS schema with proper API integration, payload filtering for InsertCmsPage compliance, and full type safety.
-- **Phase 2 Complete (Architect-Approved)**: All three CMS admin dashboards fully implemented:
+## Recent Changes
+
+### Unified Student Dashboard Architecture (November 2025)
+- **Decision**: Removed dual-dashboard architecture (ExplorerDashboard + EnrolledStudentDashboard) in favor of unified approach
+- **Implementation**: 
+  - Created `UnifiedStudentDashboard` component that handles both enrolled and non-enrolled states
+  - Non-enrolled students see placement test CTA, public features (course catalog, teacher directory), and locked feature previews with enrollment CTAs
+  - Enrolled students get full `EnrolledStudentDashboard` experience (3029 lines with all hubs)
+  - Simplified `ConditionalDashboard` to single routing decision
+- **Public Features System**:
+  - Added `institutePublicFeaturesSchema` in shared/schema.ts for admin control over feature visibility
+  - Created `/api/public-features` GET endpoint and `/api/admin/public-features` PUT endpoint
+  - New `usePublicFeatures()` hook for fetching admin-configured visibility settings
+  - 10 controllable features: courseCatalog, placementTest, teacherDirectory, liveClasses, progressTracking, linguaquestGames, certificates, oneOnOneSessions, blogPosts, videoCourses
+- **Archived Components** (Preserved for Seasonal Campaigns):
+  - `ExplorerDashboard.tsx` (1583 lines) → `_archived/` - Conversion-optimized dashboard with purple/blue gradient theme
+  - `NonEnrolledStudentDashboard.tsx` (14 lines) → `_archived/` - Simple wrapper
+  - **Future Use**: Christmas/Valentine's/New Year campaign landing pages with discount codes, special event promotions, A/B testing
+  - Comprehensive README in `_archived/` with restoration guide and integration points
+- **Benefits**: Reduced duplication, centralized feature control, consistent UX, easier maintenance, preserved campaign flexibility
+
+### CMS Platform Development (Complete)
+- **Phase 1**: Website builder retrofitted to CMS schema with proper API integration, payload filtering for InsertCmsPage compliance, and full type safety.
+- **Phase 2**: All three CMS admin dashboards fully implemented:
   - **Phase 2A**: Blog management dashboard with RichTextWidget for content editing, category/tag selectors, featured image upload, draft/publish workflow, multi-language support, and SEO metadata fields.
   - **Phase 2B**: Video management dashboard supporting local uploads and YouTube/Vimeo embeds, with grid view, thumbnails, and comprehensive metadata editing.
   - **Phase 2C**: Media library dashboard with grid/list view toggle, file upload via FileUploadWidget, filtering by type, search functionality, statistics dashboard, and metadata editing. Backend PUT /api/cms/media/:id endpoint implemented for persisting alt text and captions.
-- **Phase 3 Complete (Architect-Approved)**: Gen-Z focused public marketing website with 8 pages replacing login-first experience:
+- **Phase 3**: Gen-Z focused public marketing website with 8 pages replacing login-first experience:
   - **Public Layout**: Responsive header/footer with language switcher, gradient backgrounds (primary/purple/pink), mobile-optimized navigation
   - **Homepage** (/): Hero section, feature cards, stats dashboard, blog/video previews using real CMS API data, multiple CTAs
   - **Blog System** (/blog, /blog/:slug): Listing page with search/filters/pagination, detail page with rich text rendering, category/tag navigation, related posts
