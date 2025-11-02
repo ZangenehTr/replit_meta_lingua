@@ -43,6 +43,7 @@ interface FormDefinition {
 function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   const { t } = useTranslation(['admin', 'common']);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   // Fetch Course Creation form definition (Form ID 10)
   const { data: formDefinition, isLoading: formLoading } = useQuery<FormDefinition>({
@@ -50,17 +51,24 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
     enabled: isOpen
   });
 
+  // Fetch curriculum categories for the selector
+  const { data: categories } = useQuery<any[]>({
+    queryKey: ['/api/cms/curriculum-categories'],
+    enabled: isOpen
+  });
+
   const createCourseMutation = useMutation({
     mutationFn: async (data: any) => {
       return await apiRequest(API_ENDPOINTS.admin.courses, {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify({ ...data, categoryId: selectedCategoryId ? parseInt(selectedCategoryId) : null })
       });
     },
     onSuccess: () => {
       toast({ title: t('admin:courses.createdSuccessfully') });
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.courses] });
       setIsOpen(false);
+      setSelectedCategoryId(null);
     },
     onError: (error: any) => {
       console.error('Error creating course:', error);
@@ -98,6 +106,26 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
           </div>
         ) : formDefinition ? (
           <>
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">
+                {t('admin:courses.category')}
+              </label>
+              <Select value={selectedCategoryId || ''} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger data-testid="select-course-category">
+                  <SelectValue placeholder={t('admin:courses.selectCategory')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">
+                    {t('admin:courses.noCategory', 'No Category')}
+                  </SelectItem>
+                  {categories?.map((category: any) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <DynamicForm
               formDefinition={formDefinition}
               onSubmit={handleSubmit}
@@ -123,17 +151,25 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
 // Edit Course Dialog Component
 function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClose: () => void, queryClient: any }) {
   const { t } = useTranslation(['admin', 'common']);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    course.categoryId ? course.categoryId.toString() : null
+  );
 
   // Fetch Course Creation form definition (Form ID 10) - same form used for editing
   const { data: formDefinition, isLoading: formLoading } = useQuery<FormDefinition>({
     queryKey: ['/api/forms', 10]
   });
 
+  // Fetch curriculum categories for the selector
+  const { data: categories } = useQuery<any[]>({
+    queryKey: ['/api/cms/curriculum-categories']
+  });
+
   const updateCourseMutation = useMutation({
     mutationFn: async (data: any) => {
       return await apiRequest(`${API_ENDPOINTS.admin.courses}/${course.id}`, {
         method: 'PUT',
-        body: JSON.stringify(data)
+        body: JSON.stringify({ ...data, categoryId: selectedCategoryId ? parseInt(selectedCategoryId) : null })
       });
     },
     onSuccess: () => {
@@ -178,6 +214,26 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
           </div>
         ) : formDefinition ? (
           <>
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">
+                {t('admin:courses.category')}
+              </label>
+              <Select value={selectedCategoryId || ''} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger data-testid="select-course-category-edit">
+                  <SelectValue placeholder={t('admin:courses.selectCategory')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">
+                    {t('admin:courses.noCategory', 'No Category')}
+                  </SelectItem>
+                  {categories?.map((category: any) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <DynamicForm
               formDefinition={formDefinition}
               onSubmit={handleSubmit}

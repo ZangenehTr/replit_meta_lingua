@@ -1638,6 +1638,22 @@ export interface IStorage {
   // CMS Page Analytics methods
   trackPageAnalytics(eventData: any): Promise<any>;
   getPageAnalytics(filters?: { pageId?: number; blogPostId?: number; videoId?: number; dateFrom?: Date; dateTo?: Date }): Promise<any[]>;
+  
+  // Curriculum Categories methods
+  getCurriculumCategories(filters?: { isActive?: boolean }): Promise<any[]>;
+  getCurriculumCategory(id: number): Promise<any | undefined>;
+  getCurriculumCategoryBySlug(slug: string): Promise<any | undefined>;
+  createCurriculumCategory(category: any): Promise<any>;
+  updateCurriculumCategory(id: number, updates: any): Promise<any | undefined>;
+  deleteCurriculumCategory(id: number): Promise<void>;
+  reorderCurriculumCategories(categoryOrders: { id: number; displayOrder: number }[]): Promise<void>;
+  getCoursesByCategory(categoryId: number, filters?: { isActive?: boolean }): Promise<any[]>;
+  
+  // Guest Leads methods
+  createGuestLead(lead: any): Promise<any>;
+  getGuestLeads(filters?: { status?: string; source?: string }): Promise<any[]>;
+  getGuestLead(id: number): Promise<any | undefined>;
+  updateGuestLead(id: number, updates: any): Promise<any | undefined>;
 }
 
 export class MemStorage implements IStorage {

@@ -32,6 +32,7 @@ import CRMDashboard from "@/pages/crm-dashboard";
 import StudentInformationSystem from "@/pages/student-information-system";
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
+import CurriculumCategoriesPage from "@/pages/admin/curriculum-categories";
 import AdminVideoCourses from "@/pages/admin/video-courses";
 import ThreeDLessonBuilder from "@/pages/admin/3d-lesson-builder";
 import { AdminTeacherManagement } from "@/pages/admin/teacher-management";
@@ -295,6 +296,11 @@ function Router() {
       <Route path="/admin/courses">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminCourses />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/curriculum-categories">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <CurriculumCategoriesPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/video-courses">

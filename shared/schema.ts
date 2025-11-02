@@ -105,6 +105,20 @@ export const users = pgTable("users", {
   isPhoneVerified: boolean("is_phone_verified").default(false)
 });
 
+// Curriculum Categories table - Dynamic CMS for course categorization
+export const curriculumCategories = pgTable("curriculum_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  icon: text("icon"),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Courses table
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
@@ -120,6 +134,7 @@ export const courses = pgTable("courses", {
   duration: integer("duration"),
   totalLessons: integer("total_lessons"),
   category: text("category"),
+  categoryId: integer("category_id").references(() => curriculumCategories.id),
   tags: text("tags").array(),
   prerequisites: text("prerequisites").array(),
   learningObjectives: text("learning_objectives").array(),
@@ -4283,7 +4298,7 @@ export const placementQuestions = pgTable("placement_questions", {
 // Placement Test Sessions table - MATCHES ACTUAL DATABASE STRUCTURE
 export const placementTestSessions = pgTable("placement_test_sessions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => users.id),
   targetLanguage: varchar("target_language", { length: 100 }),
   learningGoal: text("learning_goal"),
   startedAt: timestamp("started_at"),
@@ -4354,6 +4369,20 @@ export const placementResults = pgTable("placement_results", {
   certificateUrl: varchar("certificate_url", { length: 500 }),
   detailedAnalysis: jsonb("detailed_analysis"),
   metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Guest Leads table - Captures contact information from anonymous placement test takers
+export const guestLeads = pgTable("guest_leads", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  placementSessionId: integer("placement_session_id").references(() => placementTestSessions.id),
+  source: text("source").default("placement_test"),
+  status: text("status").default("new"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -5877,6 +5906,16 @@ export const trialLessons = pgTable("trial_lessons", {
 // Course insert schema - re-enabled for storage layer
 export const insertCourseSchema = createInsertSchema(courses).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertCourse = typeof courses.$inferInsert;
+
+// Curriculum Category schemas
+export const insertCurriculumCategorySchema = createInsertSchema(curriculumCategories).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCurriculumCategory = z.infer<typeof insertCurriculumCategorySchema>;
+export type CurriculumCategory = typeof curriculumCategories.$inferSelect;
+
+// Guest Lead schemas
+export const insertGuestLeadSchema = createInsertSchema(guestLeads).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertGuestLead = z.infer<typeof insertGuestLeadSchema>;
+export type GuestLead = typeof guestLeads.$inferSelect;
 // export const insertClassSchema = createInsertSchema(classes);
 // export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
 // export const insertHolidaySchema = createInsertSchema(holidays);
@@ -6081,7 +6120,6 @@ export type InsertUserSession = typeof userSessions.$inferInsert;
 export type OtpCode = typeof otpCodes.$inferSelect;
 export type InsertOtpCode = typeof otpCodes.$inferInsert;
 export type Course = typeof courses.$inferSelect;
-export type InsertCourse = typeof courses.$inferInsert;
 export type Class = typeof classes.$inferSelect;
 export type InsertClass = typeof classes.$inferInsert;
 export type ClassEnrollment = typeof classEnrollments.$inferSelect;

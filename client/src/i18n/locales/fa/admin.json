@@ -2374,5 +2374,27 @@
   "financialReports": {
     "title": "گزارش‌های مالی",
     "subtitle": "تحلیل‌های مالی جامع و گزارش‌دهی"
+  },
+  "curriculum": {
+    "title": "دسته‌بندی‌های آموزشی",
+    "description": "مدیریت دسته‌بندی‌های دوره برای صفحات عمومی",
+    "createCategory": "ایجاد دسته‌بندی",
+    "createCategoryDesc": "افزودن دسته‌بندی آموزشی جدید",
+    "editCategory": "ویرایش دسته‌بندی",
+    "editCategoryDesc": "بروزرسانی اطلاعات دسته‌بندی",
+    "namePlaceholder": "مثلاً آمادگی آزمون",
+    "slug": "نامک URL",
+    "slugDesc": "نام سازگار با URL (فقط حروف کوچک و خط تیره)",
+    "descriptionPlaceholder": "توضیح مختصر این دسته‌بندی",
+    "icon": "نام آیکون",
+    "iconDesc": "نام آیکون Lucide (مثلاً BookOpen، GraduationCap)",
+    "activeDesc": "نمایش این دسته‌بندی در وب‌سایت عمومی",
+    "categoryCreated": "دسته‌بندی با موفقیت ایجاد شد",
+    "categoryUpdated": "دسته‌بندی با موفقیت بروزرسانی شد",
+    "categoryDeleted": "دسته‌بندی با موفقیت حذف شد",
+    "categories": "دسته‌بندی‌ها",
+    "dragToReorder": "برای تغییر ترتیب دسته‌بندی‌ها بکشید",
+    "noCategories": "هنوز دسته‌بندی وجود ندارد. اولین دسته‌بندی خود را ایجاد کنید.",
+    "deleteWarning": "آیا مطمئن هستید که می‌خواهید این دسته‌بندی را حذف کنید؟ این عمل قابل بازگشت نیست."
   }
 }

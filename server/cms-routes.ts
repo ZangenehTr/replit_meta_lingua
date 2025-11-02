@@ -622,4 +622,192 @@ Sitemap: ${protocol}://${domain}/api/seo/sitemap.xml
     res.header('Content-Type', 'text/plain');
     res.send(robotsTxt);
   });
+
+  // ========================================================================
+  // CURRICULUM CATEGORIES ROUTES
+  // ========================================================================
+
+  // Public: Get all active categories
+  app.get('/api/cms/curriculum-categories', async (req, res) => {
+    try {
+      const { isActive } = req.query;
+      const categories = await storage.getCurriculumCategories({
+        isActive: isActive === 'false' ? false : isActive === 'true' ? true : undefined
+      });
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching curriculum categories:', error);
+      res.status(500).json({ error: 'Failed to fetch curriculum categories' });
+    }
+  });
+
+  // Public: Get category by ID
+  app.get('/api/cms/curriculum-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const category = await storage.getCurriculumCategory(parseInt(id));
+      if (!category) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error('Error fetching curriculum category:', error);
+      res.status(500).json({ error: 'Failed to fetch curriculum category' });
+    }
+  });
+
+  // Public: Get category by slug
+  app.get('/api/cms/curriculum-categories/slug/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const category = await storage.getCurriculumCategoryBySlug(slug);
+      if (!category) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error('Error fetching curriculum category by slug:', error);
+      res.status(500).json({ error: 'Failed to fetch curriculum category' });
+    }
+  });
+
+  // Public: Get courses for a category
+  app.get('/api/cms/curriculum-categories/:id/courses', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.query;
+      const courses = await storage.getCoursesByCategory(parseInt(id), {
+        isActive: isActive === 'false' ? false : isActive === 'true' ? true : undefined
+      });
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching courses by category:', error);
+      res.status(500).json({ error: 'Failed to fetch courses by category' });
+    }
+  });
+
+  // Admin: Create category
+  app.post('/api/cms/curriculum-categories', async (req, res) => {
+    try {
+      const { insertCurriculumCategorySchema } = await import('@shared/schema');
+      const validatedData = insertCurriculumCategorySchema.parse(req.body);
+      const category = await storage.createCurriculumCategory(validatedData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validation error', details: error.errors });
+      }
+      console.error('Error creating curriculum category:', error);
+      res.status(500).json({ error: 'Failed to create curriculum category' });
+    }
+  });
+
+  // Admin: Update category
+  app.put('/api/cms/curriculum-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const category = await storage.updateCurriculumCategory(parseInt(id), updates);
+      if (!category) {
+        return res.status(404).json({ error: 'Category not found' });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error('Error updating curriculum category:', error);
+      res.status(500).json({ error: 'Failed to update curriculum category' });
+    }
+  });
+
+  // Admin: Delete category
+  app.delete('/api/cms/curriculum-categories/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteCurriculumCategory(parseInt(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting curriculum category:', error);
+      res.status(500).json({ error: 'Failed to delete curriculum category' });
+    }
+  });
+
+  // Admin: Reorder categories
+  app.put('/api/cms/curriculum-categories/reorder', async (req, res) => {
+    try {
+      const { categoryOrders } = req.body;
+      if (!Array.isArray(categoryOrders)) {
+        return res.status(400).json({ error: 'categoryOrders must be an array' });
+      }
+      await storage.reorderCurriculumCategories(categoryOrders);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error reordering curriculum categories:', error);
+      res.status(500).json({ error: 'Failed to reorder curriculum categories' });
+    }
+  });
+
+  // ========================================================================
+  // GUEST LEADS ROUTES
+  // ========================================================================
+
+  // Public: Create guest lead (from placement test)
+  app.post('/api/cms/guest-leads', async (req, res) => {
+    try {
+      const { insertGuestLeadSchema } = await import('@shared/schema');
+      const validatedData = insertGuestLeadSchema.parse(req.body);
+      const lead = await storage.createGuestLead(validatedData);
+      res.status(201).json(lead);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validation error', details: error.errors });
+      }
+      console.error('Error creating guest lead:', error);
+      res.status(500).json({ error: 'Failed to create guest lead' });
+    }
+  });
+
+  // Admin: Get all guest leads
+  app.get('/api/cms/guest-leads', async (req, res) => {
+    try {
+      const { status, source } = req.query;
+      const leads = await storage.getGuestLeads({
+        status: status as string | undefined,
+        source: source as string | undefined
+      });
+      res.json(leads);
+    } catch (error) {
+      console.error('Error fetching guest leads:', error);
+      res.status(500).json({ error: 'Failed to fetch guest leads' });
+    }
+  });
+
+  // Admin: Get single guest lead
+  app.get('/api/cms/guest-leads/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const lead = await storage.getGuestLead(parseInt(id));
+      if (!lead) {
+        return res.status(404).json({ error: 'Lead not found' });
+      }
+      res.json(lead);
+    } catch (error) {
+      console.error('Error fetching guest lead:', error);
+      res.status(500).json({ error: 'Failed to fetch guest lead' });
+    }
+  });
+
+  // Admin: Update guest lead
+  app.put('/api/cms/guest-leads/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const lead = await storage.updateGuestLead(parseInt(id), updates);
+      if (!lead) {
+        return res.status(404).json({ error: 'Lead not found' });
+      }
+      res.json(lead);
+    } catch (error) {
+      console.error('Error updating guest lead:', error);
+      res.status(500).json({ error: 'Failed to update guest lead' });
+    }
+  });
 }

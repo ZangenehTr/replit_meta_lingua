@@ -18286,4 +18286,106 @@ export class DatabaseStorage implements IStorage {
     
     return await query.orderBy(desc(cmsPageAnalytics.createdAt));
   }
+
+  // ============================================================================
+  // CURRICULUM CATEGORIES METHODS
+  // ============================================================================
+
+  async getCurriculumCategories(filters?: { isActive?: boolean }): Promise<CurriculumCategory[]> {
+    let query = db.select().from(curriculumCategories);
+    
+    if (filters?.isActive !== undefined) {
+      query = query.where(eq(curriculumCategories.isActive, filters.isActive)) as any;
+    }
+    
+    return await query.orderBy(asc(curriculumCategories.displayOrder), asc(curriculumCategories.name));
+  }
+
+  async getCurriculumCategory(id: number): Promise<CurriculumCategory | undefined> {
+    const [category] = await db.select().from(curriculumCategories).where(eq(curriculumCategories.id, id));
+    return category;
+  }
+
+  async getCurriculumCategoryBySlug(slug: string): Promise<CurriculumCategory | undefined> {
+    const [category] = await db.select().from(curriculumCategories).where(eq(curriculumCategories.slug, slug));
+    return category;
+  }
+
+  async createCurriculumCategory(category: InsertCurriculumCategory): Promise<CurriculumCategory> {
+    const [created] = await db.insert(curriculumCategories).values(category).returning();
+    return created;
+  }
+
+  async updateCurriculumCategory(id: number, updates: Partial<CurriculumCategory>): Promise<CurriculumCategory | undefined> {
+    const [updated] = await db
+      .update(curriculumCategories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(curriculumCategories.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCurriculumCategory(id: number): Promise<void> {
+    await db.delete(curriculumCategories).where(eq(curriculumCategories.id, id));
+  }
+
+  async reorderCurriculumCategories(categoryOrders: { id: number; displayOrder: number }[]): Promise<void> {
+    for (const { id, displayOrder } of categoryOrders) {
+      await db
+        .update(curriculumCategories)
+        .set({ displayOrder, updatedAt: new Date() })
+        .where(eq(curriculumCategories.id, id));
+    }
+  }
+
+  async getCoursesByCategory(categoryId: number, filters?: { isActive?: boolean }): Promise<Course[]> {
+    let query = db.select().from(courses).where(eq(courses.categoryId, categoryId));
+    
+    if (filters?.isActive !== undefined) {
+      query = query.where(and(eq(courses.categoryId, categoryId), eq(courses.isActive, filters.isActive))) as any;
+    }
+    
+    return await query;
+  }
+
+  // ============================================================================
+  // GUEST LEADS METHODS
+  // ============================================================================
+
+  async createGuestLead(lead: InsertGuestLead): Promise<GuestLead> {
+    const [created] = await db.insert(guestLeads).values(lead).returning();
+    return created;
+  }
+
+  async getGuestLeads(filters?: { status?: string; source?: string }): Promise<GuestLead[]> {
+    let query = db.select().from(guestLeads);
+    
+    const conditions = [];
+    if (filters?.status) {
+      conditions.push(eq(guestLeads.status, filters.status));
+    }
+    if (filters?.source) {
+      conditions.push(eq(guestLeads.source, filters.source));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(guestLeads.createdAt));
+  }
+
+  async getGuestLead(id: number): Promise<GuestLead | undefined> {
+    const [lead] = await db.select().from(guestLeads).where(eq(guestLeads.id, id));
+    return lead;
+  }
+
+  async updateGuestLead(id: number, updates: Partial<GuestLead>): Promise<GuestLead | undefined> {
+    const [updated] = await db
+      .update(guestLeads)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(guestLeads.id, id))
+      .returning();
+    return updated;
+  }
 }

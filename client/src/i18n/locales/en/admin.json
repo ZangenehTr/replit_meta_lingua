@@ -2369,6 +2369,28 @@
       "salesAnalytics": "Sales Analytics",
       "analyticsDescription": "Track sales performance and trends",
       "analyticsPlaceholder": "Analytics data will appear here"
+    },
+    "curriculum": {
+      "title": "Curriculum Categories",
+      "description": "Manage course categories for public marketing pages",
+      "createCategory": "Create Category",
+      "createCategoryDesc": "Add a new curriculum category",
+      "editCategory": "Edit Category",
+      "editCategoryDesc": "Update category information",
+      "namePlaceholder": "e.g., Test Preparation",
+      "slug": "URL Slug",
+      "slugDesc": "URL-friendly name (lowercase, hyphens only)",
+      "descriptionPlaceholder": "Brief description of this category",
+      "icon": "Icon Name",
+      "iconDesc": "Lucide icon name (e.g., BookOpen, GraduationCap)",
+      "activeDesc": "Show this category on the public website",
+      "categoryCreated": "Category created successfully",
+      "categoryUpdated": "Category updated successfully",
+      "categoryDeleted": "Category deleted successfully",
+      "categories": "Categories",
+      "dragToReorder": "Drag to reorder categories",
+      "noCategories": "No categories yet. Create your first category to get started.",
+      "deleteWarning": "Are you sure you want to delete this category? This action cannot be undone."
     }
   }
 }

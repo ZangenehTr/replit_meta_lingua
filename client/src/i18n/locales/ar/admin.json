@@ -1561,6 +1561,28 @@
       "salesAnalytics": "تحليلات المبيعات",
       "analyticsDescription": "تتبع أداء المبيعات والاتجاهات",
       "analyticsPlaceholder": "ستظهر بيانات التحليلات هنا"
+    },
+    "curriculum": {
+      "title": "فئات المناهج",
+      "description": "إدارة فئات الدورات للصفحات التسويقية العامة",
+      "createCategory": "إنشاء فئة",
+      "createCategoryDesc": "إضافة فئة منهج جديدة",
+      "editCategory": "تحرير الفئة",
+      "editCategoryDesc": "تحديث معلومات الفئة",
+      "namePlaceholder": "مثلاً التحضير للاختبارات",
+      "slug": "اسم URL",
+      "slugDesc": "اسم متوافق مع URL (أحرف صغيرة وشرطات فقط)",
+      "descriptionPlaceholder": "وصف مختصر لهذه الفئة",
+      "icon": "اسم الأيقونة",
+      "iconDesc": "اسم أيقونة Lucide (مثلاً BookOpen، GraduationCap)",
+      "activeDesc": "إظهار هذه الفئة على الموقع العام",
+      "categoryCreated": "تم إنشاء الفئة بنجاح",
+      "categoryUpdated": "تم تحديث الفئة بنجاح",
+      "categoryDeleted": "تم حذف الفئة بنجاح",
+      "categories": "الفئات",
+      "dragToReorder": "اسحب لإعادة ترتيب الفئات",
+      "noCategories": "لا توجد فئات بعد. أنشئ فئتك الأولى للبدء.",
+      "deleteWarning": "هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء."
     }
   }
 }
