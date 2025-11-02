@@ -495,7 +495,7 @@ app.use((req, res, next) => {
   
   // Register CMS routes (Content Management System)
   const { registerCmsRoutes } = await import('./routes/cms-routes.js');
-  registerCmsRoutes(app);
+  registerCmsRoutes(app, authenticateToken, requireRole);
   console.log('✅ CMS routes registered (Pages, Blog, Videos, Media)');
   
   // Import and register routes from routes.ts

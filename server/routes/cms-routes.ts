@@ -7,12 +7,18 @@ import { Express, Request, Response } from 'express';
 import { z } from 'zod';
 import { insertCmsPageSchema, insertCmsPageSectionSchema, insertCmsBlogCategorySchema, 
          insertCmsBlogTagSchema, insertCmsBlogPostSchema, insertCmsBlogCommentSchema,
-         insertCmsVideoSchema, insertCmsMediaAssetSchema, insertCmsPageAnalyticsSchema } from '@shared/schema';
+         insertCmsVideoSchema, insertCmsMediaAssetSchema, insertCmsPageAnalyticsSchema,
+         insertCurriculumCategorySchema, insertGuestLeadSchema } from '@shared/schema';
 import { DatabaseStorage } from '../database-storage.js';
 
-export function registerCmsRoutes(app: Express) {
+export function registerCmsRoutes(app: Express, authenticateToken?: any, requireRole?: any) {
   // Create storage instance
   const storage = new DatabaseStorage();
+  
+  // Admin middleware helper - applies both auth and admin role check
+  const requireAdmin = authenticateToken && requireRole ? 
+    [authenticateToken, requireRole(['Admin'])] : 
+    [];
   
   // ============================================================================
   // CMS PAGES ENDPOINTS
@@ -634,6 +640,154 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
         return res.status(400).json({ message: 'Invalid form data', errors: error.errors });
       }
       res.status(500).json({ message: 'Failed to send message' });
+    }
+  });
+  
+  // ============================================================================
+  // CURRICULUM CATEGORIES ENDPOINTS
+  // ============================================================================
+  
+  // Get all curriculum categories with optional active filter (admin only)
+  app.get('/api/cms/curriculum-categories', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { isActive } = req.query;
+      
+      const filters: any = {};
+      if (isActive !== undefined) {
+        filters.isActive = isActive === 'true';
+      }
+      
+      const categories = await storage.getCurriculumCategories(filters);
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching curriculum categories:', error);
+      res.status(500).json({ message: 'Failed to fetch curriculum categories' });
+    }
+  });
+  
+  // Get active curriculum categories (public endpoint)
+  app.get('/api/cms/curriculum-categories/active', async (req: Request, res: Response) => {
+    try {
+      const categories = await storage.getCurriculumCategories({ isActive: true });
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching active curriculum categories:', error);
+      res.status(500).json({ message: 'Failed to fetch active curriculum categories' });
+    }
+  });
+  
+  // Get curriculum category by slug (public endpoint)
+  app.get('/api/cms/curriculum-categories/slug/:slug', async (req: Request, res: Response) => {
+    try {
+      const category = await storage.getCurriculumCategoryBySlug(req.params.slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: 'Curriculum category not found' });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error('Error fetching curriculum category by slug:', error);
+      res.status(500).json({ message: 'Failed to fetch curriculum category' });
+    }
+  });
+  
+  // Get single curriculum category by ID (admin only)
+  app.get('/api/cms/curriculum-categories/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      const category = await storage.getCurriculumCategory(categoryId);
+      
+      if (!category) {
+        return res.status(404).json({ message: 'Curriculum category not found' });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error('Error fetching curriculum category:', error);
+      res.status(500).json({ message: 'Failed to fetch curriculum category' });
+    }
+  });
+  
+  // Create curriculum category (admin only)
+  app.post('/api/cms/curriculum-categories', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const categoryData = insertCurriculumCategorySchema.parse(req.body);
+      const category = await storage.createCurriculumCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error('Error creating curriculum category:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid curriculum category data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create curriculum category' });
+    }
+  });
+  
+  // Update curriculum category (admin only)
+  app.put('/api/cms/curriculum-categories/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      
+      // Validate update data with partial schema
+      const updateSchema = insertCurriculumCategorySchema.partial();
+      const categoryData = updateSchema.parse(req.body);
+      
+      const category = await storage.updateCurriculumCategory(categoryId, categoryData);
+      
+      if (!category) {
+        return res.status(404).json({ message: 'Curriculum category not found' });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error('Error updating curriculum category:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid curriculum category data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to update curriculum category' });
+    }
+  });
+  
+  // Delete curriculum category (admin only)
+  app.delete('/api/cms/curriculum-categories/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      await storage.deleteCurriculumCategory(categoryId);
+      res.json({ message: 'Curriculum category deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting curriculum category:', error);
+      res.status(500).json({ message: 'Failed to delete curriculum category' });
+    }
+  });
+  
+  // ============================================================================
+  // GUEST LEADS ENDPOINTS
+  // ============================================================================
+  
+  // Create guest lead (public endpoint)
+  app.post('/api/cms/guest-leads', async (req: Request, res: Response) => {
+    try {
+      const leadData = insertGuestLeadSchema.parse(req.body);
+      const lead = await storage.createGuestLead(leadData);
+      res.status(201).json(lead);
+    } catch (error) {
+      console.error('Error creating guest lead:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid guest lead data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create guest lead' });
+    }
+  });
+  
+  // Get all guest leads (admin only)
+  app.get('/api/cms/guest-leads', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const leads = await storage.getGuestLeads();
+      res.json(leads);
+    } catch (error) {
+      console.error('Error fetching guest leads:', error);
+      res.status(500).json({ message: 'Failed to fetch guest leads' });
     }
   });
 }

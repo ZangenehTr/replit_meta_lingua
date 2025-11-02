@@ -150,6 +150,7 @@ import {
   // CMS tables and types
   cmsPages, cmsPageSections, cmsBlogCategories, cmsBlogTags, cmsBlogPosts,
   cmsBlogPostTags, cmsBlogComments, cmsVideos, cmsMediaAssets, cmsPageAnalytics,
+  curriculumCategories, guestLeads,
   type CmsPage, type InsertCmsPage,
   type CmsPageSection, type InsertCmsPageSection,
   type CmsBlogCategory, type InsertCmsBlogCategory,
@@ -159,7 +160,9 @@ import {
   type CmsBlogComment, type InsertCmsBlogComment,
   type CmsVideo, type InsertCmsVideo,
   type CmsMediaAsset, type InsertCmsMediaAsset,
-  type CmsPageAnalytics, type InsertCmsPageAnalytics
+  type CmsPageAnalytics, type InsertCmsPageAnalytics,
+  type CurriculumCategory, type InsertCurriculumCategory,
+  type GuestLead, type InsertGuestLead
 } from "@shared/schema";
 
 // Placement test tables imported from main schema above

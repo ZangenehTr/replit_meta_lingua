@@ -2,9 +2,16 @@ import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { LanguageSelector } from '@/components/language-selector';
 import { useLanguage } from '@/hooks/use-language';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import {
   Menu,
   X,
@@ -21,6 +28,8 @@ import {
   Instagram,
   Youtube,
   Linkedin,
+  ChevronDown,
+  GraduationCap,
 } from 'lucide-react';
 
 interface PublicLayoutProps {
@@ -32,6 +41,11 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { direction } = useLanguage();
+
+  // Fetch active curriculum categories for navigation
+  const { data: curriculumCategories = [] } = useQuery<any[]>({
+    queryKey: ['/api/cms/curriculum-categories/active'],
+  });
 
   const navigation = [
     { name: t('nav.home'), href: '/', icon: Home },
@@ -79,8 +93,64 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex lg:gap-x-8">
-            {navigation.map((item) => {
+          <div className="hidden lg:flex lg:gap-x-8 lg:items-center">
+            {/* Home Link */}
+            <Link href="/">
+              <a
+                className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                  isActivePath('/')
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                data-testid="link-nav-home"
+              >
+                <Home className="h-4 w-4" />
+                {t('nav.home')}
+              </a>
+            </Link>
+
+            {/* Curriculum Dropdown */}
+            {curriculumCategories.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                      isActivePath('/curriculum')
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    data-testid="button-nav-curriculum"
+                  >
+                    <GraduationCap className="h-4 w-4" />
+                    {t('nav.curriculum', 'Curriculum')}
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <Link href="/curriculum">
+                    <DropdownMenuItem asChild>
+                      <a className="cursor-pointer" data-testid="link-all-courses">
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        {t('nav.allCourses', 'All Courses')}
+                      </a>
+                    </DropdownMenuItem>
+                  </Link>
+                  <div className="my-1 border-t" />
+                  {curriculumCategories.map((category: any) => (
+                    <Link key={category.id} href={`/curriculum/${category.slug}`}>
+                      <DropdownMenuItem asChild>
+                        <a className="cursor-pointer" data-testid={`link-category-${category.slug}`}>
+                          {category.name}
+                        </a>
+                      </DropdownMenuItem>
+                    </Link>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Other Navigation Items */}
+            {navigation.slice(1).map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.href);
               return (
@@ -144,7 +214,57 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                   </div>
 
                   <nav className="flex flex-col gap-2">
-                    {navigation.map((item) => {
+                    {/* Home Link */}
+                    <Link href="/">
+                      <a
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          isActivePath('/')
+                            ? 'bg-primary/10 text-primary font-semibold'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        }`}
+                        data-testid="link-mobile-home"
+                      >
+                        <Home className="h-5 w-5" />
+                        {t('nav.home')}
+                      </a>
+                    </Link>
+
+                    {/* Curriculum Section */}
+                    {curriculumCategories.length > 0 && (
+                      <div>
+                        <Link href="/curriculum">
+                          <a
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                              isActivePath('/curriculum')
+                                ? 'bg-primary/10 text-primary font-semibold'
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            }`}
+                            data-testid="link-mobile-curriculum"
+                          >
+                            <GraduationCap className="h-5 w-5" />
+                            {t('nav.curriculum', 'Curriculum')}
+                          </a>
+                        </Link>
+                        <div className="ml-8 mt-1 flex flex-col gap-1">
+                          {curriculumCategories.map((category: any) => (
+                            <Link key={category.id} href={`/curriculum/${category.slug}`}>
+                              <a
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                                data-testid={`link-mobile-category-${category.slug}`}
+                              >
+                                {category.name}
+                              </a>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Other Navigation Items */}
+                    {navigation.slice(1).map((item) => {
                       const Icon = item.icon;
                       const isActive = isActivePath(item.href);
                       return (
