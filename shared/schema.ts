@@ -4051,6 +4051,18 @@ export const marketingCampaigns = pgTable("marketing_campaigns", {
   createdBy: integer("created_by").references(() => users.id),
   lastModifiedBy: integer("last_modified_by").references(() => users.id),
   metadata: jsonb("metadata"),
+  // SMS Campaign fields
+  discountCode: varchar("discount_code", { length: 100 }), // optional discount code for seasonal campaigns
+  smsTemplate: text("sms_template"), // SMS message template with variables
+  smsRecipientCount: integer("sms_recipient_count").default(0), // number of SMS recipients
+  smsSentCount: integer("sms_sent_count").default(0), // number of SMS actually sent
+  smsFailedCount: integer("sms_failed_count").default(0), // number of failed SMS
+  smsDeliveredCount: integer("sms_delivered_count").default(0), // number of delivered SMS
+  smsCost: bigint("sms_cost", { mode: "number" }).default(0), // total SMS cost in IRR
+  audienceSegment: jsonb("audience_segment"), // stores audience selection criteria {type: 'unpaid_placement_test', params: {daysAgo: 7}}
+  customRecipients: text("custom_recipients").array().default([]), // for CSV uploaded phone numbers
+  smsScheduledFor: timestamp("sms_scheduled_for"), // when to send bulk SMS
+  smsSentAt: timestamp("sms_sent_at"), // when bulk SMS was sent
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -7663,6 +7675,11 @@ export const insertMarketingCampaignSchema = createInsertSchema(marketingCampaig
   roi: true,
   conversionRate: true,
   engagementRate: true,
+  smsSentCount: true,
+  smsFailedCount: true,
+  smsDeliveredCount: true,
+  smsCost: true,
+  smsSentAt: true,
   createdAt: true,
   updatedAt: true
 });
