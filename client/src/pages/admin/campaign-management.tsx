@@ -46,6 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/useLanguage";
+import { nanoid } from "nanoid";
 
 interface Campaign {
   id: number;
@@ -256,7 +257,8 @@ export default function CampaignManagementPage() {
         body: JSON.stringify({
           message: smsMessage,
           testMode: true,
-          testPhone
+          testPhone,
+          idempotencyKey: nanoid()
         })
       });
       toast({ title: 'Test SMS sent successfully!' });
@@ -279,7 +281,8 @@ export default function CampaignManagementPage() {
         message: smsMessage.replace('{discountCode}', discountCode || 'N/A'),
         segment: audienceSegment === 'custom_csv' ? undefined : audienceSegment,
         recipients: audienceSegment === 'custom_csv' ? customRecipients : undefined,
-        monthsInactive: audienceSegment === 'inactive_students' ? inactiveMonths : undefined
+        monthsInactive: audienceSegment === 'inactive_students' ? inactiveMonths : undefined,
+        idempotencyKey: nanoid()
       };
 
       const response = await apiRequest(`/api/admin/campaigns/${selectedCampaign.id}/send-sms`, {
@@ -974,6 +977,301 @@ export default function CampaignManagementPage() {
                   </Card>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sms">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Bulk SMS Campaigns
+              </CardTitle>
+              <CardDescription>
+                Send targeted SMS campaigns to students with discount codes and personalized messages
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Campaign Selection */}
+              <div className="space-y-2">
+                <Label>Select Campaign (Optional)</Label>
+                <Select 
+                  value={selectedCampaign?.id?.toString() || ''} 
+                  onValueChange={(val) => {
+                    const campaign = campaigns.find(c => c.id === parseInt(val));
+                    setSelectedCampaign(campaign || null);
+                  }}
+                >
+                  <SelectTrigger data-testid="select-campaign">
+                    <SelectValue placeholder="Select a campaign to track SMS metrics" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {campaigns.filter(c => c.status !== 'completed').map((campaign) => (
+                      <SelectItem key={campaign.id} value={campaign.id.toString()}>
+                        {campaign.name} ({campaign.type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Link SMS sends to a campaign for tracking and analytics
+                </p>
+              </div>
+
+              {/* Audience Selector */}
+              <div className="space-y-2">
+                <Label>Target Audience</Label>
+                <Select 
+                  value={audienceSegment} 
+                  onValueChange={setAudienceSegment}
+                >
+                  <SelectTrigger data-testid="select-audience">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unpaid_placement_test">
+                      Unpaid Placement Test Takers (Last 7 Days)
+                    </SelectItem>
+                    <SelectItem value="inactive_students">
+                      Inactive Students (No Activity)
+                    </SelectItem>
+                    <SelectItem value="current_students">
+                      Current Enrolled Students
+                    </SelectItem>
+                    <SelectItem value="custom_csv">
+                      Custom List (CSV Upload)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {audienceSegment === 'inactive_students' && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Label className="text-sm">Inactive for (months):</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="24"
+                      value={inactiveMonths}
+                      onChange={(e) => setInactiveMonths(parseInt(e.target.value) || 3)}
+                      className="w-20"
+                      data-testid="input-inactive-months"
+                    />
+                  </div>
+                )}
+
+                {/* Audience Preview */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchAudiencePreview}
+                  disabled={audiencePreviewLoading}
+                  data-testid="button-preview-audience"
+                  className="mt-2"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview Audience ({audienceCount || 0} recipients)
+                </Button>
+              </div>
+
+              {/* CSV Upload for Custom Audience */}
+              {audienceSegment === 'custom_csv' && (
+                <Card className="bg-muted/50">
+                  <CardHeader>
+                    <CardTitle className="text-sm">Upload Phone Numbers</CardTitle>
+                    <CardDescription className="text-xs">
+                      Upload CSV file or paste phone numbers (one per line). Format: 09123456789 or 989123456789
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Textarea
+                      placeholder="Paste phone numbers here (one per line) or paste CSV content..."
+                      value={csvContent}
+                      onChange={(e) => setCsvContent(e.target.value)}
+                      rows={8}
+                      className="font-mono text-sm"
+                      data-testid="textarea-csv-content"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => parseCSVContent('csv')}
+                        disabled={!csvContent.trim() || csvParseLoading}
+                        size="sm"
+                        data-testid="button-parse-csv"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Parse CSV
+                      </Button>
+                      <Button
+                        onClick={() => parseCSVContent('text')}
+                        disabled={!csvContent.trim() || csvParseLoading}
+                        size="sm"
+                        variant="outline"
+                        data-testid="button-parse-text"
+                      >
+                        Parse as Text
+                      </Button>
+                    </div>
+                    {csvParseResult && (
+                      <div className="space-y-2 text-sm">
+                        <div className="flex gap-4">
+                          <Badge variant="default" className="bg-green-100 text-green-800">
+                            Valid: {csvParseResult.validCount}
+                          </Badge>
+                          {csvParseResult.invalidCount > 0 && (
+                            <Badge variant="default" className="bg-red-100 text-red-800">
+                              Invalid: {csvParseResult.invalidCount}
+                            </Badge>
+                          )}
+                          {csvParseResult.duplicateCount > 0 && (
+                            <Badge variant="default" className="bg-yellow-100 text-yellow-800">
+                              Duplicates: {csvParseResult.duplicateCount}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Message Template Editor */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Message Template</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {smsMessage.length} / 160 characters
+                    {smsMessage.length > 160 && ` (${Math.ceil(smsMessage.length / 160)} SMS)`}
+                  </span>
+                </div>
+                <Textarea
+                  placeholder="Enter your message here. Use variables: {studentName}, {discountCode}, {validUntil}"
+                  value={smsMessage}
+                  onChange={(e) => setSmsMessage(e.target.value)}
+                  rows={6}
+                  data-testid="textarea-sms-message"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => insertVariable('{studentName}')}
+                    data-testid="button-insert-name"
+                  >
+                    + Student Name
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => insertVariable('{discountCode}')}
+                    data-testid="button-insert-discount"
+                  >
+                    + Discount Code
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => insertVariable('{validUntil}')}
+                    data-testid="button-insert-valid-until"
+                  >
+                    + Valid Until
+                  </Button>
+                </div>
+                
+                {/* Message Preview */}
+                <Card className="bg-muted/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xs text-muted-foreground">Preview</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    {smsMessage
+                      .replace('{studentName}', 'علی رضایی')
+                      .replace('{discountCode}', 'SPRING2025')
+                      .replace('{validUntil}', '1404/01/15')}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Discount Code Input */}
+              <div className="space-y-2">
+                <Label>Discount Code (Optional)</Label>
+                <Input
+                  placeholder="e.g., SPRING2025, YALDA30"
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                  data-testid="input-discount-code"
+                />
+                <p className="text-xs text-muted-foreground">
+                  This code will replace {'{discountCode}'} variable in your message
+                </p>
+              </div>
+
+              {/* Test SMS Feature */}
+              <Card className="bg-blue-50 dark:bg-blue-950">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Test SMS Before Sending
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Test phone number (e.g., 09123456789)"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      data-testid="input-test-phone"
+                    />
+                    <Button
+                      onClick={sendTestSMS}
+                      disabled={!testPhone || !smsMessage.trim() || testSMSLoading}
+                      data-testid="button-send-test"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Test
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Send a test message to verify formatting and variable replacement
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Bulk Send */}
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div>
+                  <p className="text-sm font-medium">Ready to send to {audienceCount || 0} recipients</p>
+                  <p className="text-xs text-muted-foreground">
+                    Estimated cost: {(audienceCount || 0) * 50} IRR
+                  </p>
+                </div>
+                <Button
+                  size="lg"
+                  onClick={sendBulkSMS}
+                  disabled={!smsMessage.trim() || audienceCount === 0 || bulkSMSLoading}
+                  data-testid="button-send-bulk"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Bulk SMS
+                </Button>
+              </div>
+
+              {/* Progress Tracking */}
+              {smsSendProgress && (
+                <Card className="bg-green-50 dark:bg-green-950">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Sending Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Progress value={(smsSendProgress.sent / smsSendProgress.total) * 100} />
+                    <div className="flex justify-between text-sm">
+                      <span>Sent: {smsSendProgress.sent}</span>
+                      <span>Failed: {smsSendProgress.failed}</span>
+                      <span>Total: {smsSendProgress.total}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
