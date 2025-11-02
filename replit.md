@@ -30,6 +30,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
     - Front Desk Clerk Pages with full internationalization, including Dashboard, Walk-in Intake, Call Logging, and Caller History.
     - Public marketing website with 8 pages (Homepage, Blog, Video Gallery, About, Contact) replacing the login-first experience, featuring SEO implementation and partial i18n.
     - Comprehensive SMS Campaign Management System for targeted marketing, audience segmentation (e.g., unpaid placement test takers, inactive students, custom CSV uploads), variable message templates, and bulk sending.
+    - **Dynamic Curriculum Category System**: Admin-managed curriculum categories with drag-to-reorder, public curriculum hub (/curriculum), dynamic category detail pages (/curriculum/:slug), and integrated navigation dropdown. Supports SEO, i18n, and course-category associations.
 
 ### Backend
 - **Framework**: Express.js with TypeScript
@@ -52,7 +53,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ### Database Design
 - **ORM**: Drizzle
-- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress tracking, LinguaQuest lessons, and dynamic form definitions/submissions.
+- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress tracking, LinguaQuest lessons, dynamic form definitions/submissions, curriculum categories with course associations, and guest leads for contact capture.
 - **Migration**: `npm run db:push --force` for schema synchronization or manual SQL for fresh deployments.
 
 ### Deployment Strategy
