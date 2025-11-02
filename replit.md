@@ -31,6 +31,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
     - Public marketing website with 8 pages (Homepage, Blog, Video Gallery, About, Contact) replacing the login-first experience, featuring SEO implementation and partial i18n.
     - Comprehensive SMS Campaign Management System for targeted marketing, audience segmentation (e.g., unpaid placement test takers, inactive students, custom CSV uploads), variable message templates, and bulk sending.
     - **Dynamic Curriculum Category System**: Admin-managed curriculum categories with drag-to-reorder, public curriculum hub (/curriculum), dynamic category detail pages (/curriculum/:slug), and integrated navigation dropdown. Supports SEO, i18n, and course-category associations.
+    - **Guest Placement Test Flow**: Anonymous placement test (/take-test) with no login required, post-test contact capture modal, CEFR results display with skill breakdowns, curriculum category recommendations, and CTAs to register/enroll. Session persistence via localStorage enables test resume.
 
 ### Backend
 - **Framework**: Express.js with TypeScript
