@@ -64,6 +64,7 @@ const __dirname = path.dirname(__filename);
 import { generatePayslipPDF, generateCertificatePDF, generateTestResultsPDF, type TestResultsPDFData } from "./utils/pdf-generator";
 import { validateIranianPhone, validateIranianEmail, validatePersianText } from "./utils/iranian-validation";
 import rateLimit from 'express-rate-limit';
+import { parsePhoneNumbersFromCSV, parsePhoneNumbersFromText, normalizeIranianPhone, isValidIranianPhone } from "./utils/csv-phone-parser";
 import { OtpService } from './services/otp-service';
 import { z } from "zod";
 import { createPlatformAuthMiddleware, validatePlatformCredential } from "./middleware/platform-auth";
@@ -17032,6 +17033,152 @@ Return JSON format:
       console.error('Error updating marketing campaign:', error);
       res.status(500).json({ error: 'Failed to update marketing campaign' });
     }
+
+  // Bulk SMS Campaign Endpoints
+  app.get("/api/admin/campaigns/audience-preview", authenticateToken, requireRole(["Admin", "Call Center Agent"]), async (req: any, res) => {
+    try {
+      const { segment, monthsInactive, customFilter } = req.query;
+      let count = 0;
+      let sampleRecords: any[] = [];
+
+      switch (segment) {
+        case "unpaid_placement_test":
+          const unpaidStudents = await storage.getUnpaidStudentsAfterPlacementTest(7);
+          count = unpaidStudents.filter((s: any) => s.phone).length;
+          sampleRecords = unpaidStudents.slice(0, 5);
+          break;
+        case "inactive_students":
+          const months = parseInt(monthsInactive as string) || 3;
+          const inactiveStudents = await storage.getInactiveStudents(months);
+          count = inactiveStudents.filter((s: any) => s.phone).length;
+          sampleRecords = inactiveStudents.slice(0, 5);
+          break;
+        case "current_students":
+          const currentStudents = await storage.getCurrentEnrolledStudents();
+          count = currentStudents.filter((s: any) => s.phone).length;
+          sampleRecords = currentStudents.slice(0, 5);
+          break;
+        case "custom_filter":
+          const criteria = customFilter ? JSON.parse(customFilter as string) : {};
+          const filteredStudents = await storage.getStudentsByCustomFilter(criteria);
+          count = filteredStudents.filter((s: any) => s.phone).length;
+          sampleRecords = filteredStudents.slice(0, 5);
+          break;
+        default:
+          return res.status(400).json({ error: "Invalid audience segment" });
+      }
+
+      res.json({ count, sampleRecords, segment });
+    } catch (error) {
+      console.error("Error previewing campaign audience:", error);
+      res.status(500).json({ error: "Failed to preview audience" });
+    }
+  });
+
+  app.post("/api/admin/campaigns/upload-recipients", authenticateToken, requireRole(["Admin", "Call Center Agent"]), async (req: any, res) => {
+    try {
+      const { content, format } = req.body;
+
+      if (!content) {
+        return res.status(400).json({ error: "No content provided" });
+      }
+
+      let result;
+      if (format === "csv") {
+        result = parsePhoneNumbersFromCSV(content);
+      } else {
+        result = parsePhoneNumbersFromText(content);
+      }
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error || "Failed to parse phone numbers" });
+      }
+
+      res.json({
+        success: true,
+        validCount: result.validPhones.length,
+        invalidCount: result.invalidPhones.length,
+        duplicateCount: result.duplicates.length,
+        validPhones: result.validPhones,
+        invalidPhones: result.invalidPhones.slice(0, 20),
+        duplicates: result.duplicates.slice(0, 20)
+      });
+    } catch (error) {
+      console.error("Error uploading recipients:", error);
+      res.status(500).json({ error: "Failed to upload recipients" });
+    }
+  });
+
+  app.post("/api/admin/campaigns/:id/send-sms", authenticateToken, requireRole(["Admin", "Call Center Agent"]), async (req: any, res) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const { message, segment, recipients, monthsInactive, customFilter, testMode, testPhone } = req.body;
+
+      if (!message || !message.trim()) {
+        return res.status(400).json({ error: "Message text is required" });
+      }
+
+      const { kavenegarService } = await import("./kavenegar-service");
+
+      if (testMode && testPhone) {
+        const normalizedPhone = normalizeIranianPhone(testPhone);
+        if (!normalizedPhone || !isValidIranianPhone(normalizedPhone)) {
+          return res.status(400).json({ error: "Invalid test phone number" });
+        }
+        const result = await kavenegarService.sendBulkSMS([normalizedPhone], message);
+        return res.json({ success: true, testMode: true, sent: result.sent, failed: result.failed });
+      }
+
+      let phoneNumbers: string[] = [];
+      if (recipients && recipients.length > 0) {
+        phoneNumbers = recipients.map((r: any) => r.phone).filter((p: string) => p && isValidIranianPhone(p));
+      } else if (segment) {
+        let students: any[] = [];
+        switch (segment) {
+          case "unpaid_placement_test":
+            students = await storage.getUnpaidStudentsAfterPlacementTest(7);
+            break;
+          case "inactive_students":
+            const months = monthsInactive || 3;
+            students = await storage.getInactiveStudents(months);
+            break;
+          case "current_students":
+            students = await storage.getCurrentEnrolledStudents();
+            break;
+          case "custom_filter":
+            const criteria = customFilter || {};
+            students = await storage.getStudentsByCustomFilter(criteria);
+            break;
+          default:
+            return res.status(400).json({ error: "Invalid audience segment" });
+        }
+        phoneNumbers = students.map((s: any) => s.phone).filter((p: string) => p && isValidIranianPhone(p));
+      } else {
+        return res.status(400).json({ error: "Either recipients or segment must be provided" });
+      }
+
+      if (phoneNumbers.length === 0) {
+        return res.status(400).json({ error: "No valid phone numbers found" });
+      }
+
+      const result = await kavenegarService.sendBulkSMS(phoneNumbers, message);
+
+      await storage.updateMarketingCampaign(campaignId, {
+        smsRecipientCount: phoneNumbers.length,
+        smsTemplate: message
+      });
+
+      res.json({
+        success: true,
+        sent: result.sent,
+        failed: result.failed,
+        totalRecipients: phoneNumbers.length
+      });
+    } catch (error) {
+      console.error("Error sending bulk SMS:", error);
+      res.status(500).json({ error: "Failed to send bulk SMS" });
+    }
+  });
   });
 
   app.get("/api/admin/campaign-management/analytics", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
