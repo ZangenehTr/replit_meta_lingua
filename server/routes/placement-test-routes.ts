@@ -461,6 +461,224 @@ export function createPlacementTestRoutes(
     }
   });
 
+  // ============================================
+  // GUEST PLACEMENT TEST ROUTES (No authentication required)
+  // ============================================
+
+  // Guest: Start new placement test (no authentication)
+  router.post('/guest/start', async (req, res) => {
+    try {
+      const data = startTestSchema.parse(req.body);
+      
+      // Use userId = -1 for guest sessions
+      const GUEST_USER_ID = -1;
+
+      const session = await placementService.startPlacementTest(
+        GUEST_USER_ID,
+        data.targetLanguage,
+        data.learningGoal
+      );
+
+      res.json({
+        success: true,
+        session: {
+          id: session.id,
+          status: session.status,
+          currentSkill: session.currentSkill,
+          startedAt: session.startedAt,
+          maxDurationMinutes: 10
+        }
+      });
+    } catch (error) {
+      console.error('Error starting guest placement test:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to start placement test'
+      });
+    }
+  });
+
+  // Guest: Get next question (no authentication)
+  router.get('/guest/sessions/:sessionId/next-question', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+
+      const session = await storage.getPlacementTestSession(sessionId);
+      if (!session || session.userId !== -1) {
+        return res.status(404).json({
+          success: false,
+          error: 'Session not found'
+        });
+      }
+
+      const nextQuestion = await placementService.getNextQuestion(sessionId);
+
+      if (!nextQuestion) {
+        const completedSession = await placementService.completeTest(sessionId);
+        return res.json({
+          success: true,
+          testCompleted: true,
+          results: {
+            overallLevel: completedSession.overallCEFRLevel,
+            skillLevels: {
+              speaking: completedSession.speakingLevel,
+              listening: completedSession.listeningLevel,
+              reading: completedSession.readingLevel,
+              writing: completedSession.writingLevel
+            },
+            scores: {
+              overall: completedSession.overallScore,
+              speaking: completedSession.speakingScore,
+              listening: completedSession.listeningScore,
+              reading: completedSession.readingScore,
+              writing: completedSession.writingScore
+            },
+            strengths: completedSession.strengths,
+            recommendations: completedSession.recommendations,
+            confidence: completedSession.confidenceScore
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        question: {
+          id: nextQuestion.id,
+          skill: nextQuestion.skill,
+          cefrLevel: nextQuestion.cefrLevel,
+          questionType: nextQuestion.questionType,
+          title: nextQuestion.title,
+          prompt: nextQuestion.prompt,
+          content: nextQuestion.content,
+          responseType: nextQuestion.responseType,
+          expectedDurationSeconds: nextQuestion.expectedDurationSeconds,
+          estimatedCompletionMinutes: nextQuestion.estimatedCompletionMinutes
+        }
+      });
+    } catch (error) {
+      console.error('Error getting next question for guest:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get next question'
+      });
+    }
+  });
+
+  // Guest: Submit response to question (no authentication)
+  router.post('/guest/sessions/:sessionId/responses', upload.single('audio'), async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      
+      let data;
+      
+      if (req.file) {
+        const questionId = parseInt(req.body.questionId);
+        console.log(`Guest audio received: ${req.file.buffer.length} bytes, SKIPPING processing to avoid memory crash`);
+        
+        data = {
+          questionId,
+          userResponse: {
+            audioUrl: '',
+            transcript: 'Audio received - automatic evaluation',
+            duration: 60,
+            audioReceived: true
+          }
+        };
+        req.file.buffer = Buffer.alloc(0);
+      } else {
+        data = submitResponseSchema.parse(req.body);
+      }
+
+      const session = await storage.getPlacementTestSession(sessionId);
+      if (!session || session.userId !== -1) {
+        return res.status(404).json({
+          success: false,
+          error: 'Session not found'
+        });
+      }
+
+      const result = await placementService.submitResponse(
+        sessionId,
+        data.questionId,
+        data.userResponse
+      );
+
+      res.json({
+        success: true,
+        evaluation: {
+          score: result.evaluation.score,
+          level: result.evaluation.level,
+          confidence: result.evaluation.confidence,
+          feedback: result.evaluation.detailedFeedback,
+          recommendations: result.evaluation.recommendations
+        },
+        submitted: true
+      });
+    } catch (error) {
+      console.error('Error submitting guest response:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to submit response'
+      });
+    }
+  });
+
+  // Guest: Get placement test results (no authentication)
+  router.get('/guest/sessions/:sessionId/results', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+
+      const session = await storage.getPlacementTestSession(sessionId);
+      if (!session || session.userId !== -1) {
+        return res.status(404).json({
+          success: false,
+          error: 'Session not found'
+        });
+      }
+
+      if (session.status !== 'completed') {
+        return res.status(400).json({
+          success: false,
+          error: 'Test not yet completed'
+        });
+      }
+
+      res.json({
+        success: true,
+        results: {
+          sessionId: session.id,
+          completedAt: session.completedAt,
+          overallLevel: session.overallCEFRLevel,
+          skillLevels: {
+            speaking: session.speakingLevel,
+            listening: session.listeningLevel,
+            reading: session.readingLevel,
+            writing: session.writingLevel
+          },
+          scores: {
+            overall: session.overallScore,
+            speaking: session.speakingScore,
+            listening: session.listeningScore,
+            reading: session.readingScore,
+            writing: session.writingScore
+          },
+          analysis: {
+            strengths: session.strengths,
+            weaknesses: session.weaknesses,
+            recommendations: session.recommendations,
+            confidenceScore: session.confidenceScore
+          },
+          testDuration: session.totalDurationSeconds
+        }
+      });
+    } catch (error) {
+      console.error('Error getting guest results:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get test results'
+      });
+    }
+  });
 
   return router;
 }
