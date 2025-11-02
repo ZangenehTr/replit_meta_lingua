@@ -118,10 +118,12 @@ import {
   // Exam roadmap tables and types
   roadmapConfigs, roadmapPlans, roadmapSessions,
   // Placement test tables and types
-  placementTests, placementQuestions, placementTestSessions, placementResults,
+  placementTests, placementQuestions, placementTestSessions, placementTestQuestions, placementTestResponses, placementResults,
   type PlacementTest, type InsertPlacementTest,
   type PlacementQuestion, type InsertPlacementQuestion,
   type PlacementTestSession, type InsertPlacementTestSession,
+  type PlacementTestQuestion, type InsertPlacementTestQuestion,
+  type PlacementTestResponse, type InsertPlacementTestResponse,
   type PlacementResult, type InsertPlacementResult,
   // Book e-commerce tables and types
   book_categories, books, book_assets, dictionary_lookups, carts, cart_items,

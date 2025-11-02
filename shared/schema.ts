@@ -4326,6 +4326,49 @@ export const placementTestSessions = pgTable("placement_test_sessions", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Placement Test Questions table
+export const placementTestQuestions = pgTable("placement_test_questions", {
+  id: serial("id").primaryKey(),
+  skill: varchar("skill", { length: 50 }).notNull(),
+  cefrLevel: varchar("cefr_level", { length: 10 }).notNull(),
+  questionType: varchar("question_type", { length: 50 }).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  prompt: text("prompt").notNull(),
+  content: jsonb("content").notNull(),
+  responseType: varchar("response_type", { length: 50 }).notNull(),
+  expectedDurationSeconds: integer("expected_duration_seconds").notNull(),
+  scoringCriteria: jsonb("scoring_criteria"),
+  maxScore: integer("max_score").default(100),
+  difficultyWeight: decimal("difficulty_weight", { precision: 3, scale: 2 }),
+  prerequisiteSkills: text("prerequisite_skills").array(),
+  tags: text("tags").array(),
+  estimatedCompletionMinutes: integer("estimated_completion_minutes").default(1),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Placement Test Responses table
+export const placementTestResponses = pgTable("placement_test_responses", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => placementTestSessions.id).notNull(),
+  questionId: integer("question_id").references(() => placementTestQuestions.id).notNull(),
+  userResponse: jsonb("user_response").notNull(),
+  responseStartTime: timestamp("response_start_time"),
+  responseEndTime: timestamp("response_end_time"),
+  timeSpentSeconds: integer("time_spent_seconds"),
+  aiScore: decimal("ai_score", { precision: 5, scale: 2 }),
+  cefrIndicators: jsonb("cefr_indicators"),
+  detailedFeedback: jsonb("detailed_feedback"),
+  manualScore: decimal("manual_score", { precision: 5, scale: 2 }),
+  manualFeedback: text("manual_feedback"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  triggeredLevelAdjustment: boolean("triggered_level_adjustment").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Placement Results table
 export const placementResults = pgTable("placement_results", {
   id: serial("id").primaryKey(),
@@ -7397,9 +7440,13 @@ export type InsertPlacementTest = typeof placementtests.$inferInsert;
 export type PlacementQuestion = typeof placementQuestions.$inferSelect;
 export type InsertPlacementQuestion = typeof placementquestions.$inferInsert;
 export type PlacementTestSession = typeof placementTestSessions.$inferSelect;
-export type InsertPlacementTestSession = typeof placementtestsessions.$inferInsert;
+export type InsertPlacementTestSession = typeof placementTestSessions.$inferInsert;
+export type PlacementTestQuestion = typeof placementTestQuestions.$inferSelect;
+export type InsertPlacementTestQuestion = typeof placementTestQuestions.$inferInsert;
+export type PlacementTestResponse = typeof placementTestResponses.$inferSelect;
+export type InsertPlacementTestResponse = typeof placementTestResponses.$inferInsert;
 export type PlacementResult = typeof placementResults.$inferSelect;
-export type InsertPlacementResult = typeof placementresults.$inferInsert;
+export type InsertPlacementResult = typeof placementResults.$inferInsert;
 
 // ============================================================================
 // ZOD SCHEMAS FOR EXAM-FOCUSED ROADMAP TABLES

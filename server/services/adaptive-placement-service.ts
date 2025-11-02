@@ -781,9 +781,46 @@ export class AdaptivePlacementService {
 
   /**
    * Get question for specific skill and level
+   * Uses existing questions from database, falls back to generation if none exist
    */
   private async getQuestionForLevel(skill: Skill, level: CEFRLevel): Promise<PlacementTestQuestion | null> {
-    // Generate specific content based on skill and level
+    // First, try to fetch existing questions from database
+    const existingQuestions = await this.storage.getPlacementTestQuestions({
+      skill,
+      cefrLevel: level,
+      isActive: true
+    });
+    
+    // If we have existing questions, randomly select one
+    if (existingQuestions && existingQuestions.length > 0) {
+      const randomIndex = Math.floor(Math.random() * existingQuestions.length);
+      const selectedQuestion = existingQuestions[randomIndex];
+      
+      // Map database question to PlacementTestQuestion interface
+      return {
+        id: selectedQuestion.id,
+        skill: selectedQuestion.skill as Skill,
+        cefrLevel: selectedQuestion.cefrLevel as CEFRLevel,
+        questionType: selectedQuestion.questionType,
+        title: selectedQuestion.title,
+        prompt: selectedQuestion.prompt,
+        content: selectedQuestion.content,
+        responseType: selectedQuestion.responseType as 'audio' | 'text' | 'multiple_choice',
+        expectedDurationSeconds: selectedQuestion.expectedDurationSeconds,
+        scoringCriteria: selectedQuestion.scoringCriteria,
+        maxScore: selectedQuestion.maxScore,
+        difficultyWeight: selectedQuestion.difficultyWeight?.toString() || '0.50',
+        prerequisiteSkills: selectedQuestion.prerequisiteSkills || [],
+        tags: selectedQuestion.tags || [],
+        estimatedCompletionMinutes: selectedQuestion.estimatedCompletionMinutes || 1,
+        isActive: selectedQuestion.isActive,
+        createdAt: selectedQuestion.createdAt,
+        updatedAt: selectedQuestion.updatedAt
+      } as PlacementTestQuestion;
+    }
+    
+    // Fallback: Generate a new question if no existing questions found
+    console.warn(`No existing questions found for ${skill} ${level}, generating new question`);
     const questionContent = this.generateQuestionContent(skill, level);
     
     // Create and store question in database
