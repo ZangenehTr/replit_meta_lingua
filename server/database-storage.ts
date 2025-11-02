@@ -6176,6 +6176,153 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // ===== AUDIENCE SEGMENTATION FOR SMS CAMPAIGNS =====
+  
+  // Get inactive students (no class activity in X months)
+  async getInactiveStudents(monthsInactive: number): Promise<any[]> {
+    console.log(`DatabaseStorage.getInactiveStudents called with ${monthsInactive} months inactive`);
+    
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - monthsInactive);
+      const cutoffDateString = cutoffDate.toISOString();
+
+      const result = await db.execute(sql`
+        SELECT DISTINCT
+          u.id,
+          u.email,
+          u.first_name,
+          u.last_name,
+          u.phone_number,
+          MAX(ce.class_date) as last_class_date
+        FROM users u
+        INNER JOIN class_enrollments ce ON u.id = ce.user_id
+        WHERE u.role = 'Student'
+        AND ce.payment_status = 'paid'
+        GROUP BY u.id, u.email, u.first_name, u.last_name, u.phone_number
+        HAVING MAX(ce.class_date) < ${cutoffDateString}
+        ORDER BY MAX(ce.class_date) DESC
+      `);
+
+      const inactiveStudents = result.rows.map((row: any) => ({
+        userId: row.id,
+        email: row.email || '',
+        firstName: row.first_name || '',
+        lastName: row.last_name || '',
+        phone: row.phone_number || '',
+        lastClassDate: row.last_class_date,
+        monthsInactive: Math.floor(
+          (new Date().getTime() - new Date(row.last_class_date).getTime()) / (1000 * 60 * 60 * 24 * 30)
+        )
+      }));
+
+      console.log(`Found ${inactiveStudents.length} inactive students (${monthsInactive}+ months)`);
+      return inactiveStudents;
+    } catch (error) {
+      console.error('Error getting inactive students:', error);
+      return [];
+    }
+  }
+
+  // Get currently enrolled students with active paid enrollments
+  async getCurrentEnrolledStudents(): Promise<any[]> {
+    console.log('DatabaseStorage.getCurrentEnrolledStudents called');
+    
+    try {
+      const result = await db.execute(sql`
+        SELECT DISTINCT
+          u.id,
+          u.email,
+          u.first_name,
+          u.last_name,
+          u.phone_number,
+          COUNT(DISTINCT ce.id) as active_enrollments,
+          MAX(ce.class_date) as next_class_date
+        FROM users u
+        INNER JOIN class_enrollments ce ON u.id = ce.user_id
+        WHERE u.role = 'Student'
+        AND ce.payment_status = 'paid'
+        AND ce.class_date >= CURRENT_DATE
+        GROUP BY u.id, u.email, u.first_name, u.last_name, u.phone_number
+        ORDER BY u.last_name, u.first_name
+      `);
+
+      const enrolledStudents = result.rows.map((row: any) => ({
+        userId: row.id,
+        email: row.email || '',
+        firstName: row.first_name || '',
+        lastName: row.last_name || '',
+        phone: row.phone_number || '',
+        activeEnrollments: row.active_enrollments,
+        nextClassDate: row.next_class_date
+      }));
+
+      console.log(`Found ${enrolledStudents.length} currently enrolled students`);
+      return enrolledStudents;
+    } catch (error) {
+      console.error('Error getting current enrolled students:', error);
+      return [];
+    }
+  }
+
+  // Get students by custom filter criteria
+  async getStudentsByCustomFilter(criteria: any): Promise<any[]> {
+    console.log('DatabaseStorage.getStudentsByCustomFilter called with criteria:', criteria);
+    
+    try {
+      // Build dynamic WHERE conditions based on criteria
+      const conditions: string[] = ["u.role = 'Student'"];
+      const params: any[] = [];
+      
+      if (criteria.hasEmail !== undefined) {
+        conditions.push(criteria.hasEmail ? "u.email IS NOT NULL AND u.email != ''" : "u.email IS NULL OR u.email = ''");
+      }
+      
+      if (criteria.hasPhone !== undefined) {
+        conditions.push(criteria.hasPhone ? "u.phone_number IS NOT NULL AND u.phone_number != ''" : "u.phone_number IS NULL OR u.phone_number = ''");
+      }
+      
+      if (criteria.createdAfter) {
+        conditions.push(`u.created_at >= '${new Date(criteria.createdAfter).toISOString()}'`);
+      }
+      
+      if (criteria.createdBefore) {
+        conditions.push(`u.created_at <= '${new Date(criteria.createdBefore).toISOString()}'`);
+      }
+
+      const whereClause = conditions.join(' AND ');
+
+      const result = await db.execute(sql.raw(`
+        SELECT DISTINCT
+          u.id,
+          u.email,
+          u.first_name,
+          u.last_name,
+          u.phone_number,
+          u.created_at
+        FROM users u
+        WHERE ${whereClause}
+        ORDER BY u.last_name, u.first_name
+        LIMIT 5000
+      `));
+
+      const filteredStudents = result.rows.map((row: any) => ({
+        userId: row.id,
+        email: row.email || '',
+        firstName: row.first_name || '',
+        lastName: row.last_name || '',
+        phone: row.phone_number || '',
+        createdAt: row.created_at
+      }));
+
+      console.log(`Found ${filteredStudents.length} students matching custom filter`);
+      return filteredStudents;
+    } catch (error) {
+      console.error('Error getting students by custom filter:', error);
+      return [];
+    }
+  }
+
   // ===== TESTING SUBSYSTEM =====
   // Test management
   async createTest(test: InsertTest): Promise<Test> {

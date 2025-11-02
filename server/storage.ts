@@ -219,6 +219,11 @@ export interface IStorage {
   getUnpaidStudentsAfterPlacementTest(daysSinceTest?: number): Promise<any[]>;
   getStudentEnrollmentSummary(userId: number): Promise<any>;
 
+  // Audience segmentation methods for SMS campaigns
+  getInactiveStudents(monthsInactive: number): Promise<any[]>;
+  getCurrentEnrolledStudents(): Promise<any[]>;
+  getStudentsByCustomFilter(criteria: any): Promise<any[]>;
+
   // User profiles
   getUserProfile(userId: number): Promise<UserProfile | undefined>;
   createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
