@@ -94,6 +94,22 @@ export default function CampaignManagementPage() {
     description: ''
   });
 
+  // SMS Campaign state
+  const [audienceSegment, setAudienceSegment] = useState('unpaid_placement_test');
+  const [inactiveMonths, setInactiveMonths] = useState(3);
+  const [audienceCount, setAudienceCount] = useState(0);
+  const [audiencePreviewLoading, setAudiencePreviewLoading] = useState(false);
+  const [smsMessage, setSmsMessage] = useState('');
+  const [discountCode, setDiscountCode] = useState('');
+  const [testPhone, setTestPhone] = useState('');
+  const [testSMSLoading, setTestSMSLoading] = useState(false);
+  const [bulkSMSLoading, setBulkSMSLoading] = useState(false);
+  const [smsSendProgress, setSmsSendProgress] = useState<{ sent: number; failed: number; total: number } | null>(null);
+  const [csvContent, setCsvContent] = useState('');
+  const [csvParseLoading, setCsvParseLoading] = useState(false);
+  const [csvParseResult, setCsvParseResult] = useState<any>(null);
+  const [customRecipients, setCustomRecipients] = useState<any[]>([]);
+
   // Fetch campaigns data
   const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
     queryKey: ['/api/admin/campaigns'],
@@ -188,6 +204,103 @@ export default function CampaignManagementPage() {
 
   const resumeCampaign = (campaignId: number) => {
     updateCampaignMutation.mutate({ id: campaignId, updates: { status: 'active' } });
+  };
+
+  // SMS Campaign handlers
+  const fetchAudiencePreview = async () => {
+    setAudiencePreviewLoading(true);
+    try {
+      const params = new URLSearchParams({
+        segment: audienceSegment,
+        ...(audienceSegment === 'inactive_students' && { monthsInactive: inactiveMonths.toString() })
+      });
+      const response = await fetch(`/api/admin/campaigns/audience-preview?${params}`);
+      const data = await response.json();
+      setAudienceCount(data.count || 0);
+      toast({ title: `Found ${data.count || 0} recipients` });
+    } catch (error) {
+      toast({ title: 'Failed to preview audience', variant: 'destructive' });
+    } finally {
+      setAudiencePreviewLoading(false);
+    }
+  };
+
+  const parseCSVContent = async (format: 'csv' | 'text') => {
+    setCsvParseLoading(true);
+    try {
+      const response = await apiRequest('/api/admin/campaigns/upload-recipients', {
+        method: 'POST',
+        body: JSON.stringify({ content: csvContent, format })
+      });
+      const data = await response.json();
+      setCsvParseResult(data);
+      setCustomRecipients(data.validPhones || []);
+      setAudienceCount(data.validCount || 0);
+      toast({ title: `Parsed ${data.validCount} valid phone numbers` });
+    } catch (error) {
+      toast({ title: 'Failed to parse CSV', variant: 'destructive' });
+    } finally {
+      setCsvParseLoading(false);
+    }
+  };
+
+  const insertVariable = (variable: string) => {
+    setSmsMessage(prev => prev + variable);
+  };
+
+  const sendTestSMS = async () => {
+    setTestSMSLoading(true);
+    try {
+      const response = await apiRequest(`/api/admin/campaigns/${selectedCampaign?.id || 0}/send-sms`, {
+        method: 'POST',
+        body: JSON.stringify({
+          message: smsMessage,
+          testMode: true,
+          testPhone
+        })
+      });
+      toast({ title: 'Test SMS sent successfully!' });
+    } catch (error) {
+      toast({ title: 'Failed to send test SMS', variant: 'destructive' });
+    } finally {
+      setTestSMSLoading(false);
+    }
+  };
+
+  const sendBulkSMS = async () => {
+    if (!selectedCampaign) {
+      toast({ title: 'Please select a campaign first', variant: 'destructive' });
+      return;
+    }
+    setBulkSMSLoading(true);
+    setSmsSendProgress({ sent: 0, failed: 0, total: audienceCount });
+    try {
+      const requestBody: any = {
+        message: smsMessage.replace('{discountCode}', discountCode || 'N/A'),
+        segment: audienceSegment === 'custom_csv' ? undefined : audienceSegment,
+        recipients: audienceSegment === 'custom_csv' ? customRecipients : undefined,
+        monthsInactive: audienceSegment === 'inactive_students' ? inactiveMonths : undefined
+      };
+
+      const response = await apiRequest(`/api/admin/campaigns/${selectedCampaign.id}/send-sms`, {
+        method: 'POST',
+        body: JSON.stringify(requestBody)
+      });
+      const data = await response.json();
+      
+      setSmsSendProgress({
+        sent: data.sent || 0,
+        failed: data.failed || 0,
+        total: data.totalRecipients || audienceCount
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/campaigns'] });
+      toast({ title: `Successfully sent ${data.sent} SMS messages!` });
+    } catch (error) {
+      toast({ title: 'Failed to send bulk SMS', variant: 'destructive' });
+    } finally {
+      setBulkSMSLoading(false);
+    }
   };
 
   // Button event handlers for campaign management operations
@@ -636,6 +749,10 @@ export default function CampaignManagementPage() {
         <TabsList>
           <TabsTrigger value="campaigns">{t('admin:campaigns.activeCampaigns')}</TabsTrigger>
           <TabsTrigger value="social">{t('admin:campaigns.social')}</TabsTrigger>
+          <TabsTrigger value="sms">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            SMS Campaigns
+          </TabsTrigger>
           <TabsTrigger value="tools">{t('admin:campaigns.tools')}</TabsTrigger>
           <TabsTrigger value="website">{t('admin:campaigns.websiteBuilderLandingPages')}</TabsTrigger>
           <TabsTrigger value="analytics">{t('admin:campaigns.analytics')}</TabsTrigger>
