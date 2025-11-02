@@ -498,6 +498,11 @@ app.use((req, res, next) => {
   registerCmsRoutes(app, authenticateToken, requireRole);
   console.log('✅ CMS routes registered (Pages, Blog, Videos, Media)');
   
+  // Register Placement Test routes (including guest routes)
+  const placementTestRouter = (await import('./routes/placement-test-routes.js')).default;
+  app.use('/api/placement-test', placementTestRouter);
+  console.log('✅ Placement Test routes registered (including guest routes)');
+  
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);

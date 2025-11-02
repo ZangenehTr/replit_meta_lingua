@@ -20,12 +20,16 @@ const upload = multer({
     if (file.fieldname === 'audio' && file.mimetype.startsWith('audio/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only audio files are allowed'), false);
+      cb(null, false);
     }
   }
 });
 // Using real authentication middleware from auth-middleware.ts
 import { z } from 'zod';
+
+// Initialize storage and services
+const storage = new DatabaseStorage();
+const ollamaService = new OllamaService();
 
 const router = express.Router();
 
@@ -58,12 +62,9 @@ function getNextWeekStartDate(): string {
   return nextWeek.toISOString();
 }
 
-export function createPlacementTestRoutes(
-  storage: DatabaseStorage,
-  ollamaService: OllamaService
-) {
-  const placementService = new AdaptivePlacementService(ollamaService, storage);
-  const roadmapGenerator = new AIRoadmapGenerator(ollamaService, storage);
+// Initialize services
+const placementService = new AdaptivePlacementService(ollamaService, storage);
+const roadmapGenerator = new AIRoadmapGenerator(ollamaService, storage);
 
   // Start new placement test
   router.post('/start', authenticateToken, async (req: AuthRequest, res) => {
@@ -680,7 +681,4 @@ export function createPlacementTestRoutes(
     }
   });
 
-  return router;
-}
-
-export default createPlacementTestRoutes;
+export default router;
