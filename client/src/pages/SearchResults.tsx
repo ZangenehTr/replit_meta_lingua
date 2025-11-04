@@ -29,6 +29,27 @@ import {
 import { cn } from '@/lib/utils';
 import type { SearchFilters as SearchFiltersType } from '@shared/schema';
 
+// Type definitions for API responses
+interface TrendingItem {
+  query: string;
+  volume?: number;
+}
+
+interface TrendingResponse {
+  trending: TrendingItem[];
+}
+
+interface FacetsResponse {
+  facets: {
+    categories?: Array<{ name: string; count: number }>;
+    languages?: Array<{ name: string; count: number }>;
+    levels?: Array<{ name: string; count: number }>;
+    contentTypes?: Array<{ name: string; count: number }>;
+    instructors?: Array<{ name: string; count: number }>;
+    ratings?: Array<{ name: number; count: number }>;
+  };
+}
+
 // Helper function to parse URL search params into filters
 function parseSearchParams(searchParams: URLSearchParams): {
   query: string;
@@ -114,14 +135,14 @@ export default function SearchResultsPage() {
   const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
 
   // Get search facets for filters
-  const { data: facetsData } = useQuery({
+  const { data: facetsData } = useQuery<FacetsResponse>({
     queryKey: ['/api/search/facets', currentQuery],
     enabled: !!currentQuery,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Get trending searches for empty state
-  const { data: trendingData } = useQuery({
+  const { data: trendingData } = useQuery<TrendingResponse>({
     queryKey: ['/api/search/trending'],
     staleTime: 30 * 60 * 1000, // 30 minutes
   });

@@ -20,6 +20,7 @@ import { LogOut, User, Settings, Home, Menu, Search } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
 import MobileBottomNav from "./mobile-bottom-nav";
+import { UniversalSearchBar } from "@/components/search/UniversalSearchBar";
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from 'react-i18next';
@@ -133,8 +134,29 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Button>
           </div>
 
+          {/* Global Search Bar - Desktop */}
+          <div className="hidden md:flex flex-1 max-w-2xl mx-4">
+            <UniversalSearchBar
+              variant="compact"
+              placeholder={t('common:search.placeholder')}
+              className="w-full"
+              data-testid="global-search-bar"
+            />
+          </div>
+
           {/* Mobile-Optimized User Actions */}
           <div className="flex items-center space-x-2">
+            {/* Search Button - Mobile Only */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setLocation('/search')}
+              data-testid="mobile-search-button"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+            
             {/* Language Selector - Always Visible */}
             <LanguageSelector />
             
