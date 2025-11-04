@@ -811,6 +811,18 @@
   "limitedTimeOffer": "Limited Time Offer",
   "category": "Category",
   "views": "views",
+  "visitorChat": {
+    "title": "Chat with Support",
+    "welcomeMessage": "Hello! How can we help you today?",
+    "contactSuggestion": "If you'd like, you can share your contact information with us so we can better assist you.",
+    "contactFormPrompt": "Please enter your contact information (optional):",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "Email",
+    "phonePlaceholder": "Phone number",
+    "messagePlaceholder": "Type your message...",
+    "thankYouForContact": "Thank you for sharing your information! We'll get back to you as soon as possible.",
+    "maybeLater": "Maybe later"
+  },
   "search": {
     "universalSearch": "Universal Search",
     "placeholder": "Search courses, students, teachers, content...",

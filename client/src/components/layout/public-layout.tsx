@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LanguageSelector } from '@/components/language-selector';
+import { VisitorChatWidget } from '@/components/visitor-chat/VisitorChatWidget';
 import { useLanguage } from '@/hooks/use-language';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -403,6 +404,9 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           </div>
         </div>
       </footer>
+
+      {/* Visitor Chat Widget */}
+      <VisitorChatWidget />
     </div>
   );
 }

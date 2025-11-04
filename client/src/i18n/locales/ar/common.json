@@ -413,6 +413,18 @@
   "noTutorsAvailable": "لا يوجد معلمون متاحون",
   "frontDesk": "الاستقبال",
   "callCenterAgent": "وكيل مركز الاتصال",
+  "visitorChat": {
+    "title": "الدردشة مع الدعم",
+    "welcomeMessage": "مرحباً! كيف يمكننا مساعدتك اليوم؟",
+    "contactSuggestion": "إذا كنت ترغب، يمكنك مشاركة معلومات الاتصال الخاصة بك معنا حتى نتمكن من مساعدتك بشكل أفضل.",
+    "contactFormPrompt": "الرجاء إدخال معلومات الاتصال الخاصة بك (اختياري):",
+    "namePlaceholder": "اسمك",
+    "emailPlaceholder": "البريد الإلكتروني",
+    "phonePlaceholder": "رقم الهاتف",
+    "messagePlaceholder": "اكتب رسالتك...",
+    "thankYouForContact": "شكراً لمشاركة معلوماتك! سنعاود الاتصال بك في أقرب وقت ممكن.",
+    "maybeLater": "ربما لاحقاً"
+  },
   "search": {
     "universalSearch": "البحث الشامل",
     "placeholder": "البحث عن الدورات، الطلاب، المعلمين، المحتوى...",

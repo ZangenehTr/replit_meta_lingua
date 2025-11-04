@@ -34,6 +34,18 @@
   },
   "filter": "فیلتر",
   "actions": "عملیات",
+  "visitorChat": {
+    "title": "چت با پشتیبانی",
+    "welcomeMessage": "سلام! چطور می‌توانیم به شما کمک کنیم؟",
+    "contactSuggestion": "اگر مایلید، می‌توانید اطلاعات تماس خود را با ما به اشتراک بگذارید تا بتوانیم بهتر به شما کمک کنیم.",
+    "contactFormPrompt": "لطفاً اطلاعات تماس خود را وارد کنید (اختیاری):",
+    "namePlaceholder": "نام شما",
+    "emailPlaceholder": "ایمیل",
+    "phonePlaceholder": "شماره تلفن",
+    "messagePlaceholder": "پیام خود را بنویسید...",
+    "thankYouForContact": "ممنون از اینکه اطلاعات خود را با ما به اشتراک گذاشتید! در اسرع وقت با شما تماس خواهیم گرفت.",
+    "maybeLater": "شاید بعداً"
+  },
   "allTypes": "همه انواع",
   "allLevels": "همه سطوح",
   "beginner": "مبتدی",

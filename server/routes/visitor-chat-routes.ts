@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../db/index.js';
+import { db } from '../db.js';
 import { visitorChatSessions, visitorChatMessages, insertVisitorChatSessionSchema, insertVisitorChatMessageSchema } from '@shared/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
