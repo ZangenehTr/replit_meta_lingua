@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
+import { useCustomFonts } from "@/hooks/use-custom-fonts";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { SocketProvider } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
@@ -1180,6 +1181,7 @@ function Router() {
 
 function AppWithBranding() {
   const { branding, isLoading } = useBranding();
+  useCustomFonts(); // Apply custom fonts globally
 
   // Always render the app - don't block on branding
   return (
