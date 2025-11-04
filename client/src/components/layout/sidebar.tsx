@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Home, 
   BookOpen, 
@@ -123,7 +123,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   useEffect(() => {
     setIsRTL(['fa', 'ar'].includes(language));
   }, [language]);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [location, setLocation] = useLocation();
 
   // Students should not have a sidebar - they use mobile bottom navigation
@@ -132,7 +132,12 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   }
 
   // Use react-i18next translation function with correct namespace
-  const navigationItems = user ? getNavigationForRole(user.role, t) : [];
+  // Memoize navigation items with dependencies on user role AND i18n language
+  // This ensures the navigation regenerates when language changes (fixing i18n issue)
+  const navigationItems = useMemo(() => {
+    if (!user) return [];
+    return getNavigationForRole(user.role, t);
+  }, [user?.role, i18n.language]);
 
   console.log('Sidebar rendering with items:', navigationItems.length, 'items');
   console.log('Callern items:', navigationItems.filter(item => item.path.includes('callern')));
