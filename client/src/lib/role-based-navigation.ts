@@ -162,6 +162,7 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
   // Enterprise Features
   { path: "/admin/teacher-payments", icon: "DollarSign", label: t('common:navigation.teacherPayments'), roles: ["Admin", "Accountant"] },
   { path: "/admin/white-label", icon: "Building2", label: t('common:navigation.whiteLabelManagement'), roles: ["Admin"] },
+  { path: "/admin/font-management", icon: "Type", label: t('common:navigation.fontManagement') || 'Font Management', roles: ["Admin"] },
   { path: "/admin/sms-settings", icon: "Send", label: t('common:navigation.smsManagement'), roles: ["Admin", "Supervisor"] },
   { path: "/admin/campaign-management", icon: "Megaphone", label: t('common:navigation.campaignManagement'), roles: ["Admin", "Call Center Agent"] },
   { path: "/admin/subsystem-permissions", icon: "Shield", label: t('common:navigation.subsystemPermissions') || 'Subsystem Permissions', roles: ["Admin"] },
