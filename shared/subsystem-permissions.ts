@@ -148,7 +148,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "mentor_dashboard", name: "داشبورد منتور", nameEn: "Mentor Dashboard", icon: "Home" },
       { id: "mentee_management", name: "مدیریت شاگردان", nameEn: "Mentee Management", icon: "Users" },
       { id: "mentoring_sessions", name: "جلسات منتورینگ", nameEn: "Mentoring Sessions", icon: "Calendar" },
-      { id: "mentoring_progress", name: "پیگیری پیشرفت", nameEn: "Progress Tracking", icon: "TrendingUp" },
+      { id: "mentoring_progress", name: "پیگیری پیشرفت منتورینگ", nameEn: "Mentoring Progress", icon: "TrendingUp" },
     ]
   }
 ];
@@ -545,11 +545,31 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
 
   collectLeafSubsystems(SUBSYSTEM_TREE);
 
-  // Sort navigation items by immutable order field for stable positioning regardless of translation state
-  // Fallback to nameEn for deterministic secondary sorting
+  // Get current language from t if available
+  const currentLang = t?.i18n?.language || 'en';
+  
+  // Sort navigation items alphabetically by the actual displayed label
+  // This ensures menu items are sorted by what the user sees, not hard-coded fallback text
   return navigationItems.sort((a, b) => {
-    const orderDiff = a.order - b.order;
-    return orderDiff !== 0 ? orderDiff : a.nameEn.localeCompare(b.nameEn);
+    // Use the correct locale for localeCompare based on current language
+    const locale = currentLang === 'fa' ? 'fa' : 
+                   currentLang === 'ar' ? 'ar' : 
+                   'en';
+    
+    // For Persian/Arabic, sort by the Persian/Arabic label (a.label contains localized text)
+    // For English, translate both labels to ensure we sort by rendered text, not nameEn
+    if (currentLang === 'fa' || currentLang === 'ar') {
+      // Sort by localized label with correct locale
+      const labelA = a.label || a.nameEn || '';
+      const labelB = b.label || b.nameEn || '';
+      return labelA.localeCompare(labelB, locale);
+    } else {
+      // For English, get the actual translated text if available, fallback to nameEn
+      // Since we're in the navigation generation, we use the translation that was applied
+      const labelA = a.nameEn || a.label || '';
+      const labelB = b.nameEn || b.label || '';
+      return labelA.localeCompare(labelB, locale);
+    }
   });
 };
 

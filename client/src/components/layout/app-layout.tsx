@@ -15,13 +15,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Settings, Home, Menu } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { LogOut, User, Settings, Home, Menu, Search } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
 import MobileBottomNav from "./mobile-bottom-nav";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from 'react-i18next';
+import { getNavigationForRole } from "@/lib/role-based-navigation";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -33,6 +35,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { direction } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
 
   const handleLogout = () => {
