@@ -52,6 +52,17 @@ interface Holiday {
   isOfficial: boolean;
 }
 
+interface CalendarNamesResponse {
+  months: string[];
+  weekdays: string[];
+  source?: string;
+}
+
+interface HolidaysResponse {
+  holidays: Holiday[];
+  source?: string;
+}
+
 interface PersianCalendarProps {
   /** Calendar mode: auto switches based on user language, manual allows user selection */
   mode?: 'auto' | 'manual';
@@ -112,14 +123,14 @@ export function PersianCalendar({
   }, [currentDate]);
 
   // Get month and weekday names
-  const { data: calendarNames } = useQuery({
+  const { data: calendarNames } = useQuery<CalendarNamesResponse>({
     queryKey: ['/api/calendar/month-names'],
     staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
     enabled: calendarType === 'jalali'
   });
 
   // Get holidays for current year
-  const { data: holidaysData } = useQuery({
+  const { data: holidaysData } = useQuery<HolidaysResponse>({
     queryKey: ['/api/calendar/holidays', currentPersianDate.year],
     staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
     enabled: showHolidays && calendarType === 'jalali'
@@ -419,10 +430,10 @@ export function PersianCalendar({
                         )}
                         
                         {/* Event indicator */}
-                        {day.events && day.events.length > 0 && (
+                        {'events' in day && (day as CalendarDay).events && (day as CalendarDay).events!.length > 0 && (
                           <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
                             <div className="flex gap-1">
-                              {day.events.slice(0, 3).map((event, index) => (
+                              {(day as CalendarDay).events!.slice(0, 3).map((event, index) => (
                                 <div
                                   key={index}
                                   className="h-1.5 w-1.5 rounded-full"
