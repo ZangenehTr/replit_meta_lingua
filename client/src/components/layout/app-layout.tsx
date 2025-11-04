@@ -86,30 +86,19 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center space-x-3">
             {/* Only show mobile menu for non-student roles */}
             {user?.role?.toLowerCase() !== 'student' && (
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="md:hidden touch-target"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setMobileMenuOpen(true);
-                    }}
-                  >
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent 
-                  side="left" 
-                  className="w-72 p-0 max-w-[75vw] z-[100]" 
-                  onPointerDownOutside={() => setMobileMenuOpen(false)}
-                  onEscapeKeyDown={() => setMobileMenuOpen(false)}
-                >
-                  <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
-                </SheetContent>
-              </Sheet>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="sm:hidden touch-target"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setMobileMenuOpen(true);
+                }}
+                data-testid="mobile-menu-button"
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
             )}
             
             {/* Enhanced Logo and Brand */}
@@ -213,20 +202,35 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Main Layout with Sidebar - Fixed to LTR layout */}
       <div className="flex min-h-[calc(100vh-4rem)]" dir="ltr">
-        {/* Desktop Sidebar - always on the left side */}
+        {/* Desktop Sidebar - hidden on mobile/tablet */}
         {user?.role?.toLowerCase() !== 'student' && (
-          <aside className="hidden md:block md:w-64 flex-shrink-0 order-first">
-            <div className="fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background">
-              <Sidebar />
-            </div>
-          </aside>
+          <>
+            {/* Mobile Sheet Sidebar */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetContent 
+                side="left" 
+                className="w-72 p-0 max-w-[75vw] z-[100] md:hidden" 
+                onPointerDownOutside={() => setMobileMenuOpen(false)}
+                onEscapeKeyDown={() => setMobileMenuOpen(false)}
+              >
+                <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
+              </SheetContent>
+            </Sheet>
+
+            {/* Desktop Sidebar - always visible on desktop */}
+            <aside className="hidden md:block md:w-64 flex-shrink-0 order-first">
+              <div className="fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background">
+                <Sidebar />
+              </div>
+            </aside>
+          </>
         )}
         
-        {/* Main Content - always positioned to the right of sidebar */}
+        {/* Main Content - simple responsive margins */}
         <main 
           className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 ${
             user?.role?.toLowerCase() !== 'student' 
-              ? 'md:w-[calc(100%-16rem)] md:ml-64'
+              ? 'md:ml-64'  // Desktop/Tablet: sidebar margin
               : ''
           }`}
           dir="ltr"
