@@ -8537,6 +8537,21 @@ export const cmsPageAnalytics = pgTable("cms_page_analytics", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// Custom Fonts - White-label font management for global branding
+export const customFonts = pgTable("custom_fonts", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  fontFamily: varchar("font_family", { length: 255 }).notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileFormat: varchar("file_format", { length: 50 }).notNull(), // woff2, woff, ttf, otf
+  language: varchar("language", { length: 10 }), // fa, en, ar, null for all languages
+  isActive: boolean("is_active").default(false),
+  displayOrder: integer("display_order").default(0),
+  uploadedBy: integer("uploaded_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Insert schemas for CMS
 export const insertCmsPageSchema = createInsertSchema(cmsPages).omit({
   id: true,
@@ -8595,6 +8610,12 @@ export const insertCmsPageAnalyticsSchema = createInsertSchema(cmsPageAnalytics)
   createdAt: true
 });
 
+export const insertCustomFontSchema = createInsertSchema(customFonts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types for CMS
 export type CmsPage = typeof cmsPages.$inferSelect;
 export type InsertCmsPage = z.infer<typeof insertCmsPageSchema>;
@@ -8616,6 +8637,8 @@ export type CmsMediaAsset = typeof cmsMediaAssets.$inferSelect;
 export type InsertCmsMediaAsset = z.infer<typeof insertCmsMediaAssetSchema>;
 export type CmsPageAnalytics = typeof cmsPageAnalytics.$inferSelect;
 export type InsertCmsPageAnalytics = z.infer<typeof insertCmsPageAnalyticsSchema>;
+export type CustomFont = typeof customFonts.$inferSelect;
+export type InsertCustomFont = z.infer<typeof insertCustomFontSchema>;
 
 // ============================================================================
 // VISITOR CHAT SYSTEM
