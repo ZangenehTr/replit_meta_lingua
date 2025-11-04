@@ -152,7 +152,7 @@ import {
   // CMS tables and types
   cmsPages, cmsPageSections, cmsBlogCategories, cmsBlogTags, cmsBlogPosts,
   cmsBlogPostTags, cmsBlogComments, cmsVideos, cmsMediaAssets, cmsPageAnalytics,
-  curriculumCategories, guestLeads,
+  customFonts, curriculumCategories, guestLeads,
   type CmsPage, type InsertCmsPage,
   type CmsPageSection, type InsertCmsPageSection,
   type CmsBlogCategory, type InsertCmsBlogCategory,
@@ -163,6 +163,7 @@ import {
   type CmsVideo, type InsertCmsVideo,
   type CmsMediaAsset, type InsertCmsMediaAsset,
   type CmsPageAnalytics, type InsertCmsPageAnalytics,
+  type CustomFont, type InsertCustomFont,
   type CurriculumCategory, type InsertCurriculumCategory,
   type GuestLead, type InsertGuestLead
 } from "@shared/schema";
@@ -18392,5 +18393,47 @@ export class DatabaseStorage implements IStorage {
       .where(eq(guestLeads.id, id))
       .returning();
     return updated;
+  }
+
+  // ============================================================================
+  // CUSTOM FONTS METHODS - White-Label Branding
+  // ============================================================================
+
+  async createCustomFont(font: InsertCustomFont): Promise<CustomFont> {
+    const [created] = await db.insert(customFonts).values(font).returning();
+    return created;
+  }
+
+  async getCustomFonts(): Promise<CustomFont[]> {
+    return await db.select().from(customFonts).orderBy(customFonts.displayOrder, desc(customFonts.createdAt));
+  }
+
+  async getCustomFont(id: number): Promise<CustomFont | undefined> {
+    const [font] = await db.select().from(customFonts).where(eq(customFonts.id, id));
+    return font;
+  }
+
+  async getActiveFonts(): Promise<CustomFont[]> {
+    return await db.select().from(customFonts).where(eq(customFonts.isActive, true)).orderBy(customFonts.displayOrder);
+  }
+
+  async updateCustomFont(id: number, updates: Partial<CustomFont>): Promise<CustomFont | undefined> {
+    const [updated] = await db
+      .update(customFonts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customFonts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCustomFont(id: number): Promise<void> {
+    await db.delete(customFonts).where(eq(customFonts.id, id));
+  }
+
+  async deactivateFontsForLanguage(language: string): Promise<void> {
+    await db
+      .update(customFonts)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(customFonts.language, language));
   }
 }

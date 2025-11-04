@@ -8,8 +8,12 @@ import { z } from 'zod';
 import { insertCmsPageSchema, insertCmsPageSectionSchema, insertCmsBlogCategorySchema, 
          insertCmsBlogTagSchema, insertCmsBlogPostSchema, insertCmsBlogCommentSchema,
          insertCmsVideoSchema, insertCmsMediaAssetSchema, insertCmsPageAnalyticsSchema,
-         insertCurriculumCategorySchema, insertGuestLeadSchema } from '@shared/schema';
+         insertCurriculumCategorySchema, insertGuestLeadSchema, insertCustomFontSchema } from '@shared/schema';
 import { DatabaseStorage } from '../database-storage.js';
+import multer from 'multer';
+import { nanoid } from 'nanoid';
+import path from 'path';
+import fs from 'fs/promises';
 
 export function registerCmsRoutes(app: Express, authenticateToken?: any, requireRole?: any) {
   // Create storage instance
@@ -788,6 +792,168 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
     } catch (error) {
       console.error('Error fetching guest leads:', error);
       res.status(500).json({ message: 'Failed to fetch guest leads' });
+    }
+  });
+  
+  // ============================================================================
+  // CUSTOM FONTS MANAGEMENT - White-Label Branding
+  // ============================================================================
+  
+  // Configure multer for font file uploads
+  const fontStorage = multer.diskStorage({
+    destination: async (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), 'public', 'fonts', 'custom');
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const fileName = `${nanoid(10)}${ext}`;
+      cb(null, fileName);
+    }
+  });
+  
+  const fontUpload = multer({
+    storage: fontStorage,
+    fileFilter: (req, file, cb) => {
+      const allowedFormats = ['.woff', '.woff2', '.ttf', '.otf'];
+      const ext = path.extname(file.originalname).toLowerCase();
+      if (allowedFormats.includes(ext)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only font files (.woff, .woff2, .ttf, .otf) are allowed'));
+      }
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+  });
+  
+  // Upload custom font (admin only)
+  app.post('/api/cms/fonts/upload', ...requireAdmin, fontUpload.single('fontFile'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No font file uploaded' });
+      }
+      
+      const { name, fontFamily, language } = req.body;
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const fileUrl = `/fonts/custom/${req.file.filename}`;
+      const fileFormat = path.extname(req.file.filename).substring(1);
+      
+      const fontData = {
+        name,
+        fontFamily,
+        fileUrl,
+        fileFormat,
+        language: language || null,
+        uploadedBy: userId
+      };
+      
+      const font = await storage.createCustomFont(fontData);
+      res.status(201).json(font);
+    } catch (error) {
+      console.error('Error uploading custom font:', error);
+      res.status(500).json({ message: 'Failed to upload font' });
+    }
+  });
+  
+  // Get all custom fonts (admin only)
+  app.get('/api/cms/fonts', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const fonts = await storage.getCustomFonts();
+      res.json(fonts);
+    } catch (error) {
+      console.error('Error fetching custom fonts:', error);
+      res.status(500).json({ message: 'Failed to fetch fonts' });
+    }
+  });
+  
+  // Get active fonts (public endpoint for applying fonts globally)
+  app.get('/api/cms/fonts/active', async (req: Request, res: Response) => {
+    try {
+      const fonts = await storage.getActiveFonts();
+      res.json(fonts);
+    } catch (error) {
+      console.error('Error fetching active fonts:', error);
+      res.status(500).json({ message: 'Failed to fetch active fonts' });
+    }
+  });
+  
+  // Activate/deactivate a font (admin only)
+  app.patch('/api/cms/fonts/:id/activate', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const fontId = parseInt(req.params.id);
+      const { isActive, language } = req.body;
+      
+      // If activating, deactivate all other fonts for the same language
+      if (isActive && language) {
+        await storage.deactivateFontsForLanguage(language);
+      }
+      
+      const font = await storage.updateCustomFont(fontId, { isActive });
+      
+      if (!font) {
+        return res.status(404).json({ message: 'Font not found' });
+      }
+      
+      res.json(font);
+    } catch (error) {
+      console.error('Error activating font:', error);
+      res.status(500).json({ message: 'Failed to activate font' });
+    }
+  });
+  
+  // Update custom font metadata (admin only)
+  app.put('/api/cms/fonts/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const fontId = parseInt(req.params.id);
+      const { name, fontFamily, language, displayOrder } = req.body;
+      
+      const font = await storage.updateCustomFont(fontId, {
+        name,
+        fontFamily,
+        language,
+        displayOrder
+      });
+      
+      if (!font) {
+        return res.status(404).json({ message: 'Font not found' });
+      }
+      
+      res.json(font);
+    } catch (error) {
+      console.error('Error updating font:', error);
+      res.status(500).json({ message: 'Failed to update font' });
+    }
+  });
+  
+  // Delete custom font (admin only)
+  app.delete('/api/cms/fonts/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const fontId = parseInt(req.params.id);
+      
+      // Get font details to delete the file
+      const font = await storage.getCustomFont(fontId);
+      if (font) {
+        const filePath = path.join(process.cwd(), 'public', font.fileUrl);
+        try {
+          await fs.unlink(filePath);
+        } catch (err) {
+          console.error('Error deleting font file:', err);
+        }
+      }
+      
+      await storage.deleteCustomFont(fontId);
+      res.json({ message: 'Font deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting font:', error);
+      res.status(500).json({ message: 'Failed to delete font' });
     }
   });
 }
