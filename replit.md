@@ -32,6 +32,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
     - Comprehensive SMS Campaign Management System for targeted marketing, audience segmentation (e.g., unpaid placement test takers, inactive students, custom CSV uploads), variable message templates, and bulk sending.
     - **Dynamic Curriculum Category System**: Admin-managed curriculum categories with drag-to-reorder, public curriculum hub (/curriculum), dynamic category detail pages (/curriculum/:slug), and integrated navigation dropdown. Supports SEO, i18n, and course-category associations.
     - **Guest Placement Test Flow**: Anonymous placement test (/take-test) with no login required, post-test contact capture modal, CEFR results display with skill breakdowns, curriculum category recommendations, and CTAs to register/enroll. Session persistence via localStorage enables test resume.
+    - **Visitor Chat System**: Floating chat widget on all public pages with smooth, non-intrusive contact capture (after 2+ messages), full RTL support (Farsi/English/Arabic), and admin dashboard for managing visitor conversations, viewing contact info, and tracking inquiries.
 
 ### Backend
 - **Framework**: Express.js with TypeScript
@@ -54,7 +55,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ### Database Design
 - **ORM**: Drizzle
-- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress tracking, LinguaQuest lessons, dynamic form definitions/submissions, curriculum categories with course associations, and guest leads for contact capture.
+- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress tracking, LinguaQuest lessons, dynamic form definitions/submissions, curriculum categories with course associations, guest leads for contact capture, and visitor chat sessions/messages for website engagement.
 - **Migration**: `npm run db:push --force` for schema synchronization or manual SQL for fresh deployments.
 
 ### Deployment Strategy
