@@ -8618,6 +8618,58 @@ export type CmsPageAnalytics = typeof cmsPageAnalytics.$inferSelect;
 export type InsertCmsPageAnalytics = z.infer<typeof insertCmsPageAnalyticsSchema>;
 
 // ============================================================================
+// VISITOR CHAT SYSTEM
+// ============================================================================
+
+// Visitor Chat Sessions - Track anonymous visitor conversations
+export const visitorChatSessions = pgTable("visitor_chat_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull().unique(), // Anonymous session identifier
+  visitorName: varchar("visitor_name", { length: 255 }), // Optional, captured during chat
+  visitorEmail: varchar("visitor_email", { length: 255 }), // Optional, captured during chat
+  visitorPhone: varchar("visitor_phone", { length: 50 }), // Optional, captured during chat
+  language: varchar("language", { length: 10 }).default("fa").notNull(), // fa, en, ar
+  status: varchar("status", { length: 20 }).default("active").notNull(), // active, closed, archived
+  assignedTo: integer("assigned_to").references(() => users.id), // Admin/staff handling the chat
+  lastMessageAt: timestamp("last_message_at"),
+  metadata: jsonb("metadata"), // Additional visitor info (browser, location, etc.)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  closedAt: timestamp("closed_at")
+});
+
+// Visitor Chat Messages - Messages in visitor conversations
+export const visitorChatMessages = pgTable("visitor_chat_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => visitorChatSessions.id).notNull(),
+  senderType: varchar("sender_type", { length: 20 }).notNull(), // visitor, admin, system
+  senderName: varchar("sender_name", { length: 255 }), // Display name
+  senderId: integer("sender_id").references(() => users.id), // Only for admin messages
+  message: text("message").notNull(),
+  messageType: varchar("message_type", { length: 20 }).default("text").notNull(), // text, info_request, contact_capture
+  metadata: jsonb("metadata"), // Extra data (e.g., contact info captured)
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Zod schemas for visitor chat
+export const insertVisitorChatSessionSchema = createInsertSchema(visitorChatSessions).omit({
+  id: true,
+  createdAt: true,
+  closedAt: true
+});
+
+export const insertVisitorChatMessageSchema = createInsertSchema(visitorChatMessages).omit({
+  id: true,
+  createdAt: true
+});
+
+// Types for visitor chat
+export type VisitorChatSession = typeof visitorChatSessions.$inferSelect;
+export type InsertVisitorChatSession = z.infer<typeof insertVisitorChatSessionSchema>;
+export type VisitorChatMessage = typeof visitorChatMessages.$inferSelect;
+export type InsertVisitorChatMessage = z.infer<typeof insertVisitorChatMessageSchema>;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 
