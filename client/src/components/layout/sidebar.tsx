@@ -113,9 +113,10 @@ const iconMap = {
 
 interface SidebarProps {
   onNavigate?: () => void;
+  collapsed?: boolean;
 }
 
-export function Sidebar({ onNavigate }: SidebarProps = {}) {
+export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
   const { user } = useAuth();
   const { language, setLanguage } = useLanguage();
   const [isRTL, setIsRTL] = useState(['fa', 'ar'].includes(language));
@@ -160,7 +161,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
 
   return (
     <div className={`sidebar-container w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="p-4">
+      <div className={collapsed ? 'p-2' : 'p-4'}>
         <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
           {navigationItems.map((item, index) => {
             const isActive = location === item.path;
@@ -168,6 +169,33 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
             const roleColors = getRoleColors(item.roles);
             const hasMultipleRoles = roleColors.length > 1;
 
+            if (collapsed) {
+              // Collapsed mode: Icon-only with tooltip
+              return (
+                <Link key={`${item.path}-${index}`} href={item.path}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`w-full h-10 ${
+                      isActive 
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    } relative flex items-center justify-center`}
+                    onClick={() => {
+                      handleNavigate(item.path);
+                    }}
+                    title={item.label}
+                    aria-label={item.label}
+                  >
+                    {/* Color indicator - simplified for collapsed view */}
+                    <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${roleColors[0]}`}></span>
+                    <Icon className="h-5 w-5" />
+                  </Button>
+                </Link>
+              );
+            }
+
+            // Expanded mode: Full labels
             return (
               <Link key={`${item.path}-${index}`} href={item.path}>
                 <Button

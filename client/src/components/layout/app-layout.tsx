@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { LogOut, User, Settings, Home, Menu, Search } from "lucide-react";
+import { LogOut, User, Settings, Home, Menu, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
 import MobileBottomNav from "./mobile-bottom-nav";
@@ -39,6 +39,24 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  
+  // Sidebar collapse state for tablets/desktop
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('sidebar-collapsed');
+      return stored === 'true';
+    }
+    return false;
+  });
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
 
   const handleLogout = () => {
@@ -217,20 +235,40 @@ export function AppLayout({ children }: AppLayoutProps) {
               </SheetContent>
             </Sheet>
 
-            {/* Desktop Sidebar - always visible on desktop */}
-            <aside className="hidden md:block md:w-64 flex-shrink-0 order-first">
-              <div className="fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background">
-                <Sidebar />
+            {/* Tablet/Desktop Sidebar - Collapsible */}
+            <aside className={`hidden md:block flex-shrink-0 order-first transition-all duration-300 ${
+              sidebarCollapsed ? 'md:w-16' : 'md:w-64'
+            }`}>
+              <div className={`fixed top-16 left-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 ${
+                sidebarCollapsed ? 'w-16' : 'w-64'
+              }`}>
+                <Sidebar collapsed={sidebarCollapsed} />
+                
+                {/* Toggle Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute bottom-4 right-2 h-8 w-8 rounded-full border bg-background shadow-sm hover:shadow-md transition-all"
+                  onClick={toggleSidebar}
+                  aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                  data-testid="button-toggle-sidebar"
+                >
+                  {sidebarCollapsed ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronLeft className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </aside>
           </>
         )}
         
-        {/* Main Content - simple responsive margins */}
+        {/* Main Content - Dynamic margin based on sidebar state */}
         <main 
-          className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 ${
+          className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 transition-all duration-300 ${
             user?.role?.toLowerCase() !== 'student' 
-              ? 'md:ml-64'  // Desktop/Tablet: sidebar margin
+              ? (sidebarCollapsed ? 'md:ml-16' : 'md:ml-64')  // Tablet/Desktop: dynamic sidebar margin
               : ''
           }`}
           dir="ltr"

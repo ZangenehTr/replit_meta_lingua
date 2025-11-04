@@ -21,7 +21,8 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Routing**: Wouter
 - **Build Tool**: Vite
 - **Localization**: Multi-language support with comprehensive i18n and full RTL/LTR layout handling (Persian/English/Arabic) across all pages and user roles.
-- **UI/UX**: Modern gradient backgrounds, professional layouts, responsive (mobile-first), touch-optimized components, role-based UI, resizable panels, and bottom navigation for mobile.
+- **UI/UX**: Modern gradient backgrounds, professional layouts, mobile-first responsive design, touch-optimized components, role-based UI, resizable panels, and bottom navigation for mobile.
+- **Responsive Design**: Collapsible sidebar for tablets/desktop (64px collapsed, 256px expanded), mobile sheet sidebar (<768px), responsive grids and containers, smooth transitions, localStorage state persistence. Breakpoints: mobile <768px, tablet 768-1024px, desktop ≥1024px.
 - **Key Features**:
     - Unified Dashboard for 8 user roles, conditionally displaying features based on enrollment status and admin configurations.
     - LinguaQuest interactive game system with 19 activity types and a progress dashboard.
