@@ -195,9 +195,7 @@ export const getMentorNavigation = (t: any): NavigationItem[] => [
 ];
 
 // Convert dynamic navigation items to component-compatible format
-const convertDynamicToNavigation = (dynamicItems: DynamicNavItem[], t: any): NavigationItem[] => {
-  // Get current language from i18n
-  const currentLang = t?.i18n?.language || 'en';
+const convertDynamicToNavigation = (dynamicItems: DynamicNavItem[], currentLang: string): NavigationItem[] => {
   const usePersian = currentLang === 'fa';
   const useArabic = currentLang === 'ar';
   
@@ -215,7 +213,7 @@ const convertDynamicToNavigation = (dynamicItems: DynamicNavItem[], t: any): Nav
 };
 
 // Get navigation based on user role using dynamic generation
-export const getNavigationForRole = (role: string, t: any): NavigationItem[] => {
+export const getNavigationForRole = (role: string, t: any, currentLang: string = 'en'): NavigationItem[] => {
   // Normalize role to handle both lowercase and capitalized versions
   const normalizedRole = role.toLowerCase();
   
@@ -240,11 +238,11 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
   const mappedRole = roleMapping[normalizedRole] || "Student";
   
   // Debug logging to see what role is being processed
-  console.log('Processing navigation for role:', role, 'normalized:', normalizedRole, 'mapped:', mappedRole);
+  console.log('Processing navigation for role:', role, 'normalized:', normalizedRole, 'mapped:', mappedRole, 'language:', currentLang);
   
   // Generate dynamic navigation based on SUBSYSTEM_TREE and role permissions
   const dynamicItems = generateDynamicNavigation(mappedRole, t);
-  const navigationItems = convertDynamicToNavigation(dynamicItems, t);
+  const navigationItems = convertDynamicToNavigation(dynamicItems, currentLang);
   
   // Add dashboard as the first item for all roles except students
   if (normalizedRole !== "student") {

@@ -136,8 +136,8 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   // This ensures the navigation regenerates when language changes (fixing i18n issue)
   const navigationItems = useMemo(() => {
     if (!user) return [];
-    return getNavigationForRole(user.role, t);
-  }, [user?.role, i18n.language]);
+    return getNavigationForRole(user.role, t, i18n.language);
+  }, [user?.role, i18n.language, t]);
 
   console.log('Sidebar rendering with items:', navigationItems.length, 'items');
   console.log('Callern items:', navigationItems.filter(item => item.path.includes('callern')));

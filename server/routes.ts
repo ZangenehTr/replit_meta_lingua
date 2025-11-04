@@ -23702,6 +23702,9 @@ Meta Lingua Academy`;
   app.use('/api/public-features', publicFeaturesRoutes);
   app.use('/api/roadmap', examRoadmapRoutes);
   
+  // Register search routes
+  app.use('/api/search', searchRoutes);
+  
   // Register AI study partner routes
   app.use(createAiStudyPartnerRoutes(storage));
   
