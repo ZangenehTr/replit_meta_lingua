@@ -46,6 +46,7 @@ import AiTrainingDashboard from "@/pages/admin/ai-training";
 import { GameAccessControl } from "@/pages/admin/game-access-control";
 import AdminTeacherPaymentsPage from "@/pages/admin/teacher-payments";
 import WhiteLabelPage from "@/pages/admin/white-label";
+import FontManagementPage from "@/pages/admin/font-management";
 import SupervisionPage from "@/pages/admin/supervision";
 import SMSSettingsPage from "@/pages/admin/sms-settings";
 import SMSTestPage from "@/pages/admin/sms-test";
@@ -389,6 +390,11 @@ function Router() {
       <Route path="/admin/white-label">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <WhiteLabelPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/font-management">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <FontManagementPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/sms-settings">
