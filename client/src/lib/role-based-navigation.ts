@@ -254,16 +254,23 @@ export const getNavigationForRole = (role: string, t: any, currentLang: string =
       order: -1 // Ensure dashboard is always first
     };
     
-    // Remove any existing dashboard item and add it at the beginning
+    // Remove any existing dashboard item and filter out the rest
     const filteredItems = navigationItems.filter(item => item.path !== "/dashboard");
-    navigationItems.splice(0, 0, dashboardItem);
-    return [dashboardItem, ...filteredItems];
+    
+    // Sort remaining items alphabetically by label
+    const sortedItems = filteredItems.sort((a, b) => a.label.localeCompare(b.label));
+    
+    // Return dashboard first, then alphabetically sorted items
+    return [dashboardItem, ...sortedItems];
   }
   
-  console.log(`Generated ${navigationItems.length} navigation items for role ${mappedRole}:`, 
-    navigationItems.map(item => ({ path: item.path, label: item.label })));
+  // For students, sort alphabetically
+  const sortedItems = navigationItems.sort((a, b) => a.label.localeCompare(b.label));
   
-  return navigationItems;
+  console.log(`Generated ${sortedItems.length} navigation items for role ${mappedRole}:`, 
+    sortedItems.map(item => ({ path: item.path, label: item.label })));
+  
+  return sortedItems;
 };
 
 // Check if user has access to a specific route
