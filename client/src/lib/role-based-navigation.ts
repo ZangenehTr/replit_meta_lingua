@@ -151,6 +151,7 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
   
   // Communication & Collaboration Tools
   { path: "/admin/communications", icon: "MessageCircle", label: t('common:navigation.communicationCenter'), roles: ["Admin", "Supervisor"] },
+  { path: "/admin/visitor-chat", icon: "MessagesSquare", label: t('common:navigation.visitorChat') || 'Visitor Chat', roles: ["Admin", "Supervisor"] },
   
   // Quality Assurance & Supervision
   { path: "/admin/supervision", icon: "Eye", label: t('common:navigation.qualityAssurance'), roles: ["Supervisor", "Admin"] },

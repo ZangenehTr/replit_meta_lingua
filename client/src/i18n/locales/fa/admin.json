@@ -2535,5 +2535,28 @@
   "alertOnFailureHint": "اعلان به مدیران در صورت خطا",
   "saveSettings": "ذخیره تنظیمات",
   "settingsSaved": "تنظیمات با موفقیت ذخیره شد",
-  "resetToDefault": "بازگشت به پیش‌فرض"
+  "resetToDefault": "بازگشت به پیش‌فرض",
+  "visitorChat": {
+    "title": "مدیریت گفتگوهای بازدیدکننده",
+    "subtitle": "مدیریت و پاسخ به سوالات بازدیدکنندگان",
+    "sessions": "جلسات",
+    "filters": "فیلترها",
+    "searchLabel": "جستجو بر اساس نام، ایمیل یا تلفن",
+    "searchPlaceholder": "جستجو...",
+    "statusFilter": "فیلتر وضعیت",
+    "filterAll": "همه جلسات",
+    "filterWithContact": "با اطلاعات تماس",
+    "filterNoContact": "ناشناس",
+    "sessionsList": "جلسات گفتگو",
+    "sessionsFound": "جلسه یافت شد",
+    "noSessions": "جلسه‌ای یافت نشد",
+    "anonymous": "بازدیدکننده ناشناس",
+    "hasContact": "تماس",
+    "conversationTitle": "گفتگو",
+    "selectSession": "یک جلسه انتخاب کنید",
+    "selectSessionPrompt": "یک جلسه گفتگو را برای مشاهده پیام‌ها انتخاب کنید",
+    "contactInfo": "اطلاعات تماس",
+    "noMessages": "هنوز پیامی وجود ندارد",
+    "responseNote": "توجه: پاسخ مدیران به گفتگوهای بازدیدکننده در به‌روزرسانی آینده پیاده‌سازی خواهد شد. در حال حاضر، از اطلاعات تماس برای ارتباط از طریق ایمیل یا تلفن استفاده کنید."
+  }
 }

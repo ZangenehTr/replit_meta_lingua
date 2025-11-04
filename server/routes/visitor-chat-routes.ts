@@ -11,6 +11,7 @@ router.post('/sessions', async (req, res) => {
   try {
     const sessionId = nanoid(32); // Generate unique session ID
     const language = req.body.language || 'fa';
+    const now = new Date();
     
     const [session] = await db
       .insert(visitorChatSessions)
@@ -18,6 +19,7 @@ router.post('/sessions', async (req, res) => {
         sessionId,
         language,
         status: 'active',
+        lastMessageAt: now,
         metadata: {
           userAgent: req.headers['user-agent'],
           ip: req.ip
@@ -157,7 +159,7 @@ router.patch('/sessions/:sessionId/contact', async (req, res) => {
 });
 
 // Admin: Get all active chat sessions
-router.get('/admin/sessions', async (req, res) => {
+router.get('/sessions/all', async (req, res) => {
   try {
     const status = (req.query.status as string) || 'active';
     
