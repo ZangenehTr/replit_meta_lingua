@@ -412,5 +412,25 @@
   "viewAllTutors": "عرض جميع المعلمين",
   "noTutorsAvailable": "لا يوجد معلمون متاحون",
   "frontDesk": "الاستقبال",
-  "callCenterAgent": "وكيل مركز الاتصال"
+  "callCenterAgent": "وكيل مركز الاتصال",
+  "search": {
+    "universalSearch": "البحث الشامل",
+    "placeholder": "البحث عن الدورات، الطلاب، المعلمين، المحتوى...",
+    "search": "بحث",
+    "filters": "التصفية",
+    "filtersDescription": "قم بتحسين نتائج البحث",
+    "resultsPageTitle": "نتائج البحث",
+    "contentTypes": "أنواع المحتوى",
+    "languages": "اللغات",
+    "categories": "الفئات",
+    "levels": "المستويات",
+    "priceRange": "نطاق السعر",
+    "rating": "التقييم",
+    "sort": {
+      "relevance": "الأكثر صلة",
+      "date": "التاريخ",
+      "rating": "التقييم",
+      "alphabetical": "أبجدي"
+    }
+  }
 }

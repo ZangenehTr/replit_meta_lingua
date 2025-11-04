@@ -24,7 +24,13 @@
     "categories": "دسته‌بندی‌ها",
     "levels": "سطوح",
     "priceRange": "محدوده قیمت",
-    "rating": "امتیاز"
+    "rating": "امتیاز",
+    "sort": {
+      "relevance": "مرتبط‌ترین",
+      "date": "تاریخ",
+      "rating": "امتیاز",
+      "alphabetical": "الفبایی"
+    }
   },
   "filter": "فیلتر",
   "actions": "عملیات",

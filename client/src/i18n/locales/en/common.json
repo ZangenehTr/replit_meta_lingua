@@ -823,6 +823,12 @@
     "categories": "Categories",
     "levels": "Levels",
     "priceRange": "Price Range",
-    "rating": "Rating"
+    "rating": "Rating",
+    "sort": {
+      "relevance": "Relevance",
+      "date": "Date",
+      "rating": "Rating",
+      "alphabetical": "Alphabetical"
+    }
   }
 }
