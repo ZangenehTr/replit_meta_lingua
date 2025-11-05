@@ -140,7 +140,7 @@ export default function TeacherSchedulePage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('students')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('navigation.students')}</p>
                   <p className="text-2xl font-bold">28</p>
                 </div>
                 <Users className="w-8 h-8 text-purple-600" />

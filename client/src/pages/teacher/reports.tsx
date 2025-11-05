@@ -161,7 +161,7 @@ export default function TeacherReportsPage() {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">{t('overview')}</TabsTrigger>
             <TabsTrigger value="performance">{t('performance')}</TabsTrigger>
-            <TabsTrigger value="students">{t('students')}</TabsTrigger>
+            <TabsTrigger value="students">{t('navigation.students')}</TabsTrigger>
             <TabsTrigger value="detailed">{t('detailed')}</TabsTrigger>
           </TabsList>
 
