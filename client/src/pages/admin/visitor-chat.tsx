@@ -106,7 +106,7 @@ export default function AdminVisitorChatPage() {
         body: JSON.stringify({
           message: messageText,
           senderType: 'admin',
-          senderName: user?.fullName || user?.email || 'Support',
+          senderName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'Support',
           senderId: user?.id
         })
       });
@@ -236,7 +236,7 @@ export default function AdminVisitorChatPage() {
       setIsTyping(true);
       socket.emit('admin-typing', {
         sessionId: selectedSession.sessionId,
-        adminName: user?.fullName || 'Support',
+        adminName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Support',
         isTyping: true
       });
     }
@@ -251,7 +251,7 @@ export default function AdminVisitorChatPage() {
       setIsTyping(false);
       socket?.emit('admin-typing', {
         sessionId: selectedSession.sessionId,
-        adminName: user?.fullName || 'Support',
+        adminName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Support',
         isTyping: false
       });
     }, 1000);
@@ -290,11 +290,12 @@ export default function AdminVisitorChatPage() {
     return true;
   });
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     try {
-      return format(new Date(dateString), 'PPp');
+      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      return format(date, 'PPp');
     } catch {
-      return dateString;
+      return String(dateString);
     }
   };
 
