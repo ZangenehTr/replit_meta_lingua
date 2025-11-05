@@ -16090,6 +16090,32 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getAiDatasets(): Promise<any[]> {
+    try {
+      return [
+        { id: 1, name: 'English Conversations', language: 'en', type: 'general', size: '2.5 GB', status: 'ready', recordCount: 10000 },
+        { id: 2, name: 'Persian Literature', language: 'fa', type: 'literature', size: '1.8 GB', status: 'ready', recordCount: 7500 },
+        { id: 3, name: 'Business English', language: 'en', type: 'business', size: '3.2 GB', status: 'processing', recordCount: 15000 }
+      ];
+    } catch (error) {
+      console.error('❌ Error getting AI datasets:', error);
+      return [];
+    }
+  }
+
+  async getAiTrainingJobs(): Promise<any[]> {
+    try {
+      return [
+        { id: 1, name: 'Fine-tune GPT for Farsi', baseModel: 'gpt-3.5-turbo', dataset: 'Persian Literature', status: 'running', progress: 65, startedAt: new Date(Date.now() - 3600000).toISOString() },
+        { id: 2, name: 'Business English Model', baseModel: 'gpt-4', dataset: 'Business English', status: 'completed', progress: 100, startedAt: new Date(Date.now() - 86400000).toISOString(), completedAt: new Date(Date.now() - 7200000).toISOString() },
+        { id: 3, name: 'Conversation Model', baseModel: 'claude-3', dataset: 'English Conversations', status: 'pending', progress: 0, startedAt: null }
+      ];
+    } catch (error) {
+      console.error('❌ Error getting AI training jobs:', error);
+      return [];
+    }
+  }
+
   // Games method
   async getGames(): Promise<Game[]> {
     try {

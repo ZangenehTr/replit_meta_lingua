@@ -742,6 +742,8 @@ export interface IStorage {
   
   // AI Models Methods
   getAiModels(): Promise<any[]>;
+  getAiDatasets(): Promise<any[]>;
+  getAiTrainingJobs(): Promise<any[]>;
   
   // System Configuration Methods
   getSystemRoles(): Promise<any[]>;
