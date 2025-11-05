@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, gte, lte, lt, inArray, or, isNull, isNotNull, ilike } from "drizzle-orm";
+import { eq, and, asc, desc, sql, gte, lte, lt, inArray, or, isNull, isNotNull, ilike } from "drizzle-orm";
 import { db } from "./db";
 import { 
   filterTeachers, 
