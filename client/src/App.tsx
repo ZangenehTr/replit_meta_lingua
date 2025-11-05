@@ -318,7 +318,7 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/financial">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
+        <RoleProtectedRoute allowedRoles={["admin", "accountant"]}>
           <AdminFinancial />
         </RoleProtectedRoute>
       </Route>
@@ -363,7 +363,7 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/financial-reports">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
+        <RoleProtectedRoute allowedRoles={["admin", "accountant"]}>
           <FinancialReportsPage />
         </RoleProtectedRoute>
       </Route>
