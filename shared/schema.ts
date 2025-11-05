@@ -8686,11 +8686,35 @@ export const insertVisitorChatMessageSchema = createInsertSchema(visitorChatMess
   createdAt: true
 });
 
+// Visitor Chat Canned Responses - Quick reply templates for admins
+export const visitorChatCannedResponses = pgTable("visitor_chat_canned_responses", {
+  id: serial("id").primaryKey(),
+  category: varchar("category", { length: 50 }).notNull(), // greeting, faq, pricing, enrollment, general
+  language: varchar("language", { length: 10 }).notNull(), // fa, en, ar
+  shortcut: varchar("shortcut", { length: 50 }).notNull(), // e.g., /hello, /pricing
+  message: text("message").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  usageCount: integer("usage_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Zod schemas for canned responses
+export const insertVisitorChatCannedResponseSchema = createInsertSchema(visitorChatCannedResponses).omit({
+  id: true,
+  usageCount: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types for visitor chat
 export type VisitorChatSession = typeof visitorChatSessions.$inferSelect;
 export type InsertVisitorChatSession = z.infer<typeof insertVisitorChatSessionSchema>;
 export type VisitorChatMessage = typeof visitorChatMessages.$inferSelect;
 export type InsertVisitorChatMessage = z.infer<typeof insertVisitorChatMessageSchema>;
+export type VisitorChatCannedResponse = typeof visitorChatCannedResponses.$inferSelect;
+export type InsertVisitorChatCannedResponse = z.infer<typeof insertVisitorChatCannedResponseSchema>;
 
 // ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables

@@ -745,6 +745,101 @@ export class CallernWebSocketServer {
         }
       });
 
+      // ========== VISITOR CHAT HANDLERS ==========
+      // Track visitor chat sessions (sessionId -> socket IDs)
+      const visitorChatSessions: Map<string, Set<string>> = new Map();
+      const adminChatSessions: Map<number, Set<string>> = new Map(); // userId -> session IDs they're viewing
+      
+      // Visitor joins a chat session
+      socket.on('visitor-join-chat', (data: { sessionId: string }) => {
+        const { sessionId } = data;
+        socket.join(`chat-${sessionId}`);
+        
+        if (!visitorChatSessions.has(sessionId)) {
+          visitorChatSessions.set(sessionId, new Set());
+        }
+        visitorChatSessions.get(sessionId)!.add(socket.id);
+        
+        console.log(`Visitor joined chat session: ${sessionId}`);
+        
+        // Notify admins that a visitor is active
+        this.io.emit('visitor-chat-active', { sessionId });
+      });
+      
+      // Admin joins to view/manage a chat session
+      socket.on('admin-join-chat', (data: { sessionId: string, adminId: number }) => {
+        const { sessionId, adminId } = data;
+        socket.join(`chat-${sessionId}`);
+        
+        if (!adminChatSessions.has(adminId)) {
+          adminChatSessions.set(adminId, new Set());
+        }
+        adminChatSessions.get(adminId)!.add(sessionId);
+        
+        console.log(`Admin ${adminId} joined chat session: ${sessionId}`);
+        
+        // Notify visitor that admin has joined
+        socket.to(`chat-${sessionId}`).emit('admin-online', { adminId, sessionId });
+      });
+      
+      // Visitor sends a message
+      socket.on('visitor-send-message', (data: { sessionId: string, message: any }) => {
+        const { sessionId, message } = data;
+        
+        // Broadcast to everyone in the chat session (including admins)
+        this.io.to(`chat-${sessionId}`).emit('new-chat-message', {
+          sessionId,
+          message
+        });
+        
+        // Notify all admins about new unread message
+        this.io.emit('visitor-chat-notification', {
+          sessionId,
+          messagePreview: message.message.substring(0, 50),
+          senderType: 'visitor'
+        });
+        
+        console.log(`New visitor message in session ${sessionId}`);
+      });
+      
+      // Admin sends a message
+      socket.on('admin-send-message', (data: { sessionId: string, message: any }) => {
+        const { sessionId, message } = data;
+        
+        // Broadcast to everyone in the chat session (including visitor)
+        this.io.to(`chat-${sessionId}`).emit('new-chat-message', {
+          sessionId,
+          message
+        });
+        
+        console.log(`Admin message sent to session ${sessionId}`);
+      });
+      
+      // Typing indicators
+      socket.on('visitor-typing', (data: { sessionId: string, isTyping: boolean }) => {
+        const { sessionId, isTyping } = data;
+        socket.to(`chat-${sessionId}`).emit('visitor-typing-status', { sessionId, isTyping });
+      });
+      
+      socket.on('admin-typing', (data: { sessionId: string, adminName: string, isTyping: boolean }) => {
+        const { sessionId, adminName, isTyping } = data;
+        socket.to(`chat-${sessionId}`).emit('admin-typing-status', { sessionId, adminName, isTyping });
+      });
+      
+      // Mark messages as read
+      socket.on('mark-messages-read', (data: { sessionId: string }) => {
+        const { sessionId } = data;
+        // Notify other participants that messages have been read
+        socket.to(`chat-${sessionId}`).emit('messages-read', { sessionId });
+      });
+      
+      // Get online admins count (for visitor widget)
+      socket.on('get-online-admins', () => {
+        const onlineAdminsCount = adminChatSessions.size;
+        socket.emit('online-admins-count', { count: onlineAdminsCount });
+      });
+      // ========== END VISITOR CHAT HANDLERS ==========
+
       // Handle disconnect
       socket.on('disconnect', async () => {
         console.log(`Socket disconnected: ${socket.id}`);
