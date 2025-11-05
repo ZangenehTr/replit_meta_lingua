@@ -3,7 +3,11 @@
   "nav": {
     "home": "خانه",
     "allCourses": "همه دوره‌ها",
-    "curriculum": "برنامه آموزشی"
+    "curriculum": "برنامه آموزشی",
+    "blog": "بلاگ",
+    "videos": "ویدیوها",
+    "about": "درباره ما",
+    "contact": "تماس با ما"
   },
   "auth": {
     "login": "ورود"

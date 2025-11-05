@@ -3,7 +3,11 @@
   "nav": {
     "home": "Home",
     "allCourses": "All Courses",
-    "curriculum": "Curriculum"
+    "curriculum": "Curriculum",
+    "blog": "Blog",
+    "videos": "Videos",
+    "about": "About",
+    "contact": "Contact"
   },
   "auth": {
     "login": "Login"

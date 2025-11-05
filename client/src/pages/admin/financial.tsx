@@ -87,7 +87,7 @@ export function AdminFinancial() {
   }, [dateRange]);
 
   // Fetch REAL transactions from accounting ledger (STABLE query key)
-  const { data: ledgerEntries = [] } = useQuery({
+  const { data: ledgerEntries = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/ledger/entries', { startDate, endDate, sourceType: filterType !== 'all' ? filterType : undefined }],
   });
 
@@ -101,11 +101,17 @@ export function AdminFinancial() {
     date: new Date(entry.transactionDate).toISOString().split('T')[0],
     description: entry.description,
     referenceNumber: entry.referenceNumber,
-    transactionType: entry.transactionType
+    transactionType: entry.transactionType,
+    student: entry.studentName || undefined,
+    teacher: entry.teacherName || undefined,
+    course: entry.courseName || undefined,
+    paymentMethod: entry.paymentMethod || undefined,
+    commission: entry.commission || undefined,
+    failureReason: entry.failureReason || undefined
   })) || [];
 
   // Fetch teacher payouts from ledger (STABLE query key)
-  const { data: teacherPayoutEntries = [] } = useQuery({
+  const { data: teacherPayoutEntries = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/ledger/entries', { startDate, endDate, sourceType: 'teacher_payout' }],
   });
 
@@ -116,7 +122,14 @@ export function AdminFinancial() {
     status: entry.status,
     date: new Date(entry.transactionDate).toISOString().split('T')[0],
     description: entry.description,
-    referenceNumber: entry.referenceNumber
+    referenceNumber: entry.referenceNumber,
+    teacher: entry.teacherName || 'Unknown Teacher',
+    period: entry.period || new Date(entry.transactionDate).toISOString().split('T')[0],
+    courses: entry.courses || [],
+    studentsCount: entry.studentsCount || 0,
+    totalEarnings: entry.totalEarnings || parseFloat(entry.amount),
+    commission: entry.commissionRate || 15,
+    netPayout: entry.netPayout || parseFloat(entry.amount)
   })) || [];
 
   const getStatusColor = (status) => {
