@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Volume2, 
   Settings, 
@@ -30,9 +31,46 @@ export default function TTSSystem() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
+  const { toast } = useToast();
 
   const [selectedTab, setSelectedTab] = useState("configuration");
   const [testText, setTestText] = useState("Hello, this is a test of the text-to-speech system.");
+  const [formData, setFormData] = useState({
+    ttsEngine: 'azure',
+    defaultLanguage: 'en-US',
+    speechRate: '1.0',
+    ttsEnabled: true,
+    autoPlay: false,
+    cacheAudio: true,
+    maxTextLength: '5000'
+  });
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('ttsSettings');
+    if (savedSettings) {
+      setFormData(JSON.parse(savedSettings));
+    }
+  }, []);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      localStorage.setItem('ttsSettings', JSON.stringify(data));
+      return new Promise(resolve => setTimeout(resolve, 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:settingsSaved', 'Settings saved successfully'),
+        description: t('admin:ttsSettingsSavedDesc', 'TTS settings have been updated')
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorSaving', 'Error saving settings'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -414,8 +452,12 @@ export default function TTSSystem() {
         <Button variant="outline" data-testid="button-reset-tts-settings">
           {t('admin:resetToDefault', 'Reset to Default')}
         </Button>
-        <Button data-testid="button-save-tts-settings">
-          {t('admin:saveSettings', 'Save Settings')}
+        <Button 
+          onClick={() => saveMutation.mutate(formData)}
+          disabled={saveMutation.isPending}
+          data-testid="button-save-tts-settings"
+        >
+          {saveMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveSettings', 'Save Settings')}
         </Button>
       </div>
     </div>

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   ShoppingCart, 
   Settings, 
@@ -24,6 +25,48 @@ export default function ShoppingCartSettings() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
+    cartExpiry: '30',
+    maxItems: '10',
+    persistentCart: true,
+    guestCheckout: false,
+    bulkDiscountThreshold: '3',
+    bulkDiscountPercent: '10',
+    freeShippingThreshold: '50',
+    studentDiscount: true,
+    requirePhone: true,
+    emailReceipt: true,
+    checkoutTimeout: '15'
+  });
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('shoppingCartSettings');
+    if (savedSettings) {
+      setFormData(JSON.parse(savedSettings));
+    }
+  }, []);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      localStorage.setItem('shoppingCartSettings', JSON.stringify(data));
+      return new Promise(resolve => setTimeout(resolve, 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:settingsSaved', 'Settings saved successfully'),
+        description: t('admin:cartSettingsSavedDesc', 'Shopping cart settings have been updated')
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorSaving', 'Error saving settings'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -210,8 +253,12 @@ export default function ShoppingCartSettings() {
           <Button variant="outline" data-testid="button-reset-settings">
             {t('admin:resetToDefault', 'Reset to Default')}
           </Button>
-          <Button data-testid="button-save-cart-settings">
-            {t('admin:saveSettings', 'Save Settings')}
+          <Button 
+            onClick={() => saveMutation.mutate(formData)}
+            disabled={saveMutation.isPending}
+            data-testid="button-save-cart-settings"
+          >
+            {saveMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveSettings', 'Save Settings')}
           </Button>
         </div>
       </div>

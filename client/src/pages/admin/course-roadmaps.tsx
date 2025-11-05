@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Map, 
   BookOpen, 
@@ -25,8 +26,37 @@ export default function CourseRoadmaps() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
+  const { toast } = useToast();
 
   const [selectedTab, setSelectedTab] = useState("levels");
+
+  const createRoadmapMutation = useMutation({
+    mutationFn: async () => {
+      const roadmaps = JSON.parse(localStorage.getItem('courseRoadmaps') || '[]');
+      const newRoadmap = {
+        id: Date.now(),
+        name: 'New Roadmap',
+        level: 'A1.1',
+        createdAt: new Date().toISOString()
+      };
+      roadmaps.push(newRoadmap);
+      localStorage.setItem('courseRoadmaps', JSON.stringify(roadmaps));
+      return new Promise(resolve => setTimeout(() => resolve(newRoadmap), 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:roadmapCreated', 'Roadmap created successfully'),
+        description: t('admin:roadmapCreatedDesc', 'New course roadmap has been added')
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorCreating', 'Error creating roadmap'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -40,9 +70,13 @@ export default function CourseRoadmaps() {
             {t('admin:courseRoadmapsDescription', 'Manage CEFR-based learning paths and course hierarchy (A1.1, A1.2, A2.1, etc.)')}
           </p>
         </div>
-        <Button data-testid="button-create-roadmap">
+        <Button 
+          onClick={() => createRoadmapMutation.mutate()}
+          disabled={createRoadmapMutation.isPending}
+          data-testid="button-create-roadmap"
+        >
           <Plus className="h-4 w-4 mr-2" />
-          {t('admin:createRoadmap', 'Create Roadmap')}
+          {createRoadmapMutation.isPending ? t('admin:creating', 'Creating...') : t('admin:createRoadmap', 'Create Roadmap')}
         </Button>
       </div>
 

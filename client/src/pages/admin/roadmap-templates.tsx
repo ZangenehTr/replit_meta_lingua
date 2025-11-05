@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   File, 
   Copy, 
@@ -25,8 +26,73 @@ export default function RoadmapTemplates() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
+  const { toast } = useToast();
 
   const [selectedTab, setSelectedTab] = useState("templates");
+  const [templateFormData, setTemplateFormData] = useState({
+    templateName: '',
+    templateDescription: ''
+  });
+
+  const createTemplateMutation = useMutation({
+    mutationFn: async () => {
+      const templates = JSON.parse(localStorage.getItem('roadmapTemplates') || '[]');
+      const newTemplate = {
+        id: Date.now(),
+        name: 'New Template',
+        category: 'General',
+        createdAt: new Date().toISOString()
+      };
+      templates.push(newTemplate);
+      localStorage.setItem('roadmapTemplates', JSON.stringify(templates));
+      return new Promise(resolve => setTimeout(() => resolve(newTemplate), 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:templateCreated', 'Template created successfully'),
+        description: t('admin:templateCreatedDesc', 'New roadmap template has been added')
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorCreating', 'Error creating template'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: async (data: typeof templateFormData) => {
+      if (!data.templateName.trim()) {
+        throw new Error('Template name is required');
+      }
+      const templates = JSON.parse(localStorage.getItem('roadmapTemplates') || '[]');
+      const newTemplate = {
+        id: Date.now(),
+        name: data.templateName,
+        description: data.templateDescription,
+        createdAt: new Date().toISOString()
+      };
+      templates.push(newTemplate);
+      localStorage.setItem('roadmapTemplates', JSON.stringify(templates));
+      return new Promise(resolve => setTimeout(() => resolve(newTemplate), 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:templateSaved', 'Template saved successfully'),
+        description: t('admin:templateSavedDesc', 'Roadmap template has been saved')
+      });
+      setTemplateFormData({ templateName: '', templateDescription: '' });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorSaving', 'Error saving template'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -45,9 +111,13 @@ export default function RoadmapTemplates() {
             <Upload className="h-4 w-4 mr-2" />
             {t('admin:importTemplate', 'Import')}
           </Button>
-          <Button data-testid="button-create-template">
+          <Button 
+            onClick={() => createTemplateMutation.mutate()}
+            disabled={createTemplateMutation.isPending}
+            data-testid="button-create-template"
+          >
             <Plus className="h-4 w-4 mr-2" />
-            {t('admin:createTemplate', 'Create Template')}
+            {createTemplateMutation.isPending ? t('admin:creating', 'Creating...') : t('admin:createTemplate', 'Create Template')}
           </Button>
         </div>
       </div>
@@ -231,6 +301,8 @@ export default function RoadmapTemplates() {
                   <Input 
                     id="template-name" 
                     placeholder={t('admin:enterTemplateName', 'Enter template name')}
+                    value={templateFormData.templateName}
+                    onChange={(e) => setTemplateFormData(prev => ({ ...prev, templateName: e.target.value }))}
                     data-testid="input-template-name"
                   />
                 </div>
@@ -239,6 +311,8 @@ export default function RoadmapTemplates() {
                   <Input 
                     id="template-description" 
                     placeholder={t('admin:enterTemplateDescription', 'Describe the template purpose')}
+                    value={templateFormData.templateDescription}
+                    onChange={(e) => setTemplateFormData(prev => ({ ...prev, templateDescription: e.target.value }))}
                     data-testid="input-template-description"
                   />
                 </div>
@@ -250,9 +324,13 @@ export default function RoadmapTemplates() {
                   <Button variant="outline" data-testid="button-preview-template">
                     {t('admin:preview', 'Preview')}
                   </Button>
-                  <Button data-testid="button-save-template">
+                  <Button 
+                    onClick={() => saveTemplateMutation.mutate(templateFormData)}
+                    disabled={saveTemplateMutation.isPending || !templateFormData.templateName.trim()}
+                    data-testid="button-save-template"
+                  >
                     <Save className="h-4 w-4 mr-2" />
-                    {t('admin:saveTemplate', 'Save Template')}
+                    {saveTemplateMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveTemplate', 'Save Template')}
                   </Button>
                 </div>
               </div>

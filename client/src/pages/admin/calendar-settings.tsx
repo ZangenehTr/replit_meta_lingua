@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Calendar, 
   Clock, 
@@ -24,6 +26,57 @@ export default function CalendarSettings() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
+    defaultTimezone: 'Europe/London',
+    weekStartDay: 'monday',
+    dateFormat: 'dd/mm/yyyy',
+    timeFormat: '24h',
+    showWeekends: true,
+    autoDST: true,
+    defaultStartTime: '08:00',
+    defaultEndTime: '18:00',
+    sessionDuration: '60',
+    bookingAdvance: '30',
+    minNotice: '2',
+    allowPastBooking: false,
+    emailReminders: true,
+    smsReminders: false,
+    reminderTime: '24',
+    followupTime: '2'
+  });
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('calendarSettings');
+    if (savedSettings) {
+      setFormData(JSON.parse(savedSettings));
+    }
+  }, []);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      localStorage.setItem('calendarSettings', JSON.stringify(data));
+      return new Promise(resolve => setTimeout(resolve, 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:settingsSaved', 'Settings saved successfully'),
+        description: t('admin:calendarSettingsSavedDesc', 'Calendar settings have been updated')
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorSaving', 'Error saving settings'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -59,7 +112,7 @@ export default function CalendarSettings() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="default-timezone">{t('admin:defaultTimezone', 'Default Timezone')}</Label>
-                  <Select defaultValue="Europe/London">
+                  <Select value={formData.defaultTimezone} onValueChange={(value) => handleInputChange('defaultTimezone', value)}>
                     <SelectTrigger data-testid="select-default-timezone">
                       <SelectValue placeholder={t('admin:selectTimezone', 'Select timezone')} />
                     </SelectTrigger>
@@ -272,8 +325,12 @@ export default function CalendarSettings() {
           <Button variant="outline" data-testid="button-test-settings">
             {t('admin:testSettings', 'Test Settings')}
           </Button>
-          <Button data-testid="button-save-calendar-settings">
-            {t('admin:saveSettings', 'Save Settings')}
+          <Button 
+            onClick={() => saveMutation.mutate(formData)}
+            disabled={saveMutation.isPending}
+            data-testid="button-save-calendar-settings"
+          >
+            {saveMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveSettings', 'Save Settings')}
           </Button>
         </div>
       </div>

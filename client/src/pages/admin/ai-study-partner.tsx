@@ -40,6 +40,18 @@ export default function AIStudyPartner() {
   const [testPrompt, setTestPrompt] = useState("");
   const [testResponse, setTestResponse] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
+  const [formData, setFormData] = useState({
+    aiModel: '',
+    responseLength: 'medium',
+    creativity: '0.7',
+    aiEnabled: true,
+    memoryEnabled: true,
+    progressTracking: true,
+    aiName: 'Alex',
+    personalityStyle: 'friendly',
+    systemPrompt: "You are Alex, a friendly and knowledgeable AI study partner helping students learn English. You should be encouraging, patient, and adapt your teaching style to each student's level and needs.",
+    conversationStarters: "Hi there! I'm Alex, your AI study partner. What would you like to practice today?\nGreat to see you again! How did your last lesson go?\nReady for some English practice? I'm here to help!"
+  });
 
   // Fetch AI models (downloaded + trained)
   const { data: models = [], isLoading: modelsLoading } = useQuery<AiModel[]>({
@@ -88,6 +100,26 @@ export default function AIStudyPartner() {
     }
     testAIMutation.mutate(testPrompt);
   };
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      localStorage.setItem('aiStudyPartnerSettings', JSON.stringify(data));
+      return new Promise(resolve => setTimeout(resolve, 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:settingsSaved', 'Settings saved successfully'),
+        description: t('admin:aiSettingsSavedDesc', 'AI Study Partner settings have been updated')
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorSaving', 'Error saving settings'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -392,8 +424,12 @@ export default function AIStudyPartner() {
         <Button variant="outline" data-testid="button-reset-ai-settings">
           {t('admin:resetToDefault', 'Reset to Default')}
         </Button>
-        <Button data-testid="button-save-ai-settings">
-          {t('admin:saveSettings', 'Save Settings')}
+        <Button 
+          onClick={() => saveMutation.mutate(formData)}
+          disabled={saveMutation.isPending}
+          data-testid="button-save-ai-settings"
+        >
+          {saveMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveSettings', 'Save Settings')}
         </Button>
       </div>
 

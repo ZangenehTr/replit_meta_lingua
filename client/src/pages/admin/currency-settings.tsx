@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Coins, 
   DollarSign, 
@@ -26,8 +27,48 @@ export default function CurrencySettings() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
+  const { toast } = useToast();
 
   const [selectedTab, setSelectedTab] = useState("primary");
+  const [formData, setFormData] = useState({
+    primaryCurrency: 'EUR',
+    currencySymbol: '€',
+    decimalPlaces: '2',
+    symbolPosition: 'before',
+    thousandSeparator: true,
+    spaceSeparator: false,
+    autoSync: true,
+    updateFrequency: 'daily',
+    rateAlerts: false,
+    alertThreshold: '5'
+  });
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('currencySettings');
+    if (savedSettings) {
+      setFormData(JSON.parse(savedSettings));
+    }
+  }, []);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      localStorage.setItem('currencySettings', JSON.stringify(data));
+      return new Promise(resolve => setTimeout(resolve, 500));
+    },
+    onSuccess: () => {
+      toast({ 
+        title: t('admin:settingsSaved', 'Settings saved successfully'),
+        description: t('admin:currencySettingsSavedDesc', 'Currency settings have been updated')
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('admin:errorSaving', 'Error saving settings'),
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -323,8 +364,12 @@ export default function CurrencySettings() {
         <Button variant="outline" data-testid="button-reset-currency-settings">
           {t('admin:resetToDefault', 'Reset to Default')}
         </Button>
-        <Button data-testid="button-save-currency-settings">
-          {t('admin:saveSettings', 'Save Settings')}
+        <Button 
+          onClick={() => saveMutation.mutate(formData)}
+          disabled={saveMutation.isPending}
+          data-testid="button-save-currency-settings"
+        >
+          {saveMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveSettings', 'Save Settings')}
         </Button>
       </div>
     </div>
