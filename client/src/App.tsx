@@ -44,6 +44,7 @@ import { IranianComplianceSettings } from "@/pages/admin/iranian-compliance-sett
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import GamesManagement from "@/pages/admin/games-management";
 import AiTrainingDashboard from "@/pages/admin/ai-training";
+import AIServicesManagement from "@/pages/admin/AIServicesManagement";
 import { GameAccessControl } from "@/pages/admin/game-access-control";
 import AdminTeacherPaymentsPage from "@/pages/admin/teacher-payments";
 import WhiteLabelPage from "@/pages/admin/white-label";
@@ -369,6 +370,11 @@ function Router() {
       <Route path="/admin/ai-training">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <AiTrainingDashboard />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/ai-services">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <AIServicesManagement />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/games-management">
