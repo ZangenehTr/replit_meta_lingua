@@ -576,6 +576,16 @@
     "week": "Week",
     "day": "Day"
   },
+  "footer": {
+    "description": "Empowering language learners worldwide with AI-enhanced, personalized learning experiences.",
+    "quickLinks": "Quick Links",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "cookies": "Cookie Policy",
+    "rights": "All rights reserved.",
+    "multilingual": "Available in English, فارسی, العربية"
+  },
   "common": {
     "with": "with",
     "and": "and",
