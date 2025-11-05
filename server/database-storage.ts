@@ -6346,7 +6346,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTestsByTeacher(teacherId: number): Promise<Test[]> {
-    return await db.select().from(tests).where(eq(tests.createdBy, teacherId));
+    return await db.select().from(tests).where(eq(tests.teacherId, teacherId));
   }
 
   async updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined> {

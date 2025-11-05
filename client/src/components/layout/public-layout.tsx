@@ -76,38 +76,35 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
           {/* Logo */}
           <div className="flex lg:flex-1">
-            <Link href="/">
-              <a className="flex items-center gap-2 -m-1.5 p-1.5" data-testid="link-home-logo">
-                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary via-purple-500 to-pink-500 rounded-xl shadow-lg">
-                  <Sparkles className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-lg bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    Meta Lingua
-                  </span>
-                  <span className="text-[10px] text-muted-foreground leading-none">
-                    {t('tagline', 'Learn Languages Globally')}
-                  </span>
-                </div>
-              </a>
+            <Link href="/" className="flex items-center gap-2 -m-1.5 p-1.5" data-testid="link-home-logo">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary via-purple-500 to-pink-500 rounded-xl shadow-lg">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Meta Lingua
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-none">
+                  {t('tagline', 'Learn Languages Globally')}
+                </span>
+              </div>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex lg:gap-x-8 lg:items-center">
             {/* Home Link */}
-            <Link href="/">
-              <a
-                className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-                  isActivePath('/')
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                data-testid="link-nav-home"
-              >
-                <Home className="h-4 w-4" />
-                {t('nav.home')}
-              </a>
+            <Link 
+              href="/"
+              className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                isActivePath('/')
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              data-testid="link-nav-home"
+            >
+              <Home className="h-4 w-4" />
+              {t('nav.home')}
             </Link>
 
             {/* Curriculum Dropdown */}
@@ -128,23 +125,19 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <Link href="/curriculum">
-                    <DropdownMenuItem asChild>
-                      <a className="cursor-pointer" data-testid="link-all-courses">
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        {t('nav.allCourses', 'All Courses')}
-                      </a>
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem asChild>
+                    <Link href="/curriculum" className="cursor-pointer" data-testid="link-all-courses">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      {t('nav.allCourses', 'All Courses')}
+                    </Link>
+                  </DropdownMenuItem>
                   <div className="my-1 border-t" />
                   {curriculumCategories.map((category: any) => (
-                    <Link key={category.id} href={`/curriculum/${category.slug}`}>
-                      <DropdownMenuItem asChild>
-                        <a className="cursor-pointer" data-testid={`link-category-${category.slug}`}>
-                          {category.name}
-                        </a>
-                      </DropdownMenuItem>
-                    </Link>
+                    <DropdownMenuItem key={category.id} asChild>
+                      <Link href={`/curriculum/${category.slug}`} className="cursor-pointer" data-testid={`link-category-${category.slug}`}>
+                        {category.name}
+                      </Link>
+                    </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -155,18 +148,18 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               const Icon = item.icon;
               const isActive = isActivePath(item.href);
               return (
-                <Link key={item.name} href={item.href}>
-                  <a
-                    className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-                      isActive
-                        ? 'text-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                    data-testid={`link-nav-${item.href.slice(1) || 'home'}`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.name}
-                  </a>
+                <Link 
+                  key={item.name} 
+                  href={item.href}
+                  className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                    isActive
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid={`link-nav-${item.href.slice(1) || 'home'}`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.name}
                 </Link>
               );
             })}
@@ -176,16 +169,14 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-4 items-center">
             <LanguageSelector />
             <Button asChild variant="outline" size="sm" data-testid="button-login">
-              <Link href="/auth">
-                <a className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  {t('auth.login')}
-                </a>
+              <Link href="/auth" className="flex items-center gap-2">
+                <LogIn className="h-4 w-4" />
+                {t('auth.login')}
               </Link>
             </Button>
             <Button asChild size="sm" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90" data-testid="button-get-started">
               <Link href="/auth?tab=register">
-                <a>{t('cta.getStarted', 'Get Started')}</a>
+                {t('cta.getStarted', 'Get Started')}
               </Link>
             </Button>
           </div>
@@ -216,48 +207,46 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
                   <nav className="flex flex-col gap-2">
                     {/* Home Link */}
-                    <Link href="/">
-                      <a
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                          isActivePath('/')
-                            ? 'bg-primary/10 text-primary font-semibold'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                        }`}
-                        data-testid="link-mobile-home"
-                      >
-                        <Home className="h-5 w-5" />
-                        {t('nav.home')}
-                      </a>
+                    <Link 
+                      href="/"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isActivePath('/')
+                          ? 'bg-primary/10 text-primary font-semibold'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      }`}
+                      data-testid="link-mobile-home"
+                    >
+                      <Home className="h-5 w-5" />
+                      {t('nav.home')}
                     </Link>
 
                     {/* Curriculum Section */}
                     {curriculumCategories.length > 0 && (
                       <div>
-                        <Link href="/curriculum">
-                          <a
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                              isActivePath('/curriculum')
-                                ? 'bg-primary/10 text-primary font-semibold'
-                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                            }`}
-                            data-testid="link-mobile-curriculum"
-                          >
-                            <GraduationCap className="h-5 w-5" />
-                            {t('nav.curriculum', 'Curriculum')}
-                          </a>
+                        <Link 
+                          href="/curriculum"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                            isActivePath('/curriculum')
+                              ? 'bg-primary/10 text-primary font-semibold'
+                              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                          }`}
+                          data-testid="link-mobile-curriculum"
+                        >
+                          <GraduationCap className="h-5 w-5" />
+                          {t('nav.curriculum', 'Curriculum')}
                         </Link>
                         <div className="ml-8 mt-1 flex flex-col gap-1">
                           {curriculumCategories.map((category: any) => (
-                            <Link key={category.id} href={`/curriculum/${category.slug}`}>
-                              <a
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-                                data-testid={`link-mobile-category-${category.slug}`}
-                              >
-                                {category.name}
-                              </a>
+                            <Link 
+                              key={category.id} 
+                              href={`/curriculum/${category.slug}`}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                              data-testid={`link-mobile-category-${category.slug}`}
+                            >
+                              {category.name}
                             </Link>
                           ))}
                         </div>
@@ -269,19 +258,19 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                       const Icon = item.icon;
                       const isActive = isActivePath(item.href);
                       return (
-                        <Link key={item.name} href={item.href}>
-                          <a
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                              isActive
-                                ? 'bg-primary/10 text-primary font-semibold'
-                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                            }`}
-                            data-testid={`link-mobile-${item.href.slice(1) || 'home'}`}
-                          >
-                            <Icon className="h-5 w-5" />
-                            {item.name}
-                          </a>
+                        <Link 
+                          key={item.name} 
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                            isActive
+                              ? 'bg-primary/10 text-primary font-semibold'
+                              : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                          }`}
+                          data-testid={`link-mobile-${item.href.slice(1) || 'home'}`}
+                        >
+                          <Icon className="h-5 w-5" />
+                          {item.name}
                         </Link>
                       );
                     })}
@@ -289,16 +278,14 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
                   <div className="border-t pt-4 space-y-2">
                     <Button asChild variant="outline" className="w-full" data-testid="button-mobile-login">
-                      <Link href="/auth">
-                        <a className="flex items-center gap-2">
-                          <LogIn className="h-4 w-4" />
-                          {t('auth.login')}
-                        </a>
+                      <Link href="/auth" className="flex items-center gap-2">
+                        <LogIn className="h-4 w-4" />
+                        {t('auth.login')}
                       </Link>
                     </Button>
                     <Button asChild className="w-full bg-gradient-to-r from-primary to-purple-600" data-testid="button-mobile-register">
                       <Link href="/auth?tab=register">
-                        <a>{t('cta.getStarted', 'Get Started')}</a>
+                        {t('cta.getStarted', 'Get Started')}
                       </Link>
                     </Button>
                   </div>
@@ -360,10 +347,8 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <ul className="space-y-2">
                 {navigation.map((item) => (
                   <li key={item.name}>
-                    <Link href={item.href}>
-                      <a className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid={`link-footer-${item.href.slice(1) || 'home'}`}>
-                        {item.name}
-                      </a>
+                    <Link href={item.href} className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid={`link-footer-${item.href.slice(1) || 'home'}`}>
+                      {item.name}
                     </Link>
                   </li>
                 ))}
