@@ -261,7 +261,7 @@ export function VisitorChatWidget() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -443,7 +443,7 @@ export function VisitorChatWidget() {
                   setNewMessage(e.target.value);
                   handleTyping();
                 }}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 className="flex-1 border-2 focus:border-primary transition-colors"
                 disabled={isLoading}
                 data-testid="input-chat-message"
