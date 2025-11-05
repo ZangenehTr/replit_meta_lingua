@@ -17,6 +17,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
+import { formatCurrency } from '@/lib/utils';
 import { format, addDays, startOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
 import { 
   Calendar as CalendarIcon, 
@@ -963,7 +964,7 @@ function ClassScheduleForm({
           </Select>
           {selectedCourse && (
             <p className="text-sm text-muted-foreground">
-              Duration: {selectedCourse.duration} weeks • Price: {selectedCourse.price?.toLocaleString()} IRR
+              Duration: {selectedCourse.duration} weeks • Price: {formatCurrency(selectedCourse.price || 0, 'IRR')}
             </p>
           )}
         </div>

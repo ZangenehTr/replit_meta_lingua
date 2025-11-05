@@ -20,6 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { formatCurrency } from "@/lib/utils";
 import { 
   Users, 
   Search, 
@@ -891,7 +892,7 @@ export function AdminStudents() {
                             </label>
                           </div>
                           <div className="text-sm font-medium">
-                            {course.price ? `${course.price.toLocaleString()} IRR` : 'Free'}
+                            {course.price ? formatCurrency(course.price, 'IRR') : 'Free'}
                           </div>
                         </div>
                       )) : (
@@ -905,7 +906,7 @@ export function AdminStudents() {
                         <div className="flex justify-between items-center">
                           <span className="font-medium">Total Fee:</span>
                           <span className="text-lg font-bold text-blue-600">
-                            {newStudentData.totalFee.toLocaleString()} IRR
+                            {formatCurrency(newStudentData.totalFee, 'IRR')}
                           </span>
                         </div>
                       </div>
@@ -1100,7 +1101,7 @@ export function AdminStudents() {
                         </label>
                       </div>
                       <span className="text-sm text-gray-500">
-                        {course.price?.toLocaleString()} IRR
+                        {formatCurrency(course.price || 0, 'IRR')}
                       </span>
                     </div>
                   ))}

@@ -18,6 +18,7 @@ import { z } from "zod";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/services/endpoints";
+import { formatCurrency } from "@/lib/utils";
 import { 
   BookOpen, 
   Search, 
@@ -492,7 +493,7 @@ export function AdminCourses() {
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-2">
                 <div className="text-lg font-bold">
-                  {(course.price || 0).toLocaleString('fa-IR')} IRR
+                  {formatCurrency(course.price || 0, 'IRR')}
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Button 
@@ -581,7 +582,7 @@ export function AdminCourses() {
           </CardHeader>
           <CardContent className="px-3 sm:px-6">
             <div className="text-xl sm:text-2xl font-bold">
-              {Array.isArray(courseData) ? courseData.reduce((sum: number, course: any) => sum + (course.price || 0), 0).toLocaleString('fa-IR') : 0} IRR
+              {formatCurrency(Array.isArray(courseData) ? courseData.reduce((sum: number, course: any) => sum + (course.price || 0), 0) : 0, 'IRR')}
             </div>
             <p className="text-xs text-green-600">{t('admin:courses.totalPotential')}</p>
           </CardContent>

@@ -32,6 +32,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/utils";
 
 interface TeacherPayment {
   id: number;
@@ -573,13 +574,13 @@ export default function TeacherPaymentsPage() {
                           <TableCell className="py-4">
                             <div className="text-right">
                               <div className="font-bold text-2xl text-green-600">
-                                {payment.finalAmount?.toLocaleString()} IRR
+                                {formatCurrency(payment.finalAmount || 0, 'IRR')}
                               </div>
                               <div className="text-sm text-gray-500 mt-1">
-                                {payment.totalHours} hours • {payment.hourlyRate?.toLocaleString()} IRR/hr
+                                {payment.totalHours} hours • {formatCurrency(payment.hourlyRate || 0, 'IRR')}/hr
                               </div>
                               <div className="text-xs text-gray-400 mt-1">
-                                Base: {payment.basePay?.toLocaleString()} | Bonus: +{payment.bonuses?.toLocaleString()} | Deduct: -{payment.deductions?.toLocaleString()}
+                                Base: {formatCurrency(payment.basePay || 0, 'IRR')} | Bonus: +{formatCurrency(payment.bonuses || 0, 'IRR')} | Deduct: -{formatCurrency(payment.deductions || 0, 'IRR')}
                               </div>
                             </div>
                           </TableCell>
@@ -655,7 +656,7 @@ export default function TeacherPaymentsPage() {
                                       </div>
                                       <div>
                                         <Label className="text-xs text-gray-500">{t('admin:teacherPayments.hourlyRate')}</Label>
-                                        <div className="text-2xl font-bold">{payment.hourlyRate?.toLocaleString()} IRR</div>
+                                        <div className="text-2xl font-bold">{formatCurrency(payment.hourlyRate || 0, 'IRR')}</div>
                                       </div>
                                     </div>
 
@@ -670,26 +671,26 @@ export default function TeacherPaymentsPage() {
                                       <h3 className="font-semibold mb-3">{t('admin:teacherPayments.paymentCalculation')}</h3>
                                       <div className="space-y-2">
                                         <div className="flex justify-between">
-                                          <span>{t('admin:teacherPayments.regularSessions')} ({payment.totalHours - (payment.callernHours || 0)} {t('admin:teacherPayments.hours')} × {payment.hourlyRate?.toLocaleString()} IRR)</span>
-                                          <span className="font-medium">{((payment.totalHours - (payment.callernHours || 0)) * (payment.hourlyRate || 0))?.toLocaleString()} IRR</span>
+                                          <span>{t('admin:teacherPayments.regularSessions')} ({payment.totalHours - (payment.callernHours || 0)} {t('admin:teacherPayments.hours')} × {formatCurrency(payment.hourlyRate || 0, 'IRR')})</span>
+                                          <span className="font-medium">{formatCurrency((payment.totalHours - (payment.callernHours || 0)) * (payment.hourlyRate || 0), 'IRR')}</span>
                                         </div>
                                         {payment.callernHours && (
                                           <div className="flex justify-between">
-                                            <span>{t('admin:teacherPayments.callernSessions')} ({payment.callernHours} {t('admin:teacherPayments.hours')} × 850,000 IRR)</span>
-                                            <span className="font-medium">{(payment.callernHours * 850000)?.toLocaleString()} IRR</span>
+                                            <span>{t('admin:teacherPayments.callernSessions')} ({payment.callernHours} {t('admin:teacherPayments.hours')} × {formatCurrency(850000, 'IRR')})</span>
+                                            <span className="font-medium">{formatCurrency(payment.callernHours * 850000, 'IRR')}</span>
                                           </div>
                                         )}
                                         <div className="flex justify-between text-green-600">
                                           <span>{t('admin:teacherPayments.performanceBonuses')}</span>
-                                          <span className="font-medium">+{payment.bonuses?.toLocaleString()} IRR</span>
+                                          <span className="font-medium">+{formatCurrency(payment.bonuses || 0, 'IRR')}</span>
                                         </div>
                                         <div className="flex justify-between text-red-600">
                                           <span>{t('admin:teacherPayments.administrativeDeductions')}</span>
-                                          <span className="font-medium">-{payment.deductions?.toLocaleString()} IRR</span>
+                                          <span className="font-medium">-{formatCurrency(payment.deductions || 0, 'IRR')}</span>
                                         </div>
                                         <div className="border-t pt-2 flex justify-between text-lg font-bold">
                                           <span>{t('admin:teacherPayments.finalPaymentAmount')}</span>
-                                          <span>{payment.finalAmount?.toLocaleString()} IRR</span>
+                                          <span>{formatCurrency(payment.finalAmount || 0, 'IRR')}</span>
                                         </div>
                                       </div>
                                     </div>
@@ -715,14 +716,14 @@ export default function TeacherPaymentsPage() {
                                           <div className="bg-gray-50 rounded-lg p-4 border">
                                             <h4 className="font-semibold text-gray-800 mb-2">{t('admin:teacherPayments.currentPayslip')}</h4>
                                             <div className="grid grid-cols-2 gap-4 text-sm">
-                                              <div>{t('admin:teacherPayments.basePay')}: <span className="font-medium">{payment.basePay?.toLocaleString()} IRR</span></div>
+                                              <div>{t('admin:teacherPayments.basePay')}: <span className="font-medium">{formatCurrency(payment.basePay || 0, 'IRR')}</span></div>
                                               <div>{t('admin:teacherPayments.hours')}: <span className="font-medium">{payment.totalHours}</span></div>
-                                              <div>{t('admin:teacherPayments.hourlyRate')}: <span className="font-medium">{payment.hourlyRate?.toLocaleString()} IRR</span></div>
+                                              <div>{t('admin:teacherPayments.hourlyRate')}: <span className="font-medium">{formatCurrency(payment.hourlyRate || 0, 'IRR')}</span></div>
                                               <div>{t('admin:teacherPayments.paymentPeriod')}: <span className="font-medium">{payment.period}</span></div>
-                                              <div>{t('admin:teacherPayments.bonuses')}: <span className="font-medium text-green-600">+{payment.bonuses?.toLocaleString()} IRR</span></div>
-                                              <div>{t('admin:teacherPayments.deductions')}: <span className="font-medium text-red-600">-{payment.deductions?.toLocaleString()} IRR</span></div>
+                                              <div>{t('admin:teacherPayments.bonuses')}: <span className="font-medium text-green-600">+{formatCurrency(payment.bonuses || 0, 'IRR')}</span></div>
+                                              <div>{t('admin:teacherPayments.deductions')}: <span className="font-medium text-red-600">-{formatCurrency(payment.deductions || 0, 'IRR')}</span></div>
                                               <div className="col-span-2 pt-2 border-t">
-                                                <span className="text-lg font-bold">{t('admin:teacherPayments.total')}: {payment.finalAmount?.toLocaleString()} IRR</span>
+                                                <span className="text-lg font-bold">{t('admin:teacherPayments.total')}: {formatCurrency(payment.finalAmount || 0, 'IRR')}</span>
                                               </div>
                                             </div>
                                           </div>
@@ -811,7 +812,7 @@ export default function TeacherPaymentsPage() {
                                                   const { newAmount, previousAmount, difference } = response.changes;
                                                   toast({
                                                     title: "Payslip Recalculated",
-                                                    description: `Amount changed from ${previousAmount?.toLocaleString()} to ${newAmount?.toLocaleString()} IRR (${difference > 0 ? '+' : ''}${difference?.toLocaleString()} IRR)`,
+                                                    description: `Amount changed from ${formatCurrency(previousAmount || 0, 'IRR')} to ${formatCurrency(newAmount || 0, 'IRR')} (${difference > 0 ? '+' : ''}${formatCurrency(Math.abs(difference || 0), 'IRR')})`,
                                                   });
                                                 } else {
                                                   toast({
@@ -983,9 +984,9 @@ export default function TeacherPaymentsPage() {
                       <div>{record.period}</div>
                       <div>{record.sessions}</div>
                       <div>{record.hours}h</div>
-                      <div className="font-medium">{record.gross.toLocaleString()} IRR</div>
-                      <div className="text-red-600">-{record.deductions.toLocaleString()} IRR</div>
-                      <div className="font-medium text-green-600">{record.net.toLocaleString()} IRR</div>
+                      <div className="font-medium">{formatCurrency(record.gross, 'IRR')}</div>
+                      <div className="text-red-600">-{formatCurrency(record.deductions, 'IRR')}</div>
+                      <div className="font-medium text-green-600">{formatCurrency(record.net, 'IRR')}</div>
                       <div>
                         <Badge variant={record.status === 'paid' ? 'default' : record.status === 'approved' ? 'secondary' : 'outline'}>
                           {record.status}

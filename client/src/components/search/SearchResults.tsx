@@ -39,7 +39,7 @@ import {
   Search,
   TrendingUp
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import type { SearchResultItem, SearchResponse, SearchFilters } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
@@ -468,7 +468,7 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
               {result.metadata.price !== undefined && (
                 <div className="flex items-center space-x-1">
                   <DollarSign className="h-4 w-4" />
-                  <span>{result.metadata.price.toLocaleString()} IRR</span>
+                  <span>{formatCurrency(result.metadata.price, 'IRR')}</span>
                 </div>
               )}
 

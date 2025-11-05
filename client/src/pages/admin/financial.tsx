@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
+import { formatCurrency } from "@/lib/utils";
 import { 
   DollarSign, 
   Search, 
@@ -602,14 +603,14 @@ export function AdminFinancial() {
                             <tr key={idx} className="hover:bg-gray-50">
                               <td className="border p-2">{account.accountCode}</td>
                               <td className="border p-2">{account.accountName}</td>
-                              <td className="border p-2 text-right">{account.debit?.toLocaleString('fa-IR') || '-'}</td>
-                              <td className="border p-2 text-right">{account.credit?.toLocaleString('fa-IR') || '-'}</td>
+                              <td className="border p-2 text-right">{account.debit ? formatCurrency(account.debit, 'IRR') : '-'}</td>
+                              <td className="border p-2 text-right">{account.credit ? formatCurrency(account.credit, 'IRR') : '-'}</td>
                             </tr>
                           ))}
                           <tr className="bg-gray-100 font-bold">
                             <td colSpan={2} className="border p-2">Total</td>
-                            <td className="border p-2 text-right">{reportData.totalDebit?.toLocaleString('fa-IR')}</td>
-                            <td className="border p-2 text-right">{reportData.totalCredit?.toLocaleString('fa-IR')}</td>
+                            <td className="border p-2 text-right">{formatCurrency(reportData.totalDebit || 0, 'IRR')}</td>
+                            <td className="border p-2 text-right">{formatCurrency(reportData.totalCredit || 0, 'IRR')}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -623,12 +624,12 @@ export function AdminFinancial() {
                             {reportData.assets?.map((asset: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{asset.accountName}</span>
-                                <span className="font-mono">{asset.balance?.toLocaleString('fa-IR')} IRR</span>
+                                <span className="font-mono">{formatCurrency(asset.balance || 0, 'IRR')}</span>
                               </div>
                             ))}
                             <div className="flex justify-between font-bold pt-2 border-t">
                               <span>Total Assets</span>
-                              <span>{reportData.totalAssets?.toLocaleString('fa-IR')} IRR</span>
+                              <span>{formatCurrency(reportData.totalAssets || 0, 'IRR')}</span>
                             </div>
                           </div>
                         </div>
@@ -638,12 +639,12 @@ export function AdminFinancial() {
                             {reportData.liabilities?.map((liability: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{liability.accountName}</span>
-                                <span className="font-mono">{liability.balance?.toLocaleString('fa-IR')} IRR</span>
+                                <span className="font-mono">{formatCurrency(liability.balance || 0, 'IRR')}</span>
                               </div>
                             ))}
                             <div className="flex justify-between font-bold pt-2 border-t">
                               <span>Total Liabilities</span>
-                              <span>{reportData.totalLiabilities?.toLocaleString('fa-IR')} IRR</span>
+                              <span>{formatCurrency(reportData.totalLiabilities || 0, 'IRR')}</span>
                             </div>
                           </div>
                         </div>
@@ -653,12 +654,12 @@ export function AdminFinancial() {
                             {reportData.equity?.map((eq: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{eq.accountName}</span>
-                                <span className="font-mono">{eq.balance?.toLocaleString('fa-IR')} IRR</span>
+                                <span className="font-mono">{formatCurrency(eq.balance || 0, 'IRR')}</span>
                               </div>
                             ))}
                             <div className="flex justify-between font-bold pt-2 border-t">
                               <span>Total Equity</span>
-                              <span>{reportData.totalEquity?.toLocaleString('fa-IR')} IRR</span>
+                              <span>{formatCurrency(reportData.totalEquity || 0, 'IRR')}</span>
                             </div>
                           </div>
                         </div>
@@ -673,12 +674,12 @@ export function AdminFinancial() {
                             {reportData.revenue?.map((rev: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{rev.accountName}</span>
-                                <span className="font-mono">{rev.balance?.toLocaleString('fa-IR')} IRR</span>
+                                <span className="font-mono">{formatCurrency(rev.balance || 0, 'IRR')}</span>
                               </div>
                             ))}
                             <div className="flex justify-between font-bold pt-2 border-t">
                               <span>Total Revenue</span>
-                              <span>{reportData.totalRevenue?.toLocaleString('fa-IR')} IRR</span>
+                              <span>{formatCurrency(reportData.totalRevenue || 0, 'IRR')}</span>
                             </div>
                           </div>
                         </div>
@@ -688,12 +689,12 @@ export function AdminFinancial() {
                             {reportData.expenses?.map((exp: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{exp.accountName}</span>
-                                <span className="font-mono">{exp.balance?.toLocaleString('fa-IR')} IRR</span>
+                                <span className="font-mono">{formatCurrency(exp.balance || 0, 'IRR')}</span>
                               </div>
                             ))}
                             <div className="flex justify-between font-bold pt-2 border-t">
                               <span>Total Expenses</span>
-                              <span>{reportData.totalExpenses?.toLocaleString('fa-IR')} IRR</span>
+                              <span>{formatCurrency(reportData.totalExpenses || 0, 'IRR')}</span>
                             </div>
                           </div>
                         </div>
@@ -701,7 +702,7 @@ export function AdminFinancial() {
                           <div className="flex justify-between text-lg font-bold">
                             <span>Net Profit</span>
                             <span className={reportData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              {reportData.netProfit?.toLocaleString('fa-IR')} IRR
+                              {formatCurrency(reportData.netProfit || 0, 'IRR')}
                             </span>
                           </div>
                         </div>

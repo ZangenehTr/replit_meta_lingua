@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/utils";
 import { 
   Search, 
   Filter, 
@@ -504,7 +505,7 @@ export default function TeacherStudentMatchingPage() {
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-medium">{teacher.hourlyRate ? `${teacher.hourlyRate.toLocaleString()} IRR/hr` : t('admin:teacherStudentMatching.rateTBD', { defaultValue: 'نرخ تعیین نشده' })}</div>
+                                    <div className="text-sm font-medium">{teacher.hourlyRate ? `${formatCurrency(teacher.hourlyRate, 'IRR')}/hr` : t('admin:teacherStudentMatching.rateTBD', { defaultValue: 'نرخ تعیین نشده' })}</div>
                                     <div className="text-xs text-gray-500">{t('admin:teacherStudentMatching.experience', { defaultValue: 'تجربه' })}: {teacher.experience || 'N/A'}</div>
                                   </div>
                                 </div>
@@ -591,7 +592,7 @@ export default function TeacherStudentMatchingPage() {
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-medium">{t('admin:teacherStudentMatching.groupRate', { defaultValue: 'نرخ گروهی' })}: {teacher.hourlyRate ? `${Math.floor(teacher.hourlyRate * 0.8).toLocaleString()} IRR/hr` : 'TBD'}</div>
+                                    <div className="text-sm font-medium">{t('admin:teacherStudentMatching.groupRate', { defaultValue: 'نرخ گروهی' })}: {teacher.hourlyRate ? `${formatCurrency(Math.floor(teacher.hourlyRate * 0.8), 'IRR')}/hr` : 'TBD'}</div>
                                     <div className="text-xs text-gray-500">{t('admin:teacherStudentMatching.groupExperience', { defaultValue: 'تجربه گروهی' })}: {teacher.experience || 'N/A'}</div>
                                   </div>
                                 </div>

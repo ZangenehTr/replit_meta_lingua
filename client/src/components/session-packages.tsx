@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Package, Clock, Calendar, ShoppingCart } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/utils";
 
 interface SessionPackage {
   id: number;
@@ -108,7 +109,7 @@ export function SessionPackages() {
                       <div className="flex flex-col">
                         <span className="font-medium">{option.name}</span>
                         <span className="text-sm text-muted-foreground">
-                          {option.sessions} sessions × {option.duration} minutes • {option.price.toLocaleString()} IRR
+                          {option.sessions} sessions × {option.duration} minutes • {formatCurrency(option.price, 'IRR')}
                         </span>
                       </div>
                     </SelectItem>
@@ -131,7 +132,7 @@ export function SessionPackages() {
                         </p>
                         <p className="text-sm">
                           <span className="font-medium">Total Price:</span>{" "}
-                          {packageOptions.find(p => p.name === selectedPackage)?.price.toLocaleString()} IRR
+                          {formatCurrency(packageOptions.find(p => p.name === selectedPackage)?.price || 0, 'IRR')}
                         </p>
                       </div>
                     )}

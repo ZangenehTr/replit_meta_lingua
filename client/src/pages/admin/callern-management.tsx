@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { formatCurrency } from "@/lib/utils";
 import { 
   Phone, 
   Users, 
@@ -824,7 +825,7 @@ export function CallernManagement() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">{t('admin:callernManagement.price')}:</span>
-                      <span className="font-medium">{pkg.price.toLocaleString()} IRR</span>
+                      <span className="font-medium">{formatCurrency(pkg.price, 'IRR')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">{t('admin:callernManagement.status')}:</span>

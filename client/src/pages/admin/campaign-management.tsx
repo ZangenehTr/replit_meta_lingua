@@ -46,6 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/useLanguage";
+import { formatCurrency } from "@/lib/utils";
 import { nanoid } from "nanoid";
 
 interface Campaign {
@@ -801,7 +802,7 @@ export default function CampaignManagementPage() {
                             <div>
                               <p className="text-xs text-gray-500">{t('admin:campaigns.budgetSpent')}</p>
                               <p className="text-sm font-medium">
-                                {(campaign.spent || 0).toLocaleString()} / {(campaign.budget || 0).toLocaleString()} IRR
+                                {formatCurrency(campaign.spent || 0, 'IRR')} / {formatCurrency(campaign.budget || 0, 'IRR')}
                               </p>
                               <Progress value={campaign.budget ? ((campaign.spent || 0) / campaign.budget) * 100 : 0} className="h-2 mt-1" />
                             </div>
@@ -816,7 +817,7 @@ export default function CampaignManagementPage() {
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">{t('admin:campaigns.costPerLead')}</p>
-                              <p className="text-sm font-medium">{(campaign.metrics?.cost_per_lead || 0).toLocaleString()} IRR</p>
+                              <p className="text-sm font-medium">{formatCurrency(campaign.metrics?.cost_per_lead || 0, 'IRR')}</p>
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">{t('admin:campaigns.roi')}</p>

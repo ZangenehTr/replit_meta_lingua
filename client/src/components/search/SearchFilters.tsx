@@ -36,7 +36,7 @@ import {
   DollarSign,
   Clock
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { SearchFilters } from '@shared/schema';
 
 interface SearchFiltersProps {
@@ -420,7 +420,7 @@ export function SearchFilters({
               <h4 className="font-medium">{t('search.priceRange')}</h4>
               {filters.priceRange && (
                 <Badge variant="outline" className="text-xs">
-                  {filters.priceRange.min?.toLocaleString()} - {filters.priceRange.max?.toLocaleString()} IRR
+                  {formatCurrency(filters.priceRange.min || 0, 'IRR')} - {formatCurrency(filters.priceRange.max || 0, 'IRR')}
                 </Badge>
               )}
             </div>
@@ -454,10 +454,10 @@ export function SearchFilters({
               />
               <div className="flex items-center justify-between text-xs">
                 <span>
-                  {filters.priceRange?.min?.toLocaleString() || '0'} IRR
+                  {formatCurrency(filters.priceRange?.min || 0, 'IRR')}
                 </span>
                 <span>
-                  {filters.priceRange?.max?.toLocaleString() || '10,000,000'} IRR
+                  {formatCurrency(filters.priceRange?.max || 10000000, 'IRR')}
                 </span>
               </div>
             </div>

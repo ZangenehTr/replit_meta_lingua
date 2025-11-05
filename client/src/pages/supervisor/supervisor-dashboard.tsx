@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from "@/hooks/useLanguage";
 import DynamicForm from "@/components/forms/DynamicForm";
+import { formatCurrency } from "@/lib/utils";
 import { 
   Users, 
   GraduationCap, 
@@ -722,7 +723,7 @@ export default function SupervisorDashboard() {
                       <span className="text-sm text-gray-600">Revenue per Student</span>
                       <span className={`font-semibold ${businessIntelligence?.avgRevenuePerStudent > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
                         {businessIntelligence?.avgRevenuePerStudent > 0 
-                          ? `${businessIntelligence.avgRevenuePerStudent.toLocaleString()} IRR`
+                          ? formatCurrency(businessIntelligence.avgRevenuePerStudent, 'IRR')
                           : 'No payments'}
                       </span>
                     </div>
@@ -845,7 +846,7 @@ export default function SupervisorDashboard() {
                       </div>
                       <div className="text-xs text-gray-500">students</div>
                       <div className="text-sm font-semibold text-green-600 mt-1">
-                        {(dailyIncome.categories?.onlineGroup?.revenue || 0).toLocaleString()} IRR
+                        {formatCurrency(dailyIncome.categories?.onlineGroup?.revenue || 0, 'IRR')}
                       </div>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg border">
@@ -855,7 +856,7 @@ export default function SupervisorDashboard() {
                       </div>
                       <div className="text-xs text-gray-500">students</div>
                       <div className="text-sm font-semibold text-green-600 mt-1">
-                        {(dailyIncome.categories?.onlineOneOnOne?.revenue || 0).toLocaleString()} IRR
+                        {formatCurrency(dailyIncome.categories?.onlineOneOnOne?.revenue || 0, 'IRR')}
                       </div>
                     </div>
                     <div className="text-center p-4 bg-orange-50 rounded-lg border">
@@ -865,7 +866,7 @@ export default function SupervisorDashboard() {
                       </div>
                       <div className="text-xs text-gray-500">students</div>
                       <div className="text-sm font-semibold text-green-600 mt-1">
-                        {(dailyIncome.categories?.inPersonGroup?.revenue || 0).toLocaleString()} IRR
+                        {formatCurrency(dailyIncome.categories?.inPersonGroup?.revenue || 0, 'IRR')}
                       </div>
                     </div>
                     <div className="text-center p-4 bg-red-50 rounded-lg border">
@@ -875,7 +876,7 @@ export default function SupervisorDashboard() {
                       </div>
                       <div className="text-xs text-gray-500">students</div>
                       <div className="text-sm font-semibold text-green-600 mt-1">
-                        {(dailyIncome.categories?.inPersonOneOnOne?.revenue || 0).toLocaleString()} IRR
+                        {formatCurrency(dailyIncome.categories?.inPersonOneOnOne?.revenue || 0, 'IRR')}
                       </div>
                     </div>
                     <div className="text-center p-4 bg-teal-50 rounded-lg border">
@@ -885,7 +886,7 @@ export default function SupervisorDashboard() {
                       </div>
                       <div className="text-xs text-gray-500">students</div>
                       <div className="text-sm font-semibold text-green-600 mt-1">
-                        {(dailyIncome.categories?.callern?.revenue || 0).toLocaleString()} IRR
+                        {formatCurrency(dailyIncome.categories?.callern?.revenue || 0, 'IRR')}
                       </div>
                     </div>
                   </div>
@@ -893,7 +894,7 @@ export default function SupervisorDashboard() {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 font-medium">Total Daily Revenue:</span>
                       <span className="text-2xl font-bold text-green-700">
-                        {(dailyIncome.totalRevenue || 0).toLocaleString()} IRR
+                        {formatCurrency(dailyIncome.totalRevenue || 0, 'IRR')}
                       </span>
                     </div>
                   </div>
