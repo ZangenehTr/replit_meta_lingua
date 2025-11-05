@@ -844,7 +844,7 @@ export default function TeacherStudentMatchingPage() {
 
         {/* Match Dialog */}
         <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Confirm Teacher-Student Match</DialogTitle>
               <DialogDescription>

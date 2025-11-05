@@ -284,7 +284,7 @@ export default function TestQuestions() {
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
                 <DialogTitle>Create New Question</DialogTitle>

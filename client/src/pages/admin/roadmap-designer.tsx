@@ -291,7 +291,7 @@ export default function RoadmapDesigner() {
                 {t('admin:roadmap.createNew')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('admin:roadmap.createNew')}</DialogTitle>
             </DialogHeader>
@@ -473,7 +473,7 @@ export default function RoadmapDesigner() {
                             Add Step
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Add Roadmap Step</DialogTitle>
                           </DialogHeader>
@@ -711,7 +711,7 @@ export default function RoadmapDesigner() {
 
       {/* Edit Step Dialog */}
       <Dialog open={isEditStepDialogOpen} onOpenChange={setIsEditStepDialogOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto backdrop-blur-xl bg-white/90 dark:bg-gray-900/90">
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto backdrop-blur-xl bg-white/90 dark:bg-gray-900/90">
           <DialogHeader>
             <DialogTitle>Edit Roadmap Step</DialogTitle>
           </DialogHeader>
@@ -821,7 +821,7 @@ export default function RoadmapDesigner() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={stepToDelete !== null} onOpenChange={(open) => !open && setStepToDelete(null)}>
-        <DialogContent className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90">
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto backdrop-blur-xl bg-white/90 dark:bg-gray-900/90">
           <DialogHeader>
             <DialogTitle>Delete Step</DialogTitle>
           </DialogHeader>

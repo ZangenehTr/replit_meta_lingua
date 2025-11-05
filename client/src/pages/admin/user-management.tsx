@@ -221,7 +221,7 @@ export default function UserManagement() {
               {t('admin:users.createUser')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('admin:users.createNewUser')}</DialogTitle>
               <DialogDescription>

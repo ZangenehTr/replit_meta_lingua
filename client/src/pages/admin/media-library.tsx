@@ -473,7 +473,7 @@ function UploadMediaDialog({ open, onOpenChange, onUploadComplete }: UploadMedia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Upload Media Files</DialogTitle>
           <DialogDescription>
@@ -570,7 +570,7 @@ function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAssetDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Media Asset</DialogTitle>
           <DialogDescription>Update metadata for {asset.originalName}</DialogDescription>

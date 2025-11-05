@@ -197,17 +197,18 @@ export default function TeacherPayments() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Period</TableHead>
-                <TableHead>Sessions</TableHead>
-                <TableHead>Hours</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[700px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Period</TableHead>
+                  <TableHead>Sessions</TableHead>
+                  <TableHead>Hours</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {payslips?.map((payslip: PayslipDetail) => (
                 <TableRow key={payslip.id}>
@@ -232,7 +233,7 @@ export default function TeacherPayments() {
                             View Details
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Payslip Details - {payslip.period}</DialogTitle>
                           </DialogHeader>
@@ -291,17 +292,18 @@ export default function TeacherPayments() {
                                   <CardTitle className="text-lg">Session Details</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Student/Group</TableHead>
-                                        <TableHead>Duration</TableHead>
-                                        <TableHead>Platform</TableHead>
-                                        <TableHead>Course</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
+                                  <div className="overflow-x-auto">
+                                    <Table className="min-w-[700px]">
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Date</TableHead>
+                                          <TableHead>Type</TableHead>
+                                          <TableHead>Student/Group</TableHead>
+                                          <TableHead>Duration</TableHead>
+                                          <TableHead>Platform</TableHead>
+                                          <TableHead>Course</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
                                     <TableBody>
                                       {selectedPayslip.sessions?.map((session, index) => (
                                         <TableRow key={index}>
@@ -319,6 +321,7 @@ export default function TeacherPayments() {
                                       ))}
                                     </TableBody>
                                   </Table>
+                                  </div>
                                 </CardContent>
                               </Card>
                             </div>
@@ -342,6 +345,7 @@ export default function TeacherPayments() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

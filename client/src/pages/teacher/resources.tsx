@@ -147,7 +147,7 @@ export default function TeacherResourcesPage() {
                 {t('uploadResource')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t('uploadNewResource')}</DialogTitle>
               </DialogHeader>

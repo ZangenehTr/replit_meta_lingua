@@ -532,15 +532,16 @@ export default function TeacherPaymentsPage() {
                       </Button>
                       </div>
                     ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t('admin:teacherPayments.teacherName')}</TableHead>
-                            <TableHead>{t('admin:teacherPayments.finalAmount')}</TableHead>
-                            <TableHead>{t('admin:teacherPayments.status')}</TableHead>
-                            <TableHead>{t('admin:teacherPayments.actions')}</TableHead>
-                          </TableRow>
-                        </TableHeader>
+                      <div className="overflow-x-auto">
+                        <Table className="min-w-[700px]">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>{t('admin:teacherPayments.teacherName')}</TableHead>
+                              <TableHead>{t('admin:teacherPayments.finalAmount')}</TableHead>
+                              <TableHead>{t('admin:teacherPayments.status')}</TableHead>
+                              <TableHead>{t('admin:teacherPayments.actions')}</TableHead>
+                            </TableRow>
+                          </TableHeader>
                         <TableBody>
                       {(payments as TeacherPayment[])?.map((payment) => (
                         <TableRow key={payment.id} className="hover:bg-blue-50 transition-colors">
@@ -596,7 +597,7 @@ export default function TeacherPaymentsPage() {
                                     <span>{t('admin:teacherPayments.payslipDetails')}</span>
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-4xl">
+                                <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
                                   <DialogHeader>
                                     <DialogTitle>{t('admin:teacherPayments.payslipDetails')} - {payment.teacherName}</DialogTitle>
                                     <DialogDescription>
@@ -702,7 +703,7 @@ export default function TeacherPaymentsPage() {
                                           <span className="ms-2">{t('admin:teacherPayments.editPayslip')}</span>
                                         </Button>
                                       </DialogTrigger>
-                                      <DialogContent className="max-w-2xl">
+                                      <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                                         <DialogHeader>
                                           <DialogTitle>{t('admin:teacherPayments.editPayslipTitle')} - {payment.teacherName}</DialogTitle>
                                           <DialogDescription>
@@ -877,6 +878,7 @@ export default function TeacherPaymentsPage() {
                       ))}
                         </TableBody>
                       </Table>
+                      </div>
                     )}
                   </div>
                 </CardContent>

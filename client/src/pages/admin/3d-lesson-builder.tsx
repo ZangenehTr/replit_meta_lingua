@@ -366,7 +366,7 @@ function Create3DLessonDialog({ queryClient }: { queryClient: any }) {
         {t('admin:threeDLessons.create3DLesson')}
       </Button>
       
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('admin:threeDLessons.createNew3DLesson')}</DialogTitle>
           <DialogDescription>
@@ -1028,7 +1028,7 @@ export default function ThreeDLessonBuilder() {
       {/* Preview Dialog */}
       {previewLesson && (
         <Dialog open={!!previewLesson} onOpenChange={() => setPreviewLesson(null)}>
-          <DialogContent className="max-w-6xl max-h-[90vh]">
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl md:max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />

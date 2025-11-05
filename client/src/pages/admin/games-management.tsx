@@ -611,7 +611,7 @@ export default function EnhancedGamesManagement() {
 
       {/* Questions Dialog */}
       <Dialog open={isQuestionsDialogOpen} onOpenChange={setIsQuestionsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Questions for {selectedGame?.gameName}
@@ -692,7 +692,7 @@ export default function EnhancedGamesManagement() {
 
       {/* Question Form Dialog */}
       <Dialog open={isQuestionFormOpen} onOpenChange={setIsQuestionFormOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedQuestion ? 'Edit Question' : 'Add Question'}
@@ -902,7 +902,7 @@ export default function EnhancedGamesManagement() {
 
       {/* Analytics Dialog */}
       <Dialog open={isAnalyticsDialogOpen} onOpenChange={setIsAnalyticsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Analytics for {selectedGame?.gameName}
@@ -1022,7 +1022,7 @@ export default function EnhancedGamesManagement() {
           form.reset();
         }
       }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedGame ? 'Edit Game' : 'Create New Game'}

@@ -722,7 +722,7 @@ export default function AITrainingDashboard() {
 
       {/* Add Model Dialog - Download Llama Models */}
       <Dialog open={showAddModelDialog} onOpenChange={setShowAddModelDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-download-model">
               {t('admin:downloadModel', 'Download AI Model')}
@@ -811,7 +811,7 @@ export default function AITrainingDashboard() {
 
       {/* Add Dataset Dialog - Multi-file Upload */}
       <Dialog open={showAddDatasetDialog} onOpenChange={setShowAddDatasetDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-upload-dataset">
               {t('admin:uploadDataset', 'Upload Training Dataset')}
@@ -968,7 +968,7 @@ export default function AITrainingDashboard() {
 
       {/* Start Training Dialog */}
       <Dialog open={showStartTrainingDialog} onOpenChange={setShowStartTrainingDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-start-training">
               {t('admin:startTraining', 'Start Training')}

@@ -902,7 +902,7 @@ export default function TrialLessonScheduling() {
 
       {/* Booking Dialog */}
       <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isRTL ? "رزرو درس آزمایشی جدید" : "New Trial Lesson Booking"}
@@ -926,7 +926,7 @@ export default function TrialLessonScheduling() {
 
       {/* Teacher Assignment Dialog */}
       <Dialog open={showTeacherAssignment} onOpenChange={setShowTeacherAssignment}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isRTL ? "تعیین معلم" : "Assign Teacher"}

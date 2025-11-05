@@ -748,7 +748,7 @@ export function AdminStudents() {
                 <span className="hidden sm:inline sm:ml-1">{t('admin:students.add')}</span>
               </ActionButton>
             </DialogTrigger>
-            <DialogContent className={`max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
+            <DialogContent className={`max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
               <DialogHeader>
                 <DialogTitle>{t('admin:students.addNewStudent')}</DialogTitle>
                 <DialogDescription>
@@ -969,7 +969,7 @@ export function AdminStudents() {
 
       {/* Edit Student Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
+        <DialogContent className={`max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle>{t('admin:students.edit')}</DialogTitle>
             <DialogDescription>
@@ -1277,7 +1277,7 @@ export function AdminStudents() {
                       <span className="hidden sm:inline sm:ml-1">{t('admin:students.view')}</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
+                  <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Student Profile: {student.firstName} {student.lastName}</DialogTitle>
                     </DialogHeader>
@@ -1655,7 +1655,7 @@ export function AdminStudents() {
                             <Eye className="h-3 w-3" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
+                        <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Student Profile: {student.firstName} {student.lastName}</DialogTitle>
                           </DialogHeader>
@@ -1734,7 +1734,7 @@ export function AdminStudents() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className={`max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
+        <DialogContent className={`max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle>{t('admin:students.edit')}</DialogTitle>
             <DialogDescription>

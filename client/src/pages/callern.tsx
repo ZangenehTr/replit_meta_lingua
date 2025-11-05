@@ -950,17 +950,18 @@ export default function CallernSystem() {
                 {t('callern:noCallsYet')}
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('callern:teacher')}</TableHead>
-                    <TableHead>{t('callern:date')}</TableHead>
-                    <TableHead>{t('callern:duration')}</TableHead>
-                    <TableHead>{t('common:type')}</TableHead>
-                    <TableHead>{t('callern:status')}</TableHead>
-                    <TableHead>{t('callern:recording')}</TableHead>
-                  </TableRow>
-                </TableHeader>
+              <div className="overflow-x-auto">
+                <Table className="min-w-[750px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('callern:teacher')}</TableHead>
+                      <TableHead>{t('callern:date')}</TableHead>
+                      <TableHead>{t('callern:duration')}</TableHead>
+                      <TableHead>{t('common:type')}</TableHead>
+                      <TableHead>{t('callern:status')}</TableHead>
+                      <TableHead>{t('callern:recording')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {callHistory.map((call: CallHistory) => (
                     <TableRow key={call.id}>
@@ -998,6 +999,7 @@ export default function CallernSystem() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -1052,7 +1054,7 @@ export default function CallernSystem() {
 
         {/* Waiting for Teacher Dialog */}
         <Dialog open={waitingForTeacher} onOpenChange={setWaitingForTeacher}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Phone className="h-5 w-5 animate-pulse text-primary" />

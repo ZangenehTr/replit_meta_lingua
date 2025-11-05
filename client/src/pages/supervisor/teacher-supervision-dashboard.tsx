@@ -490,7 +490,7 @@ export default function TeacherSupervisionDashboard() {
 
         {/* Reminder Dialog */}
         <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Send Reminder to Teacher</DialogTitle>
             </DialogHeader>

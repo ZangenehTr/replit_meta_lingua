@@ -374,7 +374,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
         <DialogHeader>
           <DialogTitle>{t('admin:videoCourses.manageLessonsFor', { title: course.title })}</DialogTitle>
           <DialogDescription>
@@ -929,7 +929,7 @@ export default function AdminVideoCourses() {
 
       {/* Create Course Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:videoCourses.createNewCourse')}</DialogTitle>
             <DialogDescription>

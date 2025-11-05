@@ -329,7 +329,7 @@ export function AdminLinguaQuest() {
               Create Lesson
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Lesson</DialogTitle>
               <DialogDescription>
@@ -664,18 +664,19 @@ export function AdminLinguaQuest() {
                   No feedback received yet
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Lesson ID</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Difficulty</TableHead>
-                      <TableHead>Feedback</TableHead>
-                      <TableHead>Score</TableHead>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[800px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Lesson ID</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Difficulty</TableHead>
+                        <TableHead>Feedback</TableHead>
+                        <TableHead>Score</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {feedback.slice(0, 50).map((fb: any) => (
                       <TableRow key={fb.id}>
@@ -710,6 +711,7 @@ export function AdminLinguaQuest() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -1076,7 +1078,7 @@ export function AdminLinguaQuest() {
 
       {/* Edit Lesson Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Lesson</DialogTitle>
             <DialogDescription>

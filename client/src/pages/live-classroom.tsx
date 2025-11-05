@@ -536,7 +536,7 @@ export default function LiveClassroom() {
                 </Button>
               </DialogTrigger>
               
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>ایجاد کلاس مجازی جدید / Create New Virtual Classroom</DialogTitle>
                 </DialogHeader>

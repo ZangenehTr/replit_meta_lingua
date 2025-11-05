@@ -515,7 +515,7 @@ export default function StudentOrderHistory() {
         {/* Order Details Modal */}
         {selectedOrder && (
           <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" data-testid="order-details-modal">
+            <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="order-details-modal">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Package className="w-5 h-5" />

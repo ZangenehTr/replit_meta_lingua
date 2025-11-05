@@ -960,7 +960,7 @@ export default function SupervisorDashboard() {
 
         {/* Observation Creation Dialog */}
         <Dialog open={observationDialogOpen} onOpenChange={setObservationDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Observation</DialogTitle>
             </DialogHeader>
@@ -1205,7 +1205,7 @@ export default function SupervisorDashboard() {
 
         {/* Target Setting Dialog */}
         <Dialog open={targetDialogOpen} onOpenChange={setTargetDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Set Monthly/Seasonal Targets</DialogTitle>
             </DialogHeader>
@@ -1240,7 +1240,7 @@ export default function SupervisorDashboard() {
 
         {/* Teachers Attention Dialog */}
         <Dialog open={teachersAttentionDialogOpen} onOpenChange={setTeachersAttentionDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center">
                 <UserMinus className="h-5 w-5 mr-2 text-red-600" />
@@ -1311,7 +1311,7 @@ export default function SupervisorDashboard() {
 
         {/* Students Attention Dialog */}
         <Dialog open={studentsAttentionDialogOpen} onOpenChange={setStudentsAttentionDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center">
                 <AlertCircle className="h-5 w-5 mr-2 text-amber-600" />

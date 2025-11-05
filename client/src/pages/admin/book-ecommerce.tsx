@@ -316,7 +316,7 @@ export function AdminBookEcommerce() {
               {t('admin:bookEcommerce.addBook')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-add-book">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-add-book">
             <DialogHeader>
               <DialogTitle data-testid="text-dialog-title">{t('admin:bookEcommerce.addNewBook')}</DialogTitle>
               <DialogDescription data-testid="text-dialog-description">
@@ -832,7 +832,7 @@ export function AdminBookEcommerce() {
 
       {/* View Book Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl" data-testid="dialog-view-book">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-view-book">
           <DialogHeader>
             <DialogTitle data-testid="text-view-title">{selectedBook?.title}</DialogTitle>
             <DialogDescription data-testid="text-view-author">{selectedBook?.author}</DialogDescription>
@@ -868,7 +868,7 @@ export function AdminBookEcommerce() {
 
       {/* Edit Book Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-edit-book">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-edit-book">
           <DialogHeader>
             <DialogTitle data-testid="text-edit-title">Edit Book</DialogTitle>
             <DialogDescription data-testid="text-edit-description">

@@ -267,7 +267,7 @@ export default function AdminClassesPage() {
                       <span className="sm:hidden">{t('admin:add')}</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh]">
+                  <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>{t('common:classScheduling.scheduleNewClass')}</DialogTitle>
                     </DialogHeader>

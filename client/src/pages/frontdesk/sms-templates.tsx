@@ -831,7 +831,7 @@ export default function SmsTemplatesPage() {
 
       {/* Create Template Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isRTL ? 'ایجاد قالب جدید' : 'Create New Template'}</DialogTitle>
             <DialogDescription>
@@ -989,7 +989,7 @@ export default function SmsTemplatesPage() {
 
       {/* Edit Template Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isRTL ? 'ویرایش قالب' : 'Edit Template'}</DialogTitle>
             <DialogDescription>
@@ -1147,7 +1147,7 @@ export default function SmsTemplatesPage() {
 
       {/* Send SMS Dialog */}
       <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isRTL ? 'ارسال پیامک' : 'Send SMS'}</DialogTitle>
             <DialogDescription>
@@ -1266,7 +1266,7 @@ export default function SmsTemplatesPage() {
 
       {/* Preview Dialog */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isRTL ? 'پیش‌نمایش قالب' : 'Template Preview'}</DialogTitle>
             <DialogDescription>

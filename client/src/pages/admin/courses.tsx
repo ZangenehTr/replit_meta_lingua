@@ -92,7 +92,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
           {t('admin:courses.createCourse')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('admin:courses.createNewCourse')}</DialogTitle>
           <DialogDescription>
@@ -202,7 +202,7 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]" role="dialog">
+      <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto" role="dialog">
         <DialogHeader>
           <DialogTitle>{t('admin:courses.editCourse')}</DialogTitle>
           <DialogDescription>{t('admin:courses.editCourseDescription')}</DialogDescription>
@@ -263,7 +263,7 @@ function ViewCourseDialog({ course, onClose }: { course: any, onClose: () => voi
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]" role="dialog">
+      <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto" role="dialog">
         <DialogHeader>
           <DialogTitle>{course.title}</DialogTitle>
           <DialogDescription>{t('admin:courses.courseDetails')}</DialogDescription>

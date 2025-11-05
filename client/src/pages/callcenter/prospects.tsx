@@ -259,7 +259,7 @@ export default function ProspectsPage() {
                     Add Prospect
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add New Prospect</DialogTitle>
                     <DialogDescription>

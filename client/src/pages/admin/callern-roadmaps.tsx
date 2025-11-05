@@ -145,7 +145,7 @@ export function AdminCallernRoadmaps() {
               {t('admin:callernRoadmaps.createRoadmap', 'Create Roadmap')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-[95vw] sm:max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('admin:callernRoadmaps.createRoadmap', 'Create Roadmap')}</DialogTitle>
               <DialogDescription>

@@ -398,7 +398,7 @@ export default function AIStudyPartner() {
       </div>
 
       <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle data-testid="dialog-title-test-ai">
               {t('admin:testAI', 'Test AI')}

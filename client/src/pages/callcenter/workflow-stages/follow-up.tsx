@@ -266,7 +266,7 @@ function FollowUp() {
                           برنامه‌ریزی
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-md" dir={isRTL ? "rtl" : "ltr"}>
+                      <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
                         <DialogHeader>
                           <DialogTitle>برنامه‌ریزی پیگیری</DialogTitle>
                           <DialogDescription>

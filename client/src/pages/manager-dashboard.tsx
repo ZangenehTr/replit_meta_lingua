@@ -323,19 +323,20 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Students</TableHead>
-                      <TableHead>Classes/Month</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Revenue</TableHead>
-                      <TableHead>Retention</TableHead>
-                      <TableHead>Performance</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[900px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Teacher</TableHead>
+                        <TableHead>Students</TableHead>
+                        <TableHead>Classes/Month</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Retention</TableHead>
+                        <TableHead>Performance</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {filteredTeachers.map((teacher) => (
                       <TableRow key={teacher.id}>
@@ -370,6 +371,7 @@ export default function ManagerDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -396,20 +398,21 @@ export default function ManagerDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Course</TableHead>
-                      <TableHead>Language</TableHead>
-                      <TableHead>Enrollments</TableHead>
-                      <TableHead>Completion</TableHead>
-                      <TableHead>Revenue</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Instructor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[900px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Course</TableHead>
+                        <TableHead>Language</TableHead>
+                        <TableHead>Enrollments</TableHead>
+                        <TableHead>Completion</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Instructor</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {filteredCourses.map((course) => (
                       <TableRow key={course.id}>
@@ -447,6 +450,7 @@ export default function ManagerDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

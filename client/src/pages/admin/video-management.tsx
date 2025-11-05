@@ -487,7 +487,7 @@ function VideoEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{video ? 'Edit Video' : 'Add New Video'}</DialogTitle>
           <DialogDescription>
@@ -682,7 +682,7 @@ function VideoPreviewDialog({ video, open, onOpenChange, getEmbedUrl }: VideoPre
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{video.title}</DialogTitle>
           {video.description && (

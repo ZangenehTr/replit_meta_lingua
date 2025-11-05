@@ -241,17 +241,18 @@ export default function Supervision() {
             </CardHeader>
             <CardContent>
               {liveSessions && liveSessions.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('admin:supervision.classTitle')}</TableHead>
-                      <TableHead>{t('admin:supervision.teacher')}</TableHead>
-                      <TableHead>{t('admin:supervision.type')}</TableHead>
-                      <TableHead>{t('admin:supervision.startTime')}</TableHead>
-                      <TableHead>{t('admin:supervision.status')}</TableHead>
-                      <TableHead>{t('admin:supervision.actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[700px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('admin:supervision.classTitle')}</TableHead>
+                        <TableHead>{t('admin:supervision.teacher')}</TableHead>
+                        <TableHead>{t('admin:supervision.type')}</TableHead>
+                        <TableHead>{t('admin:supervision.startTime')}</TableHead>
+                        <TableHead>{t('admin:supervision.status')}</TableHead>
+                        <TableHead>{t('admin:supervision.actions')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {liveSessions.map((session: any) => (
                       <TableRow key={session.id}>
@@ -288,6 +289,7 @@ export default function Supervision() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   {t('admin:supervision.noLiveClasses')}
@@ -308,17 +310,18 @@ export default function Supervision() {
             </CardHeader>
             <CardContent>
               {recordedSessions && recordedSessions.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('admin:supervision.classTitle')}</TableHead>
-                      <TableHead>{t('admin:supervision.teacher')}</TableHead>
-                      <TableHead>{t('admin:supervision.date')}</TableHead>
-                      <TableHead>{t('common:duration')}</TableHead>
-                      <TableHead>{t('admin:supervision.qualityAssurance')}</TableHead>
-                      <TableHead>{t('admin:supervision.actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[750px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('admin:supervision.classTitle')}</TableHead>
+                        <TableHead>{t('admin:supervision.teacher')}</TableHead>
+                        <TableHead>{t('admin:supervision.date')}</TableHead>
+                        <TableHead>{t('common:duration')}</TableHead>
+                        <TableHead>{t('admin:supervision.qualityAssurance')}</TableHead>
+                        <TableHead>{t('admin:supervision.actions')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {recordedSessions.map((session: any) => (
                       <TableRow key={session.id}>
@@ -360,6 +363,7 @@ export default function Supervision() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   {t('admin:supervision.noRecordedClasses')}
@@ -383,7 +387,7 @@ export default function Supervision() {
                     {t('admin:supervision.createTeacherEvaluation')}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{t('admin:supervision.createTeacherEvaluation')}</DialogTitle>
                   </DialogHeader>
@@ -705,7 +709,7 @@ export default function Supervision() {
                     Create Questionnaire
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create Student Questionnaire</DialogTitle>
                   </DialogHeader>

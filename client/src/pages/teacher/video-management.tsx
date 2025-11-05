@@ -508,7 +508,7 @@ export default function TeacherVideoManagement() {
 
           {/* Upload Dialog */}
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t('teacher:videoManagement.uploadNewVideo')}</DialogTitle>
                 <DialogDescription>

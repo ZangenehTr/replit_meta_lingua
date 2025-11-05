@@ -488,7 +488,7 @@ export default function GamesManagement() {
                 {t('admin:games.createGame')}
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('admin:games.addGame')}</DialogTitle>
               <DialogDescription>
@@ -612,7 +612,7 @@ export default function GamesManagement() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:games.editGame')}</DialogTitle>
             <DialogDescription>

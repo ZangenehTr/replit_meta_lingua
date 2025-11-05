@@ -271,7 +271,7 @@ export default function WebsiteBuilderPage() {
                     <span className="sm:hidden">{t('admin:add')}</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create New Website Page</DialogTitle>
                     <DialogDescription>

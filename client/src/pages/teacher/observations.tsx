@@ -425,7 +425,7 @@ export default function TeacherObservationsPage() {
                         Respond
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Respond to Observation</DialogTitle>
                         <DialogDescription>
@@ -482,7 +482,7 @@ export default function TeacherObservationsPage() {
                           Improvement Plan
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
+                      <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Submit Improvement Plan</DialogTitle>
                           <DialogDescription>

@@ -536,7 +536,7 @@ export default function AiTrainingDashboard() {
 
       {/* Create Model Dialog */}
       <Dialog open={showCreateModel} onOpenChange={setShowCreateModel}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New AI Model</DialogTitle>
             <DialogDescription>
@@ -549,7 +549,7 @@ export default function AiTrainingDashboard() {
 
       {/* Create Dataset Dialog */}
       <Dialog open={showCreateDataset} onOpenChange={setShowCreateDataset}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Training Dataset</DialogTitle>
             <DialogDescription>
@@ -562,7 +562,7 @@ export default function AiTrainingDashboard() {
 
       {/* Create Training Job Dialog */}
       <Dialog open={showCreateJob} onOpenChange={setShowCreateJob}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Start Training Job</DialogTitle>
             <DialogDescription>

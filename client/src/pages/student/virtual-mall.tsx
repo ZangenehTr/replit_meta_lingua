@@ -1187,7 +1187,7 @@ export default function VirtualMall() {
 
       {/* Book Details Modal */}
       <Dialog open={showBookDetailsModal} onOpenChange={setShowBookDetailsModal}>
-        <DialogContent className="max-w-md mx-auto" data-testid="book-details-modal">
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto" data-testid="book-details-modal">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold" data-testid="book-modal-title" dir="auto">
               {selectedBook?.title}

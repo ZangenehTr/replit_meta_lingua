@@ -372,7 +372,7 @@ export default function ComprehensiveCRMLeads() {
                 سرنخ جدید
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" dir="rtl">
+            <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
               <DialogHeader>
                 <DialogTitle>ایجاد سرنخ جدید</DialogTitle>
                 <DialogDescription>
@@ -860,7 +860,7 @@ export default function ComprehensiveCRMLeads() {
 
       {/* Communication Form Dialog */}
       <Dialog open={showCommunicationForm} onOpenChange={setShowCommunicationForm}>
-        <DialogContent className="max-w-2xl" dir="rtl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle>ثبت ارتباط</DialogTitle>
             <DialogDescription>

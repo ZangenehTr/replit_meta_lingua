@@ -373,7 +373,7 @@ export default function MentorMatchingPage() {
 
       {/* Mentor Assignment Dialog */}
       <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Match Mentor with Student Bundle</DialogTitle>
             <DialogDescription>

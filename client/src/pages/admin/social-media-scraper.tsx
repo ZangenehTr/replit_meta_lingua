@@ -254,18 +254,19 @@ export default function SocialMediaScraperAdmin() {
               No scrape jobs found. Create a new job to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Platform</TableHead>
-                  <TableHead>Job Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Target URL</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Platform</TableHead>
+                    <TableHead>Job Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Target URL</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {scrapeJobs.map((job: any) => (
                   <TableRow key={job.id}>
@@ -316,6 +317,7 @@ export default function SocialMediaScraperAdmin() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -333,17 +335,18 @@ export default function SocialMediaScraperAdmin() {
               No content scraped yet. Create a scrape job to start collecting data.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Platform</TableHead>
-                  <TableHead>Content</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Engagement</TableHead>
-                  <TableHead>Scraped At</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[700px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Platform</TableHead>
+                    <TableHead>Content</TableHead>
+                    <TableHead>Author</TableHead>
+                    <TableHead>Engagement</TableHead>
+                    <TableHead>Scraped At</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {scrapedContent.map((item: any) => (
                   <TableRow key={item.id}>
@@ -379,6 +382,7 @@ export default function SocialMediaScraperAdmin() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

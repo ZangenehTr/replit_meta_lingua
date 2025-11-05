@@ -380,7 +380,7 @@ export default function TakeTestPage() {
   if (showContactModal && testResults) {
     return (
       <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Great job! You've completed the test</DialogTitle>
             <DialogDescription>

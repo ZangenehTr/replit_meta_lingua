@@ -512,7 +512,7 @@ export default function TeacherAvailabilityPage() {
 
         {/* Create Dialog - Available regardless of existing periods */}
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Availability Period</DialogTitle>
               <DialogDescription>
@@ -536,7 +536,7 @@ export default function TeacherAvailabilityPage() {
 
         {/* Edit Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Availability Period</DialogTitle>
               <DialogDescription>

@@ -607,7 +607,7 @@ export default function TeacherAssignmentsPage() {
                 Create Assignment
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Assignment</DialogTitle>
               </DialogHeader>
@@ -1146,7 +1146,7 @@ export default function TeacherAssignmentsPage() {
 
         {/* Feedback Dialog - Enhanced with Text + Audio */}
         <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Grade Assignment & Provide Feedback</DialogTitle>
             </DialogHeader>

@@ -337,7 +337,7 @@ export default function TutorMarketplace() {
                         </Button>
                       </DialogTrigger>
                       
-                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>رزرو جلسه با {tutor.name} / Book Session with {tutor.name}</DialogTitle>
                         </DialogHeader>

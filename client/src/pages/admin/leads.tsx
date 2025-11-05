@@ -409,7 +409,7 @@ export default function AdminLeadsPage() {
                 {t('admin:leads.addLead')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t('admin:leads.createLead')}</DialogTitle>
                 <DialogDescription>
@@ -889,8 +889,8 @@ export default function AdminLeadsPage() {
               <div className="text-muted-foreground">{t('admin:leads.loading')}</div>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="min-w-[900px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[50px]">
@@ -1047,7 +1047,7 @@ export default function AdminLeadsPage() {
 
       {/* Communication Form Modal */}
       <Dialog open={showCommunicationForm} onOpenChange={setShowCommunicationForm}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:leads.recordCommunication')}</DialogTitle>
             <DialogDescription>

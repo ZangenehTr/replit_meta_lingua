@@ -327,7 +327,7 @@ export function AdminTeacherManagement() {
                 <span className="sm:hidden">{t('admin:teacherManagement.add', { defaultValue: 'افزودن' })}</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t('admin:teacherManagement.addTeacher')}</DialogTitle>
                 <DialogDescription>
@@ -921,7 +921,7 @@ export function AdminTeacherManagement() {
 
       {/* View Teacher Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:teacherManagement.dialogs.viewTitle')}</DialogTitle>
             <DialogDescription>
@@ -1021,7 +1021,7 @@ export function AdminTeacherManagement() {
 
       {/* Edit Teacher Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:teacherManagement.dialogs.editTitle')}</DialogTitle>
             <DialogDescription>

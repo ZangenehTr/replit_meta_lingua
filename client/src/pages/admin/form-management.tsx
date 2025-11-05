@@ -658,7 +658,7 @@ export default function FormManagement() {
 
       {/* Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Form Preview</DialogTitle>
             <DialogDescription>
@@ -683,7 +683,7 @@ export default function FormManagement() {
 
       {/* Submissions Dialog */}
       <Dialog open={submissionsDialogOpen} onOpenChange={setSubmissionsDialogOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl md:max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Form Submissions</DialogTitle>
             <DialogDescription>
@@ -729,16 +729,17 @@ export default function FormManagement() {
             </Button>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Submitted At</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted By</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[700px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Submitted At</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Submitted By</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {submissions.map((sub: any) => (
                 <TableRow key={sub.id}>
@@ -789,6 +790,7 @@ export default function FormManagement() {
               ))}
             </TableBody>
           </Table>
+          </div>
 
           {submissions.length === 0 && (
             <div className="text-center py-12">

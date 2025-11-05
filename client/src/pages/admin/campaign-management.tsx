@@ -1426,7 +1426,7 @@ export default function CampaignManagementPage() {
 
       {/* Tool Configuration Dialog */}
       <Dialog open={showToolConfigDialog} onOpenChange={setShowToolConfigDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:campaigns.configureTool', { tool: selectedTool })}</DialogTitle>
             <DialogDescription>
@@ -1444,7 +1444,7 @@ export default function CampaignManagementPage() {
 
       {/* New Campaign Creation Dialog */}
       <Dialog open={showNewCampaignDialog} onOpenChange={setShowNewCampaignDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:campaigns.createNewCampaign')}</DialogTitle>
             <DialogDescription>
@@ -1466,7 +1466,7 @@ export default function CampaignManagementPage() {
 
       {/* Campaign Settings/Edit Dialog */}
       <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('admin:campaigns.editCampaign')}</DialogTitle>
             <DialogDescription>
