@@ -143,10 +143,35 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
   console.log('Sidebar rendering with items:', navigationItems.length, 'items');
   console.log('Callern items:', navigationItems.filter(item => item.path.includes('callern')));
   
-  // Prevent sidebar scroll on navigation
+  // Restore scroll position from localStorage on mount and save on scroll
+  useEffect(() => {
+    const sidebar = document.querySelector('.sidebar-container');
+    if (!sidebar) return;
+
+    // Restore scroll position from localStorage
+    const savedScroll = localStorage.getItem('sidebar-scroll-position');
+    if (savedScroll) {
+      sidebar.scrollTop = parseInt(savedScroll, 10);
+    }
+
+    // Save scroll position to localStorage on scroll
+    const handleScroll = () => {
+      localStorage.setItem('sidebar-scroll-position', sidebar.scrollTop.toString());
+    };
+
+    sidebar.addEventListener('scroll', handleScroll);
+    return () => sidebar.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  // Prevent sidebar scroll jump on navigation
   const handleNavigate = (path: string) => {
     const sidebar = document.querySelector('.sidebar-container');
     const currentScroll = sidebar?.scrollTop || 0;
+    
+    // Save to localStorage before navigation
+    if (currentScroll) {
+      localStorage.setItem('sidebar-scroll-position', currentScroll.toString());
+    }
     
     setLocation(path);
     onNavigate?.();
