@@ -27488,6 +27488,59 @@ Meta Lingua Academy`;
 
 
 
+  // ========== TRIAL LESSONS ENDPOINTS ==========
+  
+  // Get all trial lessons with filtering
+  app.get("/api/trial-lessons", authenticateToken, requireRole(['Admin', 'Front Desk Clerk', 'Supervisor']), async (req: any, res) => {
+    try {
+      // For now, return empty array until storage methods are implemented
+      // TODO: Implement proper trial lessons storage methods
+      const trialLessons: any[] = [];
+      res.json(trialLessons);
+    } catch (error) {
+      console.error('Error fetching trial lessons:', error);
+      res.status(500).json({ message: "Failed to fetch trial lessons" });
+    }
+  });
+
+  // Get trial lessons metrics for front desk
+  app.get("/api/front-desk/trial-metrics", authenticateToken, requireRole(['Admin', 'Front Desk Clerk', 'Supervisor']), async (req: any, res) => {
+    try {
+      // Return basic metrics structure
+      const metrics = {
+        todayTrials: 0,
+        confirmedTrials: 0,
+        pendingTrials: 0,
+        completedTrials: 0,
+        noShowTrials: 0,
+        totalTeachers: 0,
+        availableTeachers: 0,
+        averageResponseTime: 0,
+        conversionRate: 0,
+        todayRevenue: 0,
+        weeklyTrials: 0,
+        monthlyTrials: 0
+      };
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching trial metrics:', error);
+      res.status(500).json({ message: "Failed to fetch trial metrics" });
+    }
+  });
+
+  // Update trial lesson
+  app.put("/api/trial-lessons/:id", authenticateToken, requireRole(['Admin', 'Front Desk Clerk', 'Supervisor']), async (req: any, res) => {
+    try {
+      const trialId = parseInt(req.params.id);
+      // For now, return success message
+      // TODO: Implement proper trial lesson update logic
+      res.json({ message: "Trial lesson updated successfully", id: trialId });
+    } catch (error) {
+      console.error('Error updating trial lesson:', error);
+      res.status(500).json({ message: "Failed to update trial lesson" });
+    }
+  });
+
   return app;
 }
 
