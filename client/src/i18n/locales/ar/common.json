@@ -1,4 +1,13 @@
 {
+  "tagline": "تعلم اللغات عالمياً",
+  "nav": {
+    "home": "الرئيسية",
+    "allCourses": "جميع الدورات",
+    "curriculum": "المنهج الدراسي"
+  },
+  "auth": {
+    "login": "تسجيل الدخول"
+  },
   "yesterday": "أمس",
   "student": {
     "navigation": {

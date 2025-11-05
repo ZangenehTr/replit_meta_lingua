@@ -1,4 +1,13 @@
 {
+  "tagline": "Learn Languages Globally",
+  "nav": {
+    "home": "Home",
+    "allCourses": "All Courses",
+    "curriculum": "Curriculum"
+  },
+  "auth": {
+    "login": "Login"
+  },
   "home": {
     "seoTitle": "Meta Lingua - AI-Powered Language Learning",
     "seoDescription": "Learn languages with AI-powered tutoring, interactive courses, and a supportive global community. Start your language learning journey today!"
