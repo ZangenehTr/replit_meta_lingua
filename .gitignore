@@ -4,3 +4,31 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Database backups (should not be in production)
+*.sql
+
+# Development uploads and assets
+uploads/
+attached_assets/
+
+# Build artifacts
+dist/
+
+# Log files
+*.log
+logs/
+
+# Cache directories
+.cache/
+.vite/
+.npm/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment files (secrets should be set in Replit)
+.env.local
+.env.*.local
