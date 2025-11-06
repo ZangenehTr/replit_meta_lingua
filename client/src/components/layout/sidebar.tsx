@@ -193,6 +193,7 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
             const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
             const roleColors = getRoleColors(item.roles);
             const hasMultipleRoles = roleColors.length > 1;
+            const isAdmin = user?.role?.toLowerCase() === 'admin';
 
             if (collapsed) {
               // Collapsed mode: Icon-only with tooltip
@@ -212,8 +213,13 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                     title={item.label}
                     aria-label={item.label}
                   >
-                    {/* Color indicator - simplified for collapsed view */}
-                    <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${roleColors[0]}`}></span>
+                    {/* Color indicator - only show for admin users */}
+                    {isAdmin && (
+                      <span 
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}
+                        title={`${item.roles?.join(', ')}`}
+                      ></span>
+                    )}
                     <Icon className="h-5 w-5" />
                   </Button>
                 </Link>
@@ -235,16 +241,19 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                   }}
                   dir={isRTL ? 'rtl' : 'ltr'}
                   style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
+                  title={isAdmin ? `${t('sidebar:availableFor', 'دسترسی برای')}: ${item.roles?.join(', ')}` : undefined}
                 >
-                  {/* Multi-role color indicators */}
-                  {hasMultipleRoles ? (
-                    <div className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 flex flex-col gap-0.5`}>
-                      {roleColors.map((color, idx) => (
-                        <span key={idx} className={`w-1 h-2 rounded-full ${color}`}></span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-1 h-8 rounded-full ${roleColors[0]}`}></span>
+                  {/* Multi-role color indicators - only show for admin users */}
+                  {isAdmin && (
+                    hasMultipleRoles ? (
+                      <div className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 flex flex-col gap-0.5`}>
+                        {roleColors.slice(0, 3).map((color, idx) => (
+                          <span key={idx} className={`w-0.5 h-2 rounded-full ${color}`}></span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}></span>
+                    )
                   )}
                   
                   <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />

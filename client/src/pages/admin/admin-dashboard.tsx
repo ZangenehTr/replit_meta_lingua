@@ -303,99 +303,119 @@ export const AdminDashboard = () => {
           </Card>
         </motion.div>
 
-        {/* Key Metrics Grid */}
+        {/* Key Metrics Grid - Redesigned for better readability */}
         <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-3"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
           {/* Total Students */}
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <Users className="h-8 w-8 text-blue-500" />
-                <div className="text-right">
-                  <span className="text-2xl font-bold text-blue-700">{stats?.totalStudents || 0}</span>
-                  <div className="flex items-center justify-end gap-1 mt-1">
-                    {stats?.studentGrowth > 0 ? (
-                      <>
-                        <ArrowUpRight className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-green-600">+{displayStats.studentGrowth}%</span>
-                      </>
-                    ) : (
-                      <>
-                        <ArrowDownRight className="h-3 w-3 text-red-500" />
-                        <span className="text-xs text-red-600">{stats?.studentGrowth}%</span>
-                      </>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center">
+                  <Users className="h-7 w-7 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-600 mb-1">{t('admin:totalStudents', 'کل دانش‌آموزان')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-blue-700">{stats?.totalStudents || 0}</span>
+                    {stats?.studentGrowth !== undefined && (
+                      <div className="flex items-center gap-1">
+                        {stats.studentGrowth > 0 ? (
+                          <>
+                            <ArrowUpRight className="h-4 w-4 text-green-500" />
+                            <span className="text-sm text-green-600">+{displayStats.studentGrowth}%</span>
+                          </>
+                        ) : (
+                          <>
+                            <ArrowDownRight className="h-4 w-4 text-red-500" />
+                            <span className="text-sm text-red-600">{stats.studentGrowth}%</span>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
+                  <Progress value={Number(studentUtilization)} className="h-2 mt-2" />
                 </div>
               </div>
-              <p className="text-xs text-gray-600">{t('admin:totalStudents', 'کل دانش‌آموزان')}</p>
-              <Progress value={Number(studentUtilization)} className="h-1.5 mt-2" />
             </CardContent>
           </Card>
 
           {/* Total Teachers */}
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <GraduationCap className="h-8 w-8 text-green-500" />
-                <div className="text-right">
-                  <span className="text-2xl font-bold text-green-700">{stats?.totalTeachers || 0}</span>
-                  <Badge variant="secondary" className="text-xs mt-1">
-                    {stats?.activeTeachers || 0} {t('admin:active', 'فعال')}
-                  </Badge>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-green-500 flex items-center justify-center">
+                  <GraduationCap className="h-7 w-7 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-600 mb-1">{t('admin:totalTeachers', 'کل معلمان')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-green-700">{stats?.totalTeachers || 0}</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {stats?.activeTeachers || 0} {t('admin:active', 'فعال')}
+                    </Badge>
+                  </div>
+                  <Progress value={Number(teacherUtilization)} className="h-2 mt-2" />
                 </div>
               </div>
-              <p className="text-xs text-gray-600">{t('admin:totalTeachers', 'کل معلمان')}</p>
-              <Progress value={Number(teacherUtilization)} className="h-1.5 mt-2" />
             </CardContent>
           </Card>
 
           {/* Monthly Revenue */}
           <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <DollarSign className="h-8 w-8 text-emerald-500" />
-                <div className="text-right">
-                  <span className="text-lg font-bold text-emerald-700">
-                    {new Intl.NumberFormat(isRTL ? 'fa-IR' : 'en-US', { notation: 'compact' }).format(stats?.monthlyRevenue || 0)}
-                  </span>
-                  <div className="flex items-center justify-end gap-1 mt-1">
-                    {stats?.revenueGrowth > 0 ? (
-                      <>
-                        <TrendingUp className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-green-600">+{displayStats.revenueGrowth}%</span>
-                      </>
-                    ) : (
-                      <>
-                        <TrendingDown className="h-3 w-3 text-red-500" />
-                        <span className="text-xs text-red-600">{stats?.revenueGrowth}%</span>
-                      </>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-emerald-500 flex items-center justify-center">
+                  <DollarSign className="h-7 w-7 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-600 mb-1">{t('admin:monthlyRevenue', 'درآمد ماهانه')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-emerald-700">
+                      {new Intl.NumberFormat(isRTL ? 'fa-IR' : 'en-US', { notation: 'compact' }).format(stats?.monthlyRevenue || 0)}
+                    </span>
+                    {stats?.revenueGrowth !== undefined && (
+                      <div className="flex items-center gap-1">
+                        {stats.revenueGrowth > 0 ? (
+                          <>
+                            <TrendingUp className="h-4 w-4 text-green-500" />
+                            <span className="text-sm text-green-600">+{displayStats.revenueGrowth}%</span>
+                          </>
+                        ) : (
+                          <>
+                            <TrendingDown className="h-4 w-4 text-red-500" />
+                            <span className="text-sm text-red-600">{stats.revenueGrowth}%</span>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-gray-600">{t('admin:monthlyRevenue', 'درآمد ماهانه')}</p>
             </CardContent>
           </Card>
 
           {/* Active Courses */}
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <BookOpen className="h-8 w-8 text-purple-500" />
-                <div className="text-right">
-                  <span className="text-2xl font-bold text-purple-700">{stats?.activeCourses || 0}</span>
-                  <Badge variant="secondary" className="text-xs mt-1">
-                    {stats?.totalCourses || 0} {t('admin:total', 'کل')}
-                  </Badge>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-purple-500 flex items-center justify-center">
+                  <BookOpen className="h-7 w-7 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-600 mb-1">{t('admin:activeCourses', 'دوره‌های فعال')}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-purple-700">{stats?.activeCourses || 0}</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {stats?.totalCourses || 0} {t('admin:total', 'کل')}
+                    </Badge>
+                  </div>
+                  <Progress value={stats?.courseCompletionRate || 0} className="h-2 mt-2" />
                 </div>
               </div>
-              <p className="text-xs text-gray-600">{t('admin:activeCourses', 'دوره‌های فعال')}</p>
-              <Progress value={stats?.courseCompletionRate || 0} className="h-1.5 mt-2" />
             </CardContent>
           </Card>
         </motion.div>

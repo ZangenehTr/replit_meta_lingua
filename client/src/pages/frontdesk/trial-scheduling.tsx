@@ -435,17 +435,42 @@ export default function TrialLessonScheduling() {
 
   if (trialLessonsError) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600">{isRTL ? "خطا در بارگذاری اطلاعات" : "Error loading data"}</p>
-          <Button 
-            onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/trial-lessons'] })}
-            className="mt-2"
-          >
-            {isRTL ? "تلاش مجدد" : "Retry"}
-          </Button>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        <Card className="max-w-md w-full shadow-xl">
+          <CardContent className="p-8 text-center">
+            <div className="mb-6">
+              <div className="mx-auto w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              {isRTL ? "خطا در بارگذاری اطلاعات" : "Error Loading Data"}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              {isRTL 
+                ? "متأسفانه نمی‌توانیم اطلاعات درس‌های آزمایشی را بارگذاری کنیم. لطفاً دوباره تلاش کنید."
+                : "We couldn't load the trial lessons. Please try again."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/trial-lessons'] })}
+                className="w-full sm:w-auto"
+                data-testid="button-retry-loading"
+              >
+                {isRTL ? "تلاش مجدد" : "Retry"}
+              </Button>
+              <Link href="/frontdesk/dashboard">
+                <Button 
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  data-testid="button-back-dashboard"
+                >
+                  {isRTL ? "بازگشت به داشبورد" : "Back to Dashboard"}
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
