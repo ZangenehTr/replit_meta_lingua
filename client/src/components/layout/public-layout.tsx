@@ -38,7 +38,7 @@ interface PublicLayoutProps {
 }
 
 export function PublicLayout({ children }: PublicLayoutProps) {
-  const { t } = useTranslation(['common']);
+  const { t, i18n } = useTranslation(['common']);
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { direction } = useLanguage();
@@ -67,6 +67,18 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   const isActivePath = (path: string) => {
     if (path === '/') return location === '/';
     return location.startsWith(path);
+  };
+
+  // Helper function to get localized category name
+  const getCategoryName = (category: any) => {
+    const currentLang = i18n.language;
+    if (currentLang === 'fa' && category.nameFa) {
+      return category.nameFa;
+    }
+    if (currentLang === 'ar' && category.nameAr) {
+      return category.nameAr;
+    }
+    return category.name; // Default to English
   };
 
   return (
@@ -135,7 +147,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                   {curriculumCategories.map((category: any) => (
                     <DropdownMenuItem key={category.id} asChild>
                       <Link href={`/curriculum/${category.slug}`} className="cursor-pointer" data-testid={`link-category-${category.slug}`}>
-                        {category.name}
+                        {getCategoryName(category)}
                       </Link>
                     </DropdownMenuItem>
                   ))}
@@ -246,7 +258,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                               className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                               data-testid={`link-mobile-category-${category.slug}`}
                             >
-                              {category.name}
+                              {getCategoryName(category)}
                             </Link>
                           ))}
                         </div>

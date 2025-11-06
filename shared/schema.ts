@@ -109,6 +109,8 @@ export const users = pgTable("users", {
 export const curriculumCategories = pgTable("curriculum_categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  nameFa: text("name_fa"),
+  nameAr: text("name_ar"),
   slug: text("slug").notNull().unique(),
   description: text("description"),
   icon: text("icon"),
