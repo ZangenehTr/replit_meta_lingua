@@ -32,3 +32,22 @@ temp/
 # Environment files (secrets should be set in Replit)
 .env.local
 .env.*.local
+
+# Screenshots and test images (development only)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Allow specific assets that should be deployed
+!client/src/assets/**/*.png
+!client/src/assets/**/*.jpg
+!client/src/assets/**/*.jpeg
+!client/src/assets/**/*.gif
+!client/src/assets/**/*.webp
+!public/**/*.png
+!public/**/*.jpg
+!public/**/*.jpeg
+!public/**/*.gif
+!public/**/*.webp
