@@ -9,6 +9,7 @@ Meta Lingua is an AI-enhanced, multilingual language learning and institute mana
 - **Role Indicators Enhancement**: Rainbow role indicators in sidebar now only visible to admin users. Made more subtle (width reduced from w-1 to w-0.5), limited to 3 colors max, with informative tooltips showing role access levels.
 - **Error State Improvements**: Enhanced trial scheduling error screen with professional Card component, circular icon container, descriptive error messaging, dual-button layout (Retry + Back to Dashboard), responsive design, and client-side navigation.
 - **Visitor Chat System**: Professional-grade real-time WebSocket messaging with typing indicators, canned responses (11 Persian templates), sound notifications, unread badges, and admin online status. Database tables created via SQL execution.
+- **Curriculum Categories i18n**: Fixed navigation menu inconsistency where curriculum categories displayed in English despite active Persian/Arabic locale. Added `nameFa` and `nameAr` fields to curriculum_categories table, populated with translations for all 5 categories (Test Prep, Conversation & Fluency, Business English, Academic English, Kids & Teens), and updated PublicLayout component with `getCategoryName()` helper to display localized names based on current i18n language.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
