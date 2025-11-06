@@ -3,6 +3,13 @@
 ## Overview
 Meta Lingua is an AI-enhanced, multilingual language learning and institute management platform designed for self-hosting, specifically for language institutes globally. It supports teaching various languages, extensive administration, student management, course enrollment, VoIP integration, and a wallet-based payment system. Its primary goal is to provide a powerful, customizable, and independent platform, particularly in regions requiring self-hosted solutions, offering a comprehensive and customizable solution for language education and administration.
 
+## Recent Changes (November 2025)
+**UI/UX Polish & Refinements**:
+- **Statistics Boxes Redesign**: Changed admin dashboard statistics from narrow 4-column vertical layout to wider 2-column horizontal layout with rounded icon containers, better spacing, and no text wrapping issues. Icons now have solid colored backgrounds (56px rounded containers).
+- **Role Indicators Enhancement**: Rainbow role indicators in sidebar now only visible to admin users. Made more subtle (width reduced from w-1 to w-0.5), limited to 3 colors max, with informative tooltips showing role access levels.
+- **Error State Improvements**: Enhanced trial scheduling error screen with professional Card component, circular icon container, descriptive error messaging, dual-button layout (Retry + Back to Dashboard), responsive design, and client-side navigation.
+- **Visitor Chat System**: Professional-grade real-time WebSocket messaging with typing indicators, canned responses (11 Persian templates), sound notifications, unread badges, and admin online status. Database tables created via SQL execution.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.
