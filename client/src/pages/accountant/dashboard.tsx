@@ -277,7 +277,7 @@ function AccountantDashboard() {
 
   return (
     <AppLayout>
-      <div className="admin-ltr p-6 space-y-6">
+      <div className="p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Welcome Banner */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

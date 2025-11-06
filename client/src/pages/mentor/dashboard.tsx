@@ -387,7 +387,7 @@ function MentorDashboard() {
 
   return (
     <AppLayout>
-      <div className="admin-ltr mentor-dashboard-container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className={`mentor-dashboard-container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6 ${isRTL ? 'rtl-layout' : 'ltr-layout'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         
         {/* ============================================================================ */}
         {/* HEADER & WELCOME SECTION */}

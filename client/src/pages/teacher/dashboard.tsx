@@ -140,7 +140,7 @@ export default function TeacherDashboard() {
     ((stats.performanceData[2].earnings - stats.performanceData[0].earnings) / stats.performanceData[0].earnings * 100).toFixed(1) : 0;
 
   return (
-    <div className="admin-ltr min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Professional Mobile Header */}
       <motion.header 
         className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-blue-100 shadow-sm"
