@@ -803,8 +803,7 @@ export default function FrontDeskDashboard() {
   // Main dashboard UI starts here
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900"
-      dir={isRTL ? 'rtl' : 'ltr'}
+      className="admin-ltr min-h-screen bg-gray-50 dark:bg-gray-900"
       data-testid="front-desk-dashboard"
     >
       {/* Header Section */}

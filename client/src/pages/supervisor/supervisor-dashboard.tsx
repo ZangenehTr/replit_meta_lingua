@@ -504,7 +504,7 @@ export default function SupervisorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="admin-ltr min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Welcome Banner */}
         <motion.div
