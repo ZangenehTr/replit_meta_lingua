@@ -4,6 +4,12 @@
 Meta Lingua is an AI-enhanced, multilingual language learning and institute management platform designed for self-hosting, specifically for language institutes globally. It supports teaching various languages, extensive administration, student management, course enrollment, VoIP integration, and a wallet-based payment system. Its primary goal is to provide a powerful, customizable, and independent platform, particularly in regions requiring self-hosted solutions, offering a comprehensive and customizable solution for language education and administration.
 
 ## Recent Changes (November 2025)
+**Deployment & Infrastructure Documentation**:
+- **Comprehensive Deployment Guide**: Created 1,600-line DEPLOYMENT.md covering complete Iranian self-hosted production setup. Includes PostgreSQL/Redis/Nginx configuration, AI services (Ollama, Whisper, Edge TTS), WebRTC/TURN server, Iranian services integration (Kavenegar SMS, Shetab payments, Isabel VoIP), monitoring, backups, security hardening, and troubleshooting.
+- **Environment Configuration Validation**: Added mandatory environment variable validation step (`npx tsx -e "import { validateEnvironment } from './server/config/env-validator.ts'; validateEnvironment();"`) to deployment workflow. Prevents silent configuration failures by catching variable naming errors (e.g., VOIP_* vs ISABEL_VOIP_*, SHETAB_API_KEY vs SHETAB_SECRET_KEY) before deployment.
+- **Environment Files Alignment**: Fixed .env.production.template and .env.production.complete to match env-validator.ts exactly. Corrected Isabel VoIP variables (ISABEL_VOIP_SERVER, ISABEL_VOIP_PORT, etc.) and Shetab variables (SHETAB_SECRET_KEY, SHETAB_GATEWAY_URL, SHETAB_CALLBACK_URL). All three files now aligned and validated.
+- **GitIgnore Updates**: Updated .gitignore to exclude .cache/ directory (8.8GB Whisper models + Playwright browsers), SQL backups, screenshots, and development files from version control to prevent deployment blockers.
+
 **UI/UX Polish & Refinements**:
 - **Statistics Boxes Redesign**: Changed admin dashboard statistics from narrow 4-column vertical layout to wider 2-column horizontal layout with rounded icon containers, better spacing, and no text wrapping issues. Icons now have solid colored backgrounds (56px rounded containers).
 - **Role Indicators Enhancement**: Rainbow role indicators in sidebar now only visible to admin users. Made more subtle (width reduced from w-1 to w-0.5), limited to 3 colors max, with informative tooltips showing role access levels.
