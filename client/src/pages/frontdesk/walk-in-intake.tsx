@@ -41,6 +41,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { cn } from '@/lib/utils';
+import { useProspect } from '@/contexts/ProspectContext';
 import type { InsertFrontDeskOperation } from '@shared/schema';
 
 // Iranian phone validation
@@ -83,6 +84,12 @@ export default function WalkInIntake() {
   const queryClient = useQueryClient();
   const { t, i18n } = useTranslation(['frontdesk', 'common']);
   const isRTL = i18n.dir() === 'rtl';
+  const { 
+    currentProspect,
+    setCurrentProspect,
+    getOrCreateProspect, 
+    enrichProspect 
+  } = useProspect();
 
   // Memoized schema with internationalized validation messages
   const intakeFormSchema = useMemo(() => z.object({
@@ -271,7 +278,40 @@ export default function WalkInIntake() {
   // Submit intake form mutation
   const submitIntakeMutation = useMutation({
     mutationFn: async (data: IntakeFormData) => {
-      // Prepare data for API
+      // First, create or get the lead in the ProspectLifecycle system
+      const lead = await getOrCreateProspect({
+        phone: data.visitorPhone,
+        email: data.visitorEmail,
+        name: `${data.firstName} ${data.lastName}`.trim(),
+        source: 'walk-in'
+      });
+
+      // Then enrich the lead with additional intake information
+      const enrichedLead = await enrichProspect(lead.id.toString(), {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.visitorEmail,
+        phoneNumber: data.visitorPhone,
+        interestedLanguage: data.targetLanguages[0], // First target language
+        level: data.proficiencyLevel,
+        budget: parseInt(data.budgetRange) || undefined,
+        preferredFormat: data.classTypePreference,
+        notes: [
+          data.previousExperience && `Previous Experience: ${data.previousExperience}`,
+          data.learningGoals.length > 0 && `Learning Goals: ${data.learningGoals.join(', ')}`,
+          data.specialRequirements && `Special Requirements: ${data.specialRequirements}`,
+          data.accessibilityNeeds && `Accessibility Needs: ${data.accessibilityNeeds}`,
+          data.clerkObservations && `Clerk Observations: ${data.clerkObservations}`,
+          `Emergency Contact: ${data.emergencyContactName} - ${data.emergencyContactPhone}`,
+          `How Heard: ${data.howHeardAbout}`,
+          `Urgency: ${data.urgencyLevel}`,
+          `Preferred Days: ${data.preferredDays.join(', ')}`,
+          `Preferred Time: ${data.preferredTimeSlots.join(', ')}`,
+          `Frequency: ${data.frequencyPreference}`
+        ].filter(Boolean).join('\n')
+      });
+      
+      // Also create a FrontDesk operation for tracking
       const visitorName = `${data.firstName} ${data.lastName}`.trim();
       
       const frontDeskOperation: Omit<InsertFrontDeskOperation, 'handledBy'> = {

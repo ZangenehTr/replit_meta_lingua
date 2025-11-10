@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
+import { ProspectProvider } from "@/contexts/ProspectContext";
 import { useBranding } from "@/hooks/use-branding";
 import { useCustomFonts } from "@/hooks/use-custom-fonts";
 import { LanguageProvider } from "@/hooks/useLanguage";
@@ -1201,13 +1202,15 @@ function AppWithBranding() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <SocketProvider>
-          <RTLLayout>
-            <AppWithBranding />
-          </RTLLayout>
-        </SocketProvider>
-      </LanguageProvider>
+      <ProspectProvider>
+        <LanguageProvider>
+          <SocketProvider>
+            <RTLLayout>
+              <AppWithBranding />
+            </RTLLayout>
+          </SocketProvider>
+        </LanguageProvider>
+      </ProspectProvider>
     </QueryClientProvider>
   );
 }

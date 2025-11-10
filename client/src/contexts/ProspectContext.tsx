@@ -87,10 +87,11 @@ export function ProspectProvider({ children }: { children: React.ReactNode }) {
   // Get or create prospect mutation
   const getOrCreateMutation = useMutation({
     mutationFn: async (data: { phone?: string; email?: string; name?: string; source?: string }) => {
-      return apiRequest('/api/prospect-lifecycle/get-or-create', {
+      const response = await apiRequest('/api/prospect-lifecycle/get-or-create', {
         method: 'POST',
         body: JSON.stringify(data)
       });
+      return response.prospect; // Unwrap the prospect from the response
     },
     onSuccess: (lead: Lead) => {
       queryClient.invalidateQueries({ queryKey: ['/api/prospect-lifecycle'] });
@@ -133,10 +134,11 @@ export function ProspectProvider({ children }: { children: React.ReactNode }) {
   // Enrich prospect mutation
   const enrichMutation = useMutation({
     mutationFn: async ({ leadId, data }: { leadId: string; data: Partial<Lead> }) => {
-      return apiRequest(`/api/prospect-lifecycle/enrich/${leadId}`, {
+      const response = await apiRequest(`/api/prospect-lifecycle/enrich/${leadId}`, {
         method: 'PATCH',
         body: JSON.stringify(data)
       });
+      return response.lead; // Unwrap the lead from the response
     },
     onSuccess: (lead: Lead) => {
       queryClient.invalidateQueries({ queryKey: ['/api/prospect-lifecycle'] });
@@ -167,10 +169,11 @@ export function ProspectProvider({ children }: { children: React.ReactNode }) {
         sendNotification?: boolean;
       }
     }) => {
-      return apiRequest(`/api/prospect-lifecycle/convert/${leadId}`, {
+      const response = await apiRequest(`/api/prospect-lifecycle/convert/${leadId}`, {
         method: 'POST',
         body: JSON.stringify(options)
       });
+      return response.user; // Unwrap the user from the response
     },
     onSuccess: (user: User) => {
       queryClient.invalidateQueries({ queryKey: ['/api/prospect-lifecycle'] });
