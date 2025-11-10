@@ -197,7 +197,7 @@ export default function TeacherResourcesPage() {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{t('totalDownloads')}</p>
                   <p className="text-2xl font-bold">
-                    {resources.reduce((acc, r) => acc + r.downloads, 0)}
+                    {resources.reduce((acc, r) => acc + (r.downloads || 0), 0)}
                   </p>
                 </div>
                 <Download className="w-8 h-8 text-green-600" />
@@ -225,7 +225,7 @@ export default function TeacherResourcesPage() {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{t('totalLikes')}</p>
                   <p className="text-2xl font-bold">
-                    {resources.reduce((acc, r) => acc + r.likes, 0)}
+                    {resources.reduce((acc, r) => acc + (r.likes || 0), 0)}
                   </p>
                 </div>
                 <Star className="w-8 h-8 text-orange-600" />
@@ -337,11 +337,11 @@ export default function TeacherResourcesPage() {
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span className="flex items-center gap-1">
                               <Download className="w-3 h-3" />
-                              {resource.downloads}
+                              {resource.downloads || 0}
                             </span>
                             <span className="flex items-center gap-1">
                               <Star className="w-3 h-3" />
-                              {resource.likes}
+                              {resource.likes || 0}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
