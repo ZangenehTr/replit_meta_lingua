@@ -52,6 +52,7 @@ import { ollamaInstaller } from "./ollama-installer";
 import { setupAiTrainingRoutes } from "./ai-training-routes";
 import { setupAiAnalysisRoutes } from "./ai-analysis-routes";
 import { authenticate, authorizePermission } from "./auth";
+import { createAdminUsersRouter } from "./routes/admin-users";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -812,7 +813,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: error.message
       });
     }
+  // Admin User Management Routes
   });
+  const adminUsersRouter = createAdminUsersRouter(storage, authenticateToken, requireRole);
+  app.use('/api/admin', adminUsersRouter);
+
   // Admin System Configuration Routes
   app.get("/api/admin/system", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
