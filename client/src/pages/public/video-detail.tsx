@@ -54,7 +54,7 @@ export default function VideoDetail() {
       <PublicLayout>
         <div className="mx-auto max-w-6xl px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Video Not Found</h1>
-          <Button asChild><Link href="/videos"><a>Back to Videos</a></Link></Button>
+          <Button asChild><Link href="/videos">Back to Videos</Link></Button>
         </div>
       </PublicLayout>
     );
@@ -83,7 +83,7 @@ export default function VideoDetail() {
       />
       <div className="mx-auto max-w-6xl px-4 py-8">
         <Button asChild variant="ghost" size="sm" className="mb-6" data-testid="button-back-to-videos">
-          <Link href="/videos"><a className="flex items-center gap-2"><ArrowLeft className="h-4 w-4" />Back to Videos</a></Link>
+          <Link href="/videos" className="flex items-center gap-2"><ArrowLeft className="h-4 w-4" />Back to Videos</Link>
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

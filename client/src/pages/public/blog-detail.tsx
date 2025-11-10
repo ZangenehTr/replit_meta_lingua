@@ -55,7 +55,7 @@ export default function BlogDetail() {
       <PublicLayout>
         <div className="mx-auto max-w-4xl px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Post Not Found</h1>
-          <Button asChild><Link href="/blog"><a>Back to Blog</a></Link></Button>
+          <Button asChild><Link href="/blog">Back to Blog</Link></Button>
         </div>
       </PublicLayout>
     );
@@ -72,7 +72,7 @@ export default function BlogDetail() {
       />
       <article className="mx-auto max-w-4xl px-4 py-8">
         <Button asChild variant="ghost" size="sm" className="mb-6" data-testid="button-back-to-blog">
-          <Link href="/blog"><a className="flex items-center gap-2"><ArrowLeft className="h-4 w-4" />Back to Blog</a></Link>
+          <Link href="/blog" className="flex items-center gap-2"><ArrowLeft className="h-4 w-4" />Back to Blog</Link>
         </Button>
 
         <header className="mb-8">
