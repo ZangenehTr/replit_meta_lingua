@@ -7,50 +7,24 @@ import type { Lead, GuestLead, User, InsertLead, InsertUser } from "@shared/sche
 import { eq, or, and, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-
-export interface ProspectSnapshot {
-  // Core identifiers
-  leadId?: number;
-  guestLeadId?: number;
-  userId?: number;
-  
-  // Contact info
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phoneNumber?: string;
-  
-  // Lead data
-  source?: string;
-  status?: string;
-  priority?: string;
-  interestedLanguage?: string;
-  level?: string;
-  notes?: string;
-  
-  // Placement test data
-  placementScore?: number;
-  placementLevel?: string;
-  placementSessionId?: number;
-  
-  // Additional data accumulated over time
-  preferredFormat?: string;
-  budget?: number;
-  nationalId?: string;
-  age?: number;
-  gender?: string;
-  
-  // Tracking
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import { 
+  ProspectDTO, 
+  ProspectInput, 
+  normalizeProspectInput,
+  leadToProspectDTO,
+  userToProspectDTO,
+  ProspectStatus,
+  ProspectPriority
+} from "@shared/types/prospect";
 
 export class ProspectLifecycleService {
   /**
    * Find or create a prospect based on phone/email
    * Implements deduplication logic
    */
-  static async getOrCreateProspect(data: ProspectSnapshot): Promise<ProspectSnapshot> {
+  static async getOrCreateProspect(input: ProspectInput): Promise<ProspectDTO> {
+    // Normalize input to canonical field names
+    const data = normalizeProspectInput(input);
     try {
       // Normalize phone number if provided
       const normalizedPhone = data.phoneNumber ? 
@@ -85,44 +59,15 @@ export class ProspectLifecycleService {
         
         if (existingUserResult[0]) {
           console.log(`✅ User already exists #${existingUserResult[0].id} for ${normalizedPhone || data.email}`);
-          // Return user info as prospect snapshot
-          return {
-            userId: existingUserResult[0].id,
-            firstName: existingUserResult[0].firstName,
-            lastName: existingUserResult[0].lastName || '',
-            email: existingUserResult[0].email,
-            phoneNumber: existingUserResult[0].phoneNumber,
-            nationalId: existingUserResult[0].nationalId || undefined,
-            status: 'existing_user',
-            ...data
-          };
+          // Return user info as prospect DTO
+          return userToProspectDTO(existingUserResult[0]);
         }
       }
       
       if (existingLead) {
-        // Found existing lead - return enriched data
+        // Found existing lead - return as DTO
         console.log(`✅ Found existing lead #${existingLead.id} for ${normalizedPhone || data.email}`);
-        return {
-          leadId: existingLead.id,
-          firstName: existingLead.firstName,
-          lastName: existingLead.lastName,
-          email: existingLead.email || data.email,
-          phoneNumber: existingLead.phoneNumber,
-          source: existingLead.source,
-          status: existingLead.status,
-          priority: existingLead.priority,
-          interestedLanguage: existingLead.interestedLanguage,
-          level: existingLead.level,
-          notes: existingLead.notes,
-          budget: existingLead.budget,
-          preferredFormat: existingLead.preferredFormat,
-          nationalId: existingLead.nationalId,
-          age: existingLead.age,
-          gender: existingLead.gender,
-          createdAt: existingLead.createdAt,
-          updatedAt: existingLead.updatedAt,
-          ...data // Overlay any new data
-        };
+        return leadToProspectDTO(existingLead);
       }
       
       // No existing lead - create new one
