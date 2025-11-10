@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Target, Plus, UserCheck, Clock, TrendingUp } from 'lucide-react';
+import { Target, Plus, UserCheck, Clock, TrendingUp, Search, Filter, Phone, Mail, Eye, UserPlus } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -22,68 +22,169 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { format } from 'date-fns';
+import { enUS, arSA } from 'date-fns/locale';
+import { faIR } from 'date-fns/locale';
+
+interface Prospect {
+  id: number;
+  leadId?: number;
+  userId?: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phoneNumber?: string;
+  source?: string;
+  status?: string;
+  priority?: string;
+  interestedLanguage?: string;
+  level?: string;
+  lastContact?: string;
+  followUpDate?: string;
+  createdAt?: string;
+  notes?: string;
+}
+
+interface UnifiedViewResponse {
+  success: boolean;
+  prospects: Prospect[];
+  stats: {
+    totalLeads: number;
+    convertedToUsers: number;
+    conversionRate: number;
+    sourceBreakdown: Record<string, number>;
+  };
+  filters: {
+    sources: string[];
+    statuses: string[];
+    priorities: string[];
+  };
+}
 
 export default function AdminProspectsPage() {
-  const { t } = useTranslation(['callcenter', 'common']);
+  const { t, i18n } = useTranslation(['callcenter', 'common']);
   const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+  
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSource, setSelectedSource] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedPriority, setSelectedPriority] = useState('all');
+  
   const [newProspectData, setNewProspectData] = React.useState({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
-    interestedIn: [],
-    skillLevel: '',
+    phoneNumber: '',
+    interestedLanguage: 'english',
+    level: '',
     notes: '',
-    priority: 'medium',
-    source: '',
+    priority: 'normal',
+    source: 'manual',
+    status: 'new',
     budget: '',
-    preferredSchedule: ''
+    preferredFormat: ''
   });
 
-  const { data: prospects = [], isLoading } = useQuery({
-    queryKey: ['/api/callcenter/prospects'],
+  // Use ProspectLifecycle unified view
+  const { data: prospectData, isLoading } = useQuery<UnifiedViewResponse>({
+    queryKey: ['/api/prospect-lifecycle/unified-view'],
   });
+  
+  const prospects = prospectData?.prospects || [];
 
-  // Create prospect mutation
+  // Create prospect mutation using ProspectLifecycle
   const createProspectMutation = useMutation({
     mutationFn: async (prospectData: any) => {
-      return apiRequest("/api/callcenter/prospects", {
+      return apiRequest("/api/prospect-lifecycle/get-or-create", {
         method: "POST",
         body: prospectData,
       });
     },
     onSuccess: () => {
       toast({
-        title: "Prospect Added",
-        description: "New prospect has been added successfully.",
+        title: t('callcenter:prospects.addedSuccess'),
+        description: t('callcenter:prospects.addedDescription'),
       });
       setIsAddDialogOpen(false);
       setNewProspectData({
         firstName: '',
         lastName: '',
         email: '',
-        phone: '',
-        interestedIn: [],
-        skillLevel: '',
+        phoneNumber: '',
+        interestedLanguage: 'english',
+        level: '',
         notes: '',
-        priority: 'medium',
-        source: '',
+        priority: 'normal',
+        source: 'manual',
+        status: 'new',
         budget: '',
-        preferredSchedule: ''
+        preferredFormat: ''
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/callcenter/prospects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prospect-lifecycle/unified-view"] });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to create prospect. Please try again.",
+        title: t('common:error'),
+        description: t('callcenter:prospects.addedError'),
         variant: "destructive",
       });
     },
   });
+  
+  // Filter prospects based on search and selections
+  const filteredProspects = prospects.filter(prospect => {
+    const matchesSearch = searchQuery === '' || 
+      `${prospect.firstName} ${prospect.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prospect.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prospect.phoneNumber?.includes(searchQuery);
+      
+    const matchesSource = selectedSource === 'all' || prospect.source === selectedSource;
+    const matchesStatus = selectedStatus === 'all' || prospect.status === selectedStatus;
+    const matchesPriority = selectedPriority === 'all' || prospect.priority === selectedPriority;
+    
+    return matchesSearch && matchesSource && matchesStatus && matchesPriority;
+  });
+  
+  // Compute stats from prospects data
+  const stats = {
+    totalLeads: prospects.filter(p => !p.userId).length,
+    convertedToUsers: prospects.filter(p => p.userId).length,
+    conversionRate: prospects.length > 0 
+      ? (prospects.filter(p => p.userId).length / prospects.length) * 100 
+      : 0,
+    pendingFollowUp: prospects.filter(p => p.status === 'contacted' || p.status === 'qualified').length
+  };
+  
+  // Get unique values for filters
+  const uniqueSources = [...new Set(prospects.map(p => p.source).filter(Boolean))];
+  const uniqueStatuses = [...new Set(prospects.map(p => p.status).filter(Boolean))];
+  const uniquePriorities = [...new Set(prospects.map(p => p.priority).filter(Boolean))];
+  
+  // Helper functions for badges
+  const getPriorityColor = (priority?: string) => {
+    switch (priority) {
+      case 'hot': return 'destructive';
+      case 'warm': return 'warning';
+      case 'cold': return 'secondary';
+      default: return 'default';
+    }
+  };
+  
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'new': return 'default';
+      case 'contacted': return 'secondary';
+      case 'qualified': return 'outline';
+      case 'negotiating': return 'default';
+      case 'lost': return 'destructive';
+      case 'converted': return 'success';
+      default: return 'default';
+    }
+  };
 
   const columns = [
     {
@@ -152,7 +253,7 @@ export default function AdminProspectsPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{prospects.length || 0}</div>
+            <div className="text-2xl font-bold">{stats.totalLeads}</div>
             <p className="text-xs text-muted-foreground">
               {t('callcenter:prospects.allStatuses')}
             </p>
@@ -167,9 +268,9 @@ export default function AdminProspectsPage() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{stats.convertedToUsers}</div>
             <p className="text-xs text-muted-foreground">
-              {t('callcenter:prospects.readyToContact')}
+              {t('callcenter:prospects.convertedToStudents')}
             </p>
           </CardContent>
         </Card>
@@ -182,7 +283,7 @@ export default function AdminProspectsPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{stats.pendingFollowUp}</div>
             <p className="text-xs text-muted-foreground">
               {t('callcenter:prospects.requiresAction')}
             </p>
@@ -197,9 +298,9 @@ export default function AdminProspectsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0%</div>
+            <div className="text-2xl font-bold">{stats.conversionRate.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
-              {t('callcenter:prospects.thisMonth')}
+              {t('callcenter:prospects.overall')}
             </p>
           </CardContent>
         </Card>
@@ -213,77 +314,186 @@ export default function AdminProspectsPage() {
           </p>
         </CardHeader>
         <CardContent>
+          {/* Search and Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t('callcenter:prospects.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                data-testid="input-prospect-search"
+              />
+            </div>
+            
+            <Select value={selectedSource} onValueChange={setSelectedSource}>
+              <SelectTrigger className="w-[180px]" data-testid="select-source-filter">
+                <SelectValue placeholder={t('callcenter:prospects.source')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('callcenter:prospects.allSources')}</SelectItem>
+                {uniqueSources.map(source => (
+                  <SelectItem key={source} value={source}>
+                    {t(`callcenter:sources.${source}`, source)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-[180px]" data-testid="select-status-filter">
+                <SelectValue placeholder={t('callcenter:prospects.status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('callcenter:prospects.allStatuses')}</SelectItem>
+                {uniqueStatuses.map(status => (
+                  <SelectItem key={status} value={status}>
+                    {t(`callcenter:statuses.${status}`, status)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+              <SelectTrigger className="w-[180px]" data-testid="select-priority-filter">
+                <SelectValue placeholder={t('callcenter:prospects.priority')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('callcenter:prospects.allPriorities')}</SelectItem>
+                {uniquePriorities.map(priority => (
+                  <SelectItem key={priority} value={priority}>
+                    {t(`callcenter:priorities.${priority}`, priority)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button variant="outline" onClick={() => {
+              setSearchQuery('');
+              setSelectedSource('all');
+              setSelectedStatus('all');
+              setSelectedPriority('all');
+            }} data-testid="button-clear-filters">
+              <Filter className="h-4 w-4 mr-2" />
+              {t('callcenter:prospects.clear')}
+            </Button>
+          </div>
           {isLoading ? (
             <div className="text-center py-8">{t('common:loading')}</div>
-          ) : prospects.length > 0 ? (
+          ) : filteredProspects.length > 0 ? (
             <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('callcenter:prospects.name')}</TableHead>
                   <TableHead>{t('callcenter:prospects.contact')}</TableHead>
-                  <TableHead>{t('callcenter:prospects.level')}</TableHead>
+                  <TableHead>{t('callcenter:prospects.source')}</TableHead>
+                  <TableHead>{t('callcenter:prospects.status')}</TableHead>
+                  <TableHead>{t('callcenter:prospects.priority')}</TableHead>
+                  <TableHead>{t('callcenter:prospects.language')}</TableHead>
                   <TableHead>{t('callcenter:prospects.interest')}</TableHead>
                   <TableHead>{t('callcenter:prospects.budget')}</TableHead>
                   <TableHead>{t('callcenter:prospects.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {prospects.map((prospect: any) => (
-                  <TableRow key={prospect.id}>
+                {filteredProspects.map((prospect) => (
+                  <TableRow key={`${prospect.leadId || 'lead'}-${prospect.userId || 'user'}-${prospect.id}`}>
                     <TableCell className="font-medium">
-                      {`${prospect.firstName || ''} ${prospect.lastName || ''}`.trim() || 'N/A'}
+                      <div className="flex items-center gap-2">
+                        {prospect.userId && (
+                          <UserCheck className="h-4 w-4 text-green-500" />
+                        )}
+                        <div>
+                          {`${prospect.firstName || ''} ${prospect.lastName || ''}`.trim() || 'N/A'}
+                          {prospect.userId && (
+                            <div className="text-xs text-muted-foreground">
+                              {t('callcenter:prospects.studentId')}: {prospect.userId}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {prospect.phone && <div>{prospect.phone}</div>}
-                        {prospect.email && <div className="text-muted-foreground">{prospect.email}</div>}
+                      <div className="space-y-1">
+                        {prospect.email && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Mail className="h-3 w-3" />
+                            {prospect.email}
+                          </div>
+                        )}
+                        {prospect.phoneNumber && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Phone className="h-3 w-3" />
+                            {prospect.phoneNumber}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {prospect.skillLevel || 'N/A'}
+                        {prospect.source || 'Unknown'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(prospect.status)}>
+                        {prospect.status || 'New'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getPriorityColor(prospect.priority)}>
+                        {prospect.priority || 'Normal'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {prospect.interestedIn && prospect.interestedIn.length > 0 
-                          ? prospect.interestedIn.slice(0, 2).join(', ') + (prospect.interestedIn.length > 2 ? '...' : '')
-                          : 'N/A'
-                        }
+                        {prospect.interestedLanguage && (
+                          <div>{prospect.interestedLanguage}</div>
+                        )}
+                        {prospect.level && (
+                          <div className="text-muted-foreground">{prospect.level}</div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {prospect.budget || 'N/A'}
+                      {prospect.preferredFormat || '-'}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {prospect.budget || '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 sm:gap-2">
                         <Button 
                           size="sm" 
-                          variant="outline" 
-                          className="text-xs sm:text-sm px-2 sm:px-3"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
                           onClick={() => {
                             toast({
-                              title: "Prospect Details",
-                              description: `${prospect.firstName} ${prospect.lastName} - ${prospect.email} - ${prospect.phone}`,
+                              title: t('callcenter:prospects.prospectDetails'),
+                              description: `${prospect.firstName} ${prospect.lastName}`,
                             });
                           }}
+                          data-testid={`button-view-prospect-${prospect.id}`}
                         >
-                          {t('callcenter:prospects.view')}
+                          <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="text-xs sm:text-sm px-2 sm:px-3"
-                          onClick={() => {
-                            toast({
-                              title: "Contact Prospect",
-                              description: `Ready to contact ${prospect.firstName} ${prospect.lastName}`,
-                            });
-                          }}
-                        >
-                          {t('callcenter:prospects.contact')}
-                        </Button>
+                        {!prospect.userId && (
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              toast({
+                                title: t('callcenter:prospects.convertToStudent'),
+                                description: t('callcenter:prospects.conversionStarted'),
+                              });
+                            }}
+                            data-testid={`button-convert-prospect-${prospect.id}`}
+                          >
+                            <UserPlus className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

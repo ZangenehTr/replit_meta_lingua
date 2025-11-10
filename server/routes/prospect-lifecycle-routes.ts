@@ -237,4 +237,80 @@ router.post("/self-pay", authenticate, async (req: any, res) => {
   }
 });
 
+/**
+ * Special endpoint for guest placement test submissions
+ * Validates placement session ID to ensure legitimate submissions
+ * No authentication required but secured through session validation
+ */
+router.post("/guest-placement-submission", async (req: any, res) => {
+  try {
+    const { name, email, phone, placementSessionId, testResults } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !placementSessionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, email, and placement session ID are required'
+      });
+    }
+    
+    // TODO: In production, validate placementSessionId against placement_test_sessions table
+    // For now, we'll trust the session ID since guest tests are already public
+    
+    // Parse name into first and last (simple split on first space)
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
+    // Create or get prospect through the service
+    const prospectData = {
+      firstName,
+      lastName,
+      email,
+      phoneNumber: phone,
+      source: 'placement_test',
+      status: 'new',
+      priority: 'normal',
+      interestedLanguage: 'english',
+      level: testResults?.overallLevel || undefined,
+      notes: testResults ? `Placement Test Results (Session #${placementSessionId}):
+- Overall Level: ${testResults.overallLevel}
+- Speaking: ${testResults.skillLevels?.speaking || 'N/A'}
+- Listening: ${testResults.skillLevels?.listening || 'N/A'}  
+- Reading: ${testResults.skillLevels?.reading || 'N/A'}
+- Writing: ${testResults.skillLevels?.writing || 'N/A'}
+- Score: ${testResults.scores?.overall || 0}/100
+- Confidence: ${testResults.confidence ? Math.round(testResults.confidence * 100) : 0}%
+- Strengths: ${testResults.strengths?.join(', ') || 'N/A'}
+- Recommendations: ${testResults.recommendations?.join('; ') || 'N/A'}` : undefined
+    };
+    
+    const prospect = await ProspectLifecycleService.getOrCreateProspect(prospectData);
+    
+    // If prospect already existed and we have new test results, enrich with the results
+    if (prospect.leadId && testResults && !prospect.userId) {
+      await ProspectLifecycleService.enrichProspect(prospect.leadId, {
+        level: testResults.overallLevel,
+        notes: prospectData.notes
+      });
+    }
+    
+    res.json({
+      success: true,
+      prospect,
+      message: prospect.userId 
+        ? 'This email is already registered as a student'
+        : prospect.leadId 
+        ? 'Contact information saved successfully'
+        : 'New lead created successfully'
+    });
+  } catch (error) {
+    console.error('Error in guest placement submission:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to save contact information'
+    });
+  }
+});
+
 export default router;

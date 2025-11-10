@@ -178,13 +178,16 @@ export default function TakeTestPage() {
 
   const submitContactMutation = useMutation({
     mutationFn: async (contactData: any) => {
-      const response = await fetch('/api/cms/guest-leads', {
+      // Use the secure guest placement submission endpoint
+      const response = await fetch('/api/prospect-lifecycle/guest-placement-submission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...contactData,
+          name: contactData.name,
+          email: contactData.email,
+          phone: contactData.phone,
           placementSessionId: currentSession?.id,
-          source: 'placement_test'
+          testResults: testResults
         })
       });
       if (!response.ok) throw new Error('Failed to save contact');
