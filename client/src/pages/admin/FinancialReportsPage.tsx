@@ -57,7 +57,7 @@ export function FinancialReportsPage() {
 
   const { data: report, isLoading, error, refetch } = useQuery<FinancialSummary>({
     queryKey: ["/api/reports/financial-summary", startDate, endDate],
-    queryFn: () => apiRequest(`/reports/financial-summary?startDate=${startDate}&endDate=${endDate}`),
+    queryFn: () => apiRequest(`/api/reports/financial-summary?startDate=${startDate}&endDate=${endDate}`),
     enabled: false // Only fetch when user clicks Generate Report
   });
 
