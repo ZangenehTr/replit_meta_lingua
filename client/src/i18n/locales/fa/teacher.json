@@ -172,5 +172,9 @@
   "monthlyTotal": "مجموع ماهانه",
   "youLabel": "شما",
   "studentLabel": "دانشجو",
-  "settings": "تنظیمات"
+  "settings": "تنظیمات",
+  "noStudentsFound": "دانش‌آموزی یافت نشد",
+  "myStudents": "دانش‌آموزان من",
+  "totalStudents": "کل دانش‌آموزان",
+  "trackStudentsProgress": "پیگیری پیشرفت و عملکرد دانش‌آموزان"
 }

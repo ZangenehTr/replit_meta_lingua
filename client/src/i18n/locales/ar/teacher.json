@@ -91,5 +91,9 @@
     "notifications": "الإشعارات",
     "announcements": "الإعلانات",
     "chatWithStudents": "المحادثة مع الطلاب"
-  }
+  },
+  "noStudentsFound": "لم يتم العثور على طلاب",
+  "myStudents": "طلابي",
+  "totalStudents": "إجمالي الطلاب",
+  "trackStudentsProgress": "تتبع تقدم وأداء طلابك"
 }

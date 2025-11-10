@@ -129,5 +129,9 @@
   "totalHours": "Total Hours",
   "monthlyTotal": "Monthly Total",
   "youLabel": "You",
-  "studentLabel": "Student"
+  "studentLabel": "Student",
+  "noStudentsFound": "No students found",
+  "myStudents": "My Students",
+  "totalStudents": "Total Students",
+  "trackStudentsProgress": "Track your students' progress and performance"
 }

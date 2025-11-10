@@ -478,7 +478,7 @@
     "pageNotFoundDescription": "Did you forget to add the page to the router?"
   },
   "wallet": {
-    "title": "Wallet",
+    "title": "Wallet Management",
     "subtitle": "Manage wallet, account top-up and course enrollment"
   },
   "ui": {
