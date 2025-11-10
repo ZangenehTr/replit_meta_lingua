@@ -31,7 +31,7 @@ const prospectDataSchema = z.object({
  * Get or create prospect (with deduplication)
  * Used by all entry points to ensure single record per person
  */
-router.post("/api/prospects/get-or-create", authenticate, async (req: any, res) => {
+router.post("/get-or-create", authenticate, async (req: any, res) => {
   try {
     const data = prospectDataSchema.parse(req.body);
     
@@ -73,7 +73,7 @@ router.post("/api/prospects/get-or-create", authenticate, async (req: any, res) 
  * Enrich existing prospect with additional data
  * Used to progressively collect information across touchpoints
  */
-router.post("/api/prospects/:leadId/enrich", authenticate, async (req: any, res) => {
+router.patch("/enrich/:leadId", authenticate, async (req: any, res) => {
   try {
     const leadId = parseInt(req.params.leadId);
     const data = prospectDataSchema.parse(req.body);
@@ -98,7 +98,7 @@ router.post("/api/prospects/:leadId/enrich", authenticate, async (req: any, res)
  * Merge guest lead into main lead system
  * Used after guest placement tests
  */
-router.post("/api/prospects/merge-guest/:guestLeadId", authenticate, async (req: any, res) => {
+router.post("/merge-guest/:guestLeadId/:leadId", authenticate, async (req: any, res) => {
   try {
     const guestLeadId = parseInt(req.params.guestLeadId);
     
@@ -122,7 +122,7 @@ router.post("/api/prospects/merge-guest/:guestLeadId", authenticate, async (req:
  * Convert lead to student
  * Creates user account with OTP access and processes payment
  */
-router.post("/api/prospects/:leadId/convert", authenticate, async (req: any, res) => {
+router.post("/convert/:leadId", authenticate, async (req: any, res) => {
   try {
     const leadId = parseInt(req.params.leadId);
     
@@ -171,7 +171,7 @@ router.post("/api/prospects/:leadId/convert", authenticate, async (req: any, res
  * Get unified prospect view
  * Shows all leads and guest leads in one dashboard
  */
-router.get("/api/prospects/unified", authenticate, async (req: any, res) => {
+router.get("/unified-view", authenticate, async (req: any, res) => {
   try {
     // Parse filters
     const filters = {
@@ -202,7 +202,7 @@ router.get("/api/prospects/unified", authenticate, async (req: any, res) => {
  * Process student self-payment after placement
  * Students can pay online or in-person after taking placement test
  */
-router.post("/api/prospects/self-pay", authenticate, async (req: any, res) => {
+router.post("/self-pay", authenticate, async (req: any, res) => {
   try {
     // Must be a student
     if (req.user.role !== 'student') {

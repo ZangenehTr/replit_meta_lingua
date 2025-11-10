@@ -23671,6 +23671,11 @@ Meta Lingua Academy`;
   app.use('/api/advanced', advancedFeaturesRouter);
   console.log('✅ Advanced features routes registered (CEFR, IRT, AI Supervisor, Mood Intelligence)');
 
+  // Setup ProspectLifecycle routes for unified prospect-to-student data management
+  const { default: prospectLifecycleRouter } = await import('./routes/prospect-lifecycle-routes');
+  app.use('/api/prospect-lifecycle', prospectLifecycleRouter);
+  console.log('✅ ProspectLifecycle routes registered (Lead Management, Guest Merging, Student Conversion)');
+
   // Setup Gamification routes (Daily Challenges, Leaderboards, Achievements, Age-based Games)
   const { createGamificationRouter } = await import('./routes/gamification-routes');
   const gamificationRouter = createGamificationRouter(storage);
