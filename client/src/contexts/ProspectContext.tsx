@@ -67,7 +67,10 @@ export function ProspectProvider({ children }: { children: React.ReactNode }) {
   // Load prospects from ProspectLifecycle unified view
   const { data: prospects = [], isLoading: isLoadingProspects, refetch: refreshProspects } = useQuery({
     queryKey: ['/api/prospect-lifecycle/unified-view'],
-    select: (data: any[]) => data.map(item => ({
+    select: (response: any) => {
+      // API returns { success, prospects, total }
+      const items = response?.prospects || [];
+      return items.map((item: any) => ({
       id: item.id,
       type: item.type as 'lead' | 'guest',
       name: item.name,
@@ -81,7 +84,8 @@ export function ProspectProvider({ children }: { children: React.ReactNode }) {
       score: item.score,
       cefr: item.cefr,
       data: item.data
-    }))
+    }));
+    }
   });
 
   // Get or create prospect mutation
@@ -138,7 +142,7 @@ export function ProspectProvider({ children }: { children: React.ReactNode }) {
         method: 'PATCH',
         body: JSON.stringify(data)
       });
-      return response.lead; // Unwrap the lead from the response
+      return response.prospect; // Unwrap the prospect from the response
     },
     onSuccess: (lead: Lead) => {
       queryClient.invalidateQueries({ queryKey: ['/api/prospect-lifecycle'] });
