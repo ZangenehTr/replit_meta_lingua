@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/ui/action-button";
@@ -90,6 +90,20 @@ export function AdminStudents() {
     totalFee: 0
   });
   const queryClient = useQueryClient();
+
+  // Check URL parameters for action=create
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'create') {
+      setIsCreateDialogOpen(true);
+      // Remove the query parameter from the URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('action');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
 
   // Handle VoIP call functionality
   const handleVoIPCall = async (student: any) => {

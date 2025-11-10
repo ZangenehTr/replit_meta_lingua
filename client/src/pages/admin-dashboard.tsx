@@ -289,7 +289,7 @@ export default function AdminDashboard() {
               </div>
               <Button 
                 className="w-full sm:w-auto min-h-[44px]"
-                onClick={() => setLocation('/admin/students')}
+                onClick={() => setLocation('/admin/students?action=create')}
                 data-testid="button-add-student"
               >
                 <Plus className="h-4 w-4 mr-2" />
