@@ -43,6 +43,8 @@ interface Prospect {
   followUpDate?: string;
   createdAt?: string;
   notes?: string;
+  budget?: number;
+  preferredFormat?: string;
 }
 
 interface UnifiedViewResponse {
@@ -168,7 +170,7 @@ export default function AdminProspectsPage() {
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case 'hot': return 'destructive';
-      case 'warm': return 'warning';
+      case 'warm': return 'outline'; // Changed from 'warning' to 'outline'
       case 'cold': return 'secondary';
       default: return 'default';
     }
@@ -181,7 +183,7 @@ export default function AdminProspectsPage() {
       case 'qualified': return 'outline';
       case 'negotiating': return 'default';
       case 'lost': return 'destructive';
-      case 'converted': return 'success';
+      case 'converted': return 'secondary'; // Changed from 'success' to 'secondary'
       default: return 'default';
     }
   };
@@ -537,8 +539,8 @@ export default function AdminProspectsPage() {
             <div>
               <Label>{t('callcenter:prospects.phone')}</Label>
               <Input 
-                value={newProspectData.phone}
-                onChange={(e) => setNewProspectData({...newProspectData, phone: e.target.value})}
+                value={newProspectData.phoneNumber}
+                onChange={(e) => setNewProspectData({...newProspectData, phoneNumber: e.target.value})}
                 placeholder={t('callcenter:prospects.enterPhoneNumber')} 
               />
             </div>
@@ -554,61 +556,21 @@ export default function AdminProspectsPage() {
             </div>
             
             <div>
-              <Label>{t('callcenter:prospects.interestedIn')}</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="verbal" 
-                    checked={newProspectData.interestedIn.includes('verbalWritingSkills')}
-                    onCheckedChange={(checked) => {
-                      const interests = checked 
-                        ? [...newProspectData.interestedIn, 'verbalWritingSkills']
-                        : newProspectData.interestedIn.filter(i => i !== 'verbalWritingSkills');
-                      setNewProspectData({...newProspectData, interestedIn: interests});
-                    }}
-                  />
-                  <label htmlFor="verbal">{t('callcenter:prospects.verbalWritingSkills')}</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="business" 
-                    checked={newProspectData.interestedIn.includes('businessEnglish')}
-                    onCheckedChange={(checked) => {
-                      const interests = checked 
-                        ? [...newProspectData.interestedIn, 'businessEnglish']
-                        : newProspectData.interestedIn.filter(i => i !== 'businessEnglish');
-                      setNewProspectData({...newProspectData, interestedIn: interests});
-                    }}
-                  />
-                  <label htmlFor="business">{t('callcenter:prospects.businessEnglish')}</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="grammar" 
-                    checked={newProspectData.interestedIn.includes('grammarFocus')}
-                    onCheckedChange={(checked) => {
-                      const interests = checked 
-                        ? [...newProspectData.interestedIn, 'grammarFocus']
-                        : newProspectData.interestedIn.filter(i => i !== 'grammarFocus');
-                      setNewProspectData({...newProspectData, interestedIn: interests});
-                    }}
-                  />
-                  <label htmlFor="grammar">{t('callcenter:prospects.grammarFocus')}</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="listening" 
-                    checked={newProspectData.interestedIn.includes('listeningSkills')}
-                    onCheckedChange={(checked) => {
-                      const interests = checked 
-                        ? [...newProspectData.interestedIn, 'listeningSkills']
-                        : newProspectData.interestedIn.filter(i => i !== 'listeningSkills');
-                      setNewProspectData({...newProspectData, interestedIn: interests});
-                    }}
-                  />
-                  <label htmlFor="listening">{t('callcenter:prospects.listeningSkills')}</label>
-                </div>
-              </div>
+              <Label>{t('callcenter:prospects.interestedLanguage')}</Label>
+              <Select value={newProspectData.interestedLanguage} onValueChange={(value) => setNewProspectData({...newProspectData, interestedLanguage: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('callcenter:prospects.selectLanguage')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="english">{t('common:languages.english')}</SelectItem>
+                  <SelectItem value="spanish">{t('common:languages.spanish')}</SelectItem>
+                  <SelectItem value="french">{t('common:languages.french')}</SelectItem>
+                  <SelectItem value="german">{t('common:languages.german')}</SelectItem>
+                  <SelectItem value="italian">{t('common:languages.italian')}</SelectItem>
+                  <SelectItem value="chinese">{t('common:languages.chinese')}</SelectItem>
+                  <SelectItem value="arabic">{t('common:languages.arabic')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -622,7 +584,7 @@ export default function AdminProspectsPage() {
               </div>
               <div>
                 <Label>{t('callcenter:prospects.currentLevel')}</Label>
-                <Select value={newProspectData.skillLevel} onValueChange={(value) => setNewProspectData({...newProspectData, skillLevel: value})}>
+                <Select value={newProspectData.level} onValueChange={(value) => setNewProspectData({...newProspectData, level: value})}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('callcenter:prospects.selectLevel')} />
                   </SelectTrigger>
