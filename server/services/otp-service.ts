@@ -266,9 +266,9 @@ export class OtpService {
   private static async sendSmsOtp(phoneNumber: string, code: string, locale: string = 'fa'): Promise<void> {
     try {
       // Get Kavenegar API settings from admin settings
-      const smsSettings = await storage.getAdminSettings('sms');
+      const smsSettings = await storage.getAdminSettings();
       
-      if (!smsSettings?.kavenegar_api_key) {
+      if (!smsSettings?.kavenegarApiKey) {
         console.warn('Kavenegar API key not configured');
         return;
       }

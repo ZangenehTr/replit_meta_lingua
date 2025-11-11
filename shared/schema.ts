@@ -6163,7 +6163,14 @@ export type InsertRolePermission = typeof rolePermissions.$inferInsert;
 export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = typeof userSessions.$inferInsert;
 export type OtpCode = typeof otpCodes.$inferSelect;
-export type InsertOtpCode = typeof otpCodes.$inferInsert;
+export type InsertOtpCode = typeof otpCodes.$inferInsert & { 
+  userId?: number | null;
+  phoneNumber?: string | null;
+  email?: string | null;
+  channel?: string | null;
+  ip?: string | null;
+  locale?: string | null;
+};
 export type Course = typeof courses.$inferSelect;
 export type Class = typeof classes.$inferSelect;
 export type InsertClass = typeof classes.$inferInsert;
