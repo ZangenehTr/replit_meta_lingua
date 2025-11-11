@@ -71,36 +71,31 @@ export class ProspectLifecycleService {
       }
       
       // No existing lead - create new one
-      const leadData = {
+      const leadData: Partial<InsertLead> = {
         firstName: data.firstName || 'Unknown',
         lastName: data.lastName || '',
-        email: data.email,
-        phoneNumber: normalizedPhone,
-        source: data.source || 'walk-in',
+        email: data.email || null,
+        phoneNumber: normalizedPhone || null,
+        source: data.source || 'manual',
         status: data.status || 'new',
-        priority: data.priority || 'medium',
-        interestedLanguage: data.interestedLanguage,
-        level: data.level,
-        notes: data.notes,
-        budget: data.budget,
-        preferredFormat: data.preferredFormat,
-        nationalId: data.nationalId,
-        age: data.age,
-        gender: data.gender
-        // createdAt and updatedAt are handled by the database defaults
-      } as any; // Type inference issue with Drizzle - fields exist in actual schema
+        priority: data.priority || 'normal',
+        interestedLanguage: data.interestedLanguage || null,
+        level: data.level || null,
+        notes: data.notes || null,
+        budget: data.budget || null,
+        preferredFormat: data.preferredFormat || null,
+        nationalId: data.nationalId || null,
+        age: data.age || null,
+        gender: data.gender || null
+      };
       
       const [newLead] = await db.insert(leads)
-        .values(leadData)
+        .values(leadData as InsertLead)
         .returning();
       
       console.log(`✅ Created new lead #${newLead.id} for ${normalizedPhone || data.email}`);
       
-      return {
-        leadId: newLead.id,
-        ...leadData,
-        ...data
-      };
+      return leadToProspectDTO(newLead);
     } catch (error) {
       console.error('❌ Error in getOrCreateProspect:', error);
       throw error;
@@ -110,7 +105,7 @@ export class ProspectLifecycleService {
   /**
    * Merge guest lead data into main lead record
    */
-  static async mergeGuestLeadToLead(guestLeadId: number): Promise<ProspectSnapshot> {
+  static async mergeGuestLeadToLead(guestLeadId: number): Promise<ProspectDTO> {
     try {
       // Get guest lead
       const [guestLead] = await db.select()
@@ -153,7 +148,7 @@ export class ProspectLifecycleService {
   /**
    * Enrich existing lead with additional data
    */
-  static async enrichProspect(leadId: number, data: Partial<ProspectSnapshot>): Promise<ProspectSnapshot> {
+  static async enrichProspect(leadId: number, data: Partial<ProspectDTO>): Promise<ProspectDTO> {
     try {
       // Get existing lead
       const [existingLead] = await db.select()
@@ -203,26 +198,7 @@ export class ProspectLifecycleService {
         .from(leads)
         .where(eq(leads.id, leadId));
       
-      return {
-        leadId: enrichedLead.id,
-        firstName: enrichedLead.firstName,
-        lastName: enrichedLead.lastName,
-        email: enrichedLead.email || undefined,
-        phoneNumber: enrichedLead.phoneNumber || undefined,
-        source: enrichedLead.source || undefined,
-        status: enrichedLead.status || undefined,
-        priority: enrichedLead.priority || undefined,
-        interestedLanguage: enrichedLead.interestedLanguage || undefined,
-        level: enrichedLead.level || undefined,
-        notes: enrichedLead.notes || undefined,
-        budget: enrichedLead.budget || undefined,
-        preferredFormat: enrichedLead.preferredFormat || undefined,
-        nationalId: enrichedLead.nationalId || undefined,
-        age: enrichedLead.age || undefined,
-        gender: enrichedLead.gender || undefined,
-        createdAt: enrichedLead.createdAt,
-        updatedAt: enrichedLead.updatedAt
-      };
+      return leadToProspectDTO(enrichedLead);
     } catch (error) {
       console.error('❌ Error enriching prospect:', error);
       throw error;
