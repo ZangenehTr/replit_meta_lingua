@@ -25,6 +25,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { enUS, arSA } from 'date-fns/locale';
 import { faIR } from 'date-fns/locale';
+import OTPConversion from '@/components/OTPConversion';
 
 interface Prospect {
   id: number;
@@ -69,6 +70,8 @@ export default function AdminProspectsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+  const [isConvertDialogOpen, setIsConvertDialogOpen] = React.useState(false);
+  const [selectedProspectForConversion, setSelectedProspectForConversion] = React.useState<Prospect | null>(null);
   
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -480,16 +483,14 @@ export default function AdminProspectsPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {!prospect.userId && (
+                        {!prospect.userId && prospect.leadId && (
                           <Button 
                             size="sm" 
                             variant="ghost"
                             className="h-8 w-8 p-0"
                             onClick={() => {
-                              toast({
-                                title: t('callcenter:prospects.convertToStudent'),
-                                description: t('callcenter:prospects.conversionStarted'),
-                              });
+                              setSelectedProspectForConversion(prospect);
+                              setIsConvertDialogOpen(true);
                             }}
                             data-testid={`button-convert-prospect-${prospect.id}`}
                           >
@@ -617,6 +618,31 @@ export default function AdminProspectsPage() {
               {createProspectMutation.isPending ? t('common:creating') : t('callcenter:prospects.addProspect')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* OTP Conversion Modal */}
+      <Dialog open={isConvertDialogOpen} onOpenChange={setIsConvertDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('callcenter:prospects.convertToStudent')}</DialogTitle>
+          </DialogHeader>
+          {selectedProspectForConversion && (
+            <OTPConversion
+              leadId={selectedProspectForConversion.leadId}
+              phoneNumber={selectedProspectForConversion.phoneNumber}
+              onSuccess={(user) => {
+                setIsConvertDialogOpen(false);
+                setSelectedProspectForConversion(null);
+                // Refresh the prospect list
+                queryClient.invalidateQueries({ queryKey: ['/api/prospect-lifecycle/unified-view'] });
+                toast({
+                  title: t('callcenter:prospects.conversionSuccess'),
+                  description: `${selectedProspectForConversion.firstName} ${selectedProspectForConversion.lastName} ${t('callcenter:prospects.convertedSuccessfully')}`,
+                });
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
