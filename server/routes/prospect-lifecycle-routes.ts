@@ -5,6 +5,9 @@ import { Router } from "express";
 import { ProspectLifecycleService } from "../services/prospect-lifecycle";
 import { authenticate, authorizePermission } from "../auth";
 import { z } from "zod";
+import { db } from "../db";
+import { leads } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -233,6 +236,110 @@ router.post("/self-pay", authenticate, async (req: any, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'خطا در پردازش پرداخت' // Error processing payment
+    });
+  }
+});
+
+/**
+ * Send OTP to lead for conversion to student
+ * No authentication required - lead provides phone number to receive OTP
+ */
+router.post("/send-otp", async (req: any, res) => {
+  try {
+    const { leadId, phoneNumber } = req.body;
+    
+    if (!leadId || !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'شناسه مشتری بالقوه و شماره تلفن الزامی است' // Lead ID and phone number are required
+      });
+    }
+    
+    // Verify lead exists and phone matches
+    const [lead] = await db.select()
+      .from(leads)
+      .where(eq(leads.id, leadId));
+    
+    if (!lead) {
+      return res.status(404).json({
+        success: false,
+        message: 'مشتری بالقوه یافت نشد' // Lead not found
+      });
+    }
+    
+    // Normalize phone numbers for comparison
+    const normalizedInput = ProspectLifecycleService['normalizePhoneNumber'](phoneNumber);
+    const normalizedLead = ProspectLifecycleService['normalizePhoneNumber'](lead.phoneNumber || '');
+    
+    if (normalizedInput !== normalizedLead) {
+      return res.status(400).json({
+        success: false,
+        message: 'شماره تلفن با اطلاعات ثبت شده مطابقت ندارد' // Phone number doesn't match records
+      });
+    }
+    
+    // Generate and send OTP
+    const { OtpService } = await import('../services/otp-service');
+    const result = await OtpService.generateOtp(
+      normalizedInput,
+      'sms',
+      'registration',
+      undefined, // No userId yet for leads
+      req.ip,
+      'fa'
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطا در ارسال کد تأیید' // Error sending verification code
+    });
+  }
+});
+
+/**
+ * Verify OTP and convert lead to student
+ */
+router.post("/verify-otp-convert", async (req: any, res) => {
+  try {
+    const { leadId, phoneNumber, otpCode } = req.body;
+    
+    if (!leadId || !phoneNumber || !otpCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'اطلاعات ناقص است' // Incomplete information
+      });
+    }
+    
+    // Verify OTP
+    const { OtpService } = await import('../services/otp-service');
+    const normalizedPhone = ProspectLifecycleService['normalizePhoneNumber'](phoneNumber);
+    const verification = await OtpService.verifyOtp(
+      normalizedPhone,
+      otpCode,
+      'registration',
+      'fa'
+    );
+    
+    if (!verification.success) {
+      return res.status(400).json(verification);
+    }
+    
+    // Convert lead to student
+    const conversionResult = await ProspectLifecycleService.convertLeadToStudent(leadId);
+    
+    res.json({
+      success: true,
+      user: conversionResult.user,
+      message: 'حساب کاربری شما با موفقیت ایجاد شد' // Your account has been created successfully
+    });
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطا در تأیید کد' // Error verifying code
     });
   }
 });
