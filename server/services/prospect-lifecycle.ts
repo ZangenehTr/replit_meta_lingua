@@ -386,7 +386,7 @@ export class ProspectLifecycleService {
     source?: string;
     dateFrom?: Date;
     dateTo?: Date;
-  }): Promise<ProspectSnapshot[]> {
+  }): Promise<ProspectDTO[]> {
     try {
       // Get all leads
       const leadsQuery = db.select()
@@ -410,47 +410,16 @@ export class ProspectLifecycleService {
         .from(guestLeads);
       
       // Combine into unified view
-      const prospects: ProspectSnapshot[] = [];
+      const prospects: ProspectDTO[] = [];
       
       // Add leads
       for (const lead of allLeads) {
-        prospects.push({
-          leadId: lead.id,
-          firstName: lead.firstName,
-          lastName: lead.lastName,
-          email: lead.email || undefined,
-          phoneNumber: lead.phoneNumber || undefined,
-          source: lead.source || undefined,
-          status: lead.status || undefined,
-          priority: lead.priority || undefined,
-          interestedLanguage: lead.interestedLanguage || undefined,
-          level: lead.level || undefined,
-          notes: lead.notes || undefined,
-          budget: lead.budget || undefined,
-          preferredFormat: lead.preferredFormat || undefined,
-          nationalId: lead.nationalId || undefined,
-          age: lead.age || undefined,
-          gender: lead.gender || undefined,
-          createdAt: lead.createdAt,
-          updatedAt: lead.updatedAt
-        });
+        prospects.push(leadToProspectDTO(lead));
       }
       
       // Add guest leads (they don't have status field)
       for (const guest of unconvertedGuests) {
-        prospects.push({
-          guestLeadId: guest.id,
-          firstName: guest.name?.split(' ')[0],
-          lastName: guest.name?.split(' ').slice(1).join(' '),
-          email: guest.email,
-          phoneNumber: guest.phone || undefined,
-          source: guest.source || 'placement_test',
-          status: 'guest',
-          placementSessionId: guest.placementSessionId || undefined,
-          notes: guest.notes || undefined,
-          createdAt: guest.createdAt,
-          updatedAt: guest.updatedAt
-        });
+        prospects.push(guestLeadToProspectDTO(guest));
       }
       
       // Sort by creation date (newest first)
