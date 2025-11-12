@@ -196,5 +196,162 @@
     "swapVideos": "Swap videos",
     "move": "Move",
     "helperText": "Click the small video to move it • Double-click to swap"
+  },
+  "landing": {
+    "seoTitle": "CallerN - 24/7 Live Video Tutoring | Meta Lingua",
+    "seoDescription": "Connect with native English teachers anytime via live video calls. AI-powered, instant sessions, certified teachers. Start speaking confidently today!",
+    "hero": {
+      "badge": "Live Video Tutoring",
+      "title": "Speak English With",
+      "titleHighlight": "Native Speakers",
+      "subtitle": "Connect with certified English teachers 24/7 via live video calls. Practice speaking, improve fluency, and gain confidence.",
+      "cta": "Get Started Free",
+      "ctaSecondary": "Meet Our Teachers"
+    },
+    "stats": {
+      "teachers": "Expert Teachers",
+      "teachersValue": "50+",
+      "availability": "Available 24/7",
+      "availabilityValue": "100%",
+      "satisfaction": "Student Rating",
+      "satisfactionValue": "4.9/5",
+      "countries": "Success Rate",
+      "countriesValue": "98%"
+    },
+    "features": {
+      "heading": "Why Choose CallerN?",
+      "subheading": "The most advanced platform for practicing English with native speakers",
+      "available247": {
+        "title": "24/7 Availability",
+        "desc": "Connect with expert teachers anytime, day or night"
+      },
+      "nativeSpeakers": {
+        "title": "Native Speakers",
+        "desc": "Learn from qualified native English speakers"
+      },
+      "instantSessions": {
+        "title": "Instant Sessions",
+        "desc": "Start a live video session in seconds"
+      },
+      "aiPowered": {
+        "title": "AI-Enhanced Learning",
+        "desc": "Real-time AI suggestions and feedback during sessions"
+      },
+      "secure": {
+        "title": "Secure & Private",
+        "desc": "End-to-end encrypted video calls"
+      },
+      "certified": {
+        "title": "Certified Teachers",
+        "desc": "All teachers are TESOL/TEFL certified"
+      }
+    },
+    "howItWorks": {
+      "heading": "How CallerN Works",
+      "subheading": "Start speaking English with native teachers in 4 simple steps",
+      "step1": {
+        "title": "Choose Your Package",
+        "desc": "Select the package that fits your learning goals"
+      },
+      "step2": {
+        "title": "Browse Online Teachers",
+        "desc": "View available teachers and their profiles"
+      },
+      "step3": {
+        "title": "Start Instant Session",
+        "desc": "Click to connect and begin your live video lesson"
+      },
+      "step4": {
+        "title": "Learn & Improve",
+        "desc": "Practice speaking, get feedback, and track your progress"
+      }
+    },
+    "teachers": {
+      "onlineNow": "Teachers Online Now",
+      "heading": "Meet Our Expert Teachers",
+      "subheading": "All our teachers are native English speakers with TESOL/TEFL certification",
+      "connectNow": "Connect Now",
+      "viewAll": "View All Teachers",
+      "noTeachersOnline": "No teachers online at the moment",
+      "checkBackLater": "Please check back in a few minutes"
+    },
+    "pricing": {
+      "heading": "Simple, Transparent Pricing",
+      "subheading": "Choose the package that fits your learning goals",
+      "mostPopular": "Most Popular",
+      "minutesLabel": "minutes",
+      "daysLabel": "days",
+      "selectPlan": "Select Plan"
+    },
+    "packages": {
+      "starter": {
+        "name": "Starter",
+        "feature1": "60 minutes of live video tutoring",
+        "feature2": "Valid for 30 days",
+        "feature3": "AI-powered suggestions",
+        "feature4": "Session recordings"
+      },
+      "professional": {
+        "name": "Professional",
+        "feature1": "180 minutes of live video tutoring",
+        "feature2": "Valid for 60 days",
+        "feature3": "AI-powered suggestions",
+        "feature4": "Session recordings",
+        "feature5": "Priority teacher matching",
+        "feature6": "Advanced analytics"
+      },
+      "unlimited": {
+        "name": "Unlimited",
+        "feature1": "480 minutes of live video tutoring",
+        "feature2": "Valid for 90 days",
+        "feature3": "AI-powered suggestions",
+        "feature4": "Session recordings",
+        "feature5": "Priority teacher matching",
+        "feature6": "Advanced analytics",
+        "feature7": "1-on-1 learning path consultation"
+      }
+    },
+    "benefits": {
+      "heading": "Transform Your English Skills",
+      "subheading": "Experience the benefits of live video tutoring with native speakers",
+      "personalized": {
+        "title": "Personalized Learning",
+        "desc": "Each session is tailored to your specific goals and level"
+      },
+      "realConversation": {
+        "title": "Real Conversation Practice",
+        "desc": "Improve fluency through authentic conversations"
+      },
+      "rapidProgress": {
+        "title": "Rapid Progress",
+        "desc": "See measurable improvement in just a few sessions"
+      },
+      "accent": {
+        "title": "Accent & Pronunciation",
+        "desc": "Work on your pronunciation and reduce your accent"
+      }
+    },
+    "finalCta": {
+      "title": "Ready to Speak English Fluently?",
+      "description": "Join thousands of students improving their English with CallerN",
+      "button": "Start Free Trial"
+    }
+  },
+  "badge": "24/7 Live Tutoring",
+  "heading": "Practice Speaking with",
+  "headingHighlight": "Native English Teachers",
+  "description": "Connect instantly with certified teachers via live video. Perfect your accent, boost your confidence, and speak English like a native.",
+  "feature1": "Available 24/7 - Learn on your schedule",
+  "feature2": "Certified native speakers",
+  "feature3": "AI-powered feedback & suggestions",
+  "feature4": "Instant sessions - no scheduling needed",
+  "stat1": "Expert Teachers",
+  "stat2": "Available 24/7",
+  "stat3": "Student Rating",
+  "stat4": "Success Rate",
+  "badge2": "Try Free Session!",
+  "cta": {
+    "learnMore": "Learn More",
+    "startNow": "Start Now"
   }
 }
