@@ -209,6 +209,205 @@ export default function PublicHome() {
         </div>
       </section>
 
+      {/* Test Prep Excellence Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 py-24">
+        <div className="absolute inset-0 bg-grid-white/5" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[22rem]">
+            {/* Left Content */}
+            <div className="text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
+                <Target className="h-4 w-4" />
+                <span className="text-sm font-medium">{t('testPrep.badge', 'Free Placement Test')}</span>
+              </div>
+              
+              <h2 className="text-4xl font-bold mb-4">
+                {t('testPrep.heading', 'Excel in Your International Tests')}
+              </h2>
+              <p className="text-lg text-blue-100 mb-6">
+                {t('testPrep.subheading', 'IELTS • TOEFL • GRE • PTE')}
+              </p>
+              
+              <p className="text-xl text-blue-100 mb-8">
+                {t('testPrep.description', 'Assess your CEFR level with our adaptive placement test. Get personalized study plans and track your progress to test success.')}
+              </p>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  { icon: CheckCircle, text: t('testPrep.feature1', 'Multi-Stage Adaptive Test (MST)') },
+                  { icon: CheckCircle, text: t('testPrep.feature2', 'Instant CEFR results with skill breakdown') },
+                  { icon: CheckCircle, text: t('testPrep.feature3', 'Personalized study plans for your test') },
+                  { icon: CheckCircle, text: t('testPrep.feature4', 'Progress tracking with detailed analytics') },
+                ].map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={index} className="flex items-start gap-3">
+                      <Icon className="h-6 w-6 text-green-300 shrink-0 mt-0.5" />
+                      <span className="text-lg">{item.text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8"
+                  data-testid="button-take-free-test"
+                >
+                  <Link href="/take-test">
+                    <a className="flex items-center gap-2">
+                      {t('testPrep.cta.takeFreeTest', 'Take Free Placement Test')}
+                      <ArrowRight className="h-5 w-5" />
+                    </a>
+                  </Link>
+                </Button>
+                
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  size="lg" 
+                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8"
+                  data-testid="button-explore-test-prep"
+                >
+                  <Link href="/curriculum?category=test-prep">
+                    <a className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      {t('testPrep.cta.exploreTestPrep', 'Explore Test Prep Courses')}
+                    </a>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Content - Stats */}
+            <div className="relative">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { icon: Users, label: t('testPrep.stat1Label', 'Tests Completed'), value: t('testPrep.stat1Value', '10,000+') },
+                  { icon: TrendingUp, label: t('testPrep.stat2Label', 'Average Improvement'), value: t('testPrep.stat2Value', '2 Bands') },
+                  { icon: Award, label: t('testPrep.stat3Label', 'Success Rate'), value: t('testPrep.stat3Value', '94%') },
+                ].map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card key={index} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all" data-testid={`testprep-stat-${index}`}>
+                      <CardContent className="p-6 text-white text-center">
+                        <Icon className="h-8 w-8 mx-auto mb-3 text-yellow-300" />
+                        <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                        <div className="text-sm text-blue-200">{stat.label}</div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Kids & Young Learners Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-pink-600 to-rose-600 py-24">
+        <div className="absolute inset-0 bg-grid-white/5" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[22rem]">
+            {/* Left Content */}
+            <div className="text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
+                <Gamepad2 className="h-4 w-4" />
+                <span className="text-sm font-medium">{t('kids.badge', 'Gamified Learning')}</span>
+              </div>
+              
+              <h2 className="text-4xl font-bold mb-4">
+                {t('kids.heading', 'Kids Love Learning Here')}
+              </h2>
+              <p className="text-lg text-purple-100 mb-6">
+                {t('kids.subheading', 'Fun, Interactive & Engaging')}
+              </p>
+              
+              <p className="text-xl text-purple-100 mb-8">
+                {t('kids.description', "Turn language learning into an adventure! With LinguaQuest, kids earn XP, unlock achievements, and compete on leaderboards while mastering new skills.")}
+              </p>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  { icon: Gamepad2, text: t('kids.feature1', '19 game types & interactive activities') },
+                  { icon: Trophy, text: t('kids.feature2', 'XP, levels & achievement badges') },
+                  { icon: Star, text: t('kids.feature3', 'Daily challenges & leaderboards') },
+                  { icon: Zap, text: t('kids.feature4', 'Audio practice with instant feedback') },
+                ].map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={index} className="flex items-start gap-3">
+                      <Icon className="h-6 w-6 text-yellow-300 shrink-0 mt-0.5" />
+                      <span className="text-lg">{item.text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="bg-white text-purple-600 hover:bg-gray-100 text-lg px-8"
+                  data-testid="button-explore-linguaquest"
+                >
+                  <Link href="/dashboard">
+                    <a className="flex items-center gap-2">
+                      {t('kids.cta.exploreLinguaQuest', 'Explore LinguaQuest')}
+                      <ArrowRight className="h-5 w-5" />
+                    </a>
+                  </Link>
+                </Button>
+                
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  size="lg" 
+                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8"
+                  data-testid="button-start-playing"
+                >
+                  <Link href="/auth?tab=register">
+                    <a className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5" />
+                      {t('kids.cta.startPlaying', 'Start Playing Free')}
+                    </a>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Content - Stats */}
+            <div className="relative">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { icon: Gamepad2, label: t('kids.stat1Label', 'Game Types'), value: t('kids.stat1Value', '19+') },
+                  { icon: Users, label: t('kids.stat2Label', 'Active Players'), value: t('kids.stat2Value', '5,000+') },
+                  { icon: Star, label: t('kids.stat3Label', 'Fun Score'), value: t('kids.stat3Value', '4.9/5') },
+                ].map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card key={index} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all" data-testid={`kids-stat-${index}`}>
+                      <CardContent className="p-6 text-white text-center">
+                        <Icon className="h-8 w-8 mx-auto mb-3 text-yellow-300" />
+                        <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                        <div className="text-sm text-purple-200">{stat.label}</div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+              
+              {/* Floating Badge */}
+              <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
+                ⭐ {t('kids.badge', 'Gamified Learning')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CallerN Promotion Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 py-24">
         <div className="absolute inset-0 bg-grid-white/5" />
