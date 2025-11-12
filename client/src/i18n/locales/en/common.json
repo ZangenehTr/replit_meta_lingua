@@ -811,6 +811,65 @@
     "satisfaction": "Satisfaction",
     "languages": "Languages"
   },
+  "testPrep": {
+    "badge": "Free Placement Test",
+    "heading": "Ace Your Test Prep",
+    "subheading": "IELTS • TOEFL • GRE • PTE",
+    "description": "Get your CEFR level assessment with our adaptive placement test. Receive personalized study roadmaps and track your progress to exam success.",
+    "feature1": "Adaptive Multi-Stage Testing (MST)",
+    "feature2": "Instant CEFR level results with skill breakdown",
+    "feature3": "Personalized study roadmaps for your exam",
+    "feature4": "Track progress with detailed analytics",
+    "stat1Label": "Tests Completed",
+    "stat1Value": "10,000+",
+    "stat2Label": "Average Improvement",
+    "stat2Value": "2 Bands",
+    "stat3Label": "Success Rate",
+    "stat3Value": "94%",
+    "cta": {
+      "takeFreeTest": "Take Free Placement Test",
+      "exploreTestPrep": "Explore Test Prep Courses"
+    }
+  },
+  "kids": {
+    "badge": "Gamified Learning",
+    "heading": "Kids Love Learning Here",
+    "subheading": "Fun, Interactive & Engaging",
+    "description": "Turn language learning into an adventure! With LinguaQuest, kids earn XP points, unlock achievements, and compete on leaderboards while mastering new skills.",
+    "feature1": "19 interactive game types and activities",
+    "feature2": "XP points, levels, and achievement badges",
+    "feature3": "Daily challenges and leaderboards",
+    "feature4": "Voice exercises with instant feedback",
+    "stat1Label": "Game Types",
+    "stat1Value": "19+",
+    "stat2Label": "Active Players",
+    "stat2Value": "5,000+",
+    "stat3Label": "Fun Rating",
+    "stat3Value": "4.9/5",
+    "cta": {
+      "exploreLinguaQuest": "Explore LinguaQuest",
+      "startPlaying": "Start Playing Free"
+    }
+  },
+  "callern": {
+    "badge": "24/7 Live Tutoring",
+    "heading": "Practice Speaking with",
+    "headingHighlight": "Native English Teachers",
+    "description": "Connect instantly with certified teachers via live video. Perfect your accent, boost your confidence, and speak English like a native.",
+    "feature1": "Available 24/7 - Learn on your schedule",
+    "feature2": "Certified native speakers",
+    "feature3": "AI-powered feedback & suggestions",
+    "feature4": "Instant sessions - no scheduling needed",
+    "stat1": "Expert Teachers",
+    "stat2": "Available 24/7",
+    "stat3": "Student Rating",
+    "stat4": "Success Rate",
+    "badge2": "Try Free Session!",
+    "cta": {
+      "learnMore": "Learn More",
+      "startNow": "Start Now"
+    }
+  },
   "blog": {
     "heading": "Latest Articles",
     "subheading": "Tips, insights, and stories from our community"

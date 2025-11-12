@@ -19,6 +19,11 @@ import {
   Award,
   Play,
   Calendar,
+  CheckCircle,
+  Clock,
+  Target,
+  Trophy,
+  Gamepad2,
 } from 'lucide-react';
 import type { CmsBlogPost, CmsVideo } from '@shared/schema';
 
