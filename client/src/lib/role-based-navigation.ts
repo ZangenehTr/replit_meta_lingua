@@ -107,11 +107,17 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     // Course Management
     { path: "/admin/courses", icon: "BookOpen", label: t('common:navigation.courseManagement'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
     
+    // Video Courses
+    { path: "/admin/video-courses", icon: "Play", label: t('common:navigation.videoCourses'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
+    
     // Class Scheduling & Management
     { path: "/admin/classes", icon: "Calendar", label: t('common:navigation.classScheduling'), roles: ["Admin", "Supervisor"] },
     
-    // Games & LinguaQuest Management  
+    // Games Management
     { path: "/admin/games-management", icon: "Gamepad2", label: t('common:navigation.gamesManagement'), roles: ["Admin", "Supervisor"] },
+    
+    // Game Access Control
+    { path: "/admin/game-access-control", icon: "Settings", label: t('common:navigation.gameAccessControl'), roles: ["Admin"] },
     
     // Callern Video Call Management
     { path: "/admin/callern-management", icon: "Video", label: t('common:navigation.callernManagement'), roles: ["Admin", "Supervisor"] },
