@@ -50,6 +50,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
   const navigation = [
     { name: t('nav.home'), href: '/', icon: Home },
+    { name: t('nav.callern', 'CallerN'), href: '/services/callern', icon: Video },
     { name: t('nav.blog'), href: '/blog', icon: BookOpen },
     { name: t('nav.videos'), href: '/videos', icon: Video },
     { name: t('nav.about'), href: '/about', icon: Info },

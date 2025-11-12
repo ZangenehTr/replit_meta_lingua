@@ -1146,6 +1146,12 @@ function Router() {
           return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CurriculumHub /></Suspense>;
         }}
       </Route>
+      <Route path="/services/callern">
+        {() => {
+          const CallernLanding = lazy(() => import("@/pages/public/callern-landing"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CallernLanding /></Suspense>;
+        }}
+      </Route>
       
       <Route path="/">
         {(() => {

@@ -204,6 +204,107 @@ export default function PublicHome() {
         </div>
       </section>
 
+      {/* CallerN Promotion Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 py-24">
+        <div className="absolute inset-0 bg-grid-white/5" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
+                <Video className="h-4 w-4" />
+                <span className="text-sm font-medium">{t('callern.badge', '24/7 Live Tutoring')}</span>
+              </div>
+              
+              <h2 className="text-4xl font-bold mb-6">
+                {t('callern.heading', 'Practice Speaking with')} <br />
+                <span className="text-yellow-300">{t('callern.headingHighlight', 'Native English Teachers')}</span>
+              </h2>
+              
+              <p className="text-xl text-indigo-100 mb-8">
+                {t('callern.description', 'Connect instantly with certified teachers via live video. Perfect your accent, boost your confidence, and speak English like a native.')}
+              </p>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  { icon: CheckCircle, text: t('callern.feature1', 'Available 24/7 - Learn on your schedule') },
+                  { icon: CheckCircle, text: t('callern.feature2', 'Certified native speakers') },
+                  { icon: CheckCircle, text: t('callern.feature3', 'AI-powered feedback & suggestions') },
+                  { icon: CheckCircle, text: t('callern.feature4', 'Instant sessions - no scheduling needed') },
+                ].map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={index} className="flex items-start gap-3">
+                      <Icon className="h-6 w-6 text-green-300 shrink-0 mt-0.5" />
+                      <span className="text-lg">{item.text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="bg-white text-indigo-600 hover:bg-gray-100 text-lg px-8"
+                  data-testid="button-callern-learn-more"
+                >
+                  <Link href="/services/callern">
+                    <a className="flex items-center gap-2">
+                      {t('callern.cta.learnMore', 'Learn More')}
+                      <ArrowRight className="h-5 w-5" />
+                    </a>
+                  </Link>
+                </Button>
+                
+                <Button 
+                  asChild 
+                  variant="outline" 
+                  size="lg" 
+                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8"
+                  data-testid="button-callern-start-now"
+                >
+                  <Link href="/auth?tab=register">
+                    <a className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5" />
+                      {t('callern.cta.startNow', 'Start Now')}
+                    </a>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Content - Stats & Features */}
+            <div className="relative">
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: Users, label: t('callern.stat1', 'Expert Teachers'), value: '50+' },
+                  { icon: Clock, label: t('callern.stat2', 'Available 24/7'), value: '100%' },
+                  { icon: Star, label: t('callern.stat3', 'Student Rating'), value: '4.9/5' },
+                  { icon: TrendingUp, label: t('callern.stat4', 'Success Rate'), value: '98%' },
+                ].map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card key={index} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all" data-testid={`callern-stat-${index}`}>
+                      <CardContent className="p-6 text-white text-center">
+                        <Icon className="h-8 w-8 mx-auto mb-3 text-yellow-300" />
+                        <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                        <div className="text-sm text-indigo-200">{stat.label}</div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+              
+              {/* Floating Badge */}
+              <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
+                {t('callern.badge2', 'Try Free Session!')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Latest Blog Posts */}
       {blogPosts.length > 0 && (
         <section className="py-24 bg-accent/30">
