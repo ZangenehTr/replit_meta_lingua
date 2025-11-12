@@ -104,20 +104,14 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     // Form Management
     { path: "/admin/form-management", icon: "FileText", label: t('common:navigation.formManagement'), roles: ["Admin"] },
     
-    // Course & Curriculum Management
+    // Course Management
     { path: "/admin/courses", icon: "BookOpen", label: t('common:navigation.courseManagement'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
-    
-    // Video Courses Management
-    { path: "/admin/video-courses", icon: "Play", label: t('common:navigation.videoCourses'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
     
     // Class Scheduling & Management
     { path: "/admin/classes", icon: "Calendar", label: t('common:navigation.classScheduling'), roles: ["Admin", "Supervisor"] },
     
-    // Games Management
+    // Games & LinguaQuest Management  
     { path: "/admin/games-management", icon: "Gamepad2", label: t('common:navigation.gamesManagement'), roles: ["Admin", "Supervisor"] },
-    
-    // Game Access Control
-    { path: "/admin/game-access-control", icon: "Settings", label: t('common:navigation.gameAccessControl'), roles: ["Admin"] },
     
     // Callern Video Call Management
     { path: "/admin/callern-management", icon: "Video", label: t('common:navigation.callernManagement'), roles: ["Admin", "Supervisor"] },
@@ -164,7 +158,6 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
   { path: "/admin/white-label", icon: "Building2", label: t('common:navigation.whiteLabelManagement'), roles: ["Admin"] },
   { path: "/admin/font-management", icon: "Type", label: t('common:navigation.fontManagement') || 'Font Management', roles: ["Admin"] },
   { path: "/admin/sms-settings", icon: "Send", label: t('common:navigation.smsManagement'), roles: ["Admin", "Supervisor"] },
-  { path: "/admin/campaign-management", icon: "Megaphone", label: t('common:navigation.campaignManagement'), roles: ["Admin", "Call Center Agent"] },
   { path: "/admin/subsystem-permissions", icon: "Shield", label: t('common:navigation.subsystemPermissions') || 'Subsystem Permissions', roles: ["Admin"] },
   { path: "/admin/website-builder", icon: "Globe", label: t('common:navigation.websiteBuilder'), roles: ["Admin"] },
   ];
