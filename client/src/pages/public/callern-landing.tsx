@@ -41,10 +41,6 @@ export default function CallernLanding() {
   // Fetch online teachers for showcase
   const { data: onlineTeachers = [] } = useQuery({
     queryKey: ['/api/callern/online-teachers'],
-    queryFn: async () => {
-      const response = await fetch('/api/callern/online-teachers');
-      return response.json();
-    }
   });
 
   const features = [
