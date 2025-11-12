@@ -28,6 +28,13 @@ import {
 import type { CmsBlogPost, CmsVideo } from '@shared/schema';
 
 export default function PublicHome() {
+  // Stock image paths (served from public directory)
+  const testPrepImage1 = '/images/ielts_toefl_test_pre_2db77567.jpg';
+  const testPrepImage2 = '/images/ielts_toefl_test_pre_c9bb05c9.jpg';
+  const kidsImage1 = '/images/happy_children_kids__c945fe9f.jpg';
+  const kidsImage2 = '/images/happy_children_kids__7b136f07.jpg';
+  const callernImage1 = '/images/online_video_call_tu_7afdda6b.jpg';
+  const callernImage2 = '/images/online_video_call_tu_4ad299e6.jpg';
   const { t } = useTranslation(['common']);
 
   // Fetch latest 3 published blog posts
@@ -269,25 +276,52 @@ export default function PublicHome() {
               </div>
             </div>
 
-            {/* Right Content - Stats */}
-            <div className="relative">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                  { icon: Users, label: t('testPrep.stat1Label', 'Tests Completed'), value: t('testPrep.stat1Value', '10,000+') },
-                  { icon: TrendingUp, label: t('testPrep.stat2Label', 'Average Improvement'), value: t('testPrep.stat2Value', '2 Bands') },
-                  { icon: Award, label: t('testPrep.stat3Label', 'Success Rate'), value: t('testPrep.stat3Value', '94%') },
-                ].map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <Card key={index} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all" data-testid={`testprep-stat-${index}`}>
-                      <CardContent className="p-6 text-white text-center">
-                        <Icon className="h-8 w-8 mx-auto mb-3 text-yellow-300" />
-                        <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                        <div className="text-sm text-blue-200">{stat.label}</div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+            {/* Right Content - Image Collage with Stats */}
+            <div className="relative space-y-4">
+              {/* Main Hero Image */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+                <img 
+                  src={testPrepImage1} 
+                  alt="Students preparing for IELTS and TOEFL tests with study materials" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent" />
+                
+                {/* Stat Badge Overlay */}
+                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <Award className="h-8 w-8 text-blue-600" />
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">{t('testPrep.stat3Value', '94%')}</div>
+                      <div className="text-sm text-gray-600">{t('testPrep.stat3Label', 'Success Rate')}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Supporting Image with Stat */}
+              <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
+                <img 
+                  src={testPrepImage2} 
+                  alt="International test preparation classroom environment" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-transparent to-teal-900/40" />
+                
+                {/* Additional Stats */}
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-6 w-6 text-green-600" />
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">{t('testPrep.stat2Value', '2 Bands')}</div>
+                      <div className="text-xs text-gray-600">{t('testPrep.stat2Label', 'Avg Improvement')}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -360,30 +394,57 @@ export default function PublicHome() {
               </div>
             </div>
 
-            {/* Right Content - Stats */}
-            <div className="relative">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                  { icon: Gamepad2, label: t('kids.stat1Label', 'Game Types'), value: t('kids.stat1Value', '19+') },
-                  { icon: Users, label: t('kids.stat2Label', 'Active Players'), value: t('kids.stat2Value', '5,000+') },
-                  { icon: Star, label: t('kids.stat3Label', 'Fun Score'), value: t('kids.stat3Value', '4.9/5') },
-                ].map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <Card key={index} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all" data-testid={`kids-stat-${index}`}>
-                      <CardContent className="p-6 text-white text-center">
-                        <Icon className="h-8 w-8 mx-auto mb-3 text-yellow-300" />
-                        <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                        <div className="text-sm text-purple-200">{stat.label}</div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+            {/* Right Content - Image Collage with Stats */}
+            <div className="relative space-y-4">
+              {/* Main Hero Image */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+                <img 
+                  src={kidsImage1} 
+                  alt="Happy children learning English in a colorful, interactive classroom environment" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 via-transparent to-transparent" />
+                
+                {/* Stat Badge Overlay */}
+                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <Star className="h-8 w-8 text-purple-600" />
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">{t('kids.stat3Value', '4.9/5')}</div>
+                      <div className="text-sm text-gray-600">{t('kids.stat3Label', 'Fun Score')}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Floating Badge */}
+                <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
+                  ⭐ {t('kids.freeDemoBadge', 'Try Free Demo')}
+                </div>
               </div>
-              
-              {/* Floating Badge */}
-              <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
-                ⭐ {t('kids.badge', 'Gamified Learning')}
+
+              {/* Supporting Image with Stat */}
+              <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
+                <img 
+                  src={kidsImage2} 
+                  alt="Kids enjoying gamified English learning activities" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-900/40 via-transparent to-rose-900/40" />
+                
+                {/* Additional Stats */}
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <Gamepad2 className="h-6 w-6 text-pink-600" />
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">{t('kids.stat1Value', '19+')}</div>
+                      <div className="text-xs text-gray-600">{t('kids.stat1Label', 'Game Types')}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -454,26 +515,52 @@ export default function PublicHome() {
               </div>
             </div>
 
-            {/* Right Content - Stats & Features */}
-            <div className="relative">
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { icon: Users, label: t('callern.stat1', 'Expert Teachers'), value: '50+' },
-                  { icon: Clock, label: t('callern.stat2', 'Available 24/7'), value: '100%' },
-                  { icon: Star, label: t('callern.stat3', 'Student Rating'), value: '4.9/5' },
-                  { icon: TrendingUp, label: t('callern.stat4', 'Success Rate'), value: '98%' },
-                ].map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <Card key={index} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all" data-testid={`callern-stat-${index}`}>
-                      <CardContent className="p-6 text-white text-center">
-                        <Icon className="h-8 w-8 mx-auto mb-3 text-yellow-300" />
-                        <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                        <div className="text-sm text-indigo-200">{stat.label}</div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+            {/* Right Content - Image Collage with Stats */}
+            <div className="relative space-y-4">
+              {/* Main Hero Image */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+                <img 
+                  src={callernImage1} 
+                  alt="Professional online English tutoring session with native speaker via video call" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/60 via-transparent to-transparent" />
+                
+                {/* Stat Badge Overlay */}
+                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <Star className="h-8 w-8 text-indigo-600" />
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">{t('callern.stat3Value', '4.9/5')}</div>
+                      <div className="text-sm text-gray-600">{t('callern.stat3', 'Student Rating')}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Supporting Image with Stat */}
+              <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
+                <img 
+                  src={callernImage2} 
+                  alt="Student practicing English conversation in online tutoring session" 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-transparent to-pink-900/40" />
+                
+                {/* Additional Stats */}
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-6 w-6 text-purple-600" />
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">{t('callern.stat2Value', '24/7')}</div>
+                      <div className="text-xs text-gray-600">{t('callern.stat2', 'Available')}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
               
               {/* Floating Badge */}
