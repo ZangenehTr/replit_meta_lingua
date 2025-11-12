@@ -122,31 +122,25 @@ export default function PublicHome() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button 
-                asChild 
+                asChild
                 size="lg" 
                 className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-lg px-8"
-                data-testid="button-start-learning"
               >
-                <Link href="/auth?tab=register">
-                  <a className="flex items-center gap-2">
-                    {t('cta.startLearning', 'Start Learning Free')}
-                    <ArrowRight className="h-5 w-5" />
-                  </a>
+                <Link href="/auth?tab=register" data-testid="button-start-learning" className="flex items-center gap-2">
+                  {t('cta.startLearning', 'Start Learning Free')}
+                  <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
               
               <Button 
-                asChild 
+                asChild
                 variant="outline" 
                 size="lg" 
                 className="text-lg px-8"
-                data-testid="button-browse-courses"
               >
-                <Link href="/linguaquest">
-                  <a className="flex items-center gap-2">
-                    <Play className="h-5 w-5" />
-                    {t('cta.browseCourses', 'Browse Free Courses')}
-                  </a>
+                <Link href="/linguaquest" data-testid="button-browse-courses" className="flex items-center gap-2">
+                  <Play className="h-5 w-5" />
+                  {t('cta.browseCourses', 'Browse Free Courses')}
                 </Link>
               </Button>
             </div>
@@ -251,31 +245,25 @@ export default function PublicHome() {
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
-                  asChild 
+                  asChild
                   size="lg" 
-                  className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8"
-                  data-testid="button-take-free-test"
+                  className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 w-full sm:w-auto"
                 >
-                  <Link href="/take-test">
-                    <a className="flex items-center gap-2">
-                      {t('testPrep.cta.takeFreeTest', 'Take Free Placement Test')}
-                      <ArrowRight className="h-5 w-5" />
-                    </a>
+                  <Link href="/take-test" data-testid="button-take-free-test" className="flex items-center gap-2 justify-center">
+                    {t('testPrep.cta.takeFreeTest', 'Take Free Placement Test')}
+                    <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
                 
                 <Button 
-                  asChild 
+                  asChild
                   variant="outline" 
                   size="lg" 
-                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8"
-                  data-testid="button-explore-test-prep"
+                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 w-full sm:w-auto"
                 >
-                  <Link href="/curriculum?category=test-prep">
-                    <a className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      {t('testPrep.cta.exploreTestPrep', 'Explore Test Prep Courses')}
-                    </a>
+                  <Link href="/curriculum?category=test-prep" data-testid="button-explore-test-prep" className="flex items-center gap-2 justify-center">
+                    <BookOpen className="h-5 w-5" />
+                    {t('testPrep.cta.exploreTestPrep', 'Explore Test Prep Courses')}
                   </Link>
                 </Button>
               </div>
@@ -348,31 +336,25 @@ export default function PublicHome() {
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
-                  asChild 
+                  asChild
                   size="lg" 
-                  className="bg-white text-purple-600 hover:bg-gray-100 text-lg px-8"
-                  data-testid="button-explore-linguaquest"
+                  className="bg-white text-purple-600 hover:bg-gray-100 text-lg px-8 w-full sm:w-auto"
                 >
-                  <Link href="/dashboard">
-                    <a className="flex items-center gap-2">
-                      {t('kids.cta.exploreLinguaQuest', 'Explore LinguaQuest')}
-                      <ArrowRight className="h-5 w-5" />
-                    </a>
+                  <Link href="/dashboard" data-testid="button-explore-linguaquest" className="flex items-center gap-2 justify-center">
+                    {t('kids.cta.exploreLinguaQuest', 'Explore LinguaQuest')}
+                    <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
                 
                 <Button 
-                  asChild 
+                  asChild
                   variant="outline" 
                   size="lg" 
-                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8"
-                  data-testid="button-start-playing"
+                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 w-full sm:w-auto"
                 >
-                  <Link href="/auth?tab=register">
-                    <a className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5" />
-                      {t('kids.cta.startPlaying', 'Start Playing Free')}
-                    </a>
+                  <Link href="/auth?tab=register" data-testid="button-start-playing" className="flex items-center gap-2 justify-center">
+                    <Sparkles className="h-5 w-5" />
+                    {t('kids.cta.startPlaying', 'Start Playing Free')}
                   </Link>
                 </Button>
               </div>
@@ -448,31 +430,25 @@ export default function PublicHome() {
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
-                  asChild 
+                  asChild
                   size="lg" 
-                  className="bg-white text-indigo-600 hover:bg-gray-100 text-lg px-8"
-                  data-testid="button-callern-learn-more"
+                  className="bg-white text-indigo-600 hover:bg-gray-100 text-lg px-8 w-full sm:w-auto"
                 >
-                  <Link href="/services/callern">
-                    <a className="flex items-center gap-2">
-                      {t('callern.cta.learnMore', 'Learn More')}
-                      <ArrowRight className="h-5 w-5" />
-                    </a>
+                  <Link href="/services/callern" data-testid="button-callern-learn-more" className="flex items-center gap-2 justify-center">
+                    {t('callern.cta.learnMore', 'Learn More')}
+                    <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
                 
                 <Button 
-                  asChild 
+                  asChild
                   variant="outline" 
                   size="lg" 
-                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8"
-                  data-testid="button-callern-start-now"
+                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 w-full sm:w-auto"
                 >
-                  <Link href="/auth?tab=register">
-                    <a className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5" />
-                      {t('callern.cta.startNow', 'Start Now')}
-                    </a>
+                  <Link href="/auth?tab=register" data-testid="button-callern-start-now" className="flex items-center gap-2 justify-center">
+                    <Sparkles className="h-5 w-5" />
+                    {t('callern.cta.startNow', 'Start Now')}
                   </Link>
                 </Button>
               </div>
@@ -522,12 +498,10 @@ export default function PublicHome() {
                   {t('blog.subheading', 'Tips, insights, and stories from our community')}
                 </p>
               </div>
-              <Button asChild variant="outline" data-testid="button-view-all-blog">
-                <Link href="/blog">
-                  <a className="flex items-center gap-2">
-                    {t('cta.viewAll', 'View All')}
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
+              <Button asChild variant="outline">
+                <Link href="/blog" data-testid="button-view-all-blog" className="flex items-center gap-2">
+                  {t('cta.viewAll', 'View All')}
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -550,10 +524,8 @@ export default function PublicHome() {
                       {post.categoryId && <Badge>{t('category')}</Badge>}
                     </div>
                     <CardTitle className="line-clamp-2">
-                      <Link href={`/blog/${post.slug}`}>
-                        <a className="hover:text-primary transition-colors">
-                          {post.title}
-                        </a>
+                      <Link href={`/blog/${post.slug}`} className="hover:text-primary transition-colors">
+                        {post.title}
                       </Link>
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
@@ -586,12 +558,10 @@ export default function PublicHome() {
                   {t('videos.subheading', 'Learn from our expert instructors')}
                 </p>
               </div>
-              <Button asChild variant="outline" data-testid="button-view-all-videos">
-                <Link href="/videos">
-                  <a className="flex items-center gap-2">
-                    {t('cta.viewAll', 'View All')}
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
+              <Button asChild variant="outline">
+                <Link href="/videos" data-testid="button-view-all-videos" className="flex items-center gap-2">
+                  {t('cta.viewAll', 'View All')}
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -623,10 +593,8 @@ export default function PublicHome() {
                       {video.category && <Badge>{video.category}</Badge>}
                     </div>
                     <CardTitle className="line-clamp-2">
-                      <Link href={`/videos/${video.id}`}>
-                        <a className="hover:text-primary transition-colors">
-                          {video.title}
-                        </a>
+                      <Link href={`/videos/${video.id}`} className="hover:text-primary transition-colors">
+                        {video.title}
                       </Link>
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
@@ -672,29 +640,25 @@ export default function PublicHome() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              asChild 
+              asChild
               size="lg" 
               variant="secondary" 
               className="text-lg px-8"
-              data-testid="button-cta-start-free"
             >
-              <Link href="/auth?tab=register">
-                <a className="flex items-center gap-2">
-                  {t('cta.startFree', 'Start Free Trial')}
-                  <ArrowRight className="h-5 w-5" />
-                </a>
+              <Link href="/auth?tab=register" data-testid="button-cta-start-free" className="flex items-center gap-2">
+                {t('cta.startFree', 'Start Free Trial')}
+                <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
             
             <Button 
-              asChild 
+              asChild
               size="lg" 
               variant="outline" 
               className="text-lg px-8 bg-white/10 border-white/20 text-white hover:bg-white/20"
-              data-testid="button-cta-learn-more"
             >
-              <Link href="/about">
-                <a>{t('cta.learnMore', 'Learn More')}</a>
+              <Link href="/about" data-testid="button-cta-learn-more">
+                {t('cta.learnMore', 'Learn More')}
               </Link>
             </Button>
           </div>

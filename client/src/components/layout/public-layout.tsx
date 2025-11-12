@@ -39,7 +39,7 @@ interface PublicLayoutProps {
 
 export function PublicLayout({ children }: PublicLayoutProps) {
   const { t, i18n } = useTranslation(['common']);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { direction } = useLanguage();
 
@@ -138,18 +138,23 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link href="/curriculum" className="cursor-pointer" data-testid="link-all-courses">
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      {t('nav.allCourses', 'All Courses')}
-                    </Link>
+                  <DropdownMenuItem 
+                    onSelect={() => setLocation('/curriculum')} 
+                    className="cursor-pointer" 
+                    data-testid="link-all-courses"
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    {t('nav.allCourses', 'All Courses')}
                   </DropdownMenuItem>
                   <div className="my-1 border-t" />
                   {curriculumCategories.map((category: any) => (
-                    <DropdownMenuItem key={category.id} asChild>
-                      <Link href={`/curriculum/${category.slug}`} className="cursor-pointer" data-testid={`link-category-${category.slug}`}>
-                        {getCategoryName(category)}
-                      </Link>
+                    <DropdownMenuItem 
+                      key={category.id} 
+                      onSelect={() => setLocation(`/curriculum/${category.slug}`)} 
+                      className="cursor-pointer" 
+                      data-testid={`link-category-${category.slug}`}
+                    >
+                      {getCategoryName(category)}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
