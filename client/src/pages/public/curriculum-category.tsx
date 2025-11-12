@@ -302,17 +302,21 @@ export default function CurriculumCategory() {
             {t('curriculum.readyToStartDesc', 'Join thousands of students already learning with Meta Lingua Academy')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact">
-              <Button size="lg" className="gap-2" data-testid="button-enroll">
-                {t('curriculum.enrollNow', 'Enroll Now')}
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/placement-test">
-              <Button size="lg" variant="outline" className="gap-2" data-testid="button-placement-test-cta">
-                {t('curriculum.takePlacementTest', 'Take Placement Test')}
-              </Button>
-            </Link>
+            <Button asChild size="lg" className="gap-2" data-testid="button-enroll">
+              <Link href="/contact">
+                <a className="flex items-center gap-2">
+                  {t('curriculum.enrollNow', 'Enroll Now')}
+                  <ArrowRight className="h-5 w-5" />
+                </a>
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="gap-2" data-testid="button-placement-test-cta">
+              <Link href="/take-test">
+                <a className="flex items-center gap-2">
+                  {t('curriculum.takePlacementTest', 'Take Placement Test')}
+                </a>
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

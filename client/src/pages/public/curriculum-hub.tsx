@@ -182,18 +182,22 @@ export default function CurriculumHub() {
             {t('curriculum.ctaDesc', 'Take our free placement test to get personalized course recommendations')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/placement-test">
-              <Button size="lg" className="gap-2" data-testid="button-placement-test">
-                <Star className="h-5 w-5" />
-                {t('curriculum.takePlacementTest', 'Take Placement Test')}
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="gap-2" data-testid="button-contact">
-                {t('curriculum.contactUs', 'Contact Us')}
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
+            <Button asChild size="lg" className="gap-2" data-testid="button-placement-test">
+              <Link href="/take-test">
+                <a className="flex items-center gap-2">
+                  <Star className="h-5 w-5" />
+                  {t('curriculum.takePlacementTest', 'Take Placement Test')}
+                </a>
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="gap-2" data-testid="button-contact">
+              <Link href="/contact">
+                <a className="flex items-center gap-2">
+                  {t('curriculum.contactUs', 'Contact Us')}
+                  <ArrowRight className="h-5 w-5" />
+                </a>
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
