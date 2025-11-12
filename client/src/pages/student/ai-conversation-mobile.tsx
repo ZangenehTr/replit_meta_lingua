@@ -187,7 +187,7 @@ export default function StudentAIConversationMobile() {
 
   return (
     <MobileLayout
-      title={t('student:aiConversation')}
+      title={t('student:aiConversation.title')}
       showBack={false}
       gradient="ai"
       headerAction={
