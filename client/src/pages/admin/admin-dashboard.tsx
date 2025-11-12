@@ -14,6 +14,7 @@ import {
   DialogTrigger 
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -278,31 +279,6 @@ export const AdminDashboard = () => {
           </Card>
         </motion.div>
 
-        {/* Role Color Legend */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <Card className="shadow-lg border-l-4 border-l-purple-500">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-700">
-                  {isRTL ? 'راهنمای رنگ نقش‌ها در منوی سایدبار' : 'Sidebar Menu Role Color Guide'}
-                </h3>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {Object.entries(ROLE_COLORS).map(([role, colorClass]) => (
-                    <div key={role} className="flex items-center gap-1.5">
-                      <div className={cn("w-3 h-3 rounded-full", colorClass)} />
-                      <span className="text-xs text-gray-600">{role}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         {/* Key Metrics Grid - Redesigned for better readability */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -521,154 +497,144 @@ export const AdminDashboard = () => {
           </Card>
         </motion.div>
 
-        {/* Question Bank Statistics - NEW */}
-        {stats?.platformMetrics?.questionTypeDistribution && Object.keys(stats.platformMetrics.questionTypeDistribution).length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-          >
-            <Card className="shadow-xl">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-indigo-500" />
-                    {t('admin:questionBankStatistics', 'آمار بانک سوالات')}
-                  </CardTitle>
-                  <Badge variant="outline" className="text-xs">
-                    {stats.platformMetrics.totalQuestions || 0} {t('admin:totalQuestions', 'سوال')}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-64 overflow-y-auto">
-                  {Object.entries(stats.platformMetrics.questionTypeDistribution)
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([type, count], index) => {
-                      const colors = [
-                        'bg-blue-50 text-blue-700 border-blue-200',
-                        'bg-purple-50 text-purple-700 border-purple-200',
-                        'bg-green-50 text-green-700 border-green-200',
-                        'bg-orange-50 text-orange-700 border-orange-200',
-                        'bg-pink-50 text-pink-700 border-pink-200'
-                      ];
-                      const colorClass = colors[index % colors.length];
-                      
-                      return (
-                        <div key={type} className={`text-center p-2 rounded-lg border ${colorClass}`}>
-                          <p className="text-lg font-bold">{count}</p>
-                          <p className="text-xs leading-tight mt-1" title={type}>
-                            {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).substring(0, 20)}
-                            {type.length > 20 && '...'}
-                          </p>
-                        </div>
-                      );
-                    })}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Course Distribution & Teacher Performance */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Course Distribution */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Card className="shadow-xl h-full">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <PieChartIcon className="h-4 w-4 text-amber-500" />
-                  {t('admin:courseDistribution', 'توزیع دوره‌ها')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <ResponsiveContainer width="50%" height={150}>
-                    <PieChart>
-                      <Pie
-                        data={stats?.courseDistribution || []}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={60}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {stats?.courseDistribution?.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="space-y-2 text-sm">
-                    {stats?.courseDistribution?.map((item) => (
-                      <div key={item.name} className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-xs text-gray-600">{item.name}</span>
-                        <span className="text-xs font-bold ml-auto">{item.value}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Top Teachers */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <Card className="shadow-xl h-full">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Award className="h-4 w-4 text-yellow-500" />
-                    {t('admin:topTeachers', 'معلمان برتر')}
-                  </CardTitle>
-                  <Link href="/admin/teacher-management">
-                    <Button variant="ghost" size="sm" className="text-xs">
-                      {t('common:viewAll', 'مشاهده همه')}
-                      <ChevronRight className="h-3 w-3 ml-1" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {stats?.teacherPerformance?.map((teacher, index) => (
-                    <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center text-white font-bold">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-800">{teacher.name}</p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                            <span className="text-xs text-gray-600">{teacher.rating}</span>
+        {/* Academic Performance - Consolidated Module with Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-indigo-500" />
+                {t('admin:academicPerformance', 'عملکرد آموزشی')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="courses" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="courses">{t('admin:coursesMix', 'ترکیب دوره‌ها')}</TabsTrigger>
+                  <TabsTrigger value="teachers">{t('admin:topTeachers', 'معلمان برتر')}</TabsTrigger>
+                  <TabsTrigger value="questions">{t('admin:questionBank', 'بانک سوالات')}</TabsTrigger>
+                </TabsList>
+                
+                {/* Course Distribution Tab */}
+                <TabsContent value="courses" className="mt-4">
+                  {stats?.courseDistribution && stats.courseDistribution.length > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <ResponsiveContainer width="50%" height={150}>
+                        <PieChart>
+                          <Pie
+                            data={stats.courseDistribution}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={40}
+                            outerRadius={60}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {stats.courseDistribution.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="space-y-2 text-sm">
+                        {stats.courseDistribution.map((item) => (
+                          <div key={item.name} className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span className="text-xs text-gray-600">{item.name}</span>
+                            <span className="text-xs font-bold ml-auto">{item.value}%</span>
                           </div>
-                          <span className="text-xs text-gray-500">
-                            {teacher.students} {t('admin:students', 'دانش‌آموز')}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {teacher.hours}h
-                          </span>
-                        </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {t('admin:noCourseData', 'داده‌ای برای نمایش وجود ندارد')}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Top Teachers Tab */}
+                <TabsContent value="teachers" className="mt-4">
+                  {stats?.teacherPerformance && stats.teacherPerformance.length > 0 ? (
+                    <div className="space-y-3">
+                      {stats.teacherPerformance.map((teacher, index) => (
+                        <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                          <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center text-white font-bold">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-800">{teacher.name}</p>
+                            <div className="flex items-center gap-3 mt-1">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                                <span className="text-xs text-gray-600">{teacher.rating}</span>
+                              </div>
+                              <span className="text-xs text-gray-500">
+                                {teacher.students} {t('admin:students', 'دانش‌آموز')}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {teacher.hours}h
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {t('admin:noTeacherData', 'داده‌ای برای نمایش وجود ندارد')}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Question Bank Tab */}
+                <TabsContent value="questions" className="mt-4">
+                  {stats?.platformMetrics?.questionTypeDistribution && Object.keys(stats.platformMetrics.questionTypeDistribution).length > 0 ? (
+                    <>
+                      <div className="flex justify-between items-center mb-3">
+                        <Badge variant="outline" className="text-xs">
+                          {stats.platformMetrics.totalQuestions || 0} {t('admin:totalQuestions', 'سوال')}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                        {Object.entries(stats.platformMetrics.questionTypeDistribution)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([type, count], index) => {
+                            const colors = [
+                              'bg-blue-50 text-blue-700 border-blue-200',
+                              'bg-purple-50 text-purple-700 border-purple-200',
+                              'bg-green-50 text-green-700 border-green-200',
+                              'bg-orange-50 text-orange-700 border-orange-200',
+                              'bg-pink-50 text-pink-700 border-pink-200'
+                            ];
+                            const colorClass = colors[index % colors.length];
+                            
+                            return (
+                              <div key={type} className={`text-center p-2 rounded-lg border ${colorClass}`}>
+                                <p className="text-lg font-bold">{count}</p>
+                                <p className="text-xs leading-tight mt-1" title={type}>
+                                  {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).substring(0, 20)}
+                                  {type.length > 20 && '...'}
+                                </p>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {t('admin:noQuestionData', 'داده‌ای برای نمایش وجود ندارد')}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Quick Actions */}
         <motion.div
