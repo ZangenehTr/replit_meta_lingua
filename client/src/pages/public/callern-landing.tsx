@@ -39,7 +39,7 @@ export default function CallernLanding() {
   const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
 
   // Fetch online teachers for showcase
-  const { data: onlineTeachers = [] } = useQuery({
+  const { data: onlineTeachers = [] as any[] } = useQuery({
     queryKey: ['/api/callern/online-teachers'],
   });
 
