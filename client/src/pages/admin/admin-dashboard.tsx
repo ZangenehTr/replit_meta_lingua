@@ -636,7 +636,7 @@ export const AdminDashboard = () => {
           </Card>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Operational Focus */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -647,15 +647,28 @@ export const AdminDashboard = () => {
               <CardTitle className="text-base">{t('admin:quickActions', 'دسترسی سریع')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-4 gap-3">
-                <Link href="/admin/users">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Link href="/admin/students">
                   <motion.div 
                     className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    data-testid="quick-action-students"
                   >
                     <Users className="h-6 w-6 text-blue-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('admin:users', 'کاربران')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('admin:students', 'دانش‌آموزان')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/admin/prospects">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    data-testid="quick-action-prospects"
+                  >
+                    <Target className="h-6 w-6 text-purple-500 mb-1" />
+                    <span className="text-xs text-gray-600 text-center">{t('admin:prospects', 'مشتریان بالقوه')}</span>
                   </motion.div>
                 </Link>
                 
@@ -664,31 +677,22 @@ export const AdminDashboard = () => {
                     className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    data-testid="quick-action-courses"
                   >
                     <BookOpen className="h-6 w-6 text-green-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('admin:courses', 'دوره‌ها')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('admin:courses', 'دوره‌ها')}</span>
                   </motion.div>
                 </Link>
                 
-                <Link href="/admin/video-courses">
+                <Link href="/admin/classes">
                   <motion.div 
                     className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    data-testid="quick-action-classes"
                   >
-                    <Video className="h-6 w-6 text-purple-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('admin:videoCourses', 'دوره‌های ویدیویی')}</span>
-                  </motion.div>
-                </Link>
-                
-                <Link href="/admin/3d-lesson-builder">
-                  <motion.div 
-                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Box className="h-6 w-6 text-blue-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('admin:threeDLessons.threeDLessonBuilder', '3D درس‌ساز')}</span>
+                    <Calendar className="h-6 w-6 text-amber-500 mb-1" />
+                    <span className="text-xs text-gray-600 text-center">{t('admin:classes', 'برنامه کلاس‌ها')}</span>
                   </motion.div>
                 </Link>
                 
@@ -697,23 +701,22 @@ export const AdminDashboard = () => {
                     className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    data-testid="quick-action-financial"
                   >
                     <DollarSign className="h-6 w-6 text-emerald-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('admin:finance', 'مالی')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('admin:finance', 'مالی')}</span>
                   </motion.div>
                 </Link>
                 
-                <Link href="/admin/iranian-compliance-settings">
+                <Link href="/admin/communications">
                   <motion.div 
-                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    data-testid="quick-action-communications"
                   >
-                    <Globe className="h-6 w-6 text-purple-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('admin:compliance', 'تطبیق')}</span>
-                    {stats?.systemHealth?.ai === 'warning' && (
-                      <span className="absolute -top-1 -right-1 h-2 w-2 bg-yellow-500 rounded-full" />
-                    )}
+                    <MessageSquare className="h-6 w-6 text-indigo-500 mb-1" />
+                    <span className="text-xs text-gray-600 text-center">{t('admin:communications', 'ارتباطات')}</span>
                   </motion.div>
                 </Link>
               </div>
