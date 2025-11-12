@@ -10,6 +10,23 @@
     "about": "درباره ما",
     "contact": "تماس با ما"
   },
+  "breadcrumb": {
+    "home": "خانه",
+    "blog": "بلاگ",
+    "article": "مقاله",
+    "videos": "ویدیوها",
+    "video": "ویدیو",
+    "curriculum": "برنامه آموزشی",
+    "category": "دسته‌بندی",
+    "services": "خدمات",
+    "callern": "کالرن",
+    "about": "درباره ما",
+    "contact": "تماس با ما",
+    "takeTest": "آزمون تعیین سطح",
+    "auth": "ورود / ثبت‌نام",
+    "dashboard": "داشبورد",
+    "linguaquest": "لینگواکوئست"
+  },
   "auth": {
     "login": "ورود"
   },

@@ -10,6 +10,23 @@
     "about": "About",
     "contact": "Contact"
   },
+  "breadcrumb": {
+    "home": "Home",
+    "blog": "Blog",
+    "article": "Article",
+    "videos": "Videos",
+    "video": "Video",
+    "curriculum": "Curriculum",
+    "category": "Category",
+    "services": "Services",
+    "callern": "CallerN",
+    "about": "About Us",
+    "contact": "Contact Us",
+    "takeTest": "Placement Test",
+    "auth": "Login / Register",
+    "dashboard": "Dashboard",
+    "linguaquest": "LinguaQuest"
+  },
   "auth": {
     "login": "Login"
   },

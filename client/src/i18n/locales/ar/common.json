@@ -10,6 +10,23 @@
     "about": "عن",
     "contact": "اتصل"
   },
+  "breadcrumb": {
+    "home": "الرئيسية",
+    "blog": "المدونة",
+    "article": "مقالة",
+    "videos": "الفيديوهات",
+    "video": "فيديو",
+    "curriculum": "المنهج الدراسي",
+    "category": "الفئة",
+    "services": "الخدمات",
+    "callern": "CallerN",
+    "about": "عنا",
+    "contact": "اتصل بنا",
+    "takeTest": "اختبار تحديد المستوى",
+    "auth": "تسجيل الدخول / التسجيل",
+    "dashboard": "لوحة التحكم",
+    "linguaquest": "LinguaQuest"
+  },
   "auth": {
     "login": "تسجيل الدخول"
   },
