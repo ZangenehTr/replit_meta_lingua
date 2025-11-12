@@ -313,11 +313,34 @@ router.post("/verify-otp-convert", async (req: any, res) => {
       });
     }
     
-    // Verify OTP
+    // SECURITY: Verify lead exists and phone matches before OTP verification
+    const [lead] = await db.select()
+      .from(leads)
+      .where(eq(leads.id, leadId));
+    
+    if (!lead) {
+      return res.status(404).json({
+        success: false,
+        message: 'مشتری بالقوه یافت نشد' // Lead not found
+      });
+    }
+    
+    // Normalize phone numbers for comparison
+    const normalizedInput = ProspectLifecycleService['normalizePhoneNumber'](phoneNumber);
+    const normalizedLead = ProspectLifecycleService['normalizePhoneNumber'](lead.phoneNumber || '');
+    
+    // CRITICAL: Verify phone number belongs to this lead
+    if (normalizedInput !== normalizedLead) {
+      return res.status(400).json({
+        success: false,
+        message: 'شماره تلفن با اطلاعات ثبت شده مطابقت ندارد' // Phone number doesn't match records
+      });
+    }
+    
+    // Now verify OTP - we know the phone belongs to this lead
     const { OtpService } = await import('../services/otp-service');
-    const normalizedPhone = ProspectLifecycleService['normalizePhoneNumber'](phoneNumber);
     const verification = await OtpService.verifyOtp(
-      normalizedPhone,
+      normalizedInput,
       otpCode,
       'registration',
       'fa'
@@ -327,7 +350,7 @@ router.post("/verify-otp-convert", async (req: any, res) => {
       return res.status(400).json(verification);
     }
     
-    // Convert lead to student
+    // Convert lead to student - phone ownership validated
     const conversionResult = await ProspectLifecycleService.convertLeadToStudent(leadId);
     
     res.json({
