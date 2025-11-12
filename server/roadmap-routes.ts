@@ -408,4 +408,269 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
       res.status(500).json({ message: "Failed to fetch recommended roadmaps" });
     }
   });
+  
+  // ===== GUEST PLACEMENT TEST ROADMAP GENERATION =====
+  
+  // Generate personalized roadmap from placement test results (no auth required)
+  app.post("/api/roadmaps/generate-from-placement", async (req: any, res) => {
+    try {
+      const { testResults, contactInfo } = req.body;
+      
+      if (!testResults || !testResults.overallLevel) {
+        return res.status(400).json({ message: "Invalid test results" });
+      }
+      
+      // Use AI to generate personalized roadmap based on test results
+      const { OllamaService } = await import('./ollama-service');
+      const ollamaService = new OllamaService();
+      
+      const currentLevel = testResults.overallLevel; // e.g., "A2", "B1", "C1"
+      
+      // Helper function to get numeric CEFR level for comparison
+      const levelOrder = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4, 'C1': 5, 'C2': 6 };
+      const getCurrentLevelOrder = (level: string) => levelOrder[level as keyof typeof levelOrder] || 0;
+      
+      const weakSkills = Object.entries(testResults.skillLevels)
+        .filter(([_, level]) => getCurrentLevelOrder(level as string) < getCurrentLevelOrder(currentLevel))
+        .map(([skill, level]) => `${skill} (${level})`)
+        .join(', ');
+      
+      const strongSkills = testResults.strengths?.join(', ') || 'None identified';
+      
+      // Generate AI roadmap using Ollama with fallback
+      const prompt = `Generate a personalized 3-month English learning roadmap for a student with:
+- Current CEFR Level: ${currentLevel}
+- Weak Skills: ${weakSkills || 'Balanced across all skills'}
+- Strong Skills: ${strongSkills}
+- Test Scores: Speaking ${testResults.scores.speaking}%, Listening ${testResults.scores.listening}%, Reading ${testResults.scores.reading}%, Writing ${testResults.scores.writing}%
+
+Create a JSON roadmap with:
+1. title: "Personalized Learning Path - ${currentLevel} to [next level]"
+2. description: Brief personalized description
+3. estimatedWeeks: 12
+4. milestones: Array of 4 milestones (one per skill focus area), each with:
+   - title
+   - description
+   - orderIndex (1-4)
+   - estimatedWeeks
+   - steps: Array of 4-5 actionable steps, each with:
+     - title
+     - description
+     - estimatedHours
+     - orderIndex
+     - resourceType (lesson/practice/video/quiz)
+
+Focus on addressing weak areas while maintaining strengths. Return ONLY valid JSON, no markdown.`;
+
+      let aiResponse;
+      try {
+        aiResponse = await ollamaService.generateCompletion(prompt);
+      } catch (aiError) {
+        console.warn('Ollama unavailable, using fallback roadmap generation');
+        // Fallback: Generate structured roadmap without AI
+        aiResponse = JSON.stringify(generateFallbackRoadmap(currentLevel, testResults));
+      }
+      
+      // Parse AI response
+      let roadmapData;
+      try {
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        roadmapData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(aiResponse);
+      } catch (parseError) {
+        console.warn('Failed to parse AI roadmap, using fallback');
+        roadmapData = generateFallbackRoadmap(currentLevel, testResults);
+      }
+      
+      // Create roadmap in database (as guest roadmap with auto-expiry after 30 days)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+      
+      const [roadmap] = await db.insert(learningRoadmaps).values({
+        title: roadmapData.title || `${contactInfo?.name || 'Guest'}'s Personalized Learning Path`,
+        description: roadmapData.description || `Customized roadmap based on ${currentLevel} placement test results`,
+        targetLevel: getNextLevel(currentLevel),
+        estimatedWeeks: roadmapData.estimatedWeeks || 12,
+        difficulty: currentLevel,
+        isActive: true,
+        createdBy: null, // Guest roadmap
+        tags: ['placement-test', 'ai-generated', 'guest', currentLevel, `expires:${expiresAt.toISOString()}`]
+      }).returning();
+      
+      // Create milestones
+      const milestonesWithSteps = [];
+      for (const milestoneData of (roadmapData.milestones || [])) {
+        const [milestone] = await db.insert(roadmapMilestones).values({
+          roadmapId: roadmap.id,
+          title: milestoneData.title,
+          description: milestoneData.description,
+          orderIndex: milestoneData.orderIndex,
+          estimatedWeeks: milestoneData.estimatedWeeks || 3
+        }).returning();
+        
+        // Create steps for this milestone
+        const steps = [];
+        for (const stepData of (milestoneData.steps || [])) {
+          const [step] = await db.insert(roadmapSteps).values({
+            milestoneId: milestone.id,
+            title: stepData.title,
+            description: stepData.description,
+            orderIndex: stepData.orderIndex,
+            resourceType: stepData.resourceType || 'lesson',
+            estimatedHours: stepData.estimatedHours || 2,
+            contentUrl: null,
+            prerequisites: []
+          }).returning();
+          steps.push(step);
+        }
+        
+        milestonesWithSteps.push({ ...milestone, steps });
+      }
+      
+      // Validate roadmap has content
+      if (!milestonesWithSteps || milestonesWithSteps.length === 0) {
+        console.error('Generated roadmap has no milestones');
+        return res.status(500).json({ 
+          message: "Failed to generate roadmap content",
+          success: false 
+        });
+      }
+      
+      res.json({
+        success: true,
+        roadmap: {
+          ...roadmap,
+          milestones: milestonesWithSteps
+        }
+      });
+    } catch (error) {
+      console.error('Error generating roadmap from placement test:', error);
+      res.status(500).json({ 
+        message: "Failed to generate personalized roadmap",
+        success: false 
+      });
+    }
+  });
+  
+  // Cleanup endpoint for expired guest roadmaps (called by scheduled task or admin)
+  app.delete("/api/roadmaps/cleanup-guest", async (req: any, res) => {
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      // Find guest roadmaps older than 30 days
+      const expiredRoadmaps = await db
+        .select()
+        .from(learningRoadmaps)
+        .where(
+          and(
+            eq(learningRoadmaps.createdBy, null),
+            sql`${learningRoadmaps.tags} && ARRAY['guest', 'placement-test']::text[]`
+          )
+        );
+      
+      let deletedCount = 0;
+      for (const roadmap of expiredRoadmaps) {
+        // Check if roadmap has expired based on tags
+        const expiryTag = roadmap.tags?.find((tag: string) => tag.startsWith('expires:'));
+        if (expiryTag) {
+          const expiryDate = new Date(expiryTag.split(':')[1]);
+          if (expiryDate < new Date()) {
+            // Delete milestones and steps first (cascade)
+            const milestones = await db
+              .select()
+              .from(roadmapMilestones)
+              .where(eq(roadmapMilestones.roadmapId, roadmap.id));
+            
+            for (const milestone of milestones) {
+              await db.delete(roadmapSteps).where(eq(roadmapSteps.milestoneId, milestone.id));
+            }
+            
+            await db.delete(roadmapMilestones).where(eq(roadmapMilestones.roadmapId, roadmap.id));
+            await db.delete(learningRoadmaps).where(eq(learningRoadmaps.id, roadmap.id));
+            deletedCount++;
+          }
+        }
+      }
+      
+      res.json({ success: true, deletedCount, message: `Deleted ${deletedCount} expired guest roadmaps` });
+    } catch (error) {
+      console.error('Error cleaning up guest roadmaps:', error);
+      res.status(500).json({ message: "Failed to cleanup guest roadmaps" });
+    }
+  });
+}
+
+// Helper function to determine next CEFR level
+function getNextLevel(current: string): string {
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  const currentIndex = levels.indexOf(current);
+  return currentIndex < levels.length - 1 ? levels[currentIndex + 1] : 'C2';
+}
+
+// Fallback roadmap generation without AI
+function generateFallbackRoadmap(currentLevel: string, testResults: any) {
+  const weakestSkill = Object.entries(testResults.skillLevels)
+    .sort((a: any, b: any) => {
+      const scoreA = testResults.scores[a[0]] || 0;
+      const scoreB = testResults.scores[b[0]] || 0;
+      return scoreA - scoreB;
+    })[0][0];
+  
+  const nextLevel = getNextLevel(currentLevel);
+  
+  return {
+    title: `Personalized Learning Path - ${currentLevel} to ${nextLevel}`,
+    description: `A structured 12-week program to advance from ${currentLevel} to ${nextLevel}, with focus on ${weakestSkill}.`,
+    estimatedWeeks: 12,
+    milestones: [
+      {
+        title: 'Speaking Fundamentals',
+        description: 'Build confidence in conversational English',
+        orderIndex: 1,
+        estimatedWeeks: 3,
+        steps: [
+          { title: 'Pronunciation Practice', description: 'Master essential phonemes and intonation', orderIndex: 1, resourceType: 'practice', estimatedHours: 4 },
+          { title: 'Daily Conversation Topics', description: 'Practice common situations (shopping, directions, small talk)', orderIndex: 2, resourceType: 'lesson', estimatedHours: 5 },
+          { title: 'Fluency Building Exercises', description: 'Reduce hesitation and increase speaking speed', orderIndex: 3, resourceType: 'practice', estimatedHours: 3 },
+          { title: 'Role-Play Scenarios', description: 'Interactive speaking practice with feedback', orderIndex: 4, resourceType: 'practice', estimatedHours: 4 }
+        ]
+      },
+      {
+        title: 'Listening Comprehension',
+        description: 'Enhance your ability to understand spoken English',
+        orderIndex: 2,
+        estimatedWeeks: 3,
+        steps: [
+          { title: 'Active Listening Techniques', description: 'Learn strategies for better comprehension', orderIndex: 1, resourceType: 'lesson', estimatedHours: 2 },
+          { title: 'Podcast & News Listening', description: 'Practice with authentic materials', orderIndex: 2, resourceType: 'practice', estimatedHours: 6 },
+          { title: 'Dictation Exercises', description: 'Improve listening accuracy through dictation', orderIndex: 3, resourceType: 'practice', estimatedHours: 4 },
+          { title: 'Accent Recognition', description: 'Familiarize with different English accents', orderIndex: 4, resourceType: 'video', estimatedHours: 3 }
+        ]
+      },
+      {
+        title: 'Reading Skills Development',
+        description: 'Improve reading speed and comprehension',
+        orderIndex: 3,
+        estimatedWeeks: 3,
+        steps: [
+          { title: 'Vocabulary Building', description: 'Learn high-frequency words and phrases', orderIndex: 1, resourceType: 'lesson', estimatedHours: 5 },
+          { title: 'Skimming & Scanning', description: 'Master efficient reading techniques', orderIndex: 2, resourceType: 'lesson', estimatedHours: 3 },
+          { title: 'Reading Practice Passages', description: 'Graded reading materials with comprehension questions', orderIndex: 3, resourceType: 'practice', estimatedHours: 6 },
+          { title: 'Context Clue Strategies', description: 'Learn to understand unknown words from context', orderIndex: 4, resourceType: 'lesson', estimatedHours: 2 }
+        ]
+      },
+      {
+        title: 'Writing Mastery',
+        description: 'Develop clear and effective writing skills',
+        orderIndex: 4,
+        estimatedWeeks: 3,
+        steps: [
+          { title: 'Sentence Structure', description: 'Master complex sentence patterns', orderIndex: 1, resourceType: 'lesson', estimatedHours: 4 },
+          { title: 'Paragraph Organization', description: 'Learn to structure coherent paragraphs', orderIndex: 2, resourceType: 'lesson', estimatedHours: 3 },
+          { title: 'Essay Writing Practice', description: 'Write and receive feedback on essays', orderIndex: 3, resourceType: 'practice', estimatedHours: 6 },
+          { title: 'Grammar & Punctuation', description: 'Review essential grammar rules', orderIndex: 4, resourceType: 'quiz', estimatedHours: 4 }
+        ]
+      }
+    ]
+  };
 }

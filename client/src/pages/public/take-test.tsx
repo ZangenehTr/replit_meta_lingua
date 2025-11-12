@@ -66,9 +66,11 @@ export default function TakeTestPage() {
   const [currentQuestion, setCurrentQuestion] = useState<PlacementTestQuestion | null>(null);
   const [userResponse, setUserResponse] = useState<any>('');
   const [testResults, setTestResults] = useState<PlacementTestResults | null>(null);
-  const [testStep, setTestStep] = useState<'intro' | 'testing' | 'contact' | 'results'>('intro');
+  const [testStep, setTestStep] = useState<'intro' | 'testing' | 'contact' | 'roadmap' | 'results'>('intro');
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '' });
+  const [personalizedRoadmap, setPersonalizedRoadmap] = useState<any | null>(null);
+  const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -193,14 +195,53 @@ export default function TakeTestPage() {
       if (!response.ok) throw new Error('Failed to save contact');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data, variables) => {
       localStorage.removeItem('guest_placement_session_id');
       setShowContactModal(false);
-      setTestStep('results');
-      toast({
-        title: 'Thank you!',
-        description: 'Your information has been saved. View your results below.'
-      });
+      
+      // Generate AI-powered personalized roadmap
+      setTestStep('roadmap');
+      setIsGeneratingRoadmap(true);
+      
+      try {
+        const roadmapResponse = await fetch('/api/roadmaps/generate-from-placement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            testResults: testResults,
+            contactInfo: variables
+          })
+        });
+        
+        if (roadmapResponse.ok) {
+          const roadmapData = await roadmapResponse.json();
+          
+          // Validate roadmap has actual content
+          if (roadmapData.success && roadmapData.roadmap && 
+              roadmapData.roadmap.milestones && roadmapData.roadmap.milestones.length > 0) {
+            setPersonalizedRoadmap(roadmapData.roadmap);
+            toast({
+              title: 'Roadmap Generated!',
+              description: 'Your personalized learning path is ready based on your test results.'
+            });
+          } else {
+            console.error('Roadmap data is invalid:', roadmapData);
+            throw new Error('Invalid roadmap data');
+          }
+        } else {
+          throw new Error('Failed to generate roadmap');
+        }
+      } catch (error) {
+        console.error('Roadmap generation error:', error);
+        toast({
+          title: 'Note',
+          description: 'Your results are ready. Personalized roadmap will be available soon.',
+          variant: 'default'
+        });
+      } finally {
+        setIsGeneratingRoadmap(false);
+        setTestStep('results');
+      }
     },
     onError: () => {
       toast({
@@ -436,11 +477,27 @@ export default function TakeTestPage() {
     );
   }
 
+  // Roadmap Generation Loading Screen
+  if (testStep === 'roadmap' && isGeneratingRoadmap) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
+        <Card className="w-full max-w-md text-center p-8">
+          <Brain className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
+          <CardTitle className="text-2xl mb-2">Generating Your Personalized Roadmap</CardTitle>
+          <CardDescription className="mb-6">
+            Our AI is creating a customized learning path based on your test results...
+          </CardDescription>
+          <Progress value={66} className="w-full" />
+        </Card>
+      </div>
+    );
+  }
+
   // Results Screen
   if (testStep === 'results' && testResults) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           <Card className="shadow-xl">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
@@ -489,18 +546,75 @@ export default function TakeTestPage() {
                   </ul>
                 </div>
               )}
-
-              <div className="pt-4 space-y-3">
-                <Button className="w-full" size="lg" onClick={() => navigate('/curriculum')} data-testid="button-explore-courses">
-                  Explore Our Courses
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/register')} data-testid="button-register">
-                  Create Account to Start Learning
-                </Button>
-              </div>
             </CardContent>
           </Card>
+
+          {/* AI-Generated Personalized Roadmap */}
+          {personalizedRoadmap && personalizedRoadmap.milestones && (
+            <Card className="shadow-xl border-2 border-primary/20">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Brain className="h-8 w-8 text-primary" />
+                  <div>
+                    <CardTitle className="text-2xl">Your Personalized Learning Roadmap</CardTitle>
+                    <CardDescription className="text-base mt-1">
+                      {personalizedRoadmap.description}
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="w-fit mt-2">
+                  {personalizedRoadmap.estimatedWeeks} weeks • AI-Generated
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {personalizedRoadmap.milestones.map((milestone: any, index: number) => (
+                  <Card key={milestone.id} className="border-l-4 border-l-primary">
+                    <CardHeader>
+                      <div className="flex items-start gap-3">
+                        <Badge className="mt-1">Week {(index * 3) + 1}-{(index + 1) * 3}</Badge>
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{milestone.title}</CardTitle>
+                          <CardDescription>{milestone.description}</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {milestone.steps && milestone.steps.map((step: any) => (
+                          <div key={step.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                            <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{step.title}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs">
+                                <Badge variant="outline" className="text-xs">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {step.estimatedHours}h
+                                </Badge>
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {step.resourceType}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="pt-4 space-y-3">
+            <Button className="w-full" size="lg" onClick={() => navigate('/curriculum')} data-testid="button-explore-courses">
+              Explore Our Courses
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => navigate('/auth?tab=register')} data-testid="button-register">
+              Create Account to Start Learning
+            </Button>
+          </div>
         </div>
       </div>
     );
