@@ -11,8 +11,17 @@ import {
 import { LanguageSelector } from '@/components/language-selector';
 import { VisitorChatWidget } from '@/components/visitor-chat/VisitorChatWidget';
 import { useLanguage } from '@/hooks/use-language';
+import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import {
   Menu,
   X,
@@ -42,6 +51,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { direction } = useLanguage();
+  const breadcrumbs = useBreadcrumbs();
 
   // Fetch active curriculum categories for navigation
   const { data: curriculumCategories = [] } = useQuery<any[]>({
@@ -313,6 +323,43 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           </div>
         </nav>
       </header>
+
+      {/* Breadcrumbs */}
+      {breadcrumbs.length > 0 && (
+        <div className="border-b bg-background/50 backdrop-blur">
+          <div className="mx-auto max-w-7xl px-4 py-3 lg:px-8">
+            <Breadcrumb>
+              <BreadcrumbList>
+                {breadcrumbs.map((crumb, index) => {
+                  const isLast = index === breadcrumbs.length - 1;
+                  const Icon = crumb.icon;
+
+                  return (
+                    <div key={index} className="flex items-center gap-2">
+                      <BreadcrumbItem>
+                        {isLast ? (
+                          <BreadcrumbPage className="flex items-center gap-2" data-testid={`breadcrumb-current-${index}`}>
+                            {Icon && <Icon className="h-4 w-4" />}
+                            {crumb.label}
+                          </BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink asChild>
+                            <Link href={crumb.href!} className="flex items-center gap-2" data-testid={`breadcrumb-link-${index}`}>
+                              {Icon && <Icon className="h-4 w-4" />}
+                              {crumb.label}
+                            </Link>
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                      {!isLast && <BreadcrumbSeparator />}
+                    </div>
+                  );
+                })}
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1">
