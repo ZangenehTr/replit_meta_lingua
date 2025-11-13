@@ -153,13 +153,11 @@ export default function CurriculumCategory() {
               <IconComponent className="h-12 w-12 text-primary" />
             </div>
             <div className="flex-1">
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
-                <span className="bg-gradient-to-r from-primary via-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {category.name}
-                </span>
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4 text-foreground">
+                {category.name}
               </h1>
               {category.description && (
-                <p className="text-lg text-muted-foreground mb-6 max-w-3xl">
+                <p className="text-lg text-foreground/80 mb-6 max-w-3xl">
                   {category.description}
                 </p>
               )}

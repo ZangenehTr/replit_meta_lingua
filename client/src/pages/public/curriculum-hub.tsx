@@ -68,12 +68,10 @@ export default function CurriculumHub() {
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-6">
-              <span className="bg-gradient-to-r from-primary via-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {t('curriculum.heroTitle', 'Explore Our Courses')}
-              </span>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-6 text-foreground">
+              {t('curriculum.heroTitle', 'Explore Our Courses')}
             </h1>
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground mb-8">
+            <p className="mx-auto max-w-2xl text-lg text-foreground/80 mb-8">
               {t('curriculum.heroSubtitle', 'Choose from our expertly designed curriculum categories to achieve your language learning goals')}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
