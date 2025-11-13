@@ -1,10 +1,10 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Brain, Mic, PenTool, Headphones, BookOpen, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Clock, Brain, Mic, PenTool, Headphones, BookOpen, ArrowRight, CheckCircle2, Square, Play, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -71,6 +71,14 @@ export default function TakeTestPage() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '' });
   const [personalizedRoadmap, setPersonalizedRoadmap] = useState<any | null>(null);
   const [isGeneratingRoadmap, setIsGeneratingRoadmap] = useState(false);
+  
+  // Audio recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioURL, setAudioURL] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -150,6 +158,10 @@ export default function TakeTestPage() {
       } else if (data.success && data.question) {
         setCurrentQuestion(data.question);
         setUserResponse('');
+        // Reset audio state for new question
+        setAudioBlob(null);
+        setAudioURL(null);
+        setIsRecording(false);
       }
     } catch (error) {
       console.error('Failed to fetch next question:', error);
@@ -159,6 +171,65 @@ export default function TakeTestPage() {
         variant: 'destructive'
       });
     }
+  };
+
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        const url = URL.createObjectURL(audioBlob);
+        setAudioURL(url);
+        
+        // Convert to base64 for submission
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          setUserResponse(reader.result);
+        };
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to access microphone. Please check your browser permissions.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const deleteRecording = () => {
+    if (audioURL) {
+      URL.revokeObjectURL(audioURL);
+    }
+    setAudioBlob(null);
+    setAudioURL(null);
+    setUserResponse('');
   };
 
   const submitResponseMutation = useMutation({
@@ -397,11 +468,64 @@ export default function TakeTestPage() {
               )}
 
               {currentQuestion.responseType === 'audio' && (
-                <Alert>
-                  <AlertDescription>
-                    Audio recording is not available in the guest test. Please describe your answer in text instead.
-                  </AlertDescription>
-                </Alert>
+                <div className="space-y-4">
+                  {!audioBlob ? (
+                    <div className="text-center space-y-4 p-6 border-2 border-dashed border-primary/30 rounded-lg">
+                      <Mic className="h-12 w-12 mx-auto text-primary" />
+                      <div>
+                        <p className="font-medium mb-2">Record your answer</p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Click the button below to start recording your response
+                        </p>
+                      </div>
+                      {!isRecording ? (
+                        <Button
+                          onClick={startRecording}
+                          size="lg"
+                          className="w-full sm:w-auto"
+                          data-testid="button-start-recording"
+                        >
+                          <Mic className="mr-2 h-5 w-5" />
+                          Start Recording
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={stopRecording}
+                          size="lg"
+                          variant="destructive"
+                          className="w-full sm:w-auto animate-pulse"
+                          data-testid="button-stop-recording"
+                        >
+                          <Square className="mr-2 h-5 w-5" />
+                          Stop Recording
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4 p-6 border-2 border-primary/30 rounded-lg bg-primary/5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          <span className="font-medium">Recording complete</span>
+                        </div>
+                        <Button
+                          onClick={deleteRecording}
+                          size="sm"
+                          variant="outline"
+                          data-testid="button-delete-recording"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete & Re-record
+                        </Button>
+                      </div>
+                      {audioURL && (
+                        <div className="flex items-center gap-4">
+                          <audio src={audioURL} controls className="flex-1" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
 
               <Button
