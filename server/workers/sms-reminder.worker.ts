@@ -149,6 +149,10 @@ export class SMSReminderWorker {
 
       console.log(`Completed processing placement test reminders`);
     } catch (error) {
+      // Silently skip if database tables don't exist yet (expected in development)
+      if (error && typeof error === 'object' && 'code' in error && error.code === '42P01') {
+        return; // Table doesn't exist, skip silently
+      }
       console.error('Error processing placement test reminders:', error);
     }
   }
