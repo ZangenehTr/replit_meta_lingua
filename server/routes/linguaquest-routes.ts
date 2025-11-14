@@ -1,5 +1,9 @@
 import type { Express } from "express";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import crypto from "crypto";
+import fs from "fs";
 import { linguaQuestService } from "../services/linguaquest-service";
 import { 
   insertLinguaquestLessonSchema,
@@ -9,6 +13,34 @@ import {
   insertVisitorAchievementSchema,
   insertLinguaquestLessonFeedbackSchema
 } from "@shared/schema";
+
+// Configure multer for LinguaQuest image uploads
+const imageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'linguaquest', 'images');
+    // Ensure directory exists
+    fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
+    cb(null, `linguaquest-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const uploadImage = multer({
+  storage: imageStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 /**
  * LinguaQuest Free Learning Platform API Routes
@@ -145,6 +177,71 @@ export function registerLinguaQuestRoutes(app: Express) {
       res.status(500).json({ 
         success: false, 
         error: 'Failed to get lesson' 
+      });
+    }
+  });
+
+  /**
+   * Upload image for LinguaQuest lesson or vocabulary item
+   * POST /api/linguaquest/upload/image
+   */
+  app.post('/api/linguaquest/upload/image', uploadImage.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No image file provided'
+        });
+      }
+
+      const imageUrl = `/uploads/linguaquest/images/${req.file.filename}`;
+      
+      res.json({
+        success: true,
+        imageUrl,
+        filename: req.file.filename,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to upload image'
+      });
+    }
+  });
+
+  /**
+   * Upload multiple images for LinguaQuest lessons
+   * POST /api/linguaquest/upload/images
+   */
+  app.post('/api/linguaquest/upload/images', uploadImage.array('images', 20), async (req, res) => {
+    try {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No image files provided'
+        });
+      }
+
+      const uploadedImages = req.files.map(file => ({
+        imageUrl: `/uploads/linguaquest/images/${file.filename}`,
+        filename: file.filename,
+        size: file.size,
+        mimetype: file.mimetype
+      }));
+
+      res.json({
+        success: true,
+        images: uploadedImages,
+        count: uploadedImages.length
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to upload images'
       });
     }
   });

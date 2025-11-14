@@ -97,6 +97,24 @@ export function GameStepRenderer({ step, onComplete, onProgress }: GameStepProps
       case 'spell_word':
         return <SpellingStep step={step} onComplete={handleStepComplete} />;
       
+      case 'synonym_antonym':
+      case 'synonym_matching':
+      case 'antonym_matching':
+        return <SynonymAntonymStep step={step} onComplete={handleStepComplete} />;
+      
+      case 'word_formation':
+      case 'word_family':
+        return <WordFormationStep step={step} onComplete={handleStepComplete} />;
+      
+      case 'grammar_battles':
+      case 'grammar_challenge':
+        return <GrammarBattlesStep step={step} onComplete={handleStepComplete} />;
+      
+      case 'timed_vocabulary_blitz':
+      case 'timed_blitz':
+      case 'vocabulary_blitz':
+        return <TimedVocabularyBlitzStep step={step} onComplete={handleStepComplete} />;
+      
       default:
         return <DefaultStep step={step} onComplete={handleStepComplete} />;
     }
@@ -1514,6 +1532,319 @@ function SpellingStep({ step, onComplete }: { step: any; onComplete: (score: num
             </Button>
           )}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Synonym/Antonym Step Component
+function SynonymAntonymStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const pairs = step.pairs || [];
+  const type = step.relationshipType || 'synonym'; // 'synonym' or 'antonym'
+
+  const handleAnswerSelect = (wordId: string, answer: string, correctAnswer: string) => {
+    const newAnswers = { ...selectedAnswers, [wordId]: answer };
+    setSelectedAnswers(newAnswers);
+
+    if (Object.keys(newAnswers).length === pairs.length) {
+      const correctCount = pairs.filter((pair: any, idx: number) => {
+        const pairKey = pair.id ?? `pair-${idx}`;
+        return newAnswers[pairKey] === (pair.correctAnswer || pair.correct);
+      }).length;
+      const score = (correctCount / pairs.length) * 100;
+      setTimeout(() => onComplete(score), 800);
+    }
+  };
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">
+          {type === 'synonym' ? t('gameSteps.synonymMatching') : t('gameSteps.antonymMatching')}
+        </CardTitle>
+        <p className="text-sm text-gray-600">{step.instruction || t('gameSteps.selectCorrectWord')}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {pairs.map((pair: any, index: number) => {
+            const pairKey = pair.id ?? `pair-${index}`;
+            return (
+              <Card key={pairKey} className="p-4">
+                <p className="font-bold text-lg mb-3">{pair.word}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {pair.options?.map((option: string, optIndex: number) => (
+                    <Button
+                      key={optIndex}
+                      variant={selectedAnswers[pairKey] === option ? "default" : "outline"}
+                      className={cn(
+                        "w-full",
+                        selectedAnswers[pairKey] === option && 
+                        option === (pair.correctAnswer || pair.correct) && "bg-emerald-600 hover:bg-emerald-700",
+                        selectedAnswers[pairKey] === option && 
+                        option !== (pair.correctAnswer || pair.correct) && "bg-red-500 hover:bg-red-600"
+                      )}
+                      onClick={() => handleAnswerSelect(pairKey, option, pair.correctAnswer || pair.correct)}
+                      data-testid={`synonym-option-${pairKey}-${option}`}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+        <Progress value={(Object.keys(selectedAnswers).length / pairs.length) * 100} className="mt-4 h-2" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// Word Formation Step Component
+function WordFormationStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+  const words = step.words || [];
+
+  const handleInputChange = (wordId: string, value: string) => {
+    const newAnswers = { ...userAnswers, [wordId]: value };
+    setUserAnswers(newAnswers);
+  };
+
+  const checkAnswers = () => {
+    const correctCount = words.filter((word: any) => 
+      userAnswers[word.id]?.trim().toLowerCase() === word.correctForm?.toLowerCase()
+    ).length;
+    const score = (correctCount / words.length) * 100;
+    onComplete(score);
+  };
+
+  const allAnswered = Object.keys(userAnswers).length === words.length && 
+                      Object.values(userAnswers).every(v => v.trim().length > 0);
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.wordFormation')}</CardTitle>
+        <p className="text-sm text-gray-600">{step.instruction || t('gameSteps.completeWordForms')}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {words.map((word: any, index: number) => (
+            <div key={word.id || index} className="space-y-2">
+              <p className="text-sm text-gray-600">{word.prompt || word.sentence}</p>
+              <div className="flex gap-2 items-center">
+                <span className="font-medium">{word.baseWord}</span>
+                <span className="text-gray-400">→</span>
+                <input
+                  type="text"
+                  className="flex-1 px-3 py-2 border rounded-md"
+                  placeholder={t('gameSteps.typeAnswer')}
+                  value={userAnswers[word.id] || ''}
+                  onChange={(e) => handleInputChange(word.id, e.target.value)}
+                  data-testid={`word-formation-${word.id}`}
+                />
+              </div>
+              {word.hint && (
+                <p className="text-xs text-gray-500 italic">💡 {word.hint}</p>
+              )}
+            </div>
+          ))}
+        </div>
+        <Button
+          onClick={checkAnswers}
+          disabled={!allAnswered}
+          className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700"
+          data-testid="submit-word-formation"
+        >
+          {t('gameSteps.submit')}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Grammar Battles Step Component
+function GrammarBattlesStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [score, setScore] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const questions = step.questions || [];
+  const question = questions[currentQuestion];
+
+  const handleAnswerSelect = (answer: string) => {
+    setSelectedAnswer(answer);
+    setAnswered(true);
+    
+    const isCorrect = answer === question.correctAnswer;
+    if (isCorrect) {
+      setScore(score + 1);
+    }
+
+    setTimeout(() => {
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+        setAnswered(false);
+        setSelectedAnswer(null);
+      } else {
+        const finalScore = ((score + (isCorrect ? 1 : 0)) / questions.length) * 100;
+        onComplete(finalScore);
+      }
+    }, 1500);
+  };
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.grammarBattle')}</CardTitle>
+        <div className="flex justify-between items-center mt-2">
+          <Badge variant="outline">{t('gameSteps.question')} {currentQuestion + 1}/{questions.length}</Badge>
+          <Badge className="bg-emerald-600">{t('gameSteps.score')}: {score}/{questions.length}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {question && (
+          <div className="space-y-4">
+            <Card className="p-4 bg-gray-50">
+              <p className="text-lg font-medium">{question.question || question.sentence}</p>
+              {question.rule && (
+                <p className="text-sm text-gray-600 mt-2">📚 {question.rule}</p>
+              )}
+            </Card>
+            <div className="grid grid-cols-1 gap-2">
+              {question.options?.map((option: string, index: number) => (
+                <Button
+                  key={index}
+                  variant={selectedAnswer === option ? "default" : "outline"}
+                  className={cn(
+                    "w-full justify-start text-left h-auto py-3 px-4",
+                    answered && option === question.correctAnswer && "bg-emerald-600 hover:bg-emerald-700",
+                    answered && selectedAnswer === option && option !== question.correctAnswer && "bg-red-500 hover:bg-red-600"
+                  )}
+                  onClick={() => !answered && handleAnswerSelect(option)}
+                  disabled={answered}
+                  data-testid={`grammar-option-${index}`}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+            {answered && question.explanation && (
+              <Card className="p-3 bg-blue-50 border-blue-200">
+                <p className="text-sm">{question.explanation}</p>
+              </Card>
+            )}
+          </div>
+        )}
+        <Progress value={((currentQuestion + 1) / questions.length) * 100} className="mt-4 h-2" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// Timed Vocabulary Blitz Step Component
+function TimedVocabularyBlitzStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [timeLeft, setTimeLeft] = useState(step.timeLimit || 60);
+  const [currentWord, setCurrentWord] = useState(0);
+  const [score, setScore] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
+  const words = step.words || [];
+  const word = words[currentWord];
+
+  useEffect(() => {
+    if (!gameStarted || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          const finalScore = (score / words.length) * 100;
+          setTimeout(() => onComplete(finalScore), 500);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameStarted, timeLeft, score, words.length, onComplete]);
+
+  const handleAnswer = (isCorrect: boolean) => {
+    if (isCorrect) {
+      setScore(score + 1);
+    }
+
+    if (currentWord < words.length - 1) {
+      setCurrentWord(currentWord + 1);
+    } else {
+      const finalScore = ((score + (isCorrect ? 1 : 0)) / words.length) * 100;
+      onComplete(finalScore);
+    }
+  };
+
+  const startGame = () => {
+    setGameStarted(true);
+  };
+
+  if (!gameStarted) {
+    return (
+      <Card className="border-emerald-200">
+        <CardHeader>
+          <CardTitle className="text-emerald-700">{t('gameSteps.vocabularyBlitz')}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <p className="text-lg mb-4">{step.instruction || t('gameSteps.matchWordsQuickly')}</p>
+          <p className="text-gray-600 mb-6">⏱️ {step.timeLimit || 60} {t('gameSteps.seconds')}</p>
+          <Button onClick={startGame} className="bg-emerald-600 hover:bg-emerald-700" data-testid="start-blitz">
+            {t('gameSteps.start')} <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-emerald-700">{t('gameSteps.vocabularyBlitz')}</CardTitle>
+          <div className="flex gap-3">
+            <Badge className={cn("text-lg px-3", timeLeft <= 10 && "bg-red-500")}>
+              ⏱️ {timeLeft}s
+            </Badge>
+            <Badge variant="outline" className="text-lg px-3">
+              {score}/{words.length}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {word && (
+          <div className="space-y-4">
+            <Card className="p-6 bg-emerald-50 text-center">
+              <p className="text-2xl font-bold">{word.word || word.text}</p>
+            </Card>
+            <div className="grid grid-cols-2 gap-3">
+              {word.options?.map((option: string, index: number) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="h-20 text-lg"
+                  onClick={() => handleAnswer(option === word.correctTranslation || option === word.correct)}
+                  data-testid={`blitz-option-${index}`}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+        <Progress value={((currentWord + 1) / words.length) * 100} className="mt-4 h-2" />
       </CardContent>
     </Card>
   );
