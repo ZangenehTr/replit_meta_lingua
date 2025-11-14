@@ -31,7 +31,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
     - Public marketing website with 8 pages, SEO implementation, and partial i18n.
     - Comprehensive SMS Campaign Management System.
     - Dynamic Curriculum Category System with admin management, drag-to-reorder, and public hub.
-    - Guest Placement Test Flow with anonymous testing, contact capture, AI-powered personalized roadmap generation, CEFR results, and curriculum recommendations.
+    - Guest Placement Test Flow with anonymous testing, **auto-timer audio recording** (browser MediaRecorder API, countdown timer, auto-stop), contact capture, AI-powered personalized roadmap generation, CEFR results, and curriculum recommendations.
     - Visitor Chat System with floating widget, contact capture, RTL support, and admin dashboard.
     - Font Management System for white-label branding, custom font uploads, and language-specific activation.
     - Breadcrumb Navigation System with dynamic URL-based trail generation, i18n, and RTL/LTR awareness.
