@@ -259,6 +259,15 @@ export default function TakeTestPage() {
     setUserResponse('');
   };
 
+  // Cleanup timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimer) {
+        clearInterval(recordingTimer);
+      }
+    };
+  }, [recordingTimer]);
+
   const submitResponseMutation = useMutation({
     mutationFn: async ({ sessionId, questionId, response }: any) => {
       const res = await fetch(`/api/placement-test/guest/sessions/${sessionId}/responses`, {
