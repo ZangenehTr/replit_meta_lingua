@@ -76,6 +76,8 @@ export default function TakeTestPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [recordingTimeLeft, setRecordingTimeLeft] = useState<number>(0);
+  const [recordingTimer, setRecordingTimer] = useState<NodeJS.Timeout | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
@@ -206,6 +208,26 @@ export default function TakeTestPage() {
 
       mediaRecorder.start();
       setIsRecording(true);
+      
+      // Set recording timer with auto-countdown
+      const duration = currentQuestion?.expectedDurationSeconds || 120;
+      setRecordingTimeLeft(duration);
+      
+      const timer = setInterval(() => {
+        setRecordingTimeLeft(prev => {
+          const newTime = prev - 1;
+          if (newTime <= 0) {
+            // Auto-stop when time reaches 0
+            clearInterval(timer);
+            setTimeout(() => stopRecording(), 100);
+            return 0;
+          }
+          return newTime;
+        });
+      }, 1000);
+      
+      setRecordingTimer(timer);
+      
     } catch (error) {
       console.error('Failed to start recording:', error);
       toast({
@@ -220,6 +242,11 @@ export default function TakeTestPage() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+    }
+    setRecordingTimeLeft(0);
+    if (recordingTimer) {
+      clearInterval(recordingTimer);
+      setRecordingTimer(null);
     }
   };
 
