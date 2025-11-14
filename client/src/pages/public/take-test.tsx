@@ -496,16 +496,23 @@ export default function TakeTestPage() {
 
               {currentQuestion.responseType === 'audio' && (
                 <div className="space-y-4">
-                  {!audioBlob ? (
-                    <div className="text-center space-y-4 p-6 border-2 border-dashed border-primary/30 rounded-lg">
-                      <Mic className="h-12 w-12 mx-auto text-primary" />
-                      <div>
-                        <p className="font-medium mb-2">Record your answer</p>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Click the button below to start recording your response
-                        </p>
-                      </div>
-                      {!isRecording ? (
+                  <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                      <strong>Instructions:</strong> Click the microphone button and speak your answer clearly. 
+                      You have up to {currentQuestion.expectedDurationSeconds} seconds.
+                    </p>
+                  </div>
+
+                  <div className="text-center space-y-4 p-6 border-2 border-dashed border-primary/30 rounded-lg">
+                    {!audioBlob && !isRecording && (
+                      <>
+                        <Mic className="h-12 w-12 mx-auto text-primary" />
+                        <div>
+                          <p className="font-medium mb-2">Record your answer</p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Click the button below to start recording your response
+                          </p>
+                        </div>
                         <Button
                           onClick={startRecording}
                           size="lg"
@@ -515,26 +522,47 @@ export default function TakeTestPage() {
                           <Mic className="mr-2 h-5 w-5" />
                           Start Recording
                         </Button>
-                      ) : (
+                      </>
+                    )}
+
+                    {isRecording && (
+                      <div className="space-y-4">
+                        <Mic className="h-12 w-12 mx-auto text-red-500 animate-pulse" />
+                        <div className="flex items-center justify-center gap-3">
+                          <Badge variant="destructive" className="animate-pulse">
+                            Recording...
+                          </Badge>
+                          <span className="text-lg font-mono text-red-600 dark:text-red-400 font-bold">
+                            {Math.floor(recordingTimeLeft / 60)}:{(recordingTimeLeft % 60).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Recording will auto-stop when timer reaches 0:00
+                        </p>
                         <Button
                           onClick={stopRecording}
                           size="lg"
-                          variant="destructive"
-                          className="w-full sm:w-auto animate-pulse"
+                          variant="outline"
+                          className="w-full sm:w-auto"
                           data-testid="button-stop-recording"
                         >
-                          <Square className="mr-2 h-5 w-5" />
-                          Stop Recording
+                          <Square className="mr-2 h-4 w-4" />
+                          Stop Early
                         </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-4 p-6 border-2 border-primary/30 rounded-lg bg-primary/5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      </div>
+                    )}
+
+                    {audioBlob && !isRecording && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-center gap-2">
                           <CheckCircle2 className="h-5 w-5 text-green-500" />
                           <span className="font-medium">Recording complete</span>
                         </div>
+                        {audioURL && (
+                          <div className="flex items-center justify-center">
+                            <audio src={audioURL} controls className="max-w-full" />
+                          </div>
+                        )}
                         <Button
                           onClick={deleteRecording}
                           size="sm"
@@ -545,13 +573,8 @@ export default function TakeTestPage() {
                           Delete & Re-record
                         </Button>
                       </div>
-                      {audioURL && (
-                        <div className="flex items-center gap-4">
-                          <audio src={audioURL} controls className="flex-1" />
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
 
