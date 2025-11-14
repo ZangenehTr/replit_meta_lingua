@@ -1850,6 +1850,529 @@ function TimedVocabularyBlitzStep({ step, onComplete }: { step: any; onComplete:
   );
 }
 
+// Synonym/Antonym Step Component
+function SynonymAntonymStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
+  const [matchedPairs, setMatchedPairs] = useState<Set<string>>(new Set());
+  const [incorrectAttempts, setIncorrectAttempts] = useState(0);
+  const [score, setScore] = useState(0);
+  
+  const pairs = step.pairs || [];
+  const maxScore = pairs.length * 10;
+  
+  const handleWordClick = (word: string) => {
+    if (matchedPairs.has(word)) return;
+    
+    if (selectedWord === word) {
+      setSelectedWord(null);
+      return;
+    }
+    
+    setSelectedWord(word);
+    if (selectedMatch) {
+      checkMatch(word, selectedMatch);
+    }
+  };
+  
+  const handleMatchClick = (match: string) => {
+    if (matchedPairs.has(match)) return;
+    
+    if (selectedMatch === match) {
+      setSelectedMatch(null);
+      return;
+    }
+    
+    setSelectedMatch(match);
+    if (selectedWord) {
+      checkMatch(selectedWord, match);
+    }
+  };
+  
+  const checkMatch = (word: string, match: string) => {
+    const pair = pairs.find((p: any) => p.word === word && p.match === match);
+    
+    if (pair) {
+      // Correct match
+      setMatchedPairs(prev => new Set([...prev, word, match]));
+      setScore(prev => prev + 10);
+      setSelectedWord(null);
+      setSelectedMatch(null);
+      
+      // Check if all pairs matched
+      if (matchedPairs.size + 2 >= pairs.length * 2) {
+        setTimeout(() => {
+          const finalScore = Math.max(0, maxScore - (incorrectAttempts * 2));
+          onComplete(finalScore);
+        }, 500);
+      }
+    } else {
+      // Incorrect match
+      setIncorrectAttempts(prev => prev + 1);
+      setSelectedWord(null);
+      setSelectedMatch(null);
+    }
+  };
+  
+  const words = pairs.map((p: any) => p.word);
+  const matches = pairs.map((p: any) => p.match).sort(() => Math.random() - 0.5); // Shuffle matches
+  
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.synonymAntonym')}</CardTitle>
+        <div className="flex items-center justify-between mt-2">
+          <Badge variant="outline">{t('gameSteps.matched', { count: matchedPairs.size / 2, total: pairs.length })}</Badge>
+          <Badge>{t('gameSteps.score', { score })}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-600 mb-2">{t('gameSteps.words')}</p>
+            {words.map((word: string, index: number) => (
+              <Button
+                key={index}
+                variant={matchedPairs.has(word) ? "default" : selectedWord === word ? "secondary" : "outline"}
+                className={cn(
+                  "w-full justify-start",
+                  matchedPairs.has(word) && "bg-emerald-600 text-white",
+                  selectedWord === word && "ring-2 ring-emerald-500"
+                )}
+                onClick={() => handleWordClick(word)}
+                disabled={matchedPairs.has(word)}
+                data-testid={`word-${index}`}
+              >
+                {word}
+              </Button>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-600 mb-2">{t('gameSteps.matches')}</p>
+            {matches.map((match: string, index: number) => (
+              <Button
+                key={index}
+                variant={matchedPairs.has(match) ? "default" : selectedMatch === match ? "secondary" : "outline"}
+                className={cn(
+                  "w-full justify-start",
+                  matchedPairs.has(match) && "bg-emerald-600 text-white",
+                  selectedMatch === match && "ring-2 ring-emerald-500"
+                )}
+                onClick={() => handleMatchClick(match)}
+                disabled={matchedPairs.has(match)}
+                data-testid={`match-${index}`}
+              >
+                {match}
+              </Button>
+            ))}
+          </div>
+        </div>
+        {incorrectAttempts > 0 && (
+          <p className="text-sm text-orange-600 mt-3">
+            {t('gameSteps.incorrectAttempts', { count: incorrectAttempts })}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Word Formation Step Component
+function WordFormationStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [selectedTiles, setSelectedTiles] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  
+  const words = step.words || [];
+  const currentWord = words[currentWordIndex];
+  const tiles = currentWord?.tiles || [];
+  
+  const handleTileClick = (tile: string, index: number) => {
+    if (selectedTiles.includes(tile + index)) return;
+    setSelectedTiles([...selectedTiles, tile]);
+  };
+  
+  const handleRemoveTile = (index: number) => {
+    setSelectedTiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const handleCheck = () => {
+    const formedWord = selectedTiles.join('');
+    const correct = formedWord === currentWord.target;
+    
+    setIsCorrect(correct);
+    setShowFeedback(true);
+    
+    if (correct) {
+      setScore(prev => prev + 15);
+    }
+    
+    setTimeout(() => {
+      setShowFeedback(false);
+      if (currentWordIndex < words.length - 1) {
+        setCurrentWordIndex(prev => prev + 1);
+        setSelectedTiles([]);
+      } else {
+        onComplete(score + (correct ? 15 : 0));
+      }
+    }, 1500);
+  };
+  
+  const handleReset = () => {
+    setSelectedTiles([]);
+  };
+  
+  const handleShuffle = () => {
+    // Shuffle is cosmetic since we track by index
+    setSelectedTiles([]);
+  };
+  
+  if (!currentWord) return null;
+  
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.wordFormation')}</CardTitle>
+        <div className="flex items-center justify-between mt-2">
+          <Badge>{t('gameSteps.word', { current: currentWordIndex + 1, total: words.length })}</Badge>
+          <Badge variant="outline">{t('gameSteps.score', { score })}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg text-center">
+          <p className="text-sm text-gray-600 mb-2">{t('gameSteps.formThisWord')}</p>
+          <p className="text-lg font-medium">{currentWord.translation}</p>
+          {currentWord.audioUrl && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => new Audio(currentWord.audioUrl).play()}
+              className="mt-2"
+            >
+              <Volume2 className="w-4 h-4 mr-2" />
+              {t('gameSteps.listen')}
+            </Button>
+          )}
+        </div>
+        
+        <div className="mb-4 min-h-[60px] p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <div className="flex flex-wrap gap-2">
+            {selectedTiles.length === 0 && (
+              <p className="text-gray-400 text-sm">{t('gameSteps.selectTiles')}</p>
+            )}
+            {selectedTiles.map((tile, index) => (
+              <Button
+                key={index}
+                variant="secondary"
+                size="sm"
+                onClick={() => handleRemoveTile(index)}
+                data-testid={`selected-tile-${index}`}
+              >
+                {tile}
+              </Button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tiles.map((tile: string, index: number) => (
+            <Button
+              key={index}
+              variant="outline"
+              onClick={() => handleTileClick(tile, index)}
+              disabled={selectedTiles.length >= currentWord.target.length}
+              data-testid={`tile-${index}`}
+            >
+              {tile}
+            </Button>
+          ))}
+        </div>
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            disabled={selectedTiles.length === 0}
+            data-testid="reset-button"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            {t('gameSteps.reset')}
+          </Button>
+          <Button
+            variant="default"
+            onClick={handleCheck}
+            disabled={selectedTiles.length === 0}
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+            data-testid="check-button"
+          >
+            {t('gameSteps.check')}
+          </Button>
+        </div>
+        
+        {showFeedback && (
+          <div className={cn(
+            "mt-4 p-3 rounded-lg text-center",
+            isCorrect ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700"
+          )}>
+            {isCorrect ? (
+              <div className="flex items-center justify-center">
+                <Check className="w-5 h-5 mr-2" />
+                {t('feedback.correct')}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center">
+                <X className="w-5 h-5 mr-2" />
+                {t('feedback.tryAgain')}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Grammar Battles Step Component
+function GrammarBattlesStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [currentRuleIndex, setCurrentRuleIndex] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  
+  const rules = step.rules || [];
+  const currentRule = rules[currentRuleIndex];
+  const questions = currentRule?.questions || [];
+  const currentQuestion = questions[currentQuestionIndex];
+  
+  const handleAnswerSelect = (answer: string) => {
+    setSelectedAnswer(answer);
+    const correct = answer === currentQuestion.correctAnswer;
+    
+    if (correct) {
+      setScore(prev => prev + 10);
+    }
+    
+    setShowExplanation(true);
+    
+    setTimeout(() => {
+      setShowExplanation(false);
+      setSelectedAnswer(null);
+      
+      // Move to next question or rule
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      } else if (currentRuleIndex < rules.length - 1) {
+        setCurrentRuleIndex(prev => prev + 1);
+        setCurrentQuestionIndex(0);
+      } else {
+        onComplete(score + (correct ? 10 : 0));
+      }
+    }, 2000);
+  };
+  
+  if (!currentRule || !currentQuestion) return null;
+  
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.grammarBattles')}</CardTitle>
+        <div className="flex items-center justify-between mt-2">
+          <Badge>{t('gameSteps.rule', { current: currentRuleIndex + 1, total: rules.length })}</Badge>
+          <Badge variant="outline">{t('gameSteps.score', { score })}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-6 p-4 bg-purple-50 rounded-lg">
+          <p className="text-sm font-semibold text-purple-900 mb-2">{t('gameSteps.grammarRule')}</p>
+          <p className="text-sm text-purple-800 mb-3">{currentRule.ruleText}</p>
+          {currentRule.example && (
+            <div className="p-2 bg-white rounded border border-purple-200">
+              <p className="text-xs text-gray-500 mb-1">{t('gameSteps.example')}</p>
+              <p className="text-sm italic">{currentRule.example}</p>
+            </div>
+          )}
+        </div>
+        
+        <div className="mb-4">
+          <p className="text-sm text-gray-600 mb-3">
+            {t('gameSteps.question')} {currentQuestionIndex + 1}/{questions.length}
+          </p>
+          <p className="text-lg font-medium mb-4">{currentQuestion.sentence}</p>
+        </div>
+        
+        <div className="space-y-2">
+          {currentQuestion.options?.map((option: string, index: number) => (
+            <Button
+              key={index}
+              variant={
+                selectedAnswer === option
+                  ? option === currentQuestion.correctAnswer
+                    ? "default"
+                    : "destructive"
+                  : "outline"
+              }
+              className={cn(
+                "w-full justify-start text-left h-auto py-3",
+                selectedAnswer === option && option === currentQuestion.correctAnswer && "bg-emerald-600"
+              )}
+              onClick={() => handleAnswerSelect(option)}
+              disabled={selectedAnswer !== null}
+              data-testid={`option-${index}`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <span>{option}</span>
+                {selectedAnswer === option && (
+                  option === currentQuestion.correctAnswer ? 
+                    <Check className="w-5 h-5" /> : 
+                    <X className="w-5 h-5" />
+                )}
+              </div>
+            </Button>
+          ))}
+        </div>
+        
+        {showExplanation && currentQuestion.explanation && (
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-900">{currentQuestion.explanation}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Timed Vocabulary Blitz Step Component
+function TimedVocabularyBlitzStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
+  const { t } = useTranslation('linguaquest');
+  const [timeLeft, setTimeLeft] = useState(step.timeLimit || 60);
+  const [currentPairIndex, setCurrentPairIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [isActive, setIsActive] = useState(true);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  
+  const pairs = step.pairs || [];
+  const currentPair = pairs[currentPairIndex];
+  
+  // Shuffle options for each pair
+  const options = currentPair ? [
+    currentPair.translation,
+    ...(currentPair.distractors || [])
+  ].sort(() => Math.random() - 0.5) : [];
+  
+  // Timer countdown
+  useEffect(() => {
+    if (!isActive || timeLeft <= 0) {
+      if (timeLeft <= 0) {
+        onComplete(score);
+      }
+      return;
+    }
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setIsActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [isActive, timeLeft, score, onComplete]);
+  
+  const handleAnswerSelect = (answer: string) => {
+    if (!isActive || selectedAnswer) return;
+    
+    setSelectedAnswer(answer);
+    const correct = answer === currentPair.translation;
+    
+    if (correct) {
+      setScore(prev => prev + 5);
+    }
+    
+    setTimeout(() => {
+      setSelectedAnswer(null);
+      if (currentPairIndex < pairs.length - 1) {
+        setCurrentPairIndex(prev => prev + 1);
+      } else {
+        setIsActive(false);
+        onComplete(score + (correct ? 5 : 0));
+      }
+    }, 500);
+  };
+  
+  if (!currentPair) return null;
+  
+  const progressPercent = ((currentPairIndex + 1) / pairs.length) * 100;
+  
+  return (
+    <Card className="border-emerald-200">
+      <CardHeader>
+        <CardTitle className="text-emerald-700">{t('gameSteps.vocabularyBlitz')}</CardTitle>
+        <div className="flex items-center justify-between mt-2">
+          <Badge variant={timeLeft <= 10 ? "destructive" : "default"}>
+            {t('gameSteps.timeLeft', { time: timeLeft })}
+          </Badge>
+          <Badge variant="outline">{t('gameSteps.score', { score })}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-6 p-6 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg text-center">
+          <p className="text-3xl font-bold text-emerald-700">{currentPair.word}</p>
+          {currentPair.audioUrl && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => new Audio(currentPair.audioUrl).play()}
+              className="mt-2"
+              data-testid="play-audio"
+            >
+              <Volume2 className="w-4 h-4 mr-2" />
+              {t('gameSteps.listen')}
+            </Button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {options.map((option: string, index: number) => (
+            <Button
+              key={index}
+              variant={
+                selectedAnswer === option
+                  ? option === currentPair.translation
+                    ? "default"
+                    : "destructive"
+                  : "outline"
+              }
+              className={cn(
+                "h-20 text-lg",
+                selectedAnswer === option && option === currentPair.translation && "bg-emerald-600"
+              )}
+              onClick={() => handleAnswerSelect(option)}
+              disabled={!isActive || selectedAnswer !== null}
+              data-testid={`blitz-option-${index}`}
+            >
+              {option}
+            </Button>
+          ))}
+        </div>
+        
+        <Progress value={progressPercent} className="h-2" />
+        <p className="text-center text-sm text-gray-600 mt-2">
+          {currentPairIndex + 1} / {pairs.length}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Default Step Component (fallback)
 function DefaultStep({ step, onComplete }: { step: any; onComplete: (score: number) => void }) {
   const { t } = useTranslation('linguaquest');
