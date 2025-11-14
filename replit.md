@@ -24,7 +24,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Responsive Design**: Collapsible sidebar for tablets/desktop, mobile sheet sidebar, responsive grids, smooth transitions, localStorage state persistence.
 - **Key Features**:
     - Unified Dashboard for 8 user roles with conditional feature display.
-    - LinguaQuest interactive game system with 19 activity types.
+    - **LinguaQuest interactive game system with 23 activity types** including 4 new game modes (Synonym/Antonym Matching, Word Formation, Grammar Battles, Timed Vocabulary Blitz) with 6 B1-C1 lessons.
     - TTS audio pre-generation pipeline.
     - Dynamic Form Management System for custom forms with 9 field types.
     - Front Desk Clerk Pages with i18n, including Dashboard, Walk-in Intake, Call Logging, and Caller History.
@@ -54,7 +54,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ### Database Design
 - **ORM**: Drizzle.
-- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress, LinguaQuest lessons, dynamic form definitions/submissions, curriculum categories, guest leads, visitor chat sessions/messages, and custom fonts.
+- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress, LinguaQuest lessons (12 total: 6 pre-existing A1-A2, 6 new B1-C1), dynamic form definitions/submissions, curriculum categories, guest leads, visitor chat sessions/messages, and custom fonts.
 
 ### Deployment Strategy
 - **Development**: Replit hosting with Neon PostgreSQL.
