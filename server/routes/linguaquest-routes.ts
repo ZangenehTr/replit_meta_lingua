@@ -183,9 +183,9 @@ export function registerLinguaQuestRoutes(app: Express) {
 
   /**
    * Upload image for LinguaQuest lesson or vocabulary item
-   * POST /api/linguaquest/upload/image
+   * POST /api/linguaquest/upload-image
    */
-  app.post('/api/linguaquest/upload/image', uploadImage.single('image'), async (req, res) => {
+  app.post('/api/linguaquest/upload-image', uploadImage.single('image'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -214,9 +214,9 @@ export function registerLinguaQuestRoutes(app: Express) {
 
   /**
    * Upload multiple images for LinguaQuest lessons
-   * POST /api/linguaquest/upload/images
+   * POST /api/linguaquest/upload-images
    */
-  app.post('/api/linguaquest/upload/images', uploadImage.array('images', 20), async (req, res) => {
+  app.post('/api/linguaquest/upload-images', uploadImage.array('images', 20), async (req, res) => {
     try {
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
         return res.status(400).json({
