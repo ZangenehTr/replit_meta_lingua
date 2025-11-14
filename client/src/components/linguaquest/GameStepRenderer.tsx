@@ -187,7 +187,13 @@ function VocabularyStep({ step, onComplete }: { step: any; onComplete: (score: n
     const loadAudio = async () => {
       const wordTexts = words.map((w: any) => w.word || w.text || w);
       const audioUrls = await generateVocabularyAudio(wordTexts);
-      setWordAudioUrls(audioUrls);
+      setWordAudioUrls(prevUrls => {
+        // Only update if URLs actually changed
+        const hasChanges = Object.keys(audioUrls).some(word => 
+          audioUrls[word] && audioUrls[word] !== prevUrls[word]
+        );
+        return hasChanges ? { ...prevUrls, ...audioUrls } : prevUrls;
+      });
     };
 
     if (words.length > 0) {
@@ -469,7 +475,7 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
       if (!step.referenceAudio && step.targetSentence) {
         const audioUrl = await generateWordAudio(step.targetSentence);
         if (audioUrl) {
-          setReferenceAudio(audioUrl);
+          setReferenceAudio(prev => prev === audioUrl ? prev : audioUrl); // Only update if URL changed
         }
       }
     };
@@ -1053,7 +1059,7 @@ function SentenceReorderingStep({ step, onComplete }: { step: any; onComplete: (
       if (!step.audio && correctSentence) {
         const audioUrl = await generateWordAudio(correctSentence);
         if (audioUrl) {
-          setSentenceAudio(audioUrl);
+          setSentenceAudio(prev => prev === audioUrl ? prev : audioUrl); // Only update if URL changed
         }
       }
     };
@@ -1163,7 +1169,7 @@ function ImageSelectionStep({ step, onComplete }: { step: any; onComplete: (scor
       if (!step.audio && step.prompt) {
         const audioUrl = await generateWordAudio(step.prompt);
         if (audioUrl) {
-          setPromptAudio(audioUrl);
+          setPromptAudio(prev => prev === audioUrl ? prev : audioUrl); // Only update if URL changed
         }
       }
     };
@@ -1264,7 +1270,13 @@ function TrueFalseStep({ step, onComplete }: { step: any; onComplete: (score: nu
           audioMap[i] = q.audio;
         }
       }
-      setQuestionAudio(audioMap);
+      setQuestionAudio(prevAudio => {
+        // Only update if URLs actually changed
+        const hasChanges = Object.keys(audioMap).some(key => 
+          audioMap[parseInt(key)] && audioMap[parseInt(key)] !== prevAudio[parseInt(key)]
+        );
+        return hasChanges ? { ...prevAudio, ...audioMap } : prevAudio;
+      });
     };
     loadAudio();
   }, [questions, generateWordAudio]);
@@ -1388,7 +1400,7 @@ function SpellingStep({ step, onComplete }: { step: any; onComplete: (score: num
       if (!step.audio && correctWord) {
         const audioUrl = await generateWordAudio(correctWord);
         if (audioUrl) {
-          setWordAudio(audioUrl);
+          setWordAudio(prev => prev === audioUrl ? prev : audioUrl); // Only update if URL changed
         }
       }
     };
