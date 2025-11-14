@@ -26,10 +26,13 @@ export function useTTS(language: string = 'en') {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiRequest('/api/tts/generate', 'POST', {
-        text: word,
-        language,
-        speed: 0.9 // Slightly slower for learning
+      const response = await apiRequest('/api/tts/generate', {
+        method: 'POST',
+        body: {
+          text: word,
+          language,
+          speed: 0.9 // Slightly slower for learning
+        }
       });
 
       if (response.success && response.audioUrl) {
@@ -71,10 +74,13 @@ export function useTTS(language: string = 'en') {
 
       // Generate audio for uncached words
       if (uncachedWords.length > 0) {
-        const response = await apiRequest('/api/tts/vocabulary', 'POST', {
-          words: uncachedWords,
-          language,
-          level: 'normal'
+        const response = await apiRequest('/api/tts/vocabulary', {
+          method: 'POST',
+          body: {
+            words: uncachedWords,
+            language,
+            level: 'normal'
+          }
         });
 
         if (response.success && response.audioFiles) {

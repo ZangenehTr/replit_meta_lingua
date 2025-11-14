@@ -38,6 +38,11 @@ interface LessonData {
   difficulty: string;
   lessonType: 'vocabulary' | 'grammar' | 'conversation' | 'listening' | 'pronunciation';
   sceneType: string;
+  sceneData?: any;
+  interactionConfig?: {
+    gameSteps?: any[];
+    completionRequirements?: any;
+  };
   vocabularyWords?: string[];
   grammarTopics?: string[];
   exampleSentences?: string[];
@@ -50,7 +55,8 @@ interface LessonData {
  * LinguaQuest Lesson Page - 3D Interactive Learning Experience
  */
 export function LinguaQuestLesson() {
-  const { lessonId } = useParams();
+  const params = useParams<{ lessonId: string }>();
+  const lessonId = params.lessonId;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
