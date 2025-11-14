@@ -1722,33 +1722,25 @@ export const insertIranianCalendarSettingsSchema = z.object({
 
 // Insert schema for LinguaQuest lessons
 export const insertLinguaquestLessonSchema = z.object({
-  title: z.string().max(255),
+  title: z.string(),
   description: z.string().optional(),
-  level: z.string().max(10), // A1, A2, B1, B2, C1, C2
-  language: z.string().max(100),
-  questType: z.string().max(100), // adventure, conversation, grammar, vocabulary
-  difficulty: z.number().min(1).max(10).default(1),
-  xpReward: z.number().default(0),
-  estimatedDuration: z.number().optional(), // minutes
-  prerequisites: z.array(z.string()).optional(),
-  content: z.any().optional(), // lesson structure and activities
-  objectives: z.array(z.string()).optional(),
-  vocabulary: z.any().optional(), // key vocabulary items
-  grammarFocus: z.array(z.string()).optional(),
-  culturalContext: z.string().optional(),
-  imageUrl: z.string().max(500).optional(),
-  audioUrl: z.string().max(500).optional(),
-  videoUrl: z.string().max(500).optional(),
-  interactiveElements: z.any().optional(),
-  completionCriteria: z.any().optional(),
+  language: z.string(),
+  difficulty: z.string().optional(), // CEFR level text
+  lessonType: z.string().optional(),
+  sceneType: z.string().optional(),
+  sceneData: z.any().optional(), // JSONB
+  interactionConfig: z.any().optional(), // JSONB
+  estimatedDurationMinutes: z.number().optional(),
+  xpReward: z.number().optional(),
+  completionRequirements: z.any().optional(),
+  vocabularyWords: z.array(z.string()).optional(),
+  grammarTopics: z.array(z.string()).optional(),
+  exampleSentences: z.array(z.string()).optional(),
+  audioFiles: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
-  isPublished: z.boolean().default(false),
-  isFeatured: z.boolean().default(false),
-  viewCount: z.number().default(0),
-  completionCount: z.number().default(0),
-  averageRating: z.number().min(0).max(5).default(0),
-  createdBy: z.number().optional(),
-  isActive: z.boolean().default(true)
+  prerequisites: z.array(z.string()).optional(),
+  isActive: z.boolean().default(true),
+  isPremium: z.boolean().optional()
 });
 
 // Insert schema for Guest Progress Tracking
