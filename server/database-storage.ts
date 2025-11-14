@@ -6047,9 +6047,6 @@ export class DatabaseStorage implements IStorage {
       
       const result = await db.execute(sql`
         SELECT COUNT(*)::int as total FROM (
-          SELECT 1 FROM class_enrollments 
-          WHERE user_id = ${userId} AND payment_status = 'paid' AND enrollment_date >= ${placementDateString}
-          UNION ALL
           SELECT 1 FROM course_payments 
           WHERE user_id = ${userId} AND status = 'completed' AND created_at >= ${placementDateString}
           UNION ALL
