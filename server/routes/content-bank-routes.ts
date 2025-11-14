@@ -6,6 +6,7 @@
 import type { Express } from "express";
 import { contentBankService } from "../services/content-bank-service";
 import { seedContentBank } from "../content/seed-content-bank";
+import { seedLinguaquestLessons } from "../content/seed-linguaquest-lessons";
 
 export function setupContentBankRoutes(app: Express) {
   
@@ -22,6 +23,23 @@ export function setupContentBankRoutes(app: Express) {
       res.status(500).json({
         success: false,
         error: 'Failed to seed content bank'
+      });
+    }
+  });
+
+  /**
+   * Seed LinguaQuest lessons (6 free B1-C1 lessons)
+   * POST /api/content-bank/seed-lessons
+   */
+  app.post('/api/content-bank/seed-lessons', async (req, res) => {
+    try {
+      const result = await seedLinguaquestLessons();
+      res.json(result);
+    } catch (error) {
+      console.error('Error seeding lessons:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to seed LinguaQuest lessons'
       });
     }
   });
