@@ -89,27 +89,26 @@ export default function TakeTestPage() {
     const savedSessionId = localStorage.getItem('guest_placement_session_id');
     if (savedSessionId && testStep === 'intro') {
       const sessionId = parseInt(savedSessionId);
-      // Hydrate session object
-      setCurrentSession({
-        id: sessionId,
-        status: 'in_progress',
-        currentSkill: 'speaking',
-        startedAt: new Date().toISOString(),
-        maxDurationMinutes: 10
-      });
       
-      // Resume session
+      // Check if session is still in progress
       fetch(`/api/placement-test/guest/sessions/${savedSessionId}/next-question`)
         .then(res => res.json())
         .then(data => {
           if (data.success && !data.testCompleted) {
+            // Resume in-progress session
+            setCurrentSession({
+              id: sessionId,
+              status: 'in_progress',
+              currentSkill: 'speaking',
+              startedAt: new Date().toISOString(),
+              maxDurationMinutes: 10
+            });
             setTestStep('testing');
             setCurrentQuestion(data.question);
-          } else if (data.testCompleted) {
-            setTestResults(data.results);
-            setShowContactModal(true);
-            setTestStep('contact');
+          } else {
+            // Session is completed or invalid - clear it and start fresh
             localStorage.removeItem('guest_placement_session_id');
+            // Stay on intro screen so user can start a new test
           }
         })
         .catch(err => {
