@@ -158,12 +158,19 @@ export default function TakeTestPage() {
         setShowContactModal(true);
         setTestStep('contact');
       } else if (data.success && data.question) {
+        // Clear recording timer to prevent it from firing on next question
+        if (recordingTimer) {
+          clearInterval(recordingTimer);
+          setRecordingTimer(null);
+        }
+        
         setCurrentQuestion(data.question);
         setUserResponse('');
         // Reset audio state for new question
         setAudioBlob(null);
         setAudioURL(null);
         setIsRecording(false);
+        setRecordingTimeLeft(0);
       }
     } catch (error) {
       console.error('Failed to fetch next question:', error);
