@@ -60,6 +60,29 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Development**: Replit hosting with Neon PostgreSQL.
 - **Production**: Replit Deploy, downloadable as ZIP, Docker containerization. Designed for Iranian hosting, requiring PostgreSQL 14+, Node.js 18+, Nginx, and Docker (optional).
 
+### Test User Seeding
+For clean deployments (both development and production), use the test user seeding endpoint to populate a fresh database with 9 essential test users:
+
+**Endpoint**: `POST /api/seed-test-users`
+
+**Created Users** (all with password: `test123`):
+1. **Teachers (2)**:
+   - Sara Rezaei (sara.rezaei@example.com) - CallerN available Mon-Fri, 9 AM - 5 PM
+   - Ali Mohammadi (ali.mohammadi@example.com) - CallerN available Sat-Wed, 10 AM - 6 PM
+
+2. **Students (2)**:
+   - Maryam Karimi (maryam.karimi@example.com) - Has CallerN service (5 sessions remaining)
+   - Reza Ahmadi (reza.ahmadi@example.com) - Has 10,000,000,000 rials wallet balance
+
+3. **Admin Roles (5)**:
+   - Admin (admin@metalingua.com) - Full system access
+   - Accountant (accountant@metalingua.com) - Financial management
+   - Call Center (callcenter@metalingua.com) - Student outreach
+   - Front Desk (frontdesk@metalingua.com) - Reception duties
+   - Mentor (mentor@metalingua.com) - Student guidance
+
+**Usage**: After running `npm run db:push` on a fresh PostgreSQL database, call this endpoint to populate test users. Ideal for Iranian self-hosted deployments starting with a clean database.
+
 ## External Dependencies
 
 ### Development Environment
