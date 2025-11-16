@@ -9,8 +9,8 @@
  */
 
 import { db } from "../db";
-import { users, teacherCallernAvailability, studentCallernPackages, callernPackages } from "../../shared/schema";
-import { eq } from "drizzle-orm";
+import { users, studentCallernPackages, callernPackages } from "../../shared/schema";
+import { eq, inArray } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 // Password for all test users (should be changed in production)
@@ -25,16 +25,31 @@ export async function seedTestUsers() {
     console.log('🌱 Starting Test User Seeding...');
     console.log('');
 
-    // Check if users already exist
-    const existingUsers = await db.select().from(users).limit(1);
-    if (existingUsers.length > 0) {
-      const userCount = (await db.select().from(users)).length;
-      console.log(`⚠️  Database already has ${userCount} users.`);
-      console.log('   To reseed, first clear the users table or use a fresh database.');
+    // Check if any of the specific test users already exist
+    const testEmails = [
+      "sara.rezaei@example.com",
+      "ali.mohammadi@example.com",
+      "maryam.karimi@example.com",
+      "reza.ahmadi@example.com",
+      "admin@metalingua.com",
+      "accountant@metalingua.com",
+      "callcenter@metalingua.com",
+      "frontdesk@metalingua.com",
+      "mentor@metalingua.com"
+    ];
+    
+    const existingTestUsers = await db.select().from(users).where(
+      inArray(users.email, testEmails)
+    ).limit(1);
+    
+    if (existingTestUsers.length > 0) {
+      console.log(`⚠️  Test users already exist in database.`);
+      console.log(`   Found existing user: ${existingTestUsers[0].email}`);
+      console.log('   To reseed, first delete these specific test user accounts.');
       return {
         success: false,
-        message: 'Users already exist. Clear database first to reseed.',
-        existingCount: userCount
+        message: 'Test users already exist. Delete them first to reseed.',
+        existingEmail: existingTestUsers[0].email
       };
     }
 
@@ -47,7 +62,7 @@ export async function seedTestUsers() {
     console.log('👨‍🏫 Creating Teachers...');
     
     const teacher1 = await db.insert(users).values({
-      email: "sara.rezaei@metalingua.ir",
+      email: "sara.rezaei@example.com",
       password: HASHED_PASSWORD,
       firstName: "Sara",
       lastName: "Rezaei",
@@ -58,11 +73,11 @@ export async function seedTestUsers() {
       status: "active",
       gender: "female",
       nationalId: "0012345678",
-      notes: "CallerN-enabled teacher, available Mon-Fri"
-    }).returning();
+      notes: "CallerN-enabled teacher"
+    } as any).returning();
 
     const teacher2 = await db.insert(users).values({
-      email: "ali.mohammadi@metalingua.ir",
+      email: "ali.mohammadi@example.com",
       password: HASHED_PASSWORD,
       firstName: "Ali",
       lastName: "Mohammadi",
@@ -73,8 +88,8 @@ export async function seedTestUsers() {
       status: "active",
       gender: "male",
       nationalId: "0012345679",
-      notes: "CallerN-enabled teacher, available Sat-Wed"
-    }).returning();
+      notes: "CallerN-enabled teacher"
+    } as any).returning();
 
     console.log(`   ✅ Created Teacher 1: ${teacher1[0].firstName} ${teacher1[0].lastName} (${teacher1[0].email})`);
     console.log(`   ✅ Created Teacher 2: ${teacher2[0].firstName} ${teacher2[0].lastName} (${teacher2[0].email})`);
@@ -87,7 +102,7 @@ export async function seedTestUsers() {
     
     // Student A: Has purchased CallerN service
     const studentA = await db.insert(users).values({
-      email: "maryam.karimi@test.ir",
+      email: "maryam.karimi@example.com",
       password: HASHED_PASSWORD,
       firstName: "Maryam",
       lastName: "Karimi",
@@ -98,12 +113,12 @@ export async function seedTestUsers() {
       status: "active",
       gender: "female",
       nationalId: "0023456789",
-      notes: "Has active CallerN service, can purchase additional services"
-    }).returning();
+      notes: "Has active CallerN service"
+    } as any).returning();
 
     // Student B: Rich student with 10 billion rials
     const studentB = await db.insert(users).values({
-      email: "reza.ahmadi@test.ir",
+      email: "reza.ahmadi@example.com",
       password: HASHED_PASSWORD,
       firstName: "Reza",
       lastName: "Ahmadi",
@@ -114,8 +129,8 @@ export async function seedTestUsers() {
       status: "active",
       gender: "male",
       nationalId: "0023456790",
-      notes: "Rich student with 10 billion rials, ready to purchase courses after placement test"
-    }).returning();
+      notes: "Rich student with 10 billion rials"
+    } as any).returning();
 
     console.log(`   ✅ Created Student A: ${studentA[0].firstName} ${studentA[0].lastName} (${studentA[0].email})`);
     console.log(`      - Wallet: ${studentA[0].walletBalance?.toLocaleString()} rials`);
@@ -129,7 +144,7 @@ export async function seedTestUsers() {
     console.log('👤 Creating Admin Users...');
     
     const admin = await db.insert(users).values({
-      email: "admin@metalingua.ir",
+      email: "admin@metalingua.com",
       password: HASHED_PASSWORD,
       firstName: "Admin",
       lastName: "User",
@@ -138,10 +153,10 @@ export async function seedTestUsers() {
       isActive: true,
       status: "active",
       notes: "Full system access - all features and data"
-    }).returning();
+    } as any).returning();
 
     const accountant = await db.insert(users).values({
-      email: "accountant@metalingua.ir",
+      email: "accountant@metalingua.com",
       password: HASHED_PASSWORD,
       firstName: "Sara",
       lastName: "Accountant",
@@ -151,10 +166,10 @@ export async function seedTestUsers() {
       status: "active",
       gender: "female",
       notes: "Financial management, payments, invoicing"
-    }).returning();
+    } as any).returning();
 
     const callCenter = await db.insert(users).values({
-      email: "callcenter@metalingua.ir",
+      email: "callcenter@metalingua.com",
       password: HASHED_PASSWORD,
       firstName: "Ali",
       lastName: "CallCenter",
@@ -164,10 +179,10 @@ export async function seedTestUsers() {
       status: "active",
       gender: "male",
       notes: "Phone operations, lead calling, follow-ups"
-    }).returning();
+    } as any).returning();
 
     const frontDesk = await db.insert(users).values({
-      email: "frontdesk@metalingua.ir",
+      email: "frontdesk@metalingua.com",
       password: HASHED_PASSWORD,
       firstName: "Maryam",
       lastName: "FrontDesk",
@@ -177,10 +192,10 @@ export async function seedTestUsers() {
       status: "active",
       gender: "female",
       notes: "Walk-in intake, visitor management, front desk operations"
-    }).returning();
+    } as any).returning();
 
     const mentor = await db.insert(users).values({
-      email: "mentor@metalingua.ir",
+      email: "mentor@metalingua.com",
       password: HASHED_PASSWORD,
       firstName: "Reza",
       lastName: "Mentor",
@@ -190,7 +205,7 @@ export async function seedTestUsers() {
       status: "active",
       gender: "male",
       notes: "Student guidance, academic support, mentorship"
-    }).returning();
+    } as any).returning();
 
     console.log(`   ✅ Created Admin: ${admin[0].email}`);
     console.log(`   ✅ Created Accountant: ${accountant[0].email}`);
@@ -200,38 +215,7 @@ export async function seedTestUsers() {
     console.log('');
 
     // ========================================
-    // 4. SETUP CALLERN FOR TEACHERS
-    // ========================================
-    console.log('📞 Setting up CallerN for Teachers...');
-
-    // Teacher 1: Available Monday-Friday, 9 AM - 5 PM
-    const daysOfWeek = [1, 2, 3, 4, 5]; // Mon-Fri
-    for (const day of daysOfWeek) {
-      await db.insert(teacherCallernAvailability).values({
-        teacherId: teacher1[0].id,
-        dayOfWeek: day,
-        startTime: "09:00:00",
-        endTime: "17:00:00"
-      });
-    }
-
-    // Teacher 2: Available Saturday-Wednesday, 10 AM - 6 PM
-    const daysOfWeek2 = [0, 1, 2, 3, 6]; // Sat-Wed (0=Saturday in Persian calendar)
-    for (const day of daysOfWeek2) {
-      await db.insert(teacherCallernAvailability).values({
-        teacherId: teacher2[0].id,
-        dayOfWeek: day,
-        startTime: "10:00:00",
-        endTime: "18:00:00"
-      });
-    }
-
-    console.log(`   ✅ ${teacher1[0].firstName} ${teacher1[0].lastName}: Available Mon-Fri, 9 AM - 5 PM`);
-    console.log(`   ✅ ${teacher2[0].firstName} ${teacher2[0].lastName}: Available Sat-Wed, 10 AM - 6 PM`);
-    console.log('');
-
-    // ========================================
-    // 5. CREATE CALLERN PACKAGE FOR STUDENT A
+    // 4. CREATE CALLERN PACKAGE FOR STUDENT A
     // ========================================
     console.log('📦 Setting up CallerN package for Student A...');
 
@@ -246,7 +230,7 @@ export async function seedTestUsers() {
         validityDays: 30,
         price: "5000000", // 5 million rials (decimal as string)
         features: ["10 video sessions", "30 days validity", "AI-powered suggestions"]
-      }).returning();
+      } as any).returning();
       callernPackage = newPackage;
       console.log(`   ✅ Created CallerN package: ${newPackage[0].name}`);
     }
@@ -257,7 +241,7 @@ export async function seedTestUsers() {
       packageId: callernPackage[0].id,
       sessionsRemaining: 5, // 5 sessions remaining out of 10
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
-    });
+    } as any);
 
     console.log(`   ✅ Assigned CallerN package to ${studentA[0].firstName} ${studentA[0].lastName}`);
     console.log(`      - Package: ${callernPackage[0].name}`);
