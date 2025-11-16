@@ -7,6 +7,7 @@ import type { Express } from "express";
 import { contentBankService } from "../services/content-bank-service";
 import { seedContentBank } from "../content/seed-content-bank";
 import { seedLinguaquestLessons } from "../content/seed-linguaquest-lessons";
+import { seedTestUsers } from "../content/seed-test-users";
 
 export function setupContentBankRoutes(app: Express) {
   
@@ -40,6 +41,28 @@ export function setupContentBankRoutes(app: Express) {
       res.status(500).json({
         success: false,
         error: 'Failed to seed LinguaQuest lessons'
+      });
+    }
+  });
+
+  /**
+   * Seed test users for development and production
+   * POST /api/seed-test-users
+   * 
+   * Creates 9 clean test users:
+   * - 2 Teachers (CallerN-enabled)
+   * - 2 Students (1 with CallerN service, 1 with 10B rials)
+   * - 5 Admin users (Admin, Accountant, Call Center, Front Desk, Mentor)
+   */
+  app.post('/api/seed-test-users', async (req, res) => {
+    try {
+      const result = await seedTestUsers();
+      res.json(result);
+    } catch (error) {
+      console.error('Error seeding test users:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to seed test users'
       });
     }
   });
