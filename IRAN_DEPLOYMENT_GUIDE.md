@@ -248,9 +248,202 @@ npm run db:push
 pm2 restart metalingua
 ```
 
+## Accessing the Platform
+
+### For the First Time
+
+After deployment, you can access the platform at:
+
+```
+http://localhost:5000
+```
+
+Or from another machine:
+```
+http://YOUR-SERVER-IP:5000
+```
+
+**Important**: The **homepage** (public marketing website) should display automatically when you visit the root URL. You should see:
+- Hero section with "Learn Languages The Smart Way"
+- Feature cards
+- Statistics section
+- Blog posts and videos (if any exist)
+- CTA buttons to "Start Free Trial" or "Learn More"
+
+**If you only see the login page**, follow the troubleshooting steps below.
+
+### Logging In
+
+Click "Login" in the top navigation or visit:
+```
+http://localhost:5000/auth
+```
+
+Use any of the test user credentials:
+- Email: `admin@metalingua.com`
+- Password: `test123`
+
+After login, you'll be redirected to the dashboard based on your role.
+
+## Troubleshooting
+
+### Issue: Homepage Shows Login Page Instead
+
+**Symptoms**: When visiting the root URL, you're immediately redirected to `/auth` or only see a login form.
+
+**Causes**:
+1. Database connection error causing authentication check to fail
+2. Missing environment variables
+3. Server not running or crashed
+
+**Solutions**:
+
+#### 1. Check if the server is running properly
+
+Look at the terminal where you ran `npm run dev` or `npm start`. You should see:
+```
+✅ Database connected successfully
+✅ Server initialized
+serving on port 5000
+```
+
+If you see errors like:
+- `❌ Database connection failed`
+- `Error: connect ECONNREFUSED`
+- `❌ FATAL: Cannot start server`
+
+Then the database isn't configured correctly.
+
+#### 2. Verify environment variables
+
+Check your `.env` file exists and contains:
+```bash
+DATABASE_URL=postgresql://username:password@localhost:5432/metalingua
+JWT_SECRET=your-secure-random-string
+```
+
+If the `.env` file is missing or `DATABASE_URL` is not set:
+```bash
+# Copy the example and edit it
+cp .env.example .env
+
+# Edit with your database credentials
+nano .env
+```
+
+#### 3. Verify database exists and is running
+
+```bash
+# Check PostgreSQL is running
+sudo systemctl status postgresql
+
+# Try connecting to the database
+psql -U metalingua_user -d metalingua -h localhost
+
+# If it fails, create the database again (see Step 4)
+```
+
+#### 4. Check browser console for errors
+
+Open your browser's Developer Tools (F12) and check the Console tab. Look for errors like:
+- `Failed to fetch` - Server is not running
+- `Network Error` - Database connection issue
+- `500 Internal Server Error` - Check server logs
+
+#### 5. Clear browser cache and localStorage
+
+Sometimes old tokens cause issues:
+```javascript
+// In browser console (F12), run:
+localStorage.clear()
+// Then refresh the page
+```
+
+#### 6. Restart the server
+
+```bash
+# Stop the server (Ctrl+C)
+# Then restart
+npm run dev
+```
+
+### Issue: "Cannot connect to database" error
+
+**Solution**:
+1. Ensure PostgreSQL is running: `sudo systemctl start postgresql`
+2. Verify database exists: `psql -l` (should list `metalingua`)
+3. Check `.env` file has correct `DATABASE_URL`
+4. Run: `npm run db:push` to create tables
+
+### Issue: Port 5000 already in use
+
+**Solution**:
+```bash
+# Find what's using port 5000
+sudo lsof -i :5000
+
+# Kill the process (replace PID with actual process ID)
+kill -9 PID
+
+# Or change the port in .env (not recommended)
+PORT=5001
+```
+
+### Issue: Test users not found
+
+**Symptoms**: Can't login with `admin@metalingua.com` / `test123`
+
+**Solution**:
+```bash
+# Make sure the server is running
+npm run dev
+
+# In another terminal or browser, seed the test users
+curl -X POST http://localhost:5000/api/seed-test-users
+
+# You should see: "✅ Created 9 test users successfully"
+```
+
+### Issue: Missing LinguaQuest lessons
+
+**Symptoms**: LinguaQuest page shows no lessons
+
+**Solution**:
+```bash
+curl -X POST http://localhost:5000/api/content-bank/seed-lessons
+```
+
 ## Support
 
 For issues or questions, contact the development team or refer to the platform documentation in `replit.md`.
+
+## Quick Reference
+
+### Important URLs
+- **Homepage**: `http://localhost:5000/`
+- **Login**: `http://localhost:5000/auth`
+- **Dashboard**: `http://localhost:5000/dashboard` (after login)
+- **LinguaQuest**: `http://localhost:5000/linguaquest`
+- **About**: `http://localhost:5000/about`
+- **Contact**: `http://localhost:5000/contact`
+
+### Test Credentials
+All test users use password: `test123`
+
+**Admins**:
+- admin@metalingua.com
+- accountant@metalingua.com
+- callcenter@metalingua.com
+- frontdesk@metalingua.com
+- mentor@metalingua.com
+
+**Teachers**:
+- sara.rezaei@example.com
+- ali.mohammadi@example.com
+
+**Students**:
+- maryam.karimi@example.com
+- reza.ahmadi@example.com
 
 ---
 
