@@ -238,14 +238,43 @@ sudo chown -R $USER:$USER /path/to/replit_meta_lingua
 
 ## Updating the Platform
 
+**IMPORTANT**: If you deployed before November 17, 2025, you need to update to get the test user seeding endpoint and other fixes.
+
 To update to the latest version:
 
 ```bash
+# Navigate to the project directory
 cd replit_meta_lingua
+
+# Pull the latest code from GitHub
 git pull origin main
+
+# Install any new dependencies
 npm install
+
+# Sync database schema (if there are schema changes)
 npm run db:push
+
+# Restart the server
+# If using PM2:
 pm2 restart metalingua
+
+# If running manually (Ctrl+C to stop first, then):
+npm run dev
+```
+
+After updating, verify the test seeding endpoint works:
+```bash
+curl -X POST http://localhost:5000/api/seed-test-users
+```
+
+You should see a response like:
+```json
+{
+  "success": true,
+  "message": "Created 9 test users successfully",
+  "users": [...]
+}
 ```
 
 ## Accessing the Platform
