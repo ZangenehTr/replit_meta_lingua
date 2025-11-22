@@ -114,3 +114,8 @@ integrations = ["javascript_openai:1.0.0", "javascript_object_storage:1.0.0", "j
 
 [objectStorage]
 defaultBucketID = "replit-objstore-c114c7c8-890f-4fe5-abb6-2e5811e3bf92"
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET = "57454a8a83c27451de5d540e698104707dfb01a3876e9508e03fae7293f3c6ee"
