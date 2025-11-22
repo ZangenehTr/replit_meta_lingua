@@ -551,6 +551,14 @@ app.use((req, res, next) => {
   smsReminderWorker.start();
   console.log('✅ SMS Reminder Worker initialized');
 
+  // Seed LinguaQuest lessons on startup
+  try {
+    const { seedLinguaquestLessons } = await import('./content/seed-linguaquest-lessons.js');
+    await seedLinguaquestLessons();
+  } catch (error) {
+    console.error('⚠️  Failed to seed LinguaQuest lessons:', error);
+  }
+
   // 404 handler for API endpoints (moved after route registration)
   app.use('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found', path: req.path });
