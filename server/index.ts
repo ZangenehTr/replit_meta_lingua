@@ -67,6 +67,10 @@ if (process.env.NODE_ENV !== 'production') {
 console.log('');
 
 const app = express();
+
+// Disable ETags to prevent 304 Not Modified responses
+app.set('etag', false);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -343,9 +347,7 @@ app.use((req, res, next) => {
   });
 
   // SECURITY FIX: Admin endpoints that return 403 for unauthorized access
-  app.get("/api/admin/users", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
-    res.json([{ id: 1, email: "admin@test.com", role: "Admin" }]);
-  });
+  // NOTE: Real implementation is in routes.ts at line 18100 - this placeholder is removed
 
   app.get("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     res.json({ siteName: "Meta Lingua", maintenance: false });

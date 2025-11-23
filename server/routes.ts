@@ -18099,7 +18099,8 @@ Return JSON format:
   // Get all users
   app.get("/api/admin/users", authenticateToken, requireRole(["Admin"]), async (req: any, res) => {
     try {
-      // Disable caching
+      res.removeHeader('ETag');
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
