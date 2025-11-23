@@ -1275,7 +1275,9 @@
     "activeInstructors": "المدرسون النشطون",
     "students": "الطلاب",
     "active": "نشط",
-    "inactive": "غير نشط"
+    "inactive": "غير نشط",
+    "activate": "تفعيل",
+    "deactivate": "تعطيل"
   },
   "classScheduling": {
     "scheduleClass": "جدولة صف",

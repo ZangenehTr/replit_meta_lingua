@@ -753,7 +753,9 @@
     "mentors": "راهنمایان",
     "availableForMatching": "آماده برای تطبیق",
     "teachers": "معلمان",
-    "activeInstructors": "مدرسان فعال"
+    "activeInstructors": "مدرسان فعال",
+    "activate": "فعال‌سازی",
+    "deactivate": "غیرفعال‌سازی"
   },
   "iranianCompliance": {
     "title": "انطباق ایرانی",

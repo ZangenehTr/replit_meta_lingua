@@ -306,7 +306,9 @@
     "enrollmentFailed": "Enrollment Failed",
     "announcementSent": "Announcement Sent",
     "invalidPhoneNumber": "Invalid Phone Number",
-    "voipCallFailed": "VoIP Call Failed"
+    "voipCallFailed": "VoIP Call Failed",
+    "userStatusUpdated": "User status updated successfully",
+    "statusUpdateFailed": "Failed to update user status"
   },
   "placeholders": {
     "selectLevel": "Select level",

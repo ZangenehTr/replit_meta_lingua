@@ -399,7 +399,9 @@
     "rateUpdated": "نرخ به‌روزرسانی شد",
     "paymentApproved": "پرداخت تایید شد",
     "reportDownloaded": "گزارش دانلود شد",
-    "sentToAccounting": "به حسابداری ارسال شد"
+    "sentToAccounting": "به حسابداری ارسال شد",
+    "userStatusUpdated": "وضعیت کاربر با موفقیت به‌روزرسانی شد",
+    "statusUpdateFailed": "خطا در به‌روزرسانی وضعیت کاربر"
   },
   "supervisor": {
     "teachers": "مدرسان",

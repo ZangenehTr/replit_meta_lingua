@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Edit, Trash2, UserPlus, Shield, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, UserPlus, Shield, Mail, Phone, Power } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 
@@ -110,7 +110,7 @@ export default function UserManagement() {
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async (userData: { id: number; email: string; firstName: string; lastName: string; role: string; phoneNumber?: string }) => {
+    mutationFn: async (userData: { id: number; email: string; firstName: string; lastName: string; role: string; phoneNumber?: string; isActive?: boolean }) => {
       return apiRequest(`/api/admin/users/${userData.id}`, {
         method: 'PUT',
         body: JSON.stringify({
@@ -118,7 +118,8 @@ export default function UserManagement() {
           firstName: userData.firstName,
           lastName: userData.lastName,
           role: userData.role,
-          phoneNumber: userData.phoneNumber
+          phoneNumber: userData.phoneNumber,
+          isActive: userData.isActive
         })
       });
     },
@@ -135,6 +136,30 @@ export default function UserManagement() {
       toast({
         title: t('common:toast.error'),
         description: error.message || t('common:toast.userUpdateFailed'),
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Toggle user active status mutation
+  const toggleUserStatusMutation = useMutation({
+    mutationFn: async ({ userId, isActive }: { userId: number; isActive: boolean }) => {
+      return apiRequest(`/api/admin/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: !isActive })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: t('common:toast.success'),
+        description: t('common:toast.userStatusUpdated')
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:toast.error'),
+        description: error.message || t('common:toast.statusUpdateFailed'),
         variant: "destructive"
       });
     }
@@ -196,6 +221,7 @@ export default function UserManagement() {
         firstName: editingUser.firstName,
         lastName: editingUser.lastName,
         role: editingUser.role,
+        isActive: editingUser.isActive,
         phoneNumber: editingUser.phoneNumber
       });
     }
@@ -475,6 +501,15 @@ export default function UserManagement() {
                           variant="ghost" 
                           size="sm" 
                           className="mx-1"
+                          title={user.isActive ? t('admin:userManagement.deactivate') : t('admin:userManagement.activate')}
+                          onClick={() => toggleUserStatusMutation.mutate({ userId: user.id, isActive: user.isActive })}
+                        >
+                          <Power className={`h-4 w-4 ${user.isActive ? 'text-green-600' : 'text-red-600'}`} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="mx-1"
                           onClick={() => handleEditUser(user)}
                         >
                           <Edit className="h-4 w-4" />
@@ -566,6 +601,19 @@ export default function UserManagement() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2 flex items-center">
+              <input
+                id="edit-isActive"
+                type="checkbox"
+                checked={editingUser?.isActive || false}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, isActive: e.target.checked} : null)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="edit-isActive" className="cursor-pointer ml-2 mb-0">
+                {t('admin:userManagement.active')}
+              </Label>
             </div>
           </div>
           <DialogFooter>

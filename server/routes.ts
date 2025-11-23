@@ -1458,10 +1458,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user endpoint
-  app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const { email, firstName, lastName, role, phoneNumber } = req.body;
+      const { email, firstName, lastName, role, phoneNumber, isActive } = req.body;
       
       console.log('Updating user with ID:', userId, req.body);
       
@@ -1472,7 +1472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if the email is being changed and if it already exists
-      if (email !== existingUser.email) {
+      if (email && email !== existingUser.email) {
         const emailUser = await storage.getUserByEmail(email);
         if (emailUser) {
           return res.status(400).json({ 
@@ -1482,14 +1482,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Build update object with only provided fields
+      const updateData: any = {};
+      if (email !== undefined) updateData.email = email;
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+      if (role !== undefined) updateData.role = role;
+      if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+      if (isActive !== undefined) updateData.isActive = isActive;
+      
       // Update the user
-      const updatedUser = await storage.updateUser(userId, {
-        email,
-        firstName,
-        lastName,
-        role,
-        phoneNumber
-      });
+      const updatedUser = await storage.updateUser(userId, updateData);
       
       // Don't return the password in the response
       const { password: _, ...userResponse } = updatedUser;
@@ -1501,7 +1504,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete user endpoint
   app.delete("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const userId = parseInt(req.params.id);
