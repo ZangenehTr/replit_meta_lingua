@@ -18,8 +18,8 @@ import { useLanguage } from '@/hooks/useLanguage';
 interface User {
   id: number;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   role: string;
   phoneNumber?: string;
   isActive: boolean;
@@ -417,17 +417,23 @@ export default function UserManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => (
+                  {filteredUsers.map((user) => {
+                    const displayName = (user.firstName || '') + ' ' + (user.lastName || '');
+                    const cleanName = displayName.trim();
+                    const nameToShow = cleanName || user.email;
+                    const avatarInitials = ((user.firstName?.[0] || user.email[0]).toUpperCase() + (user.lastName?.[0] || '').toUpperCase()).slice(0, 2);
+                    
+                    return (
                     <tr key={user.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="py-4">
                         <div className="flex items-center gap-3 rtl:flex-row-reverse">
                           <Avatar>
                             <AvatarFallback>
-                              {user.firstName[0]}{user.lastName[0]}
+                              {avatarInitials}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{user.firstName} {user.lastName}</p>
+                            <p className="font-medium">{nameToShow}</p>
                             {user.phoneNumber && (
                               <p className="text-sm text-gray-500 flex items-center rtl:flex-row-reverse">
                                 <Phone className="h-3 w-3 mx-1" />
@@ -475,7 +481,8 @@ export default function UserManagement() {
                         </Button>
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>
