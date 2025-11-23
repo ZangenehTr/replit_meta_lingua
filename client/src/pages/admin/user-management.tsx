@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
@@ -55,10 +55,18 @@ export default function UserManagement() {
     password: ''
   });
 
-  // Fetch users
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ['/api/admin/users'],
+  // Fetch users - unique query key to force fresh data
+  const { data: users = [], isLoading, error: usersError, refetch } = useQuery<User[]>({
+    queryKey: ['/api/admin/users', 'v1'],
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Disable caching
+    refetchOnMount: 'always', // Always refetch when component mounts
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[UserManagement] Users data:', { count: (users as User[]).length, users, isLoading, error: usersError });
+  }, [users, isLoading, usersError]);
 
   // Create user mutation
   const createUserMutation = useMutation({

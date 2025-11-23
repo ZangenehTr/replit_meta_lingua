@@ -18106,11 +18106,16 @@ Return JSON format:
       
       // Query directly from database to bypass any storage layer issues
       const allUsers = await db.select().from(users).orderBy(users.createdAt);
-      console.log(`[GET /api/admin/users] Direct DB query returned ${allUsers.length} users`);
-      res.json(allUsers || []);
+      
+      console.log(`[GET /api/admin/users] Query returned ${allUsers.length} users`);
+      console.log(`[GET /api/admin/users] User emails: ${allUsers.map(u => u.email).join(', ')}`);
+      console.log(`[GET /api/admin/users] Full response size: ${JSON.stringify(allUsers).length} bytes`);
+      
+      // Ensure response is JSON array
+      res.json(Array.isArray(allUsers) ? allUsers : []);
     } catch (error) {
-      console.error('Error getting users:', error);
-      res.status(500).json({ message: "Failed to get users" });
+      console.error('[GET /api/admin/users] Error:', error);
+      res.status(500).json({ message: "Failed to get users", error: String(error) });
     }
   });
 
