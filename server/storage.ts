@@ -1659,50 +1659,33 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  // In-memory storage using Maps
-  private users = new Map<number, User>();
-  private currentUserId = 1;
+  private db: any;
 
-  constructor() {
-    // In-memory storage using Maps (NO database dependencies)
+  constructor(db?: any) {
+    this.db = db;
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await this.db.select().from(users).where(eq(users.id, id));
+    return result[0];
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if (user.email === email) {
-        return user;
-      }
-    }
-    return undefined;
+    const result = await this.db.select().from(users).where(eq(users.email, email));
+    return result[0];
   }
 
   async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return await this.db.select().from(users);
   }
 
   async getTeachers(): Promise<User[]> {
-    return Array.from(this.users.values()).filter(user => user.role.toLowerCase() === 'teacher');
+    return await this.db.select().from(users).where(eq(users.role, 'Teacher'));
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const newUser: User = {
-      ...insertUser,
-      id: this.currentUserId++,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      preferences: insertUser.preferences || {},
-      isActive: insertUser.isActive ?? true,
-      lastLoginAt: insertUser.lastLoginAt || null,
-      placementTestScore: insertUser.placementTestScore || null,
-      culturalProfile: insertUser.culturalProfile || null,
-      isOnline: insertUser.isOnline ?? false
-    };
-    this.users.set(newUser.id, newUser);
-    return newUser;
+    const result = await this.db.insert(users).values(insertUser).returning();
+    return result[0];
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
