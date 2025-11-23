@@ -18100,6 +18100,10 @@ Return JSON format:
   app.get("/api/admin/users", authenticateToken, requireRole(["Admin"]), async (req: any, res) => {
     try {
       const allUsers = await storage.getAllUsers();
+      // Disable caching to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       res.json(allUsers);
       // Exclude test users with lowercase roles
     } catch (error) {
