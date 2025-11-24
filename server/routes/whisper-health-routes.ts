@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { authenticateToken } from '../middleware';
+import { authenticateToken } from '../auth-middleware';
 import { whisperService } from '../whisper-service';
 
 const router = Router();
@@ -12,6 +12,7 @@ const router = Router();
 /**
  * Get Whisper provider health status
  * Checks both faster-whisper (self-hosted) and OpenAI Whisper availability
+ * Reads configuration from admin settings (database) for accurate runtime status
  */
 router.get('/whisper-health', authenticateToken, async (req: Request, res: Response) => {
   // Verify admin role
@@ -20,8 +21,12 @@ router.get('/whisper-health', authenticateToken, async (req: Request, res: Respo
   }
 
   try {
-    const provider = process.env.WHISPER_PROVIDER || 'faster-whisper';
-    const whisperUrl = process.env.WHISPER_URL || 'http://localhost:8000';
+    // Get current runtime configuration from WhisperService
+    const currentConfig = whisperService.getProviderConfig();
+    const provider = currentConfig.provider;
+    const whisperUrl = currentConfig.baseUrl;
+    
+    // Check if OpenAI is available as fallback
     const openaiApiKey = process.env.OPENAI_API_KEY;
 
     const healthStatus: {

@@ -62,6 +62,41 @@ export class WhisperService extends EventEmitter {
   }
 
   /**
+   * Update configuration from admin settings (database)
+   * This allows runtime reconfiguration without restarting the server
+   */
+  updateConfigFromSettings(settings: { whisperProvider?: string; whisperUrl?: string; openaiApiKey?: string }) {
+    if (settings.whisperProvider) {
+      this.whisperProvider = settings.whisperProvider as 'faster-whisper' | 'openai';
+      console.log(`✓ Whisper provider updated to: ${this.whisperProvider}`);
+    }
+    
+    if (settings.whisperUrl) {
+      this.config.baseUrl = settings.whisperUrl;
+      console.log(`✓ Whisper URL updated to: ${settings.whisperUrl}`);
+      // Re-check availability with new URL
+      this.checkAvailability();
+    }
+    
+    // Update OpenAI client if API key changes
+    if (settings.openaiApiKey) {
+      this.openai = new OpenAI({ apiKey: settings.openaiApiKey });
+      console.log('✓ OpenAI Whisper API key updated');
+    }
+  }
+
+  /**
+   * Get current provider configuration
+   */
+  getProviderConfig(): { provider: string; baseUrl: string; isAvailable: boolean } {
+    return {
+      provider: this.whisperProvider,
+      baseUrl: this.config.baseUrl,
+      isAvailable: this.isAvailable
+    };
+  }
+
+  /**
    * Check if Whisper service is available
    */
   async checkAvailability(): Promise<boolean> {

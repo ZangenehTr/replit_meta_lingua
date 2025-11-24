@@ -1041,6 +1041,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const updatedSettings = await storage.updateAdminSettings(req.body);
+      
+      // Update Whisper service configuration if Whisper settings changed
+      if (req.body.whisperProvider || req.body.whisperUrl) {
+        whisperService.updateConfigFromSettings({
+          whisperProvider: updatedSettings.whisperProvider,
+          whisperUrl: updatedSettings.whisperUrl,
+          openaiApiKey: process.env.OPENAI_API_KEY
+        });
+      }
+      
       res.json(updatedSettings);
     } catch (error) {
       console.error("Error updating admin settings:", error);
