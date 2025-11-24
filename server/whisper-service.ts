@@ -9,9 +9,7 @@ import FormData from 'form-data';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
-// TODO: OpenAI Whisper removed for Iranian self-hosting
-// Plan: Deploy local Whisper using faster-whisper or whisper.cpp
-// import OpenAI from 'openai';
+import OpenAI from 'openai';
 
 export interface WhisperConfig {
   baseUrl: string;
@@ -35,8 +33,8 @@ export interface TranscriptionResult {
 export class WhisperService extends EventEmitter {
   private config: WhisperConfig;
   private isAvailable: boolean = false;
-  // TODO: OpenAI Whisper removed for Iranian self-hosting
-  // private openai?: OpenAI;
+  private openai?: OpenAI;
+  private whisperProvider: 'faster-whisper' | 'openai';
 
   constructor(config?: Partial<WhisperConfig>) {
     super();
@@ -47,12 +45,18 @@ export class WhisperService extends EventEmitter {
       task: config?.task || 'transcribe'
     };
     
-    // TODO: Deploy local Whisper alternative (faster-whisper or whisper.cpp)
-    // OpenAI Whisper not available for Iranian self-hosting
-    // if (process.env.OPENAI_API_KEY) {
-    //   this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    //   console.log('✓ OpenAI Whisper fallback initialized');
-    // }
+    // Determine provider from environment variable
+    this.whisperProvider = (process.env.WHISPER_PROVIDER as 'faster-whisper' | 'openai') || 'faster-whisper';
+    
+    // Initialize OpenAI if configured as provider or fallback
+    if (process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      if (this.whisperProvider === 'openai') {
+        console.log('✓ OpenAI Whisper configured as primary provider');
+      } else {
+        console.log('✓ OpenAI Whisper available as fallback provider');
+      }
+    }
     
     this.checkAvailability();
   }
@@ -141,8 +145,18 @@ export class WhisperService extends EventEmitter {
     language?: string;
     task?: 'transcribe' | 'translate';
   }): Promise<TranscriptionResult> {
-    // Try self-hosted Whisper first
-    if (this.isAvailable) {
+    // If OpenAI is the primary provider, use it first
+    if (this.whisperProvider === 'openai' && this.openai) {
+      try {
+        console.log('Using OpenAI Whisper (primary provider)');
+        return await this.transcribeWithOpenAI(buffer, fileName, options);
+      } catch (error) {
+        console.error('OpenAI Whisper (primary) failed, trying faster-whisper fallback:', error);
+      }
+    }
+
+    // Try self-hosted Whisper (faster-whisper)
+    if (this.isAvailable || this.whisperProvider === 'faster-whisper') {
       try {
         const formData = new FormData();
         formData.append('file', buffer, fileName);
@@ -162,43 +176,64 @@ export class WhisperService extends EventEmitter {
 
         return this.parseTranscriptionResponse(response.data);
       } catch (error) {
-        console.log('Self-hosted Whisper failed, trying OpenAI fallback:', error.message);
+        console.log('Faster-Whisper failed, trying OpenAI fallback:', error.message);
       }
     }
 
-    // TODO: OpenAI Whisper removed for Iranian self-hosting
-    // Deploy local Whisper alternative (faster-whisper or whisper.cpp) instead
-    // if (this.openai) {
-    //   try {
-    //     console.log('Using OpenAI Whisper as fallback');
-    //     
-    //     // Create a temporary file for OpenAI API (it requires a file, not buffer)
-    //     const tempFile = path.join('/tmp', `whisper_${Date.now()}_${fileName}`);
-    //     fs.writeFileSync(tempFile, buffer);
-    //
-    //     const transcription = await this.openai.audio.transcriptions.create({
-    //       file: fs.createReadStream(tempFile) as any,
-    //       model: 'whisper-1',
-    //       language: options?.language || (this.config.language === 'fa' ? 'fa' : 'en'),
-    //     });
-    //
-    //     // Clean up temp file
-    //     fs.unlinkSync(tempFile);
-    //
-    //     return {
-    //       text: transcription.text,
-    //       language: options?.language || this.config.language || 'fa',
-    //       duration: 0,
-    //       confidence: 0.95 // OpenAI generally has high confidence
-    //     };
-    //   } catch (error) {
-    //     console.error('OpenAI Whisper fallback error:', error);
-    //   }
-    // }
+    // Try OpenAI as fallback (if not already primary)
+    if (this.openai && this.whisperProvider !== 'openai') {
+      try {
+        console.log('Using OpenAI Whisper as fallback');
+        return await this.transcribeWithOpenAI(buffer, fileName, options);
+      } catch (error) {
+        console.error('OpenAI Whisper fallback error:', error);
+      }
+    }
 
-    // Final fallback
-    console.log('All Whisper services unavailable, using fallback transcription');
-    return this.generateFallbackTranscription();
+    // Final fallback - throw error instead of returning mock data
+    throw new Error('No Whisper transcription service available. Please configure either faster-whisper or OpenAI Whisper in admin settings.');
+  }
+
+  /**
+   * Transcribe using OpenAI Whisper API
+   */
+  private async transcribeWithOpenAI(buffer: Buffer, fileName: string, options?: {
+    language?: string;
+    task?: 'transcribe' | 'translate';
+  }): Promise<TranscriptionResult> {
+    if (!this.openai) {
+      throw new Error('OpenAI client not initialized');
+    }
+
+    // Create a temporary file for OpenAI API (it requires a file, not buffer)
+    const tempFile = path.join('/tmp', `whisper_${Date.now()}_${fileName}`);
+    fs.writeFileSync(tempFile, buffer);
+
+    try {
+      const transcription = await this.openai.audio.transcriptions.create({
+        file: fs.createReadStream(tempFile) as any,
+        model: 'whisper-1',
+        language: options?.language || (this.config.language === 'fa' ? 'fa' : 'en'),
+        response_format: 'verbose_json'
+      });
+
+      // Clean up temp file
+      fs.unlinkSync(tempFile);
+
+      return {
+        text: transcription.text,
+        language: options?.language || this.config.language || 'fa',
+        duration: (transcription as any).duration || 0,
+        segments: (transcription as any).segments || [],
+        confidence: 0.95 // OpenAI generally has high confidence
+      };
+    } catch (error) {
+      // Clean up temp file in case of error
+      if (fs.existsSync(tempFile)) {
+        fs.unlinkSync(tempFile);
+      }
+      throw error;
+    }
   }
 
   /**
