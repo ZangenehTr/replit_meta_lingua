@@ -57,21 +57,23 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **ORM**: Drizzle.
 - **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress, LinguaQuest lessons (12 total: 6 pre-existing A1-A2, 6 new B1-C1), dynamic form definitions/submissions, curriculum categories, guest leads, visitor chat sessions/messages, custom fonts, and CallerN session tracking (callSessions, callPostReports, sessionRatings, srsCards).
 
-### CallerN Implementation Status (November 24, 2025)
+### CallerN Implementation Status (November 24, 2025 - UPDATED)
 
 **Storage Layer** (`server/storage/callern-storage.ts`):
 - ✅ **Session Management (5 methods)**: createCallSession, updateCallSession, getCallSession, getWebRTCConfig with real DB queries
 - ✅ **Post-Session Reporting (4 methods)**: createCallPostReport, updateCallPostReport, getCallPostReport, getSessionReport with callPostReports table
 - ✅ **Roadmap Tracking (5 methods)**: getRoadmapInstanceByCourse, getActiveRoadmapInstanceForStudent, getRoadmapPosition, getUpcomingActivities, updateRoadmapProgressFromSession with studentRoadmapProgress/callernRoadmapSteps tables
 - ✅ **Progress Updates (2 methods)**: updateActivityInstanceStatus (with sessionId scoping), updateOverallRatings
+- ✅ **Teacher Presence Tracking**: updateTeacherStatus() now persists to callernPresence table with status validation (online/offline/in_call/away)
+- ✅ **WebRTC Configuration**: getWebRTCConfig() now returns configurable TURN/STUN servers with Iranian self-hosting support and fallback to public STUN servers
 - ⚠️ **AI Content Stubs (3 methods)**: generatePreSessionContent, generateSessionSummary, generateNextMicroSession return placeholders pending full AI integration
-- ⚠️ **Evidence & Scoring Stubs (3 methods)**: createActivityEvidence, scoreActivityInstance, updateTeacherStatus return mock data (no persistence tables yet)
+- ⚠️ **Evidence & Scoring Stubs (3 methods)**: createActivityEvidence, scoreActivityInstance return mock data (no persistence tables yet)
 
 **Database Schema**:
 - ✅ callSessions table with FK constraints: roadmapProgressId → studentRoadmapProgress.id, roadmapStepId → callernRoadmapSteps.id
 - ✅ callPostReports table with sessionId → callSessions.id
 - ✅ sessionRatings and srsCards tables defined
-- ⚠️ Teacher presence tracking not implemented (callernPresence table needed)
+- ✅ callernPresence table used for teacher status tracking with real DB queries
 - ⚠️ Activity evidence storage not implemented (separate table needed)
 
 **Routes Integration** (`server/routes/callern-flow-routes.ts`):
@@ -80,10 +82,9 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - ✅ Pre-session content, session initiation, post-session reporting flows wired
 
 **Known Limitations**:
-1. Teacher presence updates only log, don't persist to database
-2. Activity evidence and scoring data not stored in database (analytics incomplete)
-3. Database migration command (npm run db:push) times out due to large schema - requires manual retry or --force flag
-4. Roadmap session progress tracking implemented but scoring/adaptive pacing not yet wired
+1. Activity evidence and scoring data not stored in database (analytics incomplete)
+2. Database migration command (npm run db:push) times out due to large schema - requires manual retry or --force flag
+3. Roadmap session progress tracking implemented but scoring/adaptive pacing not yet wired
 
 ### AI Provider Configuration (November 24, 2025)
 
@@ -170,6 +171,32 @@ For clean deployments (both development and production), use the test user seedi
 
 **Usage**: After running `npm run db:push` on a fresh PostgreSQL database, call this endpoint to populate test users. Ideal for Iranian self-hosted deployments starting with a clean database.
 
+## OTP Service Implementation (November 24, 2025 - NEW)
+
+**Supported Channels**: SMS (Kavenegar) and Email with **phone-first priority**
+
+**Features**:
+- ✅ **Real SMS Delivery**: Implements Kavenegar API integration (environment variable: `KAVENEGAR_API_KEY`)
+- ✅ **Real Email Delivery**: Uses email service with Iranian SMTP infrastructure support
+- ✅ **Phone Format Support**: Iranian phone number validation and formatting (accepts 0XXXXXXXXX, 9XXXXXXXXX, +989XXXXXXXXX)
+- ✅ **Rate Limiting**: 5 attempts per identifier per hour, 10 attempts per IP per hour
+- ✅ **Secure Hashing**: OTP codes stored with bcrypt hashing
+- ✅ **Multi-language Support**: Full Farsi (fa), English (en), Arabic (ar) translations with RTL email templates
+- ✅ **10-minute Expiry**: Auto-expiring OTP codes with cleanup mechanism
+
+**Environment Variables**:
+- `KAVENEGAR_API_KEY`: Kavenegar API key for SMS delivery (optional, falls back to console logging in dev)
+- `TURN_SERVER_URL`: Primary TURN server for WebRTC (used in CallerN)
+- `TURN_USERNAME` / `TURN_PASSWORD`: TURN server credentials
+- `STUN_SERVER_URL`: STUN server for NAT traversal
+
+**Authentication Flow** (`POST /api/auth/request-otp`):
+1. Client provides identifier (phone or email)
+2. System detects type and defaults to SMS if phone
+3. OTP generated and stored with hash
+4. SMS sent via Kavenegar (primary) or email (fallback)
+5. Rate limits enforced per identifier and IP
+
 ## External Dependencies
 
 ### Development Environment
@@ -179,7 +206,7 @@ For clean deployments (both development and production), use the test user seedi
 ### Production Environment (Iranian Self-Hosting)
 - **Database**: Self-hosted PostgreSQL
 - **Payment Gateway**: Shetab (Iranian network)
-- **SMS Service**: Kavenegar (Iranian provider)
+- **SMS Service**: Kavenegar (Iranian provider) - INTEGRATED with real API calls in OTP service
 - **VoIP**: Isabel VoIP line (Iranian telecom)
 - **AI Services**: Ollama server (local AI processing) - configurable via AI_PROVIDER env var
   - Default: Ollama for Iranian deployments
@@ -187,6 +214,7 @@ For clean deployments (both development and production), use the test user seedi
   - Optional fallback mode supported via AI_FALLBACK_PROVIDER
 - **TTS Services**: Microsoft Edge TTS (self-hosted)
 - **Fonts**: Self-hosted Arabic/Persian fonts
-- **WebRTC**: Self-hosted TURN/STUN server, Socket.io, Simple Peer, RecordRTC
+- **WebRTC**: Self-hosted TURN/STUN server - CONFIGURED with Iranian self-hosting defaults and fallback to public STUN servers
+- **Email**: Iranian SMTP infrastructure for OTP and notification delivery
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem

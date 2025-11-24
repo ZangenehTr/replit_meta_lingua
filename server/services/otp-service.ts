@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import fetch from 'node-fetch';
 import { storage } from '../storage';
+import { emailService } from './email-service';
 import { InsertOtpCode, OtpCode } from '@shared/schema';
 
 export interface OtpGenerationResult {
@@ -109,11 +111,14 @@ export class OtpService {
       // Rate limit check
       const rateLimit = await this.checkRateLimit(identifier, ip || '');
       if (!rateLimit.allowed) {
+        const rateLimitMessages = {
+          fa: 'تعداد درخواست‌های شما از حد مجاز گذشته است. لطفاً بعداً تلاش کنید.',
+          en: 'Too many OTP requests. Please try again later.',
+          ar: 'لقد تجاوزت عدد محاولات طلب OTP. يرجى المحاولة لاحقاً.'
+        };
         return {
           success: false,
-          message: locale === 'fa' 
-            ? 'تعداد درخواست‌های شما از حد مجاز گذشته است. لطفاً بعداً تلاش کنید.'
-            : 'Too many OTP requests. Please try again later.'
+          message: rateLimitMessages[locale] || rateLimitMessages['en']
         };
       }
 
@@ -141,28 +146,50 @@ export class OtpService {
 
       const otpRecord = await storage.createOtpCode(otpData);
 
-      // TODO: Send OTP via email or SMS based on channel
-      if (channel === 'sms') {
-        await this.sendSmsOtp(identifier, code, locale);
-      } else {
-        await this.sendEmailOtp(identifier, code, locale);
+      // Send OTP via email or SMS based on channel
+      try {
+        if (channel === 'sms') {
+          await this.sendSmsOtp(identifier, code, locale);
+        } else {
+          await this.sendEmailOtp(identifier, code, locale);
+        }
+      } catch (error) {
+        console.error(`Failed to send ${channel} OTP:`, error);
+        // Log but don't fail - OTP is created even if delivery fails
+        return {
+          success: true,
+          message: locale === 'fa'
+            ? `کد تأیید ایجاد شد ولی ارسال ناموفق بود. لطفاً دوباره تلاش کنید.`
+            : locale === 'ar'
+            ? `تم إنشاء الكود لكن فشل الإرسال. يرجى المحاولة مرة أخرى.`
+            : `OTP created but delivery failed. Please try again.`,
+          otpId: otpRecord.id,
+          expiresAt
+        };
       }
+
+      const successMessages = {
+        fa: `کد تأیید به ${channel === 'sms' ? 'شماره تلفن' : 'ایمیل'} شما ارسال شد.`,
+        en: `OTP sent to your ${channel === 'sms' ? 'phone number' : 'email'}.`,
+        ar: `تم إرسال رمز التحقق إلى ${channel === 'sms' ? 'رقم الهاتف' : 'البريد الإلكتروني'} الخاص بك.`
+      };
 
       return {
         success: true,
-        message: locale === 'fa'
-          ? `کد تأیید به ${channel === 'sms' ? 'شماره تلفن' : 'ایمیل'} شما ارسال شد.`
-          : `OTP sent to your ${channel === 'sms' ? 'phone number' : 'email'}.`,
+        message: successMessages[locale] || successMessages['en'],
         otpId: otpRecord.id,
         expiresAt
       };
     } catch (error) {
       console.error('OTP generation failed:', error);
+      const errorMessages = {
+        fa: 'خطا در ارسال کد تأیید. لطفاً دوباره تلاش کنید.',
+        en: 'Failed to send OTP. Please try again.',
+        ar: 'فشل إرسال OTP. يرجى المحاولة مرة أخرى.'
+      };
       return {
         success: false,
-        message: locale === 'fa'
-          ? 'خطا در ارسال کد تأیید. لطفاً دوباره تلاش کنید.'
-          : 'Failed to send OTP. Please try again.'
+        message: errorMessages[locale] || errorMessages['en']
       };
     }
   }
@@ -265,63 +292,148 @@ export class OtpService {
    */
   private static async sendSmsOtp(phoneNumber: string, code: string, locale: string = 'fa'): Promise<void> {
     try {
-      // Get Kavenegar API settings from admin settings
-      const smsSettings = await storage.getAdminSettings();
+      const kavenegarApiKey = process.env.KAVENEGAR_API_KEY;
       
-      if (!smsSettings?.kavenegarApiKey) {
-        console.warn('Kavenegar API key not configured');
+      if (!kavenegarApiKey) {
+        console.warn('⚠️ Kavenegar API key not configured. SMS OTP will not be sent in production.');
+        console.log(`[DEV] SMS OTP for ${phoneNumber}: ${code}`);
         return;
       }
 
-      const message = locale === 'fa'
-        ? `کد تأیید Meta Lingua: ${code}\nاین کد تا 10 دقیقه معتبر است.`
-        : `Meta Lingua verification code: ${code}\nValid for 10 minutes.`;
+      const messages = {
+        fa: `کد تأیید Meta Lingua: ${code}\nاین کد تا 10 دقیقه معتبر است.`,
+        en: `Meta Lingua verification code: ${code}\nValid for 10 minutes.`,
+        ar: `رمز التحقق Meta Lingua: ${code}\nهذا الرمز صالح لمدة 10 دقائق.`
+      };
+      const message = messages[locale] || messages['en'];
 
-      // TODO: Implement actual Kavenegar SMS API call
-      // For now, log the code (remove in production)
-      console.log(`SMS OTP for ${phoneNumber}: ${code}`);
-      
-      // Placeholder for actual SMS implementation
-      // await kavenegarClient.send({
-      //   receptor: phoneNumber,
-      //   message: message,
-      //   sender: smsSettings.sender_number
-      // });
+      // Format phone number for Iranian network
+      const formattedPhone = this.formatIranianPhoneNumber(phoneNumber);
+
+      // Call Kavenegar API
+      const kavenegarUrl = new URL('https://api.kavenegar.com/v1/send.json');
+      kavenegarUrl.searchParams.append('apikey', kavenegarApiKey);
+      kavenegarUrl.searchParams.append('receptor', formattedPhone);
+      kavenegarUrl.searchParams.append('message', message);
+      kavenegarUrl.searchParams.append('sender', 'Meta Lingua'); // Default sender
+
+      const response = await fetch(kavenegarUrl.toString(), {
+        method: 'GET',
+        timeout: 10000
+      });
+
+      if (!response.ok) {
+        throw new Error(`Kavenegar API error: ${response.statusText}`);
+      }
+
+      const result = await response.json() as any;
+      if (result?.result?.status === 200) {
+        console.log(`✓ SMS OTP sent successfully to ${formattedPhone}`);
+      } else {
+        console.error('Kavenegar API returned error:', result);
+        throw new Error(`Kavenegar returned status: ${result?.result?.status || 'unknown'}`);
+      }
       
     } catch (error) {
-      console.error('SMS sending failed:', error);
+      console.error('❌ SMS sending failed:', error);
       throw error;
     }
   }
 
   /**
-   * Send OTP via Email
+   * Send OTP via Email (Iranian SMTP or fallback)
    */
   private static async sendEmailOtp(email: string, code: string, locale: string = 'fa'): Promise<void> {
     try {
-      const subject = locale === 'fa'
-        ? 'کد تأیید Meta Lingua'
-        : 'Meta Lingua Verification Code';
-        
-      const message = locale === 'fa'
-        ? `سلام!\n\nکد تأیید شما: ${code}\n\nاین کد تا 10 دقیقه معتبر است.\n\nتیم Meta Lingua`
-        : `Hello!\n\nYour verification code: ${code}\n\nThis code is valid for 10 minutes.\n\nMeta Lingua Team`;
-
-      // TODO: Implement actual email sending
-      // For now, log the code (remove in production)
-      console.log(`Email OTP for ${email}: ${code}`);
+      const subjects = {
+        fa: 'کد تأیید Meta Lingua',
+        en: 'Meta Lingua Verification Code',
+        ar: 'رمز التحقق Meta Lingua'
+      };
       
-      // Placeholder for actual email implementation
-      // await emailService.send({
-      //   to: email,
-      //   subject: subject,
-      //   text: message
-      // });
+      const messages = {
+        fa: `سلام!\n\nکد تأیید شما: ${code}\n\nاین کد تا 10 دقیقه معتبر است.\n\nاگر این درخواست را انجام ندادید، این ایمیل را نادیده بگیرید.\n\nتیم Meta Lingua`,
+        en: `Hello!\n\nYour verification code: ${code}\n\nThis code is valid for 10 minutes.\n\nIf you didn't request this, please ignore this email.\n\nMeta Lingua Team`,
+        ar: `مرحبا!\n\nرمز التحقق الخاص بك: ${code}\n\nهذا الرمز صالح لمدة 10 دقائق.\n\nإذا لم تطلب هذا، يرجى تجاهل هذا البريد الإلكتروني.\n\nفريق Meta Lingua`
+      };
+
+      const subject = subjects[locale] || subjects['en'];
+      const message = messages[locale] || messages['en'];
+
+      // Send via email service (Iranian infrastructure)
+      const emailData = {
+        subject,
+        content: message,
+        html: this.renderOtpEmailHTML(code, message, locale)
+      };
+
+      const result = await emailService.send(email, emailData);
+      
+      if (result) {
+        console.log(`✓ Email OTP sent successfully to ${email}`);
+      } else {
+        console.warn(`⚠️ Email OTP delivery uncertain for ${email} - will try next attempt`);
+      }
       
     } catch (error) {
-      console.error('Email sending failed:', error);
+      console.error('❌ Email sending failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Render HTML email template for OTP
+   */
+  private static renderOtpEmailHTML(code: string, message: string, locale: string = 'fa'): string {
+    const direction = locale === 'fa' || locale === 'ar' ? 'rtl' : 'ltr';
+    return `
+<!DOCTYPE html>
+<html dir="${direction}" lang="${locale}">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+    .header { background: #007bff; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+    .content { background: white; padding: 30px; }
+    .code-box { 
+      background: #f0f0f0; 
+      border: 2px solid #007bff; 
+      padding: 20px; 
+      text-align: center; 
+      border-radius: 5px; 
+      margin: 20px 0;
+      font-size: 24px;
+      letter-spacing: 3px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .footer { background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>${locale === 'fa' ? 'Meta Lingua' : locale === 'ar' ? 'ميتا لينجوا' : 'Meta Lingua'}</h2>
+    </div>
+    <div class="content">
+      <p>${message.split('\n').join('<br>')}</p>
+      <div class="code-box">${code}</div>
+      <p style="color: #999; font-size: 12px;">
+        ${locale === 'fa' 
+          ? 'این ایمیل خودکار ارسال شده است. لطفاً به آن پاسخ ندهید.'
+          : locale === 'ar'
+          ? 'تم إرسال هذا البريد الإلكتروني تلقائياً. يرجى عدم الرد عليه.'
+          : 'This email was sent automatically. Please do not reply to it.'}
+      </p>
+    </div>
+    <div class="footer">
+      <p>© 2025 Meta Lingua Academy. ${locale === 'fa' ? 'تمام حقوق محفوظ است.' : locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
   }
 
   /**

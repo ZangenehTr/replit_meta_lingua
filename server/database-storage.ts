@@ -15042,11 +15042,103 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTeacherStatus(teacherId: number, status: string, sessionId?: number): Promise<void> {
-    // TODO: Implement teacher status updates
+    try {
+      // Validate status values
+      const validStatuses = ['online', 'offline', 'in_call', 'away'];
+      if (!validStatuses.includes(status)) {
+        console.warn(`Invalid teacher status: ${status}. Must be one of: ${validStatuses.join(', ')}`);
+        return;
+      }
+
+      // Check if teacher presence record exists
+      const { callernPresence } = await import('@shared/schema');
+      const existing = await db.select().from(callernPresence)
+        .where(eq(callernPresence.userId, teacherId))
+        .limit(1);
+
+      if (existing.length > 0) {
+        // Update existing record
+        await db.update(callernPresence)
+          .set({
+            status,
+            sessionId: sessionId?.toString(),
+            updatedAt: new Date()
+          })
+          .where(eq(callernPresence.userId, teacherId));
+      } else {
+        // Create new presence record
+        await db.insert(callernPresence).values({
+          userId: teacherId,
+          status,
+          sessionId: sessionId?.toString(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+
+      console.log(`✓ Teacher ${teacherId} status updated to: ${status}`);
+    } catch (error) {
+      console.error('Error updating teacher status:', error);
+      throw error;
+    }
   }
 
   async getWebRTCConfig(): Promise<any> {
-    return { turnServers: [], stunServers: [] }; // TODO: Implement
+    try {
+      // Iranian self-hosting configuration for WebRTC
+      // These are default TURN/STUN servers for Iranian deployment
+      // In production, configure via environment variables or admin settings
+      
+      const config = {
+        turnServers: [
+          // Primary: Self-hosted TURN server (Iranian infrastructure)
+          {
+            urls: process.env.TURN_SERVER_URL || 'turn:turn.metalingua.ir:3478',
+            username: process.env.TURN_USERNAME || 'callern-user',
+            credential: process.env.TURN_PASSWORD || 'callern-secure-pass'
+          },
+          // Fallback: Alternative TURN configuration
+          {
+            urls: process.env.TURN_SERVER_URL_2 || 'turn:turn-backup.metalingua.ir:3478',
+            username: process.env.TURN_USERNAME_2 || 'callern-user-backup',
+            credential: process.env.TURN_PASSWORD_2 || 'callern-backup-pass'
+          }
+        ],
+        stunServers: [
+          // STUN servers for NAT traversal (Iranian hosted if possible)
+          {
+            urls: process.env.STUN_SERVER_URL || 'stun:stun.metalingua.ir:3478'
+          },
+          {
+            urls: process.env.STUN_SERVER_URL_2 || 'stun:stun-backup.metalingua.ir:3478'
+          },
+          // Public STUN servers as fallback
+          {
+            urls: 'stun:stun.l.google.com:19302'
+          },
+          {
+            urls: 'stun:stun1.l.google.com:19302'
+          }
+        ],
+        iceCandidatePoolSize: 10,
+        iceTransportPolicy: 'all' // Allow both relay and direct connections
+      };
+
+      console.log('✓ WebRTC configuration loaded for CallerN sessions');
+      return config;
+    } catch (error) {
+      console.error('Error loading WebRTC configuration:', error);
+      // Return safe fallback
+      return {
+        turnServers: [],
+        stunServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ],
+        iceCandidatePoolSize: 10,
+        iceTransportPolicy: 'all'
+      };
+    }
   }
 
   async generateSessionSummary(params: any): Promise<any> {
