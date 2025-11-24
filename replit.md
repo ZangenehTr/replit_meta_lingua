@@ -51,10 +51,40 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
     - Unified Class Scheduling with multi-view calendar.
     - AI Supervisor for real-time video call monitoring (audio streaming, vocab suggestions, attention tracking, TTT ratio).
     - CMS Platform for Blog, Video, and Media library.
+    - **CallerN Storage Layer**: Dedicated module (`server/storage/callern-storage.ts`) with 24 methods for session management, roadmap tracking, and post-session reporting. Uses real database queries with proper FK constraints.
 
 ### Database Design
 - **ORM**: Drizzle.
-- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress, LinguaQuest lessons (12 total: 6 pre-existing A1-A2, 6 new B1-C1), dynamic form definitions/submissions, curriculum categories, guest leads, visitor chat sessions/messages, and custom fonts.
+- **Schema**: User management, course system, payment tracking, gamification, mood intelligence, guest progress, LinguaQuest lessons (12 total: 6 pre-existing A1-A2, 6 new B1-C1), dynamic form definitions/submissions, curriculum categories, guest leads, visitor chat sessions/messages, custom fonts, and CallerN session tracking (callSessions, callPostReports, sessionRatings, srsCards).
+
+### CallerN Implementation Status (November 24, 2025)
+
+**Storage Layer** (`server/storage/callern-storage.ts`):
+- ✅ **Session Management (5 methods)**: createCallSession, updateCallSession, getCallSession, getWebRTCConfig with real DB queries
+- ✅ **Post-Session Reporting (4 methods)**: createCallPostReport, updateCallPostReport, getCallPostReport, getSessionReport with callPostReports table
+- ✅ **Roadmap Tracking (5 methods)**: getRoadmapInstanceByCourse, getActiveRoadmapInstanceForStudent, getRoadmapPosition, getUpcomingActivities, updateRoadmapProgressFromSession with studentRoadmapProgress/callernRoadmapSteps tables
+- ✅ **Progress Updates (2 methods)**: updateActivityInstanceStatus (with sessionId scoping), updateOverallRatings
+- ⚠️ **AI Content Stubs (3 methods)**: generatePreSessionContent, generateSessionSummary, generateNextMicroSession return placeholders pending full AI integration
+- ⚠️ **Evidence & Scoring Stubs (3 methods)**: createActivityEvidence, scoreActivityInstance, updateTeacherStatus return mock data (no persistence tables yet)
+
+**Database Schema**:
+- ✅ callSessions table with FK constraints: roadmapProgressId → studentRoadmapProgress.id, roadmapStepId → callernRoadmapSteps.id
+- ✅ callPostReports table with sessionId → callSessions.id
+- ✅ sessionRatings and srsCards tables defined
+- ⚠️ Teacher presence tracking not implemented (callernPresence table needed)
+- ⚠️ Activity evidence storage not implemented (separate table needed)
+
+**Routes Integration** (`server/routes/callern-flow-routes.ts`):
+- ✅ All 29 callernStorage.* method calls connected to real database methods
+- ✅ Zero LSP errors in routes and storage modules
+- ✅ Pre-session content, session initiation, post-session reporting flows wired
+
+**Known Limitations**:
+1. AI provider not yet configurable via env vars (hardcoded to Ollama, needs AI_PROVIDER env var support for OpenAI fallback)
+2. Teacher presence updates only log, don't persist to database
+3. Activity evidence and scoring data not stored in database (analytics incomplete)
+4. Database migration command (npm run db:push) times out due to large schema - requires manual retry or --force flag
+5. Roadmap session progress tracking implemented but scoring/adaptive pacing not yet wired
 
 ### Deployment Strategy
 - **Development**: Replit hosting with Neon PostgreSQL.
