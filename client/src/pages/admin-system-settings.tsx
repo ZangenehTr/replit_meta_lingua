@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ interface CustomRole {
 
 export default function AdminSystemSettings() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentLanguage, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -90,7 +90,7 @@ export default function AdminSystemSettings() {
   });
 
   // Update form when config data loads
-  useState(() => {
+  useEffect(() => {
     if (systemConfig) {
       setConfigData(systemConfig);
     }
@@ -105,8 +105,8 @@ export default function AdminSystemSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/system-config"] });
       toast({
-        title: currentLanguage === 'fa' ? "تنظیمات ذخیره شد" : "Settings Saved",
-        description: currentLanguage === 'fa' 
+        title: language === 'fa' ? "تنظیمات ذخیره شد" : "Settings Saved",
+        description: language === 'fa' 
           ? "تنظیمات سیستم با موفقیت به‌روزرسانی شد"
           : "System settings have been updated successfully"
       });
@@ -114,8 +114,8 @@ export default function AdminSystemSettings() {
     onError: () => {
       toast({
         variant: "destructive",
-        title: currentLanguage === 'fa' ? "خطا" : "Error",
-        description: currentLanguage === 'fa' 
+        title: language === 'fa' ? "خطا" : "Error",
+        description: language === 'fa' 
           ? "خطا در به‌روزرسانی تنظیمات سیستم"
           : "Failed to update system settings"
       });
@@ -130,8 +130,8 @@ export default function AdminSystemSettings() {
       }),
     onSuccess: (_, service) => {
       toast({
-        title: currentLanguage === 'fa' ? "اتصال موفق" : "Connection Successful",
-        description: currentLanguage === 'fa' 
+        title: language === 'fa' ? "اتصال موفق" : "Connection Successful",
+        description: language === 'fa' 
           ? `اتصال به ${service} با موفقیت برقرار شد`
           : `Successfully connected to ${service}`
       });
@@ -139,8 +139,8 @@ export default function AdminSystemSettings() {
     onError: (_, service) => {
       toast({
         variant: "destructive",
-        title: currentLanguage === 'fa' ? "خطا در اتصال" : "Connection Failed",
-        description: currentLanguage === 'fa' 
+        title: language === 'fa' ? "خطا در اتصال" : "Connection Failed",
+        description: language === 'fa' 
           ? `خطا در اتصال به ${service}`
           : `Failed to connect to ${service}`
       });
@@ -170,7 +170,7 @@ export default function AdminSystemSettings() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>{currentLanguage === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}</p>
+          <p>{language === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}</p>
         </div>
       </div>
     );
@@ -185,10 +185,10 @@ export default function AdminSystemSettings() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                {currentLanguage === 'fa' ? 'تنظیمات سیستم' : 'System Settings'}
+                {language === 'fa' ? 'تنظیمات سیستم' : 'System Settings'}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                {currentLanguage === 'fa' 
+                {language === 'fa' 
                   ? 'مدیریت وابستگی‌های فنی و پیکربندی سیستم'
                   : 'Manage technical dependencies and system configuration'
                 }
@@ -201,8 +201,8 @@ export default function AdminSystemSettings() {
             >
               <Save className="h-4 w-4" />
               {updateConfigMutation.isPending 
-                ? (currentLanguage === 'fa' ? 'در حال ذخیره...' : 'Saving...') 
-                : (currentLanguage === 'fa' ? 'ذخیره تغییرات' : 'Save Changes')
+                ? (language === 'fa' ? 'در حال ذخیره...' : 'Saving...') 
+                : (language === 'fa' ? 'ذخیره تغییرات' : 'Save Changes')
               }
             </Button>
           </div>
@@ -211,19 +211,19 @@ export default function AdminSystemSettings() {
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="integrations" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
-                {currentLanguage === 'fa' ? 'ادغام‌ها' : 'Integrations'}
+                {language === 'fa' ? 'ادغام‌ها' : 'Integrations'}
               </TabsTrigger>
               <TabsTrigger value="roles" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                {currentLanguage === 'fa' ? 'نقش‌ها' : 'Roles'}
+                {language === 'fa' ? 'نقش‌ها' : 'Roles'}
               </TabsTrigger>
               <TabsTrigger value="ai" className="flex items-center gap-2">
                 <Bot className="h-4 w-4" />
-                {currentLanguage === 'fa' ? 'هوش مصنوعی' : 'AI Settings'}
+                {language === 'fa' ? 'هوش مصنوعی' : 'AI Settings'}
               </TabsTrigger>
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
-                {currentLanguage === 'fa' ? 'عمومی' : 'General'}
+                {language === 'fa' ? 'عمومی' : 'General'}
               </TabsTrigger>
             </TabsList>
 
@@ -233,13 +233,13 @@ export default function AdminSystemSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'ادغام پیامک (کاوه نگار)' : 'SMS Integration (Kavenegar)'}
+                    {language === 'fa' ? 'ادغام پیامک (کاوه نگار)' : 'SMS Integration (Kavenegar)'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="smsEnabled">
-                      {currentLanguage === 'fa' ? 'فعال‌سازی پیامک' : 'Enable SMS'}
+                      {language === 'fa' ? 'فعال‌سازی پیامک' : 'Enable SMS'}
                     </Label>
                     <Switch
                       id="smsEnabled"
@@ -251,26 +251,26 @@ export default function AdminSystemSettings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="kavenegarApiKey">
-                        {currentLanguage === 'fa' ? 'کلید API کاوه نگار' : 'Kavenegar API Key'}
+                        {language === 'fa' ? 'کلید API کاوه نگار' : 'Kavenegar API Key'}
                       </Label>
                       <Input
                         id="kavenegarApiKey"
                         type="password"
                         value={configData.kavenegarApiKey || ''}
                         onChange={(e) => handleConfigUpdate('kavenegarApiKey', e.target.value)}
-                        placeholder={currentLanguage === 'fa' ? 'کلید API خود را وارد کنید' : 'Enter your API key'}
+                        placeholder={language === 'fa' ? 'کلید API خود را وارد کنید' : 'Enter your API key'}
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="kavenegarSenderNumber">
-                        {currentLanguage === 'fa' ? 'شماره فرستنده' : 'Sender Number'}
+                        {language === 'fa' ? 'شماره فرستنده' : 'Sender Number'}
                       </Label>
                       <Input
                         id="kavenegarSenderNumber"
                         value={configData.kavenegarSenderNumber || ''}
                         onChange={(e) => handleConfigUpdate('kavenegarSenderNumber', e.target.value)}
-                        placeholder={currentLanguage === 'fa' ? 'شماره فرستنده' : 'Sender number'}
+                        placeholder={language === 'fa' ? 'شماره فرستنده' : 'Sender number'}
                       />
                     </div>
                   </div>
@@ -280,7 +280,7 @@ export default function AdminSystemSettings() {
                     onClick={() => testConnectionMutation.mutate('kavenegar')}
                     disabled={testConnectionMutation.isPending}
                   >
-                    {currentLanguage === 'fa' ? 'تست اتصال' : 'Test Connection'}
+                    {language === 'fa' ? 'تست اتصال' : 'Test Connection'}
                   </Button>
                 </CardContent>
               </Card>
@@ -290,13 +290,13 @@ export default function AdminSystemSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'ادغام پرداخت (شتاب)' : 'Payment Integration (Shetab)'}
+                    {language === 'fa' ? 'ادغام پرداخت (شتاب)' : 'Payment Integration (Shetab)'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="paymentEnabled">
-                      {currentLanguage === 'fa' ? 'فعال‌سازی پرداخت' : 'Enable Payments'}
+                      {language === 'fa' ? 'فعال‌سازی پرداخت' : 'Enable Payments'}
                     </Label>
                     <Switch
                       id="paymentEnabled"
@@ -308,44 +308,44 @@ export default function AdminSystemSettings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="shetabMerchantId">
-                        {currentLanguage === 'fa' ? 'شناسه پذیرنده' : 'Merchant ID'}
+                        {language === 'fa' ? 'شناسه پذیرنده' : 'Merchant ID'}
                       </Label>
                       <Input
                         id="shetabMerchantId"
                         value={configData.shetabMerchantId || ''}
                         onChange={(e) => handleConfigUpdate('shetabMerchantId', e.target.value)}
-                        placeholder={currentLanguage === 'fa' ? 'شناسه پذیرنده' : 'Merchant ID'}
+                        placeholder={language === 'fa' ? 'شناسه پذیرنده' : 'Merchant ID'}
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="shetabTerminalId">
-                        {currentLanguage === 'fa' ? 'شناسه ترمینال' : 'Terminal ID'}
+                        {language === 'fa' ? 'شناسه ترمینال' : 'Terminal ID'}
                       </Label>
                       <Input
                         id="shetabTerminalId"
                         value={configData.shetabTerminalId || ''}
                         onChange={(e) => handleConfigUpdate('shetabTerminalId', e.target.value)}
-                        placeholder={currentLanguage === 'fa' ? 'شناسه ترمینال' : 'Terminal ID'}
+                        placeholder={language === 'fa' ? 'شناسه ترمینال' : 'Terminal ID'}
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="shetabApiKey">
-                        {currentLanguage === 'fa' ? 'کلید API' : 'API Key'}
+                        {language === 'fa' ? 'کلید API' : 'API Key'}
                       </Label>
                       <Input
                         id="shetabApiKey"
                         type="password"
                         value={configData.shetabApiKey || ''}
                         onChange={(e) => handleConfigUpdate('shetabApiKey', e.target.value)}
-                        placeholder={currentLanguage === 'fa' ? 'کلید API' : 'API Key'}
+                        placeholder={language === 'fa' ? 'کلید API' : 'API Key'}
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="shetabGatewayUrl">
-                        {currentLanguage === 'fa' ? 'آدرس درگاه' : 'Gateway URL'}
+                        {language === 'fa' ? 'آدرس درگاه' : 'Gateway URL'}
                       </Label>
                       <Input
                         id="shetabGatewayUrl"
@@ -361,7 +361,7 @@ export default function AdminSystemSettings() {
                     onClick={() => testConnectionMutation.mutate('shetab')}
                     disabled={testConnectionMutation.isPending}
                   >
-                    {currentLanguage === 'fa' ? 'تست اتصال' : 'Test Connection'}
+                    {language === 'fa' ? 'تست اتصال' : 'Test Connection'}
                   </Button>
                 </CardContent>
               </Card>
@@ -371,13 +371,13 @@ export default function AdminSystemSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'تنظیمات ایمیل' : 'Email Configuration'}
+                    {language === 'fa' ? 'تنظیمات ایمیل' : 'Email Configuration'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="emailEnabled">
-                      {currentLanguage === 'fa' ? 'فعال‌سازی ایمیل' : 'Enable Email'}
+                      {language === 'fa' ? 'فعال‌سازی ایمیل' : 'Enable Email'}
                     </Label>
                     <Switch
                       id="emailEnabled"
@@ -389,7 +389,7 @@ export default function AdminSystemSettings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="smtpHost">
-                        {currentLanguage === 'fa' ? 'میزبان SMTP' : 'SMTP Host'}
+                        {language === 'fa' ? 'میزبان SMTP' : 'SMTP Host'}
                       </Label>
                       <Input
                         id="smtpHost"
@@ -401,7 +401,7 @@ export default function AdminSystemSettings() {
 
                     <div>
                       <Label htmlFor="smtpPort">
-                        {currentLanguage === 'fa' ? 'پورت SMTP' : 'SMTP Port'}
+                        {language === 'fa' ? 'پورت SMTP' : 'SMTP Port'}
                       </Label>
                       <Input
                         id="smtpPort"
@@ -414,26 +414,26 @@ export default function AdminSystemSettings() {
 
                     <div>
                       <Label htmlFor="smtpUser">
-                        {currentLanguage === 'fa' ? 'نام کاربری' : 'Username'}
+                        {language === 'fa' ? 'نام کاربری' : 'Username'}
                       </Label>
                       <Input
                         id="smtpUser"
                         value={configData.smtpUser || ''}
                         onChange={(e) => handleConfigUpdate('smtpUser', e.target.value)}
-                        placeholder={currentLanguage === 'fa' ? 'نام کاربری' : 'Username'}
+                        placeholder={language === 'fa' ? 'نام کاربری' : 'Username'}
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="smtpPassword">
-                        {currentLanguage === 'fa' ? 'رمز عبور' : 'Password'}
+                        {language === 'fa' ? 'رمز عبور' : 'Password'}
                       </Label>
                       <Input
                         id="smtpPassword"
                         type="password"
                         value={configData.smtpPassword || ''}
                         onChange={(e) => handleConfigUpdate('smtpPassword', e.target.value)}
-                        placeholder={currentLanguage === 'fa' ? 'رمز عبور' : 'Password'}
+                        placeholder={language === 'fa' ? 'رمز عبور' : 'Password'}
                       />
                     </div>
                   </div>
@@ -443,7 +443,7 @@ export default function AdminSystemSettings() {
                     onClick={() => testConnectionMutation.mutate('email')}
                     disabled={testConnectionMutation.isPending}
                   >
-                    {currentLanguage === 'fa' ? 'تست اتصال' : 'Test Connection'}
+                    {language === 'fa' ? 'تست اتصال' : 'Test Connection'}
                   </Button>
                 </CardContent>
               </Card>
@@ -455,13 +455,13 @@ export default function AdminSystemSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bot className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'تنظیمات هوش مصنوعی (اولاما)' : 'AI Configuration (Ollama)'}
+                    {language === 'fa' ? 'تنظیمات هوش مصنوعی (اولاما)' : 'AI Configuration (Ollama)'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="aiEnabled">
-                      {currentLanguage === 'fa' ? 'فعال‌سازی هوش مصنوعی' : 'Enable AI'}
+                      {language === 'fa' ? 'فعال‌سازی هوش مصنوعی' : 'Enable AI'}
                     </Label>
                     <Switch
                       id="aiEnabled"
@@ -473,7 +473,7 @@ export default function AdminSystemSettings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="ollamaApiUrl">
-                        {currentLanguage === 'fa' ? 'آدرس API اولاما' : 'Ollama API URL'}
+                        {language === 'fa' ? 'آدرس API اولاما' : 'Ollama API URL'}
                       </Label>
                       <Input
                         id="ollamaApiUrl"
@@ -485,7 +485,7 @@ export default function AdminSystemSettings() {
 
                     <div>
                       <Label htmlFor="ollamaModel">
-                        {currentLanguage === 'fa' ? 'مدل هوش مصنوعی' : 'AI Model'}
+                        {language === 'fa' ? 'مدل هوش مصنوعی' : 'AI Model'}
                       </Label>
                       <Input
                         id="ollamaModel"
@@ -501,7 +501,7 @@ export default function AdminSystemSettings() {
                     onClick={() => testConnectionMutation.mutate('ollama')}
                     disabled={testConnectionMutation.isPending}
                   >
-                    {currentLanguage === 'fa' ? 'تست اتصال' : 'Test Connection'}
+                    {language === 'fa' ? 'تست اتصال' : 'Test Connection'}
                   </Button>
                 </CardContent>
               </Card>
@@ -513,13 +513,13 @@ export default function AdminSystemSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Settings className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'تنظیمات عمومی' : 'General Settings'}
+                    {language === 'fa' ? 'تنظیمات عمومی' : 'General Settings'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="maintenanceMode">
-                      {currentLanguage === 'fa' ? 'حالت تعمیر و نگهداری' : 'Maintenance Mode'}
+                      {language === 'fa' ? 'حالت تعمیر و نگهداری' : 'Maintenance Mode'}
                     </Label>
                     <Switch
                       id="maintenanceMode"
@@ -530,7 +530,7 @@ export default function AdminSystemSettings() {
 
                   <div className="flex items-center justify-between">
                     <Label htmlFor="registrationEnabled">
-                      {currentLanguage === 'fa' ? 'فعال‌سازی ثبت‌نام' : 'Enable Registration'}
+                      {language === 'fa' ? 'فعال‌سازی ثبت‌نام' : 'Enable Registration'}
                     </Label>
                     <Switch
                       id="registrationEnabled"
@@ -541,7 +541,7 @@ export default function AdminSystemSettings() {
 
                   <div>
                     <Label htmlFor="maxUsersPerInstitute">
-                      {currentLanguage === 'fa' ? 'حداکثر کاربران در هر موسسه' : 'Max Users Per Institute'}
+                      {language === 'fa' ? 'حداکثر کاربران در هر موسسه' : 'Max Users Per Institute'}
                     </Label>
                     <Input
                       id="maxUsersPerInstitute"
@@ -561,18 +561,18 @@ export default function AdminSystemSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'مدیریت نقش‌های سفارشی' : 'Custom Roles Management'}
+                    {language === 'fa' ? 'مدیریت نقش‌های سفارشی' : 'Custom Roles Management'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {currentLanguage === 'fa' 
+                    {language === 'fa' 
                       ? 'نقش‌های سفارشی جدید با مجوزهای مختلف تعریف کنید'
                       : 'Define new custom roles with different permission sets'
                     }
                   </p>
                   <Button>
-                    {currentLanguage === 'fa' ? 'افزودن نقش جدید' : 'Add New Role'}
+                    {language === 'fa' ? 'افزودن نقش جدید' : 'Add New Role'}
                   </Button>
                 </CardContent>
               </Card>
