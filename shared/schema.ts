@@ -278,6 +278,8 @@ export const adminSettings = pgTable("admin_settings", {
   paymentReceivedSmsTemplate: text("payment_received_sms_template"),
   aiProvider: varchar("ai_provider", { length: 50 }).default("ollama"),
   aiOllamaUrl: varchar("ai_ollama_url", { length: 255 }),
+  whisperProvider: varchar("whisper_provider", { length: 50 }).default("faster-whisper"),
+  whisperUrl: varchar("whisper_url", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
