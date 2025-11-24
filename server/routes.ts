@@ -22,6 +22,7 @@ import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
 import { setupContentBankRoutes } from "./routes/content-bank-routes";
 import { registerLinguaQuestRoutes } from "./routes/linguaquest-routes";
 import linguaquestAudioRoutes from "./routes/linguaquest-audio-routes";
+import infrastructureHealthRoutes from "./routes/infrastructure-health-routes";
 import searchRoutes from "./routes/search-routes";
 import visitorChatRoutes from "./routes/visitor-chat-routes";
 import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes";
@@ -23731,6 +23732,7 @@ Meta Lingua Academy`;
   
   // Register visitor chat routes
   app.use('/api/visitor-chat', visitorChatRoutes);
+  app.use('/api', infrastructureHealthRoutes);
   
   // Register AI study partner routes
   app.use(createAiStudyPartnerRoutes(storage));
