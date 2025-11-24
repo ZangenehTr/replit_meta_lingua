@@ -80,11 +80,68 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - ✅ Pre-session content, session initiation, post-session reporting flows wired
 
 **Known Limitations**:
-1. AI provider not yet configurable via env vars (hardcoded to Ollama, needs AI_PROVIDER env var support for OpenAI fallback)
-2. Teacher presence updates only log, don't persist to database
-3. Activity evidence and scoring data not stored in database (analytics incomplete)
-4. Database migration command (npm run db:push) times out due to large schema - requires manual retry or --force flag
-5. Roadmap session progress tracking implemented but scoring/adaptive pacing not yet wired
+1. Teacher presence updates only log, don't persist to database
+2. Activity evidence and scoring data not stored in database (analytics incomplete)
+3. Database migration command (npm run db:push) times out due to large schema - requires manual retry or --force flag
+4. Roadmap session progress tracking implemented but scoring/adaptive pacing not yet wired
+
+### AI Provider Configuration (November 24, 2025)
+
+The platform supports flexible AI provider selection through environment variables, enabling deployment in both Iranian (Ollama-based) and international (OpenAI-based) contexts.
+
+**Environment Variables**:
+- `AI_PROVIDER`: Primary AI provider selection (`ollama` | `openai`)
+  - Default: `ollama` (for Iranian self-hosting)
+  - Set to `openai` for international deployments
+- `AI_FALLBACK_PROVIDER`: Optional fallback AI provider (`ollama` | `openai`)
+  - Automatically retries failed requests with fallback provider
+  - Must be different from primary provider
+  - No default (single provider mode if not set)
+
+**Provider-Specific Configuration**:
+- **Ollama** (Iranian self-hosting):
+  - `OLLAMA_HOST`: Ollama server URL (default: `http://localhost:11434`)
+  - `OLLAMA_MODEL`: Model name (default: `llama3.2:3b`)
+  - Requires self-hosted Ollama server (not available in Replit dev environment)
+- **OpenAI** (International deployments):
+  - `OPENAI_API_KEY`: OpenAI API key (required for OpenAI provider)
+  - Uses `gpt-4o-mini` model by default
+
+**Deployment Scenarios**:
+
+1. **Iranian Self-Hosting (Default)**:
+   - No configuration needed
+   - Uses Ollama exclusively
+   - Ollama connection errors expected in dev environment (connects on production server)
+
+2. **International Deployment**:
+   ```bash
+   AI_PROVIDER=openai
+   OPENAI_API_KEY=sk-...
+   ```
+
+3. **Hybrid with Fallback** (Development flexibility):
+   ```bash
+   AI_PROVIDER=openai
+   AI_FALLBACK_PROVIDER=ollama
+   OPENAI_API_KEY=sk-...
+   OLLAMA_HOST=http://localhost:11434
+   ```
+
+4. **Reverse Fallback** (Test OpenAI while primary is Ollama):
+   ```bash
+   AI_PROVIDER=ollama
+   AI_FALLBACK_PROVIDER=openai
+   OPENAI_API_KEY=sk-...
+   OLLAMA_HOST=http://localhost:11434
+   ```
+
+**Behavior**:
+- System tries primary provider first
+- If primary fails and fallback is configured, automatically retries with fallback
+- Logs show which provider is being used for each request
+- Health checks monitor both primary and fallback provider status
+- Graceful degradation: app starts even if AI providers are unavailable (expected during development builds)
 
 ### Deployment Strategy
 - **Development**: Replit hosting with Neon PostgreSQL.
@@ -124,7 +181,10 @@ For clean deployments (both development and production), use the test user seedi
 - **Payment Gateway**: Shetab (Iranian network)
 - **SMS Service**: Kavenegar (Iranian provider)
 - **VoIP**: Isabel VoIP line (Iranian telecom)
-- **AI Services**: Ollama server (local AI processing)
+- **AI Services**: Ollama server (local AI processing) - configurable via AI_PROVIDER env var
+  - Default: Ollama for Iranian deployments
+  - Alternative: OpenAI for international deployments (requires OPENAI_API_KEY)
+  - Optional fallback mode supported via AI_FALLBACK_PROVIDER
 - **TTS Services**: Microsoft Edge TTS (self-hosted)
 - **Fonts**: Self-hosted Arabic/Persian fonts
 - **WebRTC**: Self-hosted TURN/STUN server, Socket.io, Simple Peer, RecordRTC
