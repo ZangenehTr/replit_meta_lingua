@@ -2564,7 +2564,7 @@ export const cart_items = pgTable("cart_items", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// CallerN Call History table
+// CallerN Call History table (historical/completed sessions)
 export const callernCallHistory = pgTable("callern_call_history", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(),
@@ -2576,6 +2576,39 @@ export const callernCallHistory = pgTable("callern_call_history", {
   callQuality: varchar("call_quality", { length: 20 }),
   recordingUrl: varchar("recording_url", { length: 500 }),
   status: varchar("status", { length: 20 }).default("completed"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CallerN Sessions table (active/in-progress sessions)
+export const callSessions = pgTable("call_sessions", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  roadmapProgressId: integer("roadmap_progress_id").references(() => studentRoadmapProgress.id),
+  roadmapStepId: integer("roadmap_step_id").references(() => callernRoadmapSteps.id),
+  sessionType: varchar("session_type", { length: 50 }).default("callern"),
+  status: varchar("status", { length: 20 }).default("active"), // active, completed, cancelled
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+  durationSec: integer("duration_sec"),
+  recordingPath: varchar("recording_path", { length: 500 }),
+  transcriptPath: varchar("transcript_path", { length: 500 }),
+  callQuality: varchar("call_quality", { length: 20 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CallerN Post-Session Reports table
+export const callPostReports = pgTable("call_post_reports", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => callSessions.id).notNull(),
+  aiSummaryJson: jsonb("ai_summary_json"),
+  nextSessionPrep: jsonb("next_session_prep"),
+  taughtItemsJson: jsonb("taught_items_json"),
+  teacherEditsJson: jsonb("teacher_edits_json"),
+  teacherNotes: text("teacher_notes"),
+  teacherConfirmed: boolean("teacher_confirmed").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -6626,12 +6659,10 @@ export type ActivityInstance = typeof activityInstance.$inferSelect;
 export type InsertActivityInstance = typeof activityinstances.$inferInsert;
 
 // CallerN Session System Types
-export type CallSession = typeof callSession.$inferSelect;
-export type InsertCallSession = typeof callsessions.$inferInsert;
-export type CallPostReport = typeof callPostReport.$inferSelect;
-export type InsertCallPostReport = typeof callpostreports.$inferInsert;
-export type SessionRatings = typeof sessionRatings.$inferSelect;
-export type InsertSessionRatings = typeof sessionratingss.$inferInsert;
+export type CallSession = typeof callSessions.$inferSelect;
+export type InsertCallSession = typeof callSessions.$inferInsert;
+export type CallPostReport = typeof callPostReports.$inferSelect;
+export type InsertCallPostReport = typeof callPostReports.$inferInsert;
 export type SrsCard = typeof srsCard.$inferSelect;
 export type InsertSrsCard = typeof srscards.$inferInsert;
 

@@ -8930,3 +8930,38 @@ export const storage = new DatabaseStorage();
 
 // Create unified testing storage instance
 export const unifiedTestingStorage = new UnifiedTestingMemStorage();
+
+// ============================================================================
+// CALLERN STORAGE MODULE - CallerN-specific methods
+// ============================================================================
+// Re-export all CallerN storage methods from dedicated module
+// (Separated to avoid 591 pre-existing LSP errors in main storage.ts)
+export {
+  createCallSession,
+  updateCallSession,
+  getCallSession,
+  updateTeacherStatus,
+  getWebRTCConfig,
+  generatePreSessionContent,
+  generateSessionSummary,
+  generateNextMicroSession,
+  prepareSrsSeeds,
+  storePreSessionData,
+  createCallPostReport,
+  updateCallPostReport,
+  getCallPostReport,
+  getSessionReport,
+  generateSrsCardsFromTaughtItems,
+  updateRoadmapProgressFromSession,
+  updateOverallRatings,
+  createActivityEvidence,
+  updateActivityInstanceStatus,
+  scoreActivityInstance,
+  getStudentLearningGoal,
+  getStudentFocusAreas,
+  getRoadmapInstanceByCourse,
+  getActiveRoadmapInstanceForStudent,
+  getUpcomingActivities,
+  getRecentSessions,
+  getRoadmapPosition
+} from './storage/callern-storage';

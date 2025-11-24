@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
+import * as callernStorage from '../storage/callern-storage';
 import { authenticate, type AuthenticatedRequest } from '../auth';
 
 // Use centralized authentication middleware
@@ -67,22 +68,22 @@ router.post('/callern/prep', requireAuth, async (req, res) => {
 
     // Get active roadmap instance for this student
     const roadmapInstance = courseId 
-      ? await storage.getRoadmapInstanceByCourse(courseId, studentId)
-      : await storage.getActiveRoadmapInstanceForStudent(studentId);
+      ? await callernStorage.getRoadmapInstanceByCourse(courseId, studentId)
+      : await callernStorage.getActiveRoadmapInstanceForStudent(studentId);
 
     if (!roadmapInstance) {
       return res.status(404).json({ message: 'No active roadmap found for student' });
     }
 
     // Get current position and next activities
-    const currentPosition = await storage.getRoadmapPosition(roadmapInstance.id);
-    const upcomingActivities = await storage.getUpcomingActivities(roadmapInstance.id, 3);
+    const currentPosition = await callernStorage.getRoadmapPosition(roadmapInstance.id);
+    const upcomingActivities = await callernStorage.getUpcomingActivities(roadmapInstance.id, 3);
 
     // Get last 3 sessions for context
-    const recentSessions = await storage.getRecentSessions(studentId, 3);
+    const recentSessions = await callernStorage.getRecentSessions(studentId, 3);
 
     // Generate AI-powered pre-session content
-    const aiContent = await storage.generatePreSessionContent({
+    const aiContent = await callernStorage.generatePreSessionContent({
       studentProfile,
       roadmapInstance,
       currentPosition,
@@ -92,7 +93,7 @@ router.post('/callern/prep', requireAuth, async (req, res) => {
     });
 
     // Prepare SRS seeds for session
-    const srsSeedCards = await storage.prepareSrsSeeds(studentId, aiContent.vocabulary);
+    const srsSeedCards = await callernStorage.prepareSrsSeeds(studentId, aiContent.vocabulary);
 
     // Rule: If target_language != 'fa' → grammar explained in Farsi
     const grammarExplanationLang = roadmapInstance.template?.targetLanguage !== 'fa' ? 'fa' : 'en';
@@ -120,7 +121,7 @@ router.post('/callern/prep', requireAuth, async (req, res) => {
     };
 
     // Store pre-session data for teacher briefing
-    await storage.storePreSessionData(studentId, teacherId, response);
+    await callernStorage.storePreSessionData(studentId, teacherId, response);
 
     res.json(response);
   } catch (error) {
@@ -147,19 +148,19 @@ router.get('/callern/teacher-brief', requireAuth, async (req, res) => {
     }
 
     // Get student's learning data
-    const recentSessions = await storage.getRecentSessions(parseInt(studentId as string), 5);
-    const roadmapInstance = await storage.getActiveRoadmapInstanceForStudent(parseInt(studentId as string));
-    const currentPosition = roadmapInstance ? await storage.getRoadmapPosition(roadmapInstance.id) : null;
+    const recentSessions = await callernStorage.getRecentSessions(parseInt(studentId as string), 5);
+    const roadmapInstance = await callernStorage.getActiveRoadmapInstanceForStudent(parseInt(studentId as string));
+    const currentPosition = roadmapInstance ? await callernStorage.getRoadmapPosition(roadmapInstance.id) : null;
 
     // Calculate session statistics
     const totalMinutes = recentSessions.reduce((sum, session) => sum + (session.durationSec || 0), 0) / 60;
     const totalHours = Math.floor(totalMinutes / 60);
 
     // Get last session learned items
-    const lastSessionReport = recentSessions[0] ? await storage.getSessionReport(recentSessions[0].id) : null;
+    const lastSessionReport = recentSessions[0] ? await callernStorage.getSessionReport(recentSessions[0].id) : null;
 
     // Get student's learning goal and deadline
-    const learningGoal = await storage.getStudentLearningGoal(parseInt(studentId as string));
+    const learningGoal = await callernStorage.getStudentLearningGoal(parseInt(studentId as string));
 
     const briefData = {
       student_name: `${student.firstName} ${student.lastName}`,
@@ -183,7 +184,7 @@ router.get('/callern/teacher-brief', requireAuth, async (req, res) => {
       micro_sessions_per_week: 4, // TODO: Get from student preferences
       student_level: roadmapInstance?.template?.targetLevel || 'A2',
       learning_style: student.preferences?.learningStyle || 'visual',
-      areas_to_focus: await storage.getStudentFocusAreas(parseInt(studentId as string))
+      areas_to_focus: await callernStorage.getStudentFocusAreas(parseInt(studentId as string))
     };
 
     res.json(briefData);
@@ -202,7 +203,7 @@ router.post('/callern/start', requireAuth, async (req, res) => {
     const { studentId, teacherId, roadmapInstanceId, activityInstanceId } = startSessionSchema.parse(req.body);
 
     // Create new call session
-    const session = await storage.createCallSession({
+    const session = await callernStorage.createCallSession({
       studentId,
       teacherId,
       roadmapInstanceId,
@@ -213,13 +214,13 @@ router.post('/callern/start', requireAuth, async (req, res) => {
     });
 
     // Mark teacher as online and in session
-    await storage.updateTeacherStatus(teacherId, 'in_session', session.id);
+    await callernStorage.updateTeacherStatus(teacherId, 'in_session', session.id);
 
     res.status(201).json({
       message: 'Session started successfully',
       session_id: session.id,
       started_at: session.startedAt,
-      webrtc_config: await storage.getWebRTCConfig(), // TURN servers, etc.
+      webrtc_config: await callernStorage.getWebRTCConfig(), // TURN servers, etc.
       ai_supervisor_enabled: true
     });
   } catch (error) {
@@ -233,7 +234,7 @@ router.post('/callern/end', requireAuth, async (req, res) => {
     const { sessionId, durationSec, recordingPath, transcriptPath } = endSessionSchema.parse(req.body);
 
     // Update session with end data
-    const session = await storage.updateCallSession(sessionId, {
+    const session = await callernStorage.updateCallSession(sessionId, {
       endedAt: new Date(),
       durationSec,
       recordingPath,
@@ -246,10 +247,10 @@ router.post('/callern/end', requireAuth, async (req, res) => {
     }
 
     // Mark teacher as available
-    await storage.updateTeacherStatus(session.teacherId, 'available');
+    await callernStorage.updateTeacherStatus(session.teacherId, 'available');
 
     // Generate AI summary and next session material
-    const aiSummary = await storage.generateSessionSummary({
+    const aiSummary = await callernStorage.generateSessionSummary({
       sessionId,
       durationSec,
       transcriptPath,
@@ -257,7 +258,7 @@ router.post('/callern/end', requireAuth, async (req, res) => {
     });
 
     // Create next micro-session content immediately
-    const nextSessionPrep = await storage.generateNextMicroSession({
+    const nextSessionPrep = await callernStorage.generateNextMicroSession({
       sessionId,
       studentId: session.studentId,
       roadmapInstanceId: session.roadmapInstanceId,
@@ -265,7 +266,7 @@ router.post('/callern/end', requireAuth, async (req, res) => {
     });
 
     // Store AI-generated post-report
-    await storage.createCallPostReport({
+    await callernStorage.createCallPostReport({
       sessionId,
       aiSummaryJson: aiSummary,
       nextSessionPrep,
@@ -304,7 +305,7 @@ router.post('/callern/post-report', requireAuth, async (req, res) => {
     }
 
     // Update with teacher confirmation
-    const updatedReport = await storage.updateCallPostReport(sessionId, {
+    const updatedReport = await callernStorage.updateCallPostReport(sessionId, {
       taughtItemsJson: taughtItems,
       teacherEditsJson: teacherEdits,
       teacherNotes,
@@ -312,10 +313,10 @@ router.post('/callern/post-report', requireAuth, async (req, res) => {
     });
 
     // Generate SRS cards from confirmed taught items
-    const srsCards = await storage.generateSrsCardsFromTaughtItems(sessionId, taughtItems);
+    const srsCards = await callernStorage.generateSrsCardsFromTaughtItems(sessionId, taughtItems);
 
     // Update student's roadmap progress based on taught items
-    await storage.updateRoadmapProgressFromSession(sessionId, taughtItems);
+    await callernStorage.updateRoadmapProgressFromSession(sessionId, taughtItems);
 
     res.json({
       message: 'Post-session report confirmed successfully',
@@ -369,7 +370,7 @@ router.post('/callern/rate', requireAuth, async (req, res) => {
     });
 
     // Update overall ratings for teacher/student
-    await storage.updateOverallRatings(session, role, score);
+    await callernStorage.updateOverallRatings(session, role, score);
 
     res.status(201).json({
       message: 'Rating submitted successfully',
@@ -395,7 +396,7 @@ router.post('/activities/:activityInstanceId/evidence', requireAuth, async (req,
     }).parse(req.body);
 
     // Create evidence record
-    const evidence = await storage.createActivityEvidence({
+    const evidence = await callernStorage.createActivityEvidence({
       activityInstanceId,
       studentId: req.user.id,
       content,
@@ -405,7 +406,7 @@ router.post('/activities/:activityInstanceId/evidence', requireAuth, async (req,
     });
 
     // Update activity instance status
-    await storage.updateActivityInstanceStatus(activityInstanceId, 'completed');
+    await callernStorage.updateActivityInstanceStatus(activityInstanceId, 'completed');
 
     res.status(201).json({
       message: 'Evidence submitted successfully',
@@ -435,7 +436,7 @@ router.post('/activities/:activityInstanceId/score', requireAuth, async (req, re
     }
 
     // Update activity instance with scoring
-    const scoring = await storage.scoreActivityInstance(activityInstanceId, {
+    const scoring = await callernStorage.scoreActivityInstance(activityInstanceId, {
       aiScore,
       teacherScore,
       rubricApplied,
