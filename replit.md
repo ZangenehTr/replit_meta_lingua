@@ -88,3 +88,33 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Email**: Iranian SMTP infrastructure
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem
+## AI Provider Health Monitoring (November 24, 2025 - NEW)
+
+**Purpose**: Provides real-time health status of AI providers (OpenAI or Ollama) in the admin dashboard.
+
+**Backend** (`server/routes/ai-health-routes.ts`):
+- ✅ **Secure Endpoint**: `GET /api/admin/ai-health` (requires admin authentication)
+- ✅ **Configuration-Based Health Check**: Reads from environment variables (`AI_PROVIDER`, `OPENAI_API_KEY`, `OLLAMA_HOST`)
+- ✅ **Primary Provider Monitoring**: Reports status of configured primary AI provider
+- ✅ **Fallback Provider Monitoring**: If `AI_FALLBACK_PROVIDER` set, also reports fallback status
+- ✅ **Status Reporting**: Returns `healthy` | `unhealthy` for each provider based on:
+  - **OpenAI**: Checks if `OPENAI_API_KEY` is configured (healthy if present)
+  - **Ollama**: Checks if `OLLAMA_HOST` is configured (development returns unhealthy, production returns healthy if configured)
+- ✅ **Environment-Aware**: Different health checks for dev vs production deployments
+
+**Frontend** (`client/src/components/admin/ai-health-widget.tsx`):
+- ✅ **Dashboard Widget**: Displays in Admin Settings → AI Settings tab
+- ✅ **Real-time Status**: Shows primary and fallback provider health
+- ✅ **Color-Coded Badges**: 🟢 Healthy, 🔴 Unhealthy
+- ✅ **Overall Status**: Indicates if at least one provider is healthy
+- ✅ **Auto-Refresh**: Polls every 60 seconds
+- ✅ **Manual Refresh**: Button to check status on-demand
+- ✅ **i18n Support**: Full Farsi/English translations
+
+**Environment Variables**:
+- `AI_PROVIDER`: Primary AI provider (`ollama` | `openai`) - default: `ollama`
+- `AI_FALLBACK_PROVIDER`: Optional fallback provider (`ollama` | `openai`)
+- `OPENAI_API_KEY`: Required only if using OpenAI provider
+- `OLLAMA_HOST`: Ollama server URL (default: `http://localhost:11434`)
+
+**Use Case**: Enables Iranian admins to verify AI infrastructure is operational (either Ollama or OpenAI) before students attempt AI-powered features (CallerN AI Supervisor, content generation, etc.).

@@ -13,6 +13,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { Settings, Shield, MessageSquare, CreditCard, Bot, Users, AlertTriangle, Save } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { InfrastructureHealthWidget } from "@/components/admin/infrastructure-health-widget";
+import { AIHealthWidget } from "@/components/admin/ai-health-widget";
 
 interface SystemConfig {
   id?: number;
@@ -454,6 +455,9 @@ export default function AdminSystemSettings() {
             </TabsContent>
 
             <TabsContent value="ai" className="space-y-6">
+              {/* AI Health Status */}
+              <AIHealthWidget />
+              
               {/* AI Configuration (Ollama) */}
               <Card>
                 <CardHeader>
