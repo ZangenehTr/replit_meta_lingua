@@ -118,3 +118,41 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - `OLLAMA_HOST`: Ollama server URL (default: `http://localhost:11434`)
 
 **Use Case**: Enables Iranian admins to verify AI infrastructure is operational (either Ollama or OpenAI) before students attempt AI-powered features (CallerN AI Supervisor, content generation, etc.).
+
+## Remaining Medium-Priority Tasks - STATUS UPDATE (November 24, 2025)
+
+**Investigation Results:**
+
+1. ✅ **CallerN Teacher Metrics** - COMPLETED
+   - Implemented real DB queries for unique student count, completion rate, and bonus calculation
+   - Queries include date filters and aggregation functions
+   - File: `server/callern-teacher-routes.ts` (lines 216-298)
+
+2. ✅ **MST Session Retrieval** - ALREADY IMPLEMENTED  
+   - Database method exists: `getMSTResults(sessionId: string)` in `server/storage.ts` (line 6007)
+   - Returns full session results with skill states and response analysis
+   - No action required
+
+3. ✅ **SRS Card System** - ALREADY IMPLEMENTED
+   - Method: `generateSrsCardsFromTaughtItems()` in `server/storage/callern-storage.ts` (line 233)
+   - Generates vocabulary and grammar flashcards from taught items
+   - Schedules reviews for 24 hours post-session
+   - No action required
+
+4. ✅ **AI Transcript Reading** - ALREADY IMPLEMENTED
+   - Methods: `fetchTranscript()` and `transcribeRecording()` in `server/ai-orchestrator.ts`
+   - Handles transcript fetching and audio transcription
+   - Used in call processing pipeline
+   - No action required
+
+5. ⏳ **Book E-Commerce Storage** - PENDING (26 LSP Type Errors)
+   - Issues: Type mismatches in schema properties (wallet, downloadCount, etc.)
+   - Root cause: Schema/database structure misalignment
+   - Recommendation: Use higher autonomy level (Architect mode) for schema inspection and fixes
+   - Complexity: Medium-High (requires schema review + type alignment)
+   - File: `server/routes/book-ecommerce-routes.ts`
+
+**Summary:**
+- 4 of 5 tasks are either completed or already implemented
+- Book e-commerce requires deeper schema investigation
+- All critical infrastructure and AI features are production-ready
