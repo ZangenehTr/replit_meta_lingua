@@ -35,7 +35,7 @@ export default function Auth() {
   const { user, login, register: registerUser, loginLoading, registerLoading, logout } = useAuth();
   const [authError, setAuthError] = useState<string>("");
   const [forceLogin, setForceLogin] = useState(false);
-  const [useOtp, setUseOtp] = useState(false);
+  const [useOtp, setUseOtp] = useState(true); // Phone-first: OTP is primary, password is fallback
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMessage, setOtpMessage] = useState("");
@@ -427,8 +427,8 @@ export default function Auth() {
                         loginForm.setValue("otp", "");
                       }}
                     >
-                      <Lock className="mr-2 h-4 w-4" />
-                      {t('auth:usePassword') || 'Use Password'}
+                      <Mail className="mr-2 h-4 w-4" />
+                      {t('auth:useEmailPassword') || 'Use Email & Password'}
                     </Button>
                   )}
                   
