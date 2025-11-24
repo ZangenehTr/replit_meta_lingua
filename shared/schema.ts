@@ -276,6 +276,8 @@ export const adminSettings = pgTable("admin_settings", {
   enrollmentSmsTemplate: text("enrollment_sms_template"),
   sessionReminderSmsTemplate: text("session_reminder_sms_template"),
   paymentReceivedSmsTemplate: text("payment_received_sms_template"),
+  aiProvider: varchar("ai_provider", { length: 50 }).default("ollama"),
+  aiOllamaUrl: varchar("ai_ollama_url", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

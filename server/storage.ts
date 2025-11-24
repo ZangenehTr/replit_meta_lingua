@@ -4506,6 +4506,8 @@ export class MemStorage implements IStorage {
       callRecordingEnabled: false,
       backupEnabled: false,
       maintenanceMode: false,
+      aiProvider: process.env.AI_PROVIDER || "ollama",
+      aiOllamaUrl: process.env.OLLAMA_HOST || "http://localhost:11434",
       createdAt: new Date(),
       updatedAt: new Date()
     };

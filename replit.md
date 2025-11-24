@@ -88,36 +88,79 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Email**: Iranian SMTP infrastructure
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem
-## AI Provider Health Monitoring (November 24, 2025 - NEW)
+## AI Provider Management System (November 24, 2025 - ENHANCED)
 
-**Purpose**: Provides real-time health status of AI providers (OpenAI or Ollama) in the admin dashboard.
+### 1. AI Provider Health Monitoring Widget
 
 **Backend** (`server/routes/ai-health-routes.ts`):
 - ✅ **Secure Endpoint**: `GET /api/admin/ai-health` (requires admin authentication)
 - ✅ **Configuration-Based Health Check**: Reads from environment variables (`AI_PROVIDER`, `OPENAI_API_KEY`, `OLLAMA_HOST`)
-- ✅ **Primary Provider Monitoring**: Reports status of configured primary AI provider
-- ✅ **Fallback Provider Monitoring**: If `AI_FALLBACK_PROVIDER` set, also reports fallback status
-- ✅ **Status Reporting**: Returns `healthy` | `unhealthy` for each provider based on:
-  - **OpenAI**: Checks if `OPENAI_API_KEY` is configured (healthy if present)
-  - **Ollama**: Checks if `OLLAMA_HOST` is configured (development returns unhealthy, production returns healthy if configured)
-- ✅ **Environment-Aware**: Different health checks for dev vs production deployments
+- ✅ **Primary & Fallback Provider Monitoring**: Reports health for both providers if configured
+- ✅ **Status Reporting**: Returns `healthy` | `unhealthy` for each provider
 
 **Frontend** (`client/src/components/admin/ai-health-widget.tsx`):
-- ✅ **Dashboard Widget**: Displays in Admin Settings → AI Settings tab
-- ✅ **Real-time Status**: Shows primary and fallback provider health
+- ✅ **Dashboard Widget**: Displays real-time provider health
 - ✅ **Color-Coded Badges**: 🟢 Healthy, 🔴 Unhealthy
 - ✅ **Overall Status**: Indicates if at least one provider is healthy
 - ✅ **Auto-Refresh**: Polls every 60 seconds
 - ✅ **Manual Refresh**: Button to check status on-demand
 - ✅ **i18n Support**: Full Farsi/English translations
 
-**Environment Variables**:
+### 2. AI Provider Selector Component (NEW - November 24, 2025)
+
+**New Component** (`client/src/components/admin/ai-provider-selector.tsx`):
+- ✅ **Dynamic Provider Selection**: Switch between Ollama (self-hosted) and OpenAI (international) from admin dashboard
+- ✅ **One-Click Switching**: No code changes needed, immediate effect
+- ✅ **Database Storage**: Settings saved in `adminSettings` table (`aiProvider`, `aiOllamaUrl` columns)
+- ✅ **Configuration UI**: Displays provider-specific instructions and options
+- ✅ **Real-time Status**: Shows setup requirements for each provider
+- ✅ **i18n Support**: Full Farsi/English translations
+
+**Integration** (`client/src/pages/admin/settings.tsx`):
+- ✅ Added to Admin Settings → Third Party Services tab
+- ✅ Positioned before Ollama settings for easy provider switching
+- ✅ Includes helpful guidance for both providers
+
+**Database Schema Update** (`shared/schema.ts`):
+- ✅ Added `aiProvider` field to `adminSettings` table (varchar, default: "ollama")
+- ✅ Added `aiOllamaUrl` field to `adminSettings` table (varchar for custom Ollama URLs)
+
+**Backend Support** (`server/storage.ts`):
+- ✅ Updated `getAdminSettings()` to return current `AI_PROVIDER` from environment
+- ✅ Updated `updateAdminSettings()` to accept and persist provider settings
+
+### Environment Configuration
+
+**Environment Variables** (read by health monitoring):
 - `AI_PROVIDER`: Primary AI provider (`ollama` | `openai`) - default: `ollama`
 - `AI_FALLBACK_PROVIDER`: Optional fallback provider (`ollama` | `openai`)
-- `OPENAI_API_KEY`: Required only if using OpenAI provider
+- `OPENAI_API_KEY`: Required only if using OpenAI provider (set in Replit Secrets)
 - `OLLAMA_HOST`: Ollama server URL (default: `http://localhost:11434`)
 
-**Use Case**: Enables Iranian admins to verify AI infrastructure is operational (either Ollama or OpenAI) before students attempt AI-powered features (CallerN AI Supervisor, content generation, etc.).
+**Where is Replit Secrets?**
+- **NOT in the app** - Located in **Replit Platform** itself
+- Access: Go to Replit project home → Click 🔑 Secrets button (right sidebar or top toolbar)
+- Usage: Add/edit environment variables there, restart app for changes to take effect
+
+### Use Cases
+
+**Iranian Self-Hosting**:
+- Default provider: Ollama (self-hosted, no external dependencies)
+- Custom Ollama URL can be configured from admin dashboard
+- No API keys required
+- Full data sovereignty
+
+**International Deployment**:
+- Provider: OpenAI (requires API key from Replit Secrets)
+- AI_PROVIDER environment variable switches to `openai`
+- Health widget shows OpenAI status
+- Automatic fallback to Ollama if configured
+
+**Flexible Deployment**:
+- Admin can change providers from dashboard without touching code
+- One-click switching between Ollama and OpenAI
+- Settings persist in database
+- Health monitoring shows which provider is active and healthy
 
 ## Remaining Medium-Priority Tasks - STATUS UPDATE (November 24, 2025)
 

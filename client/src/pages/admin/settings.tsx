@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/ui/back-button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { apiRequest } from "@/lib/queryClient";
+import { AIProviderSelector } from "@/components/admin/ai-provider-selector";
 
 interface AdminSettings {
   id: number;
@@ -836,6 +837,9 @@ export default function AdminSettings() {
         {/* Third Party Services Settings */}
         <TabsContent value="thirdparty">
           <div className="space-y-6">
+            {/* AI Provider Selector */}
+            <AIProviderSelector />
+
             {/* Ollama AI Server Settings */}
             <Card>
               <CardHeader>
