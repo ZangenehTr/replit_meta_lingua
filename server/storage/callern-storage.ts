@@ -123,7 +123,7 @@ export async function generateSessionSummary(params: {
   sessionId: number;
   durationSec: number;
   transcriptPath?: string;
-  roadmapInstanceId?: number;
+  roadmapProgressId?: number;
 }): Promise<any> {
   // Analyze session transcript and generate AI summary
   return {
@@ -138,7 +138,7 @@ export async function generateSessionSummary(params: {
 export async function generateNextMicroSession(params: {
   sessionId: number;
   studentId: number;
-  roadmapInstanceId?: number;
+  roadmapProgressId?: number;
   lastSessionSummary: any;
 }): Promise<any> {
   // Generate content for next session based on progress
@@ -528,8 +528,8 @@ export async function getUpcomingActivities(
     .map(step => ({
       id: step.id,
       title: step.title || `Step ${step.stepOrder}`,
-      type: step.activityType || 'conversation',
-      estimatedDuration: step.estimatedDuration || 15,
+      type: step.stepType || 'conversation',
+      estimatedDuration: step.duration || 15,
       description: step.description
     }));
 }

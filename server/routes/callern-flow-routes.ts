@@ -19,8 +19,8 @@ const prepSessionSchema = z.object({
 const startSessionSchema = z.object({
   studentId: z.number(),
   teacherId: z.number(),
-  roadmapInstanceId: z.number().optional(),
-  activityInstanceId: z.number().optional()
+  roadmapProgressId: z.number().optional(),
+  roadmapStepId: z.number().optional()
 });
 
 const endSessionSchema = z.object({
@@ -181,9 +181,9 @@ router.get('/callern/teacher-brief', requireAuth, async (req, res) => {
         activity: currentPosition.activity?.title,
         progress_percentage: roadmapInstance?.currentProgress || 0
       } : null,
-      micro_sessions_per_week: 4, // TODO: Get from student preferences
+      micro_sessions_per_week: (student.preferences as any)?.microSessionsPerWeek || 4,
       student_level: roadmapInstance?.template?.targetLevel || 'A2',
-      learning_style: student.preferences?.learningStyle || 'visual',
+      learning_style: (student.preferences as any)?.learningStyle || 'visual',
       areas_to_focus: await callernStorage.getStudentFocusAreas(parseInt(studentId as string))
     };
 
@@ -200,14 +200,14 @@ router.get('/callern/teacher-brief', requireAuth, async (req, res) => {
 
 router.post('/callern/start', requireAuth, async (req, res) => {
   try {
-    const { studentId, teacherId, roadmapInstanceId, activityInstanceId } = startSessionSchema.parse(req.body);
+    const { studentId, teacherId, roadmapProgressId, roadmapStepId } = startSessionSchema.parse(req.body);
 
     // Create new call session
     const session = await callernStorage.createCallSession({
       studentId,
       teacherId,
-      roadmapInstanceId,
-      activityInstanceId,
+      roadmapProgressId,
+      roadmapStepId,
       startedAt: new Date(),
       status: 'active',
       sessionType: 'callern'
@@ -254,14 +254,14 @@ router.post('/callern/end', requireAuth, async (req, res) => {
       sessionId,
       durationSec,
       transcriptPath,
-      roadmapInstanceId: session.roadmapInstanceId
+      roadmapProgressId: session.roadmapProgressId
     });
 
     // Create next micro-session content immediately
     const nextSessionPrep = await callernStorage.generateNextMicroSession({
       sessionId,
       studentId: session.studentId,
-      roadmapInstanceId: session.roadmapInstanceId,
+      roadmapProgressId: session.roadmapProgressId,
       lastSessionSummary: aiSummary
     });
 
