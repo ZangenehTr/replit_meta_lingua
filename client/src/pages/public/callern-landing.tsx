@@ -207,7 +207,7 @@ export default function CallernLanding() {
               </span>
             </h1>
             
-            <p className="mx-auto max-w-2xl text-xl text-indigo-100 mb-10">
+            <p className="mx-auto max-w-2xl text-xl text-white font-semibold mb-10">
               {t('callern:landing.hero.description', 'Connect with certified English teachers 24/7 via live video calls. Practice speaking, improve fluency, and gain confidence - all from the comfort of your home.')}
             </p>
             

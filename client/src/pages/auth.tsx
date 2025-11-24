@@ -44,7 +44,8 @@ export default function Auth() {
   
   // Define schemas with static messages first, then override with translations when available
   const loginSchema = z.object({
-    email: z.string().email("Invalid email address"),
+    email: z.string().optional(),
+    phoneNumber: z.string().optional(),
     password: z.string().optional(),
     otp: z.string().optional(),
   }).refine((data) => data.password || data.otp, {
@@ -72,6 +73,7 @@ export default function Auth() {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
+      phoneNumber: "",
       password: "",
       otp: "",
     },
@@ -109,9 +111,9 @@ export default function Auth() {
   }, [user, setLocation, forceLogin]);
 
   const requestOtp = async () => {
-    const email = loginForm.getValues("email");
-    if (!email) {
-      setAuthError(t('auth:emailRequired') || "Email is required");
+    const phoneNumber = loginForm.getValues("phoneNumber");
+    if (!phoneNumber) {
+      setAuthError(t('auth:phoneNumberRequired') || "Phone number is required");
       return;
     }
 
@@ -123,14 +125,14 @@ export default function Auth() {
       const response = await fetch("/api/auth/request-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: email }),
+        body: JSON.stringify({ identifier: phoneNumber }),
       });
       
       const result = await response.json();
       
       if (response.ok) {
         setOtpSent(true);
-        setOtpMessage(result.message || "OTP sent to your registered phone number");
+        setOtpMessage(result.message || "OTP sent to your phone number");
         setUseOtp(true);
         loginForm.setValue("password", ""); // Clear password field
       } else {
@@ -146,9 +148,9 @@ export default function Auth() {
   const handleLogin = async (data: LoginFormData) => {
     setAuthError("");
     try {
-      // Include OTP in login if using OTP
+      // For OTP login use phone number, for password login use email
       const loginData = useOtp 
-        ? { email: data.email, otp: data.otp }
+        ? { phoneNumber: data.phoneNumber, otp: data.otp }
         : { email: data.email, password: data.password };
       
       await login(loginData);
@@ -296,26 +298,49 @@ export default function Auth() {
             
             <TabsContent value="login">
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-5 mt-6">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email" className="text-white/90 text-sm font-medium">{t('auth:email')}</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder={t('auth:emailPlaceholder')}
-                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                      {...loginForm.register("email")}
-                      onFocus={() => setFocusedField('email')}
-                      onBlur={() => setFocusedField(null)}
-                    />
+                {!useOtp ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email" className="text-white/90 text-sm font-medium">{t('auth:email')}</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder={t('auth:emailPlaceholder')}
+                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                        {...loginForm.register("email")}
+                        onFocus={() => setFocusedField('email')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                    </div>
+                    {loginForm.formState.errors.email && (
+                      <p className="text-sm text-red-300">
+                        {loginForm.formState.errors.email.message}
+                      </p>
+                    )}
                   </div>
-                  {loginForm.formState.errors.email && (
-                    <p className="text-sm text-red-300">
-                      {loginForm.formState.errors.email.message}
-                    </p>
-                  )}
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-phone" className="text-white/90 text-sm font-medium">{t('auth:phoneNumber', 'Phone Number')}</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                      <Input
+                        id="login-phone"
+                        type="tel"
+                        placeholder={t('auth:phoneNumberPlaceholder', 'Enter your phone number')}
+                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                        {...loginForm.register("phoneNumber")}
+                        onFocus={() => setFocusedField('phoneNumber')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                    </div>
+                    {loginForm.formState.errors.phoneNumber && (
+                      <p className="text-sm text-red-300">
+                        {loginForm.formState.errors.phoneNumber.message}
+                      </p>
+                    )}
+                  </div>
+                )}
                 
                 {!useOtp ? (
                   <div className="space-y-2">
