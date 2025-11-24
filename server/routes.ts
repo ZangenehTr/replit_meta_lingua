@@ -53,6 +53,7 @@ import { setupAiTrainingRoutes } from "./ai-training-routes";
 import { setupAiAnalysisRoutes } from "./ai-analysis-routes";
 import { authenticate, authorizePermission } from "./auth";
 import { createAdminUsersRouter } from "./routes/admin-users";
+import { createInfrastructureHealthRouter } from "./routes/infrastructure-health-routes";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -817,6 +818,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   const adminUsersRouter = createAdminUsersRouter(storage, authenticateToken, requireRole);
   app.use('/api/admin', adminUsersRouter);
+  const infrastructureHealthRouter = createInfrastructureHealthRouter(authenticateToken, requireRole);
+  app.use('/api/admin/infrastructure', infrastructureHealthRouter);
 
   // Admin System Configuration Routes
   app.get("/api/admin/system", authenticateToken, requireRole(['Admin']), async (req: any, res) => {

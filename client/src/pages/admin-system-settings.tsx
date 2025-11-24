@@ -12,6 +12,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { useLanguage } from "@/hooks/use-language";
 import { Settings, Shield, MessageSquare, CreditCard, Bot, Users, AlertTriangle, Save } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { InfrastructureHealthWidget } from "@/components/admin/infrastructure-health-widget";
 
 interface SystemConfig {
   id?: number;
@@ -228,6 +229,9 @@ export default function AdminSystemSettings() {
             </TabsList>
 
             <TabsContent value="integrations" className="space-y-6">
+              {/* Infrastructure Health Status */}
+              <InfrastructureHealthWidget />
+              
               {/* SMS Integration (Kavenegar) */}
               <Card>
                 <CardHeader>
