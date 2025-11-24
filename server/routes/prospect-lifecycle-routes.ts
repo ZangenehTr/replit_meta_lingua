@@ -6,7 +6,7 @@ import { ProspectLifecycleService } from "../services/prospect-lifecycle";
 import { authenticate, authorizePermission } from "../auth";
 import { z } from "zod";
 import { db } from "../db";
-import { leads } from "@shared/schema";
+import { leads, placementTestSessions } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -384,8 +384,31 @@ router.post("/guest-placement-submission", async (req: any, res) => {
       });
     }
     
-    // TODO: In production, validate placementSessionId against placement_test_sessions table
-    // For now, we'll trust the session ID since guest tests are already public
+    // Validate placementSessionId is a valid positive integer
+    const sessionId = Number(placementSessionId);
+    if (!Number.isInteger(sessionId) || sessionId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid placement session ID format. Must be a positive integer.'
+      });
+    }
+    
+    // Validate placement session exists in database
+    const placementSession = await db.query.placementTestSessions.findFirst({
+      where: eq(placementTestSessions.id, sessionId)
+    });
+    
+    if (!placementSession) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid placement session ID. Please complete a valid placement test.'
+      });
+    }
+    
+    // Optionally check if session is completed (not strictly required for guest submissions)
+    if (placementSession.status !== 'completed') {
+      console.warn(`⚠️  Guest submission for incomplete session ${sessionId} (status: ${placementSession.status})`);
+    }
     
     // Parse name into first and last (simple split on first space)
     const nameParts = name.trim().split(' ');
