@@ -162,6 +162,786 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - Settings persist in database
 - Health monitoring shows which provider is active and healthy
 
+## Production Deployment Guide (Self-Hosting in Iran)
+
+This guide helps language institutes deploy Meta Lingua on their own servers with complete independence from external services.
+
+### 🎯 Prerequisites (What You Need)
+
+1. **Server Requirements**:
+   - Linux server (Ubuntu 20.04+ or similar)
+   - Minimum: 4GB RAM, 2 CPU cores, 50GB storage
+   - Recommended: 8GB RAM, 4 CPU cores, 100GB SSD
+   - Public IP address or domain name
+
+2. **Software to Install**:
+   - Docker and Docker Compose (easiest method)
+   - OR: Node.js 18+, PostgreSQL 14+, Nginx
+
+3. **External Services (Iranian Providers)**:
+   - Kavenegar account (for SMS)
+   - Isabel VoIP line (for phone integration)
+   - Shetab merchant account (for payments)
+   - Domain name and SSL certificate
+
+### 📦 Step 1: Download and Extract Platform
+
+```bash
+# Download platform from Replit
+# Click "Download as ZIP" from Replit interface
+
+# Extract on your server
+unzip meta-lingua-platform.zip
+cd meta-lingua-platform
+```
+
+### 🗄️ Step 2: Setup PostgreSQL Database
+
+**Option A: Using Docker (Recommended)**
+```bash
+# Create database with Docker
+docker run -d \
+  --name metalingua-db \
+  -e POSTGRES_PASSWORD=your_secure_password \
+  -e POSTGRES_USER=metalingua \
+  -e POSTGRES_DB=metalingua \
+  -p 5432:5432 \
+  -v metalingua-data:/var/lib/postgresql/data \
+  postgres:14
+
+# Your database URL will be:
+# postgresql://metalingua:your_secure_password@localhost:5432/metalingua
+```
+
+**Option B: Manual PostgreSQL Installation**
+```bash
+# Install PostgreSQL
+sudo apt update
+sudo apt install postgresql-14
+
+# Create database and user
+sudo -u postgres psql
+CREATE USER metalingua WITH PASSWORD 'your_secure_password';
+CREATE DATABASE metalingua OWNER metalingua;
+\q
+```
+
+### 🤖 Step 3: Setup Ollama AI Server (Local AI)
+
+Ollama provides AI features without sending data outside Iran.
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Download AI model (choose one based on your server)
+ollama pull llama3.2:3b      # Faster, needs 4GB RAM
+ollama pull llama3.2:7b      # Better quality, needs 8GB RAM
+ollama pull qwen2.5:14b      # Best quality, needs 16GB RAM
+
+# Start Ollama service
+ollama serve  # Runs on http://localhost:11434
+
+# Test it works
+curl http://localhost:11434/api/tags
+```
+
+### 🎙️ Step 4: Setup Faster-Whisper (Speech Recognition)
+
+Faster-Whisper converts student speech to text for placement tests and practice.
+
+**Prerequisites:**
+```bash
+# Install Python and required packages
+sudo apt install python3 python3-pip ffmpeg
+
+# Install faster-whisper
+pip3 install faster-whisper
+```
+
+**Create Whisper API Server:**
+
+Create a file `whisper-server.py`:
+```python
+from fastapi import FastAPI, File, UploadFile
+from faster_whisper import WhisperModel
+import uvicorn
+import tempfile
+import os
+
+app = FastAPI()
+
+# Load model (choose size based on your needs)
+# tiny, base, small, medium, large-v3
+model = WhisperModel("medium", device="cpu", compute_type="int8")
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+@app.post("/v1/audio/transcriptions")
+async def transcribe(
+    file: UploadFile = File(...),
+    language: str = "fa"  # Persian by default
+):
+    # Save uploaded file temporarily
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+    
+    try:
+        # Transcribe audio
+        segments, info = model.transcribe(
+            tmp_path,
+            language=language,
+            beam_size=5
+        )
+        
+        # Combine segments into full text
+        text = " ".join([segment.text for segment in segments])
+        
+        return {
+            "text": text,
+            "language": info.language,
+            "duration": info.duration
+        }
+    finally:
+        os.unlink(tmp_path)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+**Run Whisper Server:**
+```bash
+# Start the server
+python3 whisper-server.py
+
+# Test it works
+curl http://localhost:8000/health
+# Should return: {"status":"healthy"}
+```
+
+**Run as System Service (stays running after reboot):**
+
+Create `/etc/systemd/system/whisper.service`:
+```ini
+[Unit]
+Description=Faster Whisper Transcription Service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/metalingua
+ExecStart=/usr/bin/python3 /opt/metalingua/whisper-server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+```bash
+sudo systemctl enable whisper
+sudo systemctl start whisper
+sudo systemctl status whisper
+```
+
+### 📹 Step 5: Setup TURN/STUN Server (Video Calls)
+
+Required for WebRTC video calls to work through firewalls.
+
+**Install Coturn:**
+```bash
+sudo apt install coturn
+
+# Edit config
+sudo nano /etc/turnserver.conf
+```
+
+Add this configuration:
+```
+# TURN server for Meta Lingua
+listening-port=3478
+fingerprint
+lt-cred-mech
+use-auth-secret
+static-auth-secret=your_secret_key_here
+realm=metalingua.ir
+total-quota=100
+stale-nonce=600
+cert=/etc/letsencrypt/live/turn.metalingua.ir/cert.pem
+pkey=/etc/letsencrypt/live/turn.metalingua.ir/privkey.pem
+cipher-list="ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512"
+no-stdout-log
+```
+
+Start TURN server:
+```bash
+sudo systemctl enable coturn
+sudo systemctl start coturn
+```
+
+### 📧 Step 6: Setup Email (SMTP)
+
+Configure your Iranian email provider:
+
+```bash
+# Example with Iranian SMTP provider
+# Add to .env file:
+SMTP_HOST=mail.yourprovider.ir
+SMTP_PORT=587
+SMTP_USER=noreply@yourdomain.ir
+SMTP_PASSWORD=your_email_password
+SMTP_FROM=noreply@yourdomain.ir
+```
+
+Common Iranian SMTP providers:
+- Parspooyesh: smtp.parspooyesh.com
+- Iran Server: mail.iranserver.com
+- Custom domain email (recommended)
+
+### 🚀 Step 7: Deploy Meta Lingua Application
+
+**Create Environment File (.env):**
+```bash
+# Database
+DATABASE_URL=postgresql://metalingua:your_password@localhost:5432/metalingua
+
+# AI Services
+AI_PROVIDER=ollama
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=llama3.2:3b
+
+# Whisper (Speech Recognition)
+WHISPER_PROVIDER=faster-whisper
+WHISPER_URL=http://localhost:8000
+
+# JWT Secret (generate random string)
+JWT_SECRET=your_very_long_random_secret_minimum_32_chars
+
+# SMS (Kavenegar)
+KAVENEGAR_API_KEY=your_kavenegar_key
+KAVENEGAR_SENDER=your_phone_number
+
+# Payment (Shetab)
+SHETAB_MERCHANT_ID=your_merchant_id
+SHETAB_TERMINAL_ID=your_terminal_id
+
+# VoIP (Isabel)
+ISABEL_VOIP_SERVER=voip.isabel.ir
+ISABEL_VOIP_USERNAME=your_username
+ISABEL_VOIP_PASSWORD=your_password
+
+# Email
+SMTP_HOST=mail.yourprovider.ir
+SMTP_PORT=587
+SMTP_USER=noreply@yourdomain.ir
+SMTP_PASSWORD=your_smtp_password
+SMTP_FROM=noreply@yourdomain.ir
+
+# WebRTC
+TURN_SERVER_URL=turn:turn.yourdomain.ir:3478
+TURN_USERNAME=metalingua
+TURN_PASSWORD=your_turn_secret
+STUN_SERVER_URL=stun:stun.yourdomain.ir:3478
+
+# Application
+NODE_ENV=production
+PORT=5000
+DOMAIN=yourdomain.ir
+```
+
+**Install Dependencies and Build:**
+```bash
+# Install Node.js packages
+npm install
+
+# Build the application
+npm run build
+
+# Push database schema
+npm run db:push
+```
+
+**Run Application:**
+
+Option A: Direct Node.js
+```bash
+# Start the server
+npm start
+
+# Or with PM2 (keeps running)
+npm install -g pm2
+pm2 start server/index.js --name metalingua
+pm2 save
+pm2 startup
+```
+
+Option B: Docker Compose (Recommended)
+```bash
+# Everything in one command
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+### 🌐 Step 8: Setup Nginx (Web Server)
+
+```bash
+sudo apt install nginx certbot python3-certbot-nginx
+
+# Create Nginx config
+sudo nano /etc/nginx/sites-available/metalingua
+```
+
+Add this configuration:
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.ir www.yourdomain.ir;
+    
+    # Redirect to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.ir www.yourdomain.ir;
+    
+    # SSL certificate
+    ssl_certificate /etc/letsencrypt/live/yourdomain.ir/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.ir/privkey.pem;
+    
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    
+    # Proxy to Node.js app
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+    
+    # WebSocket support
+    location /socket.io/ {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+Enable site and get SSL:
+```bash
+sudo ln -s /etc/nginx/sites-available/metalingua /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+# Get free SSL certificate
+sudo certbot --nginx -d yourdomain.ir -d www.yourdomain.ir
+```
+
+### ✅ Step 9: Initial Setup and Testing
+
+1. **Access Admin Panel:**
+   - Visit https://yourdomain.ir
+   - Click "Get Started" → "Admin Login"
+   - Use default admin credentials (change immediately!)
+
+2. **Configure Services in Admin Panel:**
+   - Go to Settings → Third Party Services
+   - Test all connections (Ollama, Whisper, TURN/STUN, SMS, Email)
+   - Green checkmarks = working correctly
+
+3. **Seed Test Users:**
+   ```bash
+   curl -X POST https://yourdomain.ir/api/seed-test-users
+   ```
+   This creates sample teachers and students for testing.
+
+4. **Test Key Features:**
+   - Register a new student account
+   - Take the placement test (tests Whisper)
+   - Try LinguaQuest free lessons
+   - Test video call feature (tests TURN/STUN)
+
+### 🔧 Troubleshooting
+
+**Problem: AI features not working**
+```bash
+# Check Ollama is running
+ollama list
+curl http://localhost:11434/api/tags
+
+# Restart Ollama
+sudo systemctl restart ollama
+```
+
+**Problem: Speech recognition fails**
+```bash
+# Check Whisper service
+curl http://localhost:8000/health
+
+# View logs
+tail -f /var/log/whisper.log
+
+# Restart service
+sudo systemctl restart whisper
+```
+
+**Problem: Video calls don't connect**
+```bash
+# Test TURN server
+sudo turnutils_uclient -v turn.yourdomain.ir
+
+# Check firewall
+sudo ufw allow 3478/tcp
+sudo ufw allow 3478/udp
+```
+
+**Problem: Database connection fails**
+```bash
+# Test PostgreSQL
+psql -U metalingua -d metalingua -h localhost
+
+# Check if running
+sudo systemctl status postgresql
+```
+
+### 📊 Monitoring and Maintenance
+
+**View Application Logs:**
+```bash
+# With PM2
+pm2 logs metalingua
+
+# With Docker
+docker-compose logs -f app
+
+# System logs
+tail -f /var/log/metalingua/app.log
+```
+
+**Database Backups:**
+```bash
+# Daily backup script
+pg_dump -U metalingua metalingua > backup_$(date +%Y%m%d).sql
+
+# Restore from backup
+psql -U metalingua metalingua < backup_20241124.sql
+```
+
+**Update Application:**
+```bash
+# Pull latest code
+git pull
+
+# Install new dependencies
+npm install
+
+# Rebuild
+npm run build
+
+# Update database
+npm run db:push
+
+# Restart
+pm2 restart metalingua
+# OR
+docker-compose restart app
+```
+
+### 🎓 Understanding Platform Features
+
+See "Platform Features Guide" section below for complete documentation of all features, user roles, and capabilities.
+
+---
+
+## Platform Features Guide
+
+### 1. User Roles and Dashboards
+
+The platform supports 8 distinct user roles, each with a customized dashboard:
+
+**Admin**:
+- Full platform control and settings
+- User management and role assignments
+- Payment and wallet oversight
+- Infrastructure health monitoring (AI, Whisper, TURN/STUN, SMTP, SMS)
+- CMS management (blog, videos, media library)
+- SMS campaign management
+- Analytics and reporting
+
+**Teacher**:
+- Student roster and progress tracking
+- Class scheduling and calendar
+- CallerN video tutoring (1-on-1 AI-powered sessions)
+- Lesson planning and curriculum management
+- Assignment grading and feedback
+- Performance metrics and quality scores
+
+**Student**:
+- Personal dashboard with progress tracking
+- Course enrollment and learning paths
+- LinguaQuest free learning games
+- CallerN AI Study Partner (24/7 availability)
+- Gamification (XP, levels, achievements, daily challenges)
+- Wallet and payment history
+- Assignment submissions
+
+**Mentor**:
+- Student guidance and progress monitoring
+- AI-powered recommendations
+- Learning path customization
+- Session scheduling
+- Performance analytics
+
+**Supervisor**:
+- Real-time AI supervision of video calls
+- Quality assurance monitoring
+- Teacher performance reviews
+- Compliance tracking
+
+**Call Center Agent**:
+- VoIP integration dashboard
+- Lead management and qualification
+- Call logging and history
+- Walk-in registration assistance
+- Placement test coordination
+
+**Accountant**:
+- Financial reporting
+- Payment reconciliation
+- Wallet transactions
+- Invoice management
+- Revenue analytics
+
+**Front Desk Clerk**:
+- Walk-in student intake
+- Placement test scheduling
+- Call logging for visitors
+- Quick registration workflow
+- Caller history tracking
+
+### 2. Core Learning Features
+
+**LinguaQuest Free Learning Platform**:
+- 23 interactive activity types (vocabulary, grammar, listening, speaking, reading, writing, pronunciation, conversation)
+- 6 CEFR-aligned lessons (B1-C1 levels)
+- Gamified experience with XP and level progression
+- Progress tracking across all activities
+- Free access (no payment required)
+- Mobile-optimized touch controls
+- Audio pre-generation for consistent quality
+
+**CallerN AI-Powered Video Tutoring**:
+- 24/7 on-demand AI study partner for students
+- Real-time AI supervision for teacher-student sessions
+- Screen sharing and whiteboard
+- Call recording and transcription
+- Live vocabulary capture and explanations
+- Grammar rewriting suggestions
+- Post-session AI reviews with personalized recommendations
+- Roadmap tracking and progress monitoring
+- SRS flashcard generation from taught vocabulary
+- Session rating and feedback system
+
+**Placement Test System**:
+- Guest-accessible (no login required)
+- Multi-Stage Testing (MST) with adaptive difficulty
+- 8 question types (multiple choice, fill-in-blank, audio recording, etc.)
+- Auto-timer with Whisper speech recognition
+- Contact capture workflow
+- AI-powered CEFR scoring
+- Personalized curriculum recommendations
+- Automatic roadmap generation
+
+**Testing and Assessment**:
+- Unified testing system supporting all question types
+- Teacher-created custom tests
+- Template library for common assessments
+- Analytics and performance tracking
+- Automated scoring where applicable
+
+### 3. Institute Management
+
+**Course and Curriculum**:
+- Dynamic curriculum categories
+- Multi-level course structures
+- Class scheduling with calendar views (day, week, month)
+- Enrollment management
+- Progress tracking per course
+- Certificate generation
+
+**Payment and Wallet System**:
+- Student wallet balances
+- Course payments via Shetab gateway
+- Transaction history
+- Refund processing
+- Financial reporting
+
+**Communication**:
+- VoIP integration (Isabel) for call center
+- SMS campaigns via Kavenegar
+- Email notifications (placement tests, course updates, reminders)
+- In-app messaging
+- Visitor chat widget for website
+
+**Lead Management**:
+- Guest lead capture from placement tests
+- Walk-in registration workflow
+- Call logging and history
+- Follow-up reminders
+- Conversion tracking (guest → student)
+
+### 4. AI and Intelligence Features
+
+**AI Provider Options**:
+- Ollama (default for Iranian self-hosting): Local AI processing, no external dependencies
+- OpenAI (international deployments): Cloud AI with API key
+- Admin dashboard switching (no code changes needed)
+- Health monitoring for both providers
+
+**Whisper Speech Recognition**:
+- Faster-Whisper (self-hosted): Local transcription, supports Persian/English/Arabic
+- OpenAI Whisper (fallback): Cloud transcription when local unavailable
+- Admin dashboard switching between providers
+- Health monitoring widget
+
+**AI-Powered Features**:
+- Content generation (lessons, exercises, practice activities)
+- Adaptive micro-sessions based on student performance
+- Pre/post-session reviews with personalized feedback
+- Real-time in-session AI suggestions for teachers
+- Exam roadmap generation with skill gap analysis
+- Mood intelligence tracking
+- Problem detection and learning recommendations
+
+### 5. Gamification System
+
+**XP and Leveling**:
+- Earn XP from lessons, tests, challenges, and sessions
+- Level progression with unlockable rewards
+- Visual progress indicators
+
+**Daily Challenges** (Age-Appropriate):
+- Personalized based on age group (kids, teens, adults)
+- Multiple difficulty levels (easy, medium, hard)
+- XP and coin rewards
+- Streak tracking
+- 24-hour reset cycle
+
+**Achievements**:
+- Milestone badges
+- Skill mastery recognition
+- Social proof (share achievements)
+
+**Leaderboards**:
+- Daily, weekly, monthly, all-time rankings
+- Game-specific and global boards
+- Friend comparisons
+
+### 6. Content Management System (CMS)
+
+**Blog**:
+- Multi-author support
+- Rich text editor (TipTap)
+- Image galleries
+- SEO optimization
+- Draft/published states
+
+**Video Library**:
+- Lesson videos
+- Tutorial content
+- Progress tracking
+- Video embedding
+
+**Media Library**:
+- Centralized asset management
+- Image uploads
+- Document storage
+- Organized by category
+
+### 7. Customization and White-Label
+
+**Font Management**:
+- Upload custom fonts
+- Brand consistency across platform
+- Persian/Arabic font optimization
+- Preview before applying
+
+**Internationalization (i18n)**:
+- Full support for Persian (Farsi), English, Arabic
+- RTL/LTR automatic switching
+- Date/number localization
+- User language preference
+
+**Theming**:
+- Modern gradient backgrounds
+- Customizable color schemes
+- Mobile-responsive design
+
+### 8. Infrastructure and DevOps
+
+**Health Monitoring**:
+- Real-time status for AI providers (Ollama/OpenAI)
+- Whisper service monitoring (Faster-Whisper/OpenAI)
+- TURN/STUN server status
+- SMTP email connectivity
+- Kavenegar SMS service
+- Admin dashboard widgets with auto-refresh
+
+**Database**:
+- PostgreSQL with Drizzle ORM
+- Automatic migrations via `npm run db:push`
+- Development: Neon (Replit-hosted)
+- Production: Self-hosted PostgreSQL
+
+**Deployment**:
+- Replit development environment
+- Docker containerization for production
+- Downloadable ZIP for self-hosting
+- Nginx reverse proxy setup
+- PM2 process management
+- SSL/TLS encryption
+
+**Security**:
+- JWT authentication with refresh tokens
+- Role-based access control (RBAC)
+- OTP verification (SMS/Email)
+- Rate limiting on sensitive endpoints
+- Secure password hashing
+- Environment variable management
+
+---
+
+## Daily Challenges System (Not Yet Implemented)
+
+**Current Status**: Infrastructure exists but needs database tables and real content.
+
+**Planned Implementation**:
+- Age-based challenge generation (kids, teens, adults)
+- 4 challenge types: Score-based, Time-based, Accuracy-based, Streak-based
+- Daily rotation with 24-hour expiry
+- XP and coin rewards
+- Integration with LinguaQuest game content
+- Progress tracking and completion history
+
+**Why Not Implemented Yet**: 
+The platform already has LinguaQuest (23 activity types, 6 lessons) providing engaging daily practice. Daily Challenges would add competitive elements but require additional database schema (`gameDailyChallenges`, `userDailyChallengeProgress`) and content curation. This is a future enhancement, not a core MVP feature.
+
+---
+
 ## Remaining Medium-Priority Tasks - STATUS UPDATE (November 24, 2025)
 
 **Investigation Results:**
@@ -195,7 +975,14 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
    - Complexity: Medium-High (requires schema review + type alignment)
    - File: `server/routes/book-ecommerce-routes.ts`
 
+6. 🔄 **Daily Challenges** - DEFERRED (Non-Critical Enhancement)
+   - Infrastructure exists but missing database schema
+   - LinguaQuest already provides daily practice content
+   - Would add competitive/gamification layer
+   - Complexity: Medium (requires schema + content generation)
+
 **Summary:**
-- 4 of 5 tasks are either completed or already implemented
+- 4 of 6 tasks are either completed or already implemented
 - Book e-commerce requires deeper schema investigation
+- Daily challenges deferred as non-critical enhancement
 - All critical infrastructure and AI features are production-ready
