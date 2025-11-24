@@ -210,6 +210,50 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
       const monthlyHours = monthlyMinutes / 60;
       const monthlyEarnings = monthlyHours * hourlyRate;
       
+      // Get unique student count for weekly stats
+      const weeklyUniqueStudents = await db.select({
+        count: sql<number>`count(distinct ${callernCallHistory.studentId})`
+      })
+      .from(callernCallHistory)
+      .where(
+        and(
+          eq(callernCallHistory.teacherId, teacherId),
+          eq(callernCallHistory.status, 'completed'),
+          gte(callernCallHistory.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+        )
+      );
+
+      // Calculate completion rate for weekly calls
+      const weeklyTotalCalls = weeklyStats[0]?.count || 0;
+      const weeklyCompletedCalls = await db.select({
+        count: sql<number>`count(*)`
+      })
+      .from(callernCallHistory)
+      .where(
+        and(
+          eq(callernCallHistory.teacherId, teacherId),
+          eq(callernCallHistory.status, 'completed'),
+          gte(callernCallHistory.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+        )
+      );
+      const weeklyCompletionRate = weeklyTotalCalls > 0 
+        ? Math.round((weeklyCompletedCalls[0]?.count || 0) / weeklyTotalCalls * 100)
+        : 0;
+
+      // Calculate bonus (10% of base pay for every perfect rating month)
+      const perfectMonths = await db.select({
+        count: sql<number>`count(distinct date_trunc('month', ${callernCallHistory.createdAt}))`
+      })
+      .from(callernCallHistory)
+      .where(
+        and(
+          eq(callernCallHistory.teacherId, teacherId),
+          eq(callernCallHistory.status, 'completed'),
+          sql`(student_rating + supervisor_rating) / 2.0 >= 4.5`
+        )
+      );
+      const bonusAmount = (perfectMonths[0]?.count || 0) * (monthlyEarnings * 0.1);
+
       // Get leaderboard rank (simplified - in production, use proper ranking query)
       const allTeacherStats = await db.select({
         teacherId: callernCallHistory.teacherId,
@@ -240,13 +284,13 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
         weeklyStats: {
           totalCalls: weeklyStats[0]?.count || 0,
           totalMinutes: weeklyStats[0]?.totalMinutes || 0,
-          uniqueStudents: 0, // TODO: Implement unique student count
-          completionRate: 100 // TODO: Calculate actual completion rate
+          uniqueStudents: weeklyUniqueStudents[0]?.count || 0,
+          completionRate: weeklyCompletionRate
         },
         monthlyEarnings: {
           basePay: monthlyEarnings,
-          bonuses: 0, // TODO: Implement bonus calculation
-          total: monthlyEarnings
+          bonuses: bonusAmount,
+          total: monthlyEarnings + bonusAmount
         }
       });
     } catch (error) {
