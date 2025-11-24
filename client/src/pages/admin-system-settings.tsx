@@ -14,6 +14,7 @@ import { Settings, Shield, MessageSquare, CreditCard, Bot, Users, AlertTriangle,
 import { apiRequest } from "@/lib/queryClient";
 import { InfrastructureHealthWidget } from "@/components/admin/infrastructure-health-widget";
 import { AIHealthWidget } from "@/components/admin/ai-health-widget";
+import { WhisperHealthWidget } from "@/components/admin/whisper-health-widget";
 
 interface SystemConfig {
   id?: number;
@@ -457,6 +458,7 @@ export default function AdminSystemSettings() {
             <TabsContent value="ai" className="space-y-6">
               {/* AI Health Status */}
               <AIHealthWidget />
+              <WhisperHealthWidget />
               
               {/* AI Configuration (Ollama) */}
               <Card>

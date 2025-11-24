@@ -34,6 +34,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { useLanguage } from "@/hooks/useLanguage";
 import { apiRequest } from "@/lib/queryClient";
 import { AIProviderSelector } from "@/components/admin/ai-provider-selector";
+import { WhisperProviderSelector } from "@/components/admin/whisper-provider-selector";
 
 interface AdminSettings {
   id: number;
@@ -838,6 +839,9 @@ export default function AdminSettings() {
         <TabsContent value="thirdparty">
           <div className="space-y-6">
             {/* AI Provider Selector */}
+            {/* Whisper Provider Selector */}
+            <WhisperProviderSelector />
+
             <AIProviderSelector />
 
             {/* Ollama AI Server Settings */}
