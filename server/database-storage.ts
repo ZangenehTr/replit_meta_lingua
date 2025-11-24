@@ -15050,33 +15050,32 @@ export class DatabaseStorage implements IStorage {
         return;
       }
 
-      // Check if teacher presence record exists
+      // Use atomic UPSERT with Drizzle's insert().onConflictDoUpdate()
       const { callernPresence } = await import('@shared/schema');
-      const existing = await db.select().from(callernPresence)
-        .where(eq(callernPresence.userId, teacherId))
-        .limit(1);
-
-      if (existing.length > 0) {
-        // Update existing record
-        await db.update(callernPresence)
-          .set({
-            status,
-            sessionId: sessionId?.toString(),
-            updatedAt: new Date()
-          })
-          .where(eq(callernPresence.userId, teacherId));
-      } else {
-        // Create new presence record
-        await db.insert(callernPresence).values({
+      
+      const now = new Date();
+      
+      // Atomic INSERT with ON CONFLICT DO UPDATE using Drizzle ORM
+      await db.insert(callernPresence)
+        .values({
           userId: teacherId,
           status,
-          sessionId: sessionId?.toString(),
-          createdAt: new Date(),
-          updatedAt: new Date()
+          sessionId: sessionId?.toString() || null,
+          lastSeen: now,
+          createdAt: now,
+          updatedAt: now
+        })
+        .onConflictDoUpdate({
+          target: callernPresence.userId,
+          set: {
+            status,
+            sessionId: sessionId?.toString() || null,
+            lastSeen: now,
+            updatedAt: now
+          }
         });
-      }
 
-      console.log(`✓ Teacher ${teacherId} status updated to: ${status}`);
+      console.log(`✓ Teacher ${teacherId} presence updated (UPSERT): ${status}${sessionId ? ` (session: ${sessionId})` : ''}`);
     } catch (error) {
       console.error('Error updating teacher status:', error);
       throw error;
@@ -15085,59 +15084,86 @@ export class DatabaseStorage implements IStorage {
 
   async getWebRTCConfig(): Promise<any> {
     try {
-      // Iranian self-hosting configuration for WebRTC
-      // These are default TURN/STUN servers for Iranian deployment
-      // In production, configure via environment variables or admin settings
+      // WebRTC configuration for Iranian self-hosting
+      // Zero external dependencies in production - all servers must be self-hosted
       
-      const config = {
-        turnServers: [
-          // Primary: Self-hosted TURN server (Iranian infrastructure)
-          {
-            urls: process.env.TURN_SERVER_URL || 'turn:turn.metalingua.ir:3478',
-            username: process.env.TURN_USERNAME || 'callern-user',
-            credential: process.env.TURN_PASSWORD || 'callern-secure-pass'
-          },
-          // Fallback: Alternative TURN configuration
-          {
-            urls: process.env.TURN_SERVER_URL_2 || 'turn:turn-backup.metalingua.ir:3478',
-            username: process.env.TURN_USERNAME_2 || 'callern-user-backup',
-            credential: process.env.TURN_PASSWORD_2 || 'callern-backup-pass'
-          }
-        ],
-        stunServers: [
-          // STUN servers for NAT traversal (Iranian hosted if possible)
-          {
-            urls: process.env.STUN_SERVER_URL || 'stun:stun.metalingua.ir:3478'
-          },
-          {
-            urls: process.env.STUN_SERVER_URL_2 || 'stun:stun-backup.metalingua.ir:3478'
-          },
-          // Public STUN servers as fallback
-          {
-            urls: 'stun:stun.l.google.com:19302'
-          },
-          {
-            urls: 'stun:stun1.l.google.com:19302'
-          }
-        ],
-        iceCandidatePoolSize: 10,
-        iceTransportPolicy: 'all' // Allow both relay and direct connections
-      };
-
-      console.log('✓ WebRTC configuration loaded for CallerN sessions');
-      return config;
-    } catch (error) {
-      console.error('Error loading WebRTC configuration:', error);
-      // Return safe fallback
-      return {
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const config: any = {
         turnServers: [],
-        stunServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ],
+        stunServers: [],
         iceCandidatePoolSize: 10,
         iceTransportPolicy: 'all'
       };
+
+      // Check for primary TURN server
+      const turn1Url = process.env.TURN_SERVER_URL;
+      const turn1User = process.env.TURN_USERNAME;
+      const turn1Pass = process.env.TURN_PASSWORD;
+      
+      if (turn1Url && turn1User && turn1Pass) {
+        // Validate that TURN URL is self-hosted (not public service)
+        if (!isDevelopment && (turn1Url.includes('google') || turn1Url.includes('twilio') || turn1Url.includes('xirsys'))) {
+          throw new Error(`❌ TURN server ${turn1Url} is external service. Iranian self-hosting requires internal TURN server.`);
+        }
+        
+        config.turnServers.push({
+          urls: turn1Url,
+          username: turn1User,
+          credential: turn1Pass
+        });
+        console.log('✓ Primary TURN server configured from environment');
+      } else if (!isDevelopment) {
+        // REQUIRED in production
+        throw new Error('❌ TURN server not configured. Set TURN_SERVER_URL, TURN_USERNAME, TURN_PASSWORD for production.');
+      } else {
+        console.warn('⚠️ Development mode: TURN server not configured. Will use STUN-only (not recommended for production).');
+      }
+
+      // Secondary TURN server (optional but recommended)
+      const turn2Url = process.env.TURN_SERVER_URL_2;
+      const turn2User = process.env.TURN_USERNAME_2;
+      const turn2Pass = process.env.TURN_PASSWORD_2;
+      
+      if (turn2Url && turn2User && turn2Pass) {
+        config.turnServers.push({
+          urls: turn2Url,
+          username: turn2User,
+          credential: turn2Pass
+        });
+        console.log('✓ Secondary TURN server configured from environment');
+      }
+
+      // Add STUN servers (self-hosted preferred)
+      const stun1 = process.env.STUN_SERVER_URL;
+      const stun2 = process.env.STUN_SERVER_URL_2;
+      
+      if (stun1) {
+        // Validate that STUN URL is self-hosted in production
+        if (!isDevelopment && stun1.includes('google')) {
+          throw new Error(`❌ STUN server ${stun1} is external service. Use self-hosted STUN server.`);
+        }
+        config.stunServers.push({ urls: stun1 });
+        console.log('✓ Primary STUN server configured from environment');
+      } else if (!isDevelopment) {
+        // REQUIRED in production
+        throw new Error('❌ STUN server not configured. Set STUN_SERVER_URL for production.');
+      } else {
+        // Development fallback to local STUN (no external dependencies)
+        console.warn('⚠️ Development mode: Using local STUN fallback. Configure STUN_SERVER_URL for production.');
+        config.stunServers.push({ urls: 'stun:127.0.0.1:3478' }); // Local dev STUN
+      }
+      
+      if (stun2) {
+        config.stunServers.push({ urls: stun2 });
+        console.log('✓ Secondary STUN server configured from environment');
+      }
+
+      const mode = isDevelopment ? '(development mode)' : '(production mode)';
+      console.log(`✓ WebRTC config loaded ${mode}: ${config.turnServers.length} TURN, ${config.stunServers.length} STUN servers`);
+      return config;
+    } catch (error) {
+      console.error('Error loading WebRTC configuration:', error);
+      throw error; // Fail fast in production
     }
   }
 

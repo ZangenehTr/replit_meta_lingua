@@ -280,7 +280,7 @@ class EmailService {
     `;
   }
   
-  // Real email implementation for Iranian self-hosting
+  // Real email implementation for Iranian self-hosting with nodemailer
   async send(to: string, emailData: EmailData): Promise<boolean> {
     console.log(`Sending email to ${to}:`, {
       subject: emailData.subject,
@@ -288,25 +288,60 @@ class EmailService {
     });
     
     try {
-      // Real email validation and sending logic
-      const isValidEmail = this.isValidEmailFormat(to);
-      if (!isValidEmail) {
+      // Validate email format
+      if (!this.isValidEmailFormat(to)) {
         console.error('Invalid email format:', to);
         return false;
       }
       
-      // Real Iranian SMTP server connectivity check
-      const hasSmtpAccess = await this.checkSmtpConnectivity();
+      // Check if SMTP is configured via environment variables
+      const smtpHost = process.env.SMTP_HOST;
+      const smtpPort = process.env.SMTP_PORT;
+      const smtpUser = process.env.SMTP_USER;
+      const smtpPass = process.env.SMTP_PASSWORD;
+      const smtpFrom = process.env.SMTP_FROM || 'noreply@metalingua.ir';
       
-      if (hasSmtpAccess) {
-        // Send through Iranian email infrastructure
-        await new Promise(resolve => setTimeout(resolve, 200));
-        return true;
+      if (!smtpHost || !smtpUser || !smtpPass) {
+        console.warn('⚠️ SMTP not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASSWORD environment variables for production email delivery.');
+        console.log(`[DEV] Email to ${to}: ${emailData.subject}`);
+        console.log(`[DEV] Would send HTML email with ${emailData.html?.length || 0} chars`);
+        return true; // Return true in dev mode for testing
       }
       
-      return false;
+      // Real nodemailer SMTP configuration for Iranian infrastructure
+      const nodemailerModule = await import('nodemailer');
+      const nodemailer = nodemailerModule.default || nodemailerModule;
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: parseInt(smtpPort || '587'),
+        secure: smtpPort === '465', // TLS for port 465, STARTTLS for 587
+        auth: {
+          user: smtpUser,
+          pass: smtpPass
+        },
+        // Iranian SMTP servers may need specific settings
+        tls: {
+          rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== 'false'
+        }
+      });
+      
+      // Prepare email message
+      const emailMessage = {
+        from: smtpFrom,
+        to,
+        subject: emailData.subject,
+        text: emailData.content,
+        html: emailData.html || emailData.content
+      };
+      
+      // Send email via nodemailer
+      const info = await transporter.sendMail(emailMessage);
+      console.log(`✓ Email sent successfully to ${to}: ${info.messageId}`);
+      
+      // Return true (interface requires boolean) - messageId logged for auditing
+      return true;
     } catch (error) {
-      console.error('Email sending failed:', error);
+      console.error('❌ Email sending failed:', error);
       return false;
     }
   }
@@ -314,17 +349,6 @@ class EmailService {
   private isValidEmailFormat(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  }
-  
-  private async checkSmtpConnectivity(): Promise<boolean> {
-    // Real SMTP connectivity check for Iranian servers
-    try {
-      // Would connect to local Iranian SMTP server
-      return true; // Assume Iranian infrastructure is available
-    } catch (error) {
-      console.error('SMTP connectivity check failed:', error);
-      return false;
-    }
   }
 }
 
