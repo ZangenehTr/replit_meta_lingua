@@ -6459,6 +6459,15 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   app.put("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const settings = await storage.updateAdminSettings(req.body);
+      
+      // Update Whisper service configuration if Whisper settings changed
+      if (req.body.whisperProvider || req.body.whisperUrl) {
+        whisperService.updateConfigFromSettings({
+          whisperProvider: settings.whisperProvider,
+          whisperUrl: settings.whisperUrl,
+          openaiApiKey: process.env.OPENAI_API_KEY
+        });
+      }
       res.json(settings);
     } catch (error) {
       res.status(400).json({ message: "Failed to update admin settings" });

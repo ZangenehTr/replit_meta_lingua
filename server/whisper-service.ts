@@ -445,6 +445,26 @@ export class WhisperService extends EventEmitter {
   isLanguageSupported(language: string): boolean {
     return this.getSupportedLanguages().includes(language);
   }
+
+  /**
+   * Initialize configuration from database admin settings
+   * Should be called during server startup after database connection is established
+   */
+  async initializeFromDatabase(getAdminSettings: () => Promise<any>) {
+    try {
+      const settings = await getAdminSettings();
+      if (settings) {
+        this.updateConfigFromSettings({
+          whisperProvider: settings.whisperProvider,
+          whisperUrl: settings.whisperUrl,
+          openaiApiKey: process.env.OPENAI_API_KEY
+        });
+        console.log('✓ Whisper service initialized from database admin settings');
+      }
+    } catch (error) {
+      console.warn('⚠️  Could not load Whisper config from database, using environment defaults:', error);
+    }
+  }
 }
 
 // Singleton instance

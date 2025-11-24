@@ -509,6 +509,15 @@ app.use((req, res, next) => {
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
   
+  // Initialize Whisper service from database admin settings
+  try {
+    const { whisperService } = await import('./whisper-service.js');
+    const { storage } = await import('./storage.js');
+    await whisperService.initializeFromDatabase(() => storage.getAdminSettings());
+  } catch (error) {
+    console.warn('⚠️  Could not initialize Whisper service from database:', error);
+  }
+  
   // Initialize Isabel VoIP service from environment variables
   if (process.env.ISABEL_VOIP_ENABLED === 'true' && process.env.ISABEL_VOIP_SERVER) {
     try {
