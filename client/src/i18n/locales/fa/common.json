@@ -833,6 +833,22 @@
       "lessonsCompleted": "درس"
     }
   },
+  "expertTeachers": {
+    "title": "معلمان متخصص",
+    "subtitle": "با معلمان حرفه‌ای زبان از سراسر جهان ارتباط برقرار کنید",
+    "filterLanguage": "فیلتر بر اساس زبان",
+    "sortBy": "مرتب سازی",
+    "highestRated": "بیشترین رتبه",
+    "lowestPrice": "کمترین قیمت",
+    "showing": "نمایش",
+    "teachers": "معلم",
+    "languages": "زبان‌ها",
+    "specializations": "تخصص‌ها",
+    "bookLesson": "رزرو درس",
+    "noTeachers": "معلمی یافت نشد",
+    "tryDifferentFilters": "سعی کنید فیلترهای مختلفی را انتخاب کنید"
+  },
+  "backToHome": "بازگشت به صفحه اصلی",
   "pwa": {
     "offline": "شما آفلاین هستید",
     "offlineTitle": "آماده برای آفلاین",

@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -83,6 +84,7 @@ export default function TakeTestPage() {
   
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Load session from localStorage on mount
   useEffect(() => {

@@ -1141,6 +1141,12 @@ function Router() {
           return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><TakeTest /></Suspense>;
         }}
       </Route>
+      <Route path="/expert-teachers">
+        {() => {
+          const ExpertTeachers = lazy(() => import("@/pages/public/expert-teachers"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><ExpertTeachers /></Suspense>;
+        }}
+      </Route>
       <Route path="/curriculum/:slug">
         {() => {
           const CurriculumCategory = lazy(() => import("@/pages/public/curriculum-category"));

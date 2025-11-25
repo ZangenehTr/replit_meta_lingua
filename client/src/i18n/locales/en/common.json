@@ -1011,6 +1011,22 @@
       "lessonsCompleted": "Lessons"
     }
   },
+  "expertTeachers": {
+    "title": "Expert Teachers",
+    "subtitle": "Connect with professional language teachers from around the world",
+    "filterLanguage": "Filter by Language",
+    "sortBy": "Sort By",
+    "highestRated": "Highest Rated",
+    "lowestPrice": "Lowest Price",
+    "showing": "Showing",
+    "teachers": "teachers",
+    "languages": "Languages",
+    "specializations": "Specializations",
+    "bookLesson": "Book Lesson",
+    "noTeachers": "No Teachers Found",
+    "tryDifferentFilters": "Try adjusting your filters"
+  },
+  "backToHome": "Back to Home",
   "pwa": {
     "offline": "You are offline",
     "offlineTitle": "Ready for Offline",

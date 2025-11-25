@@ -666,6 +666,22 @@
       "lessonsCompleted": "دروس"
     }
   },
+  "expertTeachers": {
+    "title": "المعلمون الخبراء",
+    "subtitle": "تواصل مع معلمي اللغات المحترفين من جميع أنحاء العالم",
+    "filterLanguage": "تصفية حسب اللغة",
+    "sortBy": "الترتيب حسب",
+    "highestRated": "الأعلى تقييماً",
+    "lowestPrice": "الأقل سعراً",
+    "showing": "عرض",
+    "teachers": "معلمون",
+    "languages": "اللغات",
+    "specializations": "التخصصات",
+    "bookLesson": "احجز درسًا",
+    "noTeachers": "لم يتم العثور على معلمين",
+    "tryDifferentFilters": "حاول تطبيق مرشحات مختلفة"
+  },
+  "backToHome": "العودة إلى الصفحة الرئيسية",
   "pwa": {
     "offline": "أنت غير متصل",
     "offlineTitle": "جاهز للعمل بلا اتصال",
