@@ -13,6 +13,21 @@ Language preference: Default language set to Farsi (fa) for Iranian users.
 AI Sales Agent: Telegram bot must be trained on ALL platform features with attractive messaging emphasizing novelty and innovation.
 CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid duplication. NO hardcoded data, NO fake/mock data, NO non-functional buttons, always use real API calls and working e2e business logic.
 
+## Recently Completed Features
+
+### Phone-First Authentication (November 25, 2025)
+- **SMS-Based Login**: Users can now authenticate via Iranian phone numbers (Kavenegar SMS)
+- **6 Authentication Endpoints**:
+  1. `/api/auth/phone/request-otp-login` - Request OTP for existing users
+  2. `/api/auth/phone/request-otp-signup` - Request OTP for registration
+  3. `/api/auth/phone/verify-otp-login` - Verify OTP and login
+  4. `/api/auth/phone/verify-otp-signup` - Verify OTP and create account
+  5. `/api/auth/phone/login` - Phone login flow (combined)
+  6. `/api/auth/phone/signup` - Phone signup flow (combined)
+- **Features**: Rate limiting, Iranian phone number validation, multilingual support (FA/EN/AR), 10-min OTP expiry
+- **Session Management**: Automatic session creation with 24-hour access tokens, 7-day refresh tokens
+- **Phone Field**: Users now have `isPhoneVerified` flag and phone number stored in profile
+
 ## System Architecture
 
 ### Frontend

@@ -505,6 +505,11 @@ app.use((req, res, next) => {
   app.use('/api/placement-test', placementTestRouter);
   console.log('✅ Placement Test routes registered (including guest routes)');
   
+  // Register Phone-First Authentication routes
+  const phoneAuthRouter = (await import('./routes/phone-auth-routes.js')).default;
+  app.use('/api/auth', phoneAuthRouter);
+  console.log('✅ Phone-First Authentication routes registered');
+  
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
