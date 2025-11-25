@@ -15,6 +15,17 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ## Recently Completed Features
 
+### PWA (Progressive Web App) Support (November 25, 2025)
+- **Installable App**: Users can install Meta Lingua as a native-like app on mobile/desktop
+- **Offline Support**: Service worker with Workbox caching strategy for offline learning
+- **PWA Components**: Install prompt, update prompt, offline indicator integrated into main App
+- **Manifest Configuration**: Meta Lingua branding, standalone display, Persian/English/Arabic support
+- **Caching Strategy**: 
+  - CacheFirst for fonts and static assets (1 year)
+  - NetworkFirst for API calls (1 day, 10s timeout)
+  - CacheFirst for images (30 days)
+- **Icons**: Generated PWA icons (192x192, 512x512, maskable)
+
 ### Phone-First Authentication (November 25, 2025)
 - **SMS-Based Login**: Users can now authenticate via Iranian phone numbers (Kavenegar SMS)
 - **6 Authentication Endpoints**:
