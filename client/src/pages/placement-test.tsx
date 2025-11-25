@@ -10,6 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
+import { ArrowLeft } from 'lucide-react';
+
 
 interface PlacementTestSession {
   id: number;
@@ -90,6 +93,7 @@ export default function PlacementTestPage() {
   const autoSubmitAfterRecording = useRef(false);
 
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
   // Start placement test mutation

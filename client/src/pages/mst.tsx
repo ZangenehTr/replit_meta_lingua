@@ -9,6 +9,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { ArrowLeft } from "lucide-react";
+
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
@@ -90,6 +93,7 @@ function pickAudioMime(): string | undefined {
 
 export default function MSTPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const { t } = useTranslation();
 
   // Session / flow

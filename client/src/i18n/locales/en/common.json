@@ -852,39 +852,38 @@
     }
   },
   "kids": {
-    "badge": "Gamified Learning",
-    "heading": "Kids Love Learning Here",
-    "subheading": "Fun, Interactive & Engaging",
-    "description": "Turn language learning into an adventure! With LinguaQuest, kids earn XP points, unlock achievements, and compete on leaderboards while mastering new skills.",
-    "feature1": "19 interactive game types and activities",
-    "feature2": "XP points, levels, and achievement badges",
-    "feature3": "Daily challenges and leaderboards",
-    "feature4": "Voice exercises with instant feedback",
-    "stat1Label": "Game Types",
-    "stat1Value": "19+",
-    "stat2Label": "Active Players",
-    "stat2Value": "5,000+",
-    "stat3Label": "Fun Rating",
-    "stat3Value": "4.9/5",
+    "freeDemoBadge": "Try Free Demo",
+    "badge": "Free Demo",
+    "heading": "LinguaQuest: Learning Through Games",
+    "subheading": "Master languages while having fun",
+    "description": "Unlock interactive language games designed for every proficiency level",
+    "feature1": "Game-Based Learning",
+    "feature2": "Progressive Difficulty",
+    "feature3": "Instant Feedback",
+    "feature4": "Earn Rewards",
     "cta": {
       "exploreLinguaQuest": "Explore LinguaQuest",
-      "startPlaying": "Start Playing Free"
-    }
+      "startPlaying": "Start Playing Now"
+    },
+    "stat1Label": "Games",
+    "stat1Value": "23+",
+    "stat3Label": "Avg Rating",
+    "stat3Value": "4.8/5"
   },
   "callern": {
-    "badge": "24/7 Live Tutoring",
-    "heading": "Practice Speaking with",
-    "headingHighlight": "Native English Teachers",
-    "description": "Connect instantly with certified teachers via live video. Perfect your accent, boost your confidence, and speak English like a native.",
-    "feature1": "Available 24/7 - Learn on your schedule",
-    "feature2": "Certified native speakers",
-    "feature3": "AI-powered feedback & suggestions",
-    "feature4": "Instant sessions - no scheduling needed",
-    "stat1": "Expert Teachers",
-    "stat2": "Available 24/7",
+    "stat2": "Available",
+    "stat2Value": "24/7",
     "stat3": "Student Rating",
-    "stat4": "Success Rate",
-    "badge2": "Try Free Session!",
+    "stat3Value": "4.9/5",
+    "badge": "24/7 Live Sessions",
+    "heading": "Learn Through Real Conversations",
+    "headingHighlight": "Real-time Interaction",
+    "description": "Practice with native speakers in personalized one-on-one sessions",
+    "feature1": "Native Speakers",
+    "feature2": "Flexible Scheduling",
+    "feature3": "Grammar Correction",
+    "feature4": "Cultural Insights",
+    "badge2": "Expert Teachers",
     "cta": {
       "learnMore": "Learn More",
       "startNow": "Start Now"
@@ -1011,5 +1010,10 @@
       "streak": "Day Streak",
       "lessonsCompleted": "Lessons"
     }
+  },
+  "pwa": {
+    "offline": "You are offline",
+    "offlineTitle": "Ready for Offline",
+    "offlineDescription": "App is ready to work offline. You can learn even without internet!"
   }
 }

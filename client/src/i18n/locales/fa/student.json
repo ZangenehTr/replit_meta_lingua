@@ -29,12 +29,7 @@
     "noUpcomingSessions": "جلسه‌ای در پیش نیست",
     "withTeacher": "با {{teacher}}"
   },
-  "courses": {
-    "all": "همه",
-    "active": "فعال",
-    "upcoming": "آینده",
-    "completed": "تکمیل شده"
-  },
+  "courses": "دوره‌ها",
   "assignments": {
     "title": "تکالیف من",
     "pending": "در انتظار",
@@ -643,7 +638,7 @@
   "trialBooked": "درس آزمایشی رزرو شد",
   "trialBookedDescription": "درس آزمایشی شما با موفقیت برنامه‌ریزی شد",
   "bookingFailed": "رزرو ناموفق بود. لطفاً دوباره تلاش کنید.",
-  "teachers": "مدرسان",
+  "teachers": "مدرسین",
   "startLearning": "شروع یادگیری",
   "technicalSupport": "پشتیبانی فنی",
   "partnership": "مشارکت",
@@ -716,7 +711,6 @@
   "yearsExp": "سال تجربه",
   "response": "زمان پاسخگویی",
   "viewProfile": "مشاهده پروفایل",
-  "overview": "نمای کلی",
-  "teachers": "مدرسین",
-  "courses": "دوره‌ها"
+  "enrollNow": "ثبت‌نام کنید",
+  "enrollFree": "ثبت‌نام رایگان"
 }

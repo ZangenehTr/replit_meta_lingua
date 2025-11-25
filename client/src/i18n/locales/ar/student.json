@@ -72,63 +72,58 @@
   },
   "courses": {
     "title": "دوراتي",
-    "enrolled": "مسجّل",
-    "inProgress": "قيد التقدم",
-    "completed": "مكتمل",
+    "noCourses": "لم يتم العثور على دورات",
     "progress": "التقدم",
-    "nextLesson": "الدرس التالي",
-    "continueLesson": "متابعة الدرس",
-    "startCourse": "بدء الدورة",
-    "viewCertificate": "عرض الشهادة"
+    "nextSession": "الجلسة التالية",
+    "instructor": "المدرس",
+    "continue": "متابعة التعلم",
+    "viewDetails": "عرض التفاصيل",
+    "exploreCourses": "استكشاف الدورات",
+    "searchPlaceholder": "البحث في الدورات...",
+    "online": "عبر الإنترنت",
+    "inPerson": "وجهاً لوجه",
+    "selfPaced": "بوتيرة ذاتية",
+    "duration": "المدة",
+    "language": "اللغة",
+    "level": "المستوى",
+    "schedule": "الجدول",
+    "price": "السعر",
+    "enrollNow": "سجل الآن",
+    "enrollmentSuccess": "تم التسجيل بنجاح",
+    "enrollmentSuccessDesc": "لقد تم تسجيلك بنجاح في الدورة!",
+    "enrollmentFailed": "فشل التسجيل",
+    "enrollmentFailedDesc": "فشل في التسجيل في الدورة. يرجى المحاولة مرة أخرى."
   },
   "assignments": {
-    "title": "مهامي",
+    "title": "المهام",
     "pending": "في الانتظار",
-    "submitted": "مُسلّم",
-    "graded": "مُقيّم",
-    "overdue": "متأخر",
-    "dueDate": "موعد التسليم",
-    "submitAssignment": "تسليم المهمة",
-    "viewFeedback": "عرض التعليقات",
-    "completedLesson": "درس مكتمل",
-    "submittedAssignment": "واجب مرسل",
-    "watchedVideo": "فيديو مُشاهد"
+    "completed": "مكتمل",
+    "dueDate": "تاريخ الاستحقاق",
+    "submit": "إرسال",
+    "submitted": "مُرسل",
+    "graded": "مُقيّم"
   },
   "sampleCourse1": "محادثة إنجليزية B1",
   "sampleCourse2": "أساسيات القواعد",
   "sampleCourse3": "ممارسة النطق",
   "hoursAgo": "منذ {{count}} ساعة",
   "daysAgo": "منذ {{count}} يوم",
-  "progress": {
-    "title": "تقدمي",
-    "overallProgress": "التقدم العام",
-    "skillsProgress": "تقدم المهارات",
-    "weeklyGoals": "الأهداف الأسبوعية",
-    "achievements": "الإنجازات",
-    "learningStreak": "سلسلة التعلم",
-    "totalXP": "إجمالي النقاط",
-    "currentStreak": "السلسلة الحالية"
-  },
+  "progress": "التقدم",
   "gamification": {
-    "xp": "النقاط",
+    "title": "التقدم والإنجازات",
+    "subtitle": "تتبع رحلة التعلم واكسب المكافآت",
     "level": "المستوى",
-    "streak": "السلسلة",
+    "xp": "نقاط الخبرة",
+    "streak": "سلسلة الأيام",
+    "achievements": "الإنجازات",
+    "leaderboard": "لوحة الصدارة",
     "badges": "الشارات",
-    "leaderboard": "لوحة المتصدرين",
-    "dailyGoals": "الأهداف اليومية",
-    "weeklyChallenge": "التحدي الأسبوعي",
-    "achievements": "الإنجازات"
+    "dailyChallenges": "التحديات اليومية",
+    "challengeSubtitle": "أكمل التحديات لكسب المكافآت"
   },
   "videoCourses": {
     "title": "الدورات المرئية",
-    "watchVideo": "مشاهدة الفيديو",
-    "courseProgress": "تقدم الدورة",
-    "nextLesson": "الدرس التالي",
-    "previousLesson": "الدرس السابق",
-    "completedLessons": "الدروس المكتملة",
-    "downloadMaterials": "تحميل المواد",
-    "bookmarks": "الإشارات المرجعية",
-    "notes": "الملاحظات"
+    "subtitle": "تصفح ومشاهدة دورات تعلم اللغة المرئية"
   },
   "tutors": "المعلمون",
   "tutorsPage": {
@@ -169,80 +164,6 @@
     "allLevels": "جميع المستويات"
   },
   "stats": {
-    "totalXp": "إجمالي نقاط الخبرة",
-    "level": "المستوى",
-    "streak": "السلسلة"
-  },
-  "homework": {
-    "title": "الواجبات",
-    "submit": "إرسال",
-    "download": "تحميل",
-    "instructions": "التعليمات",
-    "attachments": "المرفقات",
-    "feedback": "التعليقات",
-    "score": "النتيجة",
-    "status": "الحالة"
-  },
-  "payment": {
-    "title": "الدفع",
-    "wallet": "المحفظة",
-    "addCredit": "إضافة رصيد",
-    "transactionHistory": "تاريخ المعاملات",
-    "paymentMethods": "طرق الدفع",
-    "balance": "الرصيد"
-  },
-  "sessions": "جلسات",
-  "experience": "الخبرة",
-  "years": "سنوات",
-  "practice": "تدريب",
-  "upcomingSessions": "الجلسات القادمة",
-  "searchMessages": "البحث عن الرسائل...",
-  "noMessages": "لا توجد رسائل",
-  "profile": "الملف الشخصي",
-  "join": "انضمام",
-  "messages": "الرسائل",
-  "typeMessage": "اكتب رسالتك...",
-  "messageSendError": "فشل إرسال الرسالة",
-  "newConversation": "محادثة جديدة",
-  "contactTeacher": "الاتصال بالمعلم",
-  "askQuestions": "اطرح أسئلتك",
-  "createGroup": "إنشاء مجموعة",
-  "studyTogether": "ادرسوا معًا",
-  "contactSupport": "الاتصال بالدعم",
-  "getHelp": "احصل على المساعدة",
-  "conversationStarted": "بدأت المحادثة",
-  "teacherWillRespond": "سيرد المعلم قريبًا",
-  "groupCreated": "تم إنشاء المجموعة",
-  "inviteClassmates": "ادع زملاءك في الصف",
-  "supportContacted": "تم الاتصال بالدعم",
-  "supportWillRespond": "سيرد الدعم قريبًا",
-  "studyMode": {
-    "title": "نمط الدراسة",
-    "casual": "عادي",
-    "focused": "مركز",
-    "examPrep": "إعداد الامتحان"
-  },
-  "personality": {
-    "encouraging": "مشجع",
-    "professional": "مهني",
-    "friendly": "ودود",
-    "challenging": "تحدي"
-  },
-  "aiPersonality": "شخصية الذكاء الاصطناعي",
-  "navigation": {
-    "home": "الرئيسية",
-    "courses": "الدورات",
-    "callern": "CallerN",
-    "aiPartner": "الشريك الذكي",
-    "profile": "الملف الشخصي"
-  },
-  "saveSettings": "حفظ الإعدادات",
-  "learningProgress": "تقدم التعلم",
-  "studyPartnerSettings": "إعدادات شريك الدراسة",
-  "placementTestRequired": "أكمل اختبار تحديد المستوى",
-  "placementTestDescription": "خذ اختبار تحديد المستوى لمدة 10 دقائق لإنشاء مسار التعلم المخصص لك والعثور على مستوى البداية المثالي",
-  "startPlacementTest": "بدء اختبار تحديد المستوى (10 دقائق)",
-  "stats": {
     "totalLessons": "إجمالي الدروس",
     "completedLessons": "الدروس المكتملة",
     "currentStreak": "السلسلة الحالية",
@@ -253,101 +174,6 @@
     "memberTier": "درجة العضوية",
     "studyTimeThisWeek": "وقت الدراسة هذا الأسبوع",
     "weeklyGoalHours": "هدف الساعات الأسبوعية"
-  },
-  "courses": {
-    "title": "دوراتي",
-    "noCourses": "لم يتم التسجيل في دورات",
-    "progress": "التقدم",
-    "nextSession": "الجلسة التالية",
-    "instructor": "المدرس",
-    "continue": "متابعة التعلم",
-    "viewDetails": "عرض التفاصيل",
-    "exploreCourses": "استكشاف الدورات",
-    "searchPlaceholder": "البحث في الدورات...",
-    "online": "عبر الإنترنت",
-    "inPerson": "وجهاً لوجه",
-    "selfPaced": "بوتيرة ذاتية",
-    "noCourses": "لم يتم العثور على دورات",
-    "duration": "المدة",
-    "language": "اللغة",
-    "level": "المستوى",
-    "schedule": "الجدول",
-    "price": "السعر",
-    "enrollNow": "سجل الآن",
-    "enrollmentSuccess": "تم التسجيل بنجاح",
-    "enrollmentSuccessDesc": "لقد تم تسجيلك بنجاح في الدورة!",
-    "enrollmentFailed": "فشل التسجيل",
-    "enrollmentFailedDesc": "فشل في التسجيل في الدورة. يرجى المحاولة مرة أخرى."
-  },
-  "assignments": {
-    "title": "المهام",
-    "pending": "في الانتظار",
-    "completed": "مكتمل",
-    "dueDate": "تاريخ الاستحقاق",
-    "submit": "إرسال",
-    "submitted": "مُرسل",
-    "graded": "مُقيّم"
-  },
-  "practice": {
-    "title": "ممارسة الذكاء الاصطناعي",
-    "subtitle": "مارس اللغة العربية مع محادثة الذكاء الاصطناعي",
-    "startSession": "بدء جلسة ممارسة",
-    "holdToSpeak": "اضغط للتحدث",
-    "sessionActive": "الجلسة نشطة",
-    "sessionEnded": "انتهت الجلسة"
-  },
-  "gamification": {
-    "title": "التقدم والإنجازات",
-    "subtitle": "تتبع رحلة التعلم واكسب المكافآت",
-    "level": "المستوى",
-    "xp": "نقاط الخبرة",
-    "streak": "سلسلة الأيام",
-    "achievements": "الإنجازات",
-    "leaderboard": "لوحة الصدارة",
-    "badges": "الشارات",
-    "dailyChallenges": "التحديات اليومية",
-    "challengeSubtitle": "أكمل التحديات لكسب المكافآت"
-  },
-  "packages": {
-    "title": "حزم الجلسات",
-    "purchase": "شراء حزمة",
-    "remaining": "المتبقي",
-    "used": "مُستخدم",
-    "expired": "منتهي الصلاحية",
-    "active": "نشط"
-  },
-  "streak": "السلسلة",
-  "days": "أيام",
-  "totalXP": "إجمالي نقاط الخبرة",
-  "weeklyProgress": "التقدم الأسبوعي",
-  "hours": "ساعات",
-  "lessonsCompleted": "الدروس المكتملة",
-  "xpToNextLevel": "نقاط الخبرة للمستوى التالي",
-  "joinClass": "انضم للصف",
-  "myCourses": "دوراتي",
-  "walletBalance": "رصيد المحفظة",
-  "progress": "التقدم",
-  "goodAfternoon": "مساء الخير",
-  "goodMorning": "صباح الخير",
-  "goodEvening": "مساء الخير",
-  "upcomingSessions": "الجلسات القادمة",
-  "join": "انضمام",
-  "specialization": "التخصص",
-  "completed": "مكتمل",
-  "noSessionsToday": "لا توجد جلسات مجدولة لليوم",
-  "bookSession": "احجز جلسة",
-  "sessions": "الجلسات",
-  "moodLearning": {
-    "title": "ذكاء المزاج لتعلم العربية",
-    "subtitle": "تتبع حالتك العاطفية واحصل على توصيات تعلم عربية مخصصة مدعومة برؤى ثقافية عربية. دون اتصال بالإنترنت للتعلم الآمن."
-  },
-  "aiConversation": {
-    "title": "ممارسة اللغة مع الذكاء الاصطناعي",
-    "subtitle": "مارس المحادثات مع الذكاء الاصطناعي بالإنجليزية أو العربية. اضغط على زر الميكروفون للتحدث."
-  },
-  "sessions": {
-    "title": "الجلسات المباشرة",
-    "subtitle": "إدارة جلسات التعلم القادمة والسابقة"
   },
   "homework": {
     "title": "الواجبات والمهام",
@@ -399,22 +225,27 @@
     "submittedFiles": "الملفات المرسلة",
     "checkBackLater": "تحقق لاحقاً من المهام الجديدة"
   },
-  "messages": {
-    "title": "الرسائل",
-    "subtitle": "تواصل مع معلميك وزملائك في الصف"
-  },
   "payment": {
     "title": "المحفظة والاعتمادات",
     "subtitle": "إدارة رصيد المحفظة ومزايا العضوية"
   },
-  "tests": {
-    "title": "اختباراتي",
-    "subtitle": "خذ الاختبارات وعرض نتائجك"
+  "sessions": {
+    "title": "الجلسات المباشرة",
+    "subtitle": "إدارة جلسات التعلم القادمة والسابقة"
   },
-  "videoCourses": {
-    "title": "الدورات المرئية",
-    "subtitle": "تصفح ومشاهدة دورات تعلم اللغة المرئية"
+  "experience": "الخبرة",
+  "years": "سنوات",
+  "practice": {
+    "title": "ممارسة الذكاء الاصطناعي",
+    "subtitle": "مارس اللغة العربية مع محادثة الذكاء الاصطناعي",
+    "startSession": "بدء جلسة ممارسة",
+    "holdToSpeak": "اضغط للتحدث",
+    "sessionActive": "الجلسة نشطة",
+    "sessionEnded": "انتهت الجلسة"
   },
+  "upcomingSessions": "الجلسات القادمة",
+  "searchMessages": "البحث عن الرسائل...",
+  "noMessages": "لا توجد رسائل",
   "profile": {
     "aiRoadmapTitle": "خريطة طريق مدعومة بالذكاء الاصطناعي",
     "aiRoadmapDesc": "مسار تعلم مخصص بناءً على أهدافك ومستواك",
@@ -431,6 +262,89 @@
     "fillingSectionsHelp": "ملء الأقسام التالية سيساعد الذكاء الاصطناعي:",
     "completeProfileNow": "أكمل الملف الآن",
     "skipForNow": "تخطي في الوقت الحالي"
+  },
+  "join": "انضمام",
+  "messages": {
+    "title": "الرسائل",
+    "subtitle": "تواصل مع معلميك وزملائك في الصف"
+  },
+  "typeMessage": "اكتب رسالتك...",
+  "messageSendError": "فشل إرسال الرسالة",
+  "newConversation": "محادثة جديدة",
+  "contactTeacher": "الاتصال بالمعلم",
+  "askQuestions": "اطرح أسئلتك",
+  "createGroup": "إنشاء مجموعة",
+  "studyTogether": "ادرسوا معًا",
+  "contactSupport": "الاتصال بالدعم",
+  "getHelp": "احصل على المساعدة",
+  "conversationStarted": "بدأت المحادثة",
+  "teacherWillRespond": "سيرد المعلم قريبًا",
+  "groupCreated": "تم إنشاء المجموعة",
+  "inviteClassmates": "ادع زملاءك في الصف",
+  "supportContacted": "تم الاتصال بالدعم",
+  "supportWillRespond": "سيرد الدعم قريبًا",
+  "studyMode": {
+    "title": "نمط الدراسة",
+    "casual": "عادي",
+    "focused": "مركز",
+    "examPrep": "إعداد الامتحان"
+  },
+  "personality": {
+    "encouraging": "مشجع",
+    "professional": "مهني",
+    "friendly": "ودود",
+    "challenging": "تحدي"
+  },
+  "aiPersonality": "شخصية الذكاء الاصطناعي",
+  "navigation": {
+    "home": "الرئيسية",
+    "courses": "الدورات",
+    "callern": "CallerN",
+    "aiPartner": "الشريك الذكي",
+    "profile": "الملف الشخصي"
+  },
+  "saveSettings": "حفظ الإعدادات",
+  "learningProgress": "تقدم التعلم",
+  "studyPartnerSettings": "إعدادات شريك الدراسة",
+  "placementTestRequired": "أكمل اختبار تحديد المستوى",
+  "placementTestDescription": "خذ اختبار تحديد المستوى لمدة 10 دقائق لإنشاء مسار التعلم المخصص لك والعثور على مستوى البداية المثالي",
+  "startPlacementTest": "بدء اختبار تحديد المستوى (10 دقائق)",
+  "packages": {
+    "title": "حزم الجلسات",
+    "purchase": "شراء حزمة",
+    "remaining": "المتبقي",
+    "used": "مُستخدم",
+    "expired": "منتهي الصلاحية",
+    "active": "نشط"
+  },
+  "streak": "السلسلة",
+  "days": "أيام",
+  "totalXP": "إجمالي نقاط الخبرة",
+  "weeklyProgress": "التقدم الأسبوعي",
+  "hours": "ساعات",
+  "lessonsCompleted": "الدروس المكتملة",
+  "xpToNextLevel": "نقاط الخبرة للمستوى التالي",
+  "joinClass": "انضم للصف",
+  "myCourses": "دوراتي",
+  "walletBalance": "رصيد المحفظة",
+  "goodAfternoon": "مساء الخير",
+  "goodMorning": "صباح الخير",
+  "goodEvening": "مساء الخير",
+  "specialization": "التخصص",
+  "completed": "مكتمل",
+  "noSessionsToday": "لا توجد جلسات مجدولة لليوم",
+  "bookSession": "احجز جلسة",
+  "moodLearning": {
+    "title": "ذكاء المزاج لتعلم العربية",
+    "subtitle": "تتبع حالتك العاطفية واحصل على توصيات تعلم عربية مخصصة مدعومة برؤى ثقافية عربية. دون اتصال بالإنترنت للتعلم الآمن."
+  },
+  "aiConversation": {
+    "title": "ممارسة اللغة مع الذكاء الاصطناعي",
+    "subtitle": "مارس المحادثات مع الذكاء الاصطناعي بالإنجليزية أو العربية. اضغط على زر الميكروفون للتحدث."
+  },
+  "tests": {
+    "title": "اختباراتي",
+    "subtitle": "خذ الاختبارات وعرض نتائجك"
   },
   "mst": {
     "title": "اختبار تحديد المستوى متعدد المراحل",
@@ -503,7 +417,7 @@
     "completed-with-recording": "مكتمل مع التسجيل"
   },
   "group": "مجموعة",
-  "individual": "فردي", 
+  "individual": "فردي",
   "startsIn": "يبدأ في",
   "midtermExam": "امتحان منتصف الفصل",
   "finalExam": "الامتحان النهائي",
@@ -608,5 +522,8 @@
     "orderPlaced": "تم تسليم طلبك #{{orderId}} بنجاح!",
     "error": "خطأ في الدفع"
   },
-  "fieldsPrePopulated": "تم ملء المعلومات مسبقاً من ملفك الشخصي. يمكنك تعديل أي حقل حسب الحاجة."
+  "fieldsPrePopulated": "تم ملء المعلومات مسبقاً من ملفك الشخصي. يمكنك تعديل أي حقل حسب الحاجة.",
+  "enrollNow": "قم بالتسجيل",
+  "enrollFree": "التسجيل مجاني",
+  "startLearning": "ابدأ التعلم"
 }
