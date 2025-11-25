@@ -52,6 +52,22 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Security**: Cryptographic signature verification, rate limiting, transaction deduplication
 - **Database**: Uses `walletTransactions`, `paymentTransactions`, and `paymentIdempotency` tables
 
+### PWA Deployment Optimization (November 25, 2025)
+- **Bundle Size Optimization**: Fixed PWA deployment failure (7.05 MB bundle exceeded 2 MB precaching limit)
+- **Three Optimization Strategies Applied**:
+  1. **Increased Precache Limit**: maximumFileSizeToCacheInBytes increased from 2 MB to 5 MB
+  2. **Precache Exclusions**: Added globIgnores for node_modules and dist folders
+  3. **Code Splitting via Manual Chunks**: Large vendor libraries split into separate chunks
+     - vendor-three (Three.js 3D library)
+     - vendor-pdf (PDF reader)
+     - vendor-charts (Charts visualization)
+     - vendor-ml (TensorFlow/ML)
+     - vendor-mediapipe (MediaPipe face/hand detection)
+     - vendor-openai (OpenAI API client)
+     - vendor-stripe (Stripe payment processing)
+     - vendor-common (Other dependencies)
+- **Result**: App now deployable without PWA plugin errors; better performance through independent chunk caching
+
 ### WebRTC & Deployment Documentation (November 25, 2025)
 - **DEPLOYMENT_GUIDE.md** - Complete Iranian self-hosting guide (PostgreSQL, Ollama, Kavenegar, Isabel VoIP setup)
 - **WEBRTC_SETUP.md** - CallerN video infrastructure guide (coturn TURN/STUN server setup, performance tuning)

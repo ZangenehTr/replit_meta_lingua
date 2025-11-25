@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from "vite-plugin-pwa";
+import type { ManualChunksOption } from "rollup";
 
 export default defineConfig({
   plugins: [
@@ -47,6 +48,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        globIgnores: ["**/node_modules/**/*", "**/dist/**/*"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -131,5 +134,21 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules")) {
+            if (id.includes("three")) return "vendor-three";
+            if (id.includes("react-pdf")) return "vendor-pdf";
+            if (id.includes("recharts")) return "vendor-charts";
+            if (id.includes("@tensorflow")) return "vendor-ml";
+            if (id.includes("mediapipe")) return "vendor-mediapipe";
+            if (id.includes("openai")) return "vendor-openai";
+            if (id.includes("stripe")) return "vendor-stripe";
+            return "vendor-common";
+          }
+        },
+      },
+    },
   },
 });
