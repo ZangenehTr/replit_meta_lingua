@@ -157,69 +157,308 @@ CallerN منصة تدريس فيديو ذكية مدعومة بالذكاء ال
 CallerN مثالي للمتعلمين الذين يريدون نتائج أسرع ومرونة كاملة!`
   };
 
+  // Comprehensive Platform Features Knowledge Base
+  private readonly PLATFORM_FEATURES = {
+    fa: `
+🚀 **تمام خدمات و ویژگی‌های منحصر به فرد متا لینگوا:**
+
+═══════════════════════════════════════════════════════════
+
+1️⃣ **کالرن (CallerN) - تدریس ویدیویی هوشمند ۲۴/۷**
+   ✨ AI در زمان واقعی: تصحیح فوری دستور، واژگان، تلفظ
+   🎯 انعطاف‌پذیری کامل: بدون جدول ثابت، هروقت خواستید
+   🎥 ضبط خودکار تمام جلسات برای بازنگری
+   👨‍🏫 تدریس فردی ۱۰۰% شخصی‌شده
+
+2️⃣ **LinguaQuest - سیستم یادگیری گیمیفایی شده**
+   🎮 ۲۳ نوع فعالیت تعاملی و سرگرم‌کننده
+   ⭐ کسب امتیاز و رتبه (XP) برای هر فعالیت
+   🏆 بج‌های انجام و دستاورد برای انگیزه‌دهی
+   📈 ۶ درس کامل با محتوای پیشرفته
+
+3️⃣ **کلاس‌های زندهٔ با AI**
+   🤖 AI حین کلاس ترجمه می‌کند
+   💬 نوشتاری خودکار (Transcript) کامل جلسه
+   ✏️ تصحیح فوری دستور و تلفظ
+   🎓 کلاس‌های گروهی مقرون‌به‌صرفه
+
+4️⃣ **سیستم چالش‌های روزانه**
+   🎯 چالش‌های روزانه برای تقویت مهارت‌ها
+   🏅 جوایز و نشان برای انجام چالش‌ها
+   📊 پیگیری پیشرفت روزانه
+   ⚡ باعث عادت‌دهی به یادگیری می‌شود
+
+5️⃣ **تست‌های قرار‌گیری هوشمند**
+   🧠 آزمایش‌های AI-powered برای تعیین سطح دقیق
+   📋 ۸ نوع سؤال مختلف
+   🎯 نتایج فوری با پیشنهادات شخصی‌شده
+   🏫 تعیین کلاس بهینه برای شما
+
+6️⃣ **نظارت هوشمند کلاس (AI Supervisor)**
+   👁️ نظارت زمان‌واقعی بر فعالیت کلاس
+   📊 تحلیل رفتار و پیشرفت دانشجو
+   💡 توصیه‌های فوری برای بهبود
+   📈 گزارش‌های مفصل برای معلمان
+
+7️⃣ **سیستم چت مهمان‌ها**
+   👥 چت فوری برای بازدیدکننده‌های جدید
+   🎯 سؤالات رایج و پاسخ‌های فوری
+   📱 دسترسی آسان بدون ثبت‌نام
+   🚀 تبدیل مهمان‌ها به دانشجوی فعال
+
+8️⃣ **سیستم گیمیفیکیشن**
+   ⚡ امتیاز XP برای هر فعالیت
+   🎖️ سطح‌های مختلف و رتبه‌بندی
+   🏆 رقابت سالم میان دانشجویان
+   🎁 جوایز و تشویق‌های خاص
+
+9️⃣ **برنامه‌ریزی هوشمند کلاس‌ها**
+   📅 زمان‌بندی خودکار بر اساس سطح و اهداف
+   🔄 تعدیل خودکار برنامه بر اساس پیشرفت
+   ⏰ یادآوری‌های هوشمند برای کلاس‌ها
+   🎯 بهینه‌سازی مسیر یادگیری
+
+🔟 **سیستم TTS (متن به گفتار) هوشمند**
+   🔊 تولید خودکار فایل‌های صوتی
+   🌍 پشتیبانی از چندین زبان
+   🎵 کیفیت صوتی بالا و طبیعی
+   💾 نگهداری برای استفادهٔ دوباره
+
+════════════════════════════════════════════════════════════
+✅ تمام این ویژگی‌ها در یک پلتفرم یکپارچه!
+✅ بدون نیاز به برنامه‌های اضافی!
+✅ دسترسی کامل از موبایل و کامپیوتر!`,
+
+    en: `
+🚀 **ALL of Meta Lingua's Unique Features & Services:**
+
+═══════════════════════════════════════════════════════════
+
+1️⃣ **CallerN - Smart 24/7 Video Tutoring**
+   ✨ Real-time AI: Instant grammar, vocabulary, pronunciation correction
+   🎯 Complete Flexibility: No schedule, learn whenever you want
+   🎥 Automatic session recording for review
+   👨‍🏫 100% personalized one-on-one tutoring
+
+2️⃣ **LinguaQuest - Gamified Learning System**
+   🎮 23 interactive and engaging activity types
+   ⭐ Earn XP points and levels for every activity
+   🏆 Badges and achievements for motivation
+   📈 6 complete lessons with advanced content
+
+3️⃣ **Live Classes with AI Enhancement**
+   🤖 AI translates vocabulary during class
+   💬 Automatic full session transcription
+   ✏️ Real-time grammar and pronunciation correction
+   🎓 Affordable group classes (3-8 students)
+
+4️⃣ **Daily Challenges System**
+   🎯 Daily challenges to strengthen skills
+   🏅 Rewards and badges for completion
+   📊 Track your daily progress
+   ⚡ Build a daily learning habit
+
+5️⃣ **Smart Placement Tests**
+   🧠 AI-powered tests to determine exact level
+   📋 8 different question types
+   🎯 Instant results with personalized recommendations
+   🏫 Perfect class placement for you
+
+6️⃣ **Smart Class Monitoring (AI Supervisor)**
+   👁️ Real-time monitoring of class activities
+   📊 Analysis of student behavior and progress
+   💡 Real-time suggestions for improvement
+   📈 Detailed reports for teachers
+
+7️⃣ **Visitor Chat System**
+   👥 Instant chat for new visitors
+   🎯 Frequently asked questions & quick answers
+   📱 Easy access without registration
+   🚀 Convert visitors into active students
+
+8️⃣ **Gamification System**
+   ⚡ XP points for every achievement
+   🎖️ Different levels and rankings
+   🏆 Healthy competition between students
+   🎁 Special rewards and incentives
+
+9️⃣ **Smart Class Scheduling**
+   📅 Automatic scheduling based on level and goals
+   🔄 Auto-adjustment based on progress
+   ⏰ Smart reminders for classes
+   🎯 Optimize your learning path
+
+🔟 **Smart TTS System (Text-to-Speech)**
+   🔊 Automatic audio file generation
+   🌍 Support for multiple languages
+   🎵 High-quality and natural-sounding voices
+   💾 Save and reuse for later
+
+════════════════════════════════════════════════════════════
+✅ All features in ONE unified platform!
+✅ No need for extra apps!
+✅ Full access from mobile and desktop!`,
+
+    ar: `
+🚀 **جميع الميزات و الخدمات الفريدة في ميتا لينغوا:**
+
+═══════════════════════════════════════════════════════════
+
+1️⃣ **CallerN - تدريس فيديو ذكي ۲۴/۷**
+   ✨ ذكاء اصطناعي في الوقت الفعلي: تصحيح فوري للنحو والمفردات والنطق
+   🎯 مرونة كاملة: بدون جدول ثابت، تعلم متى تشاء
+   🎥 تسجيل تلقائي للجلسات للمراجعة
+   👨‍🏫 تدريس فردي ۱۰۰٪ شخصي
+
+2️⃣ **LinguaQuest - نظام التعلم الممتع**
+   🎮 ۲۳ نوع نشاط تفاعلي وممتع
+   ⭐ اكسب نقاط XP ومستويات لكل نشاط
+   🏆 شارات وإنجازات للتحفيز
+   📈 ۶ دروس كاملة بمحتوى متقدم
+
+3️⃣ **الفصول المباشرة مع تحسين AI**
+   🤖 الذكاء الاصطناعي يترجم المفردات أثناء الفصل
+   💬 نسخ تلقائي كامل للجلسة
+   ✏️ تصحيح فوري للنحو والنطق
+   🎓 فصول جماعية اقتصادية
+
+4️⃣ **نظام التحديات اليومية**
+   🎯 تحديات يومية لتقوية مهاراتك
+   🏅 جوائز وشارات للإكمال
+   📊 تتبع تقدمك اليومي
+   ⚡ بناء عادة التعلم اليومية
+
+5️⃣ **اختبارات التوظيف الذكية**
+   🧠 اختبارات مدعومة بالذكاء الاصطناعي لتحديد مستوى دقيق
+   📋 ۸ أنواع أسئلة مختلفة
+   🎯 النتائج الفورية مع التوصيات الشخصية
+   🏫 الفصل المثالي لك
+
+6️⃣ **مراقبة الفصل الذكية (مشرف AI)**
+   👁️ المراقبة في الوقت الفعلي لأنشطة الفصل
+   📊 تحليل السلوك والتقدم
+   💡 اقتراحات فورية للتحسن
+   📈 تقارير مفصلة للمعلمين
+
+7️⃣ **نظام دردشة الزوار**
+   👥 دردشة فورية للزوار الجدد
+   🎯 الأسئلة المتكررة والإجابات السريعة
+   📱 الوصول السهل بدون تسجيل
+   🚀 تحويل الزوار إلى طلاب نشطين
+
+8️⃣ **نظام تحفيز الألعاب**
+   ⚡ نقاط XP لكل إنجاز
+   🎖️ مستويات وترتيب مختلف
+   🏆 منافسة صحية بين الطلاب
+   🎁 مكافآت وحوافز خاصة
+
+9️⃣ **جدولة الفصول الذكية**
+   📅 جدولة تلقائية بناءً على المستوى والأهداف
+   🔄 التعديل التلقائي بناءً على التقدم
+   ⏰ تذكيرات ذكية للفصول
+   🎯 تحسين مسار التعلم
+
+🔟 **نظام TTS الذكي (تحويل النص إلى كلام)**
+   🔊 إنشاء ملفات صوتية تلقائي
+   🌍 دعم لغات متعددة
+   🎵 جودة صوتية عالية وطبيعية
+   💾 احفظ لاستخدام لاحق
+
+════════════════════════════════════════════════════════════
+✅ جميع الميزات في منصة واحدة متكاملة!
+✅ لا حاجة لتطبيقات إضافية!
+✅ وصول كامل من الهاتف وسطح المكتب!`
+  };
+
   // Multilingual system prompts
   private readonly SYSTEM_PROMPT = {
     fa: `شما یک مشاور حرفه‌ای آموزش زبان در آکادمی متا لینگوا هستید. با مهربانی و حرفه‌ای پاسخ دهید.
 
 مأموریت شما:
-1. به سؤالات درباره دوره‌های زبان و کالرن (CallerN) پاسخ دهید
+1. به سؤالات درباره تمام خدمات متا لینگوا پاسخ دهید (کالرن، LinguaQuest، کلاس‌های زندهٔ AI، چالش‌های روزانه، و غیره)
 2. نیازهای یادگیری مشتری را شناسایی کنید
-3. دوره‌های مناسب و کالرن پیشنهاد دهید
+3. بهترین خدمات متناسب با نیاز او پیشنهاد دهید
 4. اطلاعات تماس جمع‌آوری کنید
 5. برای موضوعات پیچیده به تیم انسانی ارجاع دهید
 
-دانش کلیدی درباره کالرن:
-- کالرن یک پلتفرم تدریس ویدیویی هوشمند ۲۴/۷ است
-- AI در حین کلاس واژگان، دستور زبان و تلفظ را تصحیح می‌کند
-- بسیار متفاوت از کلاس‌های سنتی - انعطاف‌پذیر و فوری است
-- ایده‌ال برای کسانی که نیاز به یادگیری سریع دارند
+ویژگی‌های کلیدی متا لینگوا:
+✨ کالرن: تدریس ویدیویی ۲۴/۷ با AI هوشمند
+🎮 LinguaQuest: بازی یادگیری با ۲۳ نوع فعالیت
+👥 کلاس‌های زندهٔ AI: کلاس‌های گروهی با تصحیح فوری AI
+⚡ چالش‌های روزانه: چالش‌های روزانه با جوایز
+🧠 تست‌های هوشمند: تعیین سطح دقیق شما
+🏆 سیستم گیمیفیکیشن: امتیازات، سطح‌ها و رتبه‌بندی
+
+توصیه‌های ترویجی:
+- تاکید کنید بر نوآوری این خدمات نسبت به رقبا
+- کالرن را برای کسانی که انعطاف‌پذیری می‌خواهند توصیه کنید
+- LinguaQuest را برای افراد جوان‌تر و علاقه‌مند به بازی توصیه کنید
+- کلاس‌های گروهی را برای افراد با بودجهٔ محدود توصیه کنید
 
 قوانین مهم:
 - هرگز قیمت دقیق ندهید، فقط محدوده قیمت
-- کالرن را توصیه کنید اگر مشتری نیاز به انعطاف‌پذیری داشته باشد
-- کالرن و کلاس‌های منظم را به عنوان گزینه‌های مختلف معرفی کنید
+- همیشه تاکید کنید بر نوآوری و قابلیت‌های منحصربه‌فرد
+- تمام خدمات در یک پلتفرم یکپارچه‌ای هستند
 - برای ثبت‌نام نهایی به تیم انسانی ارجاع دهید`,
 
     en: `You are a professional language learning consultant at Meta Lingua Academy. Be friendly and professional.
 
 Your mission:
-1. Answer questions about language courses and CallerN
-2. Identify customer learning needs
-3. Recommend suitable courses and CallerN
+1. Answer questions about ALL Meta Lingua services (CallerN, LinguaQuest, Live AI Classes, Daily Challenges, etc.)
+2. Identify customer learning needs and preferences
+3. Recommend the best combination of services for each customer
 4. Collect contact information
 5. Escalate complex issues to human team
 
-Key knowledge about CallerN:
-- CallerN is a smart 24/7 video tutoring platform
-- AI corrects vocabulary, grammar and pronunciation during the lesson
-- Very different from traditional classes - flexible and instant
-- Perfect for learners who need fast results
+Key Meta Lingua Features:
+✨ CallerN: 24/7 video tutoring with smart AI
+🎮 LinguaQuest: Game-based learning with 23 activity types
+👥 Live AI Classes: Group classes with real-time AI correction
+⚡ Daily Challenges: Daily quests with rewards and badges
+🧠 Smart Placement Tests: Find your exact level
+🏆 Gamification System: XP, levels, and rankings
+
+Promotional Tips:
+- Emphasize innovation and unique capabilities vs competitors
+- Recommend CallerN for flexibility seekers
+- Recommend LinguaQuest for younger/game-enthusiastic learners
+- Recommend group classes for budget-conscious customers
+- Highlight that ALL features are in ONE platform
 
 Important rules:
 - Never give exact prices, only ranges
-- Recommend CallerN if customer needs flexibility
-- Present CallerN and traditional classes as different options
+- Always emphasize innovation and unique capabilities
+- All services are integrated in one unified platform
 - Refer to human team for final enrollment`,
 
     ar: `أنت مستشار تعليم لغات محترف في أكاديمية ميتا لينغوا. كن ودوداً ومهنياً.
 
 مهمتك:
-1. الإجابة على الأسئلة حول دورات اللغة و CallerN
-2. تحديد احتياجات تعلم العملاء
-3. التوصية بالدورات المناسبة و CallerN
+1. الإجابة على الأسئلة حول جميع خدمات ميتا لينغوا (CallerN و LinguaQuest والفصول المباشرة مع AI والتحديات اليومية وغيرها)
+2. تحديد احتياجات ورغبات العملاء
+3. التوصية بأفضل مجموعة من الخدمات لكل عميل
 4. جمع معلومات الاتصال
-5. تصعيد المشكلات المعقدة إلى الفريق البشري
+5. تصعيد المشاكل المعقدة إلى الفريق البشري
 
-معرفة أساسية عن CallerN:
-- CallerN هي منصة تدريس فيديو ذكية ۲۴/۷
-- الذكاء الاصطناعي يصحح المفردات والنحو والنطق أثناء الدرس
-- مختلفة جداً عن الفصول التقليدية - مرنة وفورية
-- مثالية للمتعلمين الذين يريدون نتائج سريعة
+ميزات ميتا لينغوا الرئيسية:
+✨ CallerN: تدريس فيديو ۲۴/۷ مع ذكاء اصطناعي ذكي
+🎮 LinguaQuest: التعلم القائم على الألعاب مع ۲۳ نوع نشاط
+👥 الفصول المباشرة مع AI: فصول جماعية مع تصحيح AI في الوقت الفعلي
+⚡ التحديات اليومية: مهام يومية مع مكافآت وشارات
+🧠 اختبارات التوظيف الذكية: اعثر على مستواك الدقيق
+🏆 نظام تحفيز الألعاب: نقاط XP والمستويات والترتيب
+
+نصائح ترويجية:
+- أكد على الابتكار والقدرات الفريدة مقابل المنافسين
+- اوصِ CallerN للباحثين عن المرونة
+- اوصِ LinguaQuest للمتعلمين الأصغر سناً والمهتمين بالألعاب
+- اوصِ الفصول الجماعية للعملاء محدودي الميزانية
+- أبرز أن جميع الميزات في منصة واحدة
 
 قواعد مهمة:
 - لا تعطي أسعاراً دقيقة، فقط نطاقات
-- ابدأ بـ CallerN إذا احتاج العميل للمرونة
-- قدم CallerN والفصول التقليدية كخيارات مختلفة
+- أكد دائماً على الابتكار والقدرات الفريدة
+- جميع الخدمات متكاملة في منصة واحدة
 - أحل إلى الفريق البشري للتسجيل النهائي`
   };
 
@@ -273,6 +512,31 @@ Important rules:
       fa: 'تفاوت کلاس‌های منظم و کالرن:\n\nکلاس‌های منظم:\n- گروهی (۳-۸ نفر)\n- جدول ثابت\n- کمک‌هزینه\n\nکالرن:\n- یک به یک\n- ۲۴/۷ انعطاف‌پذیر\n- AI کمک‌کننده فوری\n- ضبط و بازنگری\n\nهر دو موثر! بسته به نیاز شما.',
       en: 'Difference between regular classes and CallerN:\n\nRegular Classes:\n- Group (3-8 people)\n- Fixed schedule\n- More affordable\n\nCallerN:\n- One-on-one\n- 24/7 flexible\n- AI instant assistance\n- Recording & review\n\nBoth effective! Depends on your needs.',
       ar: 'الفرق بين الفصول العادية و CallerN:\n\nالفصول العادية:\n- مجموعة (۳-۸ أشخاص)\n- جدول ثابت\n- أكثر اقتصاداً\n\nCallerN:\n- واحد على واحد\n- مرن ۲۴/۷\n- مساعدة AI فورية\n- تسجيل ومراجعة\n\nكلاهما فعال! يعتمد على احتياجاتك.'
+    },
+    linguaquest: {
+      fa: 'LinguaQuest یک سیستم یادگیری انقلابی است:\n🎮 ۲۳ نوع فعالیت تعاملی و سرگرم‌کننده\n⭐ کسب امتیاز XP برای هر فعالیت\n🏆 بج‌های انجام و دستاورد برای انگیزه‌دهی\n📈 ۶ درس کامل با محتوای پیشرفته\n🎯 بازی‌های هدفمند برای تقویت مهارت‌ها\nایده‌ال برای یادگیری سرگرم‌کننده و درازمدت!',
+      en: 'LinguaQuest is a revolutionary learning system:\n🎮 23 types of interactive and fun activities\n⭐ Earn XP points for every activity\n🏆 Badges and achievements for motivation\n📈 6 complete lessons with advanced content\n🎯 Targeted games to strengthen skills\nPerfect for engaging and long-term learning!',
+      ar: 'LinguaQuest نظام تعلم ثوري:\n🎮 ۲۳ نوع من الأنشطة التفاعلية والممتعة\n⭐ اكسب نقاط XP لكل نشاط\n🏆 شارات وإنجازات للتحفيز\n📈 ۶ دروس كاملة بمحتوى متقدم\n🎯 ألعاب موجهة لتقوية المهارات\nمثالي للتعلم الممتع والطويل الأمد!'
+    },
+    daily_challenges: {
+      fa: 'چالش‌های روزانه متا لینگوا:\n🎯 چالش‌های تازه هر روز\n⚡ زمان‌بندی و سختی متغیر\n🏅 جوایز و نشان برای انجام هر چالش\n📊 پیگیری پیشرفت روزانه شما\n🔥 نوار فعالیت برای عادت‌دهی\n💡 توصیه‌های AI برای چالش‌های مناسب\nیادگیری روزانه قطعی می‌شود!',
+      en: 'Meta Lingua Daily Challenges:\n🎯 Fresh challenges every day\n⚡ Varying timing and difficulty\n🏅 Rewards and badges for completion\n📊 Track your daily progress\n🔥 Activity streak to build habits\n💡 AI recommendations for perfect challenges\nDaily learning becomes guaranteed!',
+      ar: 'تحديات ميتا لينغوا اليومية:\n🎯 تحديات جديدة كل يوم\n⚡ أوقات وصعوبات متغيرة\n🏅 جوائز وشارات للإكمال\n📊 تتبع تقدمك اليومي\n🔥 سلسلة نشاط لبناء العادات\n💡 توصيات AI للتحديات المثالية\nيصبح التعلم اليومي مضموناً!'
+    },
+    placement_test: {
+      fa: 'تست‌های قرار‌گیری هوشمند:\n🧠 آزمایش‌های AI-powered برای تعیین سطح دقیق\n📋 ۸ نوع سؤال مختلف (گفتاری، شنیداری، درک متن و غیره)\n🎯 نتایج فوری با پیشنهادات شخصی‌شده\n🏫 تعیین کلاس بهینه برای شما\n📊 گزارش جامع از نقاط قوت و ضعف\nتا ۵۰% دقیق‌تر از تست‌های معمولی!',
+      en: 'Smart Placement Tests:\n🧠 AI-powered tests to find your exact level\n📋 8 different question types (speaking, listening, reading, etc.)\n🎯 Instant results with personalized recommendations\n🏫 Perfect class placement for you\n📊 Comprehensive report of strengths and weaknesses\nUp to 50% more accurate than regular tests!',
+      ar: 'اختبارات التوظيف الذكية:\n🧠 اختبارات مدعومة بـ AI لإيجاد مستواك الدقيق\n📋 ۸ أنواع أسئلة مختلفة (التحدث والاستماع والقراءة إلخ)\n🎯 النتائج الفورية مع التوصيات الشخصية\n🏫 التوظيف المثالي للفصل\n📊 تقرير شامل للنقاط القوية والضعيفة\nأدق بـ ٪۵۰ من الاختبارات العادية!'
+    },
+    ai_supervisor: {
+      fa: 'نظام نظارت هوشمند:\n👁️ نظارت زمان‌واقعی بر فعالیت کلاس\n📊 تحلیل رفتار و پیشرفت دانشجو\n💡 توصیه‌های فوری برای بهبود\n📈 گزارش‌های مفصل برای معلمان\n🎓 یادگیری شخصی‌شده‌تر برای هر دانشجو\nکیفیت کلاس بهتر گارانتی شده!',
+      en: 'Smart Supervisor System:\n👁️ Real-time monitoring of class activities\n📊 Analysis of student behavior and progress\n💡 Real-time suggestions for improvement\n📈 Detailed reports for teachers\n🎓 More personalized learning for each student\nBetter class quality guaranteed!',
+      ar: 'نظام المشرف الذكي:\n👁️ المراقبة في الوقت الفعلي لأنشطة الفصل\n📊 تحليل السلوك والتقدم\n💡 اقتراحات فورية للتحسن\n📈 تقارير مفصلة للمعلمين\n🎓 تعلم شخصي أكثر لكل طالب\nجودة فصل أفضل مضمونة!'
+    },
+    gamification: {
+      fa: 'سیستم گیمیفیکیشن:\n⚡ کسب امتیاز XP برای هر فعالیت\n🎖️ سطح‌های مختلف و رتبه‌بندی\n🏆 رقابت سالم میان دانشجویان\n🎁 جوایز و تشویق‌های خاص\n📊 لوحهٔ رتبه‌بندی برای انگیزه‌دهی\nیادگیری تا ۳ برابر بیشتر انگیزه‌دهی می‌شود!',
+      en: 'Gamification System:\n⚡ Earn XP points for every achievement\n🎖️ Different levels and rankings\n🏆 Healthy competition between students\n🎁 Special rewards and incentives\n📊 Leaderboards for extra motivation\nLearning becomes 3x more motivating!',
+      ar: 'نظام تحفيز الألعاب:\n⚡ اكسب نقاط XP لكل إنجاز\n🎖️ مستويات وترتيب مختلف\n🏆 منافسة صحية بين الطلاب\n🎁 مكافآت وحوافز خاصة\n📊 لوحات الترتيب للتحفيز الإضافي\nيصبح التعلم أكثر تحفيزاً بمقدار ۳ أضعاف!'
     }
   };
 
@@ -434,6 +698,43 @@ Important rules:
       return this.FAQ_RESPONSES.callern[language];
     }
 
+    // LinguaQuest keywords
+    if (lowerMessage.includes('lingua') || lowerMessage.includes('لینگوا') ||
+        lowerMessage.includes('بازی') || lowerMessage.includes('game') ||
+        lowerMessage.includes('لعب') || lowerMessage.includes('quest')) {
+      return this.FAQ_RESPONSES.linguaquest[language];
+    }
+
+    // Daily Challenges keywords
+    if (lowerMessage.includes('چالش') || lowerMessage.includes('challenge') ||
+        lowerMessage.includes('روزانه') || lowerMessage.includes('daily') ||
+        lowerMessage.includes('تحدي') || lowerMessage.includes('روزی')) {
+      return this.FAQ_RESPONSES.daily_challenges[language];
+    }
+
+    // Placement Test keywords
+    if (lowerMessage.includes('تست') || lowerMessage.includes('test') ||
+        lowerMessage.includes('سطح') || lowerMessage.includes('level') ||
+        lowerMessage.includes('قرار') || lowerMessage.includes('placement') ||
+        lowerMessage.includes('اختبار')) {
+      return this.FAQ_RESPONSES.placement_test[language];
+    }
+
+    // AI Supervisor keywords
+    if (lowerMessage.includes('نظارت') || lowerMessage.includes('supervisor') ||
+        lowerMessage.includes('مراقب') || lowerMessage.includes('monitor') ||
+        lowerMessage.includes('تحليل') || lowerMessage.includes('analysis')) {
+      return this.FAQ_RESPONSES.ai_supervisor[language];
+    }
+
+    // Gamification keywords
+    if (lowerMessage.includes('امتیاز') || lowerMessage.includes('xp') ||
+        lowerMessage.includes('نقطه') || lowerMessage.includes('points') ||
+        lowerMessage.includes('رتبه') || lowerMessage.includes('rank') ||
+        lowerMessage.includes('لعبة')) {
+      return this.FAQ_RESPONSES.gamification[language];
+    }
+
     // Difference between services
     if (lowerMessage.includes('تفاوت') || lowerMessage.includes('difference') ||
         lowerMessage.includes('vs') || lowerMessage.includes('بهتر')) {
@@ -479,7 +780,7 @@ Important rules:
     userMessage: string
   ): Promise<AgentResponse> {
     const systemPrompt = this.SYSTEM_PROMPT[context.language];
-    const callernKnowledge = this.CALLERN_KNOWLEDGE[context.language];
+    const platformFeatures = this.PLATFORM_FEATURES[context.language];
     
     // Build conversation history for context
     const conversationHistory = context.messages.slice(-10).map(msg => ({
@@ -495,7 +796,7 @@ Important rules:
         messages: [
           { 
             role: 'system', 
-            content: `${systemPrompt}\n\n${stageContext}\n\n📚 PLATFORM KNOWLEDGE:\n${callernKnowledge}` 
+            content: `${systemPrompt}\n\n${stageContext}\n\n${platformFeatures}` 
           },
           ...conversationHistory,
           { role: 'user', content: userMessage }

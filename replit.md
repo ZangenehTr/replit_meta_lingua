@@ -10,6 +10,7 @@ Critical requirement: Self-hosting in Iran with zero external dependencies. Must
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
 Code quality: Always avoid duplications - no duplicate code, methods, or logic. Prefer composition and reuse over duplication.
 Language preference: Default language set to Farsi (fa) for Iranian users.
+AI Sales Agent: Telegram bot must be trained on ALL platform features with attractive messaging emphasizing novelty and innovation.
 CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid duplication. NO hardcoded data, NO fake/mock data, NO non-functional buttons, always use real API calls and working e2e business logic.
 
 ## System Architecture
