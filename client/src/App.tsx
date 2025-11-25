@@ -13,6 +13,7 @@ import { SocketProvider } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
 import "./i18n"; // Initialize i18n
 import { AppLayout } from "@/components/layout/app-layout";
+import { PWAInstallPrompt, PWAUpdatePrompt, OfflineIndicator } from "@/components/pwa";
 import { RTLLayout } from "@/components/rtl-layout";
 import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 
@@ -1207,6 +1208,9 @@ function AppWithBranding() {
     <TooltipProvider>
       <Toaster />
       <Router />
+      <PWAInstallPrompt />
+      <PWAUpdatePrompt />
+      <OfflineIndicator />
     </TooltipProvider>
   );
 }
