@@ -1,53 +1,80 @@
-node_modules
-dist
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+# Dependencies
+node_modules/
+package-lock.json
+.npm
 
-# Database backups (should not be in production)
-*.sql
-
-# Development uploads and assets
-uploads/
-attached_assets/
-
-# Build artifacts
+# Build outputs
 dist/
+build/
+.next/
+dev-dist/
 
-# Log files
-*.log
-logs/
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.editorconfig
 
-# Cache directories
-.cache/
-.vite/
-.npm/
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Environment files (secrets should be set in Replit)
+# Environment
+.env
 .env.local
 .env.*.local
 
-# Screenshots and test images (development only)
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.webp
+# Testing
+coverage/
+.nyc_output/
 
-# Allow specific assets that should be deployed
-!client/src/assets/**/*.png
-!client/src/assets/**/*.jpg
-!client/src/assets/**/*.jpeg
-!client/src/assets/**/*.gif
-!client/src/assets/**/*.webp
-!public/**/*.png
-!public/**/*.jpg
-!public/**/*.jpeg
-!public/**/*.gif
-!public/**/*.webp
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime
+pid/
+*.pid
+*.seed
+*.pid.lock
+pids/
+
+# Caches
+.cache/
+.eslintcache
+.parcel-cache
+.turbo/
+.node_cache
+tsconfig.tsbuildinfo
+
+# Temporary files
+.temp/
+tmp/
+temp/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Development tools
+.prettierignore
+debug.log
+*.swp
+
+# Docker
+.dockerignore
+Dockerfile.*.build
+
+# Project specific
+attached_assets/*/
+!attached_assets/generated_images/
+!attached_assets/generated_videos/
+!attached_assets/stock_images/
