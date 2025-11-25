@@ -1460,6 +1460,13 @@ export default function MSTPage() {
   if (testPhase === "intro") {
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-4xl" style={mstStyle}>
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4 font-medium transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </button>
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">

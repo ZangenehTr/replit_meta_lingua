@@ -606,6 +606,13 @@ export default function PlacementTestPage() {
   const renderIntroScreen = () => (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-4xl mx-auto pt-8">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-4 font-medium transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </button>
         <Card className="border-0 shadow-xl">
           <CardHeader className="text-center pb-8">
             <div className="mx-auto mb-4 p-4 bg-indigo-100 rounded-full w-fit">
