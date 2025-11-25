@@ -4,7 +4,7 @@
 
 export interface LeadScraperConfig {
   name: string;
-  platform: 'instagram' | 'telegram' | 'linkedin' | 'directory' | 'website' | 'whatsapp' | 'pinterest';
+  platform: 'instagram' | 'telegram' | 'linkedin' | 'directory' | 'website' | 'whatsapp' | 'pinterest' | 'twitter' | 'youtube';
   baseUrl: string;
   searchUrl?: string;
   selectors: {
@@ -20,6 +20,8 @@ export interface LeadScraperConfig {
     posts?: string;
     category?: string;
     contactButton?: string;
+    position?: string;
+    description?: string;
   };
   requiresLogin?: boolean;
   customLogic?: (page: any, query: string) => Promise<any[]>;
@@ -342,7 +344,177 @@ export function calculateQualificationScore(lead: any): number {
 }
 
 /**
- * All lead scraper configurations
+ * LinkedIn scraper config (public profiles only)
+ */
+export const LINKEDIN_CONFIG: LeadScraperConfig = {
+  name: 'LinkedIn',
+  platform: 'linkedin',
+  baseUrl: 'https://www.linkedin.com',
+  searchUrl: 'https://www.linkedin.com/search/results/people/?keywords={query}',
+  selectors: {
+    profileCard: '.entity-result__item',
+    name: '.entity-result__title-text',
+    bio: '.entity-result__summary',
+    location: '.entity-result__secondary-subtitle',
+    position: '.entity-result__primary-subtitle'
+  },
+  requiresLogin: true,
+  customLogic: async (page, query) => {
+    const leads: any[] = [];
+    
+    try {
+      // Wait for search results
+      await page.waitForSelector('.entity-result__item', { timeout: 15000 });
+      
+      // Extract profile data
+      const profiles = await page.$$eval('.entity-result__item', (elements: Element[]) => {
+        return elements.slice(0, 20).map((el: Element) => {
+          const nameEl = el.querySelector('.entity-result__title-text a');
+          const bioEl = el.querySelector('.entity-result__summary');
+          const locationEl = el.querySelector('.entity-result__secondary-subtitle');
+          const positionEl = el.querySelector('.entity-result__primary-subtitle');
+          
+          return {
+            name: nameEl?.textContent?.trim(),
+            profileUrl: (nameEl as HTMLAnchorElement)?.href,
+            bio: bioEl?.textContent?.trim(),
+            location: locationEl?.textContent?.trim(),
+            position: positionEl?.textContent?.trim()
+          };
+        }).filter(p => p.name);
+      });
+      
+      for (const profile of profiles) {
+        leads.push({
+          ...profile,
+          source: 'linkedin',
+          platform: 'linkedin',
+          interests: [query]
+        });
+      }
+    } catch (error) {
+      console.error('LinkedIn scraping error:', error);
+    }
+    
+    return leads;
+  }
+};
+
+/**
+ * Twitter/X scraper config (public profiles only)
+ */
+export const TWITTER_CONFIG: LeadScraperConfig = {
+  name: 'Twitter/X',
+  platform: 'website',
+  baseUrl: 'https://twitter.com',
+  searchUrl: 'https://twitter.com/search?q={query}&f=user',
+  selectors: {
+    profileCard: '[data-testid="UserCell"]',
+    name: '[data-testid="UserName"]',
+    username: '[data-testid="UserName"] span',
+    bio: '[data-testid="UserDescription"]'
+  },
+  customLogic: async (page, query) => {
+    const leads: any[] = [];
+    
+    try {
+      // Wait for user results
+      await page.waitForSelector('[data-testid="UserCell"]', { timeout: 15000 });
+      
+      // Scroll to load more
+      await page.evaluate(() => window.scrollTo(0, 500));
+      await page.waitForTimeout(1500);
+      
+      // Extract user data
+      const users = await page.$$eval('[data-testid="UserCell"]', (elements: Element[]) => {
+        return elements.slice(0, 25).map((el: Element) => {
+          const nameEl = el.querySelector('[data-testid="UserName"]');
+          const bioEl = el.querySelector('[data-testid="UserDescription"]');
+          const linkEl = el.querySelector('a[href*="/"]') as HTMLAnchorElement;
+          
+          return {
+            name: nameEl?.textContent?.trim(),
+            bio: bioEl?.textContent?.trim(),
+            username: linkEl?.href?.split('/').pop(),
+            profileUrl: linkEl?.href
+          };
+        }).filter(u => u.username);
+      });
+      
+      for (const user of users) {
+        leads.push({
+          ...user,
+          source: 'twitter',
+          platform: 'twitter',
+          interests: [query]
+        });
+      }
+    } catch (error) {
+      console.error('Twitter scraping error:', error);
+    }
+    
+    return leads;
+  }
+};
+
+/**
+ * YouTube channel scraper config
+ */
+export const YOUTUBE_CONFIG: LeadScraperConfig = {
+  name: 'YouTube',
+  platform: 'website',
+  baseUrl: 'https://www.youtube.com',
+  searchUrl: 'https://www.youtube.com/results?search_query={query}&sp=EgIQAg%253D%253D',
+  selectors: {
+    profileCard: 'ytd-channel-renderer',
+    name: '#channel-title',
+    bio: '#description-text',
+    followers: '#subscribers'
+  },
+  customLogic: async (page, query) => {
+    const leads: any[] = [];
+    
+    try {
+      // Wait for channel results (filter by channels)
+      await page.waitForSelector('ytd-channel-renderer', { timeout: 15000 });
+      
+      // Extract channel data
+      const channels = await page.$$eval('ytd-channel-renderer', (elements: Element[]) => {
+        return elements.slice(0, 15).map((el: Element) => {
+          const nameEl = el.querySelector('#channel-title a');
+          const descEl = el.querySelector('#description-text');
+          const subsEl = el.querySelector('#subscribers');
+          const linkEl = nameEl as HTMLAnchorElement;
+          
+          return {
+            name: nameEl?.textContent?.trim(),
+            bio: descEl?.textContent?.trim(),
+            followers: subsEl?.textContent?.trim(),
+            profileUrl: linkEl?.href,
+            username: linkEl?.href?.split('/').pop()
+          };
+        }).filter(c => c.name);
+      });
+      
+      for (const channel of channels) {
+        // Try to extract email from channel about page
+        leads.push({
+          ...channel,
+          source: 'youtube',
+          platform: 'youtube',
+          interests: [query]
+        });
+      }
+    } catch (error) {
+      console.error('YouTube scraping error:', error);
+    }
+    
+    return leads;
+  }
+};
+
+/**
+ * All lead scraper configurations - 9 platforms
  */
 export const LEAD_SCRAPER_CONFIGS: Record<string, LeadScraperConfig> = {
   instagram: INSTAGRAM_CONFIG,
@@ -350,7 +522,10 @@ export const LEAD_SCRAPER_CONFIGS: Record<string, LeadScraperConfig> = {
   iranian_directory: IRANIAN_DIRECTORY_CONFIG,
   language_directory: LANGUAGE_INSTITUTE_DIRECTORY,
   whatsapp_business: WHATSAPP_BUSINESS_CONFIG,
-  pinterest: PINTEREST_CONFIG
+  pinterest: PINTEREST_CONFIG,
+  linkedin: LINKEDIN_CONFIG,
+  twitter: TWITTER_CONFIG,
+  youtube: YOUTUBE_CONFIG
 };
 
 /**
