@@ -82,6 +82,9 @@ export class TelegramBotService {
   private botToken: string;
   private baseUrl: string;
   private isConfigured: boolean = false;
+  private lastUpdateId: number = 0;
+  private pollingActive: boolean = false;
+  private pollingInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.botToken = process.env.TELEGRAM_BOT_TOKEN || '';
@@ -92,6 +95,89 @@ export class TelegramBotService {
       console.warn('⚠️ Telegram Bot Token not configured. Set TELEGRAM_BOT_TOKEN environment variable.');
     } else {
       console.log('✅ Telegram Bot Service initialized');
+      // Start polling in background
+      this.startPolling();
+    }
+  }
+
+  /**
+   * Start polling for messages
+   */
+  private async startPolling(): Promise<void> {
+    if (this.pollingActive) return;
+    
+    this.pollingActive = true;
+    console.log('🔄 Starting Telegram bot polling mode...');
+    
+    // Poll immediately first
+    await this.pollUpdates();
+    
+    // Then set interval for continued polling
+    this.pollingInterval = setInterval(() => {
+      this.pollUpdates().catch(error => {
+        console.error('❌ Polling error:', error);
+      });
+    }, 1000); // Poll every 1 second
+  }
+
+  /**
+   * Poll for new updates from Telegram
+   */
+  private async pollUpdates(): Promise<void> {
+    if (!this.isConfigured) return;
+
+    try {
+      const response = await fetch(`${this.baseUrl}/getUpdates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          offset: this.lastUpdateId + 1,
+          timeout: 0, // Don't long-poll, return immediately
+          allowed_updates: ['message', 'callback_query']
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.ok && result.result && result.result.length > 0) {
+        console.log(`📨 Received ${result.result.length} Telegram updates`);
+        
+        for (const update of result.result) {
+          // Update the offset
+          if (update.update_id > this.lastUpdateId) {
+            this.lastUpdateId = update.update_id;
+          }
+          
+          // Process update
+          try {
+            console.log(`🔄 Processing update ${update.update_id}...`);
+            await this.processUpdate(update);
+            console.log(`✅ Successfully processed update ${update.update_id}`);
+          } catch (error) {
+            console.error(`❌ Error processing update ${update.update_id}:`, {
+              message: error instanceof Error ? error.message : String(error),
+              stack: error instanceof Error ? error.stack : undefined
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Polling error:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+    }
+  }
+
+  /**
+   * Stop polling
+   */
+  stopPolling(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+      this.pollingActive = false;
+      console.log('⏹️ Telegram polling stopped');
     }
   }
 
