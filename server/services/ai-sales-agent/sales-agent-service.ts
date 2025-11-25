@@ -594,40 +594,51 @@ Important rules:
    */
   private async saveLeadData(context: ConversationContext): Promise<void> {
     try {
-      const { leadData, sessionId, platform, language } = context;
+      const { leadData, platform, language } = context;
 
-      // Check if lead already exists
+      // Only save if we have a name and email
+      if (!leadData.name || !leadData.email) {
+        return;
+      }
+
+      // Check if lead already exists by email
       const existingLead = await db.select()
         .from(guestLeads)
-        .where(eq(guestLeads.sessionId, sessionId))
+        .where(eq(guestLeads.email, leadData.email))
         .limit(1);
+
+      // Build notes with additional context
+      const notes = JSON.stringify({
+        language,
+        stage: context.stage,
+        score: leadData.score,
+        targetLanguage: leadData.targetLanguage,
+        currentLevel: leadData.currentLevel,
+        preferredSchedule: leadData.preferredSchedule,
+        budget: leadData.budget,
+        interests: leadData.interests,
+        lastMessage: context.messages[context.messages.length - 1]?.content || ''
+      });
 
       if (existingLead.length > 0) {
         // Update existing lead
         await db.update(guestLeads)
           .set({
-            phone: leadData.phone,
-            email: leadData.email,
-            preferredLanguage: language,
-            leadScore: leadData.score,
-            currentStage: context.stage,
-            conversationHistory: JSON.stringify(context.messages.slice(-20)),
+            phone: leadData.phone || existingLead[0].phone,
+            status: 'contacted',
+            notes,
             updatedAt: new Date()
           })
           .where(eq(guestLeads.id, existingLead[0].id));
       } else {
         // Create new lead
         await db.insert(guestLeads).values({
-          sessionId,
-          source: platform,
-          phone: leadData.phone,
+          name: leadData.name,
           email: leadData.email,
-          preferredLanguage: language,
-          leadScore: leadData.score,
-          currentStage: context.stage,
-          conversationHistory: JSON.stringify(context.messages.slice(-20)),
-          createdAt: new Date(),
-          updatedAt: new Date()
+          phone: leadData.phone,
+          source: platform === 'telegram' ? 'telegram' : platform === 'whatsapp' ? 'whatsapp' : 'web',
+          status: 'new',
+          notes
         });
       }
     } catch (error) {

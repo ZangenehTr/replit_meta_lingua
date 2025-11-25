@@ -22,20 +22,41 @@ export function registerAISalesAgentRoutes(app: Express) {
     try {
       const update = req.body;
       
-      if (!update || !update.update_id) {
-        return res.status(400).json({ success: false, error: 'Invalid update' });
-      }
-
-      // Process update asynchronously
-      telegramBot.processUpdate(update).catch(error => {
-        console.error('Telegram webhook processing error:', error);
+      console.log('📨 Telegram webhook received:', {
+        updateId: update?.update_id,
+        hasMessage: !!update?.message,
+        hasCallback: !!update?.callback_query
       });
 
-      // Always respond quickly to Telegram
-      res.json({ success: true });
+      if (!update || !update.update_id) {
+        console.warn('⚠️ Invalid Telegram update received');
+        return res.status(200).json({ success: false, error: 'Invalid update' });
+      }
+
+      // Always respond immediately to Telegram (within 30 seconds)
+      res.status(200).json({ success: true });
+
+      // Process update asynchronously in background
+      setImmediate(async () => {
+        try {
+          console.log('🔄 Processing Telegram update:', update.update_id);
+          await telegramBot.processUpdate(update);
+          console.log('✅ Telegram update processed successfully:', update.update_id);
+        } catch (error) {
+          console.error('❌ Telegram webhook processing error:', {
+            updateId: update.update_id,
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          });
+        }
+      });
     } catch (error) {
-      console.error('Telegram webhook error:', error);
-      res.status(500).json({ success: false, error: 'Webhook processing failed' });
+      console.error('❌ Telegram webhook handler error:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      // Return 200 OK to prevent Telegram from retrying
+      res.status(200).json({ success: false });
     }
   });
 
