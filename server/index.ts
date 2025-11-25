@@ -619,15 +619,8 @@ server.listen({
         }
       } catch (error) {
         console.error('❌ Isabel VoIP initialization error:', error.message);
-        
-        if (process.env.NODE_ENV === 'production') {
-          console.error('');
-          console.error('❌ FATAL: Cannot start in production with Isabel VoIP enabled but unreachable');
-          console.error('Either fix the VoIP server connection or set ISABEL_VOIP_ENABLED=false');
-          process.exit(1);
-        }
-        
-        console.log('   VoIP calls will use simulation mode until configured via admin panel');
+        console.warn('   ⚠️  VoIP is not available. Using simulation mode for VoIP features.');
+        console.warn('   To enable VoIP in production, ensure ISABEL_VOIP_SERVER is reachable and credentials are correct.');
       }
     } else {
       console.log('ℹ️  Isabel VoIP not configured - set ISABEL_VOIP_ENABLED=true and ISABEL_VOIP_SERVER to enable');
