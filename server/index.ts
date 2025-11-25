@@ -510,6 +510,11 @@ app.use((req, res, next) => {
   app.use('/api/auth', phoneAuthRouter);
   console.log('✅ Phone-First Authentication routes registered');
   
+  // Register Shetab Payment routes
+  const shetabPaymentRouter = (await import('./routes/shetab-payment-routes.js')).default;
+  app.use('/api/payment', shetabPaymentRouter);
+  console.log('✅ Shetab Payment Gateway routes registered');
+  
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);

@@ -28,6 +28,23 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Session Management**: Automatic session creation with 24-hour access tokens, 7-day refresh tokens
 - **Phone Field**: Users now have `isPhoneVerified` flag and phone number stored in profile
 
+### Shetab Payment Integration (November 25, 2025)
+- **Iranian Payment Gateway**: Complete integration with Shetab (Iran's national payment network)
+- **6 Payment Endpoints** (at `/api/payment/shetab/`):
+  1. `POST /shetab/initiate` - Initiate payment request
+  2. `POST /shetab/callback` - Receive payment confirmation from Shetab
+  3. `GET /shetab/status` - Check gateway configuration status
+  4. `GET /shetab/transaction/:transactionId` - Get payment status
+  5. `POST /shetab/refund` - Request refund for completed payment
+  6. `GET /shetab/history` - Get user's payment history
+- **Features**: Payment idempotency, transaction tracking, refund support, HMAC signature verification
+- **Security**: Cryptographic signature verification, rate limiting, transaction deduplication
+- **Database**: Uses `walletTransactions`, `paymentTransactions`, and `paymentIdempotency` tables
+
+### WebRTC & Deployment Documentation (November 25, 2025)
+- **DEPLOYMENT_GUIDE.md** - Complete Iranian self-hosting guide (PostgreSQL, Ollama, Kavenegar, Isabel VoIP setup)
+- **WEBRTC_SETUP.md** - CallerN video infrastructure guide (coturn TURN/STUN server setup, performance tuning)
+
 ## System Architecture
 
 ### Frontend
