@@ -224,7 +224,10 @@ app.use((req, res, next) => {
 
 // Create HTTP server IMMEDIATELY
 const server = createServer(app);
-const port = 5000;
+
+// CRITICAL: Use PORT environment variable for Autoscale deployment (43265)
+// Fall back to 5000 for local development
+const port = parseInt(process.env.PORT || '5000', 10);
 
 // CRITICAL: Open port on app startup - BEFORE any async initialization
 // This must be first to prevent deployment timeout
@@ -233,7 +236,7 @@ server.listen({
   host: "0.0.0.0",
   reusePort: true,
 }, () => {
-  log(`serving on port ${port}`);
+  log(`🚀 Server listening on port ${port} (${process.env.NODE_ENV || 'development'} mode)`);
 });
 
 // ============================================
@@ -641,4 +644,21 @@ server.listen({
       console.error('⚠️  Failed to initialize SMS Reminder Worker:', error);
     }
   })();
-})();
+})().catch((error) => {
+  console.error('❌ Background initialization error:', error);
+  // Don't exit - background services are optional
+});
+
+// Global unhandled error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit - let background tasks fail gracefully
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Only exit if it's a critical error during startup
+  if (!server.listening) {
+    process.exit(1);
+  }
+});
