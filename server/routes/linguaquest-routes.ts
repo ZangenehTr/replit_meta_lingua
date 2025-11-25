@@ -834,6 +834,190 @@ export function registerLinguaQuestRoutes(app: Express) {
     }
   });
 
+  // ====================================================================
+  // AI-POWERED LESSON GENERATION (Admin/Teacher only)
+  // ====================================================================
+
+  /**
+   * Generate a new AI-powered lesson
+   * POST /api/linguaquest/admin/generate-lesson
+   * Supports both Ollama (Iranian self-hosting) and OpenAI (international)
+   */
+  app.post('/api/linguaquest/admin/generate-lesson', async (req, res) => {
+    try {
+      // Import the AI lesson generator dynamically to avoid circular dependencies
+      const { aiLessonGenerator } = await import('../services/ai-lesson-generator');
+      
+      const {
+        topic,
+        targetLanguage = 'en',
+        nativeLanguage = 'fa',
+        difficulty = 'beginner',
+        lessonType = 'vocabulary',
+        duration = 30,
+        includeArabic = true,
+        includePersian = true,
+        customVocabulary,
+        focusAreas
+      } = req.body;
+
+      if (!topic) {
+        return res.status(400).json({
+          success: false,
+          error: 'Topic is required'
+        });
+      }
+
+      console.log(`🎓 AI Lesson Generation requested: "${topic}" (${difficulty} ${lessonType})`);
+
+      const lesson = await aiLessonGenerator.generateLesson({
+        topic,
+        targetLanguage,
+        nativeLanguage,
+        difficulty,
+        lessonType,
+        duration,
+        includeArabic,
+        includePersian,
+        customVocabulary,
+        focusAreas
+      });
+
+      res.json({
+        success: true,
+        lesson,
+        message: 'Lesson generated successfully'
+      });
+    } catch (error) {
+      console.error('Error generating AI lesson:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate lesson'
+      });
+    }
+  });
+
+  /**
+   * Save generated lesson to database
+   * POST /api/linguaquest/admin/save-lesson
+   */
+  app.post('/api/linguaquest/admin/save-lesson', async (req, res) => {
+    try {
+      const lessonData = req.body;
+
+      // Transform generated lesson to database format
+      const dbLesson = {
+        title: lessonData.title,
+        titleFa: lessonData.titleFa,
+        titleAr: lessonData.titleAr,
+        description: lessonData.description,
+        descriptionFa: lessonData.descriptionFa,
+        descriptionAr: lessonData.descriptionAr,
+        language: lessonData.language,
+        difficulty: lessonData.difficulty,
+        lessonType: lessonData.lessonType,
+        sceneType: lessonData.sceneType,
+        sceneData: lessonData.sceneData,
+        interactionConfig: {
+          gameSteps: lessonData.gameSteps,
+          completionRequirements: { minScore: 70 }
+        },
+        vocabularyWords: lessonData.vocabularyWords?.map((w: any) => w.word) || [],
+        grammarTopics: lessonData.grammarTopics || [],
+        exampleSentences: lessonData.exampleSentences?.map((s: any) => s.english) || [],
+        estimatedDurationMinutes: lessonData.estimatedDurationMinutes,
+        xpReward: lessonData.xpReward,
+        threeDContent: lessonData.threeDContent,
+        isPremium: false,
+        isActive: true,
+        orderIndex: 0
+      };
+
+      const savedLesson = await linguaQuestService.createLesson(dbLesson);
+
+      res.json({
+        success: true,
+        lessonId: savedLesson.id,
+        message: 'Lesson saved successfully'
+      });
+    } catch (error) {
+      console.error('Error saving lesson:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to save lesson'
+      });
+    }
+  });
+
+  /**
+   * Get AI provider status
+   * GET /api/linguaquest/admin/ai-status
+   */
+  app.get('/api/linguaquest/admin/ai-status', async (req, res) => {
+    try {
+      const { aiLessonGenerator } = await import('../services/ai-lesson-generator');
+      const status = await aiLessonGenerator.getProviderStatus();
+
+      res.json({
+        success: true,
+        aiProvider: status.primary || 'none',
+        fallbackProvider: status.fallback || 'none',
+        message: `AI Provider: ${status.primary || 'Not configured'}`
+      });
+    } catch (error) {
+      console.error('Error getting AI status:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get AI status'
+      });
+    }
+  });
+
+  /**
+   * Batch generate lessons for a topic
+   * POST /api/linguaquest/admin/batch-generate
+   */
+  app.post('/api/linguaquest/admin/batch-generate', async (req, res) => {
+    try {
+      const { aiLessonGenerator } = await import('../services/ai-lesson-generator');
+      const { topics, difficulty = 'beginner', lessonType = 'vocabulary' } = req.body;
+
+      if (!topics || !Array.isArray(topics) || topics.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Topics array is required'
+        });
+      }
+
+      const requests = topics.map((topic: string) => ({
+        topic,
+        targetLanguage: 'en',
+        nativeLanguage: 'fa',
+        difficulty,
+        lessonType,
+        duration: 30,
+        includeArabic: true,
+        includePersian: true
+      }));
+
+      const lessons = await aiLessonGenerator.generateLessonBatch(requests);
+
+      res.json({
+        success: true,
+        lessons,
+        generated: lessons.length,
+        requested: topics.length,
+        message: `Generated ${lessons.length} out of ${topics.length} lessons`
+      });
+    } catch (error) {
+      console.error('Error batch generating lessons:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to batch generate lessons'
+      });
+    }
+  });
+
   /**
    * Health check endpoint for LinguaQuest service
    * GET /api/linguaquest/health
@@ -852,7 +1036,8 @@ export function registerLinguaQuestRoutes(app: Express) {
         'Conversion Tracking',
         'Analytics',
         'Leaderboards',
-        'Lesson Feedback & Ratings'
+        'Lesson Feedback & Ratings',
+        'AI-Powered Lesson Generation (Ollama/OpenAI)'
       ]
     });
   });

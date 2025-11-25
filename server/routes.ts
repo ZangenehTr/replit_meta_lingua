@@ -21,6 +21,7 @@ import { registerGlobalLexiRoutes } from "./routes/global-lexi-routes";
 import { setupBookEcommerceRoutes } from "./routes/book-ecommerce-routes";
 import { setupContentBankRoutes } from "./routes/content-bank-routes";
 import { registerLinguaQuestRoutes } from "./routes/linguaquest-routes";
+import { registerAISalesAgentRoutes } from "./routes/ai-sales-agent-routes";
 import linguaquestAudioRoutes from "./routes/linguaquest-audio-routes";
 import searchRoutes from "./routes/search-routes";
 import visitorChatRoutes from "./routes/visitor-chat-routes";
@@ -23767,6 +23768,9 @@ Meta Lingua Academy`;
 
   // LinguaQuest Free Learning Platform Routes
   registerLinguaQuestRoutes(app);
+
+  // AI Sales Agent Routes (24/7 Telegram/WhatsApp Bot)
+  registerAISalesAgentRoutes(app);
   
   // LinguaQuest Audio Generation Routes
   app.use('/api/linguaquest/audio', linguaquestAudioRoutes);
