@@ -768,5 +768,70 @@
     "weeks": "هفته",
     "readyToStart": "آماده شروع هستید؟",
     "readyToStartDesc": "به زبان‌آموزان موفق ما بپیوندید و امروز سفر یادگیری خود را شروع کنید"
+  },
+  "reviews": {
+    "title": "نظرات",
+    "leaveReview": "ثبت نظر",
+    "rateTeacher": "امتیاز به معلم",
+    "rateYourTeacher": "امتیاز به معلم شما",
+    "submitReview": "ثبت نظر",
+    "submitting": "در حال ارسال...",
+    "reviewSubmitted": "نظر ثبت شد",
+    "reviewPendingApproval": "نظر شما پس از تأیید مدیر نمایش داده می‌شود.",
+    "shareExperience": "تجربه خود را به اشتراک بگذارید تا به دیگران کمک کنید",
+    "yourReviewEnglish": "نظر شما (انگلیسی)",
+    "yourReviewFarsi": "نظر شما (فارسی)",
+    "reviewPlaceholder": "تجربه خود با این معلم را به اشتراک بگذارید...",
+    "postAnonymously": "ارسال ناشناس",
+    "ratingLabels": {
+      "excellent": "عالی!",
+      "veryGood": "خیلی خوب",
+      "good": "خوب",
+      "fair": "متوسط",
+      "poor": "ضعیف"
+    },
+    "moderation": {
+      "title": "مدیریت نظرات",
+      "description": "بررسی و تأیید نظرات دانشجویان برای معلمان",
+      "pending": "در انتظار",
+      "approved": "تأیید شده",
+      "rejected": "رد شده",
+      "approve": "تأیید",
+      "reject": "رد",
+      "noPending": "نظر در انتظاری وجود ندارد",
+      "allReviewsApproved": "همه نظرات تأیید یا رد شده‌اند"
+    }
+  },
+  "widgets": {
+    "topTeachers": {
+      "title": "بهترین معلمان",
+      "subtitle": "با مربیان برتر ما آشنا شوید",
+      "rating": "امتیاز",
+      "reviews": "نظر",
+      "sessions": "جلسه"
+    },
+    "recentReviews": {
+      "title": "نظرات اخیر",
+      "subtitle": "دانشجویان ما چه می‌گویند"
+    },
+    "upcomingEvents": {
+      "title": "رویدادهای آینده",
+      "subtitle": "این فرصت‌های یادگیری را از دست ندهید",
+      "noEvents": "رویدادی در آینده نیست",
+      "registerNow": "ثبت‌نام کنید"
+    },
+    "newClasses": {
+      "title": "کلاس‌های جدید",
+      "subtitle": "دوره‌های تازه اضافه شده",
+      "enrollNow": "ثبت‌نام کنید",
+      "startingSoon": "به زودی شروع می‌شود"
+    },
+    "bestStudent": {
+      "title": "دانشجوی ماه",
+      "subtitle": "تجلیل از بهترین عملکرد",
+      "totalXP": "امتیاز کل",
+      "streak": "روز پیاپی",
+      "lessonsCompleted": "درس"
+    }
   }
 }

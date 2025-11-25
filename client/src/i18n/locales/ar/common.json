@@ -601,5 +601,70 @@
       "title": "هل أنت مستعد لتحويل مهاراتك اللغوية؟",
       "description": "انضم إلى آلاف المتعلمين الناجحين. ابدأ تجربتك المجانية اليوم واختبر مستقبل تعلم اللغة."
     }
+  },
+  "reviews": {
+    "title": "المراجعات",
+    "leaveReview": "اترك مراجعة",
+    "rateTeacher": "قيم المعلم",
+    "rateYourTeacher": "قيم معلمك",
+    "submitReview": "إرسال المراجعة",
+    "submitting": "جاري الإرسال...",
+    "reviewSubmitted": "تم إرسال المراجعة",
+    "reviewPendingApproval": "ستكون مراجعتك مرئية بعد موافقة المسؤول.",
+    "shareExperience": "شارك تجربتك لمساعدة الطلاب الآخرين",
+    "yourReviewEnglish": "مراجعتك (الإنجليزية)",
+    "yourReviewFarsi": "مراجعتك (الفارسية)",
+    "reviewPlaceholder": "شارك تجربتك مع هذا المعلم...",
+    "postAnonymously": "نشر بشكل مجهول",
+    "ratingLabels": {
+      "excellent": "ممتاز!",
+      "veryGood": "جيد جداً",
+      "good": "جيد",
+      "fair": "مقبول",
+      "poor": "ضعيف"
+    },
+    "moderation": {
+      "title": "إدارة المراجعات",
+      "description": "مراجعة والموافقة على مراجعات الطلاب للمعلمين",
+      "pending": "قيد الانتظار",
+      "approved": "موافق عليها",
+      "rejected": "مرفوضة",
+      "approve": "موافقة",
+      "reject": "رفض",
+      "noPending": "لا توجد مراجعات قيد الانتظار",
+      "allReviewsApproved": "تمت الموافقة أو الرفض على جميع المراجعات"
+    }
+  },
+  "widgets": {
+    "topTeachers": {
+      "title": "أفضل المعلمين",
+      "subtitle": "تعرف على مدربينا الأعلى تقييماً",
+      "rating": "التقييم",
+      "reviews": "مراجعة",
+      "sessions": "جلسة"
+    },
+    "recentReviews": {
+      "title": "المراجعات الأخيرة",
+      "subtitle": "ماذا يقول طلابنا"
+    },
+    "upcomingEvents": {
+      "title": "الفعاليات القادمة",
+      "subtitle": "لا تفوت فرص التعلم هذه",
+      "noEvents": "لا توجد فعاليات قادمة",
+      "registerNow": "سجل الآن"
+    },
+    "newClasses": {
+      "title": "فصول جديدة",
+      "subtitle": "دورات تمت إضافتها حديثاً",
+      "enrollNow": "سجل الآن",
+      "startingSoon": "يبدأ قريباً"
+    },
+    "bestStudent": {
+      "title": "طالب الشهر",
+      "subtitle": "احتفال بأفضل أداء",
+      "totalXP": "إجمالي النقاط",
+      "streak": "أيام متتالية",
+      "lessonsCompleted": "دروس"
+    }
   }
 }

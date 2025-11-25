@@ -55,6 +55,7 @@ import SMSSettingsPage from "@/pages/admin/sms-settings";
 import SMSTestPage from "@/pages/admin/sms-test";
 import CampaignManagementPage from "@/pages/admin/campaign-management";
 import WebsiteBuilderPage from "@/pages/admin/website-builder";
+import ReviewModerationPage from "@/pages/admin/review-moderation";
 import AdminLeadsPage from "@/pages/admin/leads";
 import AdminCampaignsPage from "@/pages/admin/campaigns";
 import AdminProspectsPage from "@/pages/admin/prospects";
@@ -423,6 +424,11 @@ function Router() {
       <Route path="/admin/website-builder">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <WebsiteBuilderPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/review-moderation">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <ReviewModerationPage />
         </RoleProtectedRoute>
       </Route>
       

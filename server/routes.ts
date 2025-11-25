@@ -27591,6 +27591,278 @@ Meta Lingua Academy`;
     }
   });
 
+  // ========== TEACHER REVIEWS API ==========
+  
+  // Submit a teacher review (students only, after completed sessions)
+  app.post("/api/reviews", authenticateToken, async (req: any, res) => {
+    try {
+      const { teacherId, rating, reviewText, reviewTextFa, reviewTextAr, sessionId, isAnonymous } = req.body;
+      
+      if (!teacherId || !rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ 
+          error: "Invalid request", 
+          message: "Teacher ID and rating (1-5) are required" 
+        });
+      }
+      
+      const review = await storage.createTeacherReview({
+        teacherId,
+        studentId: req.user.userId,
+        rating,
+        reviewText,
+        reviewTextFa,
+        reviewTextAr,
+        sessionId: sessionId || null,
+        isAnonymous: isAnonymous || false
+      });
+      
+      res.status(201).json({
+        message: "Review submitted successfully. It will be visible after admin approval.",
+        messageFa: "نظر شما با موفقیت ثبت شد. پس از تأیید مدیر نمایش داده می‌شود.",
+        messageAr: "تم إرسال المراجعة بنجاح. ستكون مرئية بعد موافقة المسؤول.",
+        review
+      });
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      res.status(500).json({ error: "Failed to submit review" });
+    }
+  });
+  
+  // Get approved reviews for a teacher (public)
+  app.get("/api/reviews/teacher/:teacherId", async (req, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const reviews = await storage.getApprovedTeacherReviews(teacherId);
+      
+      res.json(reviews);
+    } catch (error) {
+      console.error('Error fetching teacher reviews:', error);
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+  
+  // Get all reviews for admin moderation
+  app.get("/api/admin/reviews", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { status } = req.query;
+      const reviews = await storage.getAllTeacherReviews(status as string || undefined);
+      
+      res.json(reviews);
+    } catch (error) {
+      console.error('Error fetching all reviews:', error);
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+  
+  // Approve or reject a review (admin only)
+  app.patch("/api/admin/reviews/:id/status", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const reviewId = parseInt(req.params.id);
+      const { status, rejectionReason } = req.body;
+      
+      if (!['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
+      }
+      
+      const review = await storage.updateTeacherReviewStatus(
+        reviewId,
+        status,
+        req.user.userId,
+        rejectionReason
+      );
+      
+      if (!review) {
+        return res.status(404).json({ error: "Review not found" });
+      }
+      
+      res.json({ 
+        message: `Review ${status} successfully`,
+        review 
+      });
+    } catch (error) {
+      console.error('Error updating review status:', error);
+      res.status(500).json({ error: "Failed to update review status" });
+    }
+  });
+  
+  // Get recent approved reviews for widget (public)
+  app.get("/api/public/reviews/recent", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const reviews = await storage.getRecentApprovedReviews(limit);
+      
+      res.json(reviews);
+    } catch (error) {
+      console.error('Error fetching recent reviews:', error);
+      res.status(500).json({ error: "Failed to fetch recent reviews" });
+    }
+  });
+  
+  // ========== TEACHER INTRO VIDEO API ==========
+  
+  // Update teacher intro video (teacher or admin only)
+  app.patch("/api/teachers/:id/intro-video", authenticateToken, async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.id);
+      const { introVideoUrl } = req.body;
+      
+      // Only the teacher themselves or an admin can update
+      const isAdmin = ['Admin'].includes(req.user.role);
+      const isTeacher = req.user.userId === teacherId && ['Teacher', 'Instructor'].includes(req.user.role);
+      
+      if (!isAdmin && !isTeacher) {
+        return res.status(403).json({ 
+          error: "Forbidden",
+          message: "Only the teacher or an admin can update the intro video"
+        });
+      }
+      
+      const updatedUser = await storage.updateTeacherIntroVideo(teacherId, introVideoUrl);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Teacher not found" });
+      }
+      
+      res.json({
+        message: "Intro video updated successfully",
+        messageFa: "ویدیو معرفی با موفقیت به‌روزرسانی شد",
+        introVideoUrl: updatedUser.introVideoUrl
+      });
+    } catch (error) {
+      console.error('Error updating intro video:', error);
+      res.status(500).json({ error: "Failed to update intro video" });
+    }
+  });
+  
+  // Get teacher profile with intro video (public)
+  app.get("/api/public/teachers/:id", async (req, res) => {
+    try {
+      const teacherId = parseInt(req.params.id);
+      const teacher = await storage.getTeacherPublicProfile(teacherId);
+      
+      if (!teacher) {
+        return res.status(404).json({ error: "Teacher not found" });
+      }
+      
+      res.json(teacher);
+    } catch (error) {
+      console.error('Error fetching teacher profile:', error);
+      res.status(500).json({ error: "Failed to fetch teacher profile" });
+    }
+  });
+
+  // ========== INSTITUTE EVENTS API ==========
+  
+  // Get upcoming events (public)
+  app.get("/api/public/events/upcoming", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const events = await storage.getUpcomingEvents(limit);
+      
+      res.json(events);
+    } catch (error) {
+      console.error('Error fetching upcoming events:', error);
+      res.status(500).json({ error: "Failed to fetch upcoming events" });
+    }
+  });
+  
+  // Get all events (admin)
+  app.get("/api/admin/events", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const events = await storage.getAllEvents();
+      res.json(events);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+  
+  // Create event (admin)
+  app.post("/api/admin/events", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const event = await storage.createEvent({
+        ...req.body,
+        createdBy: req.user.userId
+      });
+      
+      res.status(201).json(event);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      res.status(500).json({ error: "Failed to create event" });
+    }
+  });
+  
+  // Update event (admin)
+  app.put("/api/admin/events/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const event = await storage.updateEvent(eventId, req.body);
+      
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      res.json(event);
+    } catch (error) {
+      console.error('Error updating event:', error);
+      res.status(500).json({ error: "Failed to update event" });
+    }
+  });
+  
+  // Delete event (admin)
+  app.delete("/api/admin/events/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      await storage.deleteEvent(eventId);
+      
+      res.json({ message: "Event deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      res.status(500).json({ error: "Failed to delete event" });
+    }
+  });
+
+  // ========== DYNAMIC WIDGETS DATA API ==========
+  
+  // Get top-rated teachers for widget (public)
+  app.get("/api/public/widgets/top-teachers", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const teachers = await storage.getTopRatedTeachers(limit);
+      
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching top teachers:', error);
+      res.status(500).json({ error: "Failed to fetch top teachers" });
+    }
+  });
+  
+  // Get new classes for widget (public)
+  app.get("/api/public/widgets/new-classes", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      const classes = await storage.getNewClasses(limit);
+      
+      res.json(classes);
+    } catch (error) {
+      console.error('Error fetching new classes:', error);
+      res.status(500).json({ error: "Failed to fetch new classes" });
+    }
+  });
+  
+  // Get best student for widget (public)
+  app.get("/api/public/widgets/best-student", async (req, res) => {
+    try {
+      const period = (req.query.period as string) || 'month'; // week, month, year
+      const student = await storage.getBestStudent(period);
+      
+      res.json(student);
+    } catch (error) {
+      console.error('Error fetching best student:', error);
+      res.status(500).json({ error: "Failed to fetch best student" });
+    }
+  });
+
   return app;
 }
 

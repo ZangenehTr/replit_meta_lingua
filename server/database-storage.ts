@@ -152,7 +152,7 @@ import {
   // CMS tables and types
   cmsPages, cmsPageSections, cmsBlogCategories, cmsBlogTags, cmsBlogPosts,
   cmsBlogPostTags, cmsBlogComments, cmsVideos, cmsMediaAssets, cmsPageAnalytics,
-  customFonts, curriculumCategories, guestLeads,
+  customFonts, curriculumCategories, guestLeads, teacherReviews, instituteEvents, classes,
   type CmsPage, type InsertCmsPage,
   type CmsPageSection, type InsertCmsPageSection,
   type CmsBlogCategory, type InsertCmsBlogCategory,
@@ -18696,5 +18696,327 @@ export class DatabaseStorage implements IStorage {
       .update(customFonts)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(customFonts.language, language));
+  }
+
+  // ============================================================================
+  // TEACHER REVIEWS METHODS
+  // ============================================================================
+
+  async createTeacherReview(review: any): Promise<any> {
+    const [created] = await db.insert(teacherReviews).values({
+      ...review,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return created;
+  }
+
+  async getApprovedTeacherReviews(teacherId: number): Promise<any[]> {
+    const reviews = await db.select({
+      id: teacherReviews.id,
+      teacherId: teacherReviews.teacherId,
+      studentId: teacherReviews.studentId,
+      rating: teacherReviews.rating,
+      reviewText: teacherReviews.reviewText,
+      reviewTextFa: teacherReviews.reviewTextFa,
+      reviewTextAr: teacherReviews.reviewTextAr,
+      isAnonymous: teacherReviews.isAnonymous,
+      helpfulCount: teacherReviews.helpfulCount,
+      createdAt: teacherReviews.createdAt,
+      studentFirstName: users.firstName,
+      studentLastName: users.lastName,
+      studentAvatar: users.avatar
+    })
+    .from(teacherReviews)
+    .leftJoin(users, eq(teacherReviews.studentId, users.id))
+    .where(and(
+      eq(teacherReviews.teacherId, teacherId),
+      eq(teacherReviews.status, 'approved')
+    ))
+    .orderBy(desc(teacherReviews.createdAt));
+    
+    return reviews.map(review => ({
+      ...review,
+      studentName: review.isAnonymous 
+        ? 'Anonymous' 
+        : `${review.studentFirstName || ''} ${review.studentLastName || ''}`.trim() || 'Student'
+    }));
+  }
+
+  async getAllTeacherReviews(status?: string): Promise<any[]> {
+    let query = db.select({
+      id: teacherReviews.id,
+      teacherId: teacherReviews.teacherId,
+      studentId: teacherReviews.studentId,
+      rating: teacherReviews.rating,
+      reviewText: teacherReviews.reviewText,
+      reviewTextFa: teacherReviews.reviewTextFa,
+      reviewTextAr: teacherReviews.reviewTextAr,
+      status: teacherReviews.status,
+      rejectionReason: teacherReviews.rejectionReason,
+      isAnonymous: teacherReviews.isAnonymous,
+      helpfulCount: teacherReviews.helpfulCount,
+      createdAt: teacherReviews.createdAt,
+      approvedAt: teacherReviews.approvedAt,
+      studentFirstName: users.firstName,
+      studentLastName: users.lastName
+    })
+    .from(teacherReviews)
+    .leftJoin(users, eq(teacherReviews.studentId, users.id));
+    
+    if (status) {
+      query = query.where(eq(teacherReviews.status, status)) as any;
+    }
+    
+    return await query.orderBy(desc(teacherReviews.createdAt));
+  }
+
+  async updateTeacherReviewStatus(
+    reviewId: number, 
+    status: string, 
+    approvedBy: number, 
+    rejectionReason?: string
+  ): Promise<any | undefined> {
+    const [updated] = await db
+      .update(teacherReviews)
+      .set({ 
+        status, 
+        approvedBy, 
+        approvedAt: status === 'approved' ? new Date() : null,
+        rejectionReason: rejectionReason || null,
+        updatedAt: new Date() 
+      })
+      .where(eq(teacherReviews.id, reviewId))
+      .returning();
+    return updated;
+  }
+
+  async getRecentApprovedReviews(limit: number): Promise<any[]> {
+    const reviews = await db.select({
+      id: teacherReviews.id,
+      teacherId: teacherReviews.teacherId,
+      studentId: teacherReviews.studentId,
+      rating: teacherReviews.rating,
+      reviewText: teacherReviews.reviewText,
+      reviewTextFa: teacherReviews.reviewTextFa,
+      reviewTextAr: teacherReviews.reviewTextAr,
+      isAnonymous: teacherReviews.isAnonymous,
+      createdAt: teacherReviews.createdAt,
+      studentFirstName: users.firstName,
+      studentLastName: users.lastName,
+      studentAvatar: users.avatar
+    })
+    .from(teacherReviews)
+    .leftJoin(users, eq(teacherReviews.studentId, users.id))
+    .where(eq(teacherReviews.status, 'approved'))
+    .orderBy(desc(teacherReviews.createdAt))
+    .limit(limit);
+    
+    return reviews.map(review => ({
+      ...review,
+      studentName: review.isAnonymous 
+        ? 'Anonymous' 
+        : `${review.studentFirstName || ''} ${review.studentLastName || ''}`.trim() || 'Student'
+    }));
+  }
+
+  // ============================================================================
+  // TEACHER PROFILE METHODS
+  // ============================================================================
+
+  async updateTeacherIntroVideo(teacherId: number, introVideoUrl: string): Promise<any | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({ introVideoUrl, updatedAt: new Date() })
+      .where(eq(users.id, teacherId))
+      .returning();
+    return updated;
+  }
+
+  async getTeacherPublicProfile(teacherId: number): Promise<any | undefined> {
+    const [teacher] = await db.select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      avatar: users.avatar,
+      introVideoUrl: users.introVideoUrl,
+      teacherBio: users.teacherBio,
+      teacherSpecializations: users.teacherSpecializations,
+      hourlyRate: users.hourlyRate,
+      teachingExperience: users.teachingExperience
+    })
+    .from(users)
+    .where(and(
+      eq(users.id, teacherId),
+      or(eq(users.role, 'Teacher'), eq(users.role, 'Instructor'))
+    ));
+    
+    if (!teacher) return undefined;
+    
+    // Get teacher's approved reviews for average rating
+    const reviews = await this.getApprovedTeacherReviews(teacherId);
+    const avgRating = reviews.length > 0 
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+      : 0;
+    
+    return {
+      ...teacher,
+      rating: Math.round(avgRating * 10) / 10,
+      reviewCount: reviews.length,
+      recentReviews: reviews.slice(0, 5)
+    };
+  }
+
+  // ============================================================================
+  // INSTITUTE EVENTS METHODS
+  // ============================================================================
+
+  async getUpcomingEvents(limit: number): Promise<any[]> {
+    return await db.select()
+      .from(instituteEvents)
+      .where(and(
+        eq(instituteEvents.isPublished, true),
+        gte(instituteEvents.startDate, new Date())
+      ))
+      .orderBy(asc(instituteEvents.startDate))
+      .limit(limit);
+  }
+
+  async getAllEvents(): Promise<any[]> {
+    return await db.select()
+      .from(instituteEvents)
+      .orderBy(desc(instituteEvents.startDate));
+  }
+
+  async createEvent(event: any): Promise<any> {
+    const [created] = await db.insert(instituteEvents).values({
+      ...event,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return created;
+  }
+
+  async updateEvent(id: number, updates: any): Promise<any | undefined> {
+    const [updated] = await db
+      .update(instituteEvents)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(instituteEvents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteEvent(id: number): Promise<void> {
+    await db.delete(instituteEvents).where(eq(instituteEvents.id, id));
+  }
+
+  // ============================================================================
+  // WIDGET DATA METHODS
+  // ============================================================================
+
+  async getTopRatedTeachers(limit: number): Promise<any[]> {
+    // Get teachers with their average ratings from approved reviews
+    const teachers = await db.select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      avatar: users.avatar,
+      introVideoUrl: users.introVideoUrl,
+      teacherSpecializations: users.teacherSpecializations,
+      hourlyRate: users.hourlyRate,
+      teachingExperience: users.teachingExperience
+    })
+    .from(users)
+    .where(or(eq(users.role, 'Teacher'), eq(users.role, 'Instructor')))
+    .limit(50); // Get more, then filter by rating
+    
+    // Calculate ratings for each teacher
+    const teachersWithRatings = await Promise.all(
+      teachers.map(async (teacher) => {
+        const reviews = await db.select({ rating: teacherReviews.rating })
+          .from(teacherReviews)
+          .where(and(
+            eq(teacherReviews.teacherId, teacher.id),
+            eq(teacherReviews.status, 'approved')
+          ));
+        
+        const avgRating = reviews.length > 0 
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+          : 0;
+        
+        return {
+          ...teacher,
+          rating: Math.round(avgRating * 10) / 10,
+          reviewCount: reviews.length
+        };
+      })
+    );
+    
+    // Sort by rating and return top ones
+    return teachersWithRatings
+      .filter(t => t.reviewCount > 0)
+      .sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount)
+      .slice(0, limit);
+  }
+
+  async getNewClasses(limit: number): Promise<any[]> {
+    return await db.select({
+      id: classes.id,
+      name: classes.name,
+      nameFa: classes.nameFa,
+      nameAr: classes.nameAr,
+      description: classes.description,
+      startDate: classes.startDate,
+      endDate: classes.endDate,
+      schedule: classes.schedule,
+      capacity: classes.capacity,
+      enrolledCount: classes.enrolledCount,
+      price: classes.price,
+      level: classes.level,
+      language: classes.language,
+      teacherId: classes.teacherId,
+      createdAt: classes.createdAt
+    })
+    .from(classes)
+    .where(eq(classes.status, 'open'))
+    .orderBy(desc(classes.createdAt))
+    .limit(limit);
+  }
+
+  async getBestStudent(period: string): Promise<any | null> {
+    // Get date range based on period
+    const now = new Date();
+    let startDate: Date;
+    
+    switch (period) {
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      case 'month':
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    
+    // Find student with highest XP gain in the period
+    const [topStudent] = await db.select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      avatar: users.avatar,
+      totalXp: users.totalXp,
+      currentLevel: users.currentLevel,
+      streakDays: users.streakDays,
+      totalLessons: users.totalLessons
+    })
+    .from(users)
+    .where(eq(users.role, 'Student'))
+    .orderBy(desc(users.totalXp))
+    .limit(1);
+    
+    return topStudent || null;
   }
 }

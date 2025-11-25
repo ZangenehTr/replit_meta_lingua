@@ -49,6 +49,7 @@ import {
   // CMS tables
   cmsPages, cmsPageSections, cmsBlogCategories, cmsBlogTags, cmsBlogPosts,
   cmsBlogPostTags, cmsBlogComments, cmsVideos, cmsMediaAssets, cmsPageAnalytics,
+  teacherReviews, instituteEvents,
 } from "@shared/schema";
 // Unified testing system tables
 import {
@@ -1655,6 +1656,27 @@ export interface IStorage {
   createGuestLead(lead: any): Promise<any>;
   getGuestLeads(filters?: { status?: string; source?: string }): Promise<any[]>;
   getGuestLead(id: number): Promise<any | undefined>;
+  // Teacher Reviews methods
+  createTeacherReview(review: any): Promise<any>;
+  getApprovedTeacherReviews(teacherId: number): Promise<any[]>;
+  updateTeacherReviewStatus(reviewId: number, status: string, approvedBy: number, rejectionReason?: string): Promise<any | undefined>;
+  getRecentApprovedReviews(limit: number): Promise<any[]>;
+  
+  // Teacher Profile methods
+  updateTeacherIntroVideo(teacherId: number, introVideoUrl: string): Promise<any | undefined>;
+  getTeacherPublicProfile(teacherId: number): Promise<any | undefined>;
+  
+  // Institute Events methods
+  getUpcomingEvents(limit: number): Promise<any[]>;
+  getAllEvents(): Promise<any[]>;
+  createEvent(event: any): Promise<any>;
+  updateEvent(id: number, updates: any): Promise<any | undefined>;
+  deleteEvent(id: number): Promise<void>;
+  
+  // Widget Data methods
+  getTopRatedTeachers(limit: number): Promise<any[]>;
+  getNewClasses(limit: number): Promise<any[]>;
+  getBestStudent(period: string): Promise<any | null>;
   updateGuestLead(id: number, updates: any): Promise<any | undefined>;
 }
 

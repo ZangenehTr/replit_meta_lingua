@@ -946,5 +946,70 @@
       "rating": "Rating",
       "alphabetical": "Alphabetical"
     }
+  },
+  "reviews": {
+    "title": "Reviews",
+    "leaveReview": "Leave a Review",
+    "rateTeacher": "Rate Teacher",
+    "rateYourTeacher": "Rate Your Teacher",
+    "submitReview": "Submit Review",
+    "submitting": "Submitting...",
+    "reviewSubmitted": "Review Submitted",
+    "reviewPendingApproval": "Your review will be visible after admin approval.",
+    "shareExperience": "Share your experience to help other students",
+    "yourReviewEnglish": "Your Review (English)",
+    "yourReviewFarsi": "Your Review (Farsi)",
+    "reviewPlaceholder": "Share your experience with this teacher...",
+    "postAnonymously": "Post anonymously",
+    "ratingLabels": {
+      "excellent": "Excellent!",
+      "veryGood": "Very Good",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    },
+    "moderation": {
+      "title": "Review Moderation",
+      "description": "Review and approve student reviews for teachers",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "approve": "Approve",
+      "reject": "Reject",
+      "noPending": "No pending reviews",
+      "allReviewsApproved": "All reviews have been approved or rejected"
+    }
+  },
+  "widgets": {
+    "topTeachers": {
+      "title": "Top Teachers",
+      "subtitle": "Meet our highest-rated instructors",
+      "rating": "Rating",
+      "reviews": "reviews",
+      "sessions": "sessions"
+    },
+    "recentReviews": {
+      "title": "Recent Reviews",
+      "subtitle": "What our students are saying"
+    },
+    "upcomingEvents": {
+      "title": "Upcoming Events",
+      "subtitle": "Don't miss these learning opportunities",
+      "noEvents": "No upcoming events",
+      "registerNow": "Register Now"
+    },
+    "newClasses": {
+      "title": "New Classes",
+      "subtitle": "Fresh courses just added",
+      "enrollNow": "Enroll Now",
+      "startingSoon": "Starting Soon"
+    },
+    "bestStudent": {
+      "title": "Student of the Month",
+      "subtitle": "Celebrating our top performer",
+      "totalXP": "Total XP",
+      "streak": "Day Streak",
+      "lessonsCompleted": "Lessons"
+    }
   }
 }
