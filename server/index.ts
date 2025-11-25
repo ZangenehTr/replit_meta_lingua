@@ -222,6 +222,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// Create HTTP server IMMEDIATELY
+const server = createServer(app);
+const port = 5000;
+
+// CRITICAL: Open port on app startup - BEFORE any async initialization
+// This must be first to prevent deployment timeout
+server.listen({
+  port,
+  host: "0.0.0.0",
+  reusePort: true,
+}, () => {
+  log(`serving on port ${port}`);
+});
+
+// ============================================
+// BACKGROUND INITIALIZATION (Non-Blocking)
+// ============================================
 (async () => {
   // INLINE SECURITY FIXES - Fix critical authentication vulnerabilities
   
@@ -515,11 +532,7 @@ app.use((req, res, next) => {
   app.use('/api/payment', shetabPaymentRouter);
   console.log('✅ Shetab Payment Gateway routes registered');
   
-  // Import and register routes from routes.ts
-  const { registerRoutes } = await import('./routes.js');
-  const server = await registerRoutes(app);
-
-  // 404 handler for API endpoints (moved after route registration)
+  // 404 handler for API endpoints
   app.use('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found', path: req.path });
   });
@@ -532,30 +545,32 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Setup Vite in development, static serving in production (non-blocking)
   if (app.get("env") === "development") {
-    await setupVite(app, server);
+    try {
+      await setupVite(app, server);
+    } catch (error) {
+      console.error('⚠️  Failed to setup Vite:', error);
+    }
   } else {
     serveStatic(app);
   }
-
-  // CRITICAL: OPEN PORT IMMEDIATELY - before background initialization tasks
-  // This prevents deployment timeout
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 
   // ============================================
   // BACKGROUND INITIALIZATION (Non-Blocking)
   // These tasks run AFTER port is open
   // ============================================
+  
+  // Non-blocking: Import and register heavy routes
+  (async () => {
+    try {
+      const { registerRoutes } = await import('./routes.js');
+      await registerRoutes(app);
+      console.log('✅ All main routes registered');
+    } catch (error) {
+      console.error('⚠️  Failed to register routes:', error);
+    }
+  })();
   
   // Non-blocking: Seed LinguaQuest lessons
   (async () => {
