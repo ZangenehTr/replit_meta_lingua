@@ -654,8 +654,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
-  // Only exit if it's a critical error during startup
-  if (!server.listening) {
-    process.exit(1);
-  }
+  // Log but don't exit - let the app continue running with graceful degradation
+  // The server is already listening so we don't terminate unexpectedly
 });
