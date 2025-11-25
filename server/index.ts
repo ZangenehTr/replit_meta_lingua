@@ -518,67 +518,6 @@ app.use((req, res, next) => {
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
-  
-  // Initialize Whisper service from database admin settings
-  try {
-    const { whisperService } = await import('./whisper-service.js');
-    const { storage } = await import('./storage.js');
-    await whisperService.initializeFromDatabase(() => storage.getAdminSettings());
-  } catch (error) {
-    console.warn('⚠️  Could not initialize Whisper service from database:', error);
-  }
-  
-  // Initialize Isabel VoIP service from environment variables
-  if (process.env.ISABEL_VOIP_ENABLED === 'true' && process.env.ISABEL_VOIP_SERVER) {
-    try {
-      const { isabelVoipService } = await import('./isabel-voip-service.js');
-      const connected = await isabelVoipService.configure({
-        serverAddress: process.env.ISABEL_VOIP_SERVER,
-        port: parseInt(process.env.ISABEL_VOIP_PORT || '5038'),
-        username: process.env.ISABEL_VOIP_USERNAME || '',
-        password: process.env.ISABEL_VOIP_PASSWORD || '',
-        enabled: true,
-        callRecordingEnabled: process.env.ISABEL_VOIP_RECORDING_ENABLED === 'true',
-        recordingStoragePath: process.env.ISABEL_VOIP_RECORDING_PATH || '/var/recordings'
-      });
-      
-      if (connected) {
-        console.log(`✅ Isabel VoIP connected to real server: ${process.env.ISABEL_VOIP_SERVER}:${process.env.ISABEL_VOIP_PORT || '5038'}`);
-      } else {
-        // Only possible in development (production throws error)
-        console.warn(`⚠️  Isabel VoIP configured but connection failed: ${process.env.ISABEL_VOIP_SERVER}:${process.env.ISABEL_VOIP_PORT || '5038'}`);
-        console.log('   VoIP calls will use simulation mode. Check server connectivity and credentials.');
-      }
-    } catch (error) {
-      console.error('❌ Isabel VoIP initialization error:', error.message);
-      
-      // In production, halt startup if VoIP is configured but cannot connect
-      if (process.env.NODE_ENV === 'production') {
-        console.error('');
-        console.error('❌ FATAL: Cannot start in production with Isabel VoIP enabled but unreachable');
-        console.error('Either fix the VoIP server connection or set ISABEL_VOIP_ENABLED=false');
-        process.exit(1);
-      }
-      
-      // In development, continue with simulation mode
-      console.log('   VoIP calls will use simulation mode until configured via admin panel');
-    }
-  } else {
-    console.log('ℹ️  Isabel VoIP not configured - set ISABEL_VOIP_ENABLED=true and ISABEL_VOIP_SERVER to enable');
-  }
-  
-  // Initialize SMS reminder worker
-  const { smsReminderWorker } = await import('./workers/sms-reminder.worker.js');
-  smsReminderWorker.start();
-  console.log('✅ SMS Reminder Worker initialized');
-
-  // Seed LinguaQuest lessons on startup
-  try {
-    const { seedLinguaquestLessons } = await import('./content/seed-linguaquest-lessons.js');
-    await seedLinguaquestLessons();
-  } catch (error) {
-    console.error('⚠️  Failed to seed LinguaQuest lessons:', error);
-  }
 
   // 404 handler for API endpoints (moved after route registration)
   app.use('/api/*', (req, res) => {
@@ -602,9 +541,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
+  // CRITICAL: OPEN PORT IMMEDIATELY - before background initialization tasks
+  // This prevents deployment timeout
   const port = 5000;
   server.listen({
     port,
@@ -613,4 +551,79 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  // ============================================
+  // BACKGROUND INITIALIZATION (Non-Blocking)
+  // These tasks run AFTER port is open
+  // ============================================
+  
+  // Non-blocking: Seed LinguaQuest lessons
+  (async () => {
+    try {
+      const { seedLinguaquestLessons } = await import('./content/seed-linguaquest-lessons.js');
+      await seedLinguaquestLessons();
+    } catch (error) {
+      console.error('⚠️  Failed to seed LinguaQuest lessons:', error);
+    }
+  })();
+
+  // Non-blocking: Initialize Whisper service
+  (async () => {
+    try {
+      const { whisperService } = await import('./whisper-service.js');
+      const { storage } = await import('./storage.js');
+      await whisperService.initializeFromDatabase(() => storage.getAdminSettings());
+    } catch (error) {
+      console.warn('⚠️  Could not initialize Whisper service from database:', error);
+    }
+  })();
+
+  // Non-blocking: Initialize Isabel VoIP
+  (async () => {
+    if (process.env.ISABEL_VOIP_ENABLED === 'true' && process.env.ISABEL_VOIP_SERVER) {
+      try {
+        const { isabelVoipService } = await import('./isabel-voip-service.js');
+        const connected = await isabelVoipService.configure({
+          serverAddress: process.env.ISABEL_VOIP_SERVER,
+          port: parseInt(process.env.ISABEL_VOIP_PORT || '5038'),
+          username: process.env.ISABEL_VOIP_USERNAME || '',
+          password: process.env.ISABEL_VOIP_PASSWORD || '',
+          enabled: true,
+          callRecordingEnabled: process.env.ISABEL_VOIP_RECORDING_ENABLED === 'true',
+          recordingStoragePath: process.env.ISABEL_VOIP_RECORDING_PATH || '/var/recordings'
+        });
+        
+        if (connected) {
+          console.log(`✅ Isabel VoIP connected to real server: ${process.env.ISABEL_VOIP_SERVER}:${process.env.ISABEL_VOIP_PORT || '5038'}`);
+        } else {
+          console.warn(`⚠️  Isabel VoIP configured but connection failed: ${process.env.ISABEL_VOIP_SERVER}:${process.env.ISABEL_VOIP_PORT || '5038'}`);
+          console.log('   VoIP calls will use simulation mode. Check server connectivity and credentials.');
+        }
+      } catch (error) {
+        console.error('❌ Isabel VoIP initialization error:', error.message);
+        
+        if (process.env.NODE_ENV === 'production') {
+          console.error('');
+          console.error('❌ FATAL: Cannot start in production with Isabel VoIP enabled but unreachable');
+          console.error('Either fix the VoIP server connection or set ISABEL_VOIP_ENABLED=false');
+          process.exit(1);
+        }
+        
+        console.log('   VoIP calls will use simulation mode until configured via admin panel');
+      }
+    } else {
+      console.log('ℹ️  Isabel VoIP not configured - set ISABEL_VOIP_ENABLED=true and ISABEL_VOIP_SERVER to enable');
+    }
+  })();
+
+  // Non-blocking: Start SMS Reminder Worker
+  (async () => {
+    try {
+      const { smsReminderWorker } = await import('./workers/sms-reminder.worker.js');
+      smsReminderWorker.start();
+      console.log('✅ SMS Reminder Worker initialized');
+    } catch (error) {
+      console.error('⚠️  Failed to initialize SMS Reminder Worker:', error);
+    }
+  })();
 })();
