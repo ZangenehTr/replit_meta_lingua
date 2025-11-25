@@ -1,5 +1,26 @@
 /**
- * Lead scraper configurations for social media and business directories
+ * Lead Scraper Configurations
+ * 
+ * These are TEMPLATE configurations for social media lead scraping.
+ * They require customization based on your deployment environment and
+ * should be tested before production use.
+ * 
+ * IMPORTANT NOTES:
+ * 1. Social media platforms actively block automated scraping
+ * 2. Consider using official APIs where available (see API alternatives below)
+ * 3. Always respect rate limits and terms of service
+ * 4. These templates may need updates as platforms change their structure
+ * 
+ * API-BASED ALTERNATIVES (Recommended for Production):
+ * - Instagram: Instagram Graph API (requires Facebook Developer account)
+ * - LinkedIn: LinkedIn Marketing API (requires partnership)
+ * - Twitter/X: Twitter API v2 (paid tiers available)
+ * - YouTube: YouTube Data API (free quota available)
+ * - Telegram: Bot API for channel info
+ * 
+ * ENVIRONMENT VARIABLES:
+ * - IRANIAN_DIRECTORY_URL: Custom Iranian business directory URL
+ * - LANGUAGE_DIRECTORY_URL: Custom language institute directory URL
  */
 
 export interface LeadScraperConfig {
@@ -24,11 +45,19 @@ export interface LeadScraperConfig {
     description?: string;
   };
   requiresLogin?: boolean;
+  apiAlternative?: {
+    name: string;
+    documentation: string;
+    recommended: boolean;
+  };
   customLogic?: (page: any, query: string) => Promise<any[]>;
 }
 
 /**
- * Instagram lead scraper config (public profiles only)
+ * Instagram Configuration (Template)
+ * 
+ * NOTE: Instagram heavily restricts scraping. For production use,
+ * consider the Instagram Graph API instead.
  */
 export const INSTAGRAM_CONFIG: LeadScraperConfig = {
   name: 'Instagram',
@@ -38,36 +67,57 @@ export const INSTAGRAM_CONFIG: LeadScraperConfig = {
   selectors: {
     profileCard: 'article',
     name: 'h2',
-    username: 'a[href*="/"]',
+    username: 'header a',
     bio: 'div.-vDIg span',
-    followers: 'a[href*="/followers/"] span'
+    followers: 'span.g47SY'
+  },
+  apiAlternative: {
+    name: 'Instagram Graph API',
+    documentation: 'https://developers.facebook.com/docs/instagram-api',
+    recommended: true
   },
   customLogic: async (page, query) => {
-    // Instagram specific scraping logic
-    // Note: Instagram heavily restricts scraping, this is a simplified example
     const leads: any[] = [];
+    const seenUsernames = new Set<string>();
     
     try {
-      // Wait for posts to load
       await page.waitForSelector('article', { timeout: 10000 });
       
-      // Extract post data
-      const posts = await page.$$eval('article a', (elements: Element[]) => {
-        return elements.slice(0, 20).map((el: Element) => ({
-          url: (el as HTMLAnchorElement).href,
-          username: (el as HTMLAnchorElement).href.split('/').filter(Boolean)[3]
-        }));
+      const postUrls = await page.$$eval('article a[href*="/p/"]', (elements: Element[]) => {
+        return elements.slice(0, 10).map((el: Element) => (el as HTMLAnchorElement).href);
       });
       
-      // Visit each profile to extract details (limit to prevent rate limiting)
-      for (const post of posts.slice(0, 5)) {
-        if (post.url && post.url.includes('/p/')) {
-          leads.push({
-            username: post.username,
-            profileUrl: `https://www.instagram.com/${post.username}/`,
-            source: 'instagram',
-            interests: [query]
+      for (const postUrl of postUrls.slice(0, 5)) {
+        try {
+          const newPage = await page.browser().newPage();
+          await newPage.goto(postUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          
+          const authorData = await newPage.evaluate(() => {
+            const authorLink = document.querySelector('header a[href^="/"][role="link"]');
+            if (authorLink) {
+              const href = (authorLink as HTMLAnchorElement).href;
+              const username = href.split('/').filter(Boolean).pop();
+              const displayName = authorLink.textContent?.trim();
+              return { username, displayName };
+            }
+            return null;
           });
+          
+          await newPage.close();
+          
+          if (authorData?.username && !seenUsernames.has(authorData.username)) {
+            seenUsernames.add(authorData.username);
+            leads.push({
+              username: authorData.username,
+              name: authorData.displayName || authorData.username,
+              profileUrl: `https://www.instagram.com/${authorData.username}/`,
+              source: 'instagram',
+              platform: 'instagram',
+              interests: [query]
+            });
+          }
+        } catch (error) {
+          console.log(`Instagram: Failed to process ${postUrl}`);
         }
       }
     } catch (error) {
@@ -79,7 +129,10 @@ export const INSTAGRAM_CONFIG: LeadScraperConfig = {
 };
 
 /**
- * Telegram channel/group scraper config
+ * Telegram Configuration
+ * 
+ * Uses Telegram's public web preview for channels.
+ * Works well for public channels but not for private groups.
  */
 export const TELEGRAM_CONFIG: LeadScraperConfig = {
   name: 'Telegram',
@@ -91,15 +144,22 @@ export const TELEGRAM_CONFIG: LeadScraperConfig = {
     bio: '.tgme_channel_info_description',
     followers: '.tgme_channel_info_counter'
   },
+  apiAlternative: {
+    name: 'Telegram Bot API',
+    documentation: 'https://core.telegram.org/bots/api',
+    recommended: false
+  },
   customLogic: async (page, query) => {
     const leads: any[] = [];
     
     try {
-      // Extract channel info
+      await page.waitForSelector('.tgme_channel_info', { timeout: 10000 });
+      
       const channelInfo = await page.evaluate(() => {
         const name = document.querySelector('.tgme_channel_info_header_title')?.textContent?.trim();
         const bio = document.querySelector('.tgme_channel_info_description')?.textContent?.trim();
-        const followers = document.querySelector('.tgme_channel_info_counter')?.textContent?.trim();
+        const counters = document.querySelectorAll('.tgme_channel_info_counter');
+        const followers = counters[0]?.textContent?.trim();
         
         return { name, bio, followers };
       });
@@ -111,6 +171,7 @@ export const TELEGRAM_CONFIG: LeadScraperConfig = {
           followers: channelInfo.followers,
           profileUrl: `https://t.me/${query}`,
           source: 'telegram',
+          platform: 'telegram',
           interests: [query]
         });
       }
@@ -123,44 +184,113 @@ export const TELEGRAM_CONFIG: LeadScraperConfig = {
 };
 
 /**
- * Iranian business directory scraper config
+ * LinkedIn Configuration (Template)
+ * 
+ * IMPORTANT: LinkedIn actively blocks scraping.
+ * For production use, LinkedIn Sales Navigator or Marketing API is required.
  */
-export const IRANIAN_DIRECTORY_CONFIG: LeadScraperConfig = {
-  name: 'Iranian Business Directory',
-  platform: 'directory',
-  baseUrl: 'https://example-iran-directory.ir',
-  searchUrl: 'https://example-iran-directory.ir/search?q={query}',
+export const LINKEDIN_CONFIG: LeadScraperConfig = {
+  name: 'LinkedIn',
+  platform: 'linkedin',
+  baseUrl: 'https://www.linkedin.com',
+  searchUrl: 'https://www.linkedin.com/search/results/people/?keywords={query}',
   selectors: {
-    profileCard: '.business-card',
-    name: '.business-name',
-    phone: '.business-phone',
-    email: '.business-email',
-    website: '.business-website',
-    location: '.business-address',
-    category: '.business-category'
+    profileCard: '.reusable-search__result-container',
+    name: '.entity-result__title-text a span',
+    position: '.entity-result__primary-subtitle',
+    location: '.entity-result__secondary-subtitle'
+  },
+  requiresLogin: true,
+  apiAlternative: {
+    name: 'LinkedIn Marketing API',
+    documentation: 'https://docs.microsoft.com/en-us/linkedin/marketing/',
+    recommended: true
   }
 };
 
 /**
- * Language institute directory scraper
+ * Twitter/X Configuration (Template)
+ * 
+ * NOTE: Twitter has limited scraping. Twitter API v2 is recommended.
  */
-export const LANGUAGE_INSTITUTE_DIRECTORY: LeadScraperConfig = {
-  name: 'Language Institute Directory',
-  platform: 'directory',
-  baseUrl: 'https://example-language-directory.ir',
-  searchUrl: 'https://example-language-directory.ir/institutes?city={query}',
+export const TWITTER_CONFIG: LeadScraperConfig = {
+  name: 'Twitter/X',
+  platform: 'twitter',
+  baseUrl: 'https://x.com',
+  searchUrl: 'https://x.com/search?q={query}&f=user',
   selectors: {
-    profileCard: 'div.institute-item',
-    name: 'h3.institute-name',
-    phone: 'span.phone',
-    email: 'a.email',
-    website: 'a.website',
-    location: 'p.address'
+    profileCard: '[data-testid="cellInnerDiv"]',
+    name: '[data-testid="UserName"]',
+    username: '[data-testid="UserName"] span',
+    bio: '[data-testid="UserDescription"]'
+  },
+  requiresLogin: true,
+  apiAlternative: {
+    name: 'Twitter API v2',
+    documentation: 'https://developer.twitter.com/en/docs/twitter-api',
+    recommended: true
   }
 };
 
 /**
- * WhatsApp Business scraper config (public business profiles)
+ * YouTube Configuration (Template)
+ * 
+ * YouTube Data API is recommended for reliable access.
+ */
+export const YOUTUBE_CONFIG: LeadScraperConfig = {
+  name: 'YouTube',
+  platform: 'youtube',
+  baseUrl: 'https://www.youtube.com',
+  searchUrl: 'https://www.youtube.com/results?search_query={query}&sp=EgIQAg%253D%253D',
+  selectors: {
+    profileCard: 'ytd-channel-renderer',
+    name: '#channel-title',
+    username: '#subscriber-count',
+    bio: '#description'
+  },
+  apiAlternative: {
+    name: 'YouTube Data API',
+    documentation: 'https://developers.google.com/youtube/v3',
+    recommended: true
+  },
+  customLogic: async (page, query) => {
+    const leads: any[] = [];
+    
+    try {
+      await page.waitForSelector('ytd-channel-renderer', { timeout: 10000 });
+      
+      const channels = await page.$$eval('ytd-channel-renderer', (elements: Element[]) => {
+        return elements.slice(0, 10).map((el: Element) => ({
+          name: el.querySelector('#channel-title')?.textContent?.trim(),
+          subscribers: el.querySelector('#subscribers')?.textContent?.trim(),
+          url: (el.querySelector('a#main-link') as HTMLAnchorElement)?.href
+        }));
+      });
+      
+      for (const channel of channels) {
+        if (channel.name && channel.url) {
+          leads.push({
+            name: channel.name,
+            followers: channel.subscribers,
+            profileUrl: channel.url,
+            source: 'youtube',
+            platform: 'youtube',
+            interests: [query]
+          });
+        }
+      }
+    } catch (error) {
+      console.error('YouTube scraping error:', error);
+    }
+    
+    return leads;
+  }
+};
+
+/**
+ * WhatsApp Business Configuration (Template)
+ * 
+ * Uses Google search to find WhatsApp Business profiles.
  */
 export const WHATSAPP_BUSINESS_CONFIG: LeadScraperConfig = {
   name: 'WhatsApp Business',
@@ -176,22 +306,21 @@ export const WHATSAPP_BUSINESS_CONFIG: LeadScraperConfig = {
     const leads: any[] = [];
     
     try {
-      // Wait for search results to load
-      await page.waitForSelector('.g', { timeout: 10000 });
+      await page.waitForSelector('div.g', { timeout: 10000 });
       
-      // Extract WhatsApp Business links from Google search results
-      const results = await page.$$eval('.g a', (elements: Element[]) => {
-        return elements
-          .filter((el: Element) => (el as HTMLAnchorElement).href.includes('wa.me'))
-          .slice(0, 20)
-          .map((el: Element) => ({
-            url: (el as HTMLAnchorElement).href,
-            phone: (el as HTMLAnchorElement).href.split('wa.me/')[1]?.split('?')[0]
-          }));
+      const results = await page.evaluate(() => {
+        const items: any[] = [];
+        document.querySelectorAll('div.g').forEach((el: Element) => {
+          const link = el.querySelector('a') as HTMLAnchorElement;
+          if (link?.href?.includes('wa.me')) {
+            const phone = link.href.split('wa.me/')[1]?.split('?')[0];
+            items.push({ url: link.href, phone });
+          }
+        });
+        return items.slice(0, 10);
       });
       
-      // Process each WhatsApp Business link
-      for (const result of results.slice(0, 10)) {
+      for (const result of results) {
         if (result.phone) {
           leads.push({
             phone: result.phone,
@@ -212,7 +341,7 @@ export const WHATSAPP_BUSINESS_CONFIG: LeadScraperConfig = {
 };
 
 /**
- * Pinterest scraper config (public pins and boards)
+ * Pinterest Configuration (Template)
  */
 export const PINTEREST_CONFIG: LeadScraperConfig = {
   name: 'Pinterest',
@@ -223,49 +352,32 @@ export const PINTEREST_CONFIG: LeadScraperConfig = {
     profileCard: '[data-test-id="pin"]',
     name: '[data-test-id="pinner-name"]',
     username: '[data-test-id="pinner-username"]',
-    bio: '[data-test-id="pin-description"]'
+    bio: '[data-test-id="pinner-bio"]'
   },
   customLogic: async (page, query) => {
     const leads: any[] = [];
+    const seenUsernames = new Set<string>();
     
     try {
-      // Wait for pins to load
       await page.waitForSelector('[data-test-id="pin"]', { timeout: 10000 });
       
-      // Scroll to load more pins
-      await page.evaluate(() => {
-        window.scrollTo(0, document.body.scrollHeight);
-      });
-      await page.waitForTimeout(2000);
-      
-      // Extract pin data
-      const pins = await page.$$eval('[data-test-id="pin"]', (elements: Element[]) => {
-        return elements.slice(0, 30).map((el: Element) => {
-          const linkEl = el.querySelector('a[href*="/pin/"]') as HTMLAnchorElement;
-          const userLinkEl = el.querySelector('a[href*="/"]') as HTMLAnchorElement;
-          const descEl = el.querySelector('[data-test-id="pin-description"]');
-          
-          return {
-            pinUrl: linkEl?.href,
-            userUrl: userLinkEl?.href,
-            username: userLinkEl?.href?.split('/')[3],
-            description: descEl?.textContent?.trim()
-          };
-        }).filter(pin => pin.username);
+      const pinners = await page.$$eval('[data-test-id="pinrep"]', (elements: Element[]) => {
+        return elements.slice(0, 20).map((el: Element) => ({
+          name: el.querySelector('[data-test-id="pinner-name"]')?.textContent?.trim(),
+          username: el.querySelector('a')?.href?.split('/').filter(Boolean).pop()
+        }));
       });
       
-      // Process unique users
-      const uniqueUsers = new Set();
-      for (const pin of pins) {
-        if (pin.username && !uniqueUsers.has(pin.username)) {
-          uniqueUsers.add(pin.username);
+      for (const pinner of pinners) {
+        if (pinner.username && !seenUsernames.has(pinner.username)) {
+          seenUsernames.add(pinner.username);
           leads.push({
-            username: pin.username,
-            profileUrl: pin.userUrl,
+            name: pinner.name || pinner.username,
+            username: pinner.username,
+            profileUrl: `https://www.pinterest.com/${pinner.username}/`,
             source: 'pinterest',
             platform: 'pinterest',
-            interests: [query],
-            sampleContent: pin.description
+            interests: [query]
           });
         }
       }
@@ -278,122 +390,63 @@ export const PINTEREST_CONFIG: LeadScraperConfig = {
 };
 
 /**
- * Extract email from text using regex
+ * Iranian Business Directory Configuration
+ * 
+ * Uses Google site search to find Iranian businesses.
+ * For a specific directory, set IRANIAN_DIRECTORY_URL environment variable.
  */
-export function extractEmail(text: string): string | null {
-  if (!text) return null;
-  
-  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-  const match = text.match(emailRegex);
-  return match ? match[0] : null;
-}
-
-/**
- * Extract phone number from text (supports Iranian phone formats)
- */
-export function extractPhone(text: string): string | null {
-  if (!text) return null;
-  
-  // Convert Persian digits to English
-  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  let normalized = text;
-  persianDigits.forEach((digit, index) => {
-    normalized = normalized.replace(new RegExp(digit, 'g'), index.toString());
-  });
-  
-  // Iranian phone patterns: +98, 0098, 09, etc.
-  const phonePatterns = [
-    /(\+98|0098|0)?9\d{9}/,  // Mobile: +989123456789, 09123456789
-    /(\+98|0098|0)?\d{10}/,  // Landline: 02112345678
-    /\d{3}-\d{7,8}/,         // Formatted: 021-1234567
-    /\d{11}/                 // Simple 11 digits
-  ];
-  
-  for (const pattern of phonePatterns) {
-    const match = normalized.match(pattern);
-    if (match) return match[0];
-  }
-  
-  return null;
-}
-
-/**
- * Calculate qualification score based on lead data
- */
-export function calculateQualificationScore(lead: any): number {
-  let score = 0;
-  
-  // Has contact info
-  if (lead.email) score += 30;
-  if (lead.phone) score += 30;
-  
-  // Has social presence
-  if (lead.website) score += 10;
-  if (lead.socialProfiles) score += 10;
-  
-  // Has relevant info
-  if (lead.company) score += 10;
-  if (lead.position) score += 10;
-  
-  // Location match (Iranian cities)
-  if (lead.location && /تهران|اصفهان|مشهد|شیراز|کرج/.test(lead.location)) {
-    score += 10;
-  }
-  
-  return Math.min(score, 100);
-}
-
-/**
- * LinkedIn scraper config (public profiles only)
- */
-export const LINKEDIN_CONFIG: LeadScraperConfig = {
-  name: 'LinkedIn',
-  platform: 'linkedin',
-  baseUrl: 'https://www.linkedin.com',
-  searchUrl: 'https://www.linkedin.com/search/results/people/?keywords={query}',
+export const IRANIAN_DIRECTORY_CONFIG: LeadScraperConfig = {
+  name: 'Iranian Business Directory',
+  platform: 'directory',
+  baseUrl: process.env.IRANIAN_DIRECTORY_URL || 'https://www.google.com',
+  searchUrl: 'https://www.google.com/search?q=site:*.ir+{query}+تماس+آدرس',
   selectors: {
-    profileCard: '.entity-result__item',
-    name: '.entity-result__title-text',
-    bio: '.entity-result__summary',
-    location: '.entity-result__secondary-subtitle',
-    position: '.entity-result__primary-subtitle'
+    profileCard: 'div.g',
+    name: 'h3',
+    website: 'cite',
+    location: 'span'
   },
-  requiresLogin: true,
   customLogic: async (page, query) => {
     const leads: any[] = [];
     
     try {
-      // Wait for search results
-      await page.waitForSelector('.entity-result__item', { timeout: 15000 });
+      await page.waitForSelector('div.g', { timeout: 10000 });
       
-      // Extract profile data
-      const profiles = await page.$$eval('.entity-result__item', (elements: Element[]) => {
-        return elements.slice(0, 20).map((el: Element) => {
-          const nameEl = el.querySelector('.entity-result__title-text a');
-          const bioEl = el.querySelector('.entity-result__summary');
-          const locationEl = el.querySelector('.entity-result__secondary-subtitle');
-          const positionEl = el.querySelector('.entity-result__primary-subtitle');
+      const results = await page.evaluate(() => {
+        const items: any[] = [];
+        document.querySelectorAll('div.g').forEach((el: Element) => {
+          const title = el.querySelector('h3')?.textContent?.trim();
+          const link = el.querySelector('a') as HTMLAnchorElement;
+          const snippet = el.querySelector('.VwiC3b')?.textContent?.trim() || '';
           
-          return {
-            name: nameEl?.textContent?.trim(),
-            profileUrl: (nameEl as HTMLAnchorElement)?.href,
-            bio: bioEl?.textContent?.trim(),
-            location: locationEl?.textContent?.trim(),
-            position: positionEl?.textContent?.trim()
-          };
-        }).filter(p => p.name);
+          const phoneMatch = snippet.match(/(\+98|۰۲۱|021|۰۹\d{9}|09\d{9})/);
+          
+          if (link?.href?.includes('.ir')) {
+            items.push({
+              title,
+              url: link.href,
+              snippet,
+              phone: phoneMatch ? phoneMatch[0] : null
+            });
+          }
+        });
+        return items.slice(0, 15);
       });
       
-      for (const profile of profiles) {
+      for (const result of results) {
         leads.push({
-          ...profile,
-          source: 'linkedin',
-          platform: 'linkedin',
-          interests: [query]
+          name: result.title,
+          website: result.url,
+          phone: result.phone,
+          bio: result.snippet,
+          source: 'iranian_directory',
+          platform: 'directory',
+          interests: [query],
+          country: 'Iran'
         });
       }
     } catch (error) {
-      console.error('LinkedIn scraping error:', error);
+      console.error('Iranian Directory scraping error:', error);
     }
     
     return leads;
@@ -401,56 +454,64 @@ export const LINKEDIN_CONFIG: LeadScraperConfig = {
 };
 
 /**
- * Twitter/X scraper config (public profiles only)
+ * Language Institute Directory Configuration
+ * 
+ * Searches for language learning institutes in Iran.
+ * For a specific directory, set LANGUAGE_DIRECTORY_URL environment variable.
  */
-export const TWITTER_CONFIG: LeadScraperConfig = {
-  name: 'Twitter/X',
-  platform: 'website',
-  baseUrl: 'https://twitter.com',
-  searchUrl: 'https://twitter.com/search?q={query}&f=user',
+export const LANGUAGE_INSTITUTE_DIRECTORY: LeadScraperConfig = {
+  name: 'Language Institute Directory',
+  platform: 'directory',
+  baseUrl: process.env.LANGUAGE_DIRECTORY_URL || 'https://www.google.com',
+  searchUrl: 'https://www.google.com/search?q=site:*.ir+آموزشگاه+زبان+{query}',
   selectors: {
-    profileCard: '[data-testid="UserCell"]',
-    name: '[data-testid="UserName"]',
-    username: '[data-testid="UserName"] span',
-    bio: '[data-testid="UserDescription"]'
+    profileCard: 'div.g',
+    name: 'h3',
+    website: 'cite',
+    location: 'span'
   },
   customLogic: async (page, query) => {
     const leads: any[] = [];
     
     try {
-      // Wait for user results
-      await page.waitForSelector('[data-testid="UserCell"]', { timeout: 15000 });
+      await page.waitForSelector('div.g', { timeout: 10000 });
       
-      // Scroll to load more
-      await page.evaluate(() => window.scrollTo(0, 500));
-      await page.waitForTimeout(1500);
-      
-      // Extract user data
-      const users = await page.$$eval('[data-testid="UserCell"]', (elements: Element[]) => {
-        return elements.slice(0, 25).map((el: Element) => {
-          const nameEl = el.querySelector('[data-testid="UserName"]');
-          const bioEl = el.querySelector('[data-testid="UserDescription"]');
-          const linkEl = el.querySelector('a[href*="/"]') as HTMLAnchorElement;
+      const results = await page.evaluate(() => {
+        const items: any[] = [];
+        document.querySelectorAll('div.g').forEach((el: Element) => {
+          const title = el.querySelector('h3')?.textContent?.trim();
+          const link = el.querySelector('a') as HTMLAnchorElement;
+          const snippet = el.querySelector('.VwiC3b')?.textContent?.trim() || '';
           
-          return {
-            name: nameEl?.textContent?.trim(),
-            bio: bioEl?.textContent?.trim(),
-            username: linkEl?.href?.split('/').pop(),
-            profileUrl: linkEl?.href
-          };
-        }).filter(u => u.username);
+          const phoneMatch = snippet.match(/(\+98|۰۲۱|021|۰۹\d{9}|09\d{9})/);
+          
+          if (link?.href?.includes('.ir')) {
+            items.push({
+              title,
+              url: link.href,
+              snippet,
+              phone: phoneMatch ? phoneMatch[0] : null
+            });
+          }
+        });
+        return items.slice(0, 15);
       });
       
-      for (const user of users) {
+      for (const result of results) {
         leads.push({
-          ...user,
-          source: 'twitter',
-          platform: 'twitter',
-          interests: [query]
+          name: result.title,
+          website: result.url,
+          phone: result.phone,
+          bio: result.snippet,
+          source: 'language_institute_directory',
+          platform: 'directory',
+          category: 'language_education',
+          interests: [query, 'language_learning'],
+          country: 'Iran'
         });
       }
     } catch (error) {
-      console.error('Twitter scraping error:', error);
+      console.error('Language Institute Directory scraping error:', error);
     }
     
     return leads;
@@ -458,83 +519,40 @@ export const TWITTER_CONFIG: LeadScraperConfig = {
 };
 
 /**
- * YouTube channel scraper config
+ * All available scraper configurations
  */
-export const YOUTUBE_CONFIG: LeadScraperConfig = {
-  name: 'YouTube',
-  platform: 'website',
-  baseUrl: 'https://www.youtube.com',
-  searchUrl: 'https://www.youtube.com/results?search_query={query}&sp=EgIQAg%253D%253D',
-  selectors: {
-    profileCard: 'ytd-channel-renderer',
-    name: '#channel-title',
-    bio: '#description-text',
-    followers: '#subscribers'
-  },
-  customLogic: async (page, query) => {
-    const leads: any[] = [];
-    
-    try {
-      // Wait for channel results (filter by channels)
-      await page.waitForSelector('ytd-channel-renderer', { timeout: 15000 });
-      
-      // Extract channel data
-      const channels = await page.$$eval('ytd-channel-renderer', (elements: Element[]) => {
-        return elements.slice(0, 15).map((el: Element) => {
-          const nameEl = el.querySelector('#channel-title a');
-          const descEl = el.querySelector('#description-text');
-          const subsEl = el.querySelector('#subscribers');
-          const linkEl = nameEl as HTMLAnchorElement;
-          
-          return {
-            name: nameEl?.textContent?.trim(),
-            bio: descEl?.textContent?.trim(),
-            followers: subsEl?.textContent?.trim(),
-            profileUrl: linkEl?.href,
-            username: linkEl?.href?.split('/').pop()
-          };
-        }).filter(c => c.name);
-      });
-      
-      for (const channel of channels) {
-        // Try to extract email from channel about page
-        leads.push({
-          ...channel,
-          source: 'youtube',
-          platform: 'youtube',
-          interests: [query]
-        });
-      }
-    } catch (error) {
-      console.error('YouTube scraping error:', error);
-    }
-    
-    return leads;
-  }
-};
+export const ALL_SCRAPER_CONFIGS: LeadScraperConfig[] = [
+  INSTAGRAM_CONFIG,
+  TELEGRAM_CONFIG,
+  LINKEDIN_CONFIG,
+  TWITTER_CONFIG,
+  YOUTUBE_CONFIG,
+  WHATSAPP_BUSINESS_CONFIG,
+  PINTEREST_CONFIG,
+  IRANIAN_DIRECTORY_CONFIG,
+  LANGUAGE_INSTITUTE_DIRECTORY
+];
 
 /**
- * All lead scraper configurations - 9 platforms
+ * Get configuration by platform name
  */
-export const LEAD_SCRAPER_CONFIGS: Record<string, LeadScraperConfig> = {
-  instagram: INSTAGRAM_CONFIG,
-  telegram: TELEGRAM_CONFIG,
-  iranian_directory: IRANIAN_DIRECTORY_CONFIG,
-  language_directory: LANGUAGE_INSTITUTE_DIRECTORY,
-  whatsapp_business: WHATSAPP_BUSINESS_CONFIG,
-  pinterest: PINTEREST_CONFIG,
-  linkedin: LINKEDIN_CONFIG,
-  twitter: TWITTER_CONFIG,
-  youtube: YOUTUBE_CONFIG
-};
+export function getConfigByPlatform(platform: string): LeadScraperConfig | undefined {
+  return ALL_SCRAPER_CONFIGS.find(config => 
+    config.platform === platform || 
+    config.name.toLowerCase().includes(platform.toLowerCase())
+  );
+}
 
 /**
- * Lead search queries for different targets
+ * Get all platforms that recommend API usage
  */
-export const LEAD_SEARCH_QUERIES = {
-  language_learners: 'زبان_انگلیسی',
-  ielts_candidates: 'IELTS',
-  university_students: 'دانشجو',
-  professionals: 'کسب_و_کار',
-  language_institutes: 'موسسه_زبان'
-};
+export function getApiRecommendedPlatforms(): LeadScraperConfig[] {
+  return ALL_SCRAPER_CONFIGS.filter(config => config.apiAlternative?.recommended);
+}
+
+/**
+ * Get platforms that require login
+ */
+export function getLoginRequiredPlatforms(): LeadScraperConfig[] {
+  return ALL_SCRAPER_CONFIGS.filter(config => config.requiresLogin);
+}
