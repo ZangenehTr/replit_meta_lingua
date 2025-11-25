@@ -3522,6 +3522,70 @@ export const gameLeaderboards = pgTable("game_leaderboards", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Daily Challenges Table
+export const gameDailyChallenges = pgTable("game_daily_challenges", {
+  id: serial("id").primaryKey(),
+  challengeDate: date("challenge_date").notNull(),
+  challengeType: varchar("challenge_type", { length: 50 }).notNull(), // vocabulary, grammar, listening, speaking, reading, writing
+  difficulty: varchar("difficulty", { length: 20 }).default("medium"), // easy, medium, hard
+  skillFocus: text("skill_focus").array().default([]),
+  targetXp: integer("target_xp").default(50),
+  rewardCoins: integer("reward_coins").default(10),
+  rewardBadges: text("reward_badges").array().default([]),
+  description: text("description"),
+  instructionsEn: text("instructions_en"),
+  instructionsFa: text("instructions_fa"),
+  instructionsAr: text("instructions_ar"),
+  questionCount: integer("question_count").default(5),
+  estimatedTimeMinutes: integer("estimated_time_minutes").default(15),
+  isActive: boolean("is_active").default(true),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// User Daily Challenge Progress
+export const userDailyChallengeProgress = pgTable("user_daily_challenge_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  challengeId: integer("challenge_id").references(() => gameDailyChallenges.id).notNull(),
+  status: varchar("status", { length: 20 }).default("not_started"), // not_started, in_progress, completed, abandoned
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  score: integer("score").default(0),
+  maxScore: integer("max_score").default(100),
+  correctAnswers: integer("correct_answers").default(0),
+  totalQuestions: integer("total_questions").default(0),
+  timeSpentMinutes: integer("time_spent_minutes").default(0),
+  xpEarned: integer("xp_earned").default(0),
+  coinsEarned: integer("coins_earned").default(0),
+  badgesEarned: text("badges_earned").array().default([]),
+  attemptNumber: integer("attempt_number").default(1),
+  answerDetails: jsonb("answer_details"), // detailed answer logs
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// CallerN AI Analysis Table
+export const callernAiAnalysis = pgTable("callern_ai_analysis", {
+  id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  analysisType: varchar("analysis_type", { length: 50 }).notNull(), // grammar, pronunciation, vocabulary, fluency, comprehension
+  score: decimal("score", { precision: 5, scale: 2 }).default("0"),
+  feedback: text("feedback"),
+  suggestions: text("suggestions").array().default([]),
+  strengthAreas: text("strength_areas").array().default([]),
+  improvementAreas: text("improvement_areas").array().default([]),
+  overallAssessment: text("overall_assessment"),
+  recommendedActivities: text("recommended_activities").array().default([]),
+  aiModel: varchar("ai_model", { length: 100 }).default("openai"),
+  confidence: decimal("confidence", { precision: 3, scale: 2 }),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
 // User Sessions table
 export const sessions = pgTable("sessions", {
   id: serial("id").primaryKey(),

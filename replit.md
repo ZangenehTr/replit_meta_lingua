@@ -33,7 +33,11 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ### Database Design
 - **ORM**: Drizzle.
-- **Schema**: Supports user management, course system, payment tracking, gamification, mood intelligence, guest progress, LinguaQuest lessons, dynamic form definitions/submissions, curriculum categories, guest leads, visitor chat sessions/messages, custom fonts, and CallerN session tracking (callSessions, callPostReports, sessionRatings, srsCards).
+- **Schema**: Supports user management, course system, payment tracking, gamification, mood intelligence, guest progress, LinguaQuest lessons, dynamic form definitions/submissions, curriculum categories, guest leads, visitor chat sessions/messages, custom fonts, CallerN session tracking (callSessions, callPostReports, sessionRatings, srsCards), **Daily Challenges system** (gameDailyChallenges, userDailyChallengeProgress), and **AI Supervisor Analysis** (callernAiAnalysis).
+- **Recent Additions**: 
+  - `gameDailyChallenges`: Stores daily challenge definitions (type, difficulty, instructions in 3 languages, rewards)
+  - `userDailyChallengeProgress`: Tracks user progress on daily challenges with scoring and badges
+  - `callernAiAnalysis`: AI-powered analysis for CallerN video sessions including grammar, pronunciation, vocabulary feedback
 
 ### AI Provider Configuration
 - Flexible AI provider selection via environment variables (`AI_PROVIDER`, `AI_FALLBACK_PROVIDER`).

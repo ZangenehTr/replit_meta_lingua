@@ -1,14 +1,14 @@
 import { db } from './db';
 import { 
   games, gameLevels, gameQuestions, gameSessions, gameLeaderboards,
-  userGameProgress, // gameDailyChallenges, userDailyChallengeProgress, // TODO: Add these tables to schema
+  userGameProgress, gameDailyChallenges, userDailyChallengeProgress,
   gameAnswerLogs, users
 } from '@shared/schema';
 import { eq, and, desc, sql, gte, lte, or, inArray } from 'drizzle-orm';
 import type {
   Game, GameLevel, GameQuestion, GameSession, GameLeaderboard,
-  UserGameProgress, // GameDailyChallenge, UserDailyChallengeProgress, // TODO: Add these types to schema
-  GameAnswerLog, InsertGameQuestion, // InsertGameDailyChallenge // TODO: Add this type to schema
+  UserGameProgress, GameDailyChallenge, UserDailyChallengeProgress, InsertGameDailyChallenge,
+  GameAnswerLog, InsertGameQuestion, InsertUserDailyChallengeProgress
 } from '@shared/schema';
 
 export class GameService {
@@ -806,10 +806,209 @@ export class GameService {
     return concepts;
   }
 
-  // Generate daily challenge based on user activity
-    async generateDailyChallenge(): Promise<any> {
-    // TODO: Implement daily challenge feature - requires gameDailyChallenges table in schema
-    throw new Error('Daily challenge feature not yet implemented - missing database schema');
+  // Generate today's daily challenge
+  async generateDailyChallenge(): Promise<GameDailyChallenge | null> {
+    const today = new Date().toISOString().split('T')[0];
+    
+    try {
+      // Check if challenge already exists for today
+      const [existing] = await db.select()
+        .from(gameDailyChallenges)
+        .where(eq(gameDailyChallenges.challengeDate, today as any));
+      
+      if (existing) {
+        return existing;
+      }
+
+      // Create new daily challenge
+      const challengeTypes = ['vocabulary', 'grammar', 'listening', 'speaking', 'reading', 'writing'];
+      const difficulties = ['easy', 'medium', 'hard'];
+      const selectedType = challengeTypes[Math.floor(Math.random() * challengeTypes.length)];
+      const selectedDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+
+      const challenge: InsertGameDailyChallenge = {
+        challengeDate: today as any,
+        challengeType: selectedType as any,
+        difficulty: selectedDifficulty as any,
+        skillFocus: this.getSkillsForType(selectedType),
+        targetXp: selectedDifficulty === 'easy' ? 30 : selectedDifficulty === 'medium' ? 50 : 75,
+        rewardCoins: selectedDifficulty === 'easy' ? 5 : selectedDifficulty === 'medium' ? 10 : 15,
+        rewardBadges: ['daily_champion'],
+        description: this.generateChallengeDescription(selectedType),
+        instructionsEn: `Complete today's ${selectedType} challenge with ${selectedDifficulty} difficulty`,
+        instructionsFa: `چالش امروز ${selectedType} را با سطح ${selectedDifficulty} تکمیل کنید`,
+        instructionsAr: `أكمل تحدي اليوم ${selectedType} بمستوى ${selectedDifficulty}`,
+        questionCount: selectedDifficulty === 'easy' ? 3 : selectedDifficulty === 'medium' ? 5 : 7,
+        estimatedTimeMinutes: selectedDifficulty === 'easy' ? 10 : selectedDifficulty === 'medium' ? 15 : 20,
+        isActive: true
+      };
+
+      const [created] = await db.insert(gameDailyChallenges).values(challenge).returning();
+      return created;
+    } catch (error) {
+      console.error('Error generating daily challenge:', error);
+      return null;
+    }
+  }
+
+  // Get daily challenge for user
+  async getDailyChallengeForUser(userId: number): Promise<any> {
+    const today = new Date().toISOString().split('T')[0];
+
+    try {
+      const [challenge] = await db.select().from(gameDailyChallenges).where(eq(gameDailyChallenges.challengeDate, today as any));
+      
+      if (!challenge) {
+        return null;
+      }
+
+      const [progress] = await db.select().from(userDailyChallengeProgress).where(
+        and(
+          eq(userDailyChallengeProgress.userId, userId),
+          eq(userDailyChallengeProgress.challengeId, challenge.id)
+        )
+      );
+
+      return {
+        challenge,
+        progress: progress || { status: 'not_started' }
+      };
+    } catch (error) {
+      console.error('Error fetching daily challenge:', error);
+      return null;
+    }
+  }
+
+  // Start daily challenge for user
+  async startDailyChallenge(userId: number, challengeId: number): Promise<UserDailyChallengeProgress | null> {
+    try {
+      const [existing] = await db.select().from(userDailyChallengeProgress).where(
+        and(
+          eq(userDailyChallengeProgress.userId, userId),
+          eq(userDailyChallengeProgress.challengeId, challengeId)
+        )
+      );
+
+      if (existing && existing.status === 'in_progress') {
+        return existing;
+      }
+
+      const progress: InsertUserDailyChallengeProgress = {
+        userId,
+        challengeId,
+        status: 'in_progress' as any,
+        startedAt: new Date(),
+        totalQuestions: 5,
+        attemptNumber: existing ? (existing.attemptNumber || 1) + 1 : 1
+      };
+
+      const [created] = await db.insert(userDailyChallengeProgress).values(progress).returning();
+      return created;
+    } catch (error) {
+      console.error('Error starting daily challenge:', error);
+      return null;
+    }
+  }
+
+  // Submit daily challenge answer
+  async submitDailyChallengeAnswer(progressId: number, questionIndex: number, answer: any, isCorrect: boolean): Promise<boolean> {
+    try {
+      const [progress] = await db.select().from(userDailyChallengeProgress).where(eq(userDailyChallengeProgress.id, progressId));
+      
+      if (!progress) {
+        throw new Error('Progress not found');
+      }
+
+      const currentAnswers = (progress.answerDetails as any) || [];
+      currentAnswers.push({ questionIndex, answer, isCorrect, timestamp: new Date() });
+
+      const correctCount = progress.correctAnswers || 0 + (isCorrect ? 1 : 0);
+
+      await db.update(userDailyChallengeProgress)
+        .set({
+          correctAnswers: correctCount,
+          answerDetails: currentAnswers,
+          updatedAt: new Date()
+        })
+        .where(eq(userDailyChallengeProgress.id, progressId));
+
+      return true;
+    } catch (error) {
+      console.error('Error submitting daily challenge answer:', error);
+      return false;
+    }
+  }
+
+  // Complete daily challenge
+  async completeDailyChallenge(progressId: number, score: number): Promise<UserDailyChallengeProgress | null> {
+    try {
+      const [progress] = await db.select().from(userDailyChallengeProgress).where(eq(userDailyChallengeProgress.id, progressId));
+      
+      if (!progress) {
+        throw new Error('Progress not found');
+      }
+
+      const [challenge] = await db.select().from(gameDailyChallenges).where(eq(gameDailyChallenges.id, progress.challengeId));
+      
+      if (!challenge) {
+        throw new Error('Challenge not found');
+      }
+
+      const xpEarned = Math.ceil((score / 100) * (challenge.targetXp || 50));
+      const coinsEarned = Math.ceil((score / 100) * (challenge.rewardCoins || 10));
+
+      await db.update(userDailyChallengeProgress)
+        .set({
+          status: 'completed' as any,
+          completedAt: new Date(),
+          score,
+          maxScore: 100,
+          xpEarned,
+          coinsEarned,
+          badgesEarned: score >= 80 ? ['daily_master'] : ['daily_completer'],
+          updatedAt: new Date()
+        })
+        .where(eq(userDailyChallengeProgress.id, progressId));
+
+      return await db.select().from(userDailyChallengeProgress).where(eq(userDailyChallengeProgress.id, progressId)).then(r => r[0] || null);
+    } catch (error) {
+      console.error('Error completing daily challenge:', error);
+      return null;
+    }
+  }
+
+  // Get leaderboard for daily challenges
+  async getDailyChallengeLeaderboard(challengeId: number, limit: number = 50): Promise<any[]> {
+    try {
+      return await db.select({
+        rank: sql<number>`ROW_NUMBER() OVER (ORDER BY ${userDailyChallengeProgress.score} DESC)`,
+        userId: userDailyChallengeProgress.userId,
+        userName: users.firstName,
+        score: userDailyChallengeProgress.score,
+        completedAt: userDailyChallengeProgress.completedAt
+      })
+      .from(userDailyChallengeProgress)
+      .leftJoin(users, eq(userDailyChallengeProgress.userId, users.id))
+      .where(eq(userDailyChallengeProgress.challengeId, challengeId))
+      .orderBy(desc(userDailyChallengeProgress.score))
+      .limit(limit);
+    } catch (error) {
+      console.error('Error fetching daily challenge leaderboard:', error);
+      return [];
+    }
+  }
+
+  // Helper: Get skills for challenge type
+  private getSkillsForType(type: string): string[] {
+    const skillMap: Record<string, string[]> = {
+      vocabulary: ['vocabulary', 'reading', 'comprehension'],
+      grammar: ['grammar', 'syntax', 'writing'],
+      listening: ['listening', 'comprehension', 'pronunciation'],
+      speaking: ['speaking', 'pronunciation', 'fluency'],
+      reading: ['reading', 'comprehension', 'vocabulary'],
+      writing: ['writing', 'grammar', 'vocabulary']
+    };
+    return skillMap[type] || ['general'];
   }
 
   // Determine challenge type based on activity
@@ -845,10 +1044,12 @@ export class GameService {
   // Generate challenge description
   private generateChallengeDescription(type: string): string {
     const descriptions = {
-      'score_based': 'Achieve the target score to complete this challenge!',
-      'time_based': 'Complete the game within the time limit!',
-      'accuracy_based': 'Maintain high accuracy throughout the game!',
-      'streak_based': 'Build a winning streak to claim your reward!'
+      vocabulary: 'Master new words and expand your vocabulary!',
+      grammar: 'Perfect your grammar skills!',
+      listening: 'Sharpen your listening comprehension!',
+      speaking: 'Improve your speaking skills!',
+      reading: 'Enhance your reading ability!',
+      writing: 'Refine your writing technique!'
     };
     return descriptions[type] || 'Complete today\'s special challenge!';
   }

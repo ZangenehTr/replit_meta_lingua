@@ -1534,37 +1534,8 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
   }
   
   private initializeMockData(): void {
-    // Initialize with some sample data for testing
-    console.log('Initializing enhanced mentoring storage with mock data...');
-    
-    // Mock student progress
-    const mockProgress: InsertEnhancedStudentProgress = {
-      studentId: 1,
-      mentorId: 1,
-      trackingDate: new Date().toISOString().split('T')[0] as any,
-      overallProgressPercentage: "75.5" as any,
-      skillProgressScores: {
-        speaking: 80,
-        listening: 75,
-        reading: 70,
-        writing: 65,
-        grammar: 85,
-        vocabulary: 78
-      },
-      learningVelocity: "1.2" as any,
-      consistencyScore: "85.0" as any,
-      engagementLevel: "78.5" as any,
-      motivationIndex: "82.0" as any,
-      studyTimeMinutesDaily: 45,
-      sessionCompletionRate: "92.0" as any,
-      primaryChallenges: ['pronunciation', 'grammar'],
-      identifiedStrengths: ['vocabulary', 'reading comprehension'],
-      riskLevel: 'low'
-    };
-    
-    this.createStudentProgress(mockProgress);
-    
-    console.log('Mock data initialization completed');
+    // Initialize without mock data - real data will be loaded from database
+    console.log('Enhanced mentoring storage initialized (loading from database)');
   }
   
   // ========================================================================
