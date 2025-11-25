@@ -225,11 +225,11 @@ export default function PublicHome() {
               <h2 className="text-4xl font-bold mb-4">
                 {t('testPrep.heading', 'Excel in Your International Tests')}
               </h2>
-              <p className="text-lg text-blue-100 mb-6">
+              <p className="text-lg text-white mb-6">
                 {t('testPrep.subheading', 'IELTS • TOEFL • GRE • PTE')}
               </p>
               
-              <p className="text-xl text-blue-100 mb-8">
+              <p className="text-xl text-white mb-8">
                 {t('testPrep.description', 'Assess your CEFR level with our adaptive placement test. Get personalized study plans and track your progress to test success.')}
               </p>
               
@@ -244,7 +244,7 @@ export default function PublicHome() {
                   return (
                     <li key={index} className="flex items-start gap-3">
                       <Icon className="h-6 w-6 text-green-300 shrink-0 mt-0.5" />
-                      <span className="text-lg">{item.text}</span>
+                      <span className="text-lg text-white">{item.text}</span>
                     </li>
                   );
                 })}
@@ -343,11 +343,11 @@ export default function PublicHome() {
               <h2 className="text-4xl font-bold mb-4">
                 {t('kids.heading', 'Kids Love Learning Here')}
               </h2>
-              <p className="text-lg text-purple-100 mb-6">
+              <p className="text-lg text-white mb-6">
                 {t('kids.subheading', 'Fun, Interactive & Engaging')}
               </p>
               
-              <p className="text-xl text-purple-100 mb-8">
+              <p className="text-xl text-white mb-8">
                 {t('kids.description', "Turn language learning into an adventure! With LinguaQuest, kids earn XP, unlock achievements, and compete on leaderboards while mastering new skills.")}
               </p>
               
@@ -362,7 +362,7 @@ export default function PublicHome() {
                   return (
                     <li key={index} className="flex items-start gap-3">
                       <Icon className="h-6 w-6 text-yellow-300 shrink-0 mt-0.5" />
-                      <span className="text-lg">{item.text}</span>
+                      <span className="text-lg text-white">{item.text}</span>
                     </li>
                   );
                 })}
@@ -468,7 +468,7 @@ export default function PublicHome() {
                 <span className="text-yellow-300">{t('callern.headingHighlight', 'Native English Teachers')}</span>
               </h2>
               
-              <p className="text-xl text-indigo-100 mb-8">
+              <p className="text-xl text-white mb-8">
                 {t('callern.description', 'Connect instantly with certified teachers via live video. Perfect your accent, boost your confidence, and speak English like a native.')}
               </p>
               
@@ -483,7 +483,7 @@ export default function PublicHome() {
                   return (
                     <li key={index} className="flex items-start gap-3">
                       <Icon className="h-6 w-6 text-green-300 shrink-0 mt-0.5" />
-                      <span className="text-lg">{item.text}</span>
+                      <span className="text-lg text-white">{item.text}</span>
                     </li>
                   );
                 })}
