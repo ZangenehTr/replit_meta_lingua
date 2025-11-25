@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "web", "python-3.11", "postgresql-16"]
+modules = ["nodejs-20", "web", "postgresql-16"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["espeak-ng", "ffmpeg", "ffmpeg-full", "gcc", "glibc", "jq", "libcxx", "libsndfile", "libstdcxx5", "libxcrypt", "libyaml", "netcat", "ollama", "openssh", "pkg-config", "python3", "sshpass", "xsimd"]
+packages = ["ffmpeg", "jq"]
 
 [deployment]
 deploymentTarget = "gce"
