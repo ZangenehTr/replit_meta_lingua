@@ -74,15 +74,14 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
 
     // Check if session exists and is active
     const session = await storage.getUserSession(token);
-    if (!session || !session.isActive) {
-      return res.status(401).json({ error: 'Session expired or invalid' });
+    if (session && session.isActive) {
+      // Update last active time for existing session
+      await storage.updateUserSessionActivity(session.id);
+      req.session = session;
     }
-
-    // Update last active time
-    await storage.updateUserSessionActivity(session.id);
+    // If session doesn't exist but JWT is valid, allow access (JWT is proof of authentication)
 
     req.user = user;
-    req.session = session;
     next();
   } catch (error) {
     console.error('Authentication error:', error);

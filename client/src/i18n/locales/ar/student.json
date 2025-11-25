@@ -525,5 +525,12 @@
   "fieldsPrePopulated": "تم ملء المعلومات مسبقاً من ملفك الشخصي. يمكنك تعديل أي حقل حسب الحاجة.",
   "enrollNow": "قم بالتسجيل",
   "enrollFree": "التسجيل مجاني",
-  "startLearning": "ابدأ التعلم"
+  "startLearning": "ابدأ التعلم",
+  "unifiedDashboard": {
+    "discoverYourLevel": "اكتشف مستواك",
+    "placementTestDescription": "خذ اختبار التوزيع المدعوم بالذكاء الاصطناعي لاكتشاف مستوى اللغة الإنجليزية الحالي",
+    "browseCourses": "استعرض الدورات",
+    "browseCoursesCTA": "استكشف فهرسنا الشامل للدورات",
+    "takePlacementTest": "خذ اختبار التوزيع"
+  }
 }
