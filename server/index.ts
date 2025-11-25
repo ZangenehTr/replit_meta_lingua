@@ -68,6 +68,10 @@ console.log('');
 
 const app = express();
 
+// CRITICAL: Set Express app environment from NODE_ENV
+// This ensures app.get("env") returns the correct value in both dev and production
+app.set('env', process.env.NODE_ENV || 'development');
+
 // Disable ETags to prevent 304 Not Modified responses
 app.set('etag', false);
 
