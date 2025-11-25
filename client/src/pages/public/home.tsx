@@ -222,7 +222,7 @@ export default function PublicHome() {
                 <span className="text-sm font-medium">{t('testPrep.badge', 'Free Placement Test')}</span>
               </div>
               
-              <h2 className="text-4xl font-bold mb-4">
+              <h2 className="text-4xl font-bold mb-4 text-white">
                 {t('testPrep.heading', 'Excel in Your International Tests')}
               </h2>
               <p className="text-lg text-white mb-6">
@@ -340,7 +340,7 @@ export default function PublicHome() {
                 <span className="text-sm font-medium">{t('kids.badge', 'Gamified Learning')}</span>
               </div>
               
-              <h2 className="text-4xl font-bold mb-4">
+              <h2 className="text-4xl font-bold mb-4 text-white">
                 {t('kids.heading', 'Kids Love Learning Here')}
               </h2>
               <p className="text-lg text-white mb-6">
@@ -463,7 +463,7 @@ export default function PublicHome() {
                 <span className="text-sm font-medium">{t('callern.badge', '24/7 Live Tutoring')}</span>
               </div>
               
-              <h2 className="text-4xl font-bold mb-6">
+              <h2 className="text-4xl font-bold mb-6 text-white">
                 {t('callern.heading', 'Practice Speaking with')} <br />
                 <span className="text-yellow-300">{t('callern.headingHighlight', 'Native English Teachers')}</span>
               </h2>
