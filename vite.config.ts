@@ -134,6 +134,13 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -145,6 +152,8 @@ export default defineConfig({
             if (id.includes("mediapipe")) return "vendor-mediapipe";
             if (id.includes("openai")) return "vendor-openai";
             if (id.includes("stripe")) return "vendor-stripe";
+            if (id.includes("@radix-ui")) return "vendor-radix";
+            if (id.includes("framer-motion")) return "vendor-motion";
             return "vendor-common";
           }
         },

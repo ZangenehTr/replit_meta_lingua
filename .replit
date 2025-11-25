@@ -7,7 +7,7 @@ channel = "stable-25_05"
 packages = ["espeak-ng", "ffmpeg", "ffmpeg-full", "gcc", "glibc", "jq", "libcxx", "libsndfile", "libstdcxx5", "libxcrypt", "libyaml", "netcat", "ollama", "openssh", "pkg-config", "python3", "sshpass", "xsimd"]
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "gce"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 

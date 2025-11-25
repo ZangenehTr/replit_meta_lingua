@@ -9,7 +9,8 @@ import type {
   MentoringIntervention, 
   AdaptiveLearningPath,
   RiskLevel,
-  InterventionPriority
+  InterventionPriority,
+  InterventionType
 } from './enhanced-mentoring-schema';
 
 // ============================================================================
