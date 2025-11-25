@@ -102,7 +102,12 @@ export const users = pgTable("users", {
   socializerLevel: text("socializer_level"),
   socializerSkills: text("socializer_skills").array(),
   isEmailVerified: boolean("is_email_verified").default(false),
-  isPhoneVerified: boolean("is_phone_verified").default(false)
+  isPhoneVerified: boolean("is_phone_verified").default(false),
+  introVideoUrl: text("intro_video_url"), // Teacher intro video URL
+  teacherBio: text("teacher_bio"), // Extended teacher biography
+  teacherSpecializations: text("teacher_specializations").array(), // Teacher specializations
+  hourlyRate: integer("hourly_rate"), // Teacher hourly rate in Toman
+  teachingExperience: varchar("teaching_experience", { length: 50 }) // e.g., "5 years"
 });
 
 // Curriculum Categories table - Dynamic CMS for course categorization
@@ -8815,6 +8820,86 @@ export type VisitorChatMessage = typeof visitorChatMessages.$inferSelect;
 export type InsertVisitorChatMessage = z.infer<typeof insertVisitorChatMessageSchema>;
 export type VisitorChatCannedResponse = typeof visitorChatCannedResponses.$inferSelect;
 export type InsertVisitorChatCannedResponse = z.infer<typeof insertVisitorChatCannedResponseSchema>;
+
+// ============================================================================
+// TEACHER REVIEWS SYSTEM - Student ratings with admin approval workflow
+// ============================================================================
+
+export const teacherReviews = pgTable("teacher_reviews", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  sessionId: integer("session_id"), // Reference to completed session (optional)
+  rating: integer("rating").notNull(), // 1-5 stars
+  reviewText: text("review_text"),
+  reviewTextFa: text("review_text_fa"), // Farsi version
+  reviewTextAr: text("review_text_ar"), // Arabic version
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
+  rejectionReason: text("rejection_reason"),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  isAnonymous: boolean("is_anonymous").default(false),
+  helpfulCount: integer("helpful_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for teacher reviews
+export const insertTeacherReviewSchema = createInsertSchema(teacherReviews).omit({
+  id: true,
+  status: true,
+  approvedBy: true,
+  approvedAt: true,
+  rejectionReason: true,
+  helpfulCount: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Types for teacher reviews
+export type TeacherReview = typeof teacherReviews.$inferSelect;
+export type InsertTeacherReview = z.infer<typeof insertTeacherReviewSchema>;
+
+// ============================================================================
+// EVENTS SYSTEM - For Upcoming Events widget
+// ============================================================================
+
+export const instituteEvents = pgTable("institute_events", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  titleFa: varchar("title_fa", { length: 255 }),
+  titleAr: varchar("title_ar", { length: 255 }),
+  description: text("description"),
+  descriptionFa: text("description_fa"),
+  descriptionAr: text("description_ar"),
+  eventType: varchar("event_type", { length: 50 }).notNull(), // workshop, seminar, webinar, class_opening, exam, holiday, celebration
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  location: varchar("location", { length: 255 }),
+  locationFa: varchar("location_fa", { length: 255 }),
+  isOnline: boolean("is_online").default(false),
+  onlineLink: text("online_link"),
+  imageUrl: text("image_url"),
+  capacity: integer("capacity"),
+  registeredCount: integer("registered_count").default(0),
+  isFeatured: boolean("is_featured").default(false),
+  isPublished: boolean("is_published").default(true),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for events
+export const insertInstituteEventSchema = createInsertSchema(instituteEvents).omit({
+  id: true,
+  registeredCount: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Types for events
+export type InstituteEvent = typeof instituteEvents.$inferSelect;
+export type InsertInstituteEvent = z.infer<typeof insertInstituteEventSchema>;
 
 // ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
