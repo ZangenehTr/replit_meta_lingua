@@ -64,7 +64,7 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
       try {
-        const response = await apiClient.post("/auth/login", credentials);
+        const response = await apiClient.post("/auth/phone/login", credentials);
         const data = response.data;
         
         // Store both tokens - handle different response formats
@@ -105,7 +105,7 @@ export function useAuth() {
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
       try {
-        const response = await apiClient.post("/auth/register", userData);
+        const response = await apiClient.post("/auth/phone/signup", userData);
         const data = response.data;
         
         // Store both tokens - handle different response formats

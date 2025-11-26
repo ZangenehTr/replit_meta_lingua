@@ -64,9 +64,19 @@ export function ProspectProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [currentProspect, setCurrentProspect] = useState<UnifiedProspect | null>(null);
 
-  // Load prospects from ProspectLifecycle unified view
+  // Load prospects from ProspectLifecycle unified view - DISABLED by default, only loaded when needed
   const { data: prospects = [], isLoading: isLoadingProspects, refetch: refreshProspects } = useQuery({
     queryKey: ['/api/prospect-lifecycle/unified-view'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('/api/prospect-lifecycle/unified-view', { method: 'GET' });
+        return response;
+      } catch (error) {
+        console.warn('Prospect lifecycle endpoint not available - using empty list');
+        return { prospects: [], total: 0 };
+      }
+    },
+    enabled: false, // DISABLED by default to prevent auto-load on app startup
     select: (response: any) => {
       // API returns { success, prospects, total }
       const items = response?.prospects || [];
