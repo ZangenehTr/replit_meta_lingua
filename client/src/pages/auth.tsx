@@ -122,10 +122,10 @@ export default function Auth() {
     setAuthError("");
     
     try {
-      const response = await fetch("/api/auth/request-otp", {
+      const response = await fetch("/api/auth/phone/request-otp-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: phoneNumber }),
+        body: JSON.stringify({ phoneNumber }),
       });
       
       const result = await response.json();

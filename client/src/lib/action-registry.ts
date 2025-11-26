@@ -50,7 +50,7 @@ export interface ActionResult {
 export const actionRegistry: Record<string, ActionConfig> = {
   // ========== AUTHENTICATION ACTIONS ==========
   'auth.login': {
-    endpoint: '/api/auth/login',
+    endpoint: '/api/auth/phone/login',
     method: 'POST',
     requiredRoles: [],
     cacheKeys: ['/api/users/me'],
