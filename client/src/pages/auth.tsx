@@ -41,6 +41,8 @@ export default function Auth() {
   const [otpMessage, setOtpMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0); // 90 second cooldown
+  const [otpCountdownDisplay, setOtpCountdownDisplay] = useState("");
   
   // Define schemas with static messages first, then override with translations when available
   const loginSchema = z.object({
@@ -110,10 +112,38 @@ export default function Auth() {
     }
   }, [user, setLocation, forceLogin]);
 
+  // OTP Resend Cooldown Timer
+  useEffect(() => {
+    if (otpResendCooldown <= 0) {
+      setOtpCountdownDisplay("");
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setOtpResendCooldown(prev => {
+        const newVal = prev - 1;
+        if (newVal <= 0) {
+          setOtpCountdownDisplay("");
+          return 0;
+        }
+        setOtpCountdownDisplay(`${newVal}s`);
+        return newVal;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [otpResendCooldown]);
+
   const requestOtp = async () => {
     const phoneNumber = loginForm.getValues("phoneNumber");
     if (!phoneNumber) {
       setAuthError(t('auth:phoneNumberRequired') || "Phone number is required");
+      return;
+    }
+
+    // Check cooldown
+    if (otpResendCooldown > 0) {
+      setAuthError(`⏱️ Please wait ${otpResendCooldown} seconds before requesting a new SMS code.`);
       return;
     }
 
@@ -132,9 +162,13 @@ export default function Auth() {
       
       if (response.ok) {
         setOtpSent(true);
-        setOtpMessage(result.message || "OTP sent to your phone number");
+        setOtpMessage(result.message || "✅ SMS code sent to your phone number");
         setUseOtp(true);
         loginForm.setValue("password", ""); // Clear password field
+        
+        // Start 90-second cooldown
+        setOtpResendCooldown(90);
+        setOtpCountdownDisplay("90s");
       } else {
         setAuthError(result.message || "Failed to send OTP");
       }
@@ -451,12 +485,21 @@ export default function Auth() {
                 {useOtp && (
                   <Button
                     type="button"
-                    className="w-full h-10 bg-transparent hover:bg-white/10 text-white/70 hover:text-white font-medium rounded-xl transition-all duration-200"
+                    className={`w-full h-10 font-medium rounded-xl transition-all duration-200 ${
+                      otpResendCooldown > 0
+                        ? "bg-white/5 text-white/50 cursor-not-allowed"
+                        : "bg-transparent hover:bg-white/10 text-white/70 hover:text-white"
+                    }`}
                     onClick={requestOtp}
-                    disabled={otpLoading}
+                    disabled={otpLoading || otpResendCooldown > 0}
                   >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    {t('auth:resendOtp') || 'Resend Code'}
+                    <RefreshCw className={`mr-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
+                    {otpResendCooldown > 0 
+                      ? `${t('auth:resendOtp') || 'Resend'} (${otpCountdownDisplay})`
+                      : otpSent 
+                        ? t('auth:resendOtp') || 'Resend Code'
+                        : t('auth:sendCode') || 'Send Code'
+                    }
                   </Button>
                 )}
               </form>
