@@ -198,15 +198,27 @@ export default function Auth() {
   const handleRegister = async (data: RegisterFormData) => {
     setAuthError("");
     try {
-      await registerUser({ 
-        email: data.email,
-        phoneNumber: data.phoneNumber,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: "Student" 
+      // Use email/password signup (doesn't require SMS)
+      const response = await fetch("/api/auth/email/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: "Student"
+        }),
       });
-      setLocation("/dashboard");
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Redirect to dashboard after successful signup
+        setLocation("/dashboard");
+      } else {
+        setAuthError(result.message || t('auth:registrationFailed'));
+      }
     } catch (error: any) {
       setAuthError(error.message || t('auth:registrationFailed'));
     }

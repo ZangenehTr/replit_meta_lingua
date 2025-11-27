@@ -481,4 +481,146 @@ router.post('/phone/signup', async (req: Request, res: Response) => {
   }
 });
 
+// ==========================================
+// Email/Password Registration (No SMS required)
+// ==========================================
+router.post('/email/signup', async (req: Request, res: Response) => {
+  try {
+    const signupSchema = z.object({
+      email: z.string().email('Valid email required'),
+      password: z.string().min(6, 'Password must be at least 6 characters'),
+      firstName: z.string().min(1, 'First name required'),
+      lastName: z.string().min(1, 'Last name required'),
+      role: z.enum(['Student', 'Teacher', 'Parent', 'Admin', 'Mentor', 'Supervisor', 'CallCenter', 'Accountant', 'FrontDesk']).optional().default('Student')
+    });
+
+    const data = signupSchema.parse(req.body);
+
+    // Check if email already exists
+    const existingUser = await storage.getUserByEmail(data.email);
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered. Please login instead.'
+      });
+    }
+
+    // Create user directly
+    const user = await storage.createUser({
+      email: data.email,
+      password: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: data.role,
+      isPhoneVerified: false,
+      isEmailVerified: true,
+      locale: 'fa'
+    });
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    // Set secure cookies
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      message: 'Account created successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      }
+    });
+  } catch (error: any) {
+    console.error('Email signup failed:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Signup failed. Please try again.'
+    });
+  }
+});
+
+// ==========================================
+// Email/Password Login (No SMS required)
+// ==========================================
+router.post('/email/login', async (req: Request, res: Response) => {
+  try {
+    const loginSchema = z.object({
+      email: z.string().email('Valid email required'),
+      password: z.string().min(1, 'Password required')
+    });
+
+    const { email, password } = loginSchema.parse(req.body);
+
+    // Find user by email
+    const user = await storage.getUserByEmail(email);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await storage.verifyPassword(user.id, password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    // Set secure cookies
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      }
+    });
+  } catch (error: any) {
+    console.error('Email login failed:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Login failed'
+    });
+  }
+});
+
 export default router;
