@@ -170,7 +170,7 @@ export default function Auth() {
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
-        role: "student" 
+        role: "Student" 
       });
       setLocation("/dashboard");
     } catch (error: any) {
