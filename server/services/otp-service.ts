@@ -310,8 +310,8 @@ export class OtpService {
       // Format phone number for Iranian network
       const formattedPhone = this.formatIranianPhoneNumber(phoneNumber);
 
-      // Call Kavenegar API
-      const kavenegarUrl = new URL('https://api.kavenegar.com/v1/send.json');
+      // Call Kavenegar API using IP address (46.102.138.125) instead of domain for Iranian networks
+      const kavenegarUrl = new URL('https://46.102.138.125/v1/send.json');
       kavenegarUrl.searchParams.append('apikey', kavenegarApiKey);
       kavenegarUrl.searchParams.append('receptor', formattedPhone);
       kavenegarUrl.searchParams.append('message', message);
@@ -319,6 +319,9 @@ export class OtpService {
 
       const response = await fetch(kavenegarUrl.toString(), {
         method: 'GET',
+        headers: {
+          'Host': 'api.kavenegar.com' // Required for HTTPS certificate validation with IP address
+        },
         timeout: 10000
       });
 

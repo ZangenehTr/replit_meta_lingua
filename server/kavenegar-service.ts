@@ -25,14 +25,21 @@ interface SMSResult {
 
 export class KavenegarService {
   private apiKey: string;
-  private baseUrl = 'https://api.kavenegar.com/v1';
+  // Use IP address instead of domain to avoid DNS/network issues in restricted environments
+  // Kavenegar provides these IPs for direct API access from Iran
+  private baseUrl = 'https://46.102.138.125/v1';
+  private fallbackUrls = [
+    'https://79.175.172.10/v1',
+    'https://79.175.138.153/v1',
+    'https://46.102.138.126/v1'
+  ];
 
   constructor() {
     this.apiKey = process.env.KAVENEGAR_API_KEY || '';
     if (!this.apiKey) {
       console.warn('KAVENEGAR_API_KEY not provided - SMS service will not function');
     } else {
-      console.log('✅ Kavenegar API Key configured successfully');
+      console.log('✅ Kavenegar API Key configured (using IP-based endpoint for Iranian networks)');
     }
   }
 
@@ -43,7 +50,8 @@ export class KavenegarService {
       const response = await fetch(`${this.baseUrl}/${this.apiKey}/account/info.json`, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
         },
         signal: AbortSignal.timeout(5000) // 5 second timeout
       });
@@ -91,6 +99,7 @@ export class KavenegarService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
+          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
         },
         body: params
       });
@@ -173,6 +182,7 @@ export class KavenegarService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
+          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
         },
         body: params
       });
@@ -216,7 +226,11 @@ export class KavenegarService {
     try {
       const url = `${this.baseUrl}/${this.apiKey}/account/info.json`;
       
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
+        }
+      });
       const data = await response.json();
       
       if (data.return.status === 200 && data.entries && data.entries.length > 0) {
