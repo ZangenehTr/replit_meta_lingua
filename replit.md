@@ -26,18 +26,18 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
   - CacheFirst for images (30 days)
 - **Icons**: Generated PWA icons (192x192, 512x512, maskable)
 
-### Phone-First Authentication (November 25, 2025)
-- **SMS-Based Login**: Users can now authenticate via Iranian phone numbers (Kavenegar SMS)
-- **6 Authentication Endpoints**:
+### Phone-Only Authentication (November 27, 2025) - SIMPLIFIED
+- **Phone-Only Login/Signup**: Authentication now uses only phone number + OTP (no email/password)
+- **Simplified UI**: Clean Persian interface with phone number field only
+- **4 Core Endpoints**:
   1. `/api/auth/phone/request-otp-login` - Request OTP for existing users
-  2. `/api/auth/phone/request-otp-signup` - Request OTP for registration
+  2. `/api/auth/phone/request-otp-signup` - Request OTP for registration (with firstName, lastName)
   3. `/api/auth/phone/verify-otp-login` - Verify OTP and login
   4. `/api/auth/phone/verify-otp-signup` - Verify OTP and create account
-  5. `/api/auth/phone/login` - Phone login flow (combined)
-  6. `/api/auth/phone/signup` - Phone signup flow (combined)
-- **Features**: Rate limiting, Iranian phone number validation, multilingual support (FA/EN/AR), 10-min OTP expiry
+- **Development Mode OTP Bypass**: When SMS fails in dev mode, OTP codes are logged to console for testing
+- **Features**: Rate limiting, Iranian phone number validation, 90-second resend cooldown, 10-min OTP expiry
 - **Session Management**: Automatic session creation with 24-hour access tokens, 7-day refresh tokens
-- **Phone Field**: Users now have `isPhoneVerified` flag and phone number stored in profile
+- **Kavenegar IP-Based**: Uses direct IP addresses (46.102.138.125) for Iranian network compatibility
 
 ### Shetab Payment Integration (November 25, 2025)
 - **Iranian Payment Gateway**: Complete integration with Shetab (Iran's national payment network)

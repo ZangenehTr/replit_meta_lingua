@@ -506,17 +506,20 @@ router.post('/email/signup', async (req: Request, res: Response) => {
       });
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    
     // Create user directly
     const user = await storage.createUser({
       email: data.email,
-      password: data.password,
+      password: hashedPassword,
       firstName: data.firstName,
       lastName: data.lastName,
       role: data.role,
       isPhoneVerified: false,
       isEmailVerified: true,
       locale: 'fa'
-    });
+    } as any);
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user);

@@ -2,27 +2,20 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { 
   Loader2, 
   GraduationCap, 
   Phone, 
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
   ChevronRight,
   Sparkles,
   Languages,
-  Globe2,
   RefreshCw
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -32,51 +25,34 @@ export default function Auth() {
   const { t } = useTranslation(['auth', 'common']);
   const { isRTL } = useLanguage();
   const [, setLocation] = useLocation();
-  const { user, login, register: registerUser, loginLoading, registerLoading, logout } = useAuth();
   const [authError, setAuthError] = useState<string>("");
-  const [forceLogin, setForceLogin] = useState(false);
-  const [useOtp, setUseOtp] = useState(true); // Phone-first: OTP is primary, password is fallback
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMessage, setOtpMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [otpResendCooldown, setOtpResendCooldown] = useState(0); // 90 second cooldown
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
   const [otpCountdownDisplay, setOtpCountdownDisplay] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   
-  // Define schemas with static messages first, then override with translations when available
   const loginSchema = z.object({
-    email: z.string().optional(),
-    phoneNumber: z.string().optional(),
-    password: z.string().optional(),
-    otp: z.string().optional(),
-  }).refine((data) => data.password || data.otp, {
-    message: "Either password or OTP is required",
-    path: ["password"],
+    phoneNumber: z.string().min(10, "شماره تلفن باید حداقل ۱۰ رقم باشد"),
+    otp: z.string().length(6, "کد تأیید باید ۶ رقم باشد").optional(),
   });
   
   const registerSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(6, "Password confirmation is required"),
-    firstName: z.string().min(2, "First name must be at least 2 characters"),
-    lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+    phoneNumber: z.string().min(10, "شماره تلفن باید حداقل ۱۰ رقم باشد"),
+    firstName: z.string().min(2, "نام باید حداقل ۲ حرف باشد"),
+    lastName: z.string().min(2, "نام خانوادگی باید حداقل ۲ حرف باشد"),
+    otp: z.string().length(6, "کد تأیید باید ۶ رقم باشد").optional(),
   });
   
   type LoginFormData = z.infer<typeof loginSchema>;
   type RegisterFormData = z.infer<typeof registerSchema>;
   
-  // Form initialization must happen before any conditional logic
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
       phoneNumber: "",
-      password: "",
       otp: "",
     },
   });
@@ -84,35 +60,13 @@ export default function Auth() {
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      email: "",
       phoneNumber: "",
-      password: "",
-      confirmPassword: "",
       firstName: "",
       lastName: "",
+      otp: "",
     },
   });
 
-  // Check for logout parameter in URL
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('logout') === 'true') {
-      logout();
-      setForceLogin(true);
-      // Clean URL
-      window.history.replaceState({}, document.title, "/auth");
-    }
-  }, [logout]);
-
-  // Redirect based on user role when user data is available (unless forcing login)
-  useEffect(() => {
-    if (user && !forceLogin) {
-      // All roles redirect to unified dashboard page
-      setLocation("/dashboard");
-    }
-  }, [user, setLocation, forceLogin]);
-
-  // OTP Resend Cooldown Timer
   useEffect(() => {
     if (otpResendCooldown <= 0) {
       setOtpCountdownDisplay("");
@@ -134,16 +88,15 @@ export default function Auth() {
     return () => clearInterval(timer);
   }, [otpResendCooldown]);
 
-  const requestOtp = async () => {
+  const requestOtpForLogin = async () => {
     const phoneNumber = loginForm.getValues("phoneNumber");
-    if (!phoneNumber) {
-      setAuthError(t('auth:phoneNumberRequired') || "Phone number is required");
+    if (!phoneNumber || phoneNumber.length < 10) {
+      setAuthError("لطفاً شماره تلفن معتبر وارد کنید");
       return;
     }
 
-    // Check cooldown
     if (otpResendCooldown > 0) {
-      setAuthError(`⏱️ Please wait ${otpResendCooldown} seconds before requesting a new SMS code.`);
+      setAuthError(`⏱️ لطفاً ${otpResendCooldown} ثانیه صبر کنید`);
       return;
     }
 
@@ -155,134 +108,198 @@ export default function Auth() {
       const response = await fetch("/api/auth/phone/request-otp-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ phoneNumber, locale: 'fa' }),
       });
       
       const result = await response.json();
       
       if (response.ok) {
         setOtpSent(true);
-        setOtpMessage(result.message || "✅ SMS code sent to your phone number");
-        setUseOtp(true);
-        loginForm.setValue("password", ""); // Clear password field
-        
-        // Start 90-second cooldown
+        setOtpMessage(result.message || "✅ کد تأیید به شماره تلفن شما ارسال شد");
         setOtpResendCooldown(90);
         setOtpCountdownDisplay("90s");
       } else {
-        setAuthError(result.message || "Failed to send OTP");
+        setAuthError(result.message || "خطا در ارسال کد تأیید");
       }
     } catch (error) {
-      setAuthError("Failed to send OTP. Please try again.");
+      setAuthError("خطا در ارسال کد. لطفاً دوباره تلاش کنید.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const requestOtpForSignup = async () => {
+    const phoneNumber = registerForm.getValues("phoneNumber");
+    const firstName = registerForm.getValues("firstName");
+    const lastName = registerForm.getValues("lastName");
+    
+    if (!phoneNumber || phoneNumber.length < 10) {
+      setAuthError("لطفاً شماره تلفن معتبر وارد کنید");
+      return;
+    }
+    
+    if (!firstName || firstName.length < 2) {
+      setAuthError("لطفاً نام خود را وارد کنید");
+      return;
+    }
+    
+    if (!lastName || lastName.length < 2) {
+      setAuthError("لطفاً نام خانوادگی خود را وارد کنید");
+      return;
+    }
+
+    if (otpResendCooldown > 0) {
+      setAuthError(`⏱️ لطفاً ${otpResendCooldown} ثانیه صبر کنید`);
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpMessage("");
+    setAuthError("");
+    
+    try {
+      const response = await fetch("/api/auth/phone/request-otp-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          phoneNumber, 
+          firstName,
+          lastName,
+          role: 'Student',
+          locale: 'fa' 
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        setOtpSent(true);
+        setOtpMessage(result.message || "✅ کد تأیید به شماره تلفن شما ارسال شد");
+        setOtpResendCooldown(90);
+        setOtpCountdownDisplay("90s");
+      } else {
+        setAuthError(result.message || "خطا در ارسال کد تأیید");
+      }
+    } catch (error) {
+      setAuthError("خطا در ارسال کد. لطفاً دوباره تلاش کنید.");
     } finally {
       setOtpLoading(false);
     }
   };
 
   const handleLogin = async (data: LoginFormData) => {
-    setAuthError("");
-    try {
-      // For OTP login use phone number, for password login use email
-      const loginData = useOtp 
-        ? { phoneNumber: data.phoneNumber, otp: data.otp }
-        : { email: data.email, password: data.password };
-      
-      await login(loginData);
-      // Login doesn't return user directly, we need to wait for the user query to refetch
-      // The redirect will happen in a useEffect that watches for user changes
-    } catch (error: any) {
-      setAuthError(error.message || t('auth:loginFailed'));
+    if (!data.otp || data.otp.length !== 6) {
+      setAuthError("لطفاً کد تأیید ۶ رقمی را وارد کنید");
+      return;
     }
-  };
 
-  const handleRegister = async (data: RegisterFormData) => {
     setAuthError("");
+    setIsSubmitting(true);
+    
     try {
-      // Use email/password signup (doesn't require SMS)
-      const response = await fetch("/api/auth/email/signup", {
+      const response = await fetch("/api/auth/phone/verify-otp-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          role: "Student"
+          phoneNumber: data.phoneNumber,
+          code: data.otp,
+          purpose: 'login',
+          locale: 'fa'
         }),
       });
 
       const result = await response.json();
       
       if (response.ok) {
-        // Redirect to dashboard after successful signup
-        setLocation("/dashboard");
+        // Handle tokens - backend returns them in result.tokens object
+        const accessToken = result.tokens?.accessToken || result.accessToken;
+        const refreshToken = result.tokens?.refreshToken || result.refreshToken;
+        
+        if (accessToken) {
+          localStorage.setItem("auth_token", accessToken);
+        }
+        if (refreshToken) {
+          localStorage.setItem("refresh_token", refreshToken);
+        }
+        window.location.href = "/dashboard";
       } else {
-        setAuthError(result.message || t('auth:registrationFailed'));
+        setAuthError(result.message || "کد تأیید نادرست است");
       }
     } catch (error: any) {
-      setAuthError(error.message || t('auth:registrationFailed'));
+      setAuthError(error.message || "خطا در ورود");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    setForceLogin(true);
+  const handleRegister = async (data: RegisterFormData) => {
+    if (!data.otp || data.otp.length !== 6) {
+      setAuthError("لطفاً کد تأیید ۶ رقمی را وارد کنید");
+      return;
+    }
+
+    setAuthError("");
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch("/api/auth/phone/verify-otp-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: data.phoneNumber,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          code: data.otp,
+          purpose: 'registration',
+          locale: 'fa',
+          role: 'Student'
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Handle tokens - backend returns them in result.tokens object
+        const accessToken = result.tokens?.accessToken || result.accessToken;
+        const refreshToken = result.tokens?.refreshToken || result.refreshToken;
+        
+        if (accessToken) {
+          localStorage.setItem("auth_token", accessToken);
+        }
+        if (refreshToken) {
+          localStorage.setItem("refresh_token", refreshToken);
+        }
+        window.location.href = "/dashboard";
+      } else {
+        setAuthError(result.message || "خطا در ثبت‌نام");
+      }
+    } catch (error: any) {
+      setAuthError(error.message || "خطا در ثبت‌نام");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Show logout option if user is logged in and not forcing login
-  if (user && !forceLogin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <GraduationCap className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold">{t('auth:metaLingua')}</h1>
-            </div>
-            <CardDescription>
-              {t('auth:loggedInAs', { firstName: user.firstName, lastName: user.lastName, role: user.role })}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <Button 
-              onClick={() => setLocation("/dashboard")}
-              className="w-full"
-            >
-              {t('auth:goToDashboard')}
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={handleLogout}
-              className="w-full"
-            >
-              {t('auth:switchAccount')}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as "login" | "register");
+    setAuthError("");
+    setOtpSent(false);
+    setOtpMessage("");
+  };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" dir="rtl">
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Main Content */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="relative z-10 min-h-screen flex flex-col"
       >
-        {/* Header Section with Logo */}
         <motion.div 
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -309,15 +326,14 @@ export default function Auth() {
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            {t('auth:metaLingua', 'Meta Lingua')}
+            متا لینگوا
           </h1>
           <p className="text-white/90 text-sm sm:text-base flex items-center justify-center gap-2">
             <Languages className="w-4 h-4" />
-            {t('auth:tagline', 'Your Journey to Language Mastery')}
+            سفر شما به تسلط بر زبان
           </p>
         </motion.div>
         
-        {/* Login Form Container */}
         <div className="flex-1 flex items-center justify-center px-8 pb-8">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
@@ -336,294 +352,240 @@ export default function Auth() {
                 </motion.div>
               )}
 
-              <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm rounded-xl p-1">
-              <TabsTrigger value="login" className="data-[state=active]:bg-white/20 text-white data-[state=active]:text-white rounded-lg">{t('auth:signIn')}</TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-white/20 text-white data-[state=active]:text-white rounded-lg">{t('auth:signUp')}</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
-              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-5 mt-6">
-                {!useOtp ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email" className="text-white/90 text-sm font-medium">{t('auth:email')}</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder={t('auth:emailPlaceholder')}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                        {...loginForm.register("email")}
-                        onFocus={() => setFocusedField('email')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                    </div>
-                    {loginForm.formState.errors.email && (
-                      <p className="text-sm text-red-300">
-                        {loginForm.formState.errors.email.message}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="login-phone" className="text-white/90 text-sm font-medium">{t('auth:phoneNumber', 'Phone Number')}</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                      <Input
-                        id="login-phone"
-                        type="tel"
-                        placeholder={t('auth:phoneNumberPlaceholder', 'Enter your phone number')}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                        {...loginForm.register("phoneNumber")}
-                        onFocus={() => setFocusedField('phoneNumber')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                    </div>
-                    {loginForm.formState.errors.phoneNumber && (
-                      <p className="text-sm text-red-300">
-                        {loginForm.formState.errors.phoneNumber.message}
-                      </p>
-                    )}
-                  </div>
-                )}
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm rounded-xl p-1">
+                  <TabsTrigger value="login" className="data-[state=active]:bg-white/20 text-white data-[state=active]:text-white rounded-lg">
+                    ورود
+                  </TabsTrigger>
+                  <TabsTrigger value="register" className="data-[state=active]:bg-white/20 text-white data-[state=active]:text-white rounded-lg">
+                    ثبت‌نام
+                  </TabsTrigger>
+                </TabsList>
                 
-                {!useOtp ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-white/90 text-sm font-medium">{t('auth:password')}</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                      <Input
-                        id="login-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder={t('auth:passwordPlaceholder')}
-                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                        {...loginForm.register("password")}
-                        onFocus={() => setFocusedField('password')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                    {loginForm.formState.errors.password && (
-                      <p className="text-sm text-red-300">
-                        {loginForm.formState.errors.password.message}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="login-otp" className="text-white/90 text-sm font-medium">{t('auth:otpCode') || 'Verification Code'}</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                      <Input
-                        id="login-otp"
-                        type="text"
-                        placeholder={t('common:otpPlaceholder')}
-                        maxLength={6}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                        {...loginForm.register("otp")}
-                      />
-                    </div>
-                    {otpMessage && (
-                      <p className="text-sm text-green-300">{otpMessage}</p>
-                    )}
-                  </div>
-                )}
-                
-                {!useOtp && (
-                  <div className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => setLocation("/forgot-password")}
-                      className="text-white/70 hover:text-white text-sm underline"
-                    >
-                      {t('auth:forgotPassword')}
-                    </button>
-                  </div>
-                )}
-                
-                <div className="flex gap-2">
-                  {!useOtp ? (
-                    <Button
-                      type="button"
-                      className="flex-1 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                      onClick={requestOtp}
-                      disabled={otpLoading}
-                    >
-                      {otpLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Phone className="mr-2 h-4 w-4" />
+                <TabsContent value="login">
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-5 mt-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-phone" className="text-white/90 text-sm font-medium">شماره تلفن</Label>
+                      <div className="relative">
+                        <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                        <Input
+                          id="login-phone"
+                          type="tel"
+                          placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                          className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
+                          dir="ltr"
+                          {...loginForm.register("phoneNumber")}
+                        />
+                      </div>
+                      {loginForm.formState.errors.phoneNumber && (
+                        <p className="text-sm text-red-300">
+                          {loginForm.formState.errors.phoneNumber.message}
+                        </p>
                       )}
-                      {t('auth:loginWithOtp') || 'Login with SMS Code'}
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      className="flex-1 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
-                      onClick={() => {
-                        setUseOtp(false);
-                        setOtpSent(false);
-                        loginForm.setValue("otp", "");
-                      }}
-                    >
-                      <Mail className="mr-2 h-4 w-4" />
-                      {t('auth:useEmailPassword') || 'Use Email & Password'}
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    type="submit" 
-                    className="flex-1 h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]" 
-                    disabled={loginLoading}
-                  >
-                    {loginLoading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        {t('auth:signIn')}
-                        <ChevronRight className="w-5 h-5" />
-                      </span>
+                    </div>
+                    
+                    {otpSent && (
+                      <div className="space-y-2">
+                        <Label htmlFor="login-otp" className="text-white/90 text-sm font-medium">کد تأیید</Label>
+                        <Input
+                          id="login-otp"
+                          type="text"
+                          placeholder="کد ۶ رقمی"
+                          maxLength={6}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-center text-lg tracking-widest"
+                          dir="ltr"
+                          {...loginForm.register("otp")}
+                        />
+                        {otpMessage && (
+                          <p className="text-sm text-green-300">{otpMessage}</p>
+                        )}
+                      </div>
                     )}
-                  </Button>
-                </div>
+                    
+                    <div className="flex flex-col gap-3">
+                      {!otpSent ? (
+                        <Button
+                          type="button"
+                          className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]"
+                          onClick={requestOtpForLogin}
+                          disabled={otpLoading}
+                        >
+                          {otpLoading ? (
+                            <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                          ) : (
+                            <>
+                              <Phone className="ml-2 h-5 w-5" />
+                              ارسال کد تأیید
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <>
+                          <Button 
+                            type="submit" 
+                            className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]" 
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <span className="flex items-center gap-2">
+                                ورود
+                                <ChevronRight className="w-5 h-5" />
+                              </span>
+                            )}
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            className={`w-full h-10 font-medium rounded-xl transition-all duration-200 ${
+                              otpResendCooldown > 0
+                                ? "bg-white/5 text-white/50 cursor-not-allowed"
+                                : "bg-transparent hover:bg-white/10 text-white/70 hover:text-white"
+                            }`}
+                            onClick={requestOtpForLogin}
+                            disabled={otpLoading || otpResendCooldown > 0}
+                          >
+                            <RefreshCw className={`ml-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
+                            {otpResendCooldown > 0 
+                              ? `ارسال مجدد (${otpCountdownDisplay})`
+                              : "ارسال مجدد کد"
+                            }
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </form>
+                </TabsContent>
                 
-                {useOtp && (
-                  <Button
-                    type="button"
-                    className={`w-full h-10 font-medium rounded-xl transition-all duration-200 ${
-                      otpResendCooldown > 0
-                        ? "bg-white/5 text-white/50 cursor-not-allowed"
-                        : "bg-transparent hover:bg-white/10 text-white/70 hover:text-white"
-                    }`}
-                    onClick={requestOtp}
-                    disabled={otpLoading || otpResendCooldown > 0}
-                  >
-                    <RefreshCw className={`mr-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
-                    {otpResendCooldown > 0 
-                      ? `${t('auth:resendOtp') || 'Resend'} (${otpCountdownDisplay})`
-                      : otpSent 
-                        ? t('auth:resendOtp') || 'Resend Code'
-                        : t('auth:sendCode') || 'Send Code'
-                    }
-                  </Button>
-                )}
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">{t('auth:firstName')}</Label>
-                    <Input
-                      id="firstName"
-                      placeholder={t('auth:firstNamePlaceholder')}
-                      {...registerForm.register("firstName")}
-                    />
-                    {registerForm.formState.errors.firstName && (
-                      <p className="text-sm text-red-500">
-                        {registerForm.formState.errors.firstName.message}
-                      </p>
+                <TabsContent value="register">
+                  <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4 mt-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName" className="text-white/90 text-sm font-medium">نام</Label>
+                        <Input
+                          id="firstName"
+                          placeholder="نام"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                          {...registerForm.register("firstName")}
+                        />
+                        {registerForm.formState.errors.firstName && (
+                          <p className="text-sm text-red-300">
+                            {registerForm.formState.errors.firstName.message}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName" className="text-white/90 text-sm font-medium">نام خانوادگی</Label>
+                        <Input
+                          id="lastName"
+                          placeholder="نام خانوادگی"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                          {...registerForm.register("lastName")}
+                        />
+                        {registerForm.formState.errors.lastName && (
+                          <p className="text-sm text-red-300">
+                            {registerForm.formState.errors.lastName.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="register-phone" className="text-white/90 text-sm font-medium">شماره تلفن</Label>
+                      <div className="relative">
+                        <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                        <Input
+                          id="register-phone"
+                          type="tel"
+                          placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                          className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
+                          dir="ltr"
+                          {...registerForm.register("phoneNumber")}
+                        />
+                      </div>
+                      {registerForm.formState.errors.phoneNumber && (
+                        <p className="text-sm text-red-300">
+                          {registerForm.formState.errors.phoneNumber.message}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {otpSent && (
+                      <div className="space-y-2">
+                        <Label htmlFor="register-otp" className="text-white/90 text-sm font-medium">کد تأیید</Label>
+                        <Input
+                          id="register-otp"
+                          type="text"
+                          placeholder="کد ۶ رقمی"
+                          maxLength={6}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-center text-lg tracking-widest"
+                          dir="ltr"
+                          {...registerForm.register("otp")}
+                        />
+                        {otpMessage && (
+                          <p className="text-sm text-green-300">{otpMessage}</p>
+                        )}
+                      </div>
                     )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">{t('auth:lastName')}</Label>
-                    <Input
-                      id="lastName"
-                      placeholder={t('auth:lastNamePlaceholder')}
-                      {...registerForm.register("lastName")}
-                    />
-                    {registerForm.formState.errors.lastName && (
-                      <p className="text-sm text-red-500">
-                        {registerForm.formState.errors.lastName.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-email">{t('auth:email')}</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                    <Input
-                      id="register-email"
-                      type="email"
-                      placeholder={t('auth:emailPlaceholder')}
-                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                      {...registerForm.register("email")}
-                    />
-                  </div>
-                  {registerForm.formState.errors.email && (
-                    <p className="text-sm text-red-300">
-                      {registerForm.formState.errors.email.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-phone" className="text-white/90 text-sm font-medium">{t('auth:phoneNumber', 'Phone Number')}</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
-                    <Input
-                      id="register-phone"
-                      type="tel"
-                      placeholder={t('auth:phoneNumberPlaceholder', 'Enter your phone number')}
-                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
-                      {...registerForm.register("phoneNumber")}
-                    />
-                  </div>
-                  {registerForm.formState.errors.phoneNumber && (
-                    <p className="text-sm text-red-300">
-                      {registerForm.formState.errors.phoneNumber.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-password">{t('auth:password')}</Label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    placeholder={t('auth:passwordPlaceholder')}
-                    {...registerForm.register("password")}
-                  />
-                  {registerForm.formState.errors.password && (
-                    <p className="text-sm text-red-300">
-                      {registerForm.formState.errors.password.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">{t('auth:confirmPassword', 'Confirm Password')}</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder={t('auth:confirmPasswordPlaceholder', 'Re-enter your password')}
-                    {...registerForm.register("confirmPassword")}
-                  />
-                  {registerForm.formState.errors.confirmPassword && (
-                    <p className="text-sm text-red-300">
-                      {registerForm.formState.errors.confirmPassword.message}
-                    </p>
-                  )}
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={registerLoading}>
-                  {registerLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {t('auth:createAccount')}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+                    
+                    <div className="flex flex-col gap-3">
+                      {!otpSent ? (
+                        <Button
+                          type="button"
+                          className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]"
+                          onClick={requestOtpForSignup}
+                          disabled={otpLoading}
+                        >
+                          {otpLoading ? (
+                            <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                          ) : (
+                            <>
+                              <Phone className="ml-2 h-5 w-5" />
+                              ارسال کد تأیید
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <>
+                          <Button 
+                            type="submit" 
+                            className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]" 
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <span className="flex items-center gap-2">
+                                ثبت‌نام
+                                <ChevronRight className="w-5 h-5" />
+                              </span>
+                            )}
+                          </Button>
+                          
+                          <Button
+                            type="button"
+                            className={`w-full h-10 font-medium rounded-xl transition-all duration-200 ${
+                              otpResendCooldown > 0
+                                ? "bg-white/5 text-white/50 cursor-not-allowed"
+                                : "bg-transparent hover:bg-white/10 text-white/70 hover:text-white"
+                            }`}
+                            onClick={requestOtpForSignup}
+                            disabled={otpLoading || otpResendCooldown > 0}
+                          >
+                            <RefreshCw className={`ml-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
+                            {otpResendCooldown > 0 
+                              ? `ارسال مجدد (${otpCountdownDisplay})`
+                              : "ارسال مجدد کد"
+                            }
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </form>
+                </TabsContent>
+              </Tabs>
             </div>
           </motion.div>
         </div>

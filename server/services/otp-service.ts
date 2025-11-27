@@ -146,6 +146,17 @@ export class OtpService {
 
       const otpRecord = await storage.createOtpCode(otpData);
 
+      // DEVELOPMENT MODE: Always log OTP code to console for testing
+      const isDevelopment = process.env.NODE_ENV !== 'production';
+      if (isDevelopment) {
+        console.log(`\n🔐 ═══════════════════════════════════════════════`);
+        console.log(`🔐 DEVELOPMENT OTP CODE for ${identifier}`);
+        console.log(`🔐 Code: ${code}`);
+        console.log(`🔐 Purpose: ${purpose}`);
+        console.log(`🔐 Expires: ${expiresAt.toLocaleString()}`);
+        console.log(`🔐 ═══════════════════════════════════════════════\n`);
+      }
+
       // Send OTP via email or SMS based on channel
       try {
         if (channel === 'sms') {
@@ -155,7 +166,24 @@ export class OtpService {
         }
       } catch (error) {
         console.error(`Failed to send ${channel} OTP:`, error);
-        // Log but don't fail - OTP is created even if delivery fails
+        
+        // In development mode, still report success since code is logged
+        if (isDevelopment) {
+          console.log(`⚠️ SMS/Email delivery failed, but OTP code is logged above for development testing.`);
+          const devMessages = {
+            fa: `کد تأیید: ${code} (حالت توسعه - کد در کنسول چاپ شد)`,
+            en: `Verification code: ${code} (Development mode - code logged to console)`,
+            ar: `رمز التحقق: ${code} (وضع التطوير - الكود مسجل في وحدة التحكم)`
+          };
+          return {
+            success: true,
+            message: devMessages[locale] || devMessages['en'],
+            otpId: otpRecord.id,
+            expiresAt
+          };
+        }
+        
+        // In production, log but don't fail - OTP is created even if delivery fails
         return {
           success: true,
           message: locale === 'fa'
@@ -317,13 +345,18 @@ export class OtpService {
       kavenegarUrl.searchParams.append('message', message);
       kavenegarUrl.searchParams.append('sender', 'Meta Lingua'); // Default sender
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
       const response = await fetch(kavenegarUrl.toString(), {
         method: 'GET',
         headers: {
           'Host': 'api.kavenegar.com' // Required for HTTPS certificate validation with IP address
         },
-        timeout: 10000
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Kavenegar API error: ${response.statusText}`);
