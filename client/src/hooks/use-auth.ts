@@ -64,7 +64,12 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
       try {
-        const response = await apiClient.post("/auth/phone/login", credentials);
+        // Detect whether it's email/password or phone/OTP login
+        const endpoint = credentials.email && credentials.password 
+          ? "/auth/email/login"
+          : "/auth/phone/login";
+        
+        const response = await apiClient.post(endpoint, credentials);
         const data = response.data;
         
         // Store both tokens - handle different response formats
