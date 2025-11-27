@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import bcrypt from 'bcrypt';
 import { storage } from '../storage';
 import { OtpService } from '../services/otp-service';
 import { generateTokens } from '../auth';
