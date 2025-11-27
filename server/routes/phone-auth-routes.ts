@@ -576,8 +576,8 @@ router.post('/email/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Verify password
-    const isPasswordValid = await storage.verifyPassword(user.id, password);
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
