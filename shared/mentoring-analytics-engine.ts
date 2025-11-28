@@ -1991,6 +1991,46 @@ export class MentoringAnalyticsEngine {
     }
   }
 
+  // ========================================================================
+  // LEGACY HELPER METHODS (UPDATED)
+  // ========================================================================
+  
+  private static calculateVelocityFromTimeSeries(timePoints: Date[], values: number[]): number {
+    if (timePoints.length < 2) return 0;
+    
+    const timeDeltas = timePoints.slice(1).map((time, i) => 
+      (time.getTime() - timePoints[i].getTime()) / (1000 * 60 * 60 * 24) // Convert to days
+    );
+    
+    const valueDeltas = values.slice(1).map((value, i) => value - values[i]);
+    
+    const totalTimeDelta = timeDeltas.reduce((sum, delta) => sum + delta, 0);
+    const totalValueDelta = valueDeltas.reduce((sum, delta) => sum + delta, 0);
+    
+    return totalTimeDelta > 0 ? totalValueDelta / totalTimeDelta : 0;
+  }
+  
+  private static determineVelocityTrend(timePoints: Date[], progressScores: number[]): 'accelerating' | 'steady' | 'decelerating' {
+    if (progressScores.length < 4) return 'steady';
+    
+    const midPoint = Math.floor(progressScores.length / 2);
+    const firstHalf = progressScores.slice(0, midPoint);
+    const secondHalf = progressScores.slice(midPoint);
+    const firstHalfTimes = timePoints.slice(0, midPoint);
+    const secondHalfTimes = timePoints.slice(midPoint);
+    
+    const firstHalfVelocity = this.calculateVelocityFromTimeSeries(firstHalfTimes, firstHalf);
+    const secondHalfVelocity = this.calculateVelocityFromTimeSeries(secondHalfTimes, secondHalf);
+    
+    const velocityChange = secondHalfVelocity - firstHalfVelocity;
+    
+    if (velocityChange > 0.1) return 'accelerating';
+    if (velocityChange < -0.1) return 'decelerating';
+    return 'steady';
+  }
+  
+  private static calculateVelocityConfidence(timePoints: Date[], progressScores: number[]): number {
+    const sampleSize = progressScores.length;
     const dataSpan = timePoints.length > 1 ? 
       (timePoints[timePoints.length - 1].getTime() - timePoints[0].getTime()) / (1000 * 60 * 60 * 24) : 0;
     
@@ -2005,7 +2045,7 @@ export class MentoringAnalyticsEngine {
     return Math.max(0, Math.min(1, confidence));
   }
   
-  private static simpleLinearRegression(x: number[], y: number[]): { slope: number; correlation: number } {
+  private static linearRegression(x: number[], y: number[]): { slope: number; correlation: number } {
     const n = x.length;
     const sumX = x.reduce((a, b) => a + b, 0);
     const sumY = y.reduce((a, b) => a + b, 0);
@@ -2019,7 +2059,7 @@ export class MentoringAnalyticsEngine {
     return { slope, correlation: isNaN(correlation) ? 0 : correlation };
   }
   
-  private static calculateSimpleTrendConfidence(progressScores: number[]): number {
+  private static calculateTrendConfidence(progressScores: number[]): number {
     const sampleSize = progressScores.length;
     const variance = this.calculateVariance(progressScores);
     
