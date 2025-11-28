@@ -139,19 +139,10 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes("node_modules")) {
-            if (id.includes("three")) return "vendor-three";
-            if (id.includes("react-pdf")) return "vendor-pdf";
-            if (id.includes("recharts")) return "vendor-charts";
-            if (id.includes("@tensorflow")) return "vendor-ml";
-            if (id.includes("mediapipe")) return "vendor-mediapipe";
-            if (id.includes("openai")) return "vendor-openai";
-            if (id.includes("stripe")) return "vendor-stripe";
-            if (id.includes("@radix-ui")) return "vendor-radix";
-            if (id.includes("framer-motion")) return "vendor-motion";
-            return "vendor-common";
-          }
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-radix": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-tabs", "@radix-ui/react-tooltip"],
+          "vendor-three": ["three", "three-stdlib"],
         },
       },
     },
