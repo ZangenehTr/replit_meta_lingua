@@ -73,16 +73,33 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // In production, the bundled server runs from dist/index.js
-  // and static files are in dist/public
-  const distPath = path.resolve(__dirname, "public");
+  // In Replit Autoscale deployment, the bundled server runs from /run/init
+  // but the build artifacts are in /home/runner/workspace/dist
+  // Use process.cwd() which points to the workspace root, not import.meta.url
+  const distPath = path.resolve(process.cwd(), "dist", "public");
+
+  console.log(`[Production] Looking for static files...`);
+  console.log(`  process.cwd(): ${process.cwd()}`);
+  console.log(`  __dirname: ${__dirname}`);
+  console.log(`  Resolved distPath: ${distPath}`);
 
   if (!fs.existsSync(distPath)) {
     console.error(`Static files directory not found at: ${distPath}`);
-    console.error(`Current __dirname: ${__dirname}`);
-    console.error(`Looking for production build in dist/public`);
+    console.error(`Attempting fallback to __dirname-based path...`);
+    
+    // Fallback: try __dirname-based path (works when running locally)
+    const fallbackPath = path.resolve(__dirname, "public");
+    if (fs.existsSync(fallbackPath)) {
+      console.log(`Using fallback path: ${fallbackPath}`);
+      app.use(express.static(fallbackPath));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(fallbackPath, "index.html"));
+      });
+      return;
+    }
+    
     throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first with 'npm run build'`,
+      `Could not find the build directory. Tried: ${distPath} and ${fallbackPath}. Make sure to build the client first with 'npm run build'`,
     );
   }
 
