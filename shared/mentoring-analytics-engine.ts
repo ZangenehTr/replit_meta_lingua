@@ -968,10 +968,10 @@ export class MentoringAnalyticsEngine {
     }
     
     // Determine velocity trend by comparing recent vs historical velocity
-    const velocityTrend = this.determineVelocityTrend(timePoints, progressScores);
+    const velocityTrend = this.determineVelocityTrendFromTimeSeries(timePoints, progressScores);
     
     // Calculate confidence based on data consistency and sample size
-    const velocityConfidence = this.calculateVelocityConfidence(timePoints, progressScores);
+    const velocityConfidence = this.calculateVelocityConfidenceFromTimeSeries(timePoints, progressScores);
     
     // Project time to reach goal (assuming 100% completion)
     const currentProgress = progressScores[progressScores.length - 1];
@@ -994,7 +994,7 @@ export class MentoringAnalyticsEngine {
     const { timePoints, progressScores } = metrics;
     
     // Calculate trend direction and strength using linear regression
-    const { slope, correlation } = this.linearRegression(
+    const { slope, correlation } = this.simpleLinearRegression(
       timePoints.map((_, i) => i), 
       progressScores
     );
@@ -1004,7 +1004,7 @@ export class MentoringAnalyticsEngine {
     else if (slope < -0.5) trendDirection = 'declining';
     
     const trendStrength = Math.abs(correlation);
-    const trendConfidence = this.calculateTrendConfidence(progressScores);
+    const trendConfidence = this.calculateSimpleTrendConfidence(progressScores);
     
     // Detect seasonal patterns
     const seasonalPatterns = this.detectSimpleSeasonalPatterns(timePoints, progressScores);
@@ -1080,7 +1080,7 @@ export class MentoringAnalyticsEngine {
     else if (totalRiskScore >= 20) riskLevel = 'low';
     
     // Generate intervention recommendations
-    const interventionRecommendations = this.generateInterventionRecommendations(riskFactors, riskLevel);
+    const interventionRecommendations = this.generateSimpleInterventionRecommendations(riskFactors, riskLevel);
     
     const confidenceLevel = this.calculateRiskConfidence(metrics, riskFactors);
     
@@ -2010,7 +2010,7 @@ export class MentoringAnalyticsEngine {
     return totalTimeDelta > 0 ? totalValueDelta / totalTimeDelta : 0;
   }
   
-  private static determineVelocityTrend(timePoints: Date[], progressScores: number[]): 'accelerating' | 'steady' | 'decelerating' {
+  private static determineVelocityTrendFromTimeSeries(timePoints: Date[], progressScores: number[]): 'accelerating' | 'steady' | 'decelerating' {
     if (progressScores.length < 4) return 'steady';
     
     const midPoint = Math.floor(progressScores.length / 2);
@@ -2029,7 +2029,7 @@ export class MentoringAnalyticsEngine {
     return 'steady';
   }
   
-  private static calculateVelocityConfidence(timePoints: Date[], progressScores: number[]): number {
+  private static calculateVelocityConfidenceFromTimeSeries(timePoints: Date[], progressScores: number[]): number {
     const sampleSize = progressScores.length;
     const dataSpan = timePoints.length > 1 ? 
       (timePoints[timePoints.length - 1].getTime() - timePoints[0].getTime()) / (1000 * 60 * 60 * 24) : 0;
@@ -2045,7 +2045,7 @@ export class MentoringAnalyticsEngine {
     return Math.max(0, Math.min(1, confidence));
   }
   
-  private static linearRegression(x: number[], y: number[]): { slope: number; correlation: number } {
+  private static simpleLinearRegression(x: number[], y: number[]): { slope: number; correlation: number } {
     const n = x.length;
     const sumX = x.reduce((a, b) => a + b, 0);
     const sumY = y.reduce((a, b) => a + b, 0);
@@ -2059,7 +2059,7 @@ export class MentoringAnalyticsEngine {
     return { slope, correlation: isNaN(correlation) ? 0 : correlation };
   }
   
-  private static calculateTrendConfidence(progressScores: number[]): number {
+  private static calculateSimpleTrendConfidence(progressScores: number[]): number {
     const sampleSize = progressScores.length;
     const variance = this.calculateVariance(progressScores);
     
@@ -2287,7 +2287,7 @@ export class MentoringAnalyticsEngine {
     };
   }
   
-  private static generateInterventionRecommendations(riskFactors: any[], riskLevel: RiskLevel): any[] {
+  private static generateSimpleInterventionRecommendations(riskFactors: any[], riskLevel: RiskLevel): any[] {
     const recommendations: any[] = [];
     
     riskFactors.forEach(factor => {
@@ -2351,12 +2351,12 @@ export class MentoringAnalyticsEngine {
     return Math.max(0, Math.min(100, score));
   }
   
-  private static calculateTimeToImpact(preMetrics: StudentProgressMetrics, postMetrics: StudentProgressMetrics): number {
+  private static calculateSimpleTimeToImpact(preMetrics: StudentProgressMetrics, postMetrics: StudentProgressMetrics): number {
     // Simplified: return middle of post-intervention period
     return ANALYTICS_CONFIG.INTERVENTION_EFFECTIVENESS_EVALUATION_PERIOD / 2;
   }
   
-  private static calculateSustainabilityScore(postMetrics: StudentProgressMetrics): number {
+  private static calculateSimpleSustainabilityScore(postMetrics: StudentProgressMetrics): number {
     if (postMetrics.progressScores.length < 3) return 50; // Default for insufficient data
     
     const trend = this.analyzePerformanceTrends(postMetrics);
@@ -2453,15 +2453,6 @@ export class MentoringAnalyticsEngine {
     return { expectedOutcome, competencyLevel, retentionProbability };
   }
   
-  private static calculateAverage(numbers: number[]): number {
-    return numbers.length > 0 ? numbers.reduce((a, b) => a + b, 0) / numbers.length : 0;
-  }
-  
-  private static calculateVariance(numbers: number[]): number {
-    const avg = this.calculateAverage(numbers);
-    const squareDiffs = numbers.map(value => Math.pow(value - avg, 2));
-    return this.calculateAverage(squareDiffs);
-  }
 }
 
 // ============================================================================
