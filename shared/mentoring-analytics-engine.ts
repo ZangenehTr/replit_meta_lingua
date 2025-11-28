@@ -1007,10 +1007,10 @@ export class MentoringAnalyticsEngine {
     const trendConfidence = this.calculateTrendConfidence(progressScores);
     
     // Detect seasonal patterns
-    const seasonalPatterns = this.detectSeasonalPatterns(timePoints, progressScores);
+    const seasonalPatterns = this.detectSimpleSeasonalPatterns(timePoints, progressScores);
     
     // Identify significant change points
-    const changePoints = this.detectChangePoints(timePoints, progressScores);
+    const changePoints = this.detectSimpleChangePoints(timePoints, progressScores);
     
     return {
       trendDirection,
@@ -2069,8 +2069,8 @@ export class MentoringAnalyticsEngine {
     return Math.max(0, Math.min(1, confidence));
   }
   
-  private static detectSeasonalPatterns(timePoints: Date[], values: number[]): any {
-    // Simple seasonal pattern detection
+  private static detectSimpleSeasonalPatterns(timePoints: Date[], values: number[]): any {
+    // Simple seasonal pattern detection for internal use
     const dayOfWeekPattern: { [key: string]: number } = {};
     const timeOfDayPattern: { [key: string]: number } = {};
     
@@ -2086,8 +2086,8 @@ export class MentoringAnalyticsEngine {
     return { dayOfWeek: dayOfWeekPattern, timeOfDay: timeOfDayPattern };
   }
   
-  private static detectChangePoints(timePoints: Date[], values: number[]): Array<any> {
-    // Simple change point detection using moving averages
+  private static detectSimpleChangePoints(timePoints: Date[], values: number[]): Array<any> {
+    // Simple change point detection using moving averages for internal use
     const changePoints: Array<any> = [];
     const windowSize = Math.max(3, Math.floor(values.length / 5));
     
