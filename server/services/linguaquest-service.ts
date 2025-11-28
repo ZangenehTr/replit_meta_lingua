@@ -309,29 +309,25 @@ export class LinguaQuestService {
     try {
       const session = await this.getGuestSession(sessionToken);
       if (!session) {
-        // Return beginner lessons for new users
-        return this.getLessons(undefined, 'beginner', undefined, 10);
+        // Return ALL active lessons for new users (not just beginner)
+        return this.getLessons(undefined, undefined, undefined, 10);
       }
 
       const progress = session.progress;
       const completedLessonIds = progress.completedLessons || [];
       
-      // Get lessons not yet completed, matching difficulty
-      let query = db
+      // Get all lessons not yet completed (regardless of difficulty for better engagement)
+      let lessons = await db
         .select()
         .from(linguaquestLessons)
-        .where(and(
-          eq(linguaquestLessons.isActive, true),
-          eq(linguaquestLessons.difficulty, progress.preferredDifficulty)
-        ));
-
-      if (completedLessonIds.length > 0) {
-        query = query.where(sql`${linguaquestLessons.id} NOT IN (${completedLessonIds.join(',')})`);
-      }
-
-      const lessons = await query
+        .where(eq(linguaquestLessons.isActive, true))
         .orderBy(asc(linguaquestLessons.id))
         .limit(10);
+
+      // Filter out completed lessons
+      if (completedLessonIds.length > 0) {
+        lessons = lessons.filter(l => !completedLessonIds.includes(l.id));
+      }
 
       return lessons;
     } catch (error) {

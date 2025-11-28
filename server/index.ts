@@ -539,7 +539,16 @@ server.listen({
   app.use('/api/payment', shetabPaymentRouter);
   console.log('✅ Shetab Payment Gateway routes registered');
   
-  // 404 handler for API endpoints
+  // Register all main routes SYNCHRONOUSLY before 404 handler
+  try {
+    const { registerRoutes } = await import('./routes.js');
+    await registerRoutes(app);
+    console.log('✅ All main routes registered');
+  } catch (error) {
+    console.error('⚠️  Failed to register routes:', error);
+  }
+  
+  // 404 handler for API endpoints (MUST come AFTER all route registration)
   app.use('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found', path: req.path });
   });
@@ -567,17 +576,6 @@ server.listen({
   // BACKGROUND INITIALIZATION (Non-Blocking)
   // These tasks run AFTER port is open
   // ============================================
-  
-  // Non-blocking: Import and register heavy routes
-  (async () => {
-    try {
-      const { registerRoutes } = await import('./routes.js');
-      await registerRoutes(app);
-      console.log('✅ All main routes registered');
-    } catch (error) {
-      console.error('⚠️  Failed to register routes:', error);
-    }
-  })();
   
   // Non-blocking: Seed LinguaQuest lessons
   (async () => {

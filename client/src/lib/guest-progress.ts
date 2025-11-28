@@ -254,15 +254,15 @@ export class GuestProgressManager {
       const response = await fetch(`/api/linguaquest/recommendations/${this.sessionToken}`);
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && result.lessons && result.lessons.length > 0) {
         return result.lessons;
       }
 
       // Fallback to basic lessons
-      return this.getFallbackLessons();
+      return await this.getFallbackLessons();
     } catch (error) {
       console.error('Error getting recommendations:', error);
-      return this.getFallbackLessons();
+      return await this.getFallbackLessons();
     }
   }
 
@@ -525,25 +525,37 @@ export class GuestProgressManager {
   /**
    * Get fallback lessons for offline mode
    */
-  private getFallbackLessons(): any[] {
+  private async getFallbackLessons(): Promise<any[]> {
+    try {
+      // Try to fetch all active lessons from the API
+      const response = await fetch('/api/linguaquest/lessons');
+      const result = await response.json();
+      if (result.success && result.lessons && result.lessons.length > 0) {
+        return result.lessons.slice(0, 10);
+      }
+    } catch (error) {
+      console.error('Error fetching fallback lessons:', error);
+    }
+    
+    // Hardcoded fallback only if API fails
     return [
       {
-        id: 1,
-        title: 'Basic Greetings',
-        description: 'Learn essential greeting phrases',
-        difficulty: 'beginner',
-        lessonType: 'vocabulary',
-        estimatedDurationMinutes: 10,
-        xpReward: 50
+        id: 2,
+        title: 'Daily Routines & Time Expressions',
+        description: 'Learn to discuss daily activities and time',
+        difficulty: 'B1',
+        lessonType: 'conversation',
+        estimatedDurationMinutes: 25,
+        xpReward: 265
       },
       {
-        id: 2,
-        title: 'Numbers 1-20',
-        description: 'Practice counting and numbers',
-        difficulty: 'beginner',
+        id: 3,
+        title: 'Shopping & Expressing Preferences',
+        description: 'Practice shopping vocabulary and expressing preferences',
+        difficulty: 'B1',
         lessonType: 'vocabulary',
-        estimatedDurationMinutes: 15,
-        xpReward: 75
+        estimatedDurationMinutes: 28,
+        xpReward: 275
       }
     ];
   }
