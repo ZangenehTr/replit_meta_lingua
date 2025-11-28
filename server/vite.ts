@@ -73,37 +73,46 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // In Replit Autoscale deployment, the bundled server runs from /run/init
-  // but the build artifacts are in /home/runner/workspace/dist
-  // Use process.cwd() which points to the workspace root, not import.meta.url
-  const distPath = path.resolve(process.cwd(), "dist", "public");
+  // In Replit Autoscale deployment, the bundled server runs from /run
+  // The static assets are bundled relative to the compiled index.js
+  // Use __dirname (derived from import.meta.url) which points to the compiled file location
+  
+  // Primary path: relative to compiled server file (works in Autoscale)
+  const bundledPath = path.resolve(__dirname, "public");
+  // Fallback path: workspace-based (works in local dev/preview)
+  const workspacePath = path.resolve(process.cwd(), "dist", "public");
 
   console.log(`[Production] Looking for static files...`);
   console.log(`  process.cwd(): ${process.cwd()}`);
   console.log(`  __dirname: ${__dirname}`);
-  console.log(`  Resolved distPath: ${distPath}`);
+  console.log(`  Bundled path (primary): ${bundledPath}`);
+  console.log(`  Workspace path (fallback): ${workspacePath}`);
 
-  if (!fs.existsSync(distPath)) {
-    console.error(`Static files directory not found at: ${distPath}`);
-    console.error(`Attempting fallback to __dirname-based path...`);
-    
-    // Fallback: try __dirname-based path (works when running locally)
-    const fallbackPath = path.resolve(__dirname, "public");
-    if (fs.existsSync(fallbackPath)) {
-      console.log(`Using fallback path: ${fallbackPath}`);
-      app.use(express.static(fallbackPath));
-      app.use("*", (_req, res) => {
-        res.sendFile(path.resolve(fallbackPath, "index.html"));
-      });
-      return;
-    }
-    
+  let distPath: string;
+
+  if (fs.existsSync(bundledPath)) {
+    distPath = bundledPath;
+    console.log(`Using bundled path: ${distPath}`);
+  } else if (fs.existsSync(workspacePath)) {
+    distPath = workspacePath;
+    console.log(`Using workspace path: ${distPath}`);
+  } else {
+    console.error(`Static files not found at either path!`);
+    console.error(`  Bundled: ${bundledPath}`);
+    console.error(`  Workspace: ${workspacePath}`);
     throw new Error(
-      `Could not find the build directory. Tried: ${distPath} and ${fallbackPath}. Make sure to build the client first with 'npm run build'`,
+      `Could not find the build directory. Tried: ${bundledPath} and ${workspacePath}. Make sure to build the client first with 'npm run build'`,
     );
   }
 
-  console.log(`Serving static files from: ${distPath}`);
+  // List contents for debugging
+  try {
+    const files = fs.readdirSync(distPath);
+    console.log(`Static directory contents: ${files.join(', ')}`);
+  } catch (e) {
+    console.error(`Failed to list directory contents: ${e}`);
+  }
+
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist (for SPA routing)
