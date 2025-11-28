@@ -6,11 +6,36 @@ import "./i18n";
 import { ErrorHandler } from "./error-handler";
 import { installWebRTCErrorHandler } from "./lib/webrtc-error-handler";
 
-// Install WebRTC error handler first (before any other handlers)
-installWebRTCErrorHandler();
+// Show startup errors visibly in production
+const showStartupError = (error: Error | string) => {
+  const container = document.getElementById("root");
+  if (container) {
+    container.innerHTML = `
+      <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f3f4f6; padding: 20px;">
+        <div style="max-width: 500px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 24px;">
+          <h2 style="color: #dc2626; font-size: 1.25rem; font-weight: 600; margin-bottom: 16px;">Application Error</h2>
+          <p style="color: #4b5563; margin-bottom: 16px;">The application encountered an error during startup.</p>
+          <pre style="background: #f9fafb; padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 0.875rem; color: #374151;">${typeof error === 'string' ? error : error.message || 'Unknown error'}</pre>
+          <button onclick="window.location.reload()" style="margin-top: 16px; width: 100%; background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+            Reload Page
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  console.error('Startup error:', error);
+};
 
-// Initialize error handling
-ErrorHandler.init();
+try {
+  // Install WebRTC error handler first (before any other handlers)
+  installWebRTCErrorHandler();
+
+  // Initialize error handling
+  ErrorHandler.init();
+} catch (error) {
+  showStartupError(error as Error);
+  throw error;
+}
 
 // Enhanced global error handlers
 window.addEventListener('unhandledrejection', (event) => {
@@ -81,10 +106,17 @@ const ErrorFallback = ({ error }: { error: Error }) => (
 
 const container = document.getElementById("root");
 if (!container) {
+  showStartupError("Root element not found");
   throw new Error("Root element not found");
 }
 
-const root = createRoot(container);
+let root: ReturnType<typeof createRoot>;
+try {
+  root = createRoot(container);
+} catch (error) {
+  showStartupError(error as Error);
+  throw error;
+}
 
 try {
   root.render(
@@ -94,5 +126,9 @@ try {
   );
 } catch (error) {
   console.error('Failed to render app:', error);
-  root.render(<ErrorFallback error={error as Error} />);
+  try {
+    root.render(<ErrorFallback error={error as Error} />);
+  } catch (fallbackError) {
+    showStartupError(error as Error);
+  }
 }
