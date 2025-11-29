@@ -25,13 +25,13 @@ interface SMSResult {
 
 export class KavenegarService {
   private apiKey: string;
-  // Use IP address instead of domain to avoid DNS/network issues in restricted environments
-  // Kavenegar provides these IPs for direct API access from Iran
-  private baseUrl = 'https://46.102.138.125/v1';
+  // Use domain name for international cloud servers (Replit, etc.)
+  // IP addresses are for internal Iranian networks only
+  private baseUrl = 'https://api.kavenegar.com/v1';
   private fallbackUrls = [
+    'https://46.102.138.125/v1',
     'https://79.175.172.10/v1',
-    'https://79.175.138.153/v1',
-    'https://46.102.138.126/v1'
+    'https://79.175.138.153/v1'
   ];
 
   constructor() {
@@ -39,7 +39,7 @@ export class KavenegarService {
     if (!this.apiKey) {
       console.warn('KAVENEGAR_API_KEY not provided - SMS service will not function');
     } else {
-      console.log('✅ Kavenegar API Key configured (using IP-based endpoint for Iranian networks)');
+      console.log('✅ Kavenegar API Key configured (using domain-based endpoint for cloud servers)');
     }
   }
 
@@ -50,10 +50,9 @@ export class KavenegarService {
       const response = await fetch(`${this.baseUrl}/${this.apiKey}/account/info.json`, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
+          'Accept': 'application/json'
         },
-        signal: AbortSignal.timeout(5000) // 5 second timeout
+        signal: AbortSignal.timeout(15000) // 15 second timeout for cloud connections
       });
       
       const latency = Date.now() - startTime;
@@ -98,11 +97,11 @@ export class KavenegarService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: params
-      });
+        body: params,
+        signal: AbortSignal.timeout(30000)
+      } as RequestInit);
 
       const data: KavenegarResponse = await response.json();
       
@@ -181,11 +180,11 @@ export class KavenegarService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: params
-      });
+        body: params,
+        signal: AbortSignal.timeout(30000)
+      } as RequestInit);
 
       const data: KavenegarResponse = await response.json();
       
@@ -228,7 +227,7 @@ export class KavenegarService {
       
       const response = await fetch(url, {
         headers: {
-          'Host': 'api.kavenegar.com' // Required for HTTPS with IP address
+
         }
       });
       const data = await response.json();
