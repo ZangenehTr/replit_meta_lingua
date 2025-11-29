@@ -18,7 +18,8 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 ### UI/UX Color Scheme Fix (November 29, 2025)
 - **Problem Fixed**: Dark purple backgrounds were causing serious readability issues on certain devices and browsers
 - **Solution**: Replaced dark purple theme with clean, high-contrast neutral colors:
-  - Gradients changed from purple (`hsl(262, 83%, 58%)`) to blue (`#2563eb`, `#0ea5e9`)
+  - Gradients changed from purple to WCAG-compliant blues (`#1d4ed8`, `#0369a1`)
+  - Button/badge contrast ratios: 6.7:1 and 5.9:1 (exceeds 4.5:1 AA requirement)
   - Card backgrounds changed to white with subtle borders
   - Tab and input elements use light gray (`#f1f5f9`) backgrounds
   - All text now uses dark gray colors for WCAG-compliant contrast
