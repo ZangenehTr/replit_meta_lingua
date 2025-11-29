@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import fetch from 'node-fetch';
 import { storage } from '../storage';
 import { emailService } from './email-service';
+import { kavenegarService } from '../kavenegar-service';
 import { InsertOtpCode, OtpCode } from '@shared/schema';
 
 export interface OtpGenerationResult {
@@ -328,7 +328,7 @@ export class OtpService {
         return;
       }
 
-      const messages = {
+      const messages: Record<string, string> = {
         fa: `کد تأیید Meta Lingua: ${code}\nاین کد تا 10 دقیقه معتبر است.`,
         en: `Meta Lingua verification code: ${code}\nValid for 10 minutes.`,
         ar: `رمز التحقق Meta Lingua: ${code}\nهذا الرمز صالح لمدة 10 دقائق.`
@@ -338,36 +338,14 @@ export class OtpService {
       // Format phone number for Iranian network
       const formattedPhone = this.formatIranianPhoneNumber(phoneNumber);
 
-      // Call Kavenegar API using IP address (46.102.138.125) instead of domain for Iranian networks
-      const kavenegarUrl = new URL('https://46.102.138.125/v1/send.json');
-      kavenegarUrl.searchParams.append('apikey', kavenegarApiKey);
-      kavenegarUrl.searchParams.append('receptor', formattedPhone);
-      kavenegarUrl.searchParams.append('message', message);
-      kavenegarUrl.searchParams.append('sender', 'Meta Lingua'); // Default sender
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      // Use the existing Kavenegar service for proper API handling
+      const result = await kavenegarService.sendSimpleSMS(formattedPhone, message);
       
-      const response = await fetch(kavenegarUrl.toString(), {
-        method: 'GET',
-        headers: {
-          'Host': 'api.kavenegar.com' // Required for HTTPS certificate validation with IP address
-        },
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Kavenegar API error: ${response.statusText}`);
-      }
-
-      const result = await response.json() as any;
-      if (result?.result?.status === 200) {
-        console.log(`✓ SMS OTP sent successfully to ${formattedPhone}`);
+      if (result.success) {
+        console.log(`✓ SMS OTP sent successfully to ${formattedPhone} (messageId: ${result.messageId})`);
       } else {
-        console.error('Kavenegar API returned error:', result);
-        throw new Error(`Kavenegar returned status: ${result?.result?.status || 'unknown'}`);
+        console.error('Kavenegar API returned error:', result.error);
+        throw new Error(`Kavenegar error: ${result.error || 'unknown'}`);
       }
       
     } catch (error) {
