@@ -15,6 +15,21 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ## Recently Completed Features
 
+### UI/UX Color Scheme Fix (November 29, 2025)
+- **Problem Fixed**: Dark purple backgrounds were causing serious readability issues on certain devices and browsers
+- **Solution**: Replaced dark purple theme with clean, high-contrast neutral colors:
+  - Gradients changed from purple (`hsl(262, 83%, 58%)`) to blue (`#2563eb`, `#0ea5e9`)
+  - Card backgrounds changed to white with subtle borders
+  - Tab and input elements use light gray (`#f1f5f9`) backgrounds
+  - All text now uses dark gray colors for WCAG-compliant contrast
+- **Mobile Responsiveness**: Fixed LinguaQuest lesson pages:
+  - Removed `overflow-hidden` that blocked scrolling
+  - Changed to `overflow-y-auto` for proper mobile scrolling
+  - 3D scene container adjusted to fixed heights on mobile (`200px`/`250px`) with flex growth on desktop
+  - Game step container uses `flex-1` for dynamic sizing
+- **Dark Mode**: Maintained support with appropriate dark variants (`#1e293b` backgrounds)
+- **Files Changed**: `glossy-ai-fantasy.css`, `LinguaQuestLesson.tsx`, `index.css`
+
 ### PWA (Progressive Web App) Support (November 25, 2025)
 - **Installable App**: Users can install Meta Lingua as a native-like app on mobile/desktop
 - **Offline Support**: Service worker with Workbox caching strategy for offline learning
