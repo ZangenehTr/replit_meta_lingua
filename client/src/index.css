@@ -522,49 +522,49 @@ body.rtl p, body.rtl div, body.rtl span {
 }
 
 :root {
-  /* Purple-to-Blue Explorer Theme */
-  --background: 251 91% 98%; /* #FEFCFF - Very light purple-tinted background */
-  --foreground: 234 16% 13%; /* #1F2037 - Dark blue-gray */
-  --muted: 249 22% 95%; /* #F4F3F9 - Light purple muted */
-  --muted-foreground: 241 9% 56%; /* #8B8D98 - Medium purple-gray */
+  /* Clean Modern Theme - High Contrast for Readability */
+  --background: 0 0% 100%; /* #FFFFFF - Pure white background */
+  --foreground: 222 84% 5%; /* #0F172A - Very dark blue-gray for text */
+  --muted: 210 40% 96%; /* #F1F5F9 - Light gray muted */
+  --muted-foreground: 215 16% 47%; /* #64748B - Medium gray for secondary text */
   --popover: 0 0% 100%; /* #FFFFFF */
-  --popover-foreground: 234 16% 13%; /* #1F2037 */
+  --popover-foreground: 222 84% 5%; /* #0F172A */
   --card: 0 0% 100%; /* #FFFFFF */
-  --card-foreground: 234 16% 13%; /* #1F2037 */
-  --border: 249 20% 90%; /* #E8E5F3 - Light purple border */
-  --input: 249 20% 90%; /* #E8E5F3 */
+  --card-foreground: 222 84% 5%; /* #0F172A */
+  --border: 214 32% 91%; /* #E2E8F0 - Light gray border */
+  --input: 214 32% 91%; /* #E2E8F0 */
   
-  /* Purple-to-Blue Gradient Primary Colors */
-  --primary: 262 83% 58%; /* #8B5CF6 - Purple primary */
+  /* Modern Blue Primary Colors - More Professional */
+  --primary: 213 94% 50%; /* #2563EB - Vibrant blue primary */
   --primary-foreground: 0 0% 100%; /* #FFFFFF */
-  --secondary: 249 22% 95%; /* #F4F3F9 - Light purple secondary */
-  --secondary-foreground: 234 16% 13%; /* #1F2037 */
-  --accent: 214 95% 93%; /* #EFF6FF - Light blue accent */
-  --accent-foreground: 213 94% 28%; /* #1E40AF - Dark blue */
+  --secondary: 210 40% 96%; /* #F1F5F9 - Light gray secondary */
+  --secondary-foreground: 222 84% 5%; /* #0F172A */
+  --accent: 210 40% 96%; /* #F1F5F9 - Light accent */
+  --accent-foreground: 213 94% 40%; /* #1D4ED8 - Dark blue */
   
-  /* Conversion-Optimized Colors */
-  --conversion-purple: 262 83% 58%; /* #8B5CF6 */
-  --conversion-blue: 213 94% 68%; /* #3B82F6 */
-  --conversion-gradient-start: 262 83% 58%; /* #8B5CF6 */
-  --conversion-gradient-end: 213 94% 68%; /* #3B82F6 */
+  /* Brand Gradient Colors */
+  --conversion-purple: 213 94% 50%; /* #2563EB - Blue */
+  --conversion-blue: 199 89% 48%; /* #0EA5E9 - Cyan */
+  --conversion-gradient-start: 213 94% 50%; /* #2563EB */
+  --conversion-gradient-end: 199 89% 48%; /* #0EA5E9 */
   
   --destructive: 0 84% 60%; /* #EF4444 */
   --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-  --ring: 262 83% 58%; /* #8B5CF6 - Purple ring */
+  --ring: 213 94% 50%; /* #2563EB - Blue ring */
   --radius: 0.75rem; /* Increased for modern feel */
 
   /* Sidebar colors */
   --sidebar-background: 0 0% 100%; /* #FFFFFF */
   --sidebar-foreground: 222 84% 5%; /* #0F172A */
-  --sidebar-primary: 213 94% 68%; /* #3B82F6 */
+  --sidebar-primary: 213 94% 50%; /* #2563EB */
   --sidebar-primary-foreground: 210 40% 98%; /* #F8FAFC */
   --sidebar-accent: 210 40% 96%; /* #F1F5F9 */
   --sidebar-accent-foreground: 222 84% 5%; /* #0F172A */
   --sidebar-border: 214 32% 91%; /* #E2E8F0 */
-  --sidebar-ring: 213 94% 68%; /* #3B82F6 */
+  --sidebar-ring: 213 94% 50%; /* #2563EB */
 
   /* Chart colors */
-  --chart-1: 213 94% 68%; /* #3B82F6 */
+  --chart-1: 213 94% 50%; /* #2563EB */
   --chart-2: 159 75% 48%; /* #10B981 */
   --chart-3: 45 93% 58%; /* #F59E0B */
   --chart-4: 262 83% 58%; /* #8B5CF6 */
@@ -653,9 +653,9 @@ body.rtl p, body.rtl div, body.rtl span {
     animation: spin 1s linear infinite;
   }
 
-  /* Gradient backgrounds */
+  /* Gradient backgrounds - Clean modern blue */
   .gradient-bg {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(262 83% 58%) 100%);
+    background: linear-gradient(135deg, hsl(213 94% 50%) 0%, hsl(199 89% 48%) 100%);
   }
 
   /* Card hover effects */
@@ -689,54 +689,54 @@ body.rtl p, body.rtl div, body.rtl span {
     @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
   }
 
-  /* Conversion-Optimized Gradient Components */
+  /* Conversion-Optimized Gradient Components - Clean Blue Theme */
   .conversion-gradient-bg {
-    background: linear-gradient(135deg, hsl(var(--conversion-gradient-start)) 0%, hsl(var(--conversion-gradient-end)) 100%);
+    background: linear-gradient(135deg, hsl(213 94% 50%) 0%, hsl(199 89% 48%) 100%);
   }
 
   .conversion-gradient-text {
-    background: linear-gradient(135deg, hsl(var(--conversion-gradient-start)) 0%, hsl(var(--conversion-gradient-end)) 100%);
+    background: linear-gradient(135deg, hsl(213 94% 50%) 0%, hsl(199 89% 48%) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .conversion-cta-button {
-    @apply bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:ring-4 focus:ring-purple-200 dark:focus:ring-purple-800;
+    @apply bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800;
   }
 
   .conversion-cta-secondary {
-    @apply border-2 border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 px-8 py-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg focus:ring-4 focus:ring-purple-200 dark:focus:ring-purple-800;
+    @apply border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 px-8 py-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800;
   }
 
   .hero-gradient {
-    background: linear-gradient(135deg, hsl(249 22% 95%) 0%, hsl(214 95% 93%) 50%, hsl(251 91% 98%) 100%);
+    background: linear-gradient(135deg, hsl(210 40% 98%) 0%, hsl(199 89% 96%) 50%, hsl(210 40% 98%) 100%);
   }
 
   .section-gradient {
-    background: linear-gradient(180deg, transparent 0%, hsl(249 22% 95% / 0.3) 100%);
+    background: linear-gradient(180deg, transparent 0%, hsl(210 40% 96% / 0.3) 100%);
   }
 
   .card-gradient {
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(249 22% 98%) 100%);
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(210 40% 98%) 100%);
     border: 1px solid hsl(var(--border));
-    box-shadow: 0 4px 20px hsl(var(--conversion-gradient-start) / 0.1);
+    box-shadow: 0 4px 20px hsl(213 94% 50% / 0.08);
   }
 
   .card-hover-effect {
-    @apply transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2;
+    @apply transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-2;
   }
 
   .testimonial-card {
-    @apply bg-white/80 backdrop-blur-sm border border-purple-100 hover:border-purple-200 transition-all duration-300;
+    @apply bg-white/80 backdrop-blur-sm border border-blue-100 hover:border-blue-200 transition-all duration-300;
   }
 
   .feature-icon-bg {
-    @apply bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 p-3 rounded-xl;
+    @apply bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 p-3 rounded-xl;
   }
 
   .stats-card {
-    @apply bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300;
+    @apply bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300;
   }
 
   /* Toast/notification styles */

@@ -402,15 +402,15 @@ export function LinguaQuestLesson() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Main Content - Scrollable on mobile */}
+      <main className="min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] overflow-y-auto lg:overflow-hidden">
         {!isCompleted ? (
-          <div className="h-full flex flex-col lg:flex-row">
+          <div className="min-h-full lg:h-full flex flex-col lg:flex-row">
             {/* 3D Scene - Always render to maintain immersive context */}
             {lesson.sceneData && (
               <div className={cn(
                 "bg-gradient-to-br from-gray-900 to-gray-800",
-                gameSteps.length > 0 ? "h-1/3 lg:h-full lg:w-1/2" : "h-full w-full"
+                gameSteps.length > 0 ? "h-[200px] sm:h-[250px] lg:h-full lg:w-1/2 flex-shrink-0" : "h-full w-full"
               )}>
                 <Three3DLesson
                   lesson={lesson}
@@ -427,7 +427,7 @@ export function LinguaQuestLesson() {
             
             {/* Game Steps Overlay - Interactive activities */}
             {gameSteps.length > 0 && (
-              <div className="h-2/3 lg:h-full lg:w-1/2 overflow-hidden p-4 lg:p-8 pb-20 bg-white dark:bg-gray-900 relative">
+              <div className="flex-1 lg:h-full lg:w-1/2 overflow-y-auto p-4 lg:p-8 pb-24 bg-white dark:bg-gray-900 relative">
                 {/* Step Navigation Buttons - Desktop */}
                 {gameSteps.length > 1 && (
                   <>
@@ -479,7 +479,7 @@ export function LinguaQuestLesson() {
                         }
                       }
                     }}
-                    className="h-full overflow-y-auto"
+                    className="w-full max-w-full"
                   >
                     <GameStepRenderer
                       key={`step-${currentStepIndex}-${stepKey}`}

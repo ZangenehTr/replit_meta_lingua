@@ -93,18 +93,18 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5" dir={direction}>
+    <div className="min-h-screen flex flex-col bg-white" dir={direction}>
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
           {/* Logo */}
           <div className="flex lg:flex-1">
             <Link href="/" className="flex items-center gap-2 -m-1.5 p-1.5" data-testid="link-home-logo">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary via-purple-500 to-pink-500 rounded-xl shadow-lg">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500 rounded-xl shadow-lg">
                 <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
                   Meta Lingua
                 </span>
                 <span className="text-[10px] text-muted-foreground leading-none">
@@ -202,7 +202,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                 {t('auth.login')}
               </Link>
             </Button>
-            <Button asChild size="sm" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90" data-testid="button-get-started">
+            <Button asChild size="sm" className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600" data-testid="button-get-started">
               <Link href="/auth?tab=register">
                 {t('cta.getStarted', 'Get Started')}
               </Link>
@@ -222,7 +222,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <SheetContent side="right" className="w-72">
                 <div className="flex flex-col gap-6 mt-6">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary via-purple-500 to-pink-500 rounded-xl">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500 rounded-xl">
                       <Sparkles className="h-6 w-6 text-white" />
                     </div>
                     <div className="flex flex-col">
@@ -311,7 +311,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                         {t('auth.login')}
                       </Link>
                     </Button>
-                    <Button asChild className="w-full bg-gradient-to-r from-primary to-purple-600" data-testid="button-mobile-register">
+                    <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-cyan-500" data-testid="button-mobile-register">
                       <Link href="/auth?tab=register">
                         {t('cta.getStarted', 'Get Started')}
                       </Link>
@@ -373,11 +373,11 @@ export function PublicLayout({ children }: PublicLayoutProps) {
             {/* Brand Column */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary via-purple-500 to-pink-500 rounded-xl">
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500 rounded-xl">
                   <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-lg bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
                     Meta Lingua
                   </span>
                   <span className="text-xs text-muted-foreground">

@@ -104,26 +104,26 @@ export default function PublicHome() {
         description={t('home.seoDescription', 'Learn languages with AI-powered tutoring, interactive courses, and a supportive global community. Start your language learning journey today!')}
         keywords="language learning, AI tutoring, online courses, language academy"
       />
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10">
+      {/* Hero Section - Clean Light Background */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6" data-testid="badge-new-feature">
-              <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-              <span className="text-sm font-medium text-primary">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 border border-blue-200 mb-6" data-testid="badge-new-feature">
+              <Sparkles className="h-4 w-4 text-blue-600 animate-pulse" />
+              <span className="text-sm font-medium text-blue-700">
                 {t('hero.badge', 'New: AI Study Partner Now Available')}
               </span>
             </div>
             
-            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl mb-6">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl mb-6">
               <span className="block">{t('hero.title1', 'Learn Languages')}</span>
-              <span className="block bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
                 {t('hero.title2', 'The Smart Way')}
               </span>
             </h1>
             
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground mb-10">
+            <p className="mx-auto max-w-2xl text-lg text-gray-600 mb-10">
               {t('hero.description', 'Master any language with AI-powered lessons, interactive exercises, and personalized feedback. Join thousands of learners worldwide.')}
             </p>
             
@@ -131,7 +131,7 @@ export default function PublicHome() {
               <Button 
                 asChild
                 size="lg" 
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-lg px-8"
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-lg px-8"
               >
                 <Link href="/auth?tab=register" data-testid="button-start-learning" className="flex items-center gap-2">
                   {t('cta.startLearning', 'Start Learning Free')}
