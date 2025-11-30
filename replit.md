@@ -51,6 +51,12 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
   3. `/api/auth/phone/verify-otp-login` - Verify OTP and login
   4. `/api/auth/phone/verify-otp-signup` - Verify OTP and create account
 - **Development Mode OTP Bypass**: When SMS fails in dev mode, OTP codes are logged to console for testing
+- **Demo Mode for Test Accounts (November 30, 2025)**:
+  - Environment variable: `DEMO_TEST_ACCOUNTS=true` enables test account bypass
+  - Fixed OTP code works for all 9 test accounts in production
+  - Test accounts: +989121234567, +989127654321, +989131234567, +989137654321, +989101234567-71
+  - Secure: Only works for whitelisted test phone numbers, not real users
+  - Usage: Enter test phone number → Click "Send OTP" → Enter demo code → Login successful
 - **Features**: Rate limiting, Iranian phone number validation, 90-second resend cooldown, 10-min OTP expiry
 - **Session Management**: Automatic session creation with 24-hour access tokens, 7-day refresh tokens
 - **Kavenegar IP-Based**: Uses direct IP addresses (46.102.138.125) for Iranian network compatibility

@@ -31,6 +31,83 @@ export class OtpService {
   private static readonly MAX_ATTEMPTS_PER_IDENTIFIER = 5;
   private static readonly MAX_ATTEMPTS_PER_IP = 10;
   private static readonly RATE_LIMIT_WINDOW_HOURS = 1;
+  
+  // Whitelisted test account phone numbers (exact matches only)
+  private static readonly TEST_ACCOUNT_PHONES = new Set([
+    // International format
+    '+989121234567', '+989127654321', '+989131234567', '+989137654321',
+    '+989101234567', '+989101234568', '+989101234569', '+989101234570', '+989101234571',
+    // Local format
+    '09121234567', '09127654321', '09131234567', '09137654321',
+    '09101234567', '09101234568', '09101234569', '09101234570', '09101234571',
+    // Without country code (digits only)
+    '9121234567', '9127654321', '9131234567', '9137654321',
+    '9101234567', '9101234568', '9101234569', '9101234570', '9101234571',
+  ]);
+  
+  /**
+   * Generate time-based demo OTP code using HMAC
+   * Security: Requires DEMO_TEST_SECRET environment variable
+   * The code rotates every 30 minutes to limit exposure
+   */
+  private static generateDemoCode(phone: string): string | null {
+    const secret = process.env.DEMO_TEST_SECRET;
+    if (!secret) return null;
+    
+    // Use 30-minute time slices for code rotation
+    const timeSlice = Math.floor(Date.now() / (30 * 60 * 1000));
+    const data = `${phone}:${timeSlice}`;
+    
+    // Generate HMAC and extract 6-digit code
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(data);
+    const hash = hmac.digest('hex');
+    
+    // Take first 6 hex chars, convert to number, mod to get 6 digits
+    const code = (parseInt(hash.substring(0, 8), 16) % 1000000).toString().padStart(6, '0');
+    return code;
+  }
+  
+  /**
+   * Check if demo mode bypass should be allowed and validate code
+   * Security: Requires both DEMO_TEST_ACCOUNTS=true AND DEMO_TEST_SECRET
+   * Only works for whitelisted test phone numbers with HMAC-generated codes
+   */
+  private static verifyDemoBypass(identifier: string, code: string): boolean {
+    // Must have both env vars set
+    const isDemoEnabled = process.env.DEMO_TEST_ACCOUNTS === 'true';
+    const hasSecret = !!process.env.DEMO_TEST_SECRET;
+    if (!isDemoEnabled || !hasSecret) return false;
+    
+    // Normalize phone number: remove spaces, dashes, parentheses
+    const normalizedIdentifier = identifier.replace(/[\s\-\(\)]/g, '');
+    
+    // Must be an exact match to a whitelisted phone
+    if (!this.TEST_ACCOUNT_PHONES.has(normalizedIdentifier)) return false;
+    
+    // Generate expected code and compare (constant-time comparison)
+    const expectedCode = this.generateDemoCode(normalizedIdentifier);
+    if (!expectedCode) return false;
+    
+    // Also check previous time slice to handle edge cases at slice boundaries
+    const prevTimeSlice = Math.floor(Date.now() / (30 * 60 * 1000)) - 1;
+    const prevData = `${normalizedIdentifier}:${prevTimeSlice}`;
+    const prevHmac = crypto.createHmac('sha256', process.env.DEMO_TEST_SECRET!);
+    prevHmac.update(prevData);
+    const prevHash = prevHmac.digest('hex');
+    const prevCode = (parseInt(prevHash.substring(0, 8), 16) % 1000000).toString().padStart(6, '0');
+    
+    // Constant-time comparison to prevent timing attacks
+    const codeMatches = crypto.timingSafeEqual(Buffer.from(code), Buffer.from(expectedCode));
+    const prevCodeMatches = crypto.timingSafeEqual(Buffer.from(code), Buffer.from(prevCode));
+    
+    if (codeMatches || prevCodeMatches) {
+      console.log(`🔓 Demo mode: HMAC-verified bypass for test account ${normalizedIdentifier}`);
+      return true;
+    }
+    
+    return false;
+  }
 
   /**
    * Generate a 6-digit OTP code
@@ -232,6 +309,21 @@ export class OtpService {
     locale: string = 'fa'
   ): Promise<OtpVerificationResult> {
     try {
+      // Demo mode bypass for test accounts in production (HMAC-verified)
+      if (this.verifyDemoBypass(identifier, code)) {
+        // Check if user exists (for login) or is new (for registration)
+        const user = await storage.getUserByIdentifier(identifier);
+        
+        return {
+          success: true,
+          message: locale === 'fa'
+            ? 'کد تأیید با موفقیت تأیید شد. (حالت دمو)'
+            : 'OTP verified successfully. (Demo mode)',
+          userId: user?.id,
+          isNewUser: !user
+        };
+      }
+      
       // Find active OTP for this identifier and purpose
       const otpRecord = await storage.getActiveOtpCode(identifier, purpose);
       
