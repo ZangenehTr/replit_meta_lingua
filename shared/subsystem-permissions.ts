@@ -214,28 +214,6 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "call_campaigns": ["read", "view", "list", "participate"]
     }
   },
-  "front_desk_clerk": {
-    subsystems: [
-      "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
-      "front_desk_tasks", "visitor_intake", "inquiry_tracking", 
-      "appointment_scheduling", "trial_lesson_coordination"
-    ],
-    actions: {
-      "front_desk_dashboard": ["read", "view"],
-      "walk_in_management": ["read", "create", "update", "view", "list", "delete"],
-      "phone_call_logging": ["read", "create", "update", "view", "list"],
-      "visitor_intake": ["read", "create", "update", "view", "list"],
-      "inquiry_tracking": ["read", "create", "update", "view", "list"],
-      "appointment_scheduling": ["read", "create", "update", "view", "list", "cancel"],
-      "trial_lesson_coordination": ["read", "create", "update", "view", "list", "schedule"],
-      // CRITICAL FIX: Add trial_lessons permissions to match API endpoints
-      "trial_lessons": ["read", "create", "update", "view", "list", "checkin", "complete", "waitlist", "analytics"],
-      // Add front desk resource permissions
-      "front_desk_operations": ["read", "create", "update", "view", "list", "delete", "complete", "convert"],
-      "phone_call_logs": ["read", "create", "update", "view", "list", "delete"],
-      "front_desk_tasks": ["read", "create", "update", "view", "list", "delete", "complete", "assign", "follow_up"]
-    }
-  },
   "Front Desk Clerk": {
     subsystems: [
       "front_desk_dashboard", "walk_in_management", "phone_call_logging", 
