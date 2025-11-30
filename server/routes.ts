@@ -14281,6 +14281,230 @@ Return JSON format:
     }
   });
 
+
+  // ============================================================================
+  // LEAD WORKFLOW PIPELINE ROUTES
+  // ============================================================================
+
+  // Get leads by workflow stage
+  app.get("/api/leads/by-stage/:stage", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { stage } = req.params;
+      const validStages = ['contact_desk', 'new_intake', 'follow_up', 'no_response', 'level_assessment', 'withdrawal', 'enrolled'];
+      
+      if (!validStages.includes(stage)) {
+        return res.status(400).json({ message: "Invalid workflow stage", validStages });
+      }
+
+      const stageLeads = await db.select().from(leads).where(eq(leads.workflowStage, stage)).orderBy(desc(leads.updatedAt));
+      res.json(stageLeads);
+    } catch (error) {
+      console.error('Error fetching leads by stage:', error);
+      res.status(500).json({ message: "Failed to fetch leads by stage" });
+    }
+  });
+
+  // Get workflow stage counts for dashboard
+  app.get("/api/leads/stage-counts", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const counts = await db.select({
+        stage: leads.workflowStage,
+        count: sql<number>`count(*)::int`
+      }).from(leads).groupBy(leads.workflowStage);
+
+      const stageStats: Record<string, number> = {
+        contact_desk: 0,
+        new_intake: 0,
+        follow_up: 0,
+        no_response: 0,
+        level_assessment: 0,
+        withdrawal: 0,
+        enrolled: 0
+      };
+
+      counts.forEach(({ stage, count }) => {
+        if (stage && stageStats.hasOwnProperty(stage)) {
+          stageStats[stage] = count;
+        }
+      });
+
+      res.json(stageStats);
+    } catch (error) {
+      console.error('Error fetching stage counts:', error);
+      res.status(500).json({ message: "Failed to fetch stage counts" });
+    }
+  });
+
+  // Transition lead to new workflow stage
+  app.post("/api/leads/:id/transition", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      const transitionSchema = z.object({
+        toStage: z.enum(['contact_desk', 'new_intake', 'follow_up', 'no_response', 'level_assessment', 'withdrawal', 'enrolled']),
+        reason: z.string().optional(),
+        notes: z.string().optional()
+      });
+
+      const { toStage, reason, notes } = transitionSchema.parse(req.body);
+
+      // Get current lead
+      const [lead] = await db.select().from(leads).where(eq(leads.id, leadId));
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+
+      const fromStage = lead.workflowStage || 'follow_up';
+
+      // Define valid transitions
+      const validTransitions: Record<string, string[]> = {
+        'contact_desk': ['new_intake'],
+        'new_intake': ['follow_up', 'no_response', 'withdrawal'],
+        'follow_up': ['level_assessment', 'no_response', 'withdrawal'],
+        'no_response': ['follow_up', 'withdrawal'],
+        'level_assessment': ['enrolled', 'follow_up', 'withdrawal'],
+        'withdrawal': ['follow_up'],
+        'enrolled': []
+      };
+
+      // Check if transition is valid
+      const allowedTargets = validTransitions[fromStage] || [];
+      if (!allowedTargets.includes(toStage)) {
+        return res.status(400).json({ 
+          message: `Cannot transition from '${fromStage}' to '${toStage}'`,
+          allowedTransitions: allowedTargets
+        });
+      }
+
+      // Update lead workflow stage
+      const [updatedLead] = await db.update(leads)
+        .set({
+          workflowStage: toStage,
+          stageChangedAt: new Date(),
+          updatedAt: new Date(),
+          notes: notes ? `${lead.notes || ''}\n[${new Date().toISOString()}] Stage changed: ${fromStage} → ${toStage}${reason ? ` (${reason})` : ''}` : lead.notes
+        })
+        .where(eq(leads.id, leadId))
+        .returning();
+
+      // Log the transition
+      await storage.createCommunicationLog({
+        fromUserId: req.user.id,
+        toUserId: null,
+        toParentId: leadId,
+        type: 'workflow_transition',
+        subject: `Stage: ${fromStage} → ${toStage}`,
+        content: reason || `Transitioned to ${toStage}`,
+        status: 'completed',
+        sentAt: new Date(),
+        metadata: { fromStage, toStage, reason },
+        studentId: null
+      });
+
+      res.json({ 
+        success: true, 
+        lead: updatedLead,
+        transition: { from: fromStage, to: toStage }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      }
+      console.error('Error transitioning lead:', error);
+      res.status(500).json({ message: "Failed to transition lead" });
+    }
+  });
+
+  // Record call outcome and auto-transition to no_response after 3 failed attempts
+  app.post("/api/leads/:id/record-call", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      const callSchema = z.object({
+        outcome: z.enum(['connected', 'no_answer', 'busy', 'voicemail', 'wrong_number', 'callback_requested']),
+        notes: z.string().optional(),
+        duration: z.number().optional(),
+        scheduleCallback: z.string().optional()
+      });
+
+      const { outcome, notes, duration, scheduleCallback } = callSchema.parse(req.body);
+
+      // Get current lead
+      const [lead] = await db.select().from(leads).where(eq(leads.id, leadId));
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+
+      const isFailedAttempt = ['no_answer', 'busy', 'voicemail'].includes(outcome);
+      const newCallAttempts = isFailedAttempt ? (lead.callAttempts || 0) + 1 : 0;
+      const shouldMoveToNoResponse = isFailedAttempt && newCallAttempts >= 3;
+
+      // Update lead
+      const updateData: any = {
+        callAttempts: newCallAttempts,
+        lastCallOutcome: outcome,
+        lastContactDate: new Date(),
+        updatedAt: new Date()
+      };
+
+      if (shouldMoveToNoResponse && lead.workflowStage !== 'no_response') {
+        updateData.workflowStage = 'no_response';
+        updateData.stageChangedAt = new Date();
+      }
+
+      if (outcome === 'connected') {
+        updateData.callAttempts = 0;
+        updateData.status = 'contacted';
+      }
+
+      if (scheduleCallback) {
+        updateData.nextFollowUpDate = new Date(scheduleCallback);
+      }
+
+      const [updatedLead] = await db.update(leads)
+        .set(updateData)
+        .where(eq(leads.id, leadId))
+        .returning();
+
+      // Log the call
+      await storage.createCommunicationLog({
+        fromUserId: req.user.id,
+        toUserId: null,
+        toParentId: leadId,
+        type: 'call',
+        subject: `Call: ${outcome}`,
+        content: notes || `Call outcome: ${outcome}`,
+        status: outcome === 'connected' ? 'completed' : 'attempted',
+        sentAt: new Date(),
+        metadata: { outcome, duration, callAttempts: newCallAttempts, autoMovedToNoResponse: shouldMoveToNoResponse },
+        studentId: null
+      });
+
+      res.json({ 
+        success: true, 
+        lead: updatedLead,
+        autoTransitioned: shouldMoveToNoResponse,
+        callAttempts: newCallAttempts
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      }
+      console.error('Error recording call:', error);
+      res.status(500).json({ message: "Failed to record call" });
+    }
+  });
+
+  // ============================================================================
+  // END LEAD WORKFLOW PIPELINE ROUTES
+  // ============================================================================
+
   // Send SMS
   app.post("/api/leads/:id/sms", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
