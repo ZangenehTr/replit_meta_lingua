@@ -78,7 +78,7 @@ interface ActiveCall {
 }
 
 export default function VoIPCenter() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['callcenter', 'common']);
   const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();

@@ -171,7 +171,6 @@
     "addNotes": "افزودن یادداشت",
     "createLead": "ایجاد مشتری",
     "creating": "در حال ایجاد...",
-    "voipCenter": "مرکز VoIP",
     "leadCreated": "مشتری ایجاد شد",
     "leadCreatedDesc": "مشتری جدید با موفقیت اضافه شد.",
     "voipCallInitiated": "تماس VoIP برقرار شد",
@@ -184,13 +183,11 @@
   "calls": {
     "title": "سیستم تماس",
     "makeCall": "برقراری تماس",
-    "callHistory": "تاریخچه تماس‌ها",
     "activeCall": "تماس فعال",
     "endCall": "پایان تماس",
     "recordCall": "ضبط تماس",
     "transferCall": "انتقال تماس",
-    "holdCall": "نگهداری تماس",
-    "voipCenter": "مرکز VoIP"
+    "holdCall": "نگهداری تماس"
   },
   "voip": {
     "voipCenter": "مرکز تماس VoIP",
