@@ -86,7 +86,7 @@ export default function UnifiedCallCenterWorkflow() {
       case "contact_desk":
         return true; // All call center roles can access contact desk
       case "new_intake":
-        return isRole('admin', 'supervisor');
+        return isRole('admin', 'supervisor', 'call_center_agent', 'callcenter');
       case "no_response":
         return isRole('admin', 'supervisor');
       case "follow_up":
