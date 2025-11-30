@@ -13943,6 +13943,25 @@ Return JSON format:
     }
   });
 
+
+  // Get workflow statistics for unified call center (MUST be before /api/leads/:id)
+  app.get("/api/leads/workflow-stats", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const stats = {
+        contactDesk: 0,
+        newIntake: 0,
+        noResponse: 0,
+        followUp: 0,
+        levelAssessment: 0,
+        withdrawal: 0,
+        total: 0
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching workflow stats:', error);
+      res.status(500).json({ message: "Failed to fetch workflow statistics" });
+    }
+  });
   app.get("/api/leads/:id", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
       const leadId = parseInt(req.params.id);
@@ -14298,27 +14317,6 @@ Return JSON format:
     } catch (error) {
       console.error('Error sending SMS:', error);
       res.status(500).json({ message: "Failed to send SMS" });
-    }
-  });
-
-  // Get workflow statistics for unified call center
-  app.get("/api/leads/workflow-stats", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
-    try {
-      // Return empty workflow stats for new call center agents (no mock data, avoids DB schema issues)
-      const stats = {
-        contactDesk: 0,
-        newIntake: 0,
-        noResponse: 0,
-        followUp: 0,
-        levelAssessment: 0,
-        withdrawal: 0,
-        total: 0
-      };
-      
-      res.json(stats);
-    } catch (error) {
-      console.error('Error fetching workflow stats:', error);
-      res.status(500).json({ message: "Failed to fetch workflow statistics" });
     }
   });
 
