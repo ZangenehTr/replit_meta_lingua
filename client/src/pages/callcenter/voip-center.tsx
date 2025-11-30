@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/app-layout";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -328,8 +327,7 @@ export default function VoIPCenter() {
   );
 
   return (
-    <AppLayout>
-      <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -644,6 +642,6 @@ export default function VoIPCenter() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
+    </div>
   );
 }
