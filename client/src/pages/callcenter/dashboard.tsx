@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -263,7 +262,6 @@ function CallCenterDashboard() {
   );
 
   return (
-    <AppLayout>
       <div className="p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Welcome Banner */}
         <motion.div
@@ -456,7 +454,6 @@ function CallCenterDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
   );
 }
 

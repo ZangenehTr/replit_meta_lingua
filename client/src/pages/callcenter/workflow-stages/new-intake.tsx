@@ -141,14 +141,14 @@ function NewIntake() {
         status: LEAD_STATUS.NEW, 
         priority: "medium",
         level: "pending_assessment",
-        workflowStatus: WORKFLOW_STATUS.NEW_INTAKE,
+        workflowStatus: WORKFLOW_STATUS.PENDING,
         interestedLanguage: "english", // Data Semantics Fix: All courses are English
         examType: data.courseTarget, // Store actual exam type (IELTS, TOEFL, etc.)
         interestedLevel: "beginner", // Default until assessment
         createdAt: new Date().toISOString()
       };
 
-      return await apiRequest("/api/leads", {
+      return await apiRequest("/api/prospect-lifecycle", {
         method: "POST",
         body: JSON.stringify(leadData)
       });
