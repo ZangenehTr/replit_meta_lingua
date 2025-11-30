@@ -104,16 +104,15 @@ function LevelAssessment() {
     }
   });
 
-  // Mark assessment completed mutation
+  // Mark assessment completed and move to enrolled via transition API
   const completeAssessmentMutation = useMutation({
     mutationFn: async ({ leadId, level }: { leadId: number; level: string }) => {
-      return await apiRequest(`/api/leads/${leadId}`, {
-        method: "PUT",
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
         body: JSON.stringify({
-          workflowStatus: WORKFLOW_STATUS.LEVEL_ASSESSMENT_COMPLETE,
-          status: LEAD_STATUS.CONVERTED,
-          interestedLevel: level,
-          conversionDate: new Date().toISOString()
+          toStage: 'enrolled',
+          reason: `تعیین سطح تکمیل شد - سطح: ${level}`,
+          metadata: { level, conversionDate: new Date().toISOString() }
         })
       });
     },
@@ -123,6 +122,14 @@ function LevelAssessment() {
         description: "متقاضی آماده ثبت‌نام در دوره مناسب است",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در تکمیل تعیین سطح",
+        description: error.message || "عملیات با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 

@@ -14346,10 +14346,14 @@ Return JSON format:
       const transitionSchema = z.object({
         toStage: z.enum(['contact_desk', 'new_intake', 'follow_up', 'no_response', 'level_assessment', 'withdrawal', 'enrolled']),
         reason: z.string().optional(),
-        notes: z.string().optional()
+        notes: z.string().optional(),
+        metadata: z.object({
+          level: z.string().optional(),
+          conversionDate: z.string().optional()
+        }).optional()
       });
 
-      const { toStage, reason, notes } = transitionSchema.parse(req.body);
+      const { toStage, reason, notes, metadata } = transitionSchema.parse(req.body);
 
       // Get current lead
       const [lead] = await db.select().from(leads).where(eq(leads.id, leadId));
@@ -14379,14 +14383,37 @@ Return JSON format:
         });
       }
 
+      // Build update object based on target stage
+      const updateData: any = {
+        workflowStage: toStage,
+        stageChangedAt: new Date(),
+        updatedAt: new Date(),
+        notes: notes ? `${lead.notes || ''}
+[${new Date().toISOString()}] Stage changed: ${fromStage} → ${toStage}${reason ? ` (${reason})` : ''}` : lead.notes
+      };
+
+      // Handle enrolled stage with metadata
+      if (toStage === 'enrolled' && metadata) {
+        if (metadata.level) updateData.interestedLevel = metadata.level;
+        if (metadata.conversionDate) updateData.conversionDate = new Date(metadata.conversionDate);
+        updateData.status = 'converted';
+      }
+
+      // Handle withdrawal stage
+      if (toStage === 'withdrawal') {
+        updateData.withdrawalDate = new Date();
+      }
+
+      // Handle reactivation from withdrawal
+      if (fromStage === 'withdrawal' && toStage === 'follow_up') {
+        updateData.withdrawalDate = null;
+        updateData.withdrawalReason = null;
+        updateData.callAttempts = 0;
+      }
+
       // Update lead workflow stage
       const [updatedLead] = await db.update(leads)
-        .set({
-          workflowStage: toStage,
-          stageChangedAt: new Date(),
-          updatedAt: new Date(),
-          notes: notes ? `${lead.notes || ''}\n[${new Date().toISOString()}] Stage changed: ${fromStage} → ${toStage}${reason ? ` (${reason})` : ''}` : lead.notes
-        })
+        .set(updateData)
         .where(eq(leads.id, leadId))
         .returning();
 

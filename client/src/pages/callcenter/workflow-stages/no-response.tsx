@@ -141,15 +141,14 @@ function NoResponse() {
     }
   });
 
-  // Mark as responsive mutation
+  // Mark as responsive via transition API
   const markResponsiveMutation = useMutation({
     mutationFn: async (leadId: number) => {
-      return await apiRequest(`/api/leads/${leadId}`, {
-        method: "PUT",
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
         body: JSON.stringify({ 
-          workflowStatus: WORKFLOW_STATUS.FOLLOW_UP,
-          status: LEAD_STATUS.CONTACTED,
-          lastContactDate: new Date().toISOString()
+          toStage: 'follow_up',
+          reason: 'پاسخگو شد از مرحله پاسخ نداده'
         })
       });
     },
@@ -159,17 +158,25 @@ function NoResponse() {
         description: "متقاضی به بخش پیگیری منتقل شد",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در انتقال",
+        description: error.message || "انتقال با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 
-  // Remove from no-response (lost lead)
+  // Remove from no-response (lost lead) via transition API
   const markAsLostMutation = useMutation({
     mutationFn: async (leadId: number) => {
-      return await apiRequest(`/api/leads/${leadId}`, {
-        method: "PUT", 
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST", 
         body: JSON.stringify({
-          workflowStatus: WORKFLOW_STATUS.WITHDRAWAL,
-          status: LEAD_STATUS.LOST
+          toStage: 'withdrawal',
+          reason: 'عدم پاسخگویی مداوم'
         })
       });
     },
@@ -179,6 +186,14 @@ function NoResponse() {
         description: "متقاضی به بخش انصراف منتقل شد",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در انتقال",
+        description: error.message || "انتقال با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 

@@ -186,14 +186,14 @@ function FollowUp() {
     }
   });
 
-  // Move to level assessment mutation
+  // Move to level assessment via transition API
   const moveToLevelAssessmentMutation = useMutation({
     mutationFn: async (leadId: number) => {
-      return await apiRequest(`/api/leads/${leadId}`, {
-        method: "PUT",
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
         body: JSON.stringify({
-          workflowStatus: WORKFLOW_STATUS.LEVEL_ASSESSMENT,
-          status: LEAD_STATUS.QUALIFIED
+          toStage: 'level_assessment',
+          reason: 'آماده تعیین سطح'
         })
       });
     },
@@ -203,6 +203,14 @@ function FollowUp() {
         description: "متقاضی به مرحله تعیین سطح منتقل شد",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در انتقال",
+        description: error.message || "انتقال با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 

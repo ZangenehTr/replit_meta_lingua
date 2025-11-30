@@ -96,16 +96,14 @@ function Withdrawal() {
     }
   });
 
-  // Reactivate lead mutation
+  // Reactivate lead via transition API (wrapper for consistency)
   const reactivateLeadMutation = useMutation({
     mutationFn: async (leadId: number) => {
-      return await apiRequest(`/api/leads/${leadId}`, {
-        method: "PUT",
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
         body: JSON.stringify({
-          workflowStatus: WORKFLOW_STATUS.FOLLOW_UP,
-          status: LEAD_STATUS.CONTACTED,
-          withdrawalReason: null,
-          withdrawalDate: null
+          toStage: 'follow_up',
+          reason: 'فعال‌سازی مجدد از انصراف'
         })
       });
     },
@@ -115,6 +113,14 @@ function Withdrawal() {
         description: "متقاضی به بخش پیگیری برگشت داده شد",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در فعال‌سازی",
+        description: error.message || "فعال‌سازی با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 
