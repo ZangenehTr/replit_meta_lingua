@@ -347,33 +347,111 @@ function CallCenterDashboard() {
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">{t('dashboard.overview', { ns: 'common' })}</TabsTrigger>
-            <TabsTrigger value="leads">{t('dashboard.leads', { ns: 'common' })}</TabsTrigger>
-            <TabsTrigger value="calls">{t('dashboard.calls', { ns: 'common' })}</TabsTrigger>
-            <TabsTrigger value="performance">{t('dashboard.performance', { ns: 'common' })}</TabsTrigger>
+            <TabsTrigger value="overview">{t('callcenter:dashboard.tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="leads">{t('callcenter:dashboard.tabs.leads')}</TabsTrigger>
+            <TabsTrigger value="calls">{t('callcenter:dashboard.tabs.calls')}</TabsTrigger>
+            <TabsTrigger value="performance">{t('callcenter:dashboard.tabs.performance')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">
             <div className="mt-6">
-              <p>Overview content coming soon...</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('callcenter:dashboard.overview.title')}</CardTitle>
+                  <CardDescription>{t('callcenter:dashboard.overview.description')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('callcenter:dashboard.overview.newLeads')}</p>
+                      <p className="text-3xl font-bold">{newLeads.length}</p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('callcenter:dashboard.overview.hotLeads')}</p>
+                      <p className="text-3xl font-bold">{hotLeads.length}</p>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('callcenter:dashboard.overview.conversionRate')}</p>
+                      <p className="text-3xl font-bold">{(callCenterStats?.conversionRate || 0).toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
           
           <TabsContent value="leads">
             <div className="mt-6">
-              <p>Leads content coming soon...</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('callcenter:dashboard.leads.title')}</CardTitle>
+                  <CardDescription>{t('callcenter:dashboard.leads.description')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {filteredLeads.slice(0, 5).map((lead) => (
+                      <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <div>
+                          <p className="font-medium">{lead.firstName} {lead.lastName}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{lead.phoneNumber}</p>
+                        </div>
+                        <Badge className={getStatusColor(lead.status)}>{lead.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
           
           <TabsContent value="calls">
             <div className="mt-6">
-              <p>Calls content coming soon...</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('callcenter:dashboard.calls.title')}</CardTitle>
+                  <CardDescription>{t('callcenter:dashboard.calls.description')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {todayCalls.slice(0, 5).map((call) => (
+                      <div key={call.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <div>
+                          <p className="font-medium">{call.lead.firstName} {call.lead.lastName}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{formatDuration(call.duration)}</p>
+                        </div>
+                        <Badge className={getCallOutcomeColor(call.outcome)}>{call.outcome}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
           
           <TabsContent value="performance">
             <div className="mt-6">
-              <p>Performance content coming soon...</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('callcenter:dashboard.performance.title')}</CardTitle>
+                  <CardDescription>{t('callcenter:dashboard.performance.description')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {teamPerformance.slice(0, 5).map((agent) => (
+                      <div key={agent.agentId} className="p-3 border rounded-lg">
+                        <div className="flex justify-between mb-2">
+                          <p className="font-medium">{agent.agentName}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{agent.callsToday} {t('callcenter:calls.title')}</p>
+                        </div>
+                        <Progress value={(agent.conversionRate || 0) * 100} className="h-2" />
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          {t('callcenter:dashboard.performance.conversionRate')}: {(agent.conversionRate || 0).toFixed(1)}%
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
