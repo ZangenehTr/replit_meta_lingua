@@ -34,6 +34,31 @@ export const LEAD_STATUS = {
 // Type for lead status
 export type LeadStatus = typeof LEAD_STATUS[keyof typeof LEAD_STATUS];
 
+// Lead workflow stage constants (pipeline stages for call center)
+export const LEAD_WORKFLOW_STAGE = {
+  CONTACT_DESK: 'contact_desk',
+  NEW_INTAKE: 'new_intake', 
+  FOLLOW_UP: 'follow_up',
+  NO_RESPONSE: 'no_response',
+  LEVEL_ASSESSMENT: 'level_assessment',
+  WITHDRAWAL: 'withdrawal',
+  ENROLLED: 'enrolled'
+} as const;
+
+// Type for lead workflow stage
+export type LeadWorkflowStage = typeof LEAD_WORKFLOW_STAGE[keyof typeof LEAD_WORKFLOW_STAGE];
+
+// Valid stage transitions (from -> to[])
+export const LEAD_STAGE_TRANSITIONS: Record<LeadWorkflowStage, LeadWorkflowStage[]> = {
+  [LEAD_WORKFLOW_STAGE.CONTACT_DESK]: [LEAD_WORKFLOW_STAGE.NEW_INTAKE],
+  [LEAD_WORKFLOW_STAGE.NEW_INTAKE]: [LEAD_WORKFLOW_STAGE.FOLLOW_UP, LEAD_WORKFLOW_STAGE.NO_RESPONSE, LEAD_WORKFLOW_STAGE.WITHDRAWAL],
+  [LEAD_WORKFLOW_STAGE.FOLLOW_UP]: [LEAD_WORKFLOW_STAGE.LEVEL_ASSESSMENT, LEAD_WORKFLOW_STAGE.NO_RESPONSE, LEAD_WORKFLOW_STAGE.WITHDRAWAL],
+  [LEAD_WORKFLOW_STAGE.NO_RESPONSE]: [LEAD_WORKFLOW_STAGE.FOLLOW_UP, LEAD_WORKFLOW_STAGE.WITHDRAWAL],
+  [LEAD_WORKFLOW_STAGE.LEVEL_ASSESSMENT]: [LEAD_WORKFLOW_STAGE.ENROLLED, LEAD_WORKFLOW_STAGE.FOLLOW_UP, LEAD_WORKFLOW_STAGE.WITHDRAWAL],
+  [LEAD_WORKFLOW_STAGE.WITHDRAWAL]: [LEAD_WORKFLOW_STAGE.FOLLOW_UP],
+  [LEAD_WORKFLOW_STAGE.ENROLLED]: []
+};
+
 // Users table with roles and authentication (PII fields moved to user_profiles)
 
 // OTP Codes table for email/SMS verification
@@ -1243,7 +1268,11 @@ export const leads = pgTable("leads", {
   followUpEnd: timestamp("follow_up_end"),
   smsReminderEnabled: boolean("sms_reminder_enabled").default(false),
   smsReminderSentAt: timestamp("sms_reminder_sent_at"),
-  nationalId: varchar("national_id", { length: 20 })
+  nationalId: varchar("national_id", { length: 20 }),
+  workflowStage: varchar("workflow_stage", { length: 50 }).default('follow_up'),
+  callAttempts: integer("call_attempts").default(0),
+  lastCallOutcome: varchar("last_call_outcome", { length: 50 }),
+  stageChangedAt: timestamp("stage_changed_at")
 });
 
 // Communication Logs table for tracking all lead interactions
