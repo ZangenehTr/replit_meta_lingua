@@ -575,7 +575,6 @@ export default function ProspectsPage() {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
       </div>
     </div>
   );

@@ -641,7 +641,6 @@ export default function VoIPCenter() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
     </div>
   );
 }
