@@ -98,7 +98,32 @@
     "responseRate": "نرخ پاسخ‌دهی",
     "conversionRate": "نرخ تبدیل",
     "averageCallDuration": "میانگین مدت تماس",
-    "dailyTarget": "هدف روزانه"
+    "dailyTarget": "هدف روزانه",
+    "tabs": {
+      "overview": "نمای کلی",
+      "leads": "مشتریان بالقوه",
+      "calls": "تماس‌ها",
+      "performance": "عملکرد"
+    },
+    "overview": {
+      "title": "نمای کلی",
+      "description": "خلاصه‌ای از عملکرد امروز",
+      "newLeads": "مشتریان جدید",
+      "hotLeads": "مشتریان داغ",
+      "conversionRate": "نرخ تبدیل"
+    },
+    "leads": {
+      "title": "مشتریان بالقوه",
+      "description": "لیست تمام مشتریان بالقوه"
+    },
+    "calls": {
+      "title": "تماس‌ها",
+      "description": "سیستم مدیریت تماس‌ها"
+    },
+    "performance": {
+      "title": "عملکرد",
+      "description": "معیارهای عملکرد روزانه"
+    }
   },
   "leads": {
     "title": "مدیریت مشتریان بالقوه",

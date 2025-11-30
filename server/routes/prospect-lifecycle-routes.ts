@@ -466,4 +466,105 @@ router.post("/guest-placement-submission", async (req: any, res) => {
   }
 });
 
+/**
+ * Create new lead from call center intake form
+ * POST /api/leads
+ */
+router.post("", authenticate, async (req: any, res) => {
+  try {
+    // Validate required fields
+    const { firstName, lastName, phoneNumber, email, courseTarget, goal, deliveryType, classType, referralSource, age, gender, nationalId, notes, branch } = req.body;
+    
+    if (!firstName || !lastName || !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'نام، نام خانوادگی و شماره تلفن الزامی است' // First name, last name, and phone number are required
+      });
+    }
+    
+    // Create lead data
+    const leadData = {
+      firstName,
+      lastName,
+      email: email || null,
+      phoneNumber,
+      source: 'call_center',
+      status: 'new',
+      priority: 'medium',
+      interestedLanguage: 'english',
+      level: 'pending_assessment',
+      notes: notes || `Course: ${courseTarget}, Goal: ${goal}, Delivery: ${deliveryType}, Class: ${classType}, Referral: ${referralSource}`,
+      age: age || null,
+      gender: gender || null,
+      nationalId: nationalId || null,
+      budget: null,
+      preferredFormat: deliveryType === 'آنلاین' ? 'online' : deliveryType === 'حضوری' ? 'inPerson' : 'hybrid'
+    };
+    
+    // Use existing service to create/get prospect
+    const prospect = await ProspectLifecycleService.getOrCreateProspect(leadData);
+    
+    res.json({
+      success: true,
+      lead: prospect,
+      message: 'مشتری بالقوه با موفقیت ایجاد شد' // Lead successfully created
+    });
+  } catch (error) {
+    console.error('Error creating lead:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطا در ایجاد مشتری بالقوه' // Error creating lead
+    });
+  }
+});
+
+/**
+ * Get workflow statistics for all leads
+ * GET /api/leads/workflow-stats
+ */
+router.get("/workflow-stats", authenticate, async (req: any, res) => {
+  try {
+    // Query leads grouped by status
+    const leadsByStatus = await db.select({
+      status: leads.status,
+      count: sql<number>`cast(count(*) as integer)`
+    })
+      .from(leads)
+      .groupBy(leads.status);
+    
+    // Calculate overall stats
+    const totalStats = await db.select({
+      total: sql<number>`cast(count(*) as integer)`
+    })
+      .from(leads);
+    
+    // Build response with workflow stats
+    const stats = {
+      totalLeads: totalStats[0]?.total || 0,
+      byStatus: {
+        new: leadsByStatus.find(s => s.status === 'new')?.count || 0,
+        contacted: leadsByStatus.find(s => s.status === 'contacted')?.count || 0,
+        qualified: leadsByStatus.find(s => s.status === 'qualified')?.count || 0,
+        proposal: leadsByStatus.find(s => s.status === 'proposal')?.count || 0,
+        negotiation: leadsByStatus.find(s => s.status === 'negotiation')?.count || 0,
+        closedWon: leadsByStatus.find(s => s.status === 'closed_won')?.count || 0,
+        closedLost: leadsByStatus.find(s => s.status === 'closed_lost')?.count || 0,
+        nurturing: leadsByStatus.find(s => s.status === 'nurturing')?.count || 0
+      }
+    };
+    
+    res.json({
+      success: true,
+      data: stats,
+      message: 'آمار مشتریان بالقوه با موفقیت دریافت شد' // Lead statistics successfully retrieved
+    });
+  } catch (error) {
+    console.error('Error getting workflow stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'خطا در دریافت آمار' // Error getting statistics
+    });
+  }
+});
+
 export default router;
