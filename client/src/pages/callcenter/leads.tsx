@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ActionButton } from "@/components/ui/action-button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -77,17 +74,29 @@ export default function LeadsPage() {
     preferredContactMethod: 'phone' as const
   }));
 
-  // Fetch leads
+  // Fetch leads from the unified /api/leads endpoint
   const { data: leads = [], isLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/callcenter/leads"],
+    queryKey: ["/api/leads"],
   });
 
-  // Create lead mutation
+  // Create lead mutation using unified /api/leads endpoint
   const createLeadMutation = useMutation({
     mutationFn: async (leadData: any) => {
-      return apiRequest("/api/callcenter/leads", {
+      // Map frontend field names to backend schema
+      const mappedData = {
+        firstName: leadData.firstName,
+        lastName: leadData.lastName,
+        email: leadData.email || null,
+        phoneNumber: leadData.phone, // Backend uses phoneNumber
+        source: leadData.source || 'call-center',
+        priority: leadData.priority || 'normal',
+        notes: leadData.notes || null,
+        status: 'new'
+      };
+      return apiRequest("/api/leads", {
         method: "POST",
-        body: leadData,
+        body: JSON.stringify(mappedData),
+        headers: { 'Content-Type': 'application/json' }
       });
     },
     onSuccess: () => {
@@ -107,7 +116,7 @@ export default function LeadsPage() {
         coursesInterested: [],
         preferredContactMethod: 'phone'
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/callcenter/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
     },
     onError: (error) => {
       toast({
@@ -192,9 +201,8 @@ export default function LeadsPage() {
   };
 
   return (
-    <AppLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
@@ -428,8 +436,7 @@ export default function LeadsPage() {
               </p>
             </div>
           )}
-        </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }
