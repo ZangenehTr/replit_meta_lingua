@@ -30,7 +30,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
-import { WORKFLOW_STATUS, LEAD_STATUS } from "@shared/schema";
+import { WORKFLOW_STATUS, LEAD_STATUS, LEAD_WORKFLOW_STAGE } from "@shared/schema";
 import { motion } from "framer-motion";
 import { formatDistanceToNow, format, isAfter, isBefore } from "date-fns";
 import { faIR } from "date-fns/locale";
@@ -46,11 +46,68 @@ function NoResponse() {
   const [retryFilter, setRetryFilter] = useState<string>("all"); // all, due, overdue, waiting
   const [forceCallOverride, setForceCallOverride] = useState(false);
 
-  // Fetch leads with no response (status could be 'contacted' with no recent response)
-  const { data: noResponseLeads = [], isLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/leads", { status: "no_response" }],
+  // Fetch leads with no response using new workflow pipeline API
+  const { data: noResponseLeads = [], isLoading, refetch } = useQuery<Lead[]>({
+    queryKey: ["/api/leads/by-stage/no_response"],
     queryFn: async () => {
-      return await apiRequest(`/api/leads?workflowStatus=${WORKFLOW_STATUS.NO_RESPONSE}`);
+      return await apiRequest(`/api/leads/by-stage/no_response`);
+    }
+  });
+
+  // Transition lead to another stage
+  const transitionMutation = useMutation({
+    mutationFn: async ({ leadId, toStage, reason }: { leadId: number; toStage: string; reason?: string }) => {
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
+        body: JSON.stringify({ toStage, reason })
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: "انتقال موفق",
+        description: `لید به مرحله ${variables.toStage === 'follow_up' ? 'پیگیری' : 'انصراف'} منتقل شد`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در انتقال",
+        description: error.message || "انتقال با مشکل مواجه شد",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Record call outcome
+  const recordCallMutation = useMutation({
+    mutationFn: async ({ leadId, outcome, notes }: { leadId: number; outcome: string; notes?: string }) => {
+      return await apiRequest(`/api/leads/${leadId}/record-call`, {
+        method: "POST",
+        body: JSON.stringify({ outcome, notes })
+      });
+    },
+    onSuccess: (data: any) => {
+      if (data.lead.workflowStage === 'follow_up') {
+        toast({
+          title: "تماس موفق",
+          description: "لید پاسخ داد و به مرحله پیگیری منتقل شد",
+        });
+      } else {
+        toast({
+          title: "تماس ثبت شد",
+          description: `تلاش ${data.callAttempts} از 3`,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در ثبت تماس",
+        description: error.message || "ثبت تماس با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 

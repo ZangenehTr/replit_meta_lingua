@@ -27,7 +27,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
-import { WORKFLOW_STATUS, LEAD_STATUS } from "@shared/schema";
+import { WORKFLOW_STATUS, LEAD_STATUS, LEAD_WORKFLOW_STAGE } from "@shared/schema";
 import { motion } from "framer-motion";
 import { format, addHours, addDays, isAfter, isBefore, startOfDay } from "date-fns";
 import { faIR } from "date-fns/locale";
@@ -43,11 +43,36 @@ function LevelAssessment() {
   const [assessmentDate, setAssessmentDate] = useState<Date | undefined>(undefined);
   const [assessmentTime, setAssessmentTime] = useState("");
 
-  // Fetch leads ready for level assessment
-  const { data: assessmentLeads = [], isLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/leads", { status: "level_assessment" }],
+  // Fetch leads ready for level assessment using new workflow pipeline API
+  const { data: assessmentLeads = [], isLoading, refetch } = useQuery<Lead[]>({
+    queryKey: ["/api/leads/by-stage/level_assessment"],
     queryFn: async () => {
-      return await apiRequest(`/api/leads?workflowStatus=${WORKFLOW_STATUS.LEVEL_ASSESSMENT}`);
+      return await apiRequest(`/api/leads/by-stage/level_assessment`);
+    }
+  });
+
+  // Transition lead to another stage
+  const transitionMutation = useMutation({
+    mutationFn: async ({ leadId, toStage, reason }: { leadId: number; toStage: string; reason?: string }) => {
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
+        body: JSON.stringify({ toStage, reason })
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: "انتقال موفق",
+        description: `لید به مرحله ${variables.toStage === 'enrolled' ? 'ثبت‌نام شده' : variables.toStage === 'follow_up' ? 'پیگیری' : 'انصراف'} منتقل شد`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در انتقال",
+        description: error.message || "انتقال با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 

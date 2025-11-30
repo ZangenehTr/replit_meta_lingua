@@ -100,20 +100,21 @@ export default function UnifiedCallCenterWorkflow() {
     }
   };
 
-  // Get real workflow statistics from API
-  const { data: workflowStatsData, isLoading: statsLoading } = useQuery<WorkflowStats>({
-    queryKey: ['/api/leads/workflow-stats'],
-    enabled: true
+  // Get real workflow statistics from API (stage counts)
+  const { data: stageCounts, isLoading: statsLoading } = useQuery<Record<string, number>>({
+    queryKey: ['/api/leads/stage-counts'],
+    enabled: true,
+    refetchInterval: 30000
   });
 
   const workflowStats: WorkflowStats = {
-    contactDesk: (workflowStatsData as any)?.contactDesk || 0,
-    newIntake: (workflowStatsData as any)?.newIntake || 0,
-    noResponse: (workflowStatsData as any)?.noResponse || 0,
-    followUp: (workflowStatsData as any)?.followUp || 0,
-    levelAssessment: (workflowStatsData as any)?.levelAssessment || 0,
-    withdrawal: (workflowStatsData as any)?.withdrawal || 0,
-    totalActive: (workflowStatsData as any)?.total || 0
+    contactDesk: stageCounts?.contact_desk || 0,
+    newIntake: stageCounts?.new_intake || 0,
+    noResponse: stageCounts?.no_response || 0,
+    followUp: stageCounts?.follow_up || 0,
+    levelAssessment: stageCounts?.level_assessment || 0,
+    withdrawal: stageCounts?.withdrawal || 0,
+    totalActive: Object.values(stageCounts || {}).reduce((sum, count) => sum + count, 0)
   };
 
   const workflowStages = [

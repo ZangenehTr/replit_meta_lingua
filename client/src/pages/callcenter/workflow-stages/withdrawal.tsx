@@ -25,7 +25,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
-import { WORKFLOW_STATUS, LEAD_STATUS } from "@shared/schema";
+import { WORKFLOW_STATUS, LEAD_STATUS, LEAD_WORKFLOW_STAGE } from "@shared/schema";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 
@@ -39,11 +39,36 @@ function Withdrawal() {
   const [withdrawalReason, setWithdrawalReason] = useState("");
   const [withdrawalNotes, setWithdrawalNotes] = useState("");
 
-  // Fetch withdrawn leads
-  const { data: withdrawnLeads = [], isLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/leads", { status: "withdrawal" }],
+  // Fetch withdrawn leads using new workflow pipeline API
+  const { data: withdrawnLeads = [], isLoading, refetch } = useQuery<Lead[]>({
+    queryKey: ["/api/leads/by-stage/withdrawal"],
     queryFn: async () => {
-      return await apiRequest(`/api/leads?workflowStatus=${WORKFLOW_STATUS.WITHDRAWAL}`);
+      return await apiRequest(`/api/leads/by-stage/withdrawal`);
+    }
+  });
+
+  // Transition lead to follow-up stage (reactivate)
+  const transitionMutation = useMutation({
+    mutationFn: async ({ leadId, toStage, reason }: { leadId: number; toStage: string; reason?: string }) => {
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
+        body: JSON.stringify({ toStage, reason })
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "متقاضی فعال شد",
+        description: "متقاضی به بخش پیگیری برگشت داده شد",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در فعال‌سازی",
+        description: error.message || "فعال‌سازی با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 

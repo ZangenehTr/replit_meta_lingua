@@ -28,7 +28,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
-import { WORKFLOW_STATUS, LEAD_STATUS } from "@shared/schema";
+import { WORKFLOW_STATUS, LEAD_STATUS, LEAD_WORKFLOW_STAGE } from "@shared/schema";
 import { motion } from "framer-motion";
 import { format, addDays, isAfter, isBefore, startOfDay, isValid } from "date-fns";
 import { faIR } from "date-fns/locale";
@@ -46,11 +46,74 @@ function FollowUp() {
   const [followUpNotes, setFollowUpNotes] = useState("");
   const [enableSMSReminder, setEnableSMSReminder] = useState(true);
 
-  // Fetch leads in follow-up stage
-  const { data: followUpLeads = [], isLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/leads", { status: "follow_up" }],
+  // Fetch leads in follow-up stage using new workflow pipeline API
+  const { data: followUpLeads = [], isLoading, refetch } = useQuery<Lead[]>({
+    queryKey: ["/api/leads/by-stage/follow_up"],
     queryFn: async () => {
-      return await apiRequest(`/api/leads?workflowStatus=${WORKFLOW_STATUS.FOLLOW_UP}`);
+      return await apiRequest(`/api/leads/by-stage/follow_up`);
+    }
+  });
+
+  // Transition lead to another stage
+  const transitionMutation = useMutation({
+    mutationFn: async ({ leadId, toStage, reason }: { leadId: number; toStage: string; reason?: string }) => {
+      return await apiRequest(`/api/leads/${leadId}/transition`, {
+        method: "POST",
+        body: JSON.stringify({ toStage, reason })
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: "انتقال موفق",
+        description: `لید به مرحله ${variables.toStage === 'level_assessment' ? 'تعیین سطح' : variables.toStage === 'no_response' ? 'پاسخ نداده' : 'انصراف'} منتقل شد`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در انتقال",
+        description: error.message || "انتقال با مشکل مواجه شد",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Record call outcome
+  const recordCallMutation = useMutation({
+    mutationFn: async ({ leadId, outcome, notes, scheduleCallback }: { 
+      leadId: number; 
+      outcome: string; 
+      notes?: string;
+      scheduleCallback?: string;
+    }) => {
+      return await apiRequest(`/api/leads/${leadId}/record-call`, {
+        method: "POST",
+        body: JSON.stringify({ outcome, notes, scheduleCallback })
+      });
+    },
+    onSuccess: (data: any) => {
+      if (data.autoTransitioned) {
+        toast({
+          title: "تماس ثبت شد",
+          description: `پس از ${data.callAttempts} تلاش ناموفق، لید به مرحله پاسخ نداده منتقل شد`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "تماس ثبت شد",
+          description: "نتیجه تماس با موفقیت ثبت شد",
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در ثبت تماس",
+        description: error.message || "ثبت تماس با مشکل مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 

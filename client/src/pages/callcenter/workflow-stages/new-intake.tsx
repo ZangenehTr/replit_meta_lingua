@@ -30,7 +30,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { WORKFLOW_STATUS, LEAD_STATUS } from "@shared/schema";
+import { WORKFLOW_STATUS, LEAD_STATUS, LEAD_WORKFLOW_STAGE } from "@shared/schema";
 
 // Form validation schema based on the unified workflow requirements
 const newIntakeSchema = z.object({
@@ -142,6 +142,7 @@ function NewIntake() {
         priority: "medium",
         level: "pending_assessment",
         workflowStatus: WORKFLOW_STATUS.PENDING,
+        workflowStage: LEAD_WORKFLOW_STAGE.FOLLOW_UP,
         interestedLanguage: "english", // Data Semantics Fix: All courses are English
         examType: data.courseTarget, // Store actual exam type (IELTS, TOEFL, etc.)
         interestedLevel: "beginner", // Default until assessment
