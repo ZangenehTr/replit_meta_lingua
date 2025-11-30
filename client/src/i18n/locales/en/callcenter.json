@@ -86,6 +86,51 @@
     "leadsConverted": "Leads Converted",
     "avgCallTime": "Avg Call Time"
   },
+  "workflow": {
+    "title": "Unified Workflow",
+    "subtitle": "Manage leads from initial contact to enrollment",
+    "stages": {
+      "contact_desk": "Contact Desk",
+      "new_intake": "New Intake",
+      "follow_up": "Follow Up",
+      "no_response": "No Response",
+      "level_assessment": "Level Assessment",
+      "withdrawal": "Withdrawal",
+      "enrolled": "Enrolled"
+    },
+    "actions": {
+      "transition": "Transition to Next Stage",
+      "moveToFollowUp": "Move to Follow Up",
+      "moveToNoResponse": "Move to No Response",
+      "moveToLevelAssessment": "Move to Level Assessment",
+      "moveToWithdrawal": "Move to Withdrawal",
+      "moveToEnrolled": "Convert to Student",
+      "reactivate": "Reactivate",
+      "recordCall": "Record Call Outcome",
+      "scheduleCallback": "Schedule Callback"
+    },
+    "callOutcomes": {
+      "answered": "Answered",
+      "no_answer": "No Answer",
+      "busy": "Busy",
+      "callback_requested": "Callback Requested",
+      "wrong_number": "Wrong Number",
+      "interested": "Interested"
+    },
+    "messages": {
+      "transitionSuccess": "Transition Successful",
+      "transitionError": "Transition Error",
+      "callRecorded": "Call Recorded",
+      "autoTransitionAfterAttempts": "After {{attempts}} failed attempts, moved to No Response",
+      "leadCount": "{{count}} leads"
+    },
+    "filters": {
+      "all": "All",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "highPriority": "High Priority"
+    }
+  },
   "prospects": {
     "title": "Prospect Management",
     "subtitle": "Manage and track potential students from initial contact to enrollment",

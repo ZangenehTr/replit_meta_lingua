@@ -262,5 +262,50 @@
     "targetAchievement": "دستیابی به هدف",
     "callVolume": "حجم تماس",
     "successRate": "نرخ موفقیت"
+  },
+  "workflow": {
+    "title": "گردش کار یکپارچه",
+    "subtitle": "مدیریت لیدها از تماس اولیه تا ثبت‌نام",
+    "stages": {
+      "contact_desk": "میز تماس",
+      "new_intake": "ورودی جدید",
+      "follow_up": "پیگیری",
+      "no_response": "پاسخ نداده",
+      "level_assessment": "تعیین سطح",
+      "withdrawal": "انصراف",
+      "enrolled": "ثبت‌نام شده"
+    },
+    "actions": {
+      "transition": "انتقال به مرحله بعد",
+      "moveToFollowUp": "انتقال به پیگیری",
+      "moveToNoResponse": "انتقال به پاسخ نداده",
+      "moveToLevelAssessment": "انتقال به تعیین سطح",
+      "moveToWithdrawal": "انتقال به انصراف",
+      "moveToEnrolled": "تبدیل به دانش‌آموز",
+      "reactivate": "فعال‌سازی مجدد",
+      "recordCall": "ثبت نتیجه تماس",
+      "scheduleCallback": "برنامه‌ریزی تماس مجدد"
+    },
+    "callOutcomes": {
+      "answered": "پاسخ داد",
+      "no_answer": "پاسخ نداد",
+      "busy": "مشغول",
+      "callback_requested": "درخواست تماس مجدد",
+      "wrong_number": "شماره اشتباه",
+      "interested": "علاقه‌مند"
+    },
+    "messages": {
+      "transitionSuccess": "انتقال موفق",
+      "transitionError": "خطا در انتقال",
+      "callRecorded": "تماس ثبت شد",
+      "autoTransitionAfterAttempts": "پس از {{attempts}} تلاش ناموفق، به پاسخ نداده منتقل شد",
+      "leadCount": "{{count}} لید"
+    },
+    "filters": {
+      "all": "همه",
+      "today": "امروز",
+      "thisWeek": "این هفته",
+      "highPriority": "اولویت بالا"
+    }
   }
 }

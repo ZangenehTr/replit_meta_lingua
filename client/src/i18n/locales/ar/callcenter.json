@@ -49,5 +49,50 @@
     "targetAchievement": "تحقيق الهدف",
     "callVolume": "حجم المكالمات",
     "successRate": "معدل النجاح"
+  },
+  "workflow": {
+    "title": "سير العمل الموحد",
+    "subtitle": "إدارة العملاء المحتملين من الاتصال الأول حتى التسجيل",
+    "stages": {
+      "contact_desk": "مكتب الاتصال",
+      "new_intake": "استقبال جديد",
+      "follow_up": "المتابعة",
+      "no_response": "لا استجابة",
+      "level_assessment": "تقييم المستوى",
+      "withdrawal": "انسحاب",
+      "enrolled": "مسجل"
+    },
+    "actions": {
+      "transition": "الانتقال للمرحلة التالية",
+      "moveToFollowUp": "نقل للمتابعة",
+      "moveToNoResponse": "نقل لعدم الاستجابة",
+      "moveToLevelAssessment": "نقل لتقييم المستوى",
+      "moveToWithdrawal": "نقل للانسحاب",
+      "moveToEnrolled": "تحويل لطالب",
+      "reactivate": "إعادة تفعيل",
+      "recordCall": "تسجيل نتيجة المكالمة",
+      "scheduleCallback": "جدولة معاودة الاتصال"
+    },
+    "callOutcomes": {
+      "answered": "رد",
+      "no_answer": "لا رد",
+      "busy": "مشغول",
+      "callback_requested": "طلب معاودة الاتصال",
+      "wrong_number": "رقم خاطئ",
+      "interested": "مهتم"
+    },
+    "messages": {
+      "transitionSuccess": "تم الانتقال بنجاح",
+      "transitionError": "خطأ في الانتقال",
+      "callRecorded": "تم تسجيل المكالمة",
+      "autoTransitionAfterAttempts": "بعد {{attempts}} محاولات فاشلة، تم النقل لعدم الاستجابة",
+      "leadCount": "{{count}} عميل محتمل"
+    },
+    "filters": {
+      "all": "الكل",
+      "today": "اليوم",
+      "thisWeek": "هذا الأسبوع",
+      "highPriority": "أولوية عالية"
+    }
   }
 }
