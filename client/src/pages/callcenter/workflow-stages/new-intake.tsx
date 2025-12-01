@@ -149,7 +149,7 @@ function NewIntake() {
         createdAt: new Date().toISOString()
       };
 
-      return await apiRequest("/api/prospect-lifecycle", {
+      return await apiRequest("/api/leads", {
         method: "POST",
         body: JSON.stringify(leadData)
       });
