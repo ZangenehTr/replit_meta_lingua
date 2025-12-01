@@ -1729,8 +1729,17 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByIdentifier(identifier: string): Promise<User | undefined> {
-    // Search by phone number first (primary for phone-only auth)
-    const byPhone = await this.db.select().from(users).where(eq(users.phoneNumber, identifier));
+    // Normalize phone number to +98 format for consistent lookup
+    const normalizedPhone = normalizePhoneNumber(identifier);
+    
+    // Search by normalized phone number first (primary for phone-only auth)
+    // Try both the normalized format and original in case of legacy data
+    const byPhone = await this.db.select().from(users).where(
+      or(
+        eq(users.phoneNumber, normalizedPhone),
+        eq(users.phoneNumber, identifier)
+      )
+    );
     if (byPhone.length > 0) return byPhone[0];
     
     // Fallback to email search
