@@ -185,7 +185,38 @@ import {
   type QuestionType, type Skill, type CEFRLevel, type TestType
 } from "@shared/unified-testing-schema";
 import { db } from "./db";
-import { eq, and, gte, lte, sql, desc, asc } from "drizzle-orm";
+import { eq, and, gte, lte, sql, desc, asc, or } from "drizzle-orm";
+
+/**
+ * Normalize phone number to international +98 format
+ * Handles: 09101234567, 9101234567, +989101234567, 989101234567
+ */
+export function normalizePhoneNumber(phone: string): string {
+  if (!phone) return phone;
+  
+  // Remove all non-digit characters except leading +
+  let cleaned = phone.replace(/[^\d+]/g, '');
+  
+  // Remove + if present, we'll add it back
+  if (cleaned.startsWith('+')) {
+    cleaned = cleaned.substring(1);
+  }
+  
+  // Handle different input formats
+  if (cleaned.startsWith('98') && cleaned.length === 12) {
+    // Already has country code: 989101234567
+    return '+' + cleaned;
+  } else if (cleaned.startsWith('0') && cleaned.length === 11) {
+    // Local format: 09101234567 -> +989101234567
+    return '+98' + cleaned.substring(1);
+  } else if (cleaned.length === 10 && cleaned.startsWith('9')) {
+    // Without leading 0: 9101234567 -> +989101234567
+    return '+98' + cleaned;
+  }
+  
+  // Return as-is with + prefix if nothing matched
+  return cleaned.startsWith('98') ? '+' + cleaned : '+98' + cleaned;
+}
 
 export interface IStorage {
   // User management
