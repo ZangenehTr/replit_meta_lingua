@@ -57,8 +57,12 @@ router.post('/phone/request-otp-login', async (req: Request, res: Response) => {
       });
     }
 
+    // Format phone number to international format for database lookup
+    const formattedPhone = OtpService.formatIranianPhoneNumber(phoneNumber);
+    console.log(`[Phone Auth] Looking up user with phone: ${formattedPhone} (input: ${phoneNumber})`);
+
     // Check if user exists
-    const existingUser = await storage.getUserByIdentifier(phoneNumber);
+    const existingUser = await storage.getUserByIdentifier(formattedPhone);
     if (!existingUser) {
       return res.status(404).json({
         success: false,
@@ -120,8 +124,12 @@ router.post('/phone/request-otp-signup', async (req: Request, res: Response) => 
       });
     }
 
+    // Format phone number for database lookup
+    const formattedPhone = OtpService.formatIranianPhoneNumber(phoneNumber);
+    console.log(`[Phone Auth Signup] Checking phone: ${formattedPhone} (input: ${phoneNumber})`);
+
     // Check if user already exists
-    const existingUser = await storage.getUserByIdentifier(phoneNumber);
+    const existingUser = await storage.getUserByIdentifier(formattedPhone);
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -267,15 +275,18 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
 
     const signupData = phoneSignupSchema.parse(req.body);
 
+    // Format phone number for database operations
+    const formattedPhone = OtpService.formatIranianPhoneNumber(phoneNumber);
+
     // Verify OTP
-    const verifyResult = await OtpService.verifyOtp(phoneNumber, code, 'registration', locale);
+    const verifyResult = await OtpService.verifyOtp(formattedPhone, code, 'registration', locale);
     
     if (!verifyResult.success) {
       return res.status(400).json(verifyResult);
     }
 
     // Check phone availability again (double-check)
-    const existingUser = await storage.getUserByIdentifier(phoneNumber);
+    const existingUser = await storage.getUserByIdentifier(formattedPhone);
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -285,9 +296,9 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
       });
     }
 
-    // Create new user
+    // Create new user with formatted phone
     const newUser = await storage.createUser({
-      email: signupData.email || `${phoneNumber}@metalingua.local`,
+      email: signupData.email || `${formattedPhone}@metalingua.local`,
       firstName: signupData.firstName,
       lastName: signupData.lastName,
       role: signupData.role || 'Student',
@@ -366,8 +377,11 @@ router.post('/phone/login', async (req: Request, res: Response) => {
       });
     }
 
+    // Format phone number for database lookup
+    const formattedPhone = OtpService.formatIranianPhoneNumber(phoneNumber);
+
     // Check if user exists
-    const user = await storage.getUserByIdentifier(phoneNumber);
+    const user = await storage.getUserByIdentifier(formattedPhone);
     if (!user) {
       return res.status(404).json({
         success: false,
