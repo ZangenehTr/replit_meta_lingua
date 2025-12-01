@@ -15,6 +15,16 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ## Recently Completed Features
 
+### Phone Number Format Normalization Fix (December 1, 2025)
+- **Problem Fixed**: Phone numbers +989101234569 and 09101234569 were being treated as different identifiers, causing login failures
+- **Solution**: Centralized phone number normalization to +98XXXXXXXXXX format across all authentication flows:
+  - Added `normalizePhoneNumber()` helper in `server/storage.ts`
+  - Updated `getUserByIdentifier()` to normalize phone numbers before lookup
+  - Updated OTP service (`generateOtp`, `verifyOtp`, `checkRateLimit`) to use normalized format
+  - Fixed signup route to store normalized phone format in database
+- **Result**: Both local (09101234567) and international (+989101234567) formats now correctly resolve to the same user
+- **Files Changed**: `server/storage.ts`, `server/services/otp-service.ts`, `server/routes/phone-auth-routes.ts`
+
 ### UI/UX Color Scheme Fix (November 29, 2025)
 - **Problem Fixed**: Dark purple backgrounds were causing serious readability issues on certain devices and browsers
 - **Solution**: Replaced dark purple theme with clean, high-contrast neutral colors:
