@@ -296,16 +296,16 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
       });
     }
 
-    // Create new user with formatted phone
+    // Create new user with NORMALIZED phone number (+98 format)
     const newUser = await storage.createUser({
-      email: signupData.email || `${formattedPhone}@metalingua.local`,
+      email: signupData.email || `${formattedPhone.replace('+', '')}@metalingua.local`,
       firstName: signupData.firstName,
       lastName: signupData.lastName,
       role: signupData.role || 'Student',
       password: '', // No password for phone-first auth
       isPhoneVerified: true,
       isActive: true,
-      phoneNumber: phoneNumber as any
+      phoneNumber: formattedPhone as any
     } as any);
 
     // Generate tokens
