@@ -101,10 +101,19 @@ export default function UnifiedCallCenterWorkflow() {
   };
 
   // Get real workflow statistics from API (stage counts)
-  const { data: stageCounts, isLoading: statsLoading } = useQuery<Record<string, number>>({
+  const { data: stageCounts, isLoading: statsLoading, error: stageCountsError } = useQuery<Record<string, number>>({
     queryKey: ['/api/leads/stage-counts'],
-    enabled: true,
-    refetchInterval: 30000
+    enabled: !!user,
+    refetchInterval: 30000,
+    staleTime: 5000,
+  });
+
+  // Debug logging for stage counts
+  console.log('[UnifiedWorkflow] stageCounts query:', { 
+    data: stageCounts, 
+    isLoading: statsLoading, 
+    error: stageCountsError,
+    user: user?.id 
   });
 
   const workflowStats: WorkflowStats = {
