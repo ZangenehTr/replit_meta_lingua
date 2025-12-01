@@ -13962,6 +13962,38 @@ Return JSON format:
       res.status(500).json({ message: "Failed to fetch workflow statistics" });
     }
   });
+
+  // Get workflow stage counts for dashboard - MUST be before /api/leads/:id route
+  app.get("/api/leads/stage-counts", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const counts = await db.select({
+        stage: leads.workflowStage,
+        count: sql<number>`count(*)::int`
+      }).from(leads).groupBy(leads.workflowStage);
+
+      const stageStats: Record<string, number> = {
+        contact_desk: 0,
+        new_intake: 0,
+        follow_up: 0,
+        no_response: 0,
+        level_assessment: 0,
+        withdrawal: 0,
+        enrolled: 0
+      };
+
+      counts.forEach(({ stage, count }) => {
+        if (stage && stageStats.hasOwnProperty(stage)) {
+          stageStats[stage] = count;
+        }
+      });
+
+      res.json(stageStats);
+    } catch (error) {
+      console.error('Error fetching stage counts:', error);
+      res.status(500).json({ message: "Failed to fetch stage counts" });
+    }
+  });
+
   app.get("/api/leads/:id", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
       const leadId = parseInt(req.params.id);
@@ -14304,36 +14336,6 @@ Return JSON format:
     }
   });
 
-  // Get workflow stage counts for dashboard
-  app.get("/api/leads/stage-counts", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
-    try {
-      const counts = await db.select({
-        stage: leads.workflowStage,
-        count: sql<number>`count(*)::int`
-      }).from(leads).groupBy(leads.workflowStage);
-
-      const stageStats: Record<string, number> = {
-        contact_desk: 0,
-        new_intake: 0,
-        follow_up: 0,
-        no_response: 0,
-        level_assessment: 0,
-        withdrawal: 0,
-        enrolled: 0
-      };
-
-      counts.forEach(({ stage, count }) => {
-        if (stage && stageStats.hasOwnProperty(stage)) {
-          stageStats[stage] = count;
-        }
-      });
-
-      res.json(stageStats);
-    } catch (error) {
-      console.error('Error fetching stage counts:', error);
-      res.status(500).json({ message: "Failed to fetch stage counts" });
-    }
-  });
 
   // Transition lead to new workflow stage
   app.post("/api/leads/:id/transition", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
