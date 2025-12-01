@@ -145,10 +145,13 @@ export class OtpService {
   static async checkRateLimit(identifier: string, ip: string): Promise<RateLimitCheck> {
     const now = new Date();
     const windowStart = new Date(now.getTime() - (this.RATE_LIMIT_WINDOW_HOURS * 60 * 60 * 1000));
+    
+    // Normalize phone number for consistent rate limiting
+    const normalizedIdentifier = this.formatIranianPhoneNumber(identifier);
 
     try {
-      // Check identifier-based rate limit (email/phone)
-      const identifierAttempts = await storage.getOtpAttemptsByIdentifier(identifier, windowStart);
+      // Check identifier-based rate limit (email/phone) - use normalized
+      const identifierAttempts = await storage.getOtpAttemptsByIdentifier(normalizedIdentifier, windowStart);
       if (identifierAttempts >= this.MAX_ATTEMPTS_PER_IDENTIFIER) {
         const resetTime = new Date(windowStart.getTime() + (this.RATE_LIMIT_WINDOW_HOURS * 60 * 60 * 1000));
         return {
@@ -194,8 +197,15 @@ export class OtpService {
     locale: string = 'fa'
   ): Promise<OtpGenerationResult> {
     try {
-      // Rate limit check
-      const rateLimit = await this.checkRateLimit(identifier, ip || '');
+      // CRITICAL: Normalize phone numbers to +98 format for consistent storage and lookup
+      const normalizedIdentifier = channel === 'sms' 
+        ? this.formatIranianPhoneNumber(identifier) 
+        : identifier;
+      
+      console.log(`📱 OTP Generation: original=${identifier}, normalized=${normalizedIdentifier}`);
+      
+      // Rate limit check (use normalized identifier)
+      const rateLimit = await this.checkRateLimit(normalizedIdentifier, ip || '');
       if (!rateLimit.allowed) {
         const rateLimitMessages = {
           fa: 'تعداد درخواست‌های شما از حد مجاز گذشته است. لطفاً بعداً تلاش کنید.',
@@ -208,8 +218,8 @@ export class OtpService {
         };
       }
 
-      // Invalidate any existing active OTPs for this identifier
-      await storage.invalidateActiveOtps(identifier, purpose);
+      // Invalidate any existing active OTPs for this identifier (use normalized)
+      await storage.invalidateActiveOtps(normalizedIdentifier, purpose);
 
       // Generate new OTP
       const code = this.generateOtpCode();
@@ -217,11 +227,12 @@ export class OtpService {
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + this.EXPIRY_MINUTES);
 
+      // CRITICAL: Store with normalized identifier for consistent lookup
       const otpData: InsertOtpCode = {
         userId,
-        identifier,
-        phoneNumber: channel === 'sms' ? identifier : undefined,
-        email: channel === 'email' ? identifier : undefined,
+        identifier: normalizedIdentifier,
+        phoneNumber: channel === 'sms' ? normalizedIdentifier : undefined,
+        email: channel === 'email' ? normalizedIdentifier : undefined,
         channel,
         purpose,
         codeHash,
@@ -236,7 +247,7 @@ export class OtpService {
       const isDevelopment = process.env.NODE_ENV !== 'production';
       if (isDevelopment) {
         console.log(`\n🔐 ═══════════════════════════════════════════════`);
-        console.log(`🔐 DEVELOPMENT OTP CODE for ${identifier}`);
+        console.log(`🔐 DEVELOPMENT OTP CODE for ${normalizedIdentifier} (input: ${identifier})`);
         console.log(`🔐 Code: ${code}`);
         console.log(`🔐 Purpose: ${purpose}`);
         console.log(`🔐 Expires: ${expiresAt.toLocaleString()}`);
@@ -318,10 +329,16 @@ export class OtpService {
     locale: string = 'fa'
   ): Promise<OtpVerificationResult> {
     try {
+      // CRITICAL: Normalize phone numbers to +98 format for consistent lookup
+      const normalizedIdentifier = this.formatIranianPhoneNumber(identifier);
+      
+      console.log(`🔍 OTP Verification: original=${identifier}, normalized=${normalizedIdentifier}`);
+      
       // Demo mode bypass for test accounts in production (HMAC-verified)
       if (this.verifyDemoBypass(identifier, code)) {
         // Check if user exists (for login) or is new (for registration)
-        const user = await storage.getUserByIdentifier(identifier);
+        // Use normalized identifier for user lookup
+        const user = await storage.getUserByIdentifier(normalizedIdentifier);
         
         return {
           success: true,
@@ -333,8 +350,8 @@ export class OtpService {
         };
       }
       
-      // Find active OTP for this identifier and purpose
-      const otpRecord = await storage.getActiveOtpCode(identifier, purpose);
+      // Find active OTP for this identifier and purpose (use normalized)
+      const otpRecord = await storage.getActiveOtpCode(normalizedIdentifier, purpose);
       
       if (!otpRecord) {
         return {
@@ -395,7 +412,8 @@ export class OtpService {
       await storage.consumeOtpCode(otpRecord.id);
 
       // Check if user exists (for login) or is new (for registration)
-      const user = await storage.getUserByIdentifier(identifier);
+      // Use normalized identifier for user lookup
+      const user = await storage.getUserByIdentifier(normalizedIdentifier);
       
       return {
         success: true,
