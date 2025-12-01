@@ -1697,6 +1697,16 @@ export class MemStorage implements IStorage {
     return result[0];
   }
 
+  async getUserByIdentifier(identifier: string): Promise<User | undefined> {
+    // Search by phone number first (primary for phone-only auth)
+    const byPhone = await this.db.select().from(users).where(eq(users.phoneNumber, identifier));
+    if (byPhone.length > 0) return byPhone[0];
+    
+    // Fallback to email search
+    const byEmail = await this.db.select().from(users).where(eq(users.email, identifier));
+    return byEmail[0];
+  }
+
   async getAllUsers(): Promise<User[]> {
     return await this.db.select().from(users);
   }
