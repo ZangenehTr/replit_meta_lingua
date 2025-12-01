@@ -28133,6 +28133,81 @@ Meta Lingua Academy`;
     }
   });
 
+  // Seed test users endpoint (for development and initial production setup)
+  app.post("/api/seed-test-users", async (req, res) => {
+    try {
+      const result = await seedTestUsers();
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error seeding test users:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "Failed to seed test users" 
+      });
+    }
+  });
+
+  // Activate all test users (fix for inactive accounts in production)
+  app.post("/api/activate-test-users", async (req, res) => {
+    try {
+      const testPhones = [
+        '+989121234567', '+989127654321', '+989131234567', '+989137654321',
+        '+989101234567', '+989101234568', '+989101234569', '+989101234570', '+989101234571'
+      ];
+      
+      const result = await db.update(users)
+        .set({ isActive: true, status: 'active' })
+        .where(inArray(users.phoneNumber, testPhones))
+        .returning({ id: users.id, phone: users.phoneNumber, firstName: users.firstName, isActive: users.isActive });
+      
+      console.log(`Activated ${result.length} test users`);
+      
+      res.json({
+        success: true,
+        message: `Activated ${result.length} test users`,
+        users: result.map(u => ({ id: u.id, phone: u.phone, name: u.firstName, isActive: u.isActive }))
+      });
+    } catch (error: any) {
+      console.error("Error activating test users:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "Failed to activate test users" 
+      });
+    }
+  });
+
+  // Check test user status (diagnostic endpoint)
+  app.get("/api/check-test-users", async (req, res) => {
+    try {
+      const testPhones = [
+        '+989121234567', '+989127654321', '+989131234567', '+989137654321',
+        '+989101234567', '+989101234568', '+989101234569', '+989101234570', '+989101234571'
+      ];
+      
+      const testUsers = await db.select({
+        id: users.id,
+        phone: users.phoneNumber,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        isActive: users.isActive,
+        status: users.status
+      }).from(users).where(inArray(users.phoneNumber, testPhones));
+      
+      res.json({
+        success: true,
+        count: testUsers.length,
+        users: testUsers
+      });
+    } catch (error: any) {
+      console.error("Error checking test users:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "Failed to check test users" 
+      });
+    }
+  });
+
   return app;
 }
 
