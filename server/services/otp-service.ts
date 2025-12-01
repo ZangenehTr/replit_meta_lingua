@@ -80,32 +80,41 @@ export class OtpService {
     if (!isDemoEnabled || !hasSecret) return false;
     
     // Normalize phone number: remove spaces, dashes, parentheses
-    const normalizedIdentifier = identifier.replace(/[\s\-\(\)]/g, '');
+    const cleanedIdentifier = identifier.replace(/[\s\-\(\)]/g, '');
     
-    // Must be an exact match to a whitelisted phone
-    if (!this.TEST_ACCOUNT_PHONES.has(normalizedIdentifier)) return false;
+    // Must be an exact match to a whitelisted phone (check any format)
+    if (!this.TEST_ACCOUNT_PHONES.has(cleanedIdentifier)) return false;
     
-    // Generate expected code and compare (constant-time comparison)
-    const expectedCode = this.generateDemoCode(normalizedIdentifier);
+    // CRITICAL: Normalize to international format (+98...) for code generation
+    // The script always generates codes using +98 format, so we must match that
+    const internationalPhone = this.formatIranianPhoneNumber(cleanedIdentifier);
+    
+    console.log(`🔍 Demo bypass check: input=${identifier}, cleaned=${cleanedIdentifier}, international=${internationalPhone}`);
+    
+    // Generate expected code using international format (matches script)
+    const expectedCode = this.generateDemoCode(internationalPhone);
     if (!expectedCode) return false;
     
     // Also check previous time slice to handle edge cases at slice boundaries
     const prevTimeSlice = Math.floor(Date.now() / (30 * 60 * 1000)) - 1;
-    const prevData = `${normalizedIdentifier}:${prevTimeSlice}`;
+    const prevData = `${internationalPhone}:${prevTimeSlice}`;
     const prevHmac = crypto.createHmac('sha256', process.env.DEMO_TEST_SECRET!);
     prevHmac.update(prevData);
     const prevHash = prevHmac.digest('hex');
     const prevCode = (parseInt(prevHash.substring(0, 8), 16) % 1000000).toString().padStart(6, '0');
+    
+    console.log(`🔍 Demo codes: expected=${expectedCode}, prevCode=${prevCode}, provided=${code}`);
     
     // Constant-time comparison to prevent timing attacks
     const codeMatches = crypto.timingSafeEqual(Buffer.from(code), Buffer.from(expectedCode));
     const prevCodeMatches = crypto.timingSafeEqual(Buffer.from(code), Buffer.from(prevCode));
     
     if (codeMatches || prevCodeMatches) {
-      console.log(`🔓 Demo mode: HMAC-verified bypass for test account ${normalizedIdentifier}`);
+      console.log(`🔓 Demo mode: HMAC-verified bypass for test account ${internationalPhone}`);
       return true;
     }
     
+    console.log(`❌ Demo mode: Code mismatch for ${internationalPhone}`);
     return false;
   }
 
