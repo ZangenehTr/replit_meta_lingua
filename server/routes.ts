@@ -28208,6 +28208,24 @@ Meta Lingua Academy`;
     }
   });
 
+
+  // Debug endpoint to check demo mode configuration
+  app.get("/api/debug-demo-mode", async (req, res) => {
+    const isDemoEnabled = process.env.DEMO_TEST_ACCOUNTS === 'true';
+    const hasSecret = !!process.env.DEMO_TEST_SECRET;
+    const secretLength = process.env.DEMO_TEST_SECRET?.length || 0;
+    const timeSlice = Math.floor(Date.now() / (30 * 60 * 1000));
+    
+    res.json({
+      demoEnabled: isDemoEnabled,
+      hasSecret: hasSecret,
+      secretLength: secretLength,
+      currentTimeSlice: timeSlice,
+      serverTime: new Date().toISOString(),
+      nodeEnv: process.env.NODE_ENV
+    });
+  });
+
   return app;
 }
 
