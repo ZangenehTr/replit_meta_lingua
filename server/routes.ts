@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { seedTestUsers } from "./content/seed-test-users";
 import express from "express";
 import { DEFAULT_ROLE_PERMISSIONS } from '@shared/subsystem-permissions';
 import { createServer, type Server } from "http";
@@ -28115,6 +28116,20 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error fetching best student:', error);
       res.status(500).json({ error: "Failed to fetch best student" });
+    }
+  });
+
+  // Seed test users endpoint (for development and initial production setup)
+  app.post("/api/seed-test-users", async (req, res) => {
+    try {
+      const result = await seedTestUsers();
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error seeding test users:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "Failed to seed test users" 
+      });
     }
   });
 
