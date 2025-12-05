@@ -165,6 +165,7 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
   { path: "/admin/font-management", icon: "Type", label: t('common:navigation.fontManagement') || 'Font Management', roles: ["Admin"] },
   { path: "/admin/sms-settings", icon: "Send", label: t('common:navigation.smsManagement'), roles: ["Admin", "Supervisor"] },
   { path: "/admin/subsystem-permissions", icon: "Shield", label: t('common:navigation.subsystemPermissions') || 'Subsystem Permissions', roles: ["Admin"] },
+  { path: "/admin/api-smoke-test", icon: "Server", label: t('common:navigation.apiSmokeTest') || 'API Smoke Test', roles: ["Admin"] },
   { path: "/admin/website-builder", icon: "Globe", label: t('common:navigation.websiteBuilder'), roles: ["Admin"] },
   ];
   

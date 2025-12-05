@@ -143,6 +143,7 @@
     "smsManagement": "SMS Management",
     "campaignManagement": "Campaign Management",
     "websiteBuilder": "Website Builder",
+    "apiSmokeTest": "API Smoke Test",
     "unifiedWorkflow": "Unified Workflow",
     "leadManagement": "Lead Management",
     "callLogs": "Call Logs",
