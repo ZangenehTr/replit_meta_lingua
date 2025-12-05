@@ -58,6 +58,7 @@ import { createAdminUsersRouter } from "./routes/admin-users";
 import { createInfrastructureHealthRouter } from "./routes/infrastructure-health-routes";
 import { createAIHealthRouter } from "./routes/ai-health-routes";
 import whisperHealthRouter from "./routes/whisper-health-routes";
+import smokeTestRouter from './routes/smoke-test-routes';
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -827,6 +828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/admin/ai-health", aiHealthRouter);
   app.use("/api/admin", whisperHealthRouter);
   app.use('/api/admin/infrastructure', infrastructureHealthRouter);
+  app.use('/api/smoke-test', smokeTestRouter);
 
   // Admin System Configuration Routes
   app.get("/api/admin/system", authenticateToken, requireRole(['Admin']), async (req: any, res) => {

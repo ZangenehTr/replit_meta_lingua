@@ -173,7 +173,7 @@ const TEST_CATEGORIES: TestCategory[] = [
 
 export default function ApiSmokeTestPage() {
   const { t } = useTranslation();
-  const { currentLang, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const [results, setResults] = useState<Record<string, TestResult>>({});
   const [isRunning, setIsRunning] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["health"]));
@@ -351,10 +351,10 @@ export default function ApiSmokeTestPage() {
               <div>
                 <CardTitle className="text-2xl flex items-center gap-2">
                   <Server className="h-6 w-6 text-blue-500" />
-                  {currentLang === "fa" ? "تست API ها" : "API Smoke Test"}
+                  {language === "fa" ? "تست API ها" : "API Smoke Test"}
                 </CardTitle>
                 <CardDescription className="mt-1">
-                  {currentLang === "fa" 
+                  {language === "fa" 
                     ? "تست سریع تمام نقاط پایانی API برای اطمینان از عملکرد صحیح سیستم"
                     : "Quick test all API endpoints to ensure system is working correctly"
                   }
@@ -371,7 +371,7 @@ export default function ApiSmokeTestPage() {
                   ) : (
                     <Play className="h-4 w-4 mr-2" />
                   )}
-                  {currentLang === "fa" ? "اجرای همه تست‌ها" : "Run All Tests"}
+                  {language === "fa" ? "اجرای همه تست‌ها" : "Run All Tests"}
                 </Button>
                 <Button
                   variant="outline"
@@ -379,7 +379,7 @@ export default function ApiSmokeTestPage() {
                   disabled={isRunning}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  {currentLang === "fa" ? "پاک کردن" : "Clear"}
+                  {language === "fa" ? "پاک کردن" : "Clear"}
                 </Button>
               </div>
             </div>
@@ -388,30 +388,30 @@ export default function ApiSmokeTestPage() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <div className="bg-white dark:bg-slate-800 rounded-lg p-4 text-center shadow-sm">
                 <div className="text-3xl font-bold text-slate-700 dark:text-slate-200">{overallStats.total}</div>
-                <div className="text-sm text-slate-500">{currentLang === "fa" ? "کل تست‌ها" : "Total Tests"}</div>
+                <div className="text-sm text-slate-500">{language === "fa" ? "کل تست‌ها" : "Total Tests"}</div>
               </div>
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center shadow-sm">
                 <div className="text-3xl font-bold text-green-600">{overallStats.success}</div>
-                <div className="text-sm text-green-600">{currentLang === "fa" ? "موفق" : "Passed"}</div>
+                <div className="text-sm text-green-600">{language === "fa" ? "موفق" : "Passed"}</div>
               </div>
               <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 text-center shadow-sm">
                 <div className="text-3xl font-bold text-red-600">{overallStats.errors}</div>
-                <div className="text-sm text-red-600">{currentLang === "fa" ? "خطا" : "Failed"}</div>
+                <div className="text-sm text-red-600">{language === "fa" ? "خطا" : "Failed"}</div>
               </div>
               <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 text-center shadow-sm">
                 <div className="text-3xl font-bold text-yellow-600">{overallStats.warnings}</div>
-                <div className="text-sm text-yellow-600">{currentLang === "fa" ? "هشدار" : "Warnings"}</div>
+                <div className="text-sm text-yellow-600">{language === "fa" ? "هشدار" : "Warnings"}</div>
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center shadow-sm">
                 <div className="text-3xl font-bold text-blue-600">{overallStats.tested}</div>
-                <div className="text-sm text-blue-600">{currentLang === "fa" ? "تست شده" : "Tested"}</div>
+                <div className="text-sm text-blue-600">{language === "fa" ? "تست شده" : "Tested"}</div>
               </div>
             </div>
 
             {overallStats.tested > 0 && (
               <div className="mb-6">
                 <div className="flex justify-between text-sm mb-1">
-                  <span>{currentLang === "fa" ? "پیشرفت" : "Progress"}</span>
+                  <span>{language === "fa" ? "پیشرفت" : "Progress"}</span>
                   <span>{Math.round(progressPercentage)}%</span>
                 </div>
                 <Progress value={progressPercentage} className="h-2" />
@@ -423,7 +423,7 @@ export default function ApiSmokeTestPage() {
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
           <TabsList className="flex flex-wrap h-auto gap-1 bg-white dark:bg-slate-800 p-2 rounded-lg shadow-sm">
             <TabsTrigger value="all" className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900">
-              {currentLang === "fa" ? "همه" : "All"}
+              {language === "fa" ? "همه" : "All"}
             </TabsTrigger>
             {TEST_CATEGORIES.map(category => (
               <TabsTrigger 
@@ -433,7 +433,7 @@ export default function ApiSmokeTestPage() {
               >
                 <span className="flex items-center gap-1">
                   {category.icon}
-                  {currentLang === "fa" ? category.name : category.nameEn}
+                  {language === "fa" ? category.name : category.nameEn}
                 </span>
               </TabsTrigger>
             ))}
@@ -460,10 +460,10 @@ export default function ApiSmokeTestPage() {
                           </div>
                           <div>
                             <h3 className="font-medium">
-                              {currentLang === "fa" ? category.name : category.nameEn}
+                              {language === "fa" ? category.name : category.nameEn}
                             </h3>
                             <p className="text-sm text-slate-500">
-                              {stats.tested}/{stats.total} {currentLang === "fa" ? "تست شده" : "tested"}
+                              {stats.tested}/{stats.total} {language === "fa" ? "تست شده" : "tested"}
                             </p>
                           </div>
                         </div>
@@ -493,7 +493,7 @@ export default function ApiSmokeTestPage() {
                             disabled={isRunning}
                           >
                             <Play className="h-3 w-3 mr-1" />
-                            {currentLang === "fa" ? "تست" : "Test"}
+                            {language === "fa" ? "تست" : "Test"}
                           </Button>
                         </div>
                       </div>
@@ -515,7 +515,7 @@ export default function ApiSmokeTestPage() {
                                 {getStatusIcon(result?.status)}
                                 <div>
                                   <div className="font-medium text-sm">
-                                    {currentLang === "fa" ? endpoint.name : endpoint.nameEn}
+                                    {language === "fa" ? endpoint.name : endpoint.nameEn}
                                   </div>
                                   <div className="text-xs text-slate-500 flex items-center gap-2">
                                     <code className="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs">
@@ -524,7 +524,7 @@ export default function ApiSmokeTestPage() {
                                     <span className="font-mono">{endpoint.endpoint}</span>
                                   </div>
                                   <div className="text-xs text-slate-400 mt-0.5">
-                                    {currentLang === "fa" ? endpoint.description : endpoint.descriptionEn}
+                                    {language === "fa" ? endpoint.description : endpoint.descriptionEn}
                                   </div>
                                 </div>
                               </div>
@@ -565,7 +565,7 @@ export default function ApiSmokeTestPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-lg text-red-600 flex items-center gap-2">
                 <XCircle className="h-5 w-5" />
-                {currentLang === "fa" ? "خطاهای شناسایی شده" : "Detected Errors"}
+                {language === "fa" ? "خطاهای شناسایی شده" : "Detected Errors"}
               </CardTitle>
             </CardHeader>
             <CardContent>
