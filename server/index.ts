@@ -587,6 +587,16 @@ server.listen({
     }
   })();
 
+  // Non-blocking: Seed sample content (courses, games, placement test questions)
+  (async () => {
+    try {
+      const { seedAllSampleContent } = await import('./content/seed-sample-content.js');
+      await seedAllSampleContent();
+    } catch (error) {
+      console.error('⚠️  Failed to seed sample content:', error);
+    }
+  })();
+
   // Non-blocking: Initialize Whisper service
   (async () => {
     try {

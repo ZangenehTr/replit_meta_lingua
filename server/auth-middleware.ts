@@ -1,6 +1,6 @@
-// Authentication Middleware
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
+import { matchesRole } from "@shared/constants/roles";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -16,7 +16,6 @@ export interface AuthRequest extends Request {
   };
 }
 
-// Verify JWT token
 export function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -35,14 +34,13 @@ export function authenticateToken(req: AuthRequest, res: Response, next: NextFun
   });
 }
 
-// Role-based access control
 export function requireRole(allowedRoles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!matchesRole(req.user.role, allowedRoles)) {
       return res.status(403).json({ error: "Insufficient permissions" });
     }
 
@@ -50,7 +48,6 @@ export function requireRole(allowedRoles: string[]) {
   };
 }
 
-// Optional authentication (doesn't fail if no token)
 export function optionalAuth(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -67,7 +64,6 @@ export function optionalAuth(req: AuthRequest, res: Response, next: NextFunction
   });
 }
 
-// Centralized authentication requirement (alias for authenticateToken)
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   return authenticateToken(req, res, next);
 }

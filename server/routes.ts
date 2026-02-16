@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian } from "@shared/schema";
+import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -137,22 +137,8 @@ const sendTestSmsSchema = z.object({
   idempotencyKey: z.string().uuid('Invalid idempotency key format') // Required for duplicate prevention
 });
 
-// In-memory idempotency store for preventing duplicate sends
-const idempotencyStore = new Map<string, { timestamp: number; response: any }>();
-const IDEMPOTENCY_TTL = 24 * 60 * 60 * 1000; // 24 hours
-
-// Clean up expired idempotency keys
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of idempotencyStore.entries()) {
-    if (now - value.timestamp > IDEMPOTENCY_TTL) {
-      idempotencyStore.delete(key);
-    }
-  }
-}, 60 * 60 * 1000); // Clean up every hour
-
-// Idempotency middleware
-const checkIdempotency = (req: any, res: any, next: any) => {
+// Idempotency middleware using database-backed payment_idempotency table
+const checkIdempotency = async (req: any, res: any, next: any) => {
   const idempotencyKey = req.body.idempotencyKey;
   if (!idempotencyKey) {
     return res.status(400).json({ 
@@ -161,13 +147,20 @@ const checkIdempotency = (req: any, res: any, next: any) => {
     });
   }
 
-  const existingResponse = idempotencyStore.get(idempotencyKey);
-  if (existingResponse) {
-    console.log(`Duplicate request blocked by idempotency key: ${idempotencyKey}`);
-    return res.json(existingResponse.response);
+  try {
+    const existing = await db.select()
+      .from(paymentIdempotency)
+      .where(eq(paymentIdempotency.callbackId, idempotencyKey))
+      .limit(1);
+
+    if (existing.length > 0 && existing[0].requestPayload) {
+      console.log(`Duplicate request blocked by idempotency key: ${idempotencyKey}`);
+      return res.json(existing[0].requestPayload);
+    }
+  } catch (err) {
+    console.warn('Idempotency check failed, proceeding:', err);
   }
 
-  // Store request in progress
   req.idempotencyKey = idempotencyKey;
   next();
 };
@@ -232,15 +225,6 @@ import {
   exportFinancialReportCSV, 
   exportAttendanceCSV 
 } from "./utils/csv-export";
-
-// OTP store for temporary OTP storage
-interface OtpData {
-  code: string;
-  expiresAt: Date;
-  attempts: number;
-}
-
-const otpStore = new Map<string, OtpData>();
 
 // Configure multer for audio uploads
 const audioStorage = multer.diskStorage({
@@ -11283,7 +11267,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         cost: 0,
         topic,
         callType,
-        sessionUrl: `https://meet.metalingua.com/room/${Date.now()}` // Mock WebRTC room URL
+        sessionUrl: `/callern/session/${Date.now()}`
       };
 
       res.status(201).json({ 
@@ -11432,24 +11416,23 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     try {
       const { aiPersonalizationService } = await import('./ai-services');
       
-      // Mock user profile - in a real app, this would come from the database
+      const user = await storage.getUser(req.user.id);
+      const userPrefs = user?.preferences as any || {};
+      
       const profile = {
-        userId: req.user.userId,
-        nativeLanguage: "English",
-        targetLanguage: "Persian",
-        proficiencyLevel: "intermediate" as const,
-        learningGoals: ["Business Communication", "Cultural Understanding", "Grammar Mastery"],
-        culturalBackground: "Western",
-        preferredLearningStyle: "visual" as const,
-        weaknesses: ["Verb Conjugation", "Formal Speech"],
-        strengths: ["Vocabulary", "Pronunciation"],
+        userId: req.user.id,
+        nativeLanguage: userPrefs.nativeLanguage || "Persian",
+        targetLanguage: userPrefs.targetLanguage || "English",
+        proficiencyLevel: (user?.level || "intermediate") as "beginner" | "intermediate" | "advanced",
+        learningGoals: userPrefs.learningGoals || [],
+        culturalBackground: userPrefs.culturalBackground || "",
+        preferredLearningStyle: (userPrefs.preferredLearningStyle || "visual") as "visual" | "auditory" | "kinesthetic",
+        weaknesses: userPrefs.weaknesses || [],
+        strengths: userPrefs.strengths || [],
         progressHistory: []
       };
 
-      const recentActivity = [
-        { lesson: "Persian Grammar Basics", score: 85, date: "2025-05-27" },
-        { lesson: "Business Vocabulary", score: 92, date: "2025-05-26" }
-      ];
+      const recentActivity: { lesson: string; score: number; date: string }[] = [];
 
       const recommendations = await aiPersonalizationService.generatePersonalizedRecommendations(
         profile, 
@@ -12494,11 +12477,16 @@ Return JSON format:
 
   app.get("/api/admin/ai/usage-stats", async (req: any, res) => {
     try {
-      // Mock usage statistics - in production this would come from analytics
+      const totalSessions = await db.select({ count: sql<number>`count(*)` }).from(aiActivitySessions);
+      const todaySessions = await db.select({ count: sql<number>`count(*)` })
+        .from(aiActivitySessions)
+        .where(gte(aiActivitySessions.createdAt, sql`CURRENT_DATE`));
+      
       const usageStats = {
-        totalTokensUsed: 45230,
-        averageResponseTime: 2.4,
-        requestsToday: 127
+        totalTokensUsed: 0,
+        averageResponseTime: 0,
+        requestsToday: Number(todaySessions[0]?.count || 0),
+        totalSessions: Number(totalSessions[0]?.count || 0)
       };
       
       res.json(usageStats);
@@ -14100,19 +14088,11 @@ Return JSON format:
           dbError.code === '42703'    // undefined_column
         );
         if (isSchemaError) {
-          console.log('Database schema issue detected, using fallback for testing');
-          const mockLead = {
-            id: Math.floor(Math.random() * 1000000),
-            ...validatedData,
-            // Fix field mapping for client compatibility
-            source: validatedData.leadSource, // Client expects 'source', not 'leadSource'
-            phoneNumber: validatedData.phoneNumber, // Ensure phoneNumber is preserved
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
-          // Store in memory for retrieval by GET endpoints
-          mockLeads.set(mockLead.id, mockLead);
-          res.status(201).json(mockLead);
+          console.error('Database schema issue for leads table:', dbError.message);
+          res.status(503).json({ 
+            message: "Lead creation temporarily unavailable - database schema needs migration",
+            error: "SCHEMA_MISMATCH"
+          });
         } else {
           throw dbError; // Re-throw if it's a different error
         }
@@ -25867,35 +25847,21 @@ Meta Lingua Academy`;
       const userId = req.user?.id;
       
       // Mock AI learning recommendations - replace with real AI-generated recommendations later
-      const recommendations = [
-        {
-          id: 1,
-          type: "skill_focus",
-          title: "Focus on Speaking Practice",
-          description: "Your speaking skills could benefit from more practice. Try conversation exercises.",
-          priority: "high",
-          estimatedTime: "15 minutes daily",
-          actionUrl: "/pronunciation-practice"
-        },
-        {
-          id: 2,
-          type: "study_schedule", 
-          title: "Consistent Study Schedule",
-          description: "Study for 20 minutes every day at the same time to build a habit.",
-          priority: "medium",
-          estimatedTime: "20 minutes daily",
-          actionUrl: "/courses"
-        },
-        {
-          id: 3,
-          type: "content_suggestion",
-          title: "Business English Course",
-          description: "Based on your progress, you're ready for intermediate business topics.",
-          priority: "medium", 
-          estimatedTime: "45 minutes per session",
-          actionUrl: "/course/3"
-        }
-      ];
+      const dbRecommendations = await db.select()
+        .from(learningRecommendations)
+        .where(eq(learningRecommendations.userId, userId))
+        .orderBy(desc(learningRecommendations.createdAt))
+        .limit(10);
+      
+      const recommendations = dbRecommendations.map((r: any) => ({
+        id: r.id,
+        type: r.type || "content_suggestion",
+        title: r.title || r.recommendation,
+        description: r.description || r.details || "",
+        priority: r.priority || "medium",
+        estimatedTime: r.estimatedTime || "",
+        actionUrl: r.actionUrl || "/courses"
+      }));
       
       res.json({ recommendations, total: recommendations.length });
     } catch (error) {
@@ -25990,35 +25956,31 @@ Meta Lingua Academy`;
       const limit = parseInt(req.query.limit as string) || 5;
       
       // Mock session history data - replace with real session data later
-      const sessions = [
-        {
-          id: 1,
-          teacherName: "Sarah M.",
-          topic: "Business Presentation Skills",
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-          duration: 30,
-          rating: 5,
-          notes: "Excellent progress on pronunciation"
-        },
-        {
-          id: 2,
-          teacherName: "John D.",
-          topic: "IELTS Speaking Practice",
-          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-          duration: 45,
-          rating: 4,
-          notes: "Focus on fluency in part 2"
-        },
-        {
-          id: 3,
-          teacherName: "Maria L.",
-          topic: "Daily Conversation",
-          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago  
-          duration: 30,
-          rating: 5,
-          notes: "Great improvement in confidence"
-        }
-      ].slice(0, limit);
+      const dbSessions = await db.select({
+        id: callSessions.id,
+        teacherId: callSessions.teacherId,
+        topic: callSessions.topic,
+        startedAt: callSessions.startedAt,
+        duration: callSessions.duration,
+        status: callSessions.status
+      })
+        .from(callSessions)
+        .where(eq(callSessions.studentId, userId))
+        .orderBy(desc(callSessions.startedAt))
+        .limit(limit);
+
+      const sessions = await Promise.all(dbSessions.map(async (s: any) => {
+        const teacher = s.teacherId ? await storage.getUser(s.teacherId) : null;
+        return {
+          id: s.id,
+          teacherName: teacher ? `${teacher.firstName} ${teacher.lastName?.charAt(0)}.` : "N/A",
+          topic: s.topic || "General Practice",
+          date: s.startedAt?.toISOString() || new Date().toISOString(),
+          duration: s.duration || 0,
+          rating: 0,
+          notes: ""
+        };
+      }));
       
       res.json({ sessions, total: sessions.length });
     } catch (error) {
