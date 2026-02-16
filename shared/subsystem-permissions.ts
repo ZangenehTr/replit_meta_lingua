@@ -573,6 +573,36 @@ export const INSTITUTE_SECTION_MAP: Record<string, { fa: string; en: string }> =
   iranian_compliance: { fa: "سیستم و تنظیمات", en: "System & Settings" },
   third_party_integrations: { fa: "سیستم و تنظیمات", en: "System & Settings" },
   room_management: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+
+  teacher_dashboard: { fa: "تدریس", en: "Teaching" },
+  callern_teacher: { fa: "تدریس", en: "Teaching" },
+  teacher_classes: { fa: "تدریس", en: "Teaching" },
+  teacher_schedule: { fa: "تدریس", en: "Teaching" },
+  teacher_assignments: { fa: "تدریس", en: "Teaching" },
+  teacher_students: { fa: "تدریس", en: "Teaching" },
+  teacher_video_courses: { fa: "محتوا و گزارش", en: "Content & Reports" },
+  teacher_resources: { fa: "محتوا و گزارش", en: "Content & Reports" },
+  teacher_reports: { fa: "محتوا و گزارش", en: "Content & Reports" },
+  teacher_payments: { fa: "مالی", en: "Financial" },
+
+  unified_workflow: { fa: "مرکز تماس", en: "Call Center" },
+  call_logs: { fa: "مرکز تماس", en: "Call Center" },
+  prospects: { fa: "مرکز تماس", en: "Call Center" },
+  call_campaigns: { fa: "مرکز تماس", en: "Call Center" },
+
+  front_desk_dashboard: { fa: "پذیرش", en: "Reception" },
+  walk_in_management: { fa: "پذیرش", en: "Reception" },
+  visitor_intake: { fa: "پذیرش", en: "Reception" },
+  phone_call_logging: { fa: "ارتباطات", en: "Communication" },
+  inquiry_tracking: { fa: "ارتباطات", en: "Communication" },
+  front_desk_tasks: { fa: "ارتباطات", en: "Communication" },
+  appointment_scheduling: { fa: "برنامه‌ریزی", en: "Scheduling" },
+  trial_lesson_coordination: { fa: "برنامه‌ریزی", en: "Scheduling" },
+
+  mentor_dashboard: { fa: "منتورینگ", en: "Mentoring" },
+  mentee_management: { fa: "منتورینگ", en: "Mentoring" },
+  mentoring_sessions: { fa: "منتورینگ", en: "Mentoring" },
+  mentoring_progress: { fa: "منتورینگ", en: "Mentoring" },
 };
 
 // Generate navigation items dynamically from SUBSYSTEM_TREE based on user role
@@ -606,8 +636,8 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
         if (allowedSubsystems.includes(subsystem.id) && SUBSYSTEM_ROUTES[subsystem.id]) {
           const allRolesWithAccess = getRolesForSubsystem(subsystem.id);
           
-          let section = parentPlatform || "Admin";
-          if (parentPlatform === "Admin" && INSTITUTE_SECTION_MAP[subsystem.id]) {
+          let section = parentPlatform || "Other";
+          if (INSTITUTE_SECTION_MAP[subsystem.id]) {
             section = INSTITUTE_SECTION_MAP[subsystem.id].en;
           }
           

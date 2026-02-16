@@ -155,16 +155,25 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
 
+  const MIN_ITEMS_FOR_GROUPING = 8;
+
   const groupedNavigation = useMemo(() => {
-    if (!isAdmin) return null;
+    if (navigationItems.length < MIN_ITEMS_FOR_GROUPING) return null;
+    
+    const hasSections = navigationItems.some(item => item.section);
+    if (!hasSections) return null;
     
     const groups: Record<string, typeof navigationItems> = {};
     const sectionOrder = [
       "Dashboard",
       "Student", "Teacher/Tutor", "Mentor", "Call Center Agent", "Front Desk Clerk", "Supervisor",
+      "Teaching", "Content & Reports",
+      "Reception", "Scheduling",
       "People & Access", "Courses & Academics", "Games & Interactive",
-      "AI & Technology", "Communication", "Financial",
-      "Website & Content", "Analytics & Quality", "System & Settings"
+      "AI & Technology", "Call Center", "Communication", "Financial",
+      "Website & Content", "Analytics & Quality", "System & Settings",
+      "Mentoring",
+      "Other"
     ];
     
     navigationItems.forEach(item => {
@@ -186,7 +195,7 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
       section,
       items: groups[section]
     }));
-  }, [navigationItems, isAdmin]);
+  }, [navigationItems]);
 
   console.log('Sidebar rendering with items:', navigationItems.length, 'items');
   console.log('Callern items:', navigationItems.filter(item => item.path.includes('callern')));
@@ -250,6 +259,12 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
       "Website & Content": "وبسایت و محتوا",
       "Analytics & Quality": "تحلیل و کیفیت",
       "System & Settings": "سیستم و تنظیمات",
+      "Teaching": "تدریس",
+      "Content & Reports": "محتوا و گزارش",
+      "Call Center": "مرکز تماس",
+      "Reception": "پذیرش",
+      "Scheduling": "برنامه‌ریزی",
+      "Mentoring": "منتورینگ",
       "Other": "سایر",
     };
     return labels[section] || section;
@@ -259,7 +274,7 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
     <div className={`sidebar-container w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className={collapsed ? 'p-2' : 'p-4'}>
         <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
-          {isAdmin && groupedNavigation ? (
+          {groupedNavigation ? (
             groupedNavigation.map(({ section, items }) => {
               const isCollapsed = collapsedSections[section] ?? false;
               const sectionLabel = i18n.language === 'fa' ? getSectionLabelFa(section) : section;
