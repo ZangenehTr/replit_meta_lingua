@@ -68,3 +68,14 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Email**: Iranian SMTP infrastructure
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem
+
+## Recent Changes (Feb 16, 2026)
+### LinguaQuest Bug Fixes & i18n Audit
+- **CRITICAL FIX**: Dashboard useQuery URL mismatch — changed queryKey from `['/api/linguaquest/session', token]` to `[\`/api/linguaquest/session/${token}\`]` so data actually loads
+- **TypeScript**: Fixed all 14 LSP errors in admin-linguaquest.tsx (added `<any>` type params to useQuery calls, updated refetchInterval to TanStack Query v5 API)
+- **Streak Calculation**: Fixed guest-progress.ts to track consecutive days instead of incrementing per lesson completion
+- **Score Accumulation**: Fixed ConversationStep in GameStepRenderer to use useRef for score tracking, preventing stale closure state; now returns percentage (0-100) instead of raw points
+- **i18n Compliance**: Replaced ALL hardcoded English strings in LinguaQuestHome, LinguaQuestDashboard, LinguaQuestLesson, and GameStepRenderer with t() translation calls; added keys to en/fa/ar linguaquest.json
+- **Navigation**: Added "Back to Platform" link on all LinguaQuest pages for logged-in users (checks auth_token in localStorage)
+- **XP Progress**: Fixed inconsistent XP-to-next-level calculation (now consistently 100 XP per level)
+- **Dashboard fallback**: Fixed duplicate "No Progress Found" block to use i18n instead of hardcoded English
