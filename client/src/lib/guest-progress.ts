@@ -235,7 +235,19 @@ export class GuestProgressManager {
 
     this.progress.totalXp += xpEarned;
     this.progress.totalStudyTimeMinutes += timeSpentMinutes;
-    this.progress.currentStreak += 1;
+    
+    const lastActive = new Date(this.progress.lastActiveAt);
+    const now = new Date();
+    const lastActiveDay = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayDiff = Math.floor((today.getTime() - lastActiveDay.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 1) {
+      this.progress.currentStreak += 1;
+    } else if (dayDiff > 1) {
+      this.progress.currentStreak = 1;
+    }
+    
     this.progress.currentLevel = Math.floor(this.progress.totalXp / 100) + 1;
     this.progress.lastActiveAt = new Date().toISOString();
 

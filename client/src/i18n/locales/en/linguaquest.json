@@ -107,6 +107,8 @@
     "dialogue": "Dialogue {{current}} / {{total}}",
     "score": "Score: {{score}}",
     "you": "You",
+    "playerSpeaker": "You",
+    "listen": "Listen",
     "chooseResponse": "Choose your response:",
     "pronunciationChallenge": "Pronunciation Challenge",
     "listeningComprehension": "Listening Comprehension",

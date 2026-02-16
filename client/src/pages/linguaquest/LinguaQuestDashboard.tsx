@@ -70,7 +70,7 @@ export function LinguaQuestDashboard() {
   }, []);
 
   const { data: sessionData, isLoading } = useQuery<{ success: boolean; session: GuestSession }>({
-    queryKey: ['/api/linguaquest/session', sessionToken],
+    queryKey: [`/api/linguaquest/session/${sessionToken}`],
     enabled: !!sessionToken,
   });
 
@@ -119,15 +119,15 @@ export function LinguaQuestDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 lg:p-8 flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-center">No Progress Found</CardTitle>
+            <CardTitle className="text-center">{t('dashboard.noProgress', 'No Progress Found')}</CardTitle>
             <CardDescription className="text-center">
-              Start learning to track your progress
+              {t('dashboard.startLearningPrompt', 'Start learning to track your progress')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/linguaquest">
               <Button className="w-full" data-testid="button-start-learning">
-                Start Learning
+                {t('dashboard.startLearning', 'Start Learning')}
               </Button>
             </Link>
           </CardContent>
@@ -137,8 +137,8 @@ export function LinguaQuestDashboard() {
   }
 
   const { progress, achievements, completedLessons } = sessionData.session;
-  const xpToNextLevel = (progress.currentLevel * 100);
-  const xpProgress = (progress.totalXp % 100) / 100 * 100;
+  const xpToNextLevel = 100;
+  const xpProgress = progress.totalXp % 100;
   const unlockedAchievements = achievements.filter(a => a.isUnlocked);
   const totalHours = Math.floor(progress.totalStudyTimeMinutes / 60);
   const totalMinutes = progress.totalStudyTimeMinutes % 60;
@@ -181,7 +181,7 @@ export function LinguaQuestDashboard() {
               <CardContent>
                 <div className="text-3xl font-bold" data-testid="text-total-xp">{progress.totalXp}</div>
                 <p className="text-xs text-emerald-100 mt-1">
-                  Level {progress.currentLevel}
+                  {t('dashboard.level', 'Level')} {progress.currentLevel}
                 </p>
               </CardContent>
             </Card>
@@ -269,15 +269,15 @@ export function LinguaQuestDashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                  Level {progress.currentLevel}
+                  {t('dashboard.level', 'Level')} {progress.currentLevel}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {progress.totalXp % 100} / {xpToNextLevel} XP
+                  {progress.totalXp % 100} / {xpToNextLevel} {t('dashboard.xp', 'XP')}
                 </span>
               </div>
               <Progress value={xpProgress} className="h-3" />
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {100 - (progress.totalXp % 100)} XP to Level {progress.currentLevel + 1}
+                {xpToNextLevel - (progress.totalXp % 100)} {t('dashboard.xpToLevel', 'XP to Level')} {progress.currentLevel + 1}
               </p>
             </div>
           </CardContent>
@@ -292,7 +292,7 @@ export function LinguaQuestDashboard() {
                 {t('dashboard.achievements', 'Achievements')}
               </CardTitle>
               <CardDescription>
-                {unlockedAchievements.length} of {achievements.length} unlocked
+                {t('dashboard.achievementsUnlocked', '{{unlocked}} of {{total}} unlocked', { unlocked: unlockedAchievements.length, total: achievements.length })}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -317,7 +317,7 @@ export function LinguaQuestDashboard() {
                         </p>
                         {achievement.unlockedAt && (
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
+                            {t('dashboard.unlockedDate', 'Unlocked')} {new Date(achievement.unlockedAt).toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -341,7 +341,7 @@ export function LinguaQuestDashboard() {
                 {t('dashboard.recentLessons', 'Recent Lessons')}
               </CardTitle>
               <CardDescription>
-                Your latest completed lessons
+                {t('dashboard.latestCompletedLessons', 'Your latest completed lessons')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -358,7 +358,7 @@ export function LinguaQuestDashboard() {
                     >
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 dark:text-white">
-                          Lesson #{lesson.lessonId}
+                          {t('dashboard.lessonNumber', 'Lesson')} #{lesson.lessonId}
                         </h4>
                         <div className="flex items-center gap-3 mt-1">
                           {lesson.score && (
@@ -371,7 +371,7 @@ export function LinguaQuestDashboard() {
                             {lesson.timeSpentMinutes}min
                           </span>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {lesson.attempts} {lesson.attempts === 1 ? 'attempt' : 'attempts'}
+                            {lesson.attempts} {t('dashboard.attempt', 'attempts')}
                           </span>
                         </div>
                       </div>

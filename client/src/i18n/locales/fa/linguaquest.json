@@ -107,6 +107,8 @@
     "dialogue": "گفتگو {{current}} / {{total}}",
     "score": "امتیاز: {{score}}",
     "you": "شما",
+    "playerSpeaker": "شما",
+    "listen": "گوش دهید",
     "chooseResponse": "پاسخ خود را انتخاب کنید:",
     "pronunciationChallenge": "چالش تلفظ",
     "listeningComprehension": "درک مطلب شنیداری",

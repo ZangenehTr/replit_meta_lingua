@@ -107,6 +107,8 @@
     "dialogue": "حوار {{current}} / {{total}}",
     "score": "النتيجة: {{score}}",
     "you": "أنت",
+    "playerSpeaker": "أنت",
+    "listen": "استمع",
     "chooseResponse": "اختر ردك:",
     "pronunciationChallenge": "تحدي النطق",
     "listeningComprehension": "الفهم السماعي",

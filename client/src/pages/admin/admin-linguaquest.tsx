@@ -90,30 +90,31 @@ export function AdminLinguaQuest() {
   });
 
   // Fetch analytics
-  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery<any>({
     queryKey: ['/api/linguaquest/admin/analytics'],
   });
 
   // Fetch lessons
-  const { data: lessonsData, isLoading: lessonsLoading } = useQuery({
+  const { data: lessonsData, isLoading: lessonsLoading } = useQuery<any>({
     queryKey: ['/api/linguaquest/lessons'],
   });
 
   // Fetch all feedback
-  const { data: feedbackData, isLoading: feedbackLoading } = useQuery({
+  const { data: feedbackData, isLoading: feedbackLoading } = useQuery<any>({
     queryKey: ['/api/linguaquest/admin/feedback'],
   });
 
   // Fetch audio generation stats
-  const { data: audioStatsData, isLoading: audioStatsLoading } = useQuery({
+  const { data: audioStatsData, isLoading: audioStatsLoading } = useQuery<any>({
     queryKey: ['/api/linguaquest/audio/stats'],
   });
 
   // Fetch audio generation jobs
-  const { data: audioJobsData, isLoading: audioJobsLoading, refetch: refetchJobs } = useQuery({
+  const { data: audioJobsData, isLoading: audioJobsLoading, refetch: refetchJobs } = useQuery<any>({
     queryKey: ['/api/linguaquest/audio/jobs'],
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Poll every 2 seconds if there are running jobs
+      const data = query.state.data as any;
       const hasRunningJobs = data?.jobs?.some((j: any) => j.status === 'running' || j.status === 'pending');
       return hasRunningJobs ? 2000 : false;
     }

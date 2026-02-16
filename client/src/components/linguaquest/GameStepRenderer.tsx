@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -390,6 +390,7 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
   const { t } = useTranslation('linguaquest');
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const scoreRef = useRef(0);
   const [selectedResponse, setSelectedResponse] = useState<string | null>(null);
   const dialogue = step.dialogue || [];
 
@@ -400,7 +401,9 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
     
     if (response.correct) {
       const points = response.points || 10;
-      setScore(prev => prev + points);
+      const newScore = scoreRef.current + points;
+      scoreRef.current = newScore;
+      setScore(newScore);
       
       if (currentDialogue.audio) {
         new Audio(currentDialogue.audio).play();
@@ -411,7 +414,9 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
           setCurrentDialogueIndex(prev => prev + 1);
           setSelectedResponse(null);
         } else {
-          onComplete(score + points);
+          const maxPossibleScore = dialogue.length * (dialogue[0]?.playerResponses?.[0]?.points || 10);
+          const percentage = maxPossibleScore > 0 ? (scoreRef.current / maxPossibleScore) * 100 : 100;
+          onComplete(Math.min(percentage, 100));
         }
       }, 1500);
     }
@@ -430,7 +435,7 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
       </CardHeader>
       <CardContent>
         <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-          <p className="font-medium text-blue-900">{currentDialogue.speaker === 'player' ? 'You' : currentDialogue.speaker}</p>
+          <p className="font-medium text-blue-900">{currentDialogue.speaker === 'player' ? t('gameSteps.playerSpeaker') : currentDialogue.speaker}</p>
           <p className="text-lg mt-2">{currentDialogue.text}</p>
           {currentDialogue.audio && (
             <Button 
@@ -440,7 +445,7 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
               className="mt-2"
             >
               <Volume2 className="w-4 h-4 mr-2" />
-              Listen
+              {t('gameSteps.listen')}
             </Button>
           )}
         </div>
@@ -611,7 +616,7 @@ function ListeningStep({ step, onComplete }: { step: any; onComplete: (score: nu
             data-testid="play-audio-button"
           >
             <Play className="w-5 h-5 mr-2" />
-            Play Audio
+            {t('gameSteps.playAudio')}
           </Button>
         </div>
 
