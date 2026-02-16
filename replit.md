@@ -70,6 +70,13 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **File Storage**: Local server filesystem
 
 ## Recent Changes (Feb 16, 2026)
+### Student Profile & Dashboard Fixes
+- **API /api/profile**: Enhanced GET endpoint to join users + userProfiles tables, returning combined data (firstName, lastName, email, joinedDate, stats, settings) matching frontend ProfileData interface
+- **formatDate**: Fixed to handle null/empty/invalid dates gracefully, dynamically selects locale (fa-IR/ar-SA/en-US) based on i18n.language
+- **MobileBottomNav**: Dark glass-morphism theme (bg-gray-900/95, border-white/10, text-white/60 inactive, text-purple-400 active, bg-purple-500/20 indicator)
+- **i18n**: Added 26+ missing translation keys to en/fa/ar student.json (memberSince, hoursLearned, coursesCompleted, certificates, contactInfo, settings, notifications, etc.)
+- **LSP Fixes**: Fixed 6 GlossyButton variant="outline" errors in dashboard-mobile.tsx (changed to "secondary"), fixed User type mismatch in ConditionalDashboard.tsx
+
 ### LinguaQuest Bug Fixes & i18n Audit
 - **CRITICAL FIX**: Dashboard useQuery URL mismatch — changed queryKey from `['/api/linguaquest/session', token]` to `[\`/api/linguaquest/session/${token}\`]` so data actually loads
 - **TypeScript**: Fixed all 14 LSP errors in admin-linguaquest.tsx (added `<any>` type params to useQuery calls, updated refetchInterval to TanStack Query v5 API)
