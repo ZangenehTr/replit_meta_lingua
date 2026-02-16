@@ -45,7 +45,8 @@ import {
   Share2,
   UserCheck,
   Workflow,
-  Shield
+  Shield,
+  Server
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -90,6 +91,7 @@ const iconMap = {
   UserCheck,
   Workflow,
   Shield,
+  Server,
   // New subsystem icons
   ShoppingCart,
   Book,
