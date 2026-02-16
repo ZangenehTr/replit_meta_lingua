@@ -38,7 +38,7 @@ export function ConditionalDashboard() {
   return (
     <UnifiedStudentDashboard 
       enrollmentStatus={enrollmentStatus}
-      user={user}
+      user={user as any}
     />
   );
 }

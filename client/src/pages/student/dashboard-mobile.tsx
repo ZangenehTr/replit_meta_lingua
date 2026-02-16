@@ -529,7 +529,7 @@ export default function StudentDashboardMobile() {
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-white font-bold text-lg">{t('student:myClasses')}</h3>
               <Link href="/student/sessions" data-testid="link-view-full-class-history-mobile">
-                <GlossyButton size="sm" variant="outline" className="flex items-center gap-2">
+                <GlossyButton size="sm" variant="secondary" className="flex items-center gap-2">
                   <ChevronRight className="w-4 h-4" />
                   {t('student:viewFullClassHistory')}
                 </GlossyButton>
@@ -558,10 +558,10 @@ export default function StudentDashboardMobile() {
                   <GlossyButton size="sm" variant="primary" data-testid="button-join-online-class-mobile">
                     {t('student:joinClassButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline" data-testid="button-view-online-homework-mobile">
+                  <GlossyButton size="sm" variant="secondary" data-testid="button-view-online-homework-mobile">
                     {t('student:viewHomeworkButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline" data-testid="button-previous-session-videos-mobile">
+                  <GlossyButton size="sm" variant="secondary" data-testid="button-previous-session-videos-mobile">
                     {t('student:previousSessionVideos')}
                   </GlossyButton>
                 </div>
@@ -591,7 +591,7 @@ export default function StudentDashboardMobile() {
                   <GlossyButton size="sm" variant="primary" data-testid="button-practice-inperson-mobile">
                     {t('student:practice')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline" data-testid="button-homework-inperson-mobile">
+                  <GlossyButton size="sm" variant="secondary" data-testid="button-homework-inperson-mobile">
                     {t('student:homework')}
                   </GlossyButton>
                 </div>
@@ -620,10 +620,10 @@ export default function StudentDashboardMobile() {
                   <GlossyButton size="sm" variant="primary" data-testid="button-join-additional-class-mobile">
                     {t('student:joinClassButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline" data-testid="button-view-additional-homework-mobile">
+                  <GlossyButton size="sm" variant="secondary" data-testid="button-view-additional-homework-mobile">
                     {t('student:viewHomeworkButton')}
                   </GlossyButton>
-                  <GlossyButton size="sm" variant="outline" data-testid="button-additional-session-videos-mobile">
+                  <GlossyButton size="sm" variant="secondary" data-testid="button-additional-session-videos-mobile">
                     {t('student:previousSessionVideos')}
                   </GlossyButton>
                 </div>

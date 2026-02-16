@@ -2491,9 +2491,43 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   // User Profile Management
   app.get("/api/profile", authenticateToken, async (req: any, res) => {
     try {
+      const user = await storage.getUser(req.user.id);
       const profile = await storage.getUserProfile(req.user.id);
-      res.json(profile);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const profileData = {
+        id: user.id,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        avatar: user.avatar || '',
+        language: (profile as any)?.nativeLanguage || (user.preferences as any)?.language || 'fa',
+        country: '',
+        city: '',
+        joinedDate: user.createdAt ? user.createdAt.toISOString() : new Date().toISOString(),
+        bio: profile?.bio || '',
+        settings: {
+          notifications: (user.preferences as any)?.notifications ?? true,
+          emailAlerts: (user.preferences as any)?.emailAlerts ?? true,
+          smsAlerts: (user.preferences as any)?.smsAlerts ?? true,
+          darkMode: (user.preferences as any)?.darkMode ?? false,
+          language: (user.preferences as any)?.language || 'fa'
+        },
+        stats: {
+          coursesCompleted: 0,
+          hoursLearned: 0,
+          achievements: 0,
+          certificates: 0
+        }
+      };
+      
+      res.json(profileData);
     } catch (error) {
+      console.error('Error fetching profile:', error);
       res.status(500).json({ message: "Failed to fetch profile" });
     }
   });

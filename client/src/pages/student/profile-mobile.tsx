@@ -58,7 +58,7 @@ interface ProfileData {
 }
 
 export default function StudentProfileMobile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Partial<ProfileData>>({});
@@ -131,8 +131,11 @@ export default function StudentProfileMobile() {
   };
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return t('student:dateNotAvailable', '-');
     const date = new Date(dateStr);
-    return date.toLocaleDateString('fa-IR', { 
+    if (isNaN(date.getTime())) return t('student:dateNotAvailable', '-');
+    const locale = i18n.language === 'fa' ? 'fa-IR' : i18n.language === 'ar' ? 'ar-SA' : 'en-US';
+    return date.toLocaleDateString(locale, { 
       year: 'numeric',
       month: 'long',
       day: 'numeric'

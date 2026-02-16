@@ -53,7 +53,7 @@ export function MobileBottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 bottom-safe-area" style={{ zIndex: 50 }}>
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-xl border-t border-white/10 bottom-safe-area" style={{ zIndex: 50 }}>
       <nav className="flex justify-around items-center py-2">
         {navItems.map((item) => {
           const isActive = location === item.path || 
@@ -65,28 +65,28 @@ export function MobileBottomNav() {
               onClick={() => navigate(item.path)}
               className={cn(
                 "flex flex-col items-center justify-center py-2 px-3 tap-scale rounded-lg transition-all duration-200",
-                "hover:bg-gray-50",
-                isActive && "text-purple-600"
+                "hover:bg-white/5",
+                isActive && "text-purple-400"
               )}
             >
               <div className="relative">
                 {isActive && (
                   <motion.div
                     layoutId="bottomNavIndicator"
-                    className="absolute -inset-2 bg-purple-100 rounded-lg"
+                    className="absolute -inset-2 bg-purple-500/20 rounded-lg"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
                 <div className={cn(
                   "relative z-10 transition-colors",
-                  isActive ? "text-purple-600" : "text-gray-600"
+                  isActive ? "text-purple-400" : "text-white/60"
                 )}>
                   {item.icon}
                 </div>
               </div>
               <span className={cn(
                 "text-xs mt-1 transition-colors",
-                isActive ? "text-purple-600 font-medium" : "text-gray-600"
+                isActive ? "text-purple-400 font-medium" : "text-white/60"
               )}>
                 {item.label}
               </span>
