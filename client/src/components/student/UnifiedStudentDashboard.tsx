@@ -265,6 +265,7 @@ interface FeatureCardProps {
 }
 
 function FeatureCard({ icon: Icon, title, description, isUnlocked, onClick, testId }: FeatureCardProps) {
+  const { t } = useTranslation(['student', 'common']);
   return (
     <Card 
       className={`cursor-pointer transition-all hover:shadow-xl ${
@@ -277,7 +278,7 @@ function FeatureCard({ icon: Icon, title, description, isUnlocked, onClick, test
         <div className="absolute inset-0 bg-gradient-to-br from-gray-100/80 to-gray-200/80 backdrop-blur-sm z-10 flex items-center justify-center">
           <div className="text-center">
             <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-600">Enroll to Unlock</p>
+            <p className="text-sm font-semibold text-gray-600">{t('unifiedDashboard.enrollToUnlock')}</p>
           </div>
         </div>
       )}
@@ -301,7 +302,7 @@ function FeatureCard({ icon: Icon, title, description, isUnlocked, onClick, test
               size="sm" 
               className="mt-4"
             >
-              {isUnlocked ? 'Explore' : 'Learn More'}
+              {isUnlocked ? t('unifiedDashboard.explore') : t('unifiedDashboard.learnMore')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
