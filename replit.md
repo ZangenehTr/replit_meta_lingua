@@ -24,6 +24,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **UI/UX**: Modern gradient backgrounds (WCAG-compliant blues), professional layouts, mobile-first responsive design, touch-optimized components, role-based UI, resizable panels, bottom navigation for mobile, collapsible sidebar, dark mode support.
 - **Key Features**: Unified Dashboard for 8 user roles, LinguaQuest interactive game system (23 activity types, 6 lessons), TTS audio pre-generation, Dynamic Form Management, PWA support (installable, offline capability), Public marketing website, SMS Campaign Management, Dynamic Curriculum Category System, Guest Placement Test Flow (AI-powered roadmap, CEFR results), Visitor Chat System, Font Management, Breadcrumb Navigation, Admin Infrastructure Status Widget.
 - **Admin Navigation**: Collapsible section grouping for Admin sidebar items (e.g., People & Access, Courses & Academics).
+- **Role-Based Section Grouping**: Sidebar section grouping enabled for ALL roles with 8+ items: Teacher/Tutor (Teaching, Content & Reports, Financial), Supervisor (Institute Management + Call Center sections), Front Desk Clerk (Reception, Communication, Scheduling). Roles with fewer items (Mentor, Call Center Agent, Accountant) keep flat lists. Students use mobile bottom navigation.
 
 ### Backend
 - **Framework**: Express.js with TypeScript.
