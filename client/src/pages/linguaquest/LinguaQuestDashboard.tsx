@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Flame,
   Target,
-  BookOpen
+  BookOpen,
+  ArrowLeft
 } from "lucide-react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -63,6 +64,7 @@ export function LinguaQuestDashboard() {
   const { t, i18n } = useTranslation('linguaquest');
   const isRTL = i18n.dir() === 'rtl';
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [isLoggedIn] = useState(() => !!localStorage.getItem('auth_token'));
 
   useEffect(() => {
     const token = localStorage.getItem('linguaquest_session_token');
@@ -156,12 +158,22 @@ export function LinguaQuestDashboard() {
               {t('dashboard.subtitle', 'Track your progress and achievements')}
             </p>
           </div>
-          <Link href="/linguaquest">
-            <Button variant="outline" size="lg" data-testid="button-back-to-lessons">
-              <BookOpen className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('dashboard.backToLessons', 'Back to Lessons')}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {isLoggedIn && (
+              <Link href="/admin/dashboard">
+                <Button variant="ghost" size="lg" className="text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                  <ArrowLeft className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('navigation.backToPlatform', 'Back to Platform')}
+                </Button>
+              </Link>
+            )}
+            <Link href="/linguaquest">
+              <Button variant="outline" size="lg" data-testid="button-back-to-lessons">
+                <BookOpen className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('dashboard.backToLessons', 'Back to Lessons')}
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}

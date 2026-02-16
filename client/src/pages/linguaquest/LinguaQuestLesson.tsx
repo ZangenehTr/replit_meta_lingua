@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,10 +56,12 @@ interface LessonData {
  * LinguaQuest Lesson Page - 3D Interactive Learning Experience
  */
 export function LinguaQuestLesson() {
+  const { t } = useTranslation('linguaquest');
   const params = useParams<{ lessonId: string }>();
   const lessonId = params.lessonId;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [isLoggedIn] = useState(() => !!localStorage.getItem('auth_token'));
   
   const [lesson, setLesson] = useState<LessonData | null>(null);
   const [progress, setProgress] = useState<GuestProgressData | null>(null);
@@ -151,8 +154,8 @@ export function LinguaQuestLesson() {
     } catch (error) {
       console.error('Error loading lesson:', error);
       toast({
-        title: "Error",
-        description: "Failed to load lesson. Please try again.",
+        title: t('common.error', 'Error'),
+        description: t('errors.loadLesson', 'Failed to load lesson. Please try again.'),
         variant: "destructive"
       });
     } finally {
@@ -192,8 +195,8 @@ export function LinguaQuestLesson() {
 
       // Show completion toast
       toast({
-        title: "🎉 Lesson Completed!",
-        description: `You earned ${lesson.xpReward} XP! ${result.levelUp ? 'Level up!' : ''}`,
+        title: `🎉 ${t('lesson.lessonCompleted', 'Lesson Completed!')}`,
+        description: `${t('feedback.earnedXP', { xp: lesson.xpReward })} ${result.levelUp ? t('feedback.levelUp', 'Level Up!') : ''}`,
         duration: 5000
       });
 
@@ -220,8 +223,8 @@ export function LinguaQuestLesson() {
     } catch (error) {
       console.error('Error completing lesson:', error);
       toast({
-        title: "Error",
-        description: "Failed to save lesson progress. Please try again.",
+        title: t('common.error', 'Error'),
+        description: t('errors.saveProgress', 'Failed to save lesson progress. Please try again.'),
         variant: "destructive"
       });
     }
@@ -240,8 +243,8 @@ export function LinguaQuestLesson() {
     guestProgress.recordUpgradePrompt('completion_modal', 'lesson_end');
     
     toast({
-      title: "🚀 Ready for More?",
-      description: "Unlock advanced lessons and personalized tutoring with Meta Lingua Pro!",
+      title: `🚀 ${t('lesson.readyForMore', 'Ready for More?')}`,
+      description: t('upgrade.ctaDescription', 'Unlock advanced lessons and personalized tutoring with Meta Lingua Pro!'),
       duration: 8000,
       action: (
         <Button 
@@ -249,7 +252,7 @@ export function LinguaQuestLesson() {
           onClick={() => window.location.href = '/signup?source=linguaquest&lesson_completed=true'}
           className="bg-amber-500 hover:bg-amber-600"
         >
-          Upgrade Now
+          {t('upgrade.upgradeNow', 'Upgrade Now')}
         </Button>
       )
     });
@@ -317,14 +320,14 @@ export function LinguaQuestLesson() {
           <CardContent className="p-6 text-center">
             <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              Lesson Not Found
+              {t('lesson.lessonNotFound', 'Lesson Not Found')}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              The requested lesson could not be loaded.
+              {t('lesson.lessonNotFoundDesc', 'The requested lesson could not be loaded.')}
             </p>
             <Button onClick={handleReturnHome} data-testid="button-return-home">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Return to Home
+              {t('lesson.returnToHome', 'Return to Home')}
             </Button>
           </CardContent>
         </Card>
@@ -368,13 +371,21 @@ export function LinguaQuestLesson() {
             </div>
 
             <div className="flex items-center space-x-4">
+              {isLoggedIn && (
+                <Link href="/admin/dashboard">
+                  <Button variant="ghost" size="sm" className="hidden sm:flex text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    {t('navigation.backToPlatform', 'Back to Platform')}
+                  </Button>
+                </Link>
+              )}
               {/* Progress indicator */}
               <div className="hidden sm:flex items-center space-x-3">
                 <div className="text-right text-sm">
                   <div className="text-gray-900 dark:text-white font-medium">
                     {Math.round(lessonProgress)}%
                   </div>
-                  <div className="text-gray-500 text-xs">Progress</div>
+                  <div className="text-gray-500 text-xs">{t('navigation.progress', 'Progress')}</div>
                 </div>
                 <div className="w-20">
                   <Progress value={lessonProgress} className="h-2" />
@@ -448,7 +459,7 @@ export function LinguaQuestLesson() {
                       </Button>
                     )}
                     <div className="hidden lg:block absolute right-2 top-4 text-sm text-gray-500 dark:text-gray-400">
-                      Step {currentStepIndex + 1} of {gameSteps.length}
+                      {t('lesson.stepOf', { current: currentStepIndex + 1, total: gameSteps.length, defaultValue: 'Step {{current}} of {{total}}' })}
                     </div>
                   </>
                 )}
@@ -497,8 +508,12 @@ export function LinguaQuestLesson() {
                     if (isRequired && stepScore < minimumScore) {
                       // Do NOT record failing score - show retry option
                       toast({
-                        title: "Try Again!",
-                        description: `You need at least ${minimumScore}% to pass this required step. You scored ${Math.round(stepScore)}%. Click Retry to try again.`,
+                        title: t('feedback.tryAgain', 'Try Again!'),
+                        description: t('lesson.minimumScoreRequired', {
+                          minimumScore,
+                          score: Math.round(stepScore),
+                          defaultValue: 'You need at least {{minimumScore}}% to pass this required step. You scored {{score}}%. Click Retry to try again.'
+                        }),
                         variant: "destructive",
                         duration: 10000,
                         action: (
@@ -509,7 +524,7 @@ export function LinguaQuestLesson() {
                               setStepKey(prev => prev + 1);
                             }}
                           >
-                            Retry
+                            {t('common.retry', 'Retry')}
                           </Button>
                         )
                       });
@@ -558,8 +573,12 @@ export function LinguaQuestLesson() {
                         handleLessonComplete(lesson.estimatedDurationMinutes || 15);
                       } else {
                         toast({
-                          title: "Lesson Not Completed",
-                          description: `You need ${minimumScore}% on required steps to complete this lesson. Current: ${Math.round(avgRequiredScore)}%`,
+                          title: t('feedback.lessonNotCompleted', 'Lesson Not Completed'),
+                          description: t('lesson.lessonNotCompletedDesc', {
+                            minimumScore,
+                            score: Math.round(avgRequiredScore),
+                            defaultValue: 'You need {{minimumScore}}% on required steps to complete this lesson. Current: {{score}}%'
+                          }),
                           variant: "destructive"
                         });
                       }
@@ -572,7 +591,7 @@ export function LinguaQuestLesson() {
                 {Object.keys(stepScores).length > 0 && (
                   <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Current Score:</span>
+                      <span className="text-sm font-medium">{t('lesson.currentScore', 'Current Score:')}</span>
                       <span className="text-lg font-bold text-emerald-600">
                         {Math.round(totalScore)}%
                       </span>
@@ -586,7 +605,7 @@ export function LinguaQuestLesson() {
                 {isMobile && currentStepIndex > 0 && (
                   <div className="absolute bottom-24 left-0 right-0 flex justify-center pointer-events-none">
                     <div className="bg-gray-900/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
-                      Swipe right to go back
+                      {t('lesson.swipeBack', 'Swipe right to go back')}
                     </div>
                   </div>
                 )}
@@ -601,7 +620,7 @@ export function LinguaQuestLesson() {
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <CardTitle className="text-2xl text-gray-900 dark:text-white">
-                  🎉 Lesson Completed!
+                  🎉 {t('lesson.lessonCompleted', 'Lesson Completed!')}
                 </CardTitle>
               </CardHeader>
               
@@ -610,15 +629,15 @@ export function LinguaQuestLesson() {
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-4">
                     <div className="text-2xl font-bold text-emerald-600">{lesson.xpReward}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">XP Earned</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('lesson.xpEarned', 'XP Earned')}</div>
                   </div>
                   <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4">
                     <div className="text-2xl font-bold text-teal-600">{lesson.estimatedDurationMinutes}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">Minutes</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('lesson.minutesLabel', 'Minutes')}</div>
                   </div>
                   <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-4">
                     <div className="text-2xl font-bold text-cyan-600">100%</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">Complete</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('lesson.complete', 'Complete')}</div>
                   </div>
                 </div>
 
@@ -627,8 +646,8 @@ export function LinguaQuestLesson() {
                   <Alert className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
                     <Crown className="h-4 w-4 text-amber-600" />
                     <AlertDescription className="text-amber-800">
-                      <strong>Level Up!</strong> You reached Level {completionData.newLevel}! 
-                      Keep learning to unlock more advanced lessons.
+                      <strong>{t('lesson.levelUp', 'Level Up!')}</strong> {t('lesson.reachedLevel', { level: completionData.newLevel, defaultValue: 'You reached Level {{level}}!' })}{' '}
+                      {t('lesson.keepLearning', 'Keep learning to unlock more advanced lessons.')}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -638,7 +657,7 @@ export function LinguaQuestLesson() {
                   <div className="space-y-2">
                     <h4 className="font-semibold text-gray-900 dark:text-white flex items-center">
                       <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
-                      New Achievements Unlocked!
+                      {t('lesson.newAchievements', 'New Achievements Unlocked!')}
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {completionData.newAchievements.map((achievement: any) => (
@@ -670,9 +689,9 @@ export function LinguaQuestLesson() {
                     <AlertDescription>
                       <div className="flex items-center justify-between">
                         <div>
-                          <strong className="text-purple-800">Ready for Advanced Learning?</strong>
+                          <strong className="text-purple-800">{t('lesson.readyForAdvanced', 'Ready for Advanced Learning?')}</strong>
                           <p className="text-purple-700 text-sm mt-1">
-                            Upgrade to Meta Lingua Pro for personalized lessons and expert tutoring.
+                            {t('lesson.upgradeDescription', 'Upgrade to Meta Lingua Pro for personalized lessons and expert tutoring.')}
                           </p>
                         </div>
                         <Button 
@@ -681,7 +700,7 @@ export function LinguaQuestLesson() {
                           className="bg-purple-600 hover:bg-purple-700"
                           data-testid="button-upgrade-completion"
                         >
-                          Upgrade
+                          {t('lesson.upgrade', 'Upgrade')}
                         </Button>
                       </div>
                     </AlertDescription>
@@ -696,7 +715,7 @@ export function LinguaQuestLesson() {
                     data-testid="button-continue-learning"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Continue Learning
+                    {t('lesson.continueLearning', 'Continue Learning')}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -704,7 +723,7 @@ export function LinguaQuestLesson() {
                     data-testid="button-retry-lesson"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
-                    Retry Lesson
+                    {t('lesson.retryLesson', 'Retry Lesson')}
                   </Button>
                 </div>
               </CardContent>

@@ -13,6 +13,16 @@
       "dayStreak": "روز پیوسته",
       "totalXP": "کل امتیاز"
     },
+    "readyForAdvanced": "آماده یادگیری پیشرفته هستید؟",
+    "upgradeDescription": "برای درس‌های شخصی‌سازی شده، آموزش حرفه‌ای و گواهینامه‌های رسمی به متا لینگوا پرو ارتقا دهید.",
+    "transferProgress": "انتقال پیشرفت شما",
+    "personalizedCurriculum": "برنامه درسی شخصی‌سازی شده",
+    "officialCertificates": "گواهینامه‌های رسمی",
+    "yourLearningJourney": "سفر یادگیری شما",
+    "currentLevel": "سطح فعلی",
+    "studyTime": "زمان مطالعه",
+    "minutes": "دقیقه",
+    "achievements": "دستاوردها",
     "whyChoose": "چرا لینگواکوئست؟",
     "features": {
       "interactive3D": "تعامل سه‌بعدی",
@@ -30,7 +40,8 @@
     "lessons": "درس‌ها",
     "progress": "پیشرفت",
     "achievements": "دستاوردها",
-    "dashboard": "داشبورد"
+    "dashboard": "داشبورد",
+    "backToPlatform": "بازگشت به پلتفرم"
   },
   "dashboard": {
     "title": "سفر یادگیری شما",
@@ -175,6 +186,30 @@
     "timeLeft": "زمان: {{time}} ثانیه",
     "matchQuickly": "تا پایان زمان، تا می‌توانید تطبیق دهید!",
     "submit": "ارسال"
+  },
+  "lesson": {
+    "swipeBack": "برای بازگشت به راست بکشید",
+    "lessonCompleted": "درس تکمیل شد!",
+    "xpEarned": "امتیاز کسب شده",
+    "minutesLabel": "دقیقه",
+    "complete": "تکمیل",
+    "levelUp": "ارتقای سطح!",
+    "reachedLevel": "شما به سطح {{level}} رسیدید!",
+    "keepLearning": "به یادگیری ادامه دهید تا درس‌های پیشرفته‌تر را باز کنید.",
+    "newAchievements": "دستاوردهای جدید باز شدند!",
+    "readyForAdvanced": "آماده یادگیری پیشرفته هستید؟",
+    "readyForMore": "آماده ادامه هستید؟",
+    "upgradeDescription": "برای درس‌های شخصی‌سازی شده و آموزش حرفه‌ای به متا لینگوا پرو ارتقا دهید.",
+    "upgrade": "ارتقا",
+    "continueLearning": "ادامه یادگیری",
+    "retryLesson": "تکرار درس",
+    "stepOf": "مرحله {{current}} از {{total}}",
+    "currentScore": "امتیاز فعلی:",
+    "lessonNotFound": "درس یافت نشد",
+    "lessonNotFoundDesc": "درس درخواست شده بارگذاری نشد.",
+    "returnToHome": "بازگشت به خانه",
+    "minimumScoreRequired": "شما باید حداقل {{minimumScore}}% برای گذراندن این مرحله کسب کنید. امتیاز شما {{score}}% بود. روی تلاش مجدد کلیک کنید.",
+    "lessonNotCompletedDesc": "شما باید همه مراحل الزامی را قبل از اتمام تکمیل کنید. لطفاً برگردید و مراحل باقی‌مانده را تکمیل کنید."
   },
   "feedback": {
     "correct": "صحیح!",

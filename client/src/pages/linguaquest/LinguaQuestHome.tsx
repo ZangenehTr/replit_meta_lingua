@@ -14,6 +14,7 @@ import {
   BookOpen, 
   Mic,
   Star,
+  ArrowLeft,
   ArrowRight,
   Globe,
   Sparkles,
@@ -45,6 +46,7 @@ export function LinguaQuestHome() {
   const [recommendedLessons, setRecommendedLessons] = useState<LessonPreview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [isLoggedIn] = useState(() => !!localStorage.getItem('auth_token'));
 
   useEffect(() => {
     initializeLinguaQuest();
@@ -120,6 +122,14 @@ export function LinguaQuestHome() {
 
             {/* User Progress & Upgrade */}
             <div className="flex items-center space-x-4">
+              {isLoggedIn && (
+                <Link href="/admin/dashboard">
+                  <Button variant="ghost" size="sm" className="text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    {t('navigation.backToPlatform', 'Back to Platform')}
+                  </Button>
+                </Link>
+              )}
               {progress && (
                 <>
                   <div className="hidden sm:flex items-center space-x-3">
@@ -381,21 +391,23 @@ export function LinguaQuestHome() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                      Ready for Advanced Learning?
+                      {t('home.readyForAdvanced', 'Ready for Advanced Learning?')}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-300 mb-4">
-                      You've completed {progress.completedLessons.length} lessons! 
-                      Unlock personalized tutoring, advanced grammar, and certification with Meta Lingua Pro.
+                      {t('home.upgradeDescription', {
+                        count: progress.completedLessons.length,
+                        defaultValue: "You've completed {{count}} lessons! Unlock personalized tutoring, advanced grammar, and certification with Meta Lingua Pro."
+                      })}
                     </p>
                     <div className="flex items-center space-x-4">
                       <Badge className="bg-green-100 text-green-800">
-                        ✨ Transfer your progress
+                        ✨ {t('home.transferProgress', 'Transfer your progress')}
                       </Badge>
                       <Badge className="bg-blue-100 text-blue-800">
-                        🎯 Personalized curriculum
+                        🎯 {t('home.personalizedCurriculum', 'Personalized curriculum')}
                       </Badge>
                       <Badge className="bg-purple-100 text-purple-800">
-                        🏆 Official certificates
+                        🏆 {t('home.officialCertificates', 'Official certificates')}
                       </Badge>
                     </div>
                   </div>
@@ -420,20 +432,20 @@ export function LinguaQuestHome() {
         {progress && (
           <section className="text-center">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Your Learning Journey
+              {t('home.yourLearningJourney', 'Your Learning Journey')}
             </h3>
             <div className="inline-flex items-center space-x-8 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
               <div className="text-center">
-                <div className="text-lg font-bold text-emerald-600">Level {progress.currentLevel}</div>
-                <div className="text-sm text-gray-500">Current Level</div>
+                <div className="text-lg font-bold text-emerald-600">{t('userProgress.level', { level: progress.currentLevel })}</div>
+                <div className="text-sm text-gray-500">{t('home.currentLevel', 'Current Level')}</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-teal-600">{progress.totalStudyTimeMinutes} min</div>
-                <div className="text-sm text-gray-500">Study Time</div>
+                <div className="text-lg font-bold text-teal-600">{progress.totalStudyTimeMinutes} {t('home.minutes', 'min')}</div>
+                <div className="text-sm text-gray-500">{t('home.studyTime', 'Study Time')}</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-cyan-600">{progress.achievements.filter(a => a.isUnlocked).length}</div>
-                <div className="text-sm text-gray-500">Achievements</div>
+                <div className="text-sm text-gray-500">{t('home.achievements', 'Achievements')}</div>
               </div>
             </div>
           </section>

@@ -13,6 +13,16 @@
       "dayStreak": "Day Streak",
       "totalXP": "Total XP"
     },
+    "readyForAdvanced": "Ready for Advanced Learning?",
+    "upgradeDescription": "Upgrade to Meta Lingua Pro for personalized lessons, expert tutoring, and official certificates.",
+    "transferProgress": "Transfer your progress",
+    "personalizedCurriculum": "Personalized curriculum",
+    "officialCertificates": "Official certificates",
+    "yourLearningJourney": "Your Learning Journey",
+    "currentLevel": "Current Level",
+    "studyTime": "Study Time",
+    "minutes": "min",
+    "achievements": "Achievements",
     "whyChoose": "Why Choose LinguaQuest?",
     "features": {
       "interactive3D": "3D Interactive",
@@ -30,7 +40,8 @@
     "lessons": "Lessons",
     "progress": "Progress",
     "achievements": "Achievements",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "backToPlatform": "Back to Platform"
   },
   "dashboard": {
     "title": "Your Learning Journey",
@@ -175,6 +186,30 @@
     "timeLeft": "Time: {{time}}s",
     "matchQuickly": "Match as many as you can before time runs out!",
     "submit": "Submit"
+  },
+  "lesson": {
+    "swipeBack": "Swipe right to go back",
+    "lessonCompleted": "Lesson Completed!",
+    "xpEarned": "XP Earned",
+    "minutesLabel": "Minutes",
+    "complete": "Complete",
+    "levelUp": "Level Up!",
+    "reachedLevel": "You reached Level {{level}}!",
+    "keepLearning": "Keep learning to unlock more advanced lessons.",
+    "newAchievements": "New Achievements Unlocked!",
+    "readyForAdvanced": "Ready for Advanced Learning?",
+    "readyForMore": "Ready for More?",
+    "upgradeDescription": "Upgrade to Meta Lingua Pro for personalized lessons and expert tutoring.",
+    "upgrade": "Upgrade",
+    "continueLearning": "Continue Learning",
+    "retryLesson": "Retry Lesson",
+    "stepOf": "Step {{current}} of {{total}}",
+    "currentScore": "Current Score:",
+    "lessonNotFound": "Lesson Not Found",
+    "lessonNotFoundDesc": "The requested lesson could not be loaded.",
+    "returnToHome": "Return to Home",
+    "minimumScoreRequired": "You need at least {{minimumScore}}% to pass this required step. You scored {{score}}%. Click Retry to try again.",
+    "lessonNotCompletedDesc": "You need to complete all required steps before finishing. Please go back and complete the remaining steps."
   },
   "feedback": {
     "correct": "Correct!",

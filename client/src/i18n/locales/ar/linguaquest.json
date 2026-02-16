@@ -13,6 +13,16 @@
       "dayStreak": "أيام متتالية",
       "totalXP": "إجمالي النقاط"
     },
+    "readyForAdvanced": "هل أنت مستعد للتعلم المتقدم؟",
+    "upgradeDescription": "ترقية إلى ميتا لينغوا برو للحصول على دروس مخصصة، تدريس احترافي، وشهادات رسمية.",
+    "transferProgress": "انقل تقدمك",
+    "personalizedCurriculum": "منهج دراسي مخصص",
+    "officialCertificates": "شهادات رسمية",
+    "yourLearningJourney": "رحلة التعلم الخاصة بك",
+    "currentLevel": "المستوى الحالي",
+    "studyTime": "وقت الدراسة",
+    "minutes": "دقيقة",
+    "achievements": "الإنجازات",
     "whyChoose": "لماذا تختار لينغواكويست؟",
     "features": {
       "interactive3D": "تفاعلي ثلاثي الأبعاد",
@@ -30,7 +40,8 @@
     "lessons": "الدروس",
     "progress": "التقدم",
     "achievements": "الإنجازات",
-    "dashboard": "لوحة التحكم"
+    "dashboard": "لوحة التحكم",
+    "backToPlatform": "العودة إلى المنصة"
   },
   "dashboard": {
     "title": "رحلة التعلم الخاصة بك",
@@ -175,6 +186,30 @@
     "timeLeft": "الوقت: {{time}} ثانية",
     "matchQuickly": "طابق أكبر عدد ممكن قبل انتهاء الوقت!",
     "submit": "إرسال"
+  },
+  "lesson": {
+    "swipeBack": "اسحب لليمين للعودة",
+    "lessonCompleted": "اكتمل الدرس!",
+    "xpEarned": "النقاط المكتسبة",
+    "minutesLabel": "دقائق",
+    "complete": "مكتمل",
+    "levelUp": "ارتقاء المستوى!",
+    "reachedLevel": "لقد وصلت إلى المستوى {{level}}!",
+    "keepLearning": "واصل التعلم لفتح دروس أكثر تقدماً.",
+    "newAchievements": "إنجازات جديدة مفتوحة!",
+    "readyForAdvanced": "هل أنت مستعد للتعلم المتقدم؟",
+    "readyForMore": "مستعد للمزيد؟",
+    "upgradeDescription": "ترقية إلى ميتا لينغوا برو للحصول على دروس مخصصة وتدريس احترافي.",
+    "upgrade": "ترقية",
+    "continueLearning": "متابعة التعلم",
+    "retryLesson": "إعادة الدرس",
+    "stepOf": "الخطوة {{current}} من {{total}}",
+    "currentScore": "النتيجة الحالية:",
+    "lessonNotFound": "الدرس غير موجود",
+    "lessonNotFoundDesc": "تعذر تحميل الدرس المطلوب.",
+    "returnToHome": "العودة إلى الرئيسية",
+    "minimumScoreRequired": "تحتاج إلى {{minimumScore}}% على الأقل لاجتياز هذه الخطوة. حصلت على {{score}}%. انقر على إعادة المحاولة.",
+    "lessonNotCompletedDesc": "يجب إكمال جميع الخطوات المطلوبة قبل الانتهاء. يرجى العودة وإكمال الخطوات المتبقية."
   },
   "feedback": {
     "correct": "صحيح!",
