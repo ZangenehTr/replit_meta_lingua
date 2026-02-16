@@ -148,7 +148,6 @@ import AdminClassesPage from "@/pages/admin/classes";
 import AdminReportsPage from "@/pages/admin/reports";
 import AdminCommunicationsPage from "@/pages/admin/communications";
 import AdminVisitorChatPage from "@/pages/admin/visitor-chat";
-import AdminSupervisionPage from "@/pages/admin/supervision";
 import MentorMatchingPage from "@/pages/admin/mentor-matching";
 import UserManagement from "@/pages/admin/user-management";
 import FormManagement from "@/pages/admin/form-management";
@@ -524,11 +523,6 @@ function Router() {
       </Route>
 
       <Route path="/admin/teachers">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
-          <AdminTeacherManagement />
-        </RoleProtectedRoute>
-      </Route>
-      <Route path="/admin/teacher-management">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminTeacherManagement />
         </RoleProtectedRoute>
@@ -1083,7 +1077,7 @@ function Router() {
       </Route>
       <Route path="/admin/supervision">
         <RoleProtectedRoute allowedRoles={["admin"]}>
-          <AdminSupervisionPage />
+          <SupervisionPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/roadmap-designer">
