@@ -46,7 +46,9 @@ import {
   UserCheck,
   Workflow,
   Shield,
-  Server
+  Server,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -142,6 +144,50 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
     return getNavigationForRole(user.role, t, i18n.language);
   }, [user?.role, i18n.language, t]);
 
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (section: string) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
+
+  const groupedNavigation = useMemo(() => {
+    if (!isAdmin) return null;
+    
+    const groups: Record<string, typeof navigationItems> = {};
+    const sectionOrder = [
+      "Dashboard",
+      "Student", "Teacher/Tutor", "Mentor", "Call Center Agent", "Front Desk Clerk", "Supervisor",
+      "People & Access", "Courses & Academics", "Games & Interactive",
+      "AI & Technology", "Communication", "Financial",
+      "Website & Content", "Analytics & Quality", "System & Settings"
+    ];
+    
+    navigationItems.forEach(item => {
+      const section = item.section || "Other";
+      if (!groups[section]) groups[section] = [];
+      groups[section].push(item);
+    });
+    
+    const orderedSections = Object.keys(groups).sort((a, b) => {
+      const indexA = sectionOrder.indexOf(a);
+      const indexB = sectionOrder.indexOf(b);
+      if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return 1;
+      return indexA - indexB;
+    });
+    
+    return orderedSections.map(section => ({
+      section,
+      items: groups[section]
+    }));
+  }, [navigationItems, isAdmin]);
+
   console.log('Sidebar rendering with items:', navigationItems.length, 'items');
   console.log('Callern items:', navigationItems.filter(item => item.path.includes('callern')));
   
@@ -186,89 +232,181 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
     });
   };
 
+  const getSectionLabelFa = (section: string): string => {
+    const labels: Record<string, string> = {
+      "Dashboard": "داشبورد",
+      "Student": "پلتفرم دانش‌آموز",
+      "Teacher/Tutor": "پلتفرم معلم",
+      "Mentor": "پلتفرم منتور",
+      "Call Center Agent": "مرکز تماس",
+      "Front Desk Clerk": "پذیرش",
+      "Supervisor": "ناظر",
+      "People & Access": "افراد و دسترسی",
+      "Courses & Academics": "دوره‌ها و آموزش",
+      "Games & Interactive": "بازی و تعاملی",
+      "AI & Technology": "هوش مصنوعی و فناوری",
+      "Communication": "ارتباطات",
+      "Financial": "مالی",
+      "Website & Content": "وبسایت و محتوا",
+      "Analytics & Quality": "تحلیل و کیفیت",
+      "System & Settings": "سیستم و تنظیمات",
+      "Other": "سایر",
+    };
+    return labels[section] || section;
+  };
+
   return (
     <div className={`sidebar-container w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className={collapsed ? 'p-2' : 'p-4'}>
         <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
-          {navigationItems.map((item, index) => {
-            const isActive = location === item.path;
-            const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
-            const roleColors = getRoleColors(item.roles);
-            const hasMultipleRoles = roleColors.length > 1;
-            const isAdmin = user?.role?.toLowerCase() === 'admin';
+          {isAdmin && groupedNavigation ? (
+            groupedNavigation.map(({ section, items }) => {
+              const isCollapsed = collapsedSections[section] ?? false;
+              const sectionLabel = i18n.language === 'fa' ? getSectionLabelFa(section) : section;
+              
+              return (
+                <div key={section} className="mb-1">
+                  {!collapsed && (
+                    <button
+                      onClick={() => toggleSection(section)}
+                      className={`w-full flex items-center ${isRTL ? 'flex-row-reverse' : ''} px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300 transition-colors`}
+                    >
+                      {isCollapsed ? (
+                        <ChevronRight className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      ) : (
+                        <ChevronDown className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      )}
+                      <span>{sectionLabel}</span>
+                      <span className={`${isRTL ? 'mr-auto' : 'ml-auto'} text-[10px] text-gray-400`}>
+                        {items.length}
+                      </span>
+                    </button>
+                  )}
+                  
+                  {!isCollapsed && items.map((item, index) => {
+                    const isActive = location === item.path;
+                    const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
+                    const roleColors = getRoleColors(item.roles);
+                    const hasMultipleRoles = roleColors.length > 1;
 
-            if (collapsed) {
-              // Collapsed mode: Icon-only with tooltip
+                    if (collapsed) {
+                      return (
+                        <Link key={`${item.path}-${index}`} href={item.path}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`w-full h-10 ${
+                              isActive 
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            } relative flex items-center justify-center`}
+                            onClick={() => handleNavigate(item.path)}
+                            title={item.label}
+                            aria-label={item.label}
+                          >
+                            {isAdmin && (
+                              <span 
+                                className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}
+                                title={`${item.roles?.join(', ')}`}
+                              ></span>
+                            )}
+                            <Icon className="h-5 w-5" />
+                          </Button>
+                        </Link>
+                      );
+                    }
+
+                    return (
+                      <Link key={`${item.path}-${index}`} href={item.path}>
+                        <Button
+                          variant="ghost"
+                          className={`w-full h-10 ${isRTL ? 'justify-end flex-row-reverse px-3' : 'justify-start px-3'} ${
+                            isActive 
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          } relative`}
+                          onClick={() => handleNavigate(item.path)}
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                          style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
+                          title={`${t('sidebar:availableFor', 'دسترسی برای')}: ${item.roles?.join(', ')}`}
+                        >
+                          {hasMultipleRoles ? (
+                            <div className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 flex flex-col gap-0.5`}>
+                              {roleColors.slice(0, 3).map((color, idx) => (
+                                <span key={idx} className={`w-0.5 h-2 rounded-full ${color}`}></span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}></span>
+                          )}
+                          
+                          <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
+                          <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
+                          {item.badge && (
+                            <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Button>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })
+          ) : (
+            navigationItems.map((item, index) => {
+              const isActive = location === item.path;
+              const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
+              const roleColors = getRoleColors(item.roles);
+              const hasMultipleRoles = roleColors.length > 1;
+
+              if (collapsed) {
+                return (
+                  <Link key={`${item.path}-${index}`} href={item.path}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`w-full h-10 ${
+                        isActive 
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      } relative flex items-center justify-center`}
+                      onClick={() => handleNavigate(item.path)}
+                      title={item.label}
+                      aria-label={item.label}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                );
+              }
+
               return (
                 <Link key={`${item.path}-${index}`} href={item.path}>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className={`w-full h-10 ${
+                    className={`w-full h-10 ${isRTL ? 'justify-end flex-row-reverse px-3' : 'justify-start px-3'} ${
                       isActive 
                         ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    } relative flex items-center justify-center`}
-                    onClick={() => {
-                      handleNavigate(item.path);
-                    }}
-                    title={item.label}
-                    aria-label={item.label}
+                    } relative`}
+                    onClick={() => handleNavigate(item.path)}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                    style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
                   >
-                    {/* Color indicator - only show for admin users */}
-                    {isAdmin && (
-                      <span 
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}
-                        title={`${item.roles?.join(', ')}`}
-                      ></span>
+                    <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
+                    <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
+                    {item.badge && (
+                      <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
+                        {item.badge}
+                      </Badge>
                     )}
-                    <Icon className="h-5 w-5" />
                   </Button>
                 </Link>
               );
-            }
-
-            // Expanded mode: Full labels
-            return (
-              <Link key={`${item.path}-${index}`} href={item.path}>
-                <Button
-                  variant="ghost"
-                  className={`w-full h-10 ${isRTL ? 'justify-end flex-row-reverse px-3' : 'justify-start px-3'} ${
-                    isActive 
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  } relative`}
-                  onClick={() => {
-                    handleNavigate(item.path);
-                  }}
-                  dir={isRTL ? 'rtl' : 'ltr'}
-                  style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
-                  title={isAdmin ? `${t('sidebar:availableFor', 'دسترسی برای')}: ${item.roles?.join(', ')}` : undefined}
-                >
-                  {/* Multi-role color indicators - only show for admin users */}
-                  {isAdmin && (
-                    hasMultipleRoles ? (
-                      <div className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 flex flex-col gap-0.5`}>
-                        {roleColors.slice(0, 3).map((color, idx) => (
-                          <span key={idx} className={`w-0.5 h-2 rounded-full ${color}`}></span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}></span>
-                    )
-                  )}
-                  
-                  <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
-                  <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
-                  {item.badge && (
-                    <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-            );
-          })}
+            })
+          )}
         </nav>
 
         {/* Profile section removed - handled by global header dropdown to eliminate redundancy */}

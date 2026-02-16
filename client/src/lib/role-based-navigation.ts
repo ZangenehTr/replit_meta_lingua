@@ -59,6 +59,7 @@ export interface NavigationItem {
   roles: string[];
   roleColor?: string; // Color indicator for the role(s) that have access to this item
   order?: number; // Immutable order for stable sorting regardless of translation state
+  section?: string;
 }
 
 // Student-facing platform navigation
@@ -204,13 +205,11 @@ const convertDynamicToNavigation = (dynamicItems: DynamicNavItem[], currentLang:
   return dynamicItems.map(item => ({
     path: item.path,
     icon: item.icon,
-    // item.label already contains Persian text (from subsystem.name)
-    // item.nameEn contains English text
-    // Use label (Persian) for fa/ar, nameEn for English
     label: (usePersian || useArabic) ? (item.label || item.nameEn || 'Navigation Item') : 
            (item.nameEn || item.label || 'Navigation Item'),
     roles: item.roles,
-    order: item.order || 0
+    order: item.order || 0,
+    section: item.section
   }));
 };
 

@@ -349,6 +349,7 @@ export interface NavigationItem {
   roles: string[];
   badge?: number;
   order: number; // Required for stable sorting regardless of translation state
+  section?: string;
 }
 
 // Subsystem ID to route path mapping
@@ -507,6 +508,73 @@ const getRolesForSubsystem = (subsystemId: string): string[] => {
   return rolesWithAccess;
 };
 
+export const INSTITUTE_SECTION_MAP: Record<string, { fa: string; en: string }> = {
+  sis: { fa: "افراد و دسترسی", en: "People & Access" },
+  user_management: { fa: "افراد و دسترسی", en: "People & Access" },
+  staff_management: { fa: "افراد و دسترسی", en: "People & Access" },
+  mentor_matching: { fa: "افراد و دسترسی", en: "People & Access" },
+  teacher_matching: { fa: "افراد و دسترسی", en: "People & Access" },
+  subsystem_permissions: { fa: "افراد و دسترسی", en: "People & Access" },
+
+  course_management: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  video_course_management: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  class_scheduling: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  curriculum_categories: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  mst_test_builder: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  placement_test: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  course_roadmaps: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  roadmap_templates: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  roadmap_instances: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  roadmap_designer: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  exam_roadmaps: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+
+  games_management: { fa: "بازی و تعاملی", en: "Games & Interactive" },
+  game_access_control: { fa: "بازی و تعاملی", en: "Games & Interactive" },
+  linguaquest: { fa: "بازی و تعاملی", en: "Games & Interactive" },
+  "3d_content_tools": { fa: "بازی و تعاملی", en: "Games & Interactive" },
+  "3d_lesson_builder": { fa: "بازی و تعاملی", en: "Games & Interactive" },
+
+  ai_services: { fa: "هوش مصنوعی و فناوری", en: "AI & Technology" },
+  ai_training: { fa: "هوش مصنوعی و فناوری", en: "AI & Technology" },
+  ai_study_partner: { fa: "هوش مصنوعی و فناوری", en: "AI & Technology" },
+  tts_system: { fa: "هوش مصنوعی و فناوری", en: "AI & Technology" },
+
+  callern_management: { fa: "ارتباطات", en: "Communication" },
+  callern_roadmaps: { fa: "ارتباطات", en: "Communication" },
+  communication_center: { fa: "ارتباطات", en: "Communication" },
+  visitor_chat: { fa: "ارتباطات", en: "Communication" },
+  sms_management: { fa: "ارتباطات", en: "Communication" },
+  campaign_management: { fa: "ارتباطات", en: "Communication" },
+  sms_test: { fa: "ارتباطات", en: "Communication" },
+
+  financial_management: { fa: "مالی", en: "Financial" },
+  financial_reports: { fa: "مالی", en: "Financial" },
+  currency_settings: { fa: "مالی", en: "Financial" },
+  shopping_cart_settings: { fa: "مالی", en: "Financial" },
+  book_ecommerce: { fa: "مالی", en: "Financial" },
+  teacher_payment_management: { fa: "مالی", en: "Financial" },
+
+  website_builder: { fa: "وبسایت و محتوا", en: "Website & Content" },
+  white_label: { fa: "وبسایت و محتوا", en: "Website & Content" },
+  social_media_scraper: { fa: "وبسایت و محتوا", en: "Website & Content" },
+  review_moderation: { fa: "وبسایت و محتوا", en: "Website & Content" },
+  form_management: { fa: "وبسایت و محتوا", en: "Website & Content" },
+  font_management: { fa: "وبسایت و محتوا", en: "Website & Content" },
+
+  reports_analytics: { fa: "تحلیل و کیفیت", en: "Analytics & Quality" },
+  enhanced_analytics: { fa: "تحلیل و کیفیت", en: "Analytics & Quality" },
+  quality_assurance: { fa: "تحلیل و کیفیت", en: "Analytics & Quality" },
+  schedule_review: { fa: "تحلیل و کیفیت", en: "Analytics & Quality" },
+
+  admin_settings: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+  system_status: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+  api_smoke_test: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+  calendar_settings: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+  iranian_compliance: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+  third_party_integrations: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+  room_management: { fa: "سیستم و تنظیمات", en: "System & Settings" },
+};
+
 // Generate navigation items dynamically from SUBSYSTEM_TREE based on user role
 export const generateDynamicNavigation = (userRole: string, t?: any): NavigationItem[] => {
   const userPermissions = DEFAULT_ROLE_PERMISSIONS[userRole];
@@ -535,10 +603,13 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
         
         collectLeafSubsystems(subsystem.children, platform);
       } else {
-        // Only include if user has permission and route mapping exists
         if (allowedSubsystems.includes(subsystem.id) && SUBSYSTEM_ROUTES[subsystem.id]) {
-          // Get ALL roles that have access to this subsystem for multi-role color indicators
           const allRolesWithAccess = getRolesForSubsystem(subsystem.id);
+          
+          let section = parentPlatform || "Admin";
+          if (parentPlatform === "Admin" && INSTITUTE_SECTION_MAP[subsystem.id]) {
+            section = INSTITUTE_SECTION_MAP[subsystem.id].en;
+          }
           
           navigationItems.push({
             path: SUBSYSTEM_ROUTES[subsystem.id],
@@ -546,7 +617,8 @@ export const generateDynamicNavigation = (userRole: string, t?: any): Navigation
             label: subsystem.name,
             nameEn: subsystem.nameEn,
             roles: allRolesWithAccess.length > 0 ? allRolesWithAccess : [userRole],
-            order: orderCounter++
+            order: orderCounter++,
+            section
           });
         }
       }
