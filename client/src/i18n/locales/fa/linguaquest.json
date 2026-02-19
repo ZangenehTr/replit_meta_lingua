@@ -297,5 +297,58 @@
     "pleaseRate": "لطفاً یک امتیاز ستاره‌ای انتخاب کنید",
     "averageRating": "میانگین امتیاز",
     "reviews": "بررسی"
+  },
+  "scene3d": {
+    "title": "صحنه تعاملی سه‌بعدی",
+    "loading": "در حال بارگذاری صحنه سه‌بعدی...",
+    "clickToInteract": "برای تعامل روی اشیاء کلیک کنید",
+    "tapToInteract": "برای تعامل روی اشیاء ضربه بزنید",
+    "objectsRemaining": "{{count}} شیء باقی‌مانده",
+    "allCompleted": "تمام تعاملات تکمیل شد!",
+    "scoreLabel": "امتیاز",
+    "timeSpent": "زمان صرف شده",
+    "seconds": "ثانیه",
+    "correctAnswer": "صحیح!",
+    "wrongAnswer": "دوباره تلاش کنید!",
+    "hint": "راهنمایی",
+    "nextObject": "شیء بعدی",
+    "finishScene": "پایان صحنه",
+    "exitScene": "خروج از صحنه",
+    "sceneComplete": "صحنه تکمیل شد",
+    "sceneCompleteDesc": "شما کل صحنه را کاوش کردید!",
+    "earnedXP": "{{xp}} امتیاز کسب شده",
+    "tryAgain": "تلاش مجدد",
+    "continueToNext": "ادامه",
+    "scenes": {
+      "cafe": "کافه",
+      "airport": "فرودگاه",
+      "classroom": "کلاس درس",
+      "market": "بازار",
+      "hospital": "بیمارستان",
+      "restaurant": "رستوران",
+      "hotel": "هتل",
+      "library": "کتابخانه",
+      "office": "دفتر کار",
+      "park": "پارک"
+    },
+    "levels": {
+      "A0": "مبتدی مطلق",
+      "A1": "مبتدی",
+      "A2": "ابتدایی",
+      "B1": "متوسط",
+      "B2": "بالاتر از متوسط",
+      "C1": "پیشرفته",
+      "C2": "تسلط"
+    },
+    "interactions": {
+      "vocabulary": "واژگان",
+      "grammar": "گرامر",
+      "conversation": "مکالمه",
+      "listening": "گوش دادن",
+      "pronunciation": "تلفظ",
+      "fillBlank": "پر کردن جای خالی",
+      "multipleChoice": "چندگزینه‌ای",
+      "trueFalse": "درست یا غلط"
+    }
   }
 }

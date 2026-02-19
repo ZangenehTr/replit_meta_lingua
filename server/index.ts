@@ -539,6 +539,21 @@ server.listen({
   app.use('/api/payment', shetabPaymentRouter);
   console.log('✅ Shetab Payment Gateway routes registered');
   
+  // Register modular feature routes
+  try {
+    const { default: interactiveScenesRoutes } = await import('./routes/interactive-scenes-routes.js');
+    const { default: socialDuelsRoutes } = await import('./routes/social-duels-routes.js');
+    const { default: sessionCrashersRoutes } = await import('./routes/session-crashers-routes.js');
+    const { default: diasporaBridgeRoutes } = await import('./routes/diaspora-bridge-routes.js');
+    app.use(interactiveScenesRoutes);
+    app.use(socialDuelsRoutes);
+    app.use(sessionCrashersRoutes);
+    app.use(diasporaBridgeRoutes);
+    console.log('✅ Feature routes registered (3D Scenes, Social Duels, Session Crashers, Diaspora Bridge)');
+  } catch (error) {
+    console.error('⚠️  Failed to register feature routes:', error);
+  }
+
   // Register all main routes SYNCHRONOUSLY before 404 handler
   try {
     const { registerRoutes } = await import('./routes.js');

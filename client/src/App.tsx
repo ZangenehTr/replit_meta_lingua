@@ -183,6 +183,11 @@ import AIPracticePage from "@/pages/ai-practice";
 import { LinguaQuestHome } from "@/pages/linguaquest/LinguaQuestHome";
 import { LinguaQuestLesson } from "@/pages/linguaquest/LinguaQuestLesson";
 import { LinguaQuestDashboard } from "@/pages/linguaquest/LinguaQuestDashboard";
+import { SceneListPage } from "@/pages/linguaquest/SceneListPage";
+import { InteractiveScenePage } from "@/pages/linguaquest/InteractiveScenePage";
+import { ChallengeDuelsPage } from "@/pages/social/ChallengeDuelsPage";
+import { SessionCrashersPage } from "@/pages/social/SessionCrashersPage";
+import { DiasporaBridgePage } from "@/pages/social/DiasporaBridgePage";
 
 // Language provider removed - using useLanguage hook directly
 
@@ -236,6 +241,11 @@ function Router() {
       <Route path="/linguaquest" component={LinguaQuestHome} />
       <Route path="/linguaquest/dashboard" component={LinguaQuestDashboard} />
       <Route path="/linguaquest/lesson/:lessonId" component={LinguaQuestLesson} />
+      <Route path="/linguaquest/scenes" component={SceneListPage} />
+      <Route path="/linguaquest/scene/:sceneId" component={InteractiveScenePage} />
+      <Route path="/social/duels" component={ChallengeDuelsPage} />
+      <Route path="/social/crashers" component={SessionCrashersPage} />
+      <Route path="/social/diaspora" component={DiasporaBridgePage} />
       
       {/* Meta Lingua Complete Implementation Testing */}
       <Route path="/meta-lingua-complete" component={MetaLinguaComplete} />

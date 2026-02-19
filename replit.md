@@ -69,7 +69,16 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem
 
-## Recent Changes (Feb 16, 2026)
+## Recent Changes (Feb 19, 2026)
+### Social & Interactive Features (4 Major Features)
+- **3D Interactive Scenes**: Three.js-powered immersive vocabulary learning environments (cafe, market, airport, hospital, office) with clickable 3D objects, CEFR A1-C1 levels, trilingual support (en/fa/ar), question panels, progress tracking. Routes: `/linguaquest/scenes`, `/linguaquest/scene/:id`. Backend: `server/routes/interactive-scenes-routes.ts`. Component: `client/src/components/3d-lessons/InteractiveScene3D.tsx`. 5 scenes seeded with 33 interaction points.
+- **Challenge Your Crush (Social Duels)**: Language dueling system with challenge/accept/decline/submit flow, leaderboard, stats tracking, daily challenge limits, anonymous mode, admin question bank CRUD. Routes: `/social/duels`. Backend: `server/routes/social-duels-routes.ts`. Frontend: `client/src/pages/social/ChallengeDuelsPage.tsx`.
+- **Session Crashers**: Drop-in practice during live CallerN sessions. Availability toggle, CEFR-based matching, teacher approval, XP rewards, session history, rating system. Routes: `/social/crashers`. Backend: `server/routes/session-crashers-routes.ts`. Frontend: `client/src/pages/social/SessionCrashersPage.tsx`.
+- **Diaspora Bridge**: Homeland-abroad language exchange matching. Diaspora/local profiles, Cultural Ambassador system, exchange sessions, ratings/feedback, admin management. Routes: `/social/diaspora`. Backend: `server/routes/diaspora-bridge-routes.ts`. Frontend: `client/src/pages/social/DiasporaBridgePage.tsx`.
+- **Database**: 9 new tables (interactive_scenes, scene_interaction_points, scene_progress, social_duels, duel_question_bank, crash_availability, crash_sessions, diaspora_profiles, diaspora_exchange_sessions)
+- **i18n**: Translation keys added for all 4 features across en/fa/ar
+
+## Previous Changes (Feb 16, 2026)
 ### Student Profile & Dashboard Fixes
 - **API /api/profile**: Enhanced GET endpoint to join users + userProfiles tables, returning combined data (firstName, lastName, email, joinedDate, stats, settings) matching frontend ProfileData interface
 - **formatDate**: Fixed to handle null/empty/invalid dates gracefully, dynamically selects locale (fa-IR/ar-SA/en-US) based on i18n.language

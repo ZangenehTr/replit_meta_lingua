@@ -334,6 +334,34 @@ export function LinguaQuestHome() {
           </div>
         </section>
 
+        {/* 3D Interactive Scenes CTA */}
+        <section className="mb-12">
+          <Card className="overflow-hidden border-0 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+            <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-3xl">🌍</span>
+                  <h2 className="text-2xl font-bold">{t('scenes.ctaTitle', '3D Interactive Scenes')}</h2>
+                </div>
+                <p className="text-emerald-50 text-lg mb-4">
+                  {t('scenes.ctaDescription', 'Explore realistic 3D environments — cafes, airports, markets — and learn vocabulary by interacting with objects around you!')}
+                </p>
+                <div className="flex items-center gap-4 text-sm text-emerald-100">
+                  <span>✓ {t('scenes.ctaFeature1', 'Real-world scenarios')}</span>
+                  <span>✓ {t('scenes.ctaFeature2', 'All CEFR levels')}</span>
+                  <span>✓ {t('scenes.ctaFeature3', 'Free to play')}</span>
+                </div>
+              </div>
+              <Link href="/linguaquest/scenes">
+                <Button size="lg" className="bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-lg px-8">
+                  <Play className="w-5 h-5 mr-2" />
+                  {t('scenes.ctaButton', 'Explore Scenes')}
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Features Section */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">

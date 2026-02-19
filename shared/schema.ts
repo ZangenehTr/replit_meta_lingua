@@ -8931,6 +8931,314 @@ export type InstituteEvent = typeof instituteEvents.$inferSelect;
 export type InsertInstituteEvent = z.infer<typeof insertInstituteEventSchema>;
 
 // ============================================================================
+// SOCIAL DUELING SYSTEM (Challenge Your Crush)
+// ============================================================================
+
+export const socialDuels = pgTable("social_duels", {
+  id: serial("id").primaryKey(),
+  challengerId: integer("challenger_id").references(() => users.id).notNull(),
+  challengedId: integer("challenged_id").references(() => users.id).notNull(),
+  challengeType: varchar("challenge_type", { length: 50 }).notNull(),
+  difficulty: varchar("difficulty", { length: 20 }).default("medium"),
+  cefrLevel: varchar("cefr_level", { length: 10 }),
+  language: varchar("language", { length: 50 }).default("english"),
+  isAnonymous: boolean("is_anonymous").default(false),
+  status: varchar("status", { length: 30 }).default("pending"),
+  questions: jsonb("questions"),
+  challengerScore: integer("challenger_score"),
+  challengedScore: integer("challenged_score"),
+  winnerId: integer("winner_id").references(() => users.id),
+  challengerAnswers: jsonb("challenger_answers"),
+  challengedAnswers: jsonb("challenged_answers"),
+  challengerCompletedAt: timestamp("challenger_completed_at"),
+  challengedCompletedAt: timestamp("challenged_completed_at"),
+  expiresAt: timestamp("expires_at"),
+  xpReward: integer("xp_reward").default(25),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertSocialDuelSchema = createInsertSchema(socialDuels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type SocialDuel = typeof socialDuels.$inferSelect;
+export type InsertSocialDuel = z.infer<typeof insertSocialDuelSchema>;
+
+export const duelQuestionBank = pgTable("duel_question_bank", {
+  id: serial("id").primaryKey(),
+  challengeType: varchar("challenge_type", { length: 50 }).notNull(),
+  cefrLevel: varchar("cefr_level", { length: 10 }).notNull(),
+  language: varchar("language", { length: 50 }).default("english"),
+  question: text("question").notNull(),
+  questionFa: text("question_fa"),
+  questionAr: text("question_ar"),
+  options: jsonb("options"),
+  correctAnswer: text("correct_answer").notNull(),
+  explanation: text("explanation"),
+  explanationFa: text("explanation_fa"),
+  explanationAr: text("explanation_ar"),
+  audioUrl: text("audio_url"),
+  imageUrl: text("image_url"),
+  difficulty: integer("difficulty").default(1),
+  timeLimitSeconds: integer("time_limit_seconds").default(30),
+  points: integer("points").default(10),
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertDuelQuestionBankSchema = createInsertSchema(duelQuestionBank).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type DuelQuestionBank = typeof duelQuestionBank.$inferSelect;
+export type InsertDuelQuestionBank = z.infer<typeof insertDuelQuestionBankSchema>;
+
+// ============================================================================
+// SESSION CRASHERS SYSTEM
+// ============================================================================
+
+export const crashAvailability = pgTable("crash_availability", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  isActive: boolean("is_active").default(false),
+  cefrLevel: varchar("cefr_level", { length: 10 }),
+  language: varchar("language", { length: 50 }).default("english"),
+  genderPreference: varchar("gender_preference", { length: 20 }).default("any"),
+  isPremium: boolean("is_premium").default(false),
+  availableFrom: time("available_from"),
+  availableTo: time("available_to"),
+  timezone: varchar("timezone", { length: 50 }).default("Asia/Tehran"),
+  totalCrashes: integer("total_crashes").default(0),
+  lastCrashAt: timestamp("last_crash_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertCrashAvailabilitySchema = createInsertSchema(crashAvailability).omit({
+  id: true,
+  totalCrashes: true,
+  lastCrashAt: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type CrashAvailability = typeof crashAvailability.$inferSelect;
+export type InsertCrashAvailability = z.infer<typeof insertCrashAvailabilitySchema>;
+
+export const crashSessions = pgTable("crash_sessions", {
+  id: serial("id").primaryKey(),
+  callSessionId: integer("call_session_id"),
+  crasherId: integer("crasher_id").references(() => users.id).notNull(),
+  hostStudentId: integer("host_student_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id),
+  status: varchar("status", { length: 30 }).default("invited"),
+  invitedAt: timestamp("invited_at").defaultNow().notNull(),
+  joinedAt: timestamp("joined_at"),
+  leftAt: timestamp("left_at"),
+  durationSeconds: integer("duration_seconds"),
+  stayedByConsent: boolean("stayed_by_consent").default(false),
+  teacherApproved: boolean("teacher_approved"),
+  crasherRating: integer("crasher_rating"),
+  hostRating: integer("host_rating"),
+  xpEarned: integer("xp_earned").default(0),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const insertCrashSessionSchema = createInsertSchema(crashSessions).omit({
+  id: true,
+  createdAt: true
+});
+
+export type CrashSession = typeof crashSessions.$inferSelect;
+export type InsertCrashSession = z.infer<typeof insertCrashSessionSchema>;
+
+// ============================================================================
+// DIASPORA BRIDGE SYSTEM
+// ============================================================================
+
+export const diasporaProfiles = pgTable("diaspora_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  isDiaspora: boolean("is_diaspora").default(false),
+  countryOfResidence: varchar("country_of_residence", { length: 100 }),
+  heritageLanguage: varchar("heritage_language", { length: 50 }),
+  targetLanguage: varchar("target_language", { length: 50 }),
+  teachingLanguages: text("teaching_languages").array().default([]),
+  proficiencyLevel: varchar("proficiency_level", { length: 10 }),
+  timezone: varchar("timezone", { length: 50 }),
+  isCulturalAmbassador: boolean("is_cultural_ambassador").default(false),
+  ambassadorSince: timestamp("ambassador_since"),
+  bio: text("bio"),
+  bioFa: text("bio_fa"),
+  interests: text("interests").array().default([]),
+  availableSlots: jsonb("available_slots"),
+  totalExchangeSessions: integer("total_exchange_sessions").default(0),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
+  isVerified: boolean("is_verified").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertDiasporaProfileSchema = createInsertSchema(diasporaProfiles).omit({
+  id: true,
+  totalExchangeSessions: true,
+  averageRating: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type DiasporaProfile = typeof diasporaProfiles.$inferSelect;
+export type InsertDiasporaProfile = z.infer<typeof insertDiasporaProfileSchema>;
+
+export const diasporaExchangeSessions = pgTable("diaspora_exchange_sessions", {
+  id: serial("id").primaryKey(),
+  diasporaUserId: integer("diaspora_user_id").references(() => users.id).notNull(),
+  localUserId: integer("local_user_id").references(() => users.id).notNull(),
+  sessionType: varchar("session_type", { length: 30 }).default("exchange"),
+  language: varchar("language", { length: 50 }),
+  cefrLevel: varchar("cefr_level", { length: 10 }),
+  scheduledAt: timestamp("scheduled_at"),
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  durationMinutes: integer("duration_minutes"),
+  status: varchar("status", { length: 30 }).default("scheduled"),
+  diasporaRating: integer("diaspora_rating"),
+  localRating: integer("local_rating"),
+  diasporaFeedback: text("diaspora_feedback"),
+  localFeedback: text("local_feedback"),
+  topicsCovered: text("topics_covered").array().default([]),
+  xpEarned: integer("xp_earned").default(0),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const insertDiasporaExchangeSessionSchema = createInsertSchema(diasporaExchangeSessions).omit({
+  id: true,
+  createdAt: true
+});
+
+export type DiasporaExchangeSession = typeof diasporaExchangeSessions.$inferSelect;
+export type InsertDiasporaExchangeSession = z.infer<typeof insertDiasporaExchangeSessionSchema>;
+
+// ============================================================================
+// 3D INTERACTIVE SCENE SYSTEM (Enhanced LinguaQuest)
+// ============================================================================
+
+export const interactiveScenes = pgTable("interactive_scenes", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  titleFa: varchar("title_fa", { length: 255 }),
+  titleAr: varchar("title_ar", { length: 255 }),
+  description: text("description"),
+  descriptionFa: text("description_fa"),
+  descriptionAr: text("description_ar"),
+  sceneType: varchar("scene_type", { length: 50 }).notNull(),
+  cefrLevel: varchar("cefr_level", { length: 10 }).notNull(),
+  language: varchar("language", { length: 50 }).default("english"),
+  environment: jsonb("environment"),
+  cameraConfig: jsonb("camera_config"),
+  lightingConfig: jsonb("lighting_config"),
+  objects: jsonb("objects"),
+  interactions: jsonb("interactions"),
+  narrationScript: text("narration_script"),
+  narrationScriptFa: text("narration_script_fa"),
+  narrationScriptAr: text("narration_script_ar"),
+  audioAssets: jsonb("audio_assets"),
+  estimatedDurationMinutes: integer("estimated_duration_minutes").default(10),
+  xpReward: integer("xp_reward").default(50),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  isPublished: boolean("is_published").default(false),
+  tags: text("tags").array().default([]),
+  prerequisites: text("prerequisites").array().default([]),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertInteractiveSceneSchema = createInsertSchema(interactiveScenes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type InteractiveScene = typeof interactiveScenes.$inferSelect;
+export type InsertInteractiveScene = z.infer<typeof insertInteractiveSceneSchema>;
+
+export const sceneInteractionPoints = pgTable("scene_interaction_points", {
+  id: serial("id").primaryKey(),
+  sceneId: integer("scene_id").references(() => interactiveScenes.id).notNull(),
+  objectId: varchar("object_id", { length: 100 }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  labelFa: varchar("label_fa", { length: 255 }),
+  labelAr: varchar("label_ar", { length: 255 }),
+  interactionType: varchar("interaction_type", { length: 50 }).notNull(),
+  position: jsonb("position").notNull(),
+  scale: jsonb("scale"),
+  rotation: jsonb("rotation"),
+  color: varchar("color", { length: 20 }),
+  shape: varchar("shape", { length: 30 }).default("box"),
+  questionData: jsonb("question_data"),
+  feedbackCorrect: text("feedback_correct"),
+  feedbackCorrectFa: text("feedback_correct_fa"),
+  feedbackCorrectAr: text("feedback_correct_ar"),
+  feedbackIncorrect: text("feedback_incorrect"),
+  feedbackIncorrectFa: text("feedback_incorrect_fa"),
+  feedbackIncorrectAr: text("feedback_incorrect_ar"),
+  audioUrl: text("audio_url"),
+  points: integer("points").default(10),
+  sortOrder: integer("sort_order").default(0),
+  isRequired: boolean("is_required").default(true),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertSceneInteractionPointSchema = createInsertSchema(sceneInteractionPoints).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type SceneInteractionPoint = typeof sceneInteractionPoints.$inferSelect;
+export type InsertSceneInteractionPoint = z.infer<typeof insertSceneInteractionPointSchema>;
+
+export const sceneProgress = pgTable("scene_progress", {
+  id: serial("id").primaryKey(),
+  sceneId: integer("scene_id").references(() => interactiveScenes.id).notNull(),
+  userId: integer("user_id").references(() => users.id),
+  guestToken: varchar("guest_token", { length: 255 }),
+  completedInteractions: jsonb("completed_interactions"),
+  score: integer("score").default(0),
+  maxScore: integer("max_score").default(0),
+  timeSpentSeconds: integer("time_spent_seconds").default(0),
+  status: varchar("status", { length: 30 }).default("in_progress"),
+  completedAt: timestamp("completed_at"),
+  xpEarned: integer("xp_earned").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertSceneProgressSchema = createInsertSchema(sceneProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type SceneProgress = typeof sceneProgress.$inferSelect;
+export type InsertSceneProgress = z.infer<typeof insertSceneProgressSchema>;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 

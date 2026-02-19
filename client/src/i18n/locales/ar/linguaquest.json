@@ -295,5 +295,58 @@
     "currentLevel": "المستوى الحالي",
     "strongSkills": "المهارات القوية",
     "weakSkills": "مجالات التحسين"
+  },
+  "scene3d": {
+    "title": "المشهد التفاعلي ثلاثي الأبعاد",
+    "loading": "جارٍ تحميل المشهد ثلاثي الأبعاد...",
+    "clickToInteract": "انقر على الأشياء للتفاعل",
+    "tapToInteract": "اضغط على الأشياء للتفاعل",
+    "objectsRemaining": "{{count}} أشياء متبقية",
+    "allCompleted": "تم إكمال جميع التفاعلات!",
+    "scoreLabel": "النتيجة",
+    "timeSpent": "الوقت المستغرق",
+    "seconds": "ثوانٍ",
+    "correctAnswer": "صحيح!",
+    "wrongAnswer": "حاول مرة أخرى!",
+    "hint": "تلميح",
+    "nextObject": "الشيء التالي",
+    "finishScene": "إنهاء المشهد",
+    "exitScene": "الخروج من المشهد",
+    "sceneComplete": "اكتمل المشهد",
+    "sceneCompleteDesc": "لقد استكشفت المشهد بأكمله!",
+    "earnedXP": "حصلت على {{xp}} نقطة",
+    "tryAgain": "حاول مرة أخرى",
+    "continueToNext": "متابعة",
+    "scenes": {
+      "cafe": "مقهى",
+      "airport": "مطار",
+      "classroom": "فصل دراسي",
+      "market": "سوق",
+      "hospital": "مستشفى",
+      "restaurant": "مطعم",
+      "hotel": "فندق",
+      "library": "مكتبة",
+      "office": "مكتب",
+      "park": "حديقة"
+    },
+    "levels": {
+      "A0": "مبتدئ تمامًا",
+      "A1": "مبتدئ",
+      "A2": "أساسي",
+      "B1": "متوسط",
+      "B2": "فوق المتوسط",
+      "C1": "متقدم",
+      "C2": "إتقان"
+    },
+    "interactions": {
+      "vocabulary": "المفردات",
+      "grammar": "القواعد",
+      "conversation": "المحادثة",
+      "listening": "الاستماع",
+      "pronunciation": "النطق",
+      "fillBlank": "ملء الفراغ",
+      "multipleChoice": "اختيار من متعدد",
+      "trueFalse": "صح أم خطأ"
+    }
   }
 }

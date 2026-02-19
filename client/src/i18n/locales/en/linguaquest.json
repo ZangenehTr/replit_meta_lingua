@@ -297,5 +297,58 @@
     "pleaseRate": "Please select a star rating",
     "averageRating": "Average Rating",
     "reviews": "reviews"
+  },
+  "scene3d": {
+    "title": "3D Interactive Scene",
+    "loading": "Loading 3D scene...",
+    "clickToInteract": "Click objects to interact",
+    "tapToInteract": "Tap objects to interact",
+    "objectsRemaining": "{{count}} objects remaining",
+    "allCompleted": "All interactions completed!",
+    "scoreLabel": "Score",
+    "timeSpent": "Time Spent",
+    "seconds": "seconds",
+    "correctAnswer": "Correct!",
+    "wrongAnswer": "Try again!",
+    "hint": "Hint",
+    "nextObject": "Next Object",
+    "finishScene": "Finish Scene",
+    "exitScene": "Exit Scene",
+    "sceneComplete": "Scene Complete",
+    "sceneCompleteDesc": "You explored the entire scene!",
+    "earnedXP": "Earned {{xp}} XP",
+    "tryAgain": "Try Again",
+    "continueToNext": "Continue",
+    "scenes": {
+      "cafe": "Cafe",
+      "airport": "Airport",
+      "classroom": "Classroom",
+      "market": "Market",
+      "hospital": "Hospital",
+      "restaurant": "Restaurant",
+      "hotel": "Hotel",
+      "library": "Library",
+      "office": "Office",
+      "park": "Park"
+    },
+    "levels": {
+      "A0": "Absolute Beginner",
+      "A1": "Beginner",
+      "A2": "Elementary",
+      "B1": "Intermediate",
+      "B2": "Upper Intermediate",
+      "C1": "Advanced",
+      "C2": "Mastery"
+    },
+    "interactions": {
+      "vocabulary": "Vocabulary",
+      "grammar": "Grammar",
+      "conversation": "Conversation",
+      "listening": "Listening",
+      "pronunciation": "Pronunciation",
+      "fillBlank": "Fill in the Blank",
+      "multipleChoice": "Multiple Choice",
+      "trueFalse": "True or False"
+    }
   }
 }
