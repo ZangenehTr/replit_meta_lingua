@@ -1,15 +1,17 @@
 import { useState, useRef, useCallback, useEffect, Suspense, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Text, Html, Environment, Sky, Plane } from "@react-three/drei";
+import { OrbitControls, Text, Html, Sky, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, Volume2, HelpCircle, ArrowRight } from "lucide-react";
+import { Check, X, ArrowRight } from "lucide-react";
 import { useTTS } from "@/hooks/useTTS";
 import { cn } from "@/lib/utils";
+import { getObjectComponent } from "./SceneObjects3D";
+import { getEnvironmentComponent } from "./SceneEnvironments3D";
 
 interface InteractionPointData {
   id: number;
@@ -78,18 +80,48 @@ interface InteractiveScene3DProps {
   isMobile?: boolean;
 }
 
-const SCENE_COLORS: Record<string, { ground: string; sky: string; ambient: string }> = {
-  cafe: { ground: "#8B7355", sky: "#87CEEB", ambient: "#FFF8DC" },
-  airport: { ground: "#C0C0C0", sky: "#B0C4DE", ambient: "#F0F8FF" },
-  classroom: { ground: "#DEB887", sky: "#87CEEB", ambient: "#FFFFF0" },
-  market: { ground: "#CD853F", sky: "#FFD700", ambient: "#FFF8DC" },
-  hospital: { ground: "#F5F5F5", sky: "#E0E0E0", ambient: "#FFFFFF" },
-  restaurant: { ground: "#8B4513", sky: "#2F4F4F", ambient: "#FFE4B5" },
-  hotel: { ground: "#D2B48C", sky: "#87CEEB", ambient: "#FAFAD2" },
-  library: { ground: "#A0522D", sky: "#4682B4", ambient: "#F5F5DC" },
-  office: { ground: "#808080", sky: "#87CEEB", ambient: "#F0F0F0" },
-  park: { ground: "#228B22", sky: "#87CEEB", ambient: "#F0FFF0" },
+const SCENE_CAMERAS: Record<string, { position: [number, number, number]; target: [number, number, number] }> = {
+  cafe: { position: [6, 4, 8], target: [0, 0.5, -1] },
+  market: { position: [0, 5, 10], target: [0, 0.5, -2] },
+  airport: { position: [0, 4, 10], target: [0, 1, -2] },
+  hospital: { position: [5, 4, 8], target: [0, 0.8, 0] },
+  office: { position: [6, 4, 8], target: [0, 0.5, -1] },
 };
+
+function getCameraConfig(sceneTitle: string) {
+  const key = sceneTitle.toLowerCase();
+  if (key.includes("cafe") || key.includes("coffee")) return SCENE_CAMERAS.cafe;
+  if (key.includes("market") || key.includes("bazaar")) return SCENE_CAMERAS.market;
+  if (key.includes("airport") || key.includes("flight")) return SCENE_CAMERAS.airport;
+  if (key.includes("hospital") || key.includes("clinic")) return SCENE_CAMERAS.hospital;
+  if (key.includes("office") || key.includes("work")) return SCENE_CAMERAS.office;
+  return SCENE_CAMERAS.cafe;
+}
+
+function CameraController({ target, introComplete }: { target: [number, number, number]; introComplete: boolean }) {
+  const { camera } = useThree();
+  const basePos = useRef(new THREE.Vector3());
+  const startTime = useRef(Date.now());
+  const initialized = useRef(false);
+
+  useFrame(() => {
+    if (introComplete) return;
+    if (!initialized.current) {
+      basePos.current.copy(camera.position);
+      initialized.current = true;
+    }
+    const elapsed = (Date.now() - startTime.current) / 1000;
+    if (elapsed < 3) {
+      const progress = elapsed / 3;
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const sweep = Math.sin(ease * Math.PI * 0.5) * 1.5;
+      camera.position.x = basePos.current.x + sweep;
+      camera.lookAt(target[0], target[1], target[2]);
+    }
+  });
+
+  return null;
+}
 
 function InteractiveObject({
   point,
@@ -104,57 +136,48 @@ function InteractiveObject({
   onClick: () => void;
   lang: string;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
-    if (!meshRef.current) return;
-    if (isCompleted) return;
+    if (!groupRef.current) return;
 
-    if (hovered || isActive) {
-      meshRef.current.scale.setScalar(1.15 + Math.sin(state.clock.elapsedTime * 3) * 0.05);
+    if (!isCompleted && (hovered || isActive)) {
+      const bobSpeed = isActive ? 4 : 2.5;
+      groupRef.current.position.y = point.position.y + Math.sin(state.clock.elapsedTime * bobSpeed) * 0.06;
     } else {
-      meshRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+      groupRef.current.position.y = point.position.y;
     }
 
-    if (!isCompleted) {
-      meshRef.current.rotation.y += 0.005;
+    if (glowRef.current) {
+      const pulse = 0.5 + Math.sin(state.clock.elapsedTime * 3) * 0.3;
+      (glowRef.current.material as THREE.MeshBasicMaterial).opacity = isCompleted ? 0 : hovered ? 0.4 : pulse * 0.2;
+      const s = isCompleted ? 0 : hovered ? 1.4 : 1.1 + pulse * 0.15;
+      glowRef.current.scale.setScalar(s);
     }
   });
 
-  const color = isCompleted
-    ? "#4CAF50"
-    : isActive
-    ? "#FF9800"
-    : hovered
-    ? "#2196F3"
-    : point.color || "#6366F1";
-
   const pos = point.position;
-  const scale = point.scale || { x: 0.5, y: 0.5, z: 0.5 };
-
-  const label =
-    lang === "fa" && point.labelFa ? point.labelFa : lang === "ar" && point.labelAr ? point.labelAr : point.label;
-
-  const geometry = useMemo(() => {
-    switch (point.shape) {
-      case "sphere":
-        return <sphereGeometry args={[0.5, 32, 32]} />;
-      case "cylinder":
-        return <cylinderGeometry args={[0.3, 0.3, 0.8, 32]} />;
-      case "cone":
-        return <coneGeometry args={[0.4, 0.8, 32]} />;
-      case "torus":
-        return <torusGeometry args={[0.4, 0.15, 16, 32]} />;
-      default:
-        return <boxGeometry args={[0.8, 0.8, 0.8]} />;
-    }
-  }, [point.shape]);
+  const scale = point.scale || { x: 1, y: 1, z: 1 };
+  const label = lang === "fa" && point.labelFa ? point.labelFa : lang === "ar" && point.labelAr ? point.labelAr : point.label;
+  const ObjectModel = getObjectComponent(point.objectId);
 
   return (
-    <group position={[pos.x, pos.y, pos.z]}>
-      <mesh
-        ref={meshRef}
+    <group ref={groupRef} position={[pos.x, pos.y, pos.z]}>
+      {!isCompleted && (
+        <mesh ref={glowRef} position={[0, 0.3, 0]}>
+          <sphereGeometry args={[0.6, 16, 16]} />
+          <meshBasicMaterial
+            color={isActive ? "#FF9800" : hovered ? "#2196F3" : "#6366F1"}
+            transparent
+            opacity={0.15}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
+      <group
         scale={[scale.x, scale.y, scale.z]}
         onClick={(e) => {
           e.stopPropagation();
@@ -170,88 +193,86 @@ function InteractiveObject({
           document.body.style.cursor = "default";
         }}
       >
-        {geometry}
-        <meshStandardMaterial
-          color={color}
-          emissive={hovered || isActive ? color : "#000000"}
-          emissiveIntensity={hovered || isActive ? 0.3 : 0}
-          metalness={0.3}
-          roughness={0.6}
-        />
-      </mesh>
+        {ObjectModel ? (
+          <ObjectModel />
+        ) : (
+          <mesh>
+            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <meshStandardMaterial color={point.color || "#6366F1"} />
+          </mesh>
+        )}
+      </group>
 
       {(hovered || isActive) && !isCompleted && (
-        <Html center position={[0, 1.2, 0]} distanceFactor={8}>
-          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-indigo-200 dark:border-indigo-700 whitespace-nowrap">
-            <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{label}</p>
+        <Html center position={[0, 1.3, 0]} distanceFactor={8} zIndexRange={[100, 0]}>
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border-2 border-indigo-300 dark:border-indigo-600 whitespace-nowrap animate-in fade-in duration-200">
+            <p className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{label}</p>
+            <p className="text-[10px] text-indigo-400 text-center mt-0.5">
+              {isActive ? "⬆" : "👆"}
+            </p>
           </div>
         </Html>
       )}
 
       {isCompleted && (
-        <Html center position={[0, 1, 0]} distanceFactor={8}>
-          <div className="bg-green-500/90 w-6 h-6 rounded-full flex items-center justify-center">
+        <Html center position={[0, 1.1, 0]} distanceFactor={8} zIndexRange={[100, 0]}>
+          <div className="bg-green-500 w-7 h-7 rounded-full flex items-center justify-center shadow-lg ring-2 ring-green-300 ring-offset-1">
             <Check className="w-4 h-4 text-white" />
           </div>
         </Html>
       )}
 
       {!isCompleted && !hovered && (
-        <Text
-          position={[0, -0.8, 0]}
-          fontSize={0.2}
-          color="#FFFFFF"
-          outlineColor="#000000"
-          outlineWidth={0.02}
-          anchorX="center"
-          anchorY="middle"
-        >
-          {label}
-        </Text>
+        <Html center position={[0, -0.5, 0]} distanceFactor={10} zIndexRange={[50, 0]}>
+          <div className="bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-md">
+            <p className="text-[11px] text-white font-medium whitespace-nowrap">{label}</p>
+          </div>
+        </Html>
       )}
     </group>
   );
 }
 
-function Ground({ color, sceneType }: { color: string; sceneType: string }) {
-  return (
-    <Plane
-      args={[40, 40]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, -0.5, 0]}
-      receiveShadow
-    >
-      <meshStandardMaterial color={color} roughness={0.8} />
-    </Plane>
-  );
-}
-
-function SceneEnvironment({
-  sceneType,
-  envConfig,
-}: {
-  sceneType: string;
-  envConfig?: SceneData["environment"];
-}) {
-  const colors = SCENE_COLORS[sceneType] || SCENE_COLORS.classroom;
-  const groundColor = envConfig?.groundColor || colors.ground;
+function SceneLighting({ sceneType }: { sceneType: string }) {
+  const key = sceneType.toLowerCase();
+  const isIndoor = key.includes("cafe") || key.includes("hospital") || key.includes("office");
+  const isMarket = key.includes("market") || key.includes("bazaar");
 
   return (
     <>
-      <ambientLight intensity={envConfig?.ambientLight || 0.6} />
-      <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
-      <Sky sunPosition={[10, 20, 10]} />
-      <Ground color={groundColor} sceneType={sceneType} />
-      {envConfig?.fog && (
-        <fog
-          attach="fog"
-          color={envConfig.fogColor || "#E0E0E0"}
-          near={5}
-          far={30}
+      <ambientLight intensity={isIndoor ? 0.35 : 0.5} color={isIndoor ? "#FFF8E1" : "#FFFFFF"} />
+      <directionalLight
+        position={isMarket ? [8, 15, 5] : [5, 10, 5]}
+        intensity={isIndoor ? 0.6 : 1.2}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.5}
+        shadow-camera-far={50}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+        color={isMarket ? "#FFE0B2" : "#FFFFFF"}
+      />
+      {!isIndoor && (
+        <hemisphereLight
+          args={["#87CEEB", "#8B7355", 0.3]}
         />
       )}
     </>
   );
+}
+
+function SceneBackground({ sceneType }: { sceneType: string }) {
+  const key = sceneType.toLowerCase();
+  const isOutdoor = key.includes("market") || key.includes("bazaar");
+
+  if (isOutdoor) {
+    return <Sky sunPosition={[15, 25, 10]} turbidity={3} rayleigh={0.5} />;
+  }
+
+  return null;
 }
 
 function QuestionPanel({
@@ -324,7 +345,7 @@ function QuestionPanel({
               variant={showResult && selectedAnswer === "true" ? (isCorrect ? "default" : "destructive") : "outline"}
               className="flex-1"
             >
-              {t("scene3d.interactions.trueFalse")} ✓
+              True ✓
             </Button>
             <Button
               onClick={() => !showResult && handleAnswer("false")}
@@ -332,7 +353,7 @@ function QuestionPanel({
               variant={showResult && selectedAnswer === "false" ? (isCorrect ? "default" : "destructive") : "outline"}
               className="flex-1"
             >
-              {t("scene3d.interactions.trueFalse")} ✗
+              False ✗
             </Button>
           </div>
         )}
@@ -342,12 +363,12 @@ function QuestionPanel({
             {isCorrect ? (
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />
-                {t("scene3d.correctAnswer")}
+                {t("scene3d.correctAnswer", "Correct!")}
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <X className="w-4 h-4" />
-                {t("scene3d.wrongAnswer")}
+                {t("scene3d.wrongAnswer", "Try again next time!")}
               </div>
             )}
           </div>
@@ -367,6 +388,12 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
   const [score, setScore] = useState(0);
   const [startTime] = useState(Date.now());
   const [showCompletion, setShowCompletion] = useState(false);
+  const [introComplete, setIntroComplete] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIntroComplete(true), 3500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const totalRequired = useMemo(
     () => scene.interactions.filter((p) => p.isRequired).length,
@@ -387,7 +414,6 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
     (point: InteractionPointData) => {
       if (completedPoints.has(point.objectId)) return;
       setActivePoint(point);
-
       if (point.audioUrl) {
         playWord(point.label);
       }
@@ -398,7 +424,6 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
   const handleAnswer = useCallback(
     (correct: boolean) => {
       if (!activePoint) return;
-
       const earned = correct ? activePoint.points : 0;
       setScore((prev) => prev + earned);
 
@@ -410,7 +435,6 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
 
       setTimeout(() => {
         setActivePoint(null);
-
         const newCompleted = completedPoints.size + 1;
         if (newCompleted >= totalRequired) {
           setShowCompletion(true);
@@ -424,33 +448,34 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
     [activePoint, completedPoints.size, totalRequired, score, startTime, onComplete]
   );
 
-  const cameraPos = scene.cameraConfig?.position || [0, 5, 10];
-  const fov = scene.cameraConfig?.fov || 60;
+  const camConfig = getCameraConfig(scene.title);
+  const EnvironmentComponent = getEnvironmentComponent(scene.title);
+  const fov = scene.cameraConfig?.fov || 55;
 
   const sceneTitle =
     lang === "fa" && scene.titleFa ? scene.titleFa : lang === "ar" && scene.titleAr ? scene.titleAr : scene.title;
 
   return (
     <div className="relative w-full h-full min-h-[500px]">
-      <div className="absolute top-0 left-0 right-0 z-10 p-3 flex items-center justify-between bg-gradient-to-b from-black/50 to-transparent">
-        <div className="flex items-center gap-2">
-          <h3 className="text-white font-bold text-sm">{sceneTitle}</h3>
-          <Badge className="bg-indigo-500 text-white text-xs">{scene.cefrLevel}</Badge>
+      <div className="absolute top-0 left-0 right-0 z-10 p-3 flex items-center justify-between bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <h3 className="text-white font-bold text-sm drop-shadow-lg">{sceneTitle}</h3>
+          <Badge className="bg-indigo-500 text-white text-xs shadow-md">{scene.cefrLevel}</Badge>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-white text-sm">
-            {t("scene3d.scoreLabel")}: {score}/{maxScore}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="text-white text-sm font-medium drop-shadow-lg">
+            {t("scene3d.scoreLabel", "Score")}: {score}/{maxScore}
           </div>
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-xs shadow-md">
             {completedPoints.size}/{totalRequired}
           </Badge>
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 bg-gradient-to-t from-black/50 to-transparent">
-        <Progress value={progressPercent} className="h-2" />
-        <p className="text-white/80 text-xs mt-1 text-center">
-          {isMobile ? t("scene3d.tapToInteract") : t("scene3d.clickToInteract")}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 bg-gradient-to-t from-black/60 via-black/30 to-transparent pointer-events-none">
+        <Progress value={progressPercent} className="h-2.5 shadow-md" />
+        <p className="text-white/90 text-xs mt-1.5 text-center font-medium drop-shadow">
+          {isMobile ? t("scene3d.tapToInteract", "Tap objects to learn") : t("scene3d.clickToInteract", "Click objects to learn")}
         </p>
       </div>
 
@@ -464,19 +489,19 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <Card className="max-w-sm mx-auto bg-white/95 dark:bg-gray-800/95 shadow-2xl">
             <CardContent className="p-6 text-center space-y-4">
-              <div className="text-4xl">🎉</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">{t("scene3d.sceneComplete")}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{t("scene3d.sceneCompleteDesc")}</p>
+              <div className="text-5xl">🎉</div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">{t("scene3d.sceneComplete", "Scene Complete!")}</h3>
+              <p className="text-gray-600 dark:text-gray-300">{t("scene3d.sceneCompleteDesc", "Great job exploring this scene!")}</p>
               <div className="flex justify-center gap-4">
                 <Badge className="text-lg px-4 py-2 bg-yellow-500">
-                  {t("scene3d.earnedXP", { xp: scene.xpReward })}
+                  +{scene.xpReward} XP
                 </Badge>
                 <Badge className="text-lg px-4 py-2 bg-indigo-500">
                   {score}/{maxScore}
                 </Badge>
               </div>
               <Button onClick={() => onComplete(score, Math.floor((Date.now() - startTime) / 1000))} className="w-full">
-                {t("scene3d.continueToNext")} <ArrowRight className="w-4 h-4 ml-2" />
+                {t("scene3d.continueToNext", "Continue")} <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
@@ -486,15 +511,32 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
       <Canvas
         shadows
         camera={{
-          position: cameraPos as [number, number, number],
+          position: camConfig.position,
           fov,
           near: 0.1,
-          far: 100,
+          far: 200,
         }}
         style={{ width: "100%", height: "100%" }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
+        dpr={[1, 1.5]}
       >
         <Suspense fallback={null}>
-          <SceneEnvironment sceneType={scene.sceneType} envConfig={scene.environment} />
+          <color attach="background" args={["#1a1a2e"]} />
+
+          <SceneLighting sceneType={scene.title} />
+          <SceneBackground sceneType={scene.title} />
+
+          {EnvironmentComponent && <EnvironmentComponent />}
+
+          <ContactShadows
+            position={[0, -0.005, 0]}
+            opacity={0.35}
+            scale={20}
+            blur={2}
+            far={6}
+          />
+
+          <CameraController target={camConfig.target} introComplete={introComplete} />
 
           {scene.interactions.map((point) => (
             <InteractiveObject
@@ -508,13 +550,18 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
           ))}
 
           <OrbitControls
-            enablePan={false}
+            enablePan={true}
             enableZoom={true}
-            minPolarAngle={Math.PI / 6}
-            maxPolarAngle={Math.PI / 2.2}
-            minDistance={3}
-            maxDistance={20}
-            target={[0, 0, 0]}
+            minPolarAngle={Math.PI / 8}
+            maxPolarAngle={Math.PI / 2.1}
+            minDistance={2}
+            maxDistance={18}
+            target={camConfig.target}
+            enableDamping
+            dampingFactor={0.08}
+            rotateSpeed={0.5}
+            panSpeed={0.4}
+            zoomSpeed={0.8}
           />
         </Suspense>
       </Canvas>
