@@ -41,7 +41,8 @@
     "progress": "Progress",
     "achievements": "Achievements",
     "dashboard": "Dashboard",
-    "backToPlatform": "Back to Platform"
+    "backToPlatform": "Back to Platform",
+    "back": "Back"
   },
   "dashboard": {
     "title": "Your Learning Journey",
@@ -350,5 +351,23 @@
       "multipleChoice": "Multiple Choice",
       "trueFalse": "True or False"
     }
+  },
+  "scenes": {
+    "title": "3D Interactive Scenes",
+    "subtitle": "Explore real-world environments and learn vocabulary",
+    "explore": "Explore Scenes",
+    "exploreDesc": "Click on objects, answer questions, and build vocabulary in immersive 3D environments",
+    "allLevels": "All Levels",
+    "beginner": "Beginner",
+    "elementary": "Elementary",
+    "intermediate": "Intermediate",
+    "upperIntermediate": "Upper Intermediate",
+    "advanced": "Advanced",
+    "mastery": "Mastery",
+    "noScenes": "No scenes available for this level yet",
+    "checkBack": "Check back soon for new content!",
+    "startScene": "Start Scene",
+    "xpReward": "XP",
+    "minutes": "min"
   }
 }

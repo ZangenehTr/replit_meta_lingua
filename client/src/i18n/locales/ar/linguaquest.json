@@ -41,7 +41,8 @@
     "progress": "التقدم",
     "achievements": "الإنجازات",
     "dashboard": "لوحة التحكم",
-    "backToPlatform": "العودة إلى المنصة"
+    "backToPlatform": "العودة إلى المنصة",
+    "back": "رجوع"
   },
   "dashboard": {
     "title": "رحلة التعلم الخاصة بك",
@@ -348,5 +349,23 @@
       "multipleChoice": "اختيار من متعدد",
       "trueFalse": "صح أم خطأ"
     }
+  },
+  "scenes": {
+    "title": "مشاهد تفاعلية ثلاثية الأبعاد",
+    "subtitle": "استكشف بيئات حقيقية وتعلم المفردات",
+    "explore": "استكشاف المشاهد",
+    "exploreDesc": "انقر على الأشياء، أجب على الأسئلة، وابنِ مفرداتك في بيئات ثلاثية الأبعاد",
+    "allLevels": "جميع المستويات",
+    "beginner": "مبتدئ",
+    "elementary": "ابتدائي",
+    "intermediate": "متوسط",
+    "upperIntermediate": "فوق المتوسط",
+    "advanced": "متقدم",
+    "mastery": "إتقان",
+    "noScenes": "لا توجد مشاهد متاحة لهذا المستوى بعد",
+    "checkBack": "تحقق مرة أخرى قريباً لمحتوى جديد!",
+    "startScene": "ابدأ المشهد",
+    "xpReward": "نقاط الخبرة",
+    "minutes": "دقيقة"
   }
 }

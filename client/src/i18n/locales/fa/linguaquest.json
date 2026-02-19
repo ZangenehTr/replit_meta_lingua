@@ -41,7 +41,8 @@
     "progress": "پیشرفت",
     "achievements": "دستاوردها",
     "dashboard": "داشبورد",
-    "backToPlatform": "بازگشت به پلتفرم"
+    "backToPlatform": "بازگشت به پلتفرم",
+    "back": "بازگشت"
   },
   "dashboard": {
     "title": "سفر یادگیری شما",
@@ -350,5 +351,23 @@
       "multipleChoice": "چندگزینه‌ای",
       "trueFalse": "درست یا غلط"
     }
+  },
+  "scenes": {
+    "title": "صحنه‌های سه‌بعدی تعاملی",
+    "subtitle": "محیط‌های واقعی را کاوش کنید و واژگان بیاموزید",
+    "explore": "کاوش صحنه‌ها",
+    "exploreDesc": "روی اشیا کلیک کنید، به سوالات پاسخ دهید و واژگان خود را در محیط‌های سه‌بعدی بسازید",
+    "allLevels": "همه سطوح",
+    "beginner": "مبتدی",
+    "elementary": "مقدماتی",
+    "intermediate": "متوسط",
+    "upperIntermediate": "بالاتر از متوسط",
+    "advanced": "پیشرفته",
+    "mastery": "تسلط",
+    "noScenes": "هنوز صحنه‌ای برای این سطح موجود نیست",
+    "checkBack": "به زودی محتوای جدید اضافه خواهد شد!",
+    "startScene": "شروع صحنه",
+    "xpReward": "امتیاز",
+    "minutes": "دقیقه"
   }
 }

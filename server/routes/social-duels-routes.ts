@@ -271,14 +271,14 @@ router.get("/api/duels/leaderboard", async (req: Request, res: Response) => {
   try {
     const topPlayers = await db.execute(sql`
       SELECT 
-        u.id, u.first_name, u.last_name, u.username,
+        u.id, u.first_name, u.last_name,
         COUNT(CASE WHEN sd.winner_id = u.id THEN 1 END) as wins,
         COUNT(sd.id) as total_duels,
         ROUND(COUNT(CASE WHEN sd.winner_id = u.id THEN 1 END)::numeric / NULLIF(COUNT(sd.id), 0) * 100, 1) as win_rate
       FROM users u
       JOIN social_duels sd ON (sd.challenger_id = u.id OR sd.challenged_id = u.id)
       WHERE sd.status = 'completed'
-      GROUP BY u.id, u.first_name, u.last_name, u.username
+      GROUP BY u.id, u.first_name, u.last_name
       HAVING COUNT(sd.id) >= 3
       ORDER BY wins DESC, win_rate DESC
       LIMIT 20
