@@ -14,6 +14,7 @@ import multer from 'multer';
 import { nanoid } from 'nanoid';
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 
 export function registerCmsRoutes(app: Express, authenticateToken?: any, requireRole?: any) {
   // Create storage instance
@@ -516,7 +517,7 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   
   // Media file upload
   const cmsUploadDir = 'uploads/cms-media';
-  const fsSync = require('fs');
+  
   if (!fsSync.existsSync(cmsUploadDir)) {
     fsSync.mkdirSync(cmsUploadDir, { recursive: true });
   }
