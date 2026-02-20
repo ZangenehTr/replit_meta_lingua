@@ -69,7 +69,16 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem
 
-## Recent Changes (Feb 19, 2026)
+## Recent Changes (Feb 20, 2026)
+### Platform Audit & Polish
+- **Route Consolidation**: Merged duplicate server/cms-routes.ts into server/routes/cms-routes.ts (canonical), deleted unused lexi-routes.ts. Fixed ESM compatibility (`require('fs')` → `import fsSync from 'fs'`).
+- **i18n 100% Coverage**: Synced 1,500+ missing translation keys across Farsi and Arabic for all 17 namespaces. Fixed structural issues where FA `common.actions` and `student.packages` were strings instead of objects (converted to proper nested objects matching EN structure). Zero missing keys in FA and AR.
+- **Mobile Responsive**: Made 8 pages fully responsive (wallet, BookReader, ai-practice, course-detail, unified-dashboard, level-assessment, pronunciation-practice, not-found). Pattern: mobile-first with sm:/md:/lg: breakpoints, flex-col stacking, responsive padding/text.
+- **Non-functional Buttons Fixed**: Fixed 3 empty onClick handlers in student and teacher mobile dashboards with proper navigation.
+- **Cleanup**: Removed .backup files from locale folders, removed dead code.
+- **Server Health**: All routes registering successfully, CMS media upload working, AI provider health monitoring active.
+
+## Previous Changes (Feb 19, 2026)
 ### Social & Interactive Features (4 Major Features)
 - **3D Interactive Scenes**: Three.js-powered immersive vocabulary learning environments (cafe, market, airport, hospital, office) with clickable 3D objects, CEFR A1-C1 levels, trilingual support (en/fa/ar), question panels, progress tracking. Routes: `/linguaquest/scenes`, `/linguaquest/scene/:id`. Backend: `server/routes/interactive-scenes-routes.ts`. Component: `client/src/components/3d-lessons/InteractiveScene3D.tsx`. 5 scenes seeded with 33 interaction points.
 - **Challenge Your Crush (Social Duels)**: Language dueling system with challenge/accept/decline/submit flow, leaderboard, stats tracking, daily challenge limits, anonymous mode, admin question bank CRUD. Routes: `/social/duels`. Backend: `server/routes/social-duels-routes.ts`. Frontend: `client/src/pages/social/ChallengeDuelsPage.tsx`.
