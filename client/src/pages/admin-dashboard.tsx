@@ -104,7 +104,8 @@ export default function AdminDashboard() {
     lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null | undefined) => {
+    if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     switch (status.toLowerCase()) {
       case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'inactive': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
@@ -234,7 +235,7 @@ export default function AdminDashboard() {
                           </p>
                         </div>
                         <Badge className={getStatusColor(student.status)}>
-                          {student.status}
+                          {student.status || 'N/A'}
                         </Badge>
                       </div>
                     ))}
@@ -259,7 +260,7 @@ export default function AdminDashboard() {
                           </p>
                         </div>
                         <Badge className={getStatusColor(lead.status)}>
-                          {lead.status}
+                          {lead.status || 'N/A'}
                         </Badge>
                       </div>
                     ))}
@@ -299,8 +300,8 @@ export default function AdminDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
+                <div className="hidden md:block overflow-x-auto">
+                  <Table className="min-w-[700px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('admin:dashboard.student')}</TableHead>
@@ -337,7 +338,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(student.status)}>
-                            {student.status}
+                            {student.status || 'N/A'}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -373,6 +374,33 @@ export default function AdminDashboard() {
                   </TableBody>
                 </Table>
                 </div>
+                <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredStudents.map((student) => (
+                    <div key={student.id} className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{student.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">STU-{student.id.toString().padStart(4, '0')}</div>
+                        </div>
+                        <Badge className={getStatusColor(student.status)}>{student.status || 'N/A'}</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center"><Mail className="h-3 w-3 mr-1 shrink-0" /><span className="truncate">{student.email}</span></div>
+                        <div className="flex items-center"><Phone className="h-3 w-3 mr-1 shrink-0" />{student.phone}</div>
+                        <div className="flex items-center"><BookOpen className="h-3 w-3 mr-1 shrink-0" />{student.enrolledCourses} {t('admin:dashboard.courses')}</div>
+                        <div>${student.totalPayments}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/students?view=${student.id}`)}>
+                          <Eye className="h-4 w-4 mr-1" /> {t('admin:dashboard.view')}
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/students?edit=${student.id}`)}>
+                          <Edit className="h-4 w-4 mr-1" /> {t('admin:dashboard.edit')}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -407,8 +435,8 @@ export default function AdminDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
+                <div className="hidden md:block overflow-x-auto">
+                  <Table className="min-w-[800px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('admin:dashboard.lead')}</TableHead>
@@ -449,7 +477,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(lead.status)}>
-                            {lead.status}
+                            {lead.status || 'N/A'}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -501,6 +529,40 @@ export default function AdminDashboard() {
                   </TableBody>
                 </Table>
                 </div>
+                <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredLeads.map((lead) => (
+                    <div key={lead.id} className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{lead.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{t('admin:dashboard.created')}: {lead.createdAt}</div>
+                        </div>
+                        <Badge className={getStatusColor(lead.status)}>{lead.status || 'N/A'}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center"><Mail className="h-3 w-3 mr-1 shrink-0" /><span className="truncate">{lead.email}</span></div>
+                        <div className="flex items-center"><Phone className="h-3 w-3 mr-1 shrink-0" />{lead.phone}</div>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        <Badge variant="outline" className="text-xs">{lead.source}</Badge>
+                        {lead.interestedCourses?.slice(0, 2).map((course, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">{course}</Badge>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => window.location.href = `tel:${lead.phone}`}>
+                          <Phone className="h-4 w-4 mr-1" /> {t('admin:dashboard.call')}
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => window.location.href = `mailto:${lead.email}`}>
+                          <Mail className="h-4 w-4 mr-1" /> {t('admin:dashboard.email')}
+                        </Button>
+                        <Button variant="outline" size="sm" className="min-h-[40px]" onClick={() => setLocation(`/admin/leads?edit=${lead.id}`)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -535,17 +597,17 @@ export default function AdminDashboard() {
 
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
+                <div className="hidden md:block overflow-x-auto">
+                  <Table className="min-w-[700px]">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice</TableHead>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Course</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t('admin:dashboard.invoice')}</TableHead>
+                      <TableHead>{t('admin:dashboard.student')}</TableHead>
+                      <TableHead>{t('admin:dashboard.course')}</TableHead>
+                      <TableHead>{t('admin:dashboard.amount')}</TableHead>
+                      <TableHead>{t('admin:dashboard.status')}</TableHead>
+                      <TableHead>{t('admin:dashboard.dueDate')}</TableHead>
+                      <TableHead>{t('admin:dashboard.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -559,7 +621,7 @@ export default function AdminDashboard() {
                         <TableCell>${invoice.amount}</TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(invoice.status)}>
-                            {invoice.status}
+                            {invoice.status || 'N/A'}
                           </Badge>
                         </TableCell>
                         <TableCell>{invoice.dueDate}</TableCell>
@@ -587,6 +649,32 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
+                <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                  {invoices?.map((invoice) => (
+                    <div key={invoice.id} className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{invoice.invoiceNumber}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{invoice.studentName}</div>
+                        </div>
+                        <Badge className={getStatusColor(invoice.status)}>{invoice.status || 'N/A'}</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <div>{t('admin:dashboard.course')}: {invoice.courseName}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">${invoice.amount}</div>
+                        <div>{t('admin:dashboard.dueDate')}: {invoice.dueDate}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/financial?view=${invoice.id}`)}>
+                          <Eye className="h-4 w-4 mr-1" /> {t('admin:dashboard.view')}
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/financial?edit=${invoice.id}`)}>
+                          <Edit className="h-4 w-4 mr-1" /> {t('admin:dashboard.edit')}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
