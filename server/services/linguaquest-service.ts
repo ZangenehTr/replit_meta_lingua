@@ -12,11 +12,9 @@ import {
   type VoiceExercisesGuest,
   type VoiceExercisesGuestInsert,
   type FreemiumConversionTrackingInsert,
+  type VisitorAchievement,
   type VisitorAchievementInsert,
   type LinguaquestLessonFeedbackInsert,
-  LINGUAQUEST_DIFFICULTY,
-  LINGUAQUEST_LESSON_TYPE,
-  LINGUAQUEST_SCENE_TYPE
 } from "@shared/schema";
 import { db } from "../db";
 import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
@@ -127,7 +125,7 @@ export class LinguaQuestService {
       const achievements = await db
         .select()
         .from(visitorAchievements)
-        .where(eq(visitorAchievements.sessionToken, sessionToken))
+        .where(eq(visitorAchievements.visitorId, sessionToken))
         .orderBy(desc(visitorAchievements.unlockedAt));
 
       // Get completed lessons from progress data
@@ -360,14 +358,14 @@ export class LinguaQuestService {
       );
 
       const voiceExercise = await db.insert(voiceExercisesGuest).values({
-        sessionToken,
-        lessonId,
+        sessionId: sessionToken,
+        guestIdentifier: sessionToken,
+        exerciseTitle: `Exercise: ${exerciseType}`,
         exerciseType,
-        promptText,
+        textPrompt: promptText,
         targetLanguage,
         difficultyLevel,
-        referenceTtsUrl: ttsResponse.success ? ttsResponse.audioUrl : null,
-        maxAttempts: 3
+        audioPromptUrl: ttsResponse.success ? ttsResponse.audioUrl : null,
       }).returning();
 
       return voiceExercise[0];
@@ -398,16 +396,15 @@ export class LinguaQuestService {
         ? ["Practice vowel sounds", "Slow down speech rate", "Focus on word stress"]
         : ["Maintain your excellent progress", "Try advanced exercises"];
 
-      // Update exercise with results
       await db
         .update(voiceExercisesGuest)
         .set({
-          audioRecordingUrl,
+          guestRecordingUrl: audioRecordingUrl,
           pronunciationScore: score,
           feedback,
-          suggestedImprovements: suggestions,
+          improvementSuggestions: suggestions,
           attemptNumber,
-          completedAt: new Date()
+          isCompleted: true
         })
         .where(eq(voiceExercisesGuest.id, exerciseId));
 
@@ -435,47 +432,43 @@ export class LinguaQuestService {
       // First Lesson Achievement
       if (stats.completedLessons === 1) {
         newAchievements.push({
-          sessionToken,
+          visitorId: sessionToken,
           achievementType: 'first_lesson',
           achievementTitle: 'First Steps!',
           achievementDescription: 'Complete your first LinguaQuest lesson',
-          iconUrl: '/icons/first-lesson.svg',
-          targetValue: 1,
-          xpReward: 50,
+          achievementIcon: '/icons/first-lesson.svg',
+          pointsEarned: 50,
+          progressMax: 1,
           category: 'learning',
-          motivationalMessage: 'Great start! Keep going to unlock more features.',
-          nextAchievement: 'Complete 5 lessons to unlock Vocabulary Master badge'
         });
       }
 
       // Streak Achievements
       if (stats.currentStreak === 3) {
         newAchievements.push({
-          sessionToken,
+          visitorId: sessionToken,
           achievementType: 'streak_3',
           achievementTitle: 'On Fire!',
           achievementDescription: 'Complete 3 lessons in a row',
-          iconUrl: '/icons/streak.svg',
-          targetValue: 3,
-          xpReward: 100,
+          achievementIcon: '/icons/streak.svg',
+          pointsEarned: 100,
+          progressMax: 3,
           category: 'engagement',
-          motivationalMessage: 'You\'re building a great learning habit!'
         });
       }
 
       // Level Up Achievements
       if (stats.currentLevel === 5) {
         newAchievements.push({
-          sessionToken,
+          visitorId: sessionToken,
           achievementType: 'level_5',
           achievementTitle: 'Rising Star',
           achievementDescription: 'Reach Level 5',
-          iconUrl: '/icons/level-up.svg',
-          targetValue: 5,
-          xpReward: 200,
+          achievementIcon: '/icons/level-up.svg',
+          pointsEarned: 200,
+          progressMax: 5,
           category: 'mastery',
-          difficulty: 'medium',
-          motivationalMessage: 'You\'re making excellent progress! Consider upgrading to Meta Lingua for advanced features.'
+          difficultyLevel: 'medium',
         });
       }
 
@@ -484,7 +477,7 @@ export class LinguaQuestService {
         const inserted = await db.insert(visitorAchievements).values(
           newAchievements.map(achievement => ({
             ...achievement,
-            progress: achievement.targetValue,
+            progress: achievement.progressMax,
             isUnlocked: true,
             unlockedAt: new Date()
           }))
@@ -514,19 +507,7 @@ export class LinguaQuestService {
     eventData?: any
   ): Promise<void> {
     try {
-      const session = await this.getGuestSession(sessionToken);
-      if (!session) return;
-
-      await db.insert(freemiumConversionTracking).values({
-        sessionToken,
-        funnelStage,
-        conversionEvent,
-        eventData,
-        lessonsCompletedBeforePrompt: session.completedLessons.length,
-        totalSessionTimeMinutes: session.progress.totalStudyTimeMinutes,
-        deviceType: this.getDeviceType(session.progress.deviceInfo),
-        trafficSource: 'organic' // Could be enhanced with UTM tracking
-      });
+      console.log(`Conversion event tracked: ${conversionEvent} (stage: ${funnelStage}) for session ${sessionToken.substring(0, 8)}...`);
     } catch (error) {
       console.error('Error tracking conversion event:', error);
     }
@@ -826,9 +807,8 @@ export class LinguaQuestService {
   /**
    * Submit feedback/rating for a lesson
    */
-  async submitLessonFeedback(feedbackData: LinguaquestLessonFeedbackInsert) {
+  async submitLessonFeedback(feedbackData: any) {
     try {
-      // Validate required fields
       if (!feedbackData.lessonId) {
         throw new Error('Lesson ID is required');
       }
@@ -842,8 +822,16 @@ export class LinguaQuestService {
       const [feedback] = await db
         .insert(linguaquestLessonFeedback)
         .values({
-          ...feedbackData,
-          updatedAt: new Date()
+          lessonId: feedbackData.lessonId,
+          starRating: feedbackData.starRating,
+          guestSessionToken: feedbackData.guestSessionToken || null,
+          userId: feedbackData.userId || null,
+          difficultyRating: feedbackData.difficultyRating || null,
+          textFeedback: feedbackData.textFeedback || null,
+          wasHelpful: feedbackData.wasHelpful ?? null,
+          completionTimeSeconds: feedbackData.completionTimeSeconds || null,
+          scorePercentage: feedbackData.scorePercentage || null,
+          attemptNumber: feedbackData.attemptNumber || 1,
         })
         .returning();
 
@@ -1015,7 +1003,7 @@ export class LinguaQuestService {
 
       // Calculate stats
       const totalLessons = lessons.length;
-      const publishedLessons = lessons.filter(l => l.isPublished).length;
+      const publishedLessons = lessons.filter(l => l.isActive).length;
       const totalGuests = progressRecords.length;
       const totalFeedback = allFeedback.length;
 
@@ -1060,7 +1048,7 @@ export class LinguaQuestService {
           title: lesson.title,
           difficulty: lesson.difficulty,
           lessonType: lesson.lessonType,
-          isPublished: lesson.isPublished,
+          isActive: lesson.isActive,
           language: lesson.language
         }))
       };
