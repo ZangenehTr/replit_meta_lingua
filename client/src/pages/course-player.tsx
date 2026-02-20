@@ -237,8 +237,8 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
 
   if (!currentLesson || course.lessons.length === 0) {
     return (
-      <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
-        <div className="border-b p-2 sm:p-3 md:p-4">
+      <div className={`min-h-screen bg-background flex flex-col ${isRTL ? 'rtl' : 'ltr'}`}>
+        <div className="border-b p-2 sm:p-3 md:p-4 flex-shrink-0">
           <div className="flex items-center justify-between max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <BackButton 
@@ -246,17 +246,17 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                 label={t('coursePlayer:backToCourse')}
               />
               <div className="min-w-0">
-                <h1 className="text-base sm:text-lg md:text-xl font-bold truncate">{course.title}</h1>
+                <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold truncate">{course.title}</h1>
               </div>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto p-3 sm:p-6 md:p-8 px-3 sm:px-6 lg:px-8">
+        <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 lg:p-8 px-3 sm:px-6 lg:px-8">
           <Card>
-            <CardContent className="p-6 sm:p-8 md:p-12 text-center">
-              <BookOpen className="h-12 sm:h-14 md:h-16 w-12 sm:w-14 md:w-16 mx-auto mb-3 sm:mb-4 text-gray-400" />
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">{t('coursePlayer:noLessons')}</h2>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <CardContent className="p-4 sm:p-6 md:p-8 lg:p-12 text-center">
+              <BookOpen className="h-10 sm:h-12 md:h-14 lg:h-16 w-10 sm:w-12 md:w-14 lg:w-16 mx-auto mb-3 sm:mb-4 text-gray-400" />
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold mb-2">{t('coursePlayer:noLessons')}</h2>
+              <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
                 {t('coursePlayer:noLessonsDescription')}
               </p>
             </CardContent>
@@ -267,33 +267,33 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   }
 
   return (
-    <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-background flex flex-col ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
-      <div className="border-b p-2 sm:p-3 md:p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 gap-3 sm:gap-0">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+      <div className="border-b p-2 sm:p-3 md:p-4 flex-shrink-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <BackButton 
               href="/dashboard" 
               label={t('coursePlayer:backToCourse')}
             />
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg md:text-xl font-bold truncate">{course.title}</h1>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold truncate">{course.title}</h1>
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {currentLesson.title}
               </p>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm flex-shrink-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center text-xs sm:text-sm flex-shrink-0 w-full sm:w-auto">
             <Badge variant="secondary" className="whitespace-nowrap w-fit">
               {course.completedLessons} / {course.totalLessons} {t('coursePlayer:lessons')}
             </Badge>
-            <Progress value={course.progress} className="w-full sm:w-32" />
+            <Progress value={course.progress} className="w-full sm:w-32 md:w-40" />
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 px-3 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 lg:p-8 px-3 sm:px-6 lg:px-8 overflow-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
           {/* Video Player */}
           <div className="lg:col-span-2 space-y-4">
             <Card>
@@ -309,13 +309,13 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                   />
                   
                   {/* Video Controls */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <div className="space-y-2">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-4">
+                    <div className="space-y-2 sm:space-y-3">
                       {/* Progress Bar */}
                       <div className="relative">
                         <Progress 
                           value={(currentTime / duration) * 100} 
-                          className="h-2 cursor-pointer"
+                          className="h-1 sm:h-2 cursor-pointer"
                           onClick={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const percent = (e.clientX - rect.left) / rect.width;
@@ -325,7 +325,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                         {bookmarks.map((bookmark, index) => (
                           <div
                             key={index}
-                            className="absolute top-0 w-1 h-2 bg-yellow-400 cursor-pointer"
+                            className="absolute top-0 w-1 h-1 sm:h-2 bg-yellow-400 cursor-pointer"
                             style={{ left: `${(bookmark / duration) * 100}%` }}
                             onClick={() => handleSeek(bookmark)}
                           />
@@ -333,43 +333,43 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                       </div>
                       
                       {/* Control Buttons */}
-                      <div className="flex items-center justify-between text-white">
-                        <div className="flex items-center space-x-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-white text-xs sm:text-sm">
+                        <div className="flex items-center gap-1 sm:gap-4 flex-wrap">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => navigateLesson('prev')}
-                            className="text-white hover:bg-white/20"
+                            className="text-white hover:bg-white/20 h-7 sm:h-8 w-7 sm:w-8 p-0"
                           >
-                            <SkipBack className="h-4 w-4" />
+                            <SkipBack className="h-3 sm:h-4 w-3 sm:w-4" />
                           </Button>
                           
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={handlePlayPause}
-                            className="text-white hover:bg-white/20"
+                            className="text-white hover:bg-white/20 h-7 sm:h-8 w-7 sm:w-8 p-0"
                           >
-                            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                            {isPlaying ? <Pause className="h-3 sm:h-4 w-3 sm:w-4" /> : <Play className="h-3 sm:h-4 w-3 sm:w-4" />}
                           </Button>
                           
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => navigateLesson('next')}
-                            className="text-white hover:bg-white/20"
+                            className="text-white hover:bg-white/20 h-7 sm:h-8 w-7 sm:w-8 p-0"
                           >
-                            <SkipForward className="h-4 w-4" />
+                            <SkipForward className="h-3 sm:h-4 w-3 sm:w-4" />
                           </Button>
                           
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={toggleMute}
-                              className="text-white hover:bg-white/20"
+                              className="text-white hover:bg-white/20 h-7 sm:h-8 w-7 sm:w-8 p-0"
                             >
-                              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                              {isMuted ? <VolumeX className="h-3 sm:h-4 w-3 sm:w-4" /> : <Volume2 className="h-3 sm:h-4 w-3 sm:w-4" />}
                             </Button>
                             <input
                               type="range"
@@ -378,20 +378,20 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                               step="0.1"
                               value={volume}
                               onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                              className="w-20"
+                              className="w-12 sm:w-20 h-1"
                             />
                           </div>
                           
-                          <span className="text-sm">
+                          <span className="text-xs sm:text-sm">
                             {formatTime(currentTime)} / {formatTime(duration)}
                           </span>
                         </div>
                         
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <select
                             value={playbackSpeed}
                             onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-                            className="bg-black/50 text-white border border-white/20 rounded px-2 py-1 text-sm"
+                            className="bg-black/50 text-white border border-white/20 rounded px-1 sm:px-2 py-0.5 sm:py-1 text-xs sm:text-sm h-7 sm:h-8"
                           >
                             <option value={0.5}>0.5x</option>
                             <option value={0.75}>0.75x</option>
@@ -405,17 +405,17 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                             variant="ghost"
                             size="sm"
                             onClick={addBookmark}
-                            className="text-white hover:bg-white/20"
+                            className="text-white hover:bg-white/20 h-7 sm:h-8 w-7 sm:w-8 p-0"
                           >
-                            <Bookmark className="h-4 w-4" />
+                            <Bookmark className="h-3 sm:h-4 w-3 sm:w-4" />
                           </Button>
                           
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-white hover:bg-white/20"
+                            className="text-white hover:bg-white/20 h-7 sm:h-8 w-7 sm:w-8 p-0"
                           >
-                            <Maximize className="h-4 w-4" />
+                            <Maximize className="h-3 sm:h-4 w-3 sm:w-4" />
                           </Button>
                         </div>
                       </div>
@@ -544,13 +544,13 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
           </div>
 
           {/* Course Sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <Card>
-              <CardHeader className="p-3 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">{t('coursePlayer:courseLessons')}</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base md:text-lg">{t('coursePlayer:courseLessons')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="max-h-96 overflow-y-auto">
+                <div className="max-h-64 sm:max-h-96 overflow-y-auto">
                   {course.lessons.map((lesson, index) => (
                     <div
                       key={lesson.id}
@@ -559,26 +559,26 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                       }`}
                       onClick={() => setCurrentLessonId(lesson.id)}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="flex items-center justify-between gap-1 sm:gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
                           <div className="flex-shrink-0">
                             {lesson.isCompleted ? (
-                              <CheckCircle className="h-4 sm:h-5 w-4 sm:w-5 text-green-600" />
+                              <CheckCircle className="h-3 sm:h-4 md:h-5 w-3 sm:w-4 md:w-5 text-green-600 flex-shrink-0" />
                             ) : (
-                              <Circle className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                              <Circle className="h-3 sm:h-4 md:h-5 w-3 sm:w-4 md:w-5 text-gray-400 flex-shrink-0" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs sm:text-sm font-medium truncate">
                               {index + 1}. {lesson.title}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 truncate">
                               {Math.floor(lesson.duration / 60)} {t('coursePlayer:minutes')}
                             </p>
                           </div>
                         </div>
                         {lesson.isPreview && (
-                          <Badge variant="secondary" className="text-xs flex-shrink-0">
+                          <Badge variant="secondary" className="text-xs flex-shrink-0 whitespace-nowrap">
                             {t('coursePlayer:preview')}
                           </Badge>
                         )}
@@ -590,29 +590,29 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>{t('coursePlayer:courseInfo')}</CardTitle>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-sm sm:text-base md:text-lg">{t('coursePlayer:courseInfo')}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">{t('coursePlayer:instructor')}:</span>
-                  <span className="text-sm font-medium">{course.instructor}</span>
+              <CardContent className="p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3">
+                <div className="flex justify-between gap-2 text-xs sm:text-sm">
+                  <span className="text-gray-600 flex-shrink-0">{t('coursePlayer:instructor')}:</span>
+                  <span className="font-medium text-right">{course.instructor}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">{t('coursePlayer:level')}:</span>
-                  <Badge variant="outline">{course.level}</Badge>
+                <div className="flex justify-between gap-2 text-xs sm:text-sm">
+                  <span className="text-gray-600 flex-shrink-0">{t('coursePlayer:level')}:</span>
+                  <Badge variant="outline" className="text-xs">{course.level}</Badge>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">{t('coursePlayer:language')}:</span>
-                  <span className="text-sm">{course.language}</span>
+                <div className="flex justify-between gap-2 text-xs sm:text-sm">
+                  <span className="text-gray-600 flex-shrink-0">{t('coursePlayer:language')}:</span>
+                  <span className="text-right">{course.language}</span>
                 </div>
-                <Separator />
+                <Separator className="my-2 sm:my-3" />
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span>{t('coursePlayer:progress')}:</span>
                     <span>{course.progress}%</span>
                   </div>
-                  <Progress value={course.progress} />
+                  <Progress value={course.progress} className="h-1 sm:h-2" />
                 </div>
               </CardContent>
             </Card>

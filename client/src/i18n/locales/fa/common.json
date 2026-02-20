@@ -64,7 +64,25 @@
     }
   },
   "filter": "فیلتر",
-  "actions": "عملیات",
+  "actions": {
+    "search": "جستجو",
+    "filter": "فیلتر",
+    "sort": "مرتب‌سازی",
+    "actions": "عملیات",
+    "edit": "ویرایش",
+    "view": "مشاهده",
+    "reschedule": "تغییر زمان‌بندی",
+    "enrollNow": "ثبت‌نام کنید",
+    "continueReading": "ادامه مطالعه",
+    "continueLearning": "ادامه یادگیری",
+    "buyMoreCredits": "خرید اعتبار بیشتر",
+    "getPersonalizedPlan": "دریافت برنامه مطالعاتی شخصی",
+    "viewAllTasks": "مشاهده همه وظایف",
+    "viewAllTutors": "مشاهده همه اساتید",
+    "testAudio": "تست صدا",
+    "call": "تماس",
+    "endCall": "پایان تماس"
+  },
   "visitorChat": {
     "title": "چت با پشتیبانی",
     "welcomeMessage": "سلام! چطور می‌توانیم به شما کمک کنیم؟",

@@ -506,7 +506,14 @@
   "ofGoal": "از هدف",
   "accuracy": "دقت",
   "skillsProgress": "پیشرفت مهارت‌ها",
-  "packages": "بسته‌ها",
+  "packages": {
+    "title": "بسته‌های جلسات",
+    "purchase": "خرید بسته",
+    "remaining": "باقی‌مانده",
+    "used": "استفاده شده",
+    "expired": "منقضی شده",
+    "active": "فعال"
+  },
   "reward": "جایزه",
   "home": "خانه",
   "today": "امروز",

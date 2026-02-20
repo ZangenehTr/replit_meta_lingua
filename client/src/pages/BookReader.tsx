@@ -400,20 +400,20 @@ export default function BookReader() {
 
   // Main PDF Reader view
   return (
-    <div className="min-h-screen bg-background" data-testid="book-reader">
+    <div className="min-h-screen bg-background flex flex-col" data-testid="book-reader">
       {/* Header - only show on non-fullscreen */}
-      <div className="border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+      <div className="border-b bg-background/95 backdrop-blur flex-shrink-0">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 md:py-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleBackNavigation}
                 data-testid="button-back"
-                className="text-xs sm:text-sm flex-shrink-0"
+                className="text-xs sm:text-sm flex-shrink-0 h-8 w-8 sm:h-9 sm:w-auto"
               >
-                <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
+                <ArrowLeft className="w-4 h-4 mr-0 sm:mr-2" />
                 <span className="hidden sm:inline">Back</span>
               </Button>
               <div className="min-w-0 flex-1">
@@ -425,9 +425,9 @@ export default function BookReader() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">
-              <span data-testid="text-reading-progress">
-                Page {readingProgress.page} of {readingProgress.total}
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-shrink-0">
+              <span data-testid="text-reading-progress" className="whitespace-nowrap">
+                Page {readingProgress.page}/{readingProgress.total}
               </span>
               {readingProgress.total > 0 && (
                 <span className="hidden sm:inline">
@@ -439,8 +439,8 @@ export default function BookReader() {
         </div>
       </div>
 
-      {/* PDF Reader */}
-      <div className="h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
+      {/* PDF Reader - flex-grow to fill remaining space */}
+      <div className="flex-1 min-h-0">
         <PDFReader
           pdfUrl={pdfUrl}
           bookId={parseInt(bookId || '0', 10)}
