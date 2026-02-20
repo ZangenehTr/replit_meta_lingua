@@ -94,7 +94,7 @@ export function AdminPlacementTest() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Placement test created successfully"
       });
       setShowCreateDialog(false);
@@ -104,7 +104,7 @@ export function AdminPlacementTest() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: error.message || "Failed to create placement test",
         variant: "destructive"
       });

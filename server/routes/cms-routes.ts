@@ -514,7 +514,50 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
     }
   });
   
-  // Note: Media upload will be handled by form-file-routes.ts
+  // Media file upload
+  const cmsUploadDir = 'uploads/cms-media';
+  const fsSync = require('fs');
+  if (!fsSync.existsSync(cmsUploadDir)) {
+    fsSync.mkdirSync(cmsUploadDir, { recursive: true });
+  }
+  const cmsMediaStorage = multer.diskStorage({
+    destination: (req: any, file: any, cb: any) => cb(null, cmsUploadDir),
+    filename: (req: any, file: any, cb: any) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+  const cmsUpload = multer({ storage: cmsMediaStorage });
+
+  app.post('/api/cms/media/upload', cmsUpload.single('file'), async (req: any, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      const { altText, description, uploadedBy } = req.body;
+      const fileTypeMap: Record<string, string> = {
+        'image/jpeg': 'image', 'image/jpg': 'image', 'image/png': 'image',
+        'image/gif': 'image', 'image/webp': 'image',
+        'video/mp4': 'video', 'video/webm': 'video', 'video/quicktime': 'video',
+        'application/pdf': 'document', 'application/msword': 'document',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'document'
+      };
+      const asset = await storage.createMediaAsset({
+        fileName: req.file.originalname,
+        fileType: fileTypeMap[req.file.mimetype] || 'other',
+        fileSize: req.file.size,
+        filePath: req.file.path,
+        mimeType: req.file.mimetype,
+        altText: altText || null,
+        description: description || null,
+        uploadedBy: uploadedBy ? parseInt(uploadedBy) : null
+      });
+      res.status(201).json({ message: 'File uploaded successfully', asset });
+    } catch (error) {
+      console.error('Error uploading media:', error);
+      res.status(500).json({ message: 'Failed to upload media' });
+    }
+  });
   
   // ============================================================================
   // ANALYTICS ENDPOINTS
@@ -765,6 +808,67 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
     }
   });
   
+  // Get courses for a curriculum category (public)
+  app.get('/api/cms/curriculum-categories/:id/courses', async (req: Request, res: Response) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      const { isActive } = req.query;
+      const courses = await storage.getCoursesByCategory(categoryId, {
+        isActive: isActive === 'false' ? false : isActive === 'true' ? true : undefined
+      });
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching courses by category:', error);
+      res.status(500).json({ message: 'Failed to fetch courses by category' });
+    }
+  });
+
+  // Reorder curriculum categories (admin only)
+  app.put('/api/cms/curriculum-categories/reorder', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { categoryOrders } = req.body;
+      if (!Array.isArray(categoryOrders)) {
+        return res.status(400).json({ message: 'categoryOrders must be an array' });
+      }
+      await storage.reorderCurriculumCategories(categoryOrders);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error reordering curriculum categories:', error);
+      res.status(500).json({ message: 'Failed to reorder curriculum categories' });
+    }
+  });
+
+  // Get page sections by page ID
+  app.get('/api/cms/pages/:id/sections', async (req: Request, res: Response) => {
+    try {
+      const pageId = parseInt(req.params.id);
+      const sections = await storage.getCmsPageSections(pageId);
+      res.json(sections);
+    } catch (error) {
+      console.error('Error fetching page sections:', error);
+      res.status(500).json({ message: 'Failed to fetch page sections' });
+    }
+  });
+
+  // Create page section under a page
+  app.post('/api/cms/pages/:id/sections', async (req: Request, res: Response) => {
+    try {
+      const pageId = parseInt(req.params.id);
+      const sectionData = insertCmsPageSectionSchema.parse({
+        ...req.body,
+        pageId
+      });
+      const section = await storage.createCmsPageSection(sectionData);
+      res.status(201).json(section);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid section data', errors: error.errors });
+      }
+      console.error('Error creating page section:', error);
+      res.status(500).json({ message: 'Failed to create page section' });
+    }
+  });
+
   // ============================================================================
   // GUEST LEADS ENDPOINTS
   // ============================================================================
@@ -787,11 +891,45 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
   // Get all guest leads (admin only)
   app.get('/api/cms/guest-leads', ...requireAdmin, async (req: Request, res: Response) => {
     try {
-      const leads = await storage.getGuestLeads();
+      const { status, source } = req.query;
+      const leads = await storage.getGuestLeads({
+        status: status as string | undefined,
+        source: source as string | undefined
+      });
       res.json(leads);
     } catch (error) {
       console.error('Error fetching guest leads:', error);
       res.status(500).json({ message: 'Failed to fetch guest leads' });
+    }
+  });
+
+  // Get single guest lead (admin only)
+  app.get('/api/cms/guest-leads/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      const lead = await storage.getGuestLead(leadId);
+      if (!lead) {
+        return res.status(404).json({ message: 'Lead not found' });
+      }
+      res.json(lead);
+    } catch (error) {
+      console.error('Error fetching guest lead:', error);
+      res.status(500).json({ message: 'Failed to fetch guest lead' });
+    }
+  });
+
+  // Update guest lead (admin only)
+  app.put('/api/cms/guest-leads/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      const lead = await storage.updateGuestLead(leadId, req.body);
+      if (!lead) {
+        return res.status(404).json({ message: 'Lead not found' });
+      }
+      res.json(lead);
+    } catch (error) {
+      console.error('Error updating guest lead:', error);
+      res.status(500).json({ message: 'Failed to update guest lead' });
     }
   });
   

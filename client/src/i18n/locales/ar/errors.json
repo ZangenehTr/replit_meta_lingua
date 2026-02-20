@@ -34,6 +34,10 @@
     "invalidResponse": "استجابة غير صحيحة من الخادم",
     "dataLoadFailed": "فشل تحميل البيانات",
     "saveDataFailed": "فشل حفظ البيانات",
-    "deleteDataFailed": "فشل حذف البيانات"
+    "deleteDataFailed": "فشل حذف البيانات",
+    "failedToJoinSession": "فشل الانضمام إلى الجلسة",
+    "loadingSessions": "خطأ في تحميل الجلسات",
+    "contactFailed": "فشل الاتصال",
+    "unableToStartCommunication": "تعذر بدء الاتصال مع {{name}}. يرجى المحاولة مرة أخرى."
   }
 }

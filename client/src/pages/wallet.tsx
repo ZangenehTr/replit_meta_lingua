@@ -7,23 +7,23 @@ import { BackButton } from "@/components/ui/back-button";
 
 export default function WalletPage() {
   const { t } = useTranslation(['common']);
-  const { currentLanguage, isRTL } = useLanguage();
+  const { isRTL } = useLanguage();
 
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
-      <div className="flex">
+      <div className="flex flex-col md:flex-row">
         <Sidebar />
         
-        <main className={`flex-1 ${isRTL ? 'mr-64' : 'ml-64'} p-6`}>
+        <main className={`flex-1 ${isRTL ? 'mr-0 md:mr-64' : 'ml-0 md:ml-64'} px-4 sm:px-6 lg:px-8 py-4 sm:py-6`}>
           <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <div className="flex items-center gap-4 mb-4">
                 <BackButton href="/dashboard" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 {t('common:wallet.title')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-2">
                 {t('common:wallet.subtitle')}
               </p>
             </div>

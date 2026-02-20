@@ -148,25 +148,25 @@ export default function LevelAssessment() {
   if (isCompleted) {
     return (
       <AppLayout>
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <Card className="text-center">
             <CardHeader>
               <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <Trophy className="h-8 w-8 text-green-600" />
               </div>
-              <CardTitle className="text-2xl">Assessment Complete!</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl sm:text-2xl">Assessment Complete!</CardTitle>
+              <CardDescription className="text-sm sm:text-base">
                 Here are your English proficiency results
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Your Score</p>
-                  <p className="text-3xl font-bold text-blue-600">{Math.round(score)}%</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Your Score</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">{Math.round(score)}%</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600">English Level</p>
+                  <p className="text-xs sm:text-sm text-gray-600">English Level</p>
                   <Badge className={getLevelColor(level)} variant="secondary">
                     {level}
                   </Badge>
@@ -174,29 +174,29 @@ export default function LevelAssessment() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">Level Description</p>
+                <p className="text-xs sm:text-sm text-gray-600">Level Description</p>
                 <div className="text-left space-y-2">
                   {level === 'A1' && (
-                    <p className="text-sm">You can understand basic phrases and express simple needs. Great start!</p>
+                    <p className="text-xs sm:text-sm">You can understand basic phrases and express simple needs. Great start!</p>
                   )}
                   {level === 'A2' && (
-                    <p className="text-sm">You can communicate in simple tasks and describe familiar topics.</p>
+                    <p className="text-xs sm:text-sm">You can communicate in simple tasks and describe familiar topics.</p>
                   )}
                   {level === 'B1' && (
-                    <p className="text-sm">You can handle most situations and express opinions on familiar topics.</p>
+                    <p className="text-xs sm:text-sm">You can handle most situations and express opinions on familiar topics.</p>
                   )}
                   {level === 'B2' && (
-                    <p className="text-sm">You can interact fluently and understand complex texts.</p>
+                    <p className="text-xs sm:text-sm">You can interact fluently and understand complex texts.</p>
                   )}
                   {level === 'C1' && (
-                    <p className="text-sm">You can express yourself fluently and understand virtually everything.</p>
+                    <p className="text-xs sm:text-sm">You can express yourself fluently and understand virtually everything.</p>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-3 justify-center">
-                <Button>View Recommended Courses</Button>
-                <Button variant="outline">Retake Test</Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button className="w-full sm:w-auto">View Recommended Courses</Button>
+                <Button variant="outline" className="w-full sm:w-auto">Retake Test</Button>
               </div>
             </CardContent>
           </Card>
@@ -207,29 +207,29 @@ export default function LevelAssessment() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Target className="h-5 w-5 flex-shrink-0" />
                   English Level Assessment
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs sm:text-sm">
                   Question {currentQuestion + 1} of {questions.length}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-mono">{formatTime(timeLeft)}</span>
+                <Clock className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-mono">{formatTime(timeLeft)}</span>
               </div>
             </div>
             <Progress value={((currentQuestion) / questions.length) * 100} className="h-2" />
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">
+              <h3 className="text-base sm:text-lg font-medium">
                 {questions[currentQuestion].text}
               </h3>
               
@@ -237,7 +237,7 @@ export default function LevelAssessment() {
                 {questions[currentQuestion].options.map((option, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                    <Label htmlFor={`option-${index}`} className="cursor-pointer">
+                    <Label htmlFor={`option-${index}`} className="cursor-pointer text-xs sm:text-sm">
                       {option}
                     </Label>
                   </div>
@@ -245,11 +245,12 @@ export default function LevelAssessment() {
               </RadioGroup>
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row justify-between gap-3">
               <Button 
                 variant="outline" 
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
+                className="w-full sm:w-auto"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Previous
@@ -258,6 +259,7 @@ export default function LevelAssessment() {
               <Button 
                 onClick={handleNext}
                 disabled={selectedAnswer === null}
+                className="w-full sm:w-auto"
               >
                 {currentQuestion === questions.length - 1 ? 'Complete' : 'Next'}
                 <ArrowRight className="h-4 w-4 ml-2" />

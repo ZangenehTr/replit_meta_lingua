@@ -467,7 +467,6 @@ export default function StudentDashboardMobile() {
                       subtitle={`${session.date} at ${session.time}`}
                       leftIcon={<Video className="w-5 h-5" />}
                       rightContent={<ChevronRight className="w-5 h-5" />}
-                      onClick={() => {}}
                     />
                   </Link>
                 ))}

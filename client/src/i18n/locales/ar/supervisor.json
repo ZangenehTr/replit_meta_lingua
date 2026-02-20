@@ -9,7 +9,14 @@
     "totalObservations": "إجمالي الملاحظات",
     "pendingEvaluations": "التقييمات المعلقة",
     "qualityScore": "نقاط الجودة",
-    "complianceRate": "معدل الامتثال"
+    "complianceRate": "معدل الامتثال",
+    "overview": "نظرة عامة",
+    "teachers": "المعلمون",
+    "observations": "الملاحظات",
+    "quality": "ضمان الجودة",
+    "reports": "التقارير",
+    "analytics": "التحليلات",
+    "compliance": "الامتثال"
   },
   "observations": {
     "title": "ملاحظات الفصل",
@@ -21,7 +28,10 @@
     "observationDate": "تاريخ الملاحظة",
     "status": "الحالة",
     "feedback": "التعليق",
-    "rating": "التقييم"
+    "rating": "التقييم",
+    "inProgress": "قيد التنفيذ",
+    "viewDetails": "عرض التفاصيل",
+    "addFeedback": "إضافة تعليق"
   },
   "evaluations": {
     "title": "تقييمات المعلمين",
@@ -42,5 +52,44 @@
     "monitoring": "المراقبة",
     "reporting": "الإبلاغ",
     "training": "التدريب"
+  },
+  "stats": {
+    "totalTeachers": "إجمالي المعلمين",
+    "activeObservations": "الملاحظات النشطة",
+    "completionRate": "معدل الإنجاز",
+    "qualityScore": "نقاط الجودة",
+    "pendingObservations": "الملاحظات المعلقة",
+    "thisMonth": "هذا الشهر",
+    "complianceRate": "معدل الامتثال",
+    "averageRating": "متوسط التقييم"
+  },
+  "teachers": {
+    "title": "إدارة المعلمين",
+    "performance": "الأداء",
+    "viewProfile": "عرض الملف الشخصي",
+    "scheduleObservation": "جدولة ملاحظة",
+    "sendFeedback": "إرسال تعليق",
+    "viewReports": "عرض التقارير"
+  },
+  "quality": {
+    "title": "ضمان الجودة",
+    "standards": "معايير التدريس",
+    "compliance": "فحص الامتثال",
+    "improvement": "خطط التحسين",
+    "training": "احتياجات التدريب"
+  },
+  "reports": {
+    "title": "تقارير الأداء",
+    "generate": "إنشاء تقرير",
+    "teacherPerformance": "أداء المعلمين",
+    "institutionalMetrics": "المقاييس المؤسسية",
+    "export": "تصدير البيانات"
+  },
+  "teacherManagement": {
+    "title": "إدارة المعلمين",
+    "totalTeachers": "إجمالي المعلمين",
+    "activeTeachers": "المعلمون النشطون",
+    "viewProfile": "عرض الملف الشخصي",
+    "scheduleObservation": "جدولة ملاحظة"
   }
 }

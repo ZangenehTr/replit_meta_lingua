@@ -48,7 +48,7 @@ export default function FontManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cms/fonts'] });
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Font uploaded successfully",
       });
       setSelectedFile(null);
@@ -56,7 +56,7 @@ export default function FontManagementPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: error.message,
         variant: "destructive",
       });
@@ -74,13 +74,13 @@ export default function FontManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cms/fonts'] });
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Font status updated",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: "Failed to update font status",
         variant: "destructive",
       });
@@ -97,13 +97,13 @@ export default function FontManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cms/fonts'] });
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Font deleted successfully",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: "Failed to delete font",
         variant: "destructive",
       });

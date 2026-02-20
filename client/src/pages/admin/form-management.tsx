@@ -67,7 +67,7 @@ export default function FormManagement() {
       category: "",
       isActive: true,
       fields: [],
-      submitButtonTextEn: "Submit",
+      submitButtonTextEn: t('common:submit'),
       submitButtonTextFa: "ارسال",
       submitButtonTextAr: "إرسال",
     }
@@ -100,7 +100,7 @@ export default function FormManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Form created successfully"
       });
       setCreateDialogOpen(false);
@@ -110,7 +110,7 @@ export default function FormManagement() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: error.message || "Failed to create form",
         variant: "destructive"
       });
@@ -127,7 +127,7 @@ export default function FormManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Form updated successfully"
       });
       setEditDialogOpen(false);
@@ -138,7 +138,7 @@ export default function FormManagement() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: error.message || "Failed to update form",
         variant: "destructive"
       });
@@ -154,14 +154,14 @@ export default function FormManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Form deleted successfully"
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/forms'] });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: error.message || "Failed to delete form",
         variant: "destructive"
       });
@@ -178,7 +178,7 @@ export default function FormManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Submission status updated"
       });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/forms/${selectedForm?.id}/submissions`] });
@@ -186,7 +186,7 @@ export default function FormManagement() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: error.message || "Failed to update submission",
         variant: "destructive"
       });
@@ -216,7 +216,7 @@ export default function FormManagement() {
       category: formItem.category || "",
       isActive: formItem.isActive ?? true,
       fields: formItem.fields || [],
-      submitButtonTextEn: formItem.submitButtonTextEn || "Submit",
+      submitButtonTextEn: formItem.submitButtonTextEn || t('common:submit'),
       submitButtonTextFa: formItem.submitButtonTextFa || "ارسال",
       submitButtonTextAr: formItem.submitButtonTextAr || "إرسال",
     });
@@ -234,7 +234,7 @@ export default function FormManagement() {
       category: formItem.category,
       isActive: false,
       fields: formItem.fields || [],
-      submitButtonTextEn: formItem.submitButtonTextEn || "Submit",
+      submitButtonTextEn: formItem.submitButtonTextEn || t('common:submit'),
       submitButtonTextFa: formItem.submitButtonTextFa || "ارسال",
       submitButtonTextAr: formItem.submitButtonTextAr || "إرسال",
     };

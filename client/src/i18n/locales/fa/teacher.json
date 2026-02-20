@@ -9,7 +9,9 @@
     "prepareMaterials": "آماده‌سازی مطالب",
     "takeAttendance": "حضور و غیاب",
     "assignHomework": "تعیین تکلیف",
-    "viewStudents": "مشاهده دانشجویان"
+    "viewStudents": "مشاهده دانشجویان",
+    "active": "کلاس‌های فعال",
+    "completed": "تکمیل شده"
   },
   "assignments": {
     "title": "مدیریت تکالیف",
@@ -20,7 +22,10 @@
     "dueDate": "مهلت تحویل",
     "submissions": "تحویل‌ها",
     "grade": "نمره",
-    "feedback": "بازخورد"
+    "feedback": "بازخورد",
+    "subtitle": "ایجاد و مدیریت تکالیف برای دانش‌آموزان شما",
+    "submitted": "ارسال شده",
+    "notSubmitted": "ارسال نشده"
   },
   "students": {
     "title": "دانشجویان من",
@@ -104,7 +109,12 @@
     "acknowledged": "تایید شده",
     "viewObservations": "مشاهده بازرسی‌ها",
     "feedback": "بازخورد",
-    "score": "امتیاز"
+    "score": "امتیاز",
+    "subtitle": "مشاهده و پاسخ به گزارش‌های ارزیابی تدریس شما",
+    "pending": "در انتظار",
+    "viewDetails": "مشاهده جزئیات",
+    "acknowledge": "تأیید",
+    "respond": "پاسخ"
   },
   "overview": "نمای کلی",
   "upcomingSessions": "جلسات آینده",
@@ -176,5 +186,29 @@
   "noStudentsFound": "دانش‌آموزی یافت نشد",
   "myStudents": "دانش‌آموزان من",
   "totalStudents": "کل دانش‌آموزان",
-  "trackStudentsProgress": "پیگیری پیشرفت و عملکرد دانش‌آموزان"
+  "trackStudentsProgress": "پیگیری پیشرفت و عملکرد دانش‌آموزان",
+  "stats": {
+    "completedLessons": "درس‌های تکمیل شده",
+    "totalStudents": "مجموع دانش‌آموزان",
+    "averageRating": "میانگین امتیاز",
+    "monthlyEarnings": "درآمد ماهانه",
+    "upcomingSessions": "جلسات آینده",
+    "pendingAssignments": "تکالیف در انتظار",
+    "activeStudents": "دانش‌آموزان فعال",
+    "thisWeek": "این هفته"
+  },
+  "availability": {
+    "title": "دسترسی ماهانه",
+    "subtitle": "بازه‌های زمانی در دسترس خود را برای تخصیص کلاس توسط مدیران تنظیم کنید",
+    "selectDays": "انتخاب روزها",
+    "timeRange": "بازه زمانی",
+    "save": "ذخیره دسترسی",
+    "updated": "دسترسی با موفقیت به‌روزرسانی شد"
+  },
+  "noClassesToday": "کلاسی برای امروز برنامه‌ریزی نشده است",
+  "noRecentActivity": "فعالیت اخیری وجود ندارد",
+  "myClasses": "کلاس‌های من",
+  "classesAssignedByAdmin": "کلاس‌های تخصیص داده شده توسط مدیران",
+  "activeClasses": "کلاس‌های فعال",
+  "completedClasses": "تکمیل شده"
 }

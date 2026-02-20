@@ -220,23 +220,23 @@ export default function AIPracticePage() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">AI Conversation Practice</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Conversation Practice</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
               Practice your English conversation skills with our AI assistant
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="flex items-center gap-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <Badge variant="outline" className="flex items-center gap-1 text-xs sm:text-sm">
               <Target className="h-3 w-3" />
-              Level: {settings.level}
+              <span className="hidden sm:inline">Level:</span> {settings.level}
             </Badge>
-            <Badge variant="outline" className="flex items-center gap-1">
+            <Badge variant="outline" className="flex items-center gap-1 text-xs sm:text-sm">
               <MessageSquare className="h-3 w-3" />
-              Topic: {settings.topic}
+              <span className="hidden sm:inline">Topic:</span> {settings.topic}
             </Badge>
           </div>
         </div>
@@ -249,10 +249,10 @@ export default function AIPracticePage() {
 
           <TabsContent value="chat" className="space-y-4">
             {/* Conversation Area */}
-            <Card className="h-96">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
+            <Card className="h-96 sm:h-[500px]">
+              <CardHeader className="pb-2 sm:pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                     <Bot className="h-5 w-5" />
                     AI Conversation
                   </CardTitle>
@@ -262,40 +262,41 @@ export default function AIPracticePage() {
                       size="sm"
                       onClick={clearConversation}
                       disabled={conversation.length === 0}
+                      className="text-xs sm:text-sm"
                     >
                       <RotateCcw className="h-4 w-4" />
-                      Clear
+                      <span className="hidden sm:inline ml-1">Clear</span>
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4 h-64 overflow-y-auto">
+              <CardContent className="p-3 sm:p-6">
+                <div className="space-y-3 sm:space-y-4 h-60 sm:h-80 overflow-y-auto">
                   {conversation.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
-                      <Bot className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                      <p>Start your conversation by typing a message or recording audio</p>
+                      <Bot className="h-6 sm:h-8 w-6 sm:w-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-xs sm:text-sm">Start your conversation by typing a message or recording audio</p>
                     </div>
                   ) : (
                     conversation.map((msg) => (
                       <div
                         key={msg.id}
-                        className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex gap-2 sm:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`flex gap-2 max-w-[70%] ${
+                          className={`flex gap-2 max-w-[85%] sm:max-w-[70%] ${
                             msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                           }`}
                         >
                           <div className="flex-shrink-0">
                             {msg.role === 'user' ? (
-                              <User className="h-6 w-6 text-blue-600" />
+                              <User className="h-5 sm:h-6 w-5 sm:w-6 text-blue-600" />
                             ) : (
-                              <Bot className="h-6 w-6 text-green-600" />
+                              <Bot className="h-5 sm:h-6 w-5 sm:w-6 text-green-600" />
                             )}
                           </div>
                           <div
-                            className={`px-4 py-2 rounded-lg ${
+                            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm ${
                               msg.role === 'user'
                                 ? 'bg-blue-600 text-white'
                                 : 'bg-gray-100 text-gray-900'
@@ -323,14 +324,14 @@ export default function AIPracticePage() {
 
             {/* Message Input Area */}
             <Card>
-              <CardContent className="pt-6">
-                <div className="flex gap-2">
-                  <div className="flex-1">
+              <CardContent className="p-3 sm:p-6">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1 w-full">
                     <Textarea
                       placeholder="Type your message here..."
                       value={currentMessage}
                       onChange={(e) => setCurrentMessage(e.target.value)}
-                      className="min-h-[80px]"
+                      className="min-h-[70px] sm:min-h-[80px] text-sm"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -339,20 +340,26 @@ export default function AIPracticePage() {
                       }}
                     />
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
                     <Button
                       onClick={() => handleSendMessage(currentMessage)}
                       disabled={!currentMessage.trim() || sendMessageMutation.isPending}
+                      className="flex-1 sm:flex-initial sm:min-w-10"
+                      size="sm"
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      <MessageSquare className="h-4 w-4 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline ml-1">Send</span>
                     </Button>
                     {settings.voiceEnabled && (
                       <Button
                         variant={isRecording ? "destructive" : "outline"}
                         onClick={isRecording ? stopRecording : startRecording}
                         disabled={sendMessageMutation.isPending}
+                        className="flex-1 sm:flex-initial sm:min-w-10"
+                        size="sm"
                       >
                         {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                        <span className="hidden sm:inline ml-1">{isRecording ? 'Stop' : 'Record'}</span>
                       </Button>
                     )}
                   </div>
@@ -363,26 +370,26 @@ export default function AIPracticePage() {
 
           <TabsContent value="settings" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <Settings className="h-5 w-5" />
                   AI Practice Settings
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs sm:text-sm">
                   Customize your AI conversation experience
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="space-y-4 p-3 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Language</label>
+                    <label className="text-xs sm:text-sm font-medium">Language</label>
                     <Select
                       value={settings.language}
                       onValueChange={(value: 'english' | 'persian') =>
                         setSettings({ ...settings, language: value })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -392,14 +399,14 @@ export default function AIPracticePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Level</label>
+                    <label className="text-xs sm:text-sm font-medium">Level</label>
                     <Select
                       value={settings.level}
                       onValueChange={(value: 'beginner' | 'intermediate' | 'advanced') =>
                         setSettings({ ...settings, level: value })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -411,14 +418,14 @@ export default function AIPracticePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Conversation Topic</label>
+                  <label className="text-xs sm:text-sm font-medium">Conversation Topic</label>
                   <Select
                     value={settings.topic}
                     onValueChange={(value: 'general' | 'business' | 'academic' | 'casual') =>
                       setSettings({ ...settings, topic: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-xs sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -429,8 +436,8 @@ export default function AIPracticePage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Voice Enabled</label>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <label className="text-xs sm:text-sm font-medium">Voice Enabled</label>
                   <Button
                     variant={settings.voiceEnabled ? "default" : "outline"}
                     size="sm"

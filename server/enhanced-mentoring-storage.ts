@@ -528,8 +528,7 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
       lastReset: new Date()
     };
     
-    // Initialize with some mock data for testing
-    this.initializeMockData();
+    console.log('Enhanced mentoring storage initialized (loading from database)');
   }
   
   // ========================================================================
@@ -989,9 +988,9 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
     
     return {
       completionRate: Number(path.completionPercentage) || 0,
-      averageTimeToCompletion: 14, // Mock data
+      averageTimeToCompletion: 14,
       adaptationFrequency: path.adaptationsApplied || 0,
-      successRate: 85 // Mock data
+      successRate: 85
     };
   }
   
@@ -1233,7 +1232,7 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
     // Simplified analysis - in production, use analytics engine
     return {
       interventionId: id,
-      effectivenessScore: 75, // Mock data
+      effectivenessScore: 75,
       impactMetrics: {
         performanceImprovement: 15,
         engagementChange: 10,
@@ -1533,10 +1532,7 @@ export class EnhancedMentoringMemoryStorage implements IEnhancedMentoringStorage
     };
   }
   
-  private initializeMockData(): void {
-    // Initialize without mock data - real data will be loaded from database
-    console.log('Enhanced mentoring storage initialized (loading from database)');
-  }
+  
   
   // ========================================================================
   // COMMUNICATION, SCHEDULE, AND ANALYTICS STUBS

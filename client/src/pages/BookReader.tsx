@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, Redirect } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -35,6 +36,7 @@ interface OrderData {
 }
 
 export default function BookReader() {
+  const { t } = useTranslation(['common']);
   const { bookId, orderId } = useParams<{ bookId: string; orderId?: string }>();
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
@@ -122,7 +124,7 @@ export default function BookReader() {
       setPdfUrl(url);
       setError(null);
       toast({
-        title: "Success",
+        title: t('common:success'),
         description: "Book loaded successfully",
       });
     },
@@ -130,7 +132,7 @@ export default function BookReader() {
       const errorMessage = error.message || 'Failed to load book';
       setError(errorMessage);
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -193,17 +195,17 @@ export default function BookReader() {
   if (authLoading || bookLoading || orderLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <Skeleton className="h-8 w-32 mb-4" />
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          <Skeleton className="h-6 sm:h-8 w-24 sm:w-32 mb-3 sm:mb-4" />
           <Card>
-            <CardContent className="p-8">
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+            <CardContent className="p-4 sm:p-6 md:p-8">
+              <div className="space-y-3 sm:space-y-4">
+                <Skeleton className="h-6 sm:h-8 w-3/4" />
+                <Skeleton className="h-3 sm:h-4 w-1/2" />
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 sm:h-4 w-full" />
+                  <Skeleton className="h-3 sm:h-4 w-full" />
+                  <Skeleton className="h-3 sm:h-4 w-3/4" />
                 </div>
               </div>
             </CardContent>
@@ -217,19 +219,19 @@ export default function BookReader() {
   if (bookError) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
-            className="mb-4"
+            className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <AlertDescription className="text-xs sm:text-sm">
               Failed to load book details. Please try again later.
             </AlertDescription>
           </Alert>
@@ -241,19 +243,19 @@ export default function BookReader() {
   if (!book) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
-            className="mb-4"
+            className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <AlertDescription className="text-xs sm:text-sm">
               Book not found.
             </AlertDescription>
           </Alert>
@@ -266,11 +268,11 @@ export default function BookReader() {
   if (!hasAccess()) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
-            className="mb-4"
+            className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -278,23 +280,23 @@ export default function BookReader() {
           </Button>
           
           <Card>
-            <CardContent className="p-8 text-center">
-              <Lock className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-2xl font-semibold mb-2">Access Required</h2>
-              <p className="text-muted-foreground mb-6">
+            <CardContent className="p-4 sm:p-6 md:p-8 text-center">
+              <Lock className="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2">Access Required</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
                 You need to purchase this book to read it.
               </p>
-              <div className="space-y-4">
-                <div className="bg-muted rounded-lg p-4">
-                  <h3 className="font-semibold text-lg">{book.title}</h3>
-                  <p className="text-sm text-muted-foreground">by {book.author}</p>
-                  <p className="text-2xl font-bold mt-2">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="bg-muted rounded-lg p-3 sm:p-4">
+                  <h3 className="font-semibold text-base sm:text-lg">{book.title}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">by {book.author}</p>
+                  <p className="text-xl sm:text-2xl font-bold mt-2">
                     {book.currency_code} {book.price}
                   </p>
                 </div>
                 <Button 
                   onClick={() => setLocation(`/books/${bookId}`)}
-                  className="w-full"
+                  className="w-full text-xs sm:text-sm"
                   data-testid="button-purchase"
                 >
                   <BookOpen className="w-4 h-4 mr-2" />
@@ -312,11 +314,11 @@ export default function BookReader() {
   if (error) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
-            className="mb-4"
+            className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -324,17 +326,18 @@ export default function BookReader() {
           </Button>
           
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <AlertDescription className="text-xs sm:text-sm">
               {error}
             </AlertDescription>
           </Alert>
           
-          <div className="mt-4">
+          <div className="mt-3 sm:mt-4">
             <Button
               onClick={() => downloadMutation.mutate()}
               disabled={downloadMutation.isPending}
               data-testid="button-retry"
+              className="text-xs sm:text-sm"
             >
               {downloadMutation.isPending ? (
                 <>
@@ -358,11 +361,11 @@ export default function BookReader() {
   if (downloadMutation.isPending || !pdfUrl) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
-            className="mb-4"
+            className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -370,19 +373,19 @@ export default function BookReader() {
           </Button>
           
           <Card>
-            <CardContent className="p-8">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                  <Download className="w-8 h-8 text-primary animate-bounce" />
+            <CardContent className="p-4 sm:p-6 md:p-8">
+              <div className="text-center space-y-3 sm:space-y-4">
+                <div className="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Download className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 text-primary animate-bounce" />
                 </div>
-                <h3 className="text-xl font-semibold">Loading {book.title}</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-base sm:text-lg md:text-xl font-semibold">Loading {book.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Preparing your book for reading...
                 </p>
                 {downloadProgress > 0 && (
-                  <div className="w-full bg-muted rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-1 sm:h-2">
                     <div 
-                      className="bg-primary h-2 rounded-full transition-all duration-300" 
+                      className="bg-primary h-1 sm:h-2 rounded-full transition-all duration-300" 
                       style={{ width: `${downloadProgress}%` }}
                     />
                   </div>
@@ -400,33 +403,34 @@ export default function BookReader() {
     <div className="min-h-screen bg-background" data-testid="book-reader">
       {/* Header - only show on non-fullscreen */}
       <div className="border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleBackNavigation}
                 data-testid="button-back"
+                className="text-xs sm:text-sm flex-shrink-0"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
-              <div className="min-w-0">
-                <h1 className="font-semibold truncate" data-testid="text-book-title">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-sm sm:text-base md:text-lg font-semibold truncate" data-testid="text-book-title">
                   {book.title}
                 </h1>
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   by {book.author}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">
               <span data-testid="text-reading-progress">
                 Page {readingProgress.page} of {readingProgress.total}
               </span>
               {readingProgress.total > 0 && (
-                <span>
+                <span className="hidden sm:inline">
                   ({Math.round((readingProgress.page / readingProgress.total) * 100)}%)
                 </span>
               )}
@@ -436,7 +440,7 @@ export default function BookReader() {
       </div>
 
       {/* PDF Reader */}
-      <div className="h-[calc(100vh-4rem)]">
+      <div className="h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
         <PDFReader
           pdfUrl={pdfUrl}
           bookId={parseInt(bookId || '0', 10)}

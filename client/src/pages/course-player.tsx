@@ -238,25 +238,25 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   if (!currentLesson || course.lessons.length === 0) {
     return (
       <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
-        <div className="border-b p-4">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center space-x-4">
+        <div className="border-b p-2 sm:p-3 md:p-4">
+          <div className="flex items-center justify-between max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <BackButton 
                 href="/dashboard" 
                 label={t('coursePlayer:backToCourse')}
               />
-              <div>
-                <h1 className="text-xl font-bold">{course.title}</h1>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg md:text-xl font-bold truncate">{course.title}</h1>
               </div>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto p-8">
+        <div className="max-w-7xl mx-auto p-3 sm:p-6 md:p-8 px-3 sm:px-6 lg:px-8">
           <Card>
-            <CardContent className="p-12 text-center">
-              <BookOpen className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-              <h2 className="text-2xl font-bold mb-2">{t('coursePlayer:noLessons')}</h2>
-              <p className="text-gray-600 dark:text-gray-400">
+            <CardContent className="p-6 sm:p-8 md:p-12 text-center">
+              <BookOpen className="h-12 sm:h-14 md:h-16 w-12 sm:w-14 md:w-16 mx-auto mb-3 sm:mb-4 text-gray-400" />
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-2">{t('coursePlayer:noLessons')}</h2>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 {t('coursePlayer:noLessonsDescription')}
               </p>
             </CardContent>
@@ -269,31 +269,31 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
-      <div className="border-b p-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-4">
+      <div className="border-b p-2 sm:p-3 md:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 gap-3 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <BackButton 
               href="/dashboard" 
               label={t('coursePlayer:backToCourse')}
             />
-            <div>
-              <h1 className="text-xl font-bold">{course.title}</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg md:text-xl font-bold truncate">{course.title}</h1>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {currentLesson.title}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm flex-shrink-0">
+            <Badge variant="secondary" className="whitespace-nowrap w-fit">
               {course.completedLessons} / {course.totalLessons} {t('coursePlayer:lessons')}
             </Badge>
-            <Progress value={course.progress} className="w-32" />
+            <Progress value={course.progress} className="w-full sm:w-32" />
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 px-3 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Video Player */}
           <div className="lg:col-span-2 space-y-4">
             <Card>
@@ -427,11 +427,11 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
 
             {/* Lesson Content Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">{t('coursePlayer:overview')}</TabsTrigger>
-                <TabsTrigger value="transcript">{t('coursePlayer:transcript')}</TabsTrigger>
-                <TabsTrigger value="notes">{t('coursePlayer:notes')}</TabsTrigger>
-                <TabsTrigger value="resources">{t('coursePlayer:resources')}</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm">{t('coursePlayer:overview')}</TabsTrigger>
+                <TabsTrigger value="transcript" className="text-xs sm:text-sm">{t('coursePlayer:transcript')}</TabsTrigger>
+                <TabsTrigger value="notes" className="text-xs sm:text-sm">{t('coursePlayer:notes')}</TabsTrigger>
+                <TabsTrigger value="resources" className="text-xs sm:text-sm">{t('coursePlayer:resources')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview" className="space-y-4">
@@ -546,30 +546,30 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
           {/* Course Sidebar */}
           <div className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>{t('coursePlayer:courseLessons')}</CardTitle>
+              <CardHeader className="p-3 sm:p-6">
+                <CardTitle className="text-base sm:text-lg">{t('coursePlayer:courseLessons')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-96 overflow-y-auto">
                   {course.lessons.map((lesson, index) => (
                     <div
                       key={lesson.id}
-                      className={`p-3 border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                      className={`p-2 sm:p-3 border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
                         lesson.id === currentLesson.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                       }`}
                       onClick={() => setCurrentLessonId(lesson.id)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                           <div className="flex-shrink-0">
                             {lesson.isCompleted ? (
-                              <CheckCircle className="h-5 w-5 text-green-600" />
+                              <CheckCircle className="h-4 sm:h-5 w-4 sm:w-5 text-green-600" />
                             ) : (
-                              <Circle className="h-5 w-5 text-gray-400" />
+                              <Circle className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
+                            <p className="text-xs sm:text-sm font-medium truncate">
                               {index + 1}. {lesson.title}
                             </p>
                             <p className="text-xs text-gray-500">
@@ -578,7 +578,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                           </div>
                         </div>
                         {lesson.isPreview && (
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-xs flex-shrink-0">
                             {t('coursePlayer:preview')}
                           </Badge>
                         )}

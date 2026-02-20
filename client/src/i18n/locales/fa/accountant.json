@@ -13,7 +13,13 @@
     "averagePayment": "میانگین پرداخت",
     "paymentSuccess": "موفقیت پرداخت",
     "revenueGrowth": "رشد درآمد",
-    "iranianCompliance": "انطباق ایرانی"
+    "iranianCompliance": "انطباق ایرانی",
+    "overview": "نمای کلی",
+    "payments": "پرداخت‌ها",
+    "invoices": "فاکتورها",
+    "reports": "گزارش‌ها",
+    "compliance": "انطباق",
+    "analytics": "تحلیل‌ها"
   },
   "payments": {
     "title": "مدیریت پرداخت‌ها",
@@ -30,7 +36,13 @@
     "paymentMethod": "روش پرداخت",
     "transactionId": "شناسه تراکنش",
     "processPayment": "پردازش پرداخت",
-    "refundPayment": "بازگردانی پرداخت"
+    "refundPayment": "بازگردانی پرداخت",
+    "newPayment": "پرداخت جدید",
+    "pendingPayments": "پرداخت‌های در انتظار",
+    "completedPayments": "پرداخت‌های تکمیل شده",
+    "refunds": "بازپرداخت‌ها",
+    "verifyPayment": "تأیید پرداخت",
+    "status": "وضعیت"
   },
   "financial": {
     "title": "گزارش‌های مالی",
@@ -50,6 +62,31 @@
     "bankingLaw": "قانون بانکداری",
     "currencyRegulation": "مقررات ارزی",
     "auditTrail": "مسیر حسابرسی",
-    "documentation": "مستندسازی"
+    "documentation": "مستندسازی",
+    "shetabIntegration": "یکپارچه‌سازی شتاب",
+    "reportingStandards": "استانداردهای گزارش‌دهی",
+    "complianceStatus": "وضعیت انطباق",
+    "generateReport": "تولید گزارش"
+  },
+  "stats": {
+    "totalRevenue": "مجموع درآمد",
+    "pendingPayments": "پرداخت‌های در انتظار",
+    "completedTransactions": "تراکنش‌های تکمیل شده",
+    "monthlyGrowth": "رشد ماهانه",
+    "totalStudents": "مجموع دانش‌آموزان",
+    "averagePayment": "میانگین پرداخت",
+    "thisMonth": "این ماه",
+    "complianceRate": "نرخ انطباق"
+  },
+  "invoices": {
+    "title": "مدیریت فاکتور",
+    "createInvoice": "ایجاد فاکتور",
+    "pending": "در انتظار",
+    "paid": "پرداخت شده",
+    "overdue": "سررسید گذشته",
+    "sendReminder": "ارسال یادآوری",
+    "downloadPDF": "دانلود PDF",
+    "invoiceNumber": "شماره فاکتور",
+    "dueDate": "تاریخ سررسید"
   }
 }

@@ -27,7 +27,14 @@
     "iranianMarketKPIs": "شاخص‌های بازار ایران",
     "localMarketIndicators": "شاخص‌های عملکرد بازار محلی",
     "dailyIncomeByCategory": "درآمد روزانه بر اساس دسته‌بندی دانش‌آموزان",
-    "revenueBreakdown": "تفکیک درآمد بر اساس نوع ارائه کلاس و فرمت"
+    "revenueBreakdown": "تفکیک درآمد بر اساس نوع ارائه کلاس و فرمت",
+    "overview": "نمای کلی",
+    "teachers": "اساتید",
+    "observations": "مشاهدات",
+    "quality": "تضمین کیفیت",
+    "reports": "گزارش‌ها",
+    "analytics": "تحلیل‌ها",
+    "compliance": "انطباق"
   },
   "observations": {
     "title": "مشاهدات کلاسی",
@@ -44,7 +51,10 @@
     "noPending": "هیچ مشاهده در انتظاری وجود ندارد",
     "approveFromSchedule": "کلاس‌ها را از بررسی برنامه تأیید کنید تا اینجا نمایش داده شوند",
     "viewAll": "مشاهده همه",
-    "more": "بیشتر"
+    "more": "بیشتر",
+    "inProgress": "در حال انجام",
+    "viewDetails": "مشاهده جزئیات",
+    "addFeedback": "افزودن بازخورد"
   },
   "evaluations": {
     "title": "ارزیابی مدرسان",
@@ -65,5 +75,44 @@
     "monitoring": "نظارت",
     "reporting": "گزارش‌دهی",
     "training": "آموزش"
+  },
+  "stats": {
+    "totalTeachers": "مجموع اساتید",
+    "activeObservations": "مشاهدات فعال",
+    "completionRate": "نرخ تکمیل",
+    "qualityScore": "امتیاز کیفیت",
+    "pendingObservations": "مشاهدات در انتظار",
+    "thisMonth": "این ماه",
+    "complianceRate": "نرخ انطباق",
+    "averageRating": "میانگین امتیاز"
+  },
+  "teachers": {
+    "title": "مدیریت اساتید",
+    "performance": "عملکرد",
+    "viewProfile": "مشاهده پروفایل",
+    "scheduleObservation": "زمان‌بندی مشاهده",
+    "sendFeedback": "ارسال بازخورد",
+    "viewReports": "مشاهده گزارش‌ها"
+  },
+  "quality": {
+    "title": "تضمین کیفیت",
+    "standards": "استانداردهای تدریس",
+    "compliance": "بررسی انطباق",
+    "improvement": "برنامه‌های بهبود",
+    "training": "نیازهای آموزشی"
+  },
+  "reports": {
+    "title": "گزارش‌های عملکرد",
+    "generate": "تولید گزارش",
+    "teacherPerformance": "عملکرد اساتید",
+    "institutionalMetrics": "شاخص‌های سازمانی",
+    "export": "خروجی داده‌ها"
+  },
+  "teacherManagement": {
+    "title": "مدیریت اساتید",
+    "totalTeachers": "مجموع اساتید",
+    "activeTeachers": "اساتید فعال",
+    "viewProfile": "مشاهده پروفایل",
+    "scheduleObservation": "زمان‌بندی مشاهده"
   }
 }

@@ -121,26 +121,11 @@
       "calls": "تماس‌ها",
       "performance": "عملکرد"
     },
-    "overview": {
-      "title": "نمای کلی",
-      "description": "خلاصه‌ای از عملکرد امروز",
-      "newLeads": "مشتریان جدید",
-      "hotLeads": "مشتریان داغ",
-      "conversionRate": "نرخ تبدیل"
-    },
-    "leads": {
-      "title": "مشتریان بالقوه",
-      "description": "لیست تمام مشتریان بالقوه"
-    },
-    "calls": {
-      "title": "تماس‌ها",
-      "description": "سیستم مدیریت تماس‌ها"
-    },
-    "performance": {
-      "title": "عملکرد",
-      "description": "معیارهای عملکرد روزانه",
-      "conversionRate": "نرخ تبدیل"
-    }
+    "overview": "نمای کلی",
+    "leads": "سرنخ‌ها",
+    "calls": "تماس‌ها",
+    "reports": "گزارش‌ها",
+    "voip": "مرکز VoIP"
   },
   "welcome": "خوش آمدید",
   "welcomeMessage": "با متقاضیان ارتباط برقرار کنید، روابط بسازید و موفقیت ثبت‌نام را پیش ببرید!",
@@ -225,7 +210,12 @@
     "callFailed": "تماس ناموفق",
     "callFailedDesc": "برقراری تماس VoIP ناموفق بود. لطفاً اتصال خود را بررسی کنید.",
     "noPhoneNumber": "شماره تلفن موجود نیست",
-    "noPhoneNumberDesc": "{{firstName}} {{lastName}} شماره تلفن ندارد."
+    "noPhoneNumberDesc": "{{firstName}} {{lastName}} شماره تلفن ندارد.",
+    "newLead": "سرنخ جدید",
+    "hotLeads": "سرنخ‌های داغ",
+    "converted": "تبدیل شده",
+    "callNow": "تماس فوری",
+    "schedule": "زمان‌بندی تماس"
   },
   "calls": {
     "title": "سیستم تماس",
@@ -234,7 +224,14 @@
     "endCall": "پایان تماس",
     "recordCall": "ضبط تماس",
     "transferCall": "انتقال تماس",
-    "holdCall": "نگهداری تماس"
+    "holdCall": "نگهداری تماس",
+    "duration": "مدت زمان",
+    "outcome": "نتیجه",
+    "recording": "ضبط",
+    "notes": "یادداشت‌ها",
+    "callback": "تماس مجدد",
+    "completed": "تکمیل شده",
+    "missed": "از دست رفته"
   },
   "voip": {
     "voipCenter": "مرکز تماس VoIP",
@@ -252,7 +249,13 @@
     "dialAnyNumber": "شماره‌گیری هر شماره با استفاده از خط VoIP ایزابل",
     "audioConfiguration": "پیکربندی صوتی",
     "microphoneInput": "ورودی میکروفون",
-    "default": "پیش‌فرض"
+    "default": "پیش‌فرض",
+    "title": "مرکز تماس VoIP",
+    "dialNumber": "شماره‌گیری",
+    "callStatus": "وضعیت تماس",
+    "connecting": "در حال اتصال",
+    "connected": "متصل",
+    "ended": "تماس پایان یافت"
   },
   "performance": {
     "title": "عملکرد مرکز تماس",
@@ -261,7 +264,10 @@
     "monthlyReport": "گزارش ماهانه",
     "targetAchievement": "دستیابی به هدف",
     "callVolume": "حجم تماس",
-    "successRate": "نرخ موفقیت"
+    "successRate": "نرخ موفقیت",
+    "callsToday": "تماس‌های امروز",
+    "leadsConverted": "سرنخ‌های تبدیل شده",
+    "avgCallTime": "میانگین مدت تماس"
   },
   "workflow": {
     "title": "گردش کار یکپارچه",
@@ -307,5 +313,16 @@
       "thisWeek": "این هفته",
       "highPriority": "اولویت بالا"
     }
+  },
+  "stats": {
+    "totalCalls": "مجموع تماس‌ها",
+    "completedCalls": "تماس‌های تکمیل شده",
+    "conversionRate": "نرخ تبدیل",
+    "avgCallDuration": "میانگین مدت تماس",
+    "activeLeads": "سرنخ‌های فعال",
+    "thisWeek": "این هفته",
+    "responseRate": "نرخ پاسخ‌دهی",
+    "qualityScore": "امتیاز کیفیت",
+    "todayCalls": "تماس‌های امروز"
   }
 }

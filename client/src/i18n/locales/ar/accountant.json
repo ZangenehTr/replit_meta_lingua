@@ -13,7 +13,13 @@
     "averagePayment": "متوسط الدفع",
     "paymentSuccess": "نجاح الدفع",
     "revenueGrowth": "نمو الإيرادات",
-    "iranianCompliance": "الامتثال الإيراني"
+    "iranianCompliance": "الامتثال الإيراني",
+    "overview": "نظرة عامة",
+    "payments": "المدفوعات",
+    "invoices": "الفواتير",
+    "reports": "التقارير",
+    "compliance": "الامتثال",
+    "analytics": "التحليلات"
   },
   "payments": {
     "title": "إدارة المدفوعات",
@@ -30,7 +36,13 @@
     "paymentMethod": "طريقة الدفع",
     "transactionId": "معرف المعاملة",
     "processPayment": "معالجة الدفع",
-    "refundPayment": "استرداد الدفع"
+    "refundPayment": "استرداد الدفع",
+    "newPayment": "دفعة جديدة",
+    "pendingPayments": "المدفوعات المعلقة",
+    "completedPayments": "المدفوعات المكتملة",
+    "refunds": "المبالغ المستردة",
+    "verifyPayment": "التحقق من الدفع",
+    "status": "الحالة"
   },
   "financial": {
     "title": "التقارير المالية",
@@ -50,6 +62,31 @@
     "bankingLaw": "قانون البنوك",
     "currencyRegulation": "لوائح العملة",
     "auditTrail": "مسار التدقيق",
-    "documentation": "التوثيق"
+    "documentation": "التوثيق",
+    "shetabIntegration": "تكامل شتاب",
+    "reportingStandards": "معايير الإبلاغ",
+    "complianceStatus": "حالة الامتثال",
+    "generateReport": "إنشاء تقرير"
+  },
+  "stats": {
+    "totalRevenue": "إجمالي الإيرادات",
+    "pendingPayments": "المدفوعات المعلقة",
+    "completedTransactions": "المعاملات المكتملة",
+    "monthlyGrowth": "النمو الشهري",
+    "totalStudents": "إجمالي الطلاب",
+    "averagePayment": "متوسط الدفع",
+    "thisMonth": "هذا الشهر",
+    "complianceRate": "معدل الامتثال"
+  },
+  "invoices": {
+    "title": "إدارة الفواتير",
+    "createInvoice": "إنشاء فاتورة",
+    "pending": "معلق",
+    "paid": "مدفوع",
+    "overdue": "متأخر",
+    "sendReminder": "إرسال تذكير",
+    "downloadPDF": "تحميل PDF",
+    "invoiceNumber": "رقم الفاتورة",
+    "dueDate": "تاريخ الاستحقاق"
   }
 }

@@ -203,7 +203,6 @@ export default function TeacherDashboardMobile() {
                           {class_.status}
                         </Badge>
                       }
-                      onClick={() => {}}
                     />
                   </Link>
                 ))}
@@ -243,7 +242,6 @@ export default function TeacherDashboardMobile() {
                       subtitle={assignment.assignmentTitle}
                       leftIcon={<AlertCircle className="w-5 h-5 text-yellow-500" />}
                       rightContent={<ChevronRight className="w-5 h-5" />}
-                      onClick={() => {}}
                     />
                   </Link>
                 ))}

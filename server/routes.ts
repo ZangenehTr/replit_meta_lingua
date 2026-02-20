@@ -28,7 +28,6 @@ import searchRoutes from "./routes/search-routes";
 import visitorChatRoutes from "./routes/visitor-chat-routes";
 import thirdPartyIntegrationRoutes from "./routes/third-party-integration-routes";
 import tttRoutes from "./ttt-routes";
-import { registerCmsRoutes } from "./cms-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
 import publicFeaturesRoutes from "./routes/public-features-routes";
 import mstRoutes from "./modules/mst/routes/mstRoutes";
@@ -24050,8 +24049,7 @@ Meta Lingua Academy`;
   setupContentBankRoutes(app);
   console.log('✅ Content Bank routes registered successfully');
   
-  registerCmsRoutes(app, storage);
-  console.log('✅ CMS routes registered successfully');
+  console.log('✅ CMS routes registered via index.ts (consolidated)');
   
   console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
   console.log('✅ Exam-focused roadmap routes registered successfully');

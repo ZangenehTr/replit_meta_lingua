@@ -34,6 +34,10 @@
     "invalidResponse": "پاسخ نامعتبر از سرور",
     "dataLoadFailed": "بارگذاری داده‌ها ناموفق",
     "saveDataFailed": "ذخیره داده‌ها ناموفق",
-    "deleteDataFailed": "حذف داده‌ها ناموفق"
+    "deleteDataFailed": "حذف داده‌ها ناموفق",
+    "failedToJoinSession": "خطا در پیوستن به جلسه",
+    "loadingSessions": "خطا در بارگذاری جلسات",
+    "contactFailed": "تماس ناموفق",
+    "unableToStartCommunication": "امکان شروع ارتباط با {{name}} وجود ندارد. لطفاً دوباره تلاش کنید."
   }
 }

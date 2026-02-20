@@ -41,10 +41,10 @@ export default function UnifiedDashboard() {
   // Show loading state while user data loads
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t('common:loading')}</p>
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-sm w-full">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4 sm:mb-6"></div>
+          <p className="text-sm sm:text-base text-muted-foreground">{t('common:loading')}</p>
         </div>
       </div>
     );
