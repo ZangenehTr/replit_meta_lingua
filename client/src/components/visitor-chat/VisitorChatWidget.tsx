@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, User, Mail, Phone, Circle } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { MessageCircle, X, Send, User, Phone, Star, Bot, Headphones, ChevronDown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/hooks/use-language';
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from '@/lib/queryClient';
@@ -10,7 +9,7 @@ import io, { Socket } from 'socket.io-client';
 
 interface Message {
   id: number;
-  senderType: 'visitor' | 'admin' | 'system';
+  senderType: 'visitor' | 'admin' | 'ai' | 'system';
   senderName: string;
   message: string;
   createdAt: string;
@@ -23,7 +22,21 @@ interface ChatSession {
   visitorName?: string;
   visitorEmail?: string;
   visitorPhone?: string;
+  chatMode?: string;
+  matchedUserId?: number;
+  matchedLeadId?: number;
 }
+
+interface MatchedUser {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
+  role?: string;
+}
+
+type ChatStep = 'contact' | 'chat' | 'rating';
 
 export function VisitorChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,24 +44,27 @@ export function VisitorChatWidget() {
   const [newMessage, setNewMessage] = useState('');
   const [session, setSession] = useState<ChatSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(false);
-  const [contactInfo, setContactInfo] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [chatStep, setChatStep] = useState<ChatStep>('contact');
+  const [collectContactFirst, setCollectContactFirst] = useState(true);
+  const [matchedUser, setMatchedUser] = useState<MatchedUser | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [adminOnline, setAdminOnline] = useState(false);
   const [adminTyping, setAdminTyping] = useState(false);
+  const [aiTyping, setAiTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  
+  const [rating, setRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   const { language } = useLanguage();
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRTL = ['fa', 'ar'].includes(language);
 
-  // Initialize WebSocket connection
   useEffect(() => {
     const socketInstance = io({
       path: '/socket.io',
@@ -56,8 +72,6 @@ export function VisitorChatWidget() {
     });
 
     socketInstance.on('connect', () => {
-      console.log('Visitor chat: Socket connected');
-      // Request online admins count
       socketInstance.emit('get-online-admins');
     });
 
@@ -71,6 +85,7 @@ export function VisitorChatWidget() {
 
     socketInstance.on('new-chat-message', (data: { message: Message }) => {
       setMessages(prev => [...prev, data.message]);
+      if (!isOpen) setUnreadCount(prev => prev + 1);
       scrollToBottom();
     });
 
@@ -79,23 +94,16 @@ export function VisitorChatWidget() {
     });
 
     setSocket(socketInstance);
-
-    return () => {
-      socketInstance.disconnect();
-    };
+    return () => { socketInstance.disconnect(); };
   }, []);
 
-  // Join chat session when it's created
   useEffect(() => {
     if (socket && session) {
       socket.emit('visitor-join-chat', { sessionId: session.sessionId });
     }
   }, [socket, session]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, adminTyping]);
+  useEffect(() => { scrollToBottom(); }, [messages, adminTyping, aiTyping]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -103,10 +111,10 @@ export function VisitorChatWidget() {
     }, 100);
   };
 
-  // Initialize chat session
   useEffect(() => {
+    if (!isOpen || session) return;
+
     const initSession = async () => {
-      // Check if there's an existing session in localStorage
       const storedSessionId = localStorage.getItem('visitorChatSessionId');
       
       if (storedSessionId) {
@@ -116,6 +124,11 @@ export function VisitorChatWidget() {
             const data = await response.json();
             setSession(data.session);
             setMessages(data.messages || []);
+            setCollectContactFirst(data.collectContactFirst ?? true);
+            if (data.matchedUser) setMatchedUser(data.matchedUser);
+            if (data.session.visitorPhone || data.session.visitorName) {
+              setChatStep('chat');
+            }
             return;
           }
         } catch (error) {
@@ -123,7 +136,6 @@ export function VisitorChatWidget() {
         }
       }
 
-      // Create new session
       try {
         const response = await apiRequest(`/api/visitor-chat/sessions`, {
           method: 'POST',
@@ -131,58 +143,80 @@ export function VisitorChatWidget() {
         });
         const newSession = await response.json();
         setSession(newSession);
+        setCollectContactFirst(newSession.collectContactFirst ?? true);
         localStorage.setItem('visitorChatSessionId', newSession.sessionId);
         
-        // Send welcome message
-        setTimeout(() => {
-          setMessages([{
-            id: 0,
-            senderType: 'admin',
-            senderName: 'Support Team',
-            message: t('common:visitorChat.welcomeMessage'),
-            createdAt: new Date().toISOString()
-          }]);
-        }, 500);
+        if (!newSession.collectContactFirst) {
+          setChatStep('chat');
+          addWelcomeMessage();
+        }
       } catch (error) {
         console.error('Error creating chat session:', error);
       }
     };
 
-    if (isOpen && !session) {
-      initSession();
-    }
-  }, [isOpen, session, language, t]);
+    initSession();
+  }, [isOpen, session, language]);
 
-  // Handle typing indicator
+  const addWelcomeMessage = () => {
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        id: 0,
+        senderType: 'ai',
+        senderName: 'Meta Lingua AI',
+        message: t('visitorChat.welcomeMessage', 'Welcome! How can I help you today?'),
+        createdAt: new Date().toISOString()
+      }]);
+    }, 500);
+  };
+
   const handleTyping = () => {
     if (!socket || !session) return;
-    
     if (!isTyping) {
       setIsTyping(true);
-      socket.emit('visitor-typing', {
-        sessionId: session.sessionId,
-        isTyping: true
-      });
+      socket.emit('visitor-typing', { sessionId: session.sessionId, isTyping: true });
     }
-    
-    // Clear existing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    
-    // Set new timeout
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
-      socket?.emit('visitor-typing', {
-        sessionId: session.sessionId,
-        isTyping: false
-      });
+      socket?.emit('visitor-typing', { sessionId: session.sessionId, isTyping: false });
     }, 1000);
+  };
+
+  const submitContact = async () => {
+    if (!session || (!contactPhone.trim() && !contactName.trim())) return;
+    setIsLoading(true);
+    try {
+      const response = await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/contact`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          visitorName: contactName || undefined,
+          visitorPhone: contactPhone || undefined
+        })
+      });
+      const data = await response.json();
+      
+      if (data.matchedUser) {
+        setMatchedUser(data.matchedUser);
+      }
+      
+      setSession(prev => prev ? {
+        ...prev,
+        visitorName: data.identifiedName || contactName,
+        visitorPhone: contactPhone
+      } : null);
+
+      setChatStep('chat');
+      addWelcomeMessage();
+    } catch (error) {
+      console.error('Error saving contact:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !session) return;
-
     setIsLoading(true);
     try {
       const response = await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/messages`, {
@@ -190,36 +224,27 @@ export function VisitorChatWidget() {
         body: JSON.stringify({
           message: newMessage,
           senderType: 'visitor',
-          senderName: session.visitorName || 'Visitor'
+          senderName: session.visitorName || contactName || 'Visitor'
         })
       });
 
-      const sentMessage = await response.json();
-      
-      // Send via WebSocket for real-time delivery
+      const data = await response.json();
+      setMessages(prev => [...prev, data.message]);
+      setNewMessage('');
+
       if (socket) {
         socket.emit('visitor-send-message', {
           sessionId: session.sessionId,
-          message: sentMessage
+          message: data.message
         });
       }
-      
-      // Add to local state
-      setMessages(prev => [...prev, sentMessage]);
-      setNewMessage('');
 
-      // After sending 3 messages, suggest sharing contact info
-      if (messages.filter(m => m.senderType === 'visitor').length === 2 && !session.visitorEmail) {
+      if (data.aiResponse) {
+        setAiTyping(true);
         setTimeout(() => {
-          setMessages(prev => [...prev, {
-            id: Date.now(),
-            senderType: 'admin',
-            senderName: 'Support Team',
-            message: t('common:visitorChat.contactSuggestion'),
-            createdAt: new Date().toISOString()
-          }]);
-          setShowContactForm(true);
-        }, 1000);
+          setAiTyping(false);
+          setMessages(prev => [...prev, data.aiResponse]);
+        }, 1200 + Math.random() * 800);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -228,240 +253,328 @@ export function VisitorChatWidget() {
     }
   };
 
-  const saveContactInfo = async () => {
-    if (!session) return;
-
+  const submitRating = async () => {
+    if (!session || rating === 0) return;
     try {
-      await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/contact`, {
+      await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/rate`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          visitorName: contactInfo.name,
-          visitorEmail: contactInfo.email,
-          visitorPhone: contactInfo.phone
-        })
+        body: JSON.stringify({ rating, ratingComment })
       });
-
-      setSession(prev => prev ? {
-        ...prev,
-        visitorName: contactInfo.name,
-        visitorEmail: contactInfo.email,
-        visitorPhone: contactInfo.phone
-      } : null);
-
-      setShowContactForm(false);
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        senderType: 'admin',
-        senderName: 'Support Team',
-        message: t('common:visitorChat.thankYouForContact'),
-        createdAt: new Date().toISOString()
-      }]);
+      setRatingSubmitted(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setSession(null);
+        setMessages([]);
+        setChatStep('contact');
+        setRating(0);
+        setRatingComment('');
+        setRatingSubmitted(false);
+        localStorage.removeItem('visitorChatSessionId');
+      }, 2000);
     } catch (error) {
-      console.error('Error saving contact info:', error);
+      console.error('Error submitting rating:', error);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      if (chatStep === 'contact') submitContact();
+      else sendMessage();
     }
   };
 
+  const displayName = session?.visitorName || matchedUser?.firstName || contactName || t('visitorChat.visitor', 'Visitor');
+
   return (
     <>
-      {/* Chat Button */}
-      <Button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-50 h-16 w-16 rounded-full shadow-2xl transition-all hover:scale-110 hover:shadow-xl ${adminOnline ? 'ring-4 ring-green-500 ring-opacity-50' : ''}`}
-        size="icon"
+      <button
+        onClick={() => { setIsOpen(!isOpen); if (!isOpen) setUnreadCount(0); }}
+        className={`fixed bottom-4 ${isRTL ? 'left-4' : 'right-4'} z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 bg-gradient-to-br from-blue-600 to-cyan-500 text-white ${adminOnline ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
         data-testid="button-visitor-chat-toggle"
+        aria-label={isOpen ? t('visitorChat.close', 'Close chat') : t('visitorChat.open', 'Open chat')}
       >
         {isOpen ? (
-          <X className="h-7 w-7" />
+          <X className="h-6 w-6" />
         ) : (
           <div className="relative">
-            <MessageCircle className="h-7 w-7" />
+            <MessageCircle className="h-6 w-6" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-white">
+                {unreadCount}
+              </span>
+            )}
             {adminOnline && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-white" />
             )}
           </div>
         )}
-      </Button>
+      </button>
 
-      {/* Chat Window */}
       {isOpen && (
         <div
-          className={`fixed bottom-24 ${isRTL ? 'left-6' : 'right-6'} z-50 w-[400px] max-w-[calc(100vw-3rem)] h-[600px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden border-2 border-primary/20`}
+          className={`fixed z-50 flex flex-col overflow-hidden bg-white
+            bottom-0 left-0 right-0 top-0 sm:bottom-20 sm:top-auto sm:${isRTL ? 'left-4 sm:right-auto' : 'right-4 sm:left-auto'} sm:w-[380px] sm:h-[560px] sm:rounded-2xl sm:shadow-2xl sm:border border-gray-200`}
           dir={isRTL ? 'rtl' : 'ltr'}
         >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <MessageCircle className="h-6 w-6" />
+          <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-3 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative shrink-0">
+                <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
+                  {session?.chatMode === 'ai' || session?.chatMode === 'hybrid' ? (
+                    <Bot className="h-5 w-5" />
+                  ) : (
+                    <Headphones className="h-5 w-5" />
+                  )}
+                </div>
                 {adminOnline && (
-                  <span className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-400 rounded-full border-2 border-white" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-blue-600" />
                 )}
               </div>
-              <div>
-                <h3 className="font-bold text-lg">{t('common:visitorChat.title')}</h3>
-                <p className="text-xs opacity-90 flex items-center gap-1">
-                  <Circle className={`h-2 w-2 ${adminOnline ? 'fill-green-400' : 'fill-gray-400'}`} />
-                  {adminOnline ? t('common:visitorChat.agentsOnline', 'Agents online') : t('common:visitorChat.offline', 'We\'ll respond soon')}
+              <div className="min-w-0">
+                <h3 className="font-semibold text-sm truncate">{t('visitorChat.title', 'Chat with us')}</h3>
+                <p className="text-[11px] text-white/80 flex items-center gap-1">
+                  <span className={`h-1.5 w-1.5 rounded-full ${adminOnline ? 'bg-green-400' : 'bg-gray-300'}`} />
+                  {adminOnline ? t('visitorChat.agentsOnline', 'Online') : t('visitorChat.offline', "We'll respond soon")}
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20 rounded-full"
-              data-testid="button-close-chat"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-1 shrink-0">
+              {chatStep === 'chat' && (
+                <button
+                  onClick={() => setChatStep('rating')}
+                  className="h-8 w-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+                  title={t('visitorChat.endChat', 'End chat')}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors sm:flex"
+                data-testid="button-close-chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
-            <div className="space-y-4">
-              {messages.map((msg, index) => (
-                <div
-                  key={msg.id || index}
-                  className={`flex ${msg.senderType === 'visitor' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-end' : 'justify-start')} animate-in slide-in-from-bottom-2 duration-300`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl p-3 shadow-md transition-all hover:shadow-lg ${
-                      msg.senderType === 'visitor'
-                        ? 'bg-primary text-primary-foreground rounded-br-sm'
-                        : msg.senderType === 'system'
-                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm italic'
-                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-bl-sm'
-                    }`}
-                    data-testid={`message-${msg.senderType}-${index}`}
-                  >
-                    {msg.senderType !== 'visitor' && msg.senderType !== 'system' && (
-                      <p className="text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">
-                        {msg.senderName}
-                      </p>
-                    )}
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
-                  </div>
-                </div>
-              ))}
-              
-              {/* Admin typing indicator */}
-              {adminTyping && (
-                <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'} animate-in fade-in duration-200`}>
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-bl-sm p-3 shadow-md">
-                    <div className="flex gap-1">
-                      <span className="h-2 w-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="h-2 w-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="h-2 w-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-
-          {/* Contact Info Form */}
-          {showContactForm && !session?.visitorEmail && (
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-t border-gray-200 dark:border-gray-700 shadow-inner">
-              <p className="text-sm mb-3 text-gray-700 dark:text-gray-300 font-medium">
-                {t('common:visitorChat.contactFormPrompt')}
-              </p>
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <User className="h-4 w-4 mt-2.5 text-gray-500 flex-shrink-0" />
-                  <Input
-                    type="text"
-                    placeholder={t('common:visitorChat.namePlaceholder')}
-                    value={contactInfo.name}
-                    onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))}
-                    className="flex-1 bg-white dark:bg-gray-900"
-                    data-testid="input-visitor-name"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Mail className="h-4 w-4 mt-2.5 text-gray-500 flex-shrink-0" />
-                  <Input
-                    type="email"
-                    placeholder={t('common:visitorChat.emailPlaceholder')}
-                    value={contactInfo.email}
-                    onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))}
-                    className="flex-1 bg-white dark:bg-gray-900"
-                    data-testid="input-visitor-email"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Phone className="h-4 w-4 mt-2.5 text-gray-500 flex-shrink-0" />
-                  <Input
-                    type="tel"
-                    placeholder={t('common:visitorChat.phonePlaceholder')}
-                    value={contactInfo.phone}
-                    onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
-                    className="flex-1 bg-white dark:bg-gray-900"
-                    data-testid="input-visitor-phone"
-                  />
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    onClick={saveContactInfo}
-                    className="flex-1 shadow-md"
-                    size="sm"
-                    disabled={!contactInfo.email && !contactInfo.phone}
-                    data-testid="button-save-contact"
-                  >
-                    {t('common:save')}
-                  </Button>
-                  <Button
-                    onClick={() => setShowContactForm(false)}
-                    variant="outline"
-                    size="sm"
-                    className="shadow-md"
-                    data-testid="button-skip-contact"
-                  >
-                    {t('common:visitorChat.maybeLater')}
-                  </Button>
-                </div>
+          {matchedUser && chatStep === 'chat' && (
+            <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-center gap-2 shrink-0">
+              <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <User className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-blue-800 truncate">
+                  {matchedUser.firstName} {matchedUser.lastName}
+                </p>
+                <p className="text-[10px] text-blue-600 truncate">
+                  {matchedUser.role === 'student' ? t('visitorChat.existingStudent', 'Existing student') :
+                   matchedUser.role ? t('visitorChat.existingMember', 'Existing member') :
+                   t('visitorChat.identified', 'Identified')}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Message Input */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder={t('common:visitorChat.messagePlaceholder')}
-                value={newMessage}
-                onChange={(e) => {
-                  setNewMessage(e.target.value);
-                  handleTyping();
-                }}
-                onKeyDown={handleKeyDown}
-                className="flex-1 border-2 focus:border-primary transition-colors"
-                disabled={isLoading}
-                data-testid="input-chat-message"
-              />
-              <Button
-                onClick={sendMessage}
-                disabled={!newMessage.trim() || isLoading}
-                size="icon"
-                className="h-10 w-10 shadow-md transition-all hover:scale-105"
-                data-testid="button-send-message"
-              >
-                <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} />
-              </Button>
+          {chatStep === 'contact' && (
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-4">
+                <Sparkles className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1 text-center">
+                {t('visitorChat.welcomeTitle', 'Welcome!')}
+              </h3>
+              <p className="text-sm text-gray-500 mb-6 text-center max-w-[260px]">
+                {t('visitorChat.contactPrompt', 'Please share your phone number so we can assist you better.')}
+              </p>
+              <div className="w-full max-w-[280px] space-y-3">
+                <div className="relative">
+                  <Phone className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400`} />
+                  <Input
+                    type="tel"
+                    placeholder={t('visitorChat.phonePlaceholder', '09123456789')}
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className={`${isRTL ? 'pr-10' : 'pl-10'} h-10 text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400`}
+                    dir="ltr"
+                    data-testid="input-visitor-phone"
+                  />
+                </div>
+                <div className="relative">
+                  <User className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400`} />
+                  <Input
+                    type="text"
+                    placeholder={t('visitorChat.namePlaceholder', 'Your name (optional)')}
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className={`${isRTL ? 'pr-10' : 'pl-10'} h-10 text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400`}
+                    data-testid="input-visitor-name"
+                  />
+                </div>
+                <Button
+                  onClick={submitContact}
+                  disabled={!contactPhone.trim() || isLoading}
+                  className="w-full h-10 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-sm font-medium"
+                  data-testid="button-start-chat"
+                >
+                  {isLoading ? t('visitorChat.connecting', 'Connecting...') : t('visitorChat.startChat', 'Start Chat')}
+                </Button>
+                <button
+                  onClick={() => { setChatStep('chat'); addWelcomeMessage(); }}
+                  className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {t('visitorChat.skipContact', 'Skip and chat anonymously')}
+                </button>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              {t('common:visitorChat.poweredBy', 'Powered by Meta Lingua')}
-            </p>
-          </div>
+          )}
+
+          {chatStep === 'chat' && (
+            <>
+              <div className="flex-1 overflow-y-auto px-4 py-3 bg-gray-50 space-y-3" style={{ overscrollBehavior: 'contain' }}>
+                {messages.map((msg, index) => (
+                  <div
+                    key={msg.id || index}
+                    className={`flex ${msg.senderType === 'visitor' ? (isRTL ? 'justify-start' : 'justify-end') : msg.senderType === 'system' ? 'justify-center' : (isRTL ? 'justify-end' : 'justify-start')}`}
+                  >
+                    {msg.senderType === 'system' ? (
+                      <p className="text-[11px] text-gray-400 bg-gray-100 rounded-full px-3 py-1">{msg.message}</p>
+                    ) : (
+                      <div className="flex items-end gap-1.5 max-w-[85%]">
+                        {msg.senderType !== 'visitor' && (
+                          <div className={`h-6 w-6 rounded-full shrink-0 flex items-center justify-center text-white text-[10px] ${msg.senderType === 'ai' ? 'bg-gradient-to-br from-blue-500 to-cyan-400' : 'bg-gray-400'}`}>
+                            {msg.senderType === 'ai' ? <Bot className="h-3.5 w-3.5" /> : <Headphones className="h-3.5 w-3.5" />}
+                          </div>
+                        )}
+                        <div
+                          className={`rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
+                            msg.senderType === 'visitor'
+                              ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-br-sm'
+                              : 'bg-white border border-gray-100 text-gray-800 shadow-sm rounded-bl-sm'
+                          }`}
+                        >
+                          {msg.senderType !== 'visitor' && (
+                            <p className="text-[10px] font-semibold text-blue-500 mb-0.5">{msg.senderName}</p>
+                          )}
+                          <p className="whitespace-pre-wrap">{msg.message}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {(adminTyping || aiTyping) && (
+                  <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'} items-end gap-1.5`}>
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shrink-0">
+                      <Bot className="h-3.5 w-3.5 text-white" />
+                    </div>
+                    <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm">
+                      <div className="flex gap-1">
+                        <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="px-3 py-2.5 border-t border-gray-100 bg-white shrink-0">
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="text"
+                    placeholder={t('visitorChat.messagePlaceholder', 'Type your message...')}
+                    value={newMessage}
+                    onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
+                    onKeyDown={handleKeyDown}
+                    className="flex-1 h-9 text-sm border-gray-200 rounded-full px-4 focus:border-blue-400 focus:ring-blue-400"
+                    disabled={isLoading}
+                    data-testid="input-chat-message"
+                  />
+                  <Button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim() || isLoading}
+                    size="icon"
+                    className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shrink-0"
+                    data-testid="button-send-message"
+                  >
+                    <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} />
+                  </Button>
+                </div>
+                <p className="text-[10px] text-gray-300 mt-1 text-center">
+                  Meta Lingua
+                </p>
+              </div>
+            </>
+          )}
+
+          {chatStep === 'rating' && (
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+              {ratingSubmitted ? (
+                <div className="text-center">
+                  <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-4 mx-auto">
+                    <Star className="h-8 w-8 text-green-600 fill-green-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">
+                    {t('visitorChat.thankYou', 'Thank you!')}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {t('visitorChat.ratingThanks', 'Your feedback helps us improve.')}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">
+                    {t('visitorChat.rateTitle', 'How was your experience?')}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6 text-center">
+                    {t('visitorChat.rateDescription', 'Your feedback helps us serve you better.')}
+                  </p>
+                  <div className="flex gap-2 mb-6">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setRating(star)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className={`h-8 w-8 transition-colors ${
+                            star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    placeholder={t('visitorChat.ratingCommentPlaceholder', 'Any comments? (optional)')}
+                    value={ratingComment}
+                    onChange={(e) => setRatingComment(e.target.value)}
+                    className="w-full max-w-[280px] h-20 text-sm border border-gray-200 rounded-xl px-3 py-2 resize-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none mb-4"
+                  />
+                  <div className="flex gap-3 w-full max-w-[280px]">
+                    <Button
+                      onClick={submitRating}
+                      disabled={rating === 0}
+                      className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-sm"
+                    >
+                      {t('visitorChat.submitRating', 'Submit')}
+                    </Button>
+                    <Button
+                      onClick={() => setChatStep('chat')}
+                      variant="outline"
+                      className="h-10 text-sm"
+                    >
+                      {t('visitorChat.back', 'Back')}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
     </>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -92,10 +92,14 @@ export function PublicLayout({ children }: PublicLayoutProps) {
     return category.name; // Default to English
   };
 
+  useEffect(() => {
+    document.documentElement.classList.remove('dark');
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-white" dir={direction}>
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
           {/* Logo */}
           <div className="flex lg:flex-1">
@@ -326,7 +330,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
       {/* Breadcrumbs */}
       {breadcrumbs.length > 0 && (
-        <div className="border-b bg-background/50 backdrop-blur">
+        <div className="border-b bg-white/50 backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 py-3 lg:px-8">
             <Breadcrumb>
               <BreadcrumbList>
@@ -367,7 +371,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-background/50 backdrop-blur">
+      <footer className="border-t bg-white/50 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {/* Brand Column */}

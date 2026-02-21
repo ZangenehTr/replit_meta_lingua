@@ -556,36 +556,35 @@
 
 /* ============================================
    19. DARK MODE ADJUSTMENTS
+   Uses class-based dark mode (.dark) to match Tailwind config
    ============================================ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --glass-white: rgba(30, 41, 59, 0.9);
-    --glass-dark: rgba(0, 0, 0, 0.4);
-  }
-  
-  .input-fantasy {
-    background: #1e293b;
-    color: #f1f5f9;
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-  
-  .list-item-fantasy {
-    background: #1e293b;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-  
-  .chip-fantasy {
-    background: #1e293b;
-    color: #f1f5f9;
-  }
-  
-  .tab-fantasy {
-    background: #1e293b;
-  }
-  
-  .tab-fantasy-item {
-    color: #94a3b8;
-  }
+.dark {
+  --glass-white: rgba(30, 41, 59, 0.9);
+  --glass-dark: rgba(0, 0, 0, 0.4);
+}
+
+.dark .input-fantasy {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dark .list-item-fantasy {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .chip-fantasy {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+.dark .tab-fantasy {
+  background: #1e293b;
+}
+
+.dark .tab-fantasy-item {
+  color: #94a3b8;
 }
 
 /* ============================================

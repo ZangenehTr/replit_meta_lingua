@@ -8817,15 +8817,20 @@ export type InsertCustomFont = z.infer<typeof insertCustomFontSchema>;
 // Visitor Chat Sessions - Track anonymous visitor conversations
 export const visitorChatSessions = pgTable("visitor_chat_sessions", {
   id: serial("id").primaryKey(),
-  sessionId: varchar("session_id", { length: 255 }).notNull().unique(), // Anonymous session identifier
-  visitorName: varchar("visitor_name", { length: 255 }), // Optional, captured during chat
-  visitorEmail: varchar("visitor_email", { length: 255 }), // Optional, captured during chat
-  visitorPhone: varchar("visitor_phone", { length: 50 }), // Optional, captured during chat
-  language: varchar("language", { length: 10 }).default("fa").notNull(), // fa, en, ar
-  status: varchar("status", { length: 20 }).default("active").notNull(), // active, closed, archived
-  assignedTo: integer("assigned_to").references(() => users.id), // Admin/staff handling the chat
+  sessionId: varchar("session_id", { length: 255 }).notNull().unique(),
+  visitorName: varchar("visitor_name", { length: 255 }),
+  visitorEmail: varchar("visitor_email", { length: 255 }),
+  visitorPhone: varchar("visitor_phone", { length: 50 }),
+  language: varchar("language", { length: 10 }).default("fa").notNull(),
+  status: varchar("status", { length: 20 }).default("active").notNull(),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  matchedUserId: integer("matched_user_id").references(() => users.id),
+  matchedLeadId: integer("matched_lead_id"),
+  chatMode: varchar("chat_mode", { length: 20 }).default("hybrid").notNull(),
+  rating: integer("rating"),
+  ratingComment: text("rating_comment"),
   lastMessageAt: timestamp("last_message_at"),
-  metadata: jsonb("metadata"), // Additional visitor info (browser, location, etc.)
+  metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   closedAt: timestamp("closed_at")
 });
@@ -8834,12 +8839,12 @@ export const visitorChatSessions = pgTable("visitor_chat_sessions", {
 export const visitorChatMessages = pgTable("visitor_chat_messages", {
   id: serial("id").primaryKey(),
   sessionId: integer("session_id").references(() => visitorChatSessions.id).notNull(),
-  senderType: varchar("sender_type", { length: 20 }).notNull(), // visitor, admin, system
-  senderName: varchar("sender_name", { length: 255 }), // Display name
-  senderId: integer("sender_id").references(() => users.id), // Only for admin messages
+  senderType: varchar("sender_type", { length: 20 }).notNull(), // visitor, admin, ai, system
+  senderName: varchar("sender_name", { length: 255 }),
+  senderId: integer("sender_id").references(() => users.id),
   message: text("message").notNull(),
-  messageType: varchar("message_type", { length: 20 }).default("text").notNull(), // text, info_request, contact_capture
-  metadata: jsonb("metadata"), // Extra data (e.g., contact info captured)
+  messageType: varchar("message_type", { length: 20 }).default("text").notNull(),
+  metadata: jsonb("metadata"),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
@@ -8878,6 +8883,30 @@ export const insertVisitorChatCannedResponseSchema = createInsertSchema(visitorC
   updatedAt: true
 });
 
+// Visitor Chat Settings - Admin configuration for chat behavior
+export const visitorChatSettings = pgTable("visitor_chat_settings", {
+  id: serial("id").primaryKey(),
+  chatMode: varchar("chat_mode", { length: 20 }).default("hybrid").notNull(), // ai, human, hybrid
+  aiGreeting: text("ai_greeting"),
+  aiGreetingFa: text("ai_greeting_fa"),
+  aiGreetingAr: text("ai_greeting_ar"),
+  businessHoursStart: varchar("business_hours_start", { length: 5 }).default("09:00"),
+  businessHoursEnd: varchar("business_hours_end", { length: 5 }).default("18:00"),
+  businessDays: jsonb("business_days").default([1,2,3,4,5,6]),
+  timezone: varchar("timezone", { length: 50 }).default("Asia/Tehran"),
+  autoEscalateAfter: integer("auto_escalate_after").default(3),
+  collectContactFirst: boolean("collect_contact_first").default(true).notNull(),
+  aiPersonality: varchar("ai_personality", { length: 50 }).default("professional"),
+  isActive: boolean("is_active").default(true).notNull(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertVisitorChatSettingsSchema = createInsertSchema(visitorChatSettings).omit({
+  id: true,
+  updatedAt: true
+});
+
 // Types for visitor chat
 export type VisitorChatSession = typeof visitorChatSessions.$inferSelect;
 export type InsertVisitorChatSession = z.infer<typeof insertVisitorChatSessionSchema>;
@@ -8885,6 +8914,8 @@ export type VisitorChatMessage = typeof visitorChatMessages.$inferSelect;
 export type InsertVisitorChatMessage = z.infer<typeof insertVisitorChatMessageSchema>;
 export type VisitorChatCannedResponse = typeof visitorChatCannedResponses.$inferSelect;
 export type InsertVisitorChatCannedResponse = z.infer<typeof insertVisitorChatCannedResponseSchema>;
+export type VisitorChatSettings = typeof visitorChatSettings.$inferSelect;
+export type InsertVisitorChatSettings = z.infer<typeof insertVisitorChatSettingsSchema>;
 
 // ============================================================================
 // TEACHER REVIEWS SYSTEM - Student ratings with admin approval workflow

@@ -2,638 +2,462 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/use-language';
-import { useSocket } from '@/hooks/use-socket';
-import { useAuth } from '@/hooks/use-auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import {
-  MessageSquare,
-  User,
-  Mail,
-  Phone,
-  Clock,
-  Filter,
-  Search,
-  Send,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  Zap,
-  Bell,
-  Volume2,
-  VolumeX,
+  MessageSquare, User, Phone, Clock, Send, Bot, Headphones, Settings,
+  Star, Users, BarChart3, Zap, ChevronRight
 } from 'lucide-react';
-import type { VisitorChatSession, VisitorChatMessage } from '@shared/schema';
 import { format } from 'date-fns';
-
-// Canned responses
-const cannedResponses = {
-  greeting: [
-    { key: '/hello', message: 'سلام! چطور می‌تونم کمکتون کنم؟' },
-    { key: '/welcome', message: 'به Meta Lingua خوش آمدید! چگونه می‌تونم بهتون کمک کنم؟' },
-    { key: '/hi', message: 'درود! چه سوالی دارید؟' },
-  ],
-  faq: [
-    { key: '/courses', message: 'ما دوره‌های متنوعی در زبان‌های انگلیسی، فارسی و عربی ارائه می‌دهیم. برای اطلاعات بیشتر به صفحه دوره‌ها مراجعه کنید.' },
-    { key: '/pricing', message: 'قیمت دوره‌ها بسته به نوع و مدت دوره متفاوت است. برای مشاوره رایگان با ما تماس بگیرید.' },
-    { key: '/placement', message: 'می‌توانید تست سطح‌یابی رایگان ما را از صفحه اصلی تکمیل کنید تا سطح زبان شما مشخص شود.' },
-    { key: '/schedule', message: 'زمان‌های کلاس‌ها بسته به دوره متفاوت است. بعد از ثبت‌نام، می‌توانید زمان مناسب خود را انتخاب کنید.' },
-  ],
-  general: [
-    { key: '/wait', message: 'لطفاً چند لحظه صبر کنید، در حال بررسی اطلاعات هستم...' },
-    { key: '/thanks', message: 'از شما سپاسگزاریم! اگر سوال دیگری داشتید، در خدمتیم.' },
-    { key: '/contact', message: 'برای تماس مستقیم می‌توانید با شماره 021-12345678 تماس بگیرید یا به info@metalingua.ir ایمیل بزنید.' },
-  ],
-};
 
 export default function AdminVisitorChatPage() {
   const { t } = useTranslation(['admin', 'common']);
-  const { isRTL } = useLanguage();
+  const { language } = useLanguage();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { socket, isConnected } = useSocket();
   const queryClient = useQueryClient();
-  
-  const [selectedSession, setSelectedSession] = useState<VisitorChatSession | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'with_contact' | 'no_contact'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [newMessage, setNewMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [visitorTyping, setVisitorTyping] = useState(false);
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
-  const [showCannedResponses, setShowCannedResponses] = useState(false);
-  const [unreadSessions, setUnreadSessions] = useState<Set<number>>(new Set());
-  
+  const isRTL = ['fa', 'ar'].includes(language);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [replyMessage, setReplyMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const messageInputRef = useRef<HTMLTextAreaElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [activeTab, setActiveTab] = useState('chats');
 
-  // Initialize notification sound
-  useEffect(() => {
-    audioRef.current = new Audio('/notification.mp3');
-  }, []);
-
-  // Fetch all visitor chat sessions
-  const { data: sessions = [], isLoading } = useQuery<VisitorChatSession[]>({
-    queryKey: ['/api/visitor-chat/sessions/all'],
+  const { data: sessions = [] } = useQuery<any[]>({
+    queryKey: ['/api/visitor-chat/admin/sessions'],
+    refetchInterval: 5000
   });
 
-  // Fetch messages for selected session
-  const { data: messagesData, refetch: refetchMessages } = useQuery<{ session: VisitorChatSession, messages: VisitorChatMessage[] }>({
-    queryKey: ['/api/visitor-chat/sessions', selectedSession?.sessionId, 'messages'],
-    enabled: !!selectedSession,
-    refetchInterval: false, // Don't poll - we'll use WebSocket for real-time updates
+  const { data: stats } = useQuery<any>({
+    queryKey: ['/api/visitor-chat/admin/stats']
   });
 
-  const messages = messagesData?.messages || [];
+  const { data: settings } = useQuery<any>({
+    queryKey: ['/api/visitor-chat/settings']
+  });
 
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: async (messageText: string) => {
-      const response = await apiRequest(`/api/visitor-chat/sessions/${selectedSession!.sessionId}/messages`, {
+  const { data: selectedChat } = useQuery<any>({
+    queryKey: ['/api/visitor-chat/admin/sessions', selectedSessionId],
+    enabled: !!selectedSessionId,
+    refetchInterval: 3000
+  });
+
+  const updateSettings = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest('/api/visitor-chat/settings', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/visitor-chat/settings'] });
+      toast({ title: t('common:saved', 'Saved'), description: t('admin:chatSettingsUpdated', 'Chat settings updated') });
+    }
+  });
+
+  const sendReply = useMutation({
+    mutationFn: async () => {
+      if (!selectedSessionId || !replyMessage.trim()) return;
+      const res = await apiRequest(`/api/visitor-chat/sessions/${selectedSessionId}/messages`, {
         method: 'POST',
         body: JSON.stringify({
-          message: messageText,
+          message: replyMessage,
           senderType: 'admin',
-          senderName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'Support',
-          senderId: user?.id
+          senderName: 'Support Team'
         })
       });
-      return response.json();
+      return res.json();
     },
-    onSuccess: (newMsg) => {
-      setNewMessage('');
-      
-      // Send via WebSocket for real-time delivery
-      if (socket && selectedSession) {
-        socket.emit('admin-send-message', {
-          sessionId: selectedSession.sessionId,
-          message: newMsg
-        });
-      }
-      
-      // Update local state
-      queryClient.setQueryData(
-        ['/api/visitor-chat/sessions', selectedSession?.sessionId, 'messages'],
-        (old: any) => old ? { ...old, messages: [...old.messages, newMsg] } : old
-      );
-      
-      scrollToBottom();
-    },
-    onError: (error) => {
-      toast({
-        title: t('common:error'),
-        description: t('visitorChat.sendError', 'Failed to send message'),
-        variant: 'destructive',
-      });
+    onSuccess: () => {
+      setReplyMessage('');
+      queryClient.invalidateQueries({ queryKey: ['/api/visitor-chat/admin/sessions', selectedSessionId] });
     }
   });
 
-  // WebSocket event handlers
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    const handleNewMessage = (data: { sessionId: string, message: VisitorChatMessage }) => {
-      const { sessionId, message } = data;
-      
-      // Update messages if this is the current session
-      if (selectedSession?.sessionId === sessionId) {
-        queryClient.setQueryData(
-          ['/api/visitor-chat/sessions', sessionId, 'messages'],
-          (old: any) => old ? { ...old, messages: [...old.messages, message] } : old
-        );
-        scrollToBottom();
-      }
-      
-      // Play sound for visitor messages
-      if (message.senderType === 'visitor' && isSoundEnabled && audioRef.current) {
-        audioRef.current.play().catch(e => console.log('Audio play failed:', e));
-      }
-      
-      // Mark session as unread
-      if (message.senderType === 'visitor') {
-        setUnreadSessions(prev => new Set([...prev, parseInt(sessionId)]));
-      }
-    };
-
-    const handleVisitorTyping = (data: { sessionId: string, isTyping: boolean }) => {
-      if (selectedSession?.sessionId === data.sessionId) {
-        setVisitorTyping(data.isTyping);
-      }
-    };
-
-    const handleVisitorChatActive = (data: { sessionId: string }) => {
-      // Refresh sessions list when a visitor becomes active
-      queryClient.invalidateQueries({ queryKey: ['/api/visitor-chat/sessions/all'] });
-    };
-
-    const handleVisitorChatNotification = (data: { sessionId: string, messagePreview: string }) => {
-      if (selectedSession?.sessionId !== data.sessionId) {
-        toast({
-          title: t('visitorChat.newMessage', 'New Visitor Message'),
-          description: data.messagePreview,
-        });
-      }
-    };
-
-    socket.on('new-chat-message', handleNewMessage);
-    socket.on('visitor-typing-status', handleVisitorTyping);
-    socket.on('visitor-chat-active', handleVisitorChatActive);
-    socket.on('visitor-chat-notification', handleVisitorChatNotification);
-
-    return () => {
-      socket.off('new-chat-message', handleNewMessage);
-      socket.off('visitor-typing-status', handleVisitorTyping);
-      socket.off('visitor-chat-active', handleVisitorChatActive);
-      socket.off('visitor-chat-notification', handleVisitorChatNotification);
-    };
-  }, [socket, isConnected, selectedSession, isSoundEnabled]);
-
-  // Join admin chat session when selected
-  useEffect(() => {
-    if (socket && selectedSession && user) {
-      socket.emit('admin-join-chat', {
-        sessionId: selectedSession.sessionId,
-        adminId: user.id
-      });
-      
-      // Mark as read
-      setUnreadSessions(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(selectedSession.id);
-        return newSet;
-      });
+  const closeSession = useMutation({
+    mutationFn: async (sessionId: string) => {
+      const res = await apiRequest(`/api/visitor-chat/admin/sessions/${sessionId}/close`, { method: 'PATCH' });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/visitor-chat/admin/sessions'] });
+      setSelectedSessionId(null);
+      toast({ title: t('common:success', 'Success'), description: t('admin:chatClosed', 'Chat closed') });
     }
-  }, [socket, selectedSession, user]);
-
-  // Auto-scroll to bottom
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Handle typing indicator
-  const handleTyping = () => {
-    if (!socket || !selectedSession) return;
-    
-    if (!isTyping) {
-      setIsTyping(true);
-      socket.emit('admin-typing', {
-        sessionId: selectedSession.sessionId,
-        adminName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Support',
-        isTyping: true
-      });
-    }
-    
-    // Clear existing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    
-    // Set new timeout
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-      socket?.emit('admin-typing', {
-        sessionId: selectedSession.sessionId,
-        adminName: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Support',
-        isTyping: false
-      });
-    }, 1000);
-  };
-
-  // Send message
-  const sendMessage = () => {
-    if (!newMessage.trim() || !selectedSession) return;
-    sendMessageMutation.mutate(newMessage.trim());
-  };
-
-  // Insert canned response
-  const insertCannedResponse = (response: string) => {
-    setNewMessage(prev => prev + (prev ? ' ' : '') + response);
-    setShowCannedResponses(false);
-    messageInputRef.current?.focus();
-  };
-
-  // Filter sessions
-  const filteredSessions = sessions.filter(session => {
-    if (filterStatus === 'with_contact' && !session.visitorName && !session.visitorEmail && !session.visitorPhone) {
-      return false;
-    }
-    if (filterStatus === 'no_contact' && (session.visitorName || session.visitorEmail || session.visitorPhone)) {
-      return false;
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const nameMatch = session.visitorName?.toLowerCase().includes(query);
-      const emailMatch = session.visitorEmail?.toLowerCase().includes(query);
-      const phoneMatch = session.visitorPhone?.toLowerCase().includes(query);
-      return nameMatch || emailMatch || phoneMatch;
-    }
-
-    return true;
   });
 
-  const formatDate = (dateString: string | Date) => {
-    try {
-      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-      return format(date, 'PPp');
-    } catch {
-      return String(dateString);
-    }
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selectedChat?.messages]);
+
+  const formatTime = (date: string) => {
+    try { return format(new Date(date), 'HH:mm'); } catch { return ''; }
   };
 
   return (
-    <div className="p-6 max-w-full mx-auto space-y-6 h-[calc(100vh-100px)]" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <MessageSquare className="h-8 w-8 text-primary" />
-            {t('visitorChat.title', 'Visitor Chat Support')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('visitorChat.subtitle', 'Manage and respond to visitor inquiries in real-time')}
-          </p>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('admin:visitorChat', 'Visitor Chat')}</h1>
+          <p className="text-sm text-muted-foreground">{t('admin:manageLiveChats', 'Manage live visitor chats and AI settings')}</p>
         </div>
-        <div className="flex gap-3">
-          <Badge variant="outline" className="text-lg px-4 py-2">
-            <Bell className="h-5 w-5 mr-2" />
-            {unreadSessions.size} {t('visitorChat.unread', 'Unread')}
-          </Badge>
-          <Badge variant={isConnected ? 'default' : 'destructive'} className="text-lg px-4 py-2">
-            <span className={`h-2 w-2 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
-            {isConnected ? 'Online' : 'Offline'}
-          </Badge>
-          <Button
-            variant={isSoundEnabled ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-            data-testid="button-toggle-sound"
-          >
-            {isSoundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-          </Button>
+        <div className="flex gap-2">
+          {stats && (
+            <>
+              <Badge variant="outline" className="gap-1"><MessageSquare className="h-3 w-3" /> {stats.activeSessions} {t('common:active', 'Active')}</Badge>
+              <Badge variant="outline" className="gap-1"><Star className="h-3 w-3" /> {stats.averageRating}</Badge>
+              <Badge variant="outline" className="gap-1"><Users className="h-3 w-3" /> {stats.identifiedVisitors} {t('admin:identified', 'Identified')}</Badge>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            {t('visitorChat.filters', 'Filters')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>{t('visitorChat.searchLabel', 'Search by name, email, or phone')}</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  data-testid="input-search-sessions"
-                  placeholder={t('visitorChat.searchPlaceholder', 'Search...')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>{t('visitorChat.statusFilter', 'Status Filter')}</Label>
-              <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
-                <SelectTrigger data-testid="select-filter-status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('visitorChat.filterAll', 'All Sessions')}</SelectItem>
-                  <SelectItem value="with_contact">{t('visitorChat.filterWithContact', 'With Contact Info')}</SelectItem>
-                  <SelectItem value="no_contact">{t('visitorChat.filterNoContact', 'Anonymous')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="chats" className="gap-1">
+            <MessageSquare className="h-4 w-4" />
+            {t('admin:liveChats', 'Live Chats')}
+            {sessions.length > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{sessions.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-1">
+            <Settings className="h-4 w-4" />
+            {t('admin:chatSettings', 'Settings')}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Main Chat Interface */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-200px)]">
-        {/* Sessions List */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>{t('visitorChat.sessionsList', 'Chat Sessions')}</span>
-              <Badge variant="secondary">{filteredSessions.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[600px]">
-              <div className="space-y-2 p-4">
-                {isLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    {t('common.loading', 'Loading...')}
-                  </div>
-                ) : filteredSessions.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {t('visitorChat.noSessions', 'No sessions found')}
+        <TabsContent value="chats">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: 'calc(100vh - 240px)' }}>
+            <Card className="lg:col-span-1 flex flex-col overflow-hidden">
+              <CardHeader className="py-3 px-4 shrink-0 border-b">
+                <CardTitle className="text-sm">{t('admin:activeSessions', 'Active Sessions')}</CardTitle>
+              </CardHeader>
+              <ScrollArea className="flex-1">
+                {sessions.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    {t('admin:noActiveSessions', 'No active chat sessions')}
                   </div>
                 ) : (
-                  filteredSessions.map((session) => {
-                    const hasContact = !!(session.visitorName || session.visitorEmail || session.visitorPhone);
-                    const isUnread = unreadSessions.has(session.id);
-
-                    return (
-                      <Card
-                        key={session.id}
-                        className={`cursor-pointer transition-all hover:shadow-md ${
-                          selectedSession?.id === session.id ? 'ring-2 ring-primary shadow-lg' : ''
-                        } ${isUnread ? 'bg-blue-50 dark:bg-blue-950' : ''}`}
-                        onClick={() => setSelectedSession(session)}
-                        data-testid={`card-session-${session.id}`}
+                  <div className="divide-y">
+                    {sessions.map((session: any) => (
+                      <button
+                        key={session.sessionId}
+                        onClick={() => setSelectedSessionId(session.sessionId)}
+                        className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${selectedSessionId === session.sessionId ? 'bg-blue-50 border-l-2 border-blue-500' : ''}`}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-2">
-                                {isUnread && (
-                                  <span className="h-3 w-3 rounded-full bg-blue-600 animate-pulse" />
-                                )}
-                                {hasContact ? (
-                                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                ) : (
-                                  <XCircle className="h-4 w-4 text-orange-600" />
-                                )}
-                                <span className="font-semibold">
-                                  {session.visitorName || t('visitorChat.anonymous', 'Anonymous Visitor')}
-                                </span>
-                              </div>
-                              
-                              {session.visitorEmail && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Mail className="h-3 w-3" />
-                                  {session.visitorEmail}
-                                </div>
-                              )}
-                              
-                              {session.visitorPhone && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Phone className="h-3 w-3" />
-                                  {session.visitorPhone}
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Clock className="h-3 w-3" />
-                                {formatDate(session.createdAt)}
-                              </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 text-white text-xs ${session.matchedUser ? 'bg-blue-500' : 'bg-gray-400'}`}>
+                              {session.matchedUser ? <User className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
                             </div>
-                            
-                            <Badge variant={hasContact ? 'default' : 'secondary'}>
-                              {hasContact ? 'Contact' : 'Anon'}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* Chat Area */}
-        <Card className="lg:col-span-2 flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div>
-                {selectedSession
-                  ? selectedSession.visitorName || t('visitorChat.anonymous', 'Anonymous Visitor')
-                  : t('visitorChat.selectSession', 'Select a session')}
-              </div>
-              {selectedSession && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowCannedResponses(!showCannedResponses)}
-                    data-testid="button-toggle-canned-responses"
-                  >
-                    <Zap className="h-4 w-4 mr-1" />
-                    {t('visitorChat.quickReplies', 'Quick Replies')}
-                  </Button>
-                </div>
-              )}
-            </CardTitle>
-            {selectedSession && selectedSession.visitorEmail && (
-              <CardDescription className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <Mail className="h-3 w-3" />
-                  {selectedSession.visitorEmail}
-                </span>
-                {selectedSession.visitorPhone && (
-                  <span className="flex items-center gap-1">
-                    <Phone className="h-3 w-3" />
-                    {selectedSession.visitorPhone}
-                  </span>
-                )}
-              </CardDescription>
-            )}
-          </CardHeader>
-          
-          <Separator />
-          
-          <CardContent className="flex-1 flex flex-col p-0">
-            {!selectedSession ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                <div className="text-center space-y-2">
-                  <MessageSquare className="h-16 w-16 mx-auto opacity-30" />
-                  <p className="text-lg">{t('visitorChat.selectSessionPrompt', 'Select a chat session to start messaging')}</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Canned Responses */}
-                {showCannedResponses && (
-                  <div className="p-4 bg-muted/50 border-b">
-                    <div className="space-y-3">
-                      {Object.entries(cannedResponses).map(([category, responses]) => (
-                        <div key={category}>
-                          <h4 className="text-sm font-semibold mb-2 capitalize">{t(`visitorChat.${category}`, category)}</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {responses.map((response) => (
-                              <Button
-                                key={response.key}
-                                variant="outline"
-                                size="sm"
-                                onClick={() => insertCannedResponse(response.message)}
-                                data-testid={`button-canned-${response.key}`}
-                              >
-                                {response.key}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Messages */}
-                <ScrollArea className="flex-1 p-4 bg-gray-50 dark:bg-gray-900">
-                  <div className="space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        {t('visitorChat.noMessages', 'No messages yet. Start the conversation!')}
-                      </div>
-                    ) : (
-                      messages.map((message, index) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.senderType === 'admin' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-end' : 'justify-start')}`}
-                          data-testid={`message-${message.senderType}-${index}`}
-                        >
-                          <div
-                            className={`max-w-[70%] rounded-lg p-3 shadow-sm ${
-                              message.senderType === 'admin'
-                                ? 'bg-primary text-primary-foreground'
-                                : message.senderType === 'system'
-                                ? 'bg-muted text-muted-foreground text-sm italic'
-                                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                            }`}
-                          >
-                            {message.senderType !== 'visitor' && message.senderType !== 'system' && (
-                              <p className="text-xs font-semibold mb-1 opacity-80">
-                                {message.senderName}
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">
+                                {session.visitorName || session.matchedUser?.firstName || t('admin:anonymous', 'Anonymous')}
                               </p>
+                              <p className="text-[11px] text-muted-foreground truncate">
+                                {session.visitorPhone || session.visitorEmail || session.sessionId.substring(0, 8)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            {session.unreadCount > 0 && (
+                              <Badge className="h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-red-500">{session.unreadCount}</Badge>
                             )}
-                            <p className="text-sm whitespace-pre-wrap">{message.message}</p>
-                            <p className={`text-xs mt-1 opacity-60`}>
-                              {formatDate(message.createdAt)}
-                            </p>
+                            <span className="text-[10px] text-muted-foreground">{formatTime(session.lastMessageAt)}</span>
                           </div>
                         </div>
-                      ))
-                    )}
-                    
-                    {/* Typing indicator */}
-                    {visitorTyping && (
-                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
-                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm">
-                          <div className="flex gap-1">
-                            <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                          </div>
+                        <div className="flex gap-1 mt-1">
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">
+                            {session.chatMode === 'ai' ? <Bot className="h-2.5 w-2.5 mr-0.5" /> : <Headphones className="h-2.5 w-2.5 mr-0.5" />}
+                            {session.chatMode}
+                          </Badge>
+                          {session.matchedUser && (
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1">{t('admin:identified', 'Identified')}</Badge>
+                          )}
+                          {session.rating && (
+                            <Badge variant="outline" className="text-[10px] h-4 px-1 gap-0.5">
+                              <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" /> {session.rating}
+                            </Badge>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </Card>
+
+            <Card className="lg:col-span-2 flex flex-col overflow-hidden">
+              {!selectedSessionId || !selectedChat ? (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">{t('admin:selectChat', 'Select a chat to view messages')}</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="border-b px-4 py-3 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white ${selectedChat.matchedUser ? 'bg-blue-500' : 'bg-gray-400'}`}>
+                        <User className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {selectedChat.session?.visitorName || selectedChat.matchedUser?.firstName || t('admin:anonymous', 'Anonymous')}
+                        </p>
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          {selectedChat.session?.visitorPhone && (
+                            <span className="flex items-center gap-0.5"><Phone className="h-3 w-3" /> {selectedChat.session.visitorPhone}</span>
+                          )}
+                          {selectedChat.matchedUser && (
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1">{selectedChat.matchedUser.role}</Badge>
+                          )}
+                          {selectedChat.matchedLead && (
+                            <Badge variant="outline" className="text-[10px] h-4 px-1">{t('admin:lead', 'Lead')}</Badge>
+                          )}
                         </div>
                       </div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
-                  </div>
-                </ScrollArea>
-
-                {/* Message Input */}
-                <div className="p-4 border-t bg-white dark:bg-gray-800">
-                  <div className="flex gap-2">
-                    <Textarea
-                      ref={messageInputRef}
-                      placeholder={t('visitorChat.messagePlaceholder', 'Type your message...')}
-                      value={newMessage}
-                      onChange={(e) => {
-                        setNewMessage(e.target.value);
-                        handleTyping();
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          sendMessage();
-                        }
-                      }}
-                      className="flex-1 min-h-[60px] max-h-[120px]"
-                      disabled={sendMessageMutation.isPending}
-                      data-testid="textarea-admin-message"
-                    />
+                    </div>
                     <Button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                      size="icon"
-                      className="h-[60px] w-[60px]"
-                      data-testid="button-send-admin-message"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => closeSession.mutate(selectedSessionId)}
+                      className="text-xs"
                     >
-                      {sendMessageMutation.isPending ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className={`h-5 w-5 ${isRTL ? 'scale-x-[-1]' : ''}`} />
-                      )}
+                      {t('admin:closeChat', 'Close')}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {t('visitorChat.enterToSend', 'Press Enter to send, Shift+Enter for new line')}
+
+                  <ScrollArea className="flex-1 px-4 py-3 bg-gray-50">
+                    <div className="space-y-3">
+                      {selectedChat.messages?.map((msg: any, index: number) => (
+                        <div
+                          key={msg.id || index}
+                          className={`flex ${msg.senderType === 'visitor' ? 'justify-start' : msg.senderType === 'system' ? 'justify-center' : 'justify-end'}`}
+                        >
+                          {msg.senderType === 'system' ? (
+                            <p className="text-[11px] text-gray-400 bg-gray-100 rounded-full px-3 py-1">{msg.message}</p>
+                          ) : (
+                            <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
+                              msg.senderType === 'visitor'
+                                ? 'bg-white border border-gray-200 text-gray-800'
+                                : msg.senderType === 'ai'
+                                ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 text-gray-800'
+                                : 'bg-blue-600 text-white'
+                            }`}>
+                              <div className="flex items-center gap-1 mb-0.5">
+                                {msg.senderType === 'ai' && <Bot className="h-3 w-3 text-blue-500" />}
+                                {msg.senderType === 'admin' && <Headphones className="h-3 w-3 text-white/70" />}
+                                <span className={`text-[10px] font-semibold ${msg.senderType === 'admin' ? 'text-white/70' : 'text-blue-500'}`}>
+                                  {msg.senderName}
+                                </span>
+                                <span className={`text-[10px] ${msg.senderType === 'admin' ? 'text-white/50' : 'text-gray-400'}`}>
+                                  {formatTime(msg.createdAt)}
+                                </span>
+                              </div>
+                              <p className="whitespace-pre-wrap">{msg.message}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  </ScrollArea>
+
+                  <div className="border-t px-3 py-2.5 shrink-0">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder={t('admin:typeReply', 'Type your reply...')}
+                        value={replyMessage}
+                        onChange={(e) => setReplyMessage(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply.mutate(); } }}
+                        className="flex-1 h-9 text-sm rounded-full px-4"
+                      />
+                      <Button
+                        onClick={() => sendReply.mutate()}
+                        disabled={!replyMessage.trim() || sendReply.isPending}
+                        size="icon"
+                        className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-blue-500" />
+                  {t('admin:aiChatMode', 'AI Chat Mode')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-sm">{t('admin:chatMode', 'Chat Mode')}</Label>
+                  <Select
+                    value={settings?.chatMode || 'hybrid'}
+                    onValueChange={(val) => updateSettings.mutate({ chatMode: val })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ai">
+                        <span className="flex items-center gap-2"><Bot className="h-4 w-4" /> {t('admin:aiOnly', 'AI Only')}</span>
+                      </SelectItem>
+                      <SelectItem value="human">
+                        <span className="flex items-center gap-2"><Headphones className="h-4 w-4" /> {t('admin:humanOnly', 'Human Only')}</span>
+                      </SelectItem>
+                      <SelectItem value="hybrid">
+                        <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> {t('admin:hybrid', 'Hybrid (AI + Human)')}</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {settings?.chatMode === 'ai' && t('admin:aiModeDesc', 'AI handles all conversations automatically')}
+                    {settings?.chatMode === 'human' && t('admin:humanModeDesc', 'Only human agents respond to chats')}
+                    {settings?.chatMode === 'hybrid' && t('admin:hybridModeDesc', 'AI responds when no human is available')}
                   </p>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm">{t('admin:collectContactFirst', 'Collect contact info first')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('admin:collectContactDesc', 'Ask for phone/name before chatting')}</p>
+                  </div>
+                  <Switch
+                    checked={settings?.collectContactFirst ?? true}
+                    onCheckedChange={(val) => updateSettings.mutate({ collectContactFirst: val })}
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm">{t('admin:autoEscalate', 'Auto-escalate after (messages)')}</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={settings?.autoEscalateAfter || 3}
+                    onChange={(e) => updateSettings.mutate({ autoEscalateAfter: parseInt(e.target.value) || 3 })}
+                    className="mt-1 w-24"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{t('admin:autoEscalateDesc', 'Escalate to human after N AI messages')}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-blue-500" />
+                  {t('admin:businessHours', 'Business Hours')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm">{t('admin:startTime', 'Start Time')}</Label>
+                    <Input
+                      type="time"
+                      value={settings?.businessHoursStart || '09:00'}
+                      onChange={(e) => updateSettings.mutate({ businessHoursStart: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">{t('admin:endTime', 'End Time')}</Label>
+                    <Input
+                      type="time"
+                      value={settings?.businessHoursEnd || '18:00'}
+                      onChange={(e) => updateSettings.mutate({ businessHoursEnd: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm">{t('admin:timezone', 'Timezone')}</Label>
+                  <Select
+                    value={settings?.timezone || 'Asia/Tehran'}
+                    onValueChange={(val) => updateSettings.mutate({ timezone: val })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Asia/Tehran">Asia/Tehran (IRST)</SelectItem>
+                      <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
+                      <SelectItem value="Europe/Istanbul">Europe/Istanbul (TRT)</SelectItem>
+                      <SelectItem value="UTC">UTC</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm">{t('admin:aiPersonality', 'AI Personality')}</Label>
+                  <Select
+                    value={settings?.aiPersonality || 'professional'}
+                    onValueChange={(val) => updateSettings.mutate({ aiPersonality: val })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="professional">{t('admin:professional', 'Professional')}</SelectItem>
+                      <SelectItem value="friendly">{t('admin:friendly', 'Friendly')}</SelectItem>
+                      <SelectItem value="casual">{t('admin:casual', 'Casual')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-500" />
+                  {t('admin:chatStatistics', 'Chat Statistics')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{stats?.activeSessions || 0}</p>
+                    <p className="text-xs text-blue-600/70">{t('admin:activeSessions', 'Active')}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-gray-600">{stats?.closedSessions || 0}</p>
+                    <p className="text-xs text-gray-500">{t('admin:closedSessions', 'Closed')}</p>
+                  </div>
+                  <div className="bg-yellow-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-yellow-600">{stats?.averageRating || '0.0'}</p>
+                    <p className="text-xs text-yellow-600/70">{t('admin:avgRating', 'Avg Rating')}</p>
+                  </div>
+                  <div className="bg-green-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-green-600">{stats?.identifiedVisitors || 0}</p>
+                    <p className="text-xs text-green-600/70">{t('admin:identifiedVisitors', 'Identified')}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
