@@ -847,8 +847,4 @@ body.rtl p, body.rtl div, body.rtl span {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
   }
   
-  /* Simplify gradients on mobile */
-  .bg-gradient-to-br {
-    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
-  }
 }
