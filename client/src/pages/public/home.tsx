@@ -107,23 +107,23 @@ export default function PublicHome() {
       {/* Hero Section - Clean Light Background */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 border border-blue-200 mb-6" data-testid="badge-new-feature">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-blue-100 border border-blue-200 mb-4 sm:mb-6" data-testid="badge-new-feature">
               <Sparkles className="h-4 w-4 text-blue-600 animate-pulse" />
-              <span className="text-sm font-medium text-blue-700">
+              <span className="text-xs sm:text-sm font-medium text-blue-700">
                 {t('hero.badge', 'New: AI Study Partner Now Available')}
               </span>
             </div>
             
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl mb-6">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-7xl mb-4 sm:mb-6">
               <span className="block">{t('hero.title1', 'Learn Languages')}</span>
               <span className="block bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
                 {t('hero.title2', 'The Smart Way')}
               </span>
             </h1>
             
-            <p className="mx-auto max-w-2xl text-lg text-gray-600 mb-10">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-gray-600 mb-8 sm:mb-10 px-2">
               {t('hero.description', 'Master any language with AI-powered lessons, interactive exercises, and personalized feedback. Join thousands of learners worldwide.')}
             </p>
             
@@ -157,19 +157,19 @@ export default function PublicHome() {
 
       {/* Stats Section */}
       <section className="border-y bg-background/50 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <div key={index} className="text-center" data-testid={`stat-${index}`}>
                   <div className="flex justify-center mb-2">
-                    <div className="p-3 rounded-full bg-primary/10">
-                      <Icon className="h-6 w-6 text-primary" />
+                    <div className="p-2 sm:p-3 rounded-full bg-primary/10">
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
                   </div>
-                  <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  <div className="text-2xl sm:text-3xl font-bold mb-1">{stat.value}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
                 </div>
               );
             })}
@@ -178,18 +178,18 @@ export default function PublicHome() {
       </section>
 
       {/* Features Section */}
-      <section className="py-24">
+      <section className="py-12 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">
+          <div className="text-center mb-8 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
               {t('features.heading', 'Why Choose Meta Lingua?')}
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
               {t('features.subheading', 'Experience the next generation of language learning with cutting-edge technology and proven methodologies.')}
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -211,29 +211,29 @@ export default function PublicHome() {
       </section>
 
       {/* Test Prep Excellence Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 py-12 sm:py-24">
         <div className="absolute inset-0 bg-grid-white/5" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[22rem]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="text-white">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/20 backdrop-blur-sm mb-4 sm:mb-6">
                 <Target className="h-4 w-4" />
-                <span className="text-sm font-medium">{t('testPrep.badge', 'Free Placement Test')}</span>
+                <span className="text-xs sm:text-sm font-medium">{t('testPrep.badge', 'Free Placement Test')}</span>
               </div>
               
-              <h2 className="text-4xl font-bold mb-4 text-white">
+              <h2 className="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 text-white">
                 {t('testPrep.heading', 'Excel in Your International Tests')}
               </h2>
-              <p className="text-lg text-white mb-6">
+              <p className="text-base sm:text-lg text-white mb-4 sm:mb-6">
                 {t('testPrep.subheading', 'IELTS • TOEFL • GRE • PTE')}
               </p>
               
-              <p className="text-xl text-white mb-8">
+              <p className="text-base sm:text-xl text-white mb-6 sm:mb-8">
                 {t('testPrep.description', 'Assess your CEFR level with our adaptive placement test. Get personalized study plans and track your progress to test success.')}
               </p>
               
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                 {[
                   { icon: CheckCircle, text: t('testPrep.feature1', 'Multi-Stage Adaptive Test (MST)') },
                   { icon: CheckCircle, text: t('testPrep.feature2', 'Instant CEFR results with skill breakdown') },
@@ -243,8 +243,8 @@ export default function PublicHome() {
                   const Icon = item.icon;
                   return (
                     <li key={index} className="flex items-start gap-3">
-                      <Icon className="h-6 w-6 text-green-300 shrink-0 mt-0.5" />
-                      <span className="text-lg text-white">{item.text}</span>
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-green-300 shrink-0 mt-0.5" />
+                      <span className="text-base sm:text-lg text-white">{item.text}</span>
                     </li>
                   );
                 })}
@@ -279,7 +279,7 @@ export default function PublicHome() {
             {/* Right Content - Image Collage with Stats */}
             <div className="relative space-y-4">
               {/* Main Hero Image */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-video sm:aspect-[4/3]">
                 <img 
                   src={testPrepImage1} 
                   alt="Students preparing for IELTS and TOEFL tests with study materials" 
@@ -290,19 +290,19 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent" />
                 
                 {/* Stat Badge Overlay */}
-                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <Award className="h-8 w-8 text-blue-600" />
+                <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Award className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">{t('testPrep.stat3Value', '94%')}</div>
-                      <div className="text-sm text-gray-600">{t('testPrep.stat3Label', 'Success Rate')}</div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{t('testPrep.stat3Value', '94%')}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">{t('testPrep.stat3Label', 'Success Rate')}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Supporting Image with Stat */}
-              <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
+              {/* Supporting Image with Stat - hidden on small mobile */}
+              <div className="hidden sm:block relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
                 <img 
                   src={testPrepImage2} 
                   alt="International test preparation classroom environment" 
@@ -329,29 +329,29 @@ export default function PublicHome() {
       </section>
 
       {/* Kids & Young Learners Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-pink-600 to-rose-600 py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-pink-600 to-rose-600 py-12 sm:py-24">
         <div className="absolute inset-0 bg-grid-white/5" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[22rem]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="text-white">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/20 backdrop-blur-sm mb-4 sm:mb-6">
                 <Gamepad2 className="h-4 w-4" />
-                <span className="text-sm font-medium">{t('kids.badge', 'Gamified Learning')}</span>
+                <span className="text-xs sm:text-sm font-medium">{t('kids.badge', 'Gamified Learning')}</span>
               </div>
               
-              <h2 className="text-4xl font-bold mb-4 text-white">
+              <h2 className="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 text-white">
                 {t('kids.heading', 'Kids Love Learning Here')}
               </h2>
-              <p className="text-lg text-white mb-6">
+              <p className="text-base sm:text-lg text-white mb-4 sm:mb-6">
                 {t('kids.subheading', 'Fun, Interactive & Engaging')}
               </p>
               
-              <p className="text-xl text-white mb-8">
+              <p className="text-base sm:text-xl text-white mb-6 sm:mb-8">
                 {t('kids.description', "Turn language learning into an adventure! With LinguaQuest, kids earn XP, unlock achievements, and compete on leaderboards while mastering new skills.")}
               </p>
               
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                 {[
                   { icon: Gamepad2, text: t('kids.feature1', '19 game types & interactive activities') },
                   { icon: Trophy, text: t('kids.feature2', 'XP, levels & achievement badges') },
@@ -361,8 +361,8 @@ export default function PublicHome() {
                   const Icon = item.icon;
                   return (
                     <li key={index} className="flex items-start gap-3">
-                      <Icon className="h-6 w-6 text-yellow-300 shrink-0 mt-0.5" />
-                      <span className="text-lg text-white">{item.text}</span>
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-300 shrink-0 mt-0.5" />
+                      <span className="text-base sm:text-lg text-white">{item.text}</span>
                     </li>
                   );
                 })}
@@ -397,7 +397,7 @@ export default function PublicHome() {
             {/* Right Content - Image Collage with Stats */}
             <div className="relative space-y-4">
               {/* Main Hero Image */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-video sm:aspect-[4/3]">
                 <img 
                   src={kidsImage1} 
                   alt="Happy children learning English in a colorful, interactive classroom environment" 
@@ -408,24 +408,24 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 via-transparent to-transparent" />
                 
                 {/* Stat Badge Overlay */}
-                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <Star className="h-8 w-8 text-purple-600" />
+                <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Star className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">{t('kids.stat3Value', '4.9/5')}</div>
-                      <div className="text-sm text-gray-600">{t('kids.stat3Label', 'Fun Score')}</div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{t('kids.stat3Value', '4.9/5')}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">{t('kids.stat3Label', 'Fun Score')}</div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Floating Badge */}
-                <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
-                  ⭐ {t('kids.freeDemoBadge', 'Try Free Demo')}
+                {/* Floating Badge - hidden on small mobile to avoid overflow */}
+                <div className="hidden sm:block absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
+                  {t('kids.freeDemoBadge', 'Try Free Demo')}
                 </div>
               </div>
 
-              {/* Supporting Image with Stat */}
-              <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
+              {/* Supporting Image with Stat - hidden on small mobile */}
+              <div className="hidden sm:block relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
                 <img 
                   src={kidsImage2} 
                   alt="Kids enjoying gamified English learning activities" 
@@ -452,27 +452,27 @@ export default function PublicHome() {
       </section>
 
       {/* CallerN Promotion Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 py-12 sm:py-24">
         <div className="absolute inset-0 bg-grid-white/5" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
             <div className="text-white">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/20 backdrop-blur-sm mb-4 sm:mb-6">
                 <Video className="h-4 w-4" />
-                <span className="text-sm font-medium">{t('callern.badge', '24/7 Live Tutoring')}</span>
+                <span className="text-xs sm:text-sm font-medium">{t('callern.badge', '24/7 Live Tutoring')}</span>
               </div>
               
-              <h2 className="text-4xl font-bold mb-6 text-white">
+              <h2 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 text-white">
                 {t('callern.heading', 'Practice Speaking with')} <br />
                 <span className="text-yellow-300">{t('callern.headingHighlight', 'Native English Teachers')}</span>
               </h2>
               
-              <p className="text-xl text-white mb-8">
+              <p className="text-base sm:text-xl text-white mb-6 sm:mb-8">
                 {t('callern.description', 'Connect instantly with certified teachers via live video. Perfect your accent, boost your confidence, and speak English like a native.')}
               </p>
               
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                 {[
                   { icon: CheckCircle, text: t('callern.feature1', 'Available 24/7 - Learn on your schedule') },
                   { icon: CheckCircle, text: t('callern.feature2', 'Certified native speakers') },
@@ -482,8 +482,8 @@ export default function PublicHome() {
                   const Icon = item.icon;
                   return (
                     <li key={index} className="flex items-start gap-3">
-                      <Icon className="h-6 w-6 text-green-300 shrink-0 mt-0.5" />
-                      <span className="text-lg text-white">{item.text}</span>
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-green-300 shrink-0 mt-0.5" />
+                      <span className="text-base sm:text-lg text-white">{item.text}</span>
                     </li>
                   );
                 })}
@@ -518,7 +518,7 @@ export default function PublicHome() {
             {/* Right Content - Image Collage with Stats */}
             <div className="relative space-y-4">
               {/* Main Hero Image */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-video sm:aspect-[4/3]">
                 <img 
                   src={callernImage1} 
                   alt="Professional online English tutoring session with native speaker via video call" 
@@ -529,19 +529,19 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/60 via-transparent to-transparent" />
                 
                 {/* Stat Badge Overlay */}
-                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <Star className="h-8 w-8 text-indigo-600" />
+                <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Star className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">{t('callern.stat3Value', '4.9/5')}</div>
-                      <div className="text-sm text-gray-600">{t('callern.stat3', 'Student Rating')}</div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{t('callern.stat3Value', '4.9/5')}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">{t('callern.stat3', 'Student Rating')}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Supporting Image with Stat */}
-              <div className="relative rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
+              {/* Supporting Image with Stat - hidden on small mobile */}
+              <div className="hidden sm:block relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
                 <img 
                   src={callernImage2} 
                   alt="Student practicing English conversation in online tutoring session" 
@@ -563,8 +563,8 @@ export default function PublicHome() {
                 </div>
               </div>
               
-              {/* Floating Badge */}
-              <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
+              {/* Floating Badge - hidden on small mobile to avoid overflow */}
+              <div className="hidden sm:block absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
                 {t('callern.badge2', 'Try Free Session!')}
               </div>
             </div>
@@ -574,18 +574,18 @@ export default function PublicHome() {
 
       {/* Latest Blog Posts */}
       {blogPosts.length > 0 && (
-        <section className="py-24 bg-accent/30">
+        <section className="py-12 sm:py-24 bg-accent/30">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center mb-12">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 sm:mb-12">
               <div>
-                <h2 className="text-3xl font-bold mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2">
                   {t('blog.heading', 'Latest Articles')}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {t('blog.subheading', 'Tips, insights, and stories from our community')}
                 </p>
               </div>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" size="sm" className="w-fit">
                 <Link href="/blog" data-testid="button-view-all-blog" className="flex items-center gap-2">
                   {t('cta.viewAll', 'View All')}
                   <ArrowRight className="h-4 w-4" />
@@ -593,7 +593,7 @@ export default function PublicHome() {
               </Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
               {blogPosts.map((post) => (
                 <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`blog-post-${post.id}`}>
                   {post.featuredImage && (
@@ -634,18 +634,18 @@ export default function PublicHome() {
 
       {/* Latest Videos */}
       {videos.length > 0 && (
-        <section className="py-24">
+        <section className="py-12 sm:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center mb-12">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 sm:mb-12">
               <div>
-                <h2 className="text-3xl font-bold mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2">
                   {t('videos.heading', 'Featured Videos')}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {t('videos.subheading', 'Learn from our expert instructors')}
                 </p>
               </div>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" size="sm" className="w-fit">
                 <Link href="/videos" data-testid="button-view-all-videos" className="flex items-center gap-2">
                   {t('cta.viewAll', 'View All')}
                   <ArrowRight className="h-4 w-4" />
@@ -653,7 +653,7 @@ export default function PublicHome() {
               </Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
               {videos.map((video) => (
                 <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`video-${video.id}`}>
                   <div className="aspect-video overflow-hidden relative group">
@@ -712,16 +712,16 @@ export default function PublicHome() {
       {/* CTA Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary to-purple-600 text-white">
         <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-6">
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:py-24 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/10 border border-white/20 mb-4 sm:mb-6">
             <Sparkles className="h-4 w-4 animate-pulse" />
-            <span className="text-sm font-medium">{t('limitedTimeOffer')}</span>
+            <span className="text-xs sm:text-sm font-medium">{t('limitedTimeOffer')}</span>
           </div>
           
-          <h2 className="text-4xl font-bold mb-6">
+          <h2 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">
             {t('cta.final.title', 'Ready to Transform Your Language Skills?')}
           </h2>
-          <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl mx-auto px-2">
             {t('cta.final.description', 'Join thousands of successful learners. Start your free trial today and experience the future of language learning.')}
           </p>
           
