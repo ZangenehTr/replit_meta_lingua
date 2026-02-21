@@ -69,7 +69,17 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Video Infrastructure**: Local filesystem storage and streaming
 - **File Storage**: Local server filesystem
 
-## Recent Changes (Feb 20, 2026)
+## Recent Changes (Feb 21, 2026)
+### Call Center ERP: 24-Stage Unified Workflow
+- **Expanded Workflow**: Extended from 6 to 24 complete workflow stages covering entire student lifecycle: Initial Intake (4 stages), Assessment & Consultation (5), Registration & Finance (4), Private Class Management (7), Attendance (3), Exit (1).
+- **18 New Stage Components**: Created workflow-stages/ directory with individual components: NoShowStage, EvaluationStage, ConsultationCCStage, ConsultationSupStage, PreRegistrationStage, FinalRegistrationStage, PrivateClassSetupStage, SetClassNumberStage, ActivePrivateClassStage, ChargeRenewalStage, HoldStage, PrivateClassWithdrawalStage, CompletedPrivateClassStage, InstallmentsStage, ChequeStage, OnlineAttendanceStage, StudentAbsenceStage, TeacherAbsenceStage.
+- **Unified Workflow Hub**: Completely redesigned unified-workflow.tsx with 6 hierarchical stage groups, collapsible sidebar with stage counts, role-based access control (Admin/Supervisor/CC Agent/Mentor/Accountant/Front Desk), mobile-responsive layout.
+- **Schema Updates**: Extended LEAD_WORKFLOW_STAGE constants and VALID_STAGE_TRANSITIONS map in shared/schema.ts to support all 24 stages.
+- **i18n Complete**: Added 200+ translation keys across en/fa/ar callcenter.json for all 24 stages, stage groups, and per-stage action labels.
+- **Design Pattern**: All components use TanStack Query, i18n, RTL support, Dialog forms, toast notifications, framer-motion animations, consistent card layouts.
+- **Role Access**: Different stages accessible by specific roles (e.g., Accountant for installments/cheque, Supervisor for consultation, Front Desk for attendance).
+
+## Previous Changes (Feb 20, 2026)
 ### Platform Audit & Polish
 - **Route Consolidation**: Merged duplicate server/cms-routes.ts into server/routes/cms-routes.ts (canonical), deleted unused lexi-routes.ts. Fixed ESM compatibility (`require('fs')` → `import fsSync from 'fs'`).
 - **i18n 100% Coverage**: Synced 1,500+ missing translation keys across Farsi and Arabic for all 17 namespaces. Fixed structural issues where FA `common.actions` and `student.packages` were strings instead of objects (converted to proper nested objects matching EN structure). Zero missing keys in FA and AR.
