@@ -10,10 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, Trash2, Check, X, Type } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import type { CustomFont } from "@shared/schema";
 
 export default function FontManagementPage() {
   const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadForm, setUploadForm] = useState({
@@ -22,12 +24,10 @@ export default function FontManagementPage() {
     language: 'fa'
   });
 
-  // Fetch all fonts
   const { data: fonts = [], isLoading } = useQuery<CustomFont[]>({
     queryKey: ['/api/cms/fonts'],
   });
 
-  // Upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const response = await fetch('/api/cms/fonts/upload', {
@@ -40,7 +40,7 @@ export default function FontManagementPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to upload font');
+        throw new Error(error.message || t('admin:fontManagement.failedToUpload'));
       }
 
       return response.json();
@@ -49,7 +49,7 @@ export default function FontManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/cms/fonts'] });
       toast({
         title: t('common:success'),
-        description: "Font uploaded successfully",
+        description: t('admin:fontManagement.fontUploaded'),
       });
       setSelectedFile(null);
       setUploadForm({ name: '', fontFamily: '', language: 'fa' });
@@ -63,7 +63,6 @@ export default function FontManagementPage() {
     },
   });
 
-  // Activate/Deactivate mutation
   const activateMutation = useMutation({
     mutationFn: async ({ id, isActive, language }: { id: number; isActive: boolean; language: string }) => {
       return apiRequest(`/api/cms/fonts/${id}/activate`, {
@@ -75,19 +74,18 @@ export default function FontManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/cms/fonts'] });
       toast({
         title: t('common:success'),
-        description: "Font status updated",
+        description: t('admin:fontManagement.fontStatusUpdated'),
       });
     },
     onError: () => {
       toast({
         title: t('common:error'),
-        description: "Failed to update font status",
+        description: t('admin:fontManagement.failedToUpdateStatus'),
         variant: "destructive",
       });
     },
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       return apiRequest(`/api/cms/fonts/${id}`, {
@@ -98,13 +96,13 @@ export default function FontManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/cms/fonts'] });
       toast({
         title: t('common:success'),
-        description: "Font deleted successfully",
+        description: t('admin:fontManagement.fontDeleted'),
       });
     },
     onError: () => {
       toast({
         title: t('common:error'),
-        description: "Failed to delete font",
+        description: t('admin:fontManagement.failedToDelete'),
         variant: "destructive",
       });
     },
@@ -117,8 +115,8 @@ export default function FontManagementPage() {
       
       if (!['woff', 'woff2', 'ttf', 'otf'].includes(ext || '')) {
         toast({
-          title: "Invalid File",
-          description: "Please upload a valid font file (.woff, .woff2, .ttf, .otf)",
+          title: t('admin:fontManagement.invalidFile'),
+          description: t('admin:fontManagement.invalidFileDescription'),
           variant: "destructive",
         });
         return;
@@ -126,7 +124,6 @@ export default function FontManagementPage() {
       
       setSelectedFile(file);
       
-      // Auto-fill font family from filename if not set
       if (!uploadForm.fontFamily) {
         const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
         setUploadForm(prev => ({
@@ -140,8 +137,8 @@ export default function FontManagementPage() {
   const handleUpload = () => {
     if (!selectedFile || !uploadForm.name || !uploadForm.fontFamily) {
       toast({
-        title: "Validation Error",
-        description: "Please fill all fields and select a font file",
+        title: t('admin:fontManagement.validationError'),
+        description: t('admin:fontManagement.validationErrorDescription'),
         variant: "destructive",
       });
       return;
@@ -157,48 +154,55 @@ export default function FontManagementPage() {
   };
 
   const getLanguageLabel = (lang: string | null) => {
-    if (!lang) return 'All Languages';
+    if (!lang) return t('admin:fontManagement.allLanguages');
     switch (lang) {
-      case 'fa': return 'فارسی (Farsi)';
-      case 'en': return 'English';
-      case 'ar': return 'عربی (Arabic)';
+      case 'fa': return t('admin:fontManagement.farsi');
+      case 'en': return t('admin:fontManagement.english');
+      case 'ar': return t('admin:fontManagement.arabic');
       default: return lang;
     }
   };
 
+  const getSampleText = (lang: string | null) => {
+    switch (lang) {
+      case 'fa': return t('admin:fontManagement.sampleTextFa');
+      case 'ar': return t('admin:fontManagement.sampleTextAr');
+      default: return t('admin:fontManagement.sampleText');
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Font Management</h1>
-          <p className="text-muted-foreground mt-1">Upload and manage custom fonts for white-label branding</p>
+          <h1 className="text-3xl font-bold">{t('admin:fontManagement.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('admin:fontManagement.description')}</p>
         </div>
       </div>
 
-      {/* Upload Section */}
       <Card data-testid="font-upload-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Upload Custom Font
+            {t('admin:fontManagement.uploadTitle')}
           </CardTitle>
           <CardDescription>
-            Upload a custom font file to use across your platform. Only one font can be active per language.
+            {t('admin:fontManagement.uploadDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription>
-              Supported formats: .woff, .woff2, .ttf, .otf (Max size: 5MB)
+              {t('admin:fontManagement.supportedFormats')}
             </AlertDescription>
           </Alert>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="font-name">Font Display Name *</Label>
+              <Label htmlFor="font-name">{t('admin:fontManagement.fontDisplayName')} *</Label>
               <Input
                 id="font-name"
-                placeholder="e.g., Vazirmatn Bold"
+                placeholder={t('admin:fontManagement.placeholderFontName')}
                 value={uploadForm.name}
                 onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
                 data-testid="input-font-name"
@@ -206,10 +210,10 @@ export default function FontManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="font-family">Font Family Name *</Label>
+              <Label htmlFor="font-family">{t('admin:fontManagement.fontFamilyName')} *</Label>
               <Input
                 id="font-family"
-                placeholder="e.g., Vazirmatn"
+                placeholder={t('admin:fontManagement.placeholderFontFamily')}
                 value={uploadForm.fontFamily}
                 onChange={(e) => setUploadForm(prev => ({ ...prev, fontFamily: e.target.value }))}
                 data-testid="input-font-family"
@@ -217,7 +221,7 @@ export default function FontManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="language">Target Language</Label>
+              <Label htmlFor="language">{t('admin:fontManagement.targetLanguage')}</Label>
               <Select
                 value={uploadForm.language}
                 onValueChange={(value) => setUploadForm(prev => ({ ...prev, language: value }))}
@@ -226,15 +230,15 @@ export default function FontManagementPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fa">فارسی (Farsi)</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ar">عربی (Arabic)</SelectItem>
+                  <SelectItem value="fa">{t('admin:fontManagement.farsi')}</SelectItem>
+                  <SelectItem value="en">{t('admin:fontManagement.english')}</SelectItem>
+                  <SelectItem value="ar">{t('admin:fontManagement.arabic')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="font-file">Font File *</Label>
+              <Label htmlFor="font-file">{t('admin:fontManagement.fontFile')} *</Label>
               <Input
                 id="font-file"
                 type="file"
@@ -244,7 +248,7 @@ export default function FontManagementPage() {
               />
               {selectedFile && (
                 <p className="text-sm text-muted-foreground">
-                  Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                  {t('admin:fontManagement.selected')}: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} {t('common:kb', 'KB')})
                 </p>
               )}
             </div>
@@ -256,40 +260,38 @@ export default function FontManagementPage() {
             className="w-full md:w-auto"
             data-testid="button-upload-font"
           >
-            <Upload className="h-4 w-4 mr-2" />
-            {uploadMutation.isPending ? 'Uploading...' : 'Upload Font'}
+            <Upload className="h-4 w-4 me-2" />
+            {uploadMutation.isPending ? t('admin:fontManagement.uploading') : t('admin:fontManagement.uploadFont')}
           </Button>
         </CardContent>
       </Card>
 
-      {/* Fonts List */}
       <Card data-testid="fonts-list-card">
         <CardHeader>
-          <CardTitle>Uploaded Fonts</CardTitle>
+          <CardTitle>{t('admin:fontManagement.uploadedFonts')}</CardTitle>
           <CardDescription>
-            Manage your custom fonts. Activate a font to apply it globally for the selected language.
+            {t('admin:fontManagement.uploadedFontsDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading fonts...</div>
+            <div className="text-center py-8 text-muted-foreground">{t('admin:fontManagement.loadingFonts')}</div>
           ) : fonts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No fonts uploaded yet. Upload your first font above.
+              {t('admin:fontManagement.noFontsUploaded')}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {fonts.map((font) => (
                 <Card key={font.id} className={font.isActive ? 'border-green-500 border-2' : ''} data-testid={`font-card-${font.id}`}>
                   <CardContent className="pt-6 space-y-4">
-                    {/* Font Preview */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Type className="h-5 w-5 text-muted-foreground" />
                         {font.isActive && (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <Check className="h-3 w-3" />
-                            Active
+                            {t('admin:fontManagement.active')}
                           </span>
                         )}
                       </div>
@@ -307,19 +309,17 @@ export default function FontManagementPage() {
                         className="p-4 bg-muted rounded-md text-center text-2xl"
                         style={{ fontFamily: `'${font.fontFamily}-preview', sans-serif` }}
                       >
-                        {font.language === 'fa' ? 'نمونه متن' : font.language === 'ar' ? 'نموذج النص' : 'Sample Text'}
+                        {getSampleText(font.language)}
                       </div>
                     </div>
 
-                    {/* Font Details */}
                     <div className="space-y-1">
                       <h3 className="font-semibold">{font.name}</h3>
-                      <p className="text-sm text-muted-foreground">Family: {font.fontFamily}</p>
-                      <p className="text-sm text-muted-foreground">Language: {getLanguageLabel(font.language)}</p>
-                      <p className="text-sm text-muted-foreground">Format: .{font.fileFormat}</p>
+                      <p className="text-sm text-muted-foreground">{t('admin:fontManagement.family')}: {font.fontFamily}</p>
+                      <p className="text-sm text-muted-foreground">{t('admin:fontManagement.language')}: {getLanguageLabel(font.language)}</p>
+                      <p className="text-sm text-muted-foreground">{t('admin:fontManagement.format')}: .{font.fileFormat}</p>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -333,15 +333,15 @@ export default function FontManagementPage() {
                         className="flex-1"
                         data-testid={`button-toggle-${font.id}`}
                       >
-                        {font.isActive ? <X className="h-4 w-4 mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-                        {font.isActive ? 'Deactivate' : 'Activate'}
+                        {font.isActive ? <X className="h-4 w-4 me-1" /> : <Check className="h-4 w-4 me-1" />}
+                        {font.isActive ? t('admin:fontManagement.deactivate') : t('admin:fontManagement.activate')}
                       </Button>
                       
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this font?')) {
+                          if (window.confirm(t('admin:fontManagement.confirmDelete'))) {
                             deleteMutation.mutate(font.id);
                           }
                         }}
