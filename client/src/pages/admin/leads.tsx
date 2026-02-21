@@ -982,7 +982,7 @@ export default function AdminLeadsPage() {
                         </TableCell>
                         <TableCell>
                           <span className="text-sm" data-testid={`text-leadSource-${lead.id}`}>
-                            {t(`admin:leads.source${lead.source.charAt(0).toUpperCase()}${lead.source.slice(1)}`)}
+                            {lead.source ? t(`admin:leads.source${lead.source.charAt(0).toUpperCase()}${lead.source.slice(1)}`) : t('admin:leads.sourceUnknown', 'Unknown')}
                           </span>
                         </TableCell>
                         <TableCell>
