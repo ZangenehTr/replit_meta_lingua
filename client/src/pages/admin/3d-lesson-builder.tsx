@@ -271,7 +271,7 @@ function Create3DLessonDialog({ queryClient }: { queryClient: any }) {
   const [currentStep, setCurrentStep] = useState(1);
   
   // Fetch available courses
-  const { data: availableCourses = [] } = useQuery({
+  const { data: availableCourses = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/video-courses'],
     enabled: isOpen
   });
@@ -335,15 +335,10 @@ function Create3DLessonDialog({ queryClient }: { queryClient: any }) {
   });
 
   const onSubmit = (data: z.infer<typeof threeDLessonSchema>) => {
-    // Parse comma-separated strings into arrays
     const processedData = {
       ...data,
-      vocabularyWords: data.vocabularyWords ? data.vocabularyWords.split(',').map(w => w.trim()) : [],
-      grammarTopics: data.grammarTopics ? data.grammarTopics.split(',').map(t => t.trim()) : [],
-      learningObjectives: data.learningObjectives ? data.learningObjectives.split(',').map(o => o.trim()) : [],
       threeDContent: selectedTemplate?.defaultConfig || data.threeDContent
     };
-    
     create3DLessonMutation.mutate(processedData);
   };
 
@@ -717,14 +712,16 @@ export default function ThreeDLessonBuilder() {
       if (filters.templateType) params.append('templateType', filters.templateType);
       if (searchTerm) params.append('search', searchTerm);
       
-      const response = await fetch(`/api/admin/3d-lessons?${params}`);
+      const response = await fetch(`/api/admin/3d-lessons?${params}`, {
+        credentials: 'include'
+      });
       if (!response.ok) throw new Error('Failed to fetch 3D lessons');
       return response.json();
     }
   });
 
   // Fetch available courses for filtering
-  const { data: availableCourses = [] } = useQuery({
+  const { data: availableCourses = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/video-courses']
   });
 
@@ -819,7 +816,7 @@ export default function ThreeDLessonBuilder() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Cube className="h-8 w-8 text-blue-500" />
+            <Box className="h-8 w-8 text-blue-500" />
             {t('admin:threeDLessons.threeDLessonBuilder')}
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -999,7 +996,7 @@ export default function ThreeDLessonBuilder() {
         ) : filteredLessons.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
-              <Cube className="h-12 w-12 text-muted-foreground mb-4" />
+              <Box className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">{t('admin:threeDLessons.noLessonsFound')}</h3>
               <p className="text-muted-foreground text-center">
                 {searchTerm || Object.values(filters).some(v => v) 

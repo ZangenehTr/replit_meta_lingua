@@ -379,10 +379,10 @@ export function AdminPlacementTest() {
                         </CardTitle>
                         <div className="flex gap-2 mt-2">
                           <Badge variant="secondary">
-                            {test.language}
+                            {test.metadata?.language || test.language || 'English'}
                           </Badge>
                           <Badge variant="outline">
-                            {test.difficulty}
+                            {test.difficultyLevel || test.difficulty || 'adaptive'}
                           </Badge>
                         </div>
                       </div>
@@ -401,7 +401,7 @@ export function AdminPlacementTest() {
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <span data-testid={`text-duration-${test.id}`}>
-                            {test.duration} mins
+                            {test.timeLimit || test.duration || 45} mins
                           </span>
                         </div>
                         <div className="flex items-center gap-2">

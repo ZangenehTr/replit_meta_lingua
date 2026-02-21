@@ -5452,11 +5452,13 @@ export class MemStorage implements IStorage {
     }
   }
 
-  async getPlacementTestAttempts(testId: number): Promise<any[]> {
+  async getPlacementTestAttempts(testId?: number): Promise<any[]> {
     try {
-      const result = await this.db.select().from(testAttempts)
-        .where(eq(testAttempts.testId, testId))
-        .orderBy(desc(testAttempts.startedAt));
+      let query = this.db.select().from(testAttempts);
+      if (testId) {
+        query = query.where(eq(testAttempts.testId, testId)) as any;
+      }
+      const result = await query.orderBy(desc(testAttempts.startTime));
       return result;
     } catch (error) {
       console.error('Error getting placement test attempts:', error);

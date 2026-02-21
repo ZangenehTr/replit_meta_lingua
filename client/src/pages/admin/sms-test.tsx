@@ -46,19 +46,19 @@ export default function SMSTestPage() {
   });
 
   // Get account info
-  const { data: accountInfo, refetch: refetchAccount } = useQuery({
+  const { data: accountInfo, refetch: refetchAccount } = useQuery<any>({
     queryKey: ['/api/admin/sms/account-info'],
     retry: false,
   });
 
   // Get SMS templates
-  const { data: smsTemplates = [] } = useQuery({
+  const { data: smsTemplates = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/sms-templates'],
     retry: false,
   });
 
   // Test connectivity
-  const { data: connectivityResult, refetch: testConnectivity, isFetching: testingConnectivity } = useQuery({
+  const { data: connectivityResult, refetch: testConnectivity, isFetching: testingConnectivity } = useQuery<any>({
     queryKey: ['/api/admin/sms/connectivity-test'],
     retry: false,
     enabled: false, // Manual trigger only

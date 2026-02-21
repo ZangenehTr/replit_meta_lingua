@@ -9224,12 +9224,14 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   app.post("/api/admin/placement-tests", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const testData = {
-        ...req.body,
+        title: req.body.title,
+        description: req.body.description,
+        teacherId: req.user.id,
+        testType: 'placement',
+        timeLimit: req.body.duration || 45,
+        difficultyLevel: req.body.difficulty || 'adaptive',
         isActive: true,
-        attempts: 0,
-        averageScore: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        metadata: { language: req.body.language || 'English' },
       };
       
       const test = await storage.createPlacementTest(testData);
@@ -9256,13 +9258,13 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       thisWeek.setDate(thisWeek.getDate() - 7);
       
       const attemptsThisWeek = attempts.filter(attempt => 
-        new Date(attempt.createdAt) > thisWeek
+        new Date(attempt.startTime) > thisWeek
       ).length;
       
       const totalAttempts = attempts.length;
-      const passedAttempts = attempts.filter(attempt => attempt.passed).length;
+      const passedAttempts = attempts.filter(attempt => attempt.status === 'completed').length;
       const averageScore = totalAttempts > 0 ? 
-        Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / totalAttempts) : 0;
+        Math.round(attempts.reduce((sum, attempt) => sum + (parseFloat(attempt.percentage) || 0), 0) / totalAttempts) : 0;
       
       const stats = {
         totalTests: tests.length,
