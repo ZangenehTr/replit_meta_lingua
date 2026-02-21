@@ -118,7 +118,7 @@ router.get('/sessions/:sessionId', async (req, res) => {
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
-        phone: users.phone,
+        phone: users.phoneNumber,
         email: users.email,
         role: users.role
       }).from(users).where(eq(users.id, session.matchedUserId));
@@ -253,13 +253,13 @@ router.patch('/sessions/:sessionId/contact', async (req, res) => {
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
-        phone: users.phone,
+        phone: users.phoneNumber,
         email: users.email,
         role: users.role
       }).from(users).where(
         or(
-          eq(users.phone, normalizedPhone),
-          eq(users.phone, visitorPhone)
+          eq(users.phoneNumber, normalizedPhone),
+          eq(users.phoneNumber, visitorPhone)
         )
       );
       if (user) {
@@ -276,7 +276,7 @@ router.patch('/sessions/:sessionId/contact', async (req, res) => {
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
-        phone: users.phone,
+        phone: users.phoneNumber,
         email: users.email,
         role: users.role
       }).from(users).where(eq(users.email, visitorEmail));
@@ -447,7 +447,7 @@ router.get('/admin/sessions', async (req, res) => {
       if (session.matchedUserId) {
         const [user] = await db.select({
           id: users.id, firstName: users.firstName, lastName: users.lastName,
-          phone: users.phone, email: users.email, role: users.role
+          phone: users.phoneNumber, email: users.email, role: users.role
         }).from(users).where(eq(users.id, session.matchedUserId));
         matchedUser = user || null;
       }
@@ -486,7 +486,7 @@ router.get('/admin/sessions/:sessionId', async (req, res) => {
     if (session.matchedUserId) {
       const [user] = await db.select({
         id: users.id, firstName: users.firstName, lastName: users.lastName,
-        phone: users.phone, email: users.email, role: users.role
+        phone: users.phoneNumber, email: users.email, role: users.role
       }).from(users).where(eq(users.id, session.matchedUserId));
       matchedUser = user || null;
     }
