@@ -1284,5 +1284,9 @@
   "selectLevel": "انتخاب سطح",
   "free": "رایگان",
   "noNotifications": "اعلانی وجود ندارد",
-  "markAllRead": "همه را خوانده شده علامت بزن"
+  "markAllRead": "همه را خوانده شده علامت بزن",
+  "discard": "لغو تغییرات",
+  "saveChanges": "ذخیره تغییرات",
+  "back": "بازگشت",
+  "availableFor": "دسترسی برای"
 }

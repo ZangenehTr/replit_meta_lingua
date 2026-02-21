@@ -1151,5 +1151,25 @@
       "noMessages": "No messages yet",
       "responseNote": "Note: Admin responses to visitor chats will be implemented in a future update. For now, use the contact information to reach out via email or phone."
     }
+  },
+  "subsystemPermissions": {
+    "title": "Subsystem Permissions",
+    "description": "Define role-based access to all platform subsystems and features",
+    "selectRole": "Select Role to Configure",
+    "roleDescription": "Choose a role to view and modify its subsystem access permissions",
+    "resetDefaults": "Reset to Defaults",
+    "savePermissions": "Save Permissions",
+    "subsystemAccess": "Subsystem Access Configuration",
+    "subsystemDescription": "Check the boxes to grant access to specific subsystems for the selected role",
+    "accessible": "Accessible",
+    "restricted": "Restricted",
+    "total": "Total",
+    "permissionsSaved": "Role permissions have been successfully updated",
+    "permissionsSaveFailed": "Failed to save permissions",
+    "defaultsRestored": "Default permissions have been restored"
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error"
   }
 }

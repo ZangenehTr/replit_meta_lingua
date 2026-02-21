@@ -1141,5 +1141,9 @@
   "otpPlaceholder": "أدخل الرمز المكون من 6 أرقام",
   "limitedTimeOffer": "عرض لفترة محدودة",
   "category": "الفئة",
-  "views": "مشاهدات"
+  "views": "مشاهدات",
+  "discard": "تجاهل التغييرات",
+  "saveChanges": "حفظ التغييرات",
+  "back": "رجوع",
+  "availableFor": "متاح لـ"
 }

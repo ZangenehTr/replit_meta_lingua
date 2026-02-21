@@ -343,7 +343,7 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                           onClick={() => handleNavigate(item.path)}
                           dir={isRTL ? 'rtl' : 'ltr'}
                           style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
-                          title={`${t('sidebar:availableFor', 'دسترسی برای')}: ${item.roles?.join(', ')}`}
+                          title={`${t('common:availableFor', 'Available for')}: ${item.roles?.join(', ')}`}
                         >
                           {hasMultipleRoles ? (
                             <div className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 flex flex-col gap-0.5`}>
