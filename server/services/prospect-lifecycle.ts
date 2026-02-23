@@ -17,6 +17,25 @@ import {
   ProspectPriority
 } from "@shared/types/prospect";
 
+function guestLeadToProspectDTO(guest: any): ProspectDTO {
+  return {
+    id: guest.id,
+    leadId: undefined,
+    userId: undefined,
+    firstName: guest.name?.split(' ')[0],
+    lastName: guest.name?.split(' ').slice(1).join(' ') || '',
+    email: guest.email,
+    phoneNumber: guest.phone,
+    source: 'guest' as any,
+    status: ProspectStatus.NEW,
+    priority: ProspectPriority.NORMAL,
+    interestedLanguage: 'english',
+    createdAt: guest.createdAt,
+    updatedAt: guest.updatedAt,
+    notes: guest.notes
+  };
+}
+
 export class ProspectLifecycleService {
   /**
    * Find or create a prospect based on phone/email
@@ -71,7 +90,7 @@ export class ProspectLifecycleService {
       }
       
       // No existing lead - create new one
-      const leadData: Partial<InsertLead> = {
+      const leadData = {
         firstName: data.firstName || 'Unknown',
         lastName: data.lastName || '',
         email: data.email || null,
@@ -86,11 +105,12 @@ export class ProspectLifecycleService {
         preferredFormat: data.preferredFormat || null,
         nationalId: data.nationalId || null,
         age: data.age || null,
-        gender: data.gender || null
-      };
+        gender: data.gender || null,
+        workflowStage: 'contact_desk'
+      } as any;
       
       const [newLead] = await db.insert(leads)
-        .values(leadData as InsertLead)
+        .values(leadData)
         .returning();
       
       console.log(`✅ Created new lead #${newLead.id} for ${normalizedPhone || data.email}`);
@@ -123,17 +143,15 @@ export class ProspectLifecycleService {
         email: guestLead.email,
         phoneNumber: guestLead.phone || undefined,
         source: guestLead.source || 'placement_test',
-        status: 'qualified', // Guest took placement test
-        notes: guestLead.notes,
-        placementSessionId: guestLead.placementSessionId || undefined
+        status: 'qualified',
+        notes: guestLead.notes
       });
       
-      // Update guest lead to mark as processed
       await db.update(guestLeads)
         .set({ 
           status: 'converted',
           updatedAt: new Date()
-        } satisfies Partial<typeof guestLeads.$inferSelect>)
+        } as any)
         .where(eq(guestLeads.id, guestLeadId));
       
       console.log(`✅ Merged guest lead #${guestLeadId} into lead #${prospect.leadId}`);
@@ -282,7 +300,7 @@ export class ProspectLifecycleService {
           studentId: newUser.id, // Using existing field
           conversionDate: new Date(), // Using existing field
           updatedAt: new Date()
-        } satisfies Partial<typeof leads.$inferSelect>)
+        } as any)
         .where(eq(leads.id, leadId));
       
       // Process initial payment if provided
@@ -304,7 +322,7 @@ export class ProspectLifecycleService {
           await db.update(users)
             .set({ 
               walletBalance: sql`${users.walletBalance} + ${options.initialPayment}`
-            } satisfies Partial<typeof users.$inferSelect>)
+            } as any)
             .where(eq(users.id, newUser.id));
         }
         
@@ -424,8 +442,8 @@ export class ProspectLifecycleService {
       
       // Sort by creation date (newest first)
       prospects.sort((a, b) => {
-        const dateA = a.createdAt?.getTime() || 0;
-        const dateB = b.createdAt?.getTime() || 0;
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       });
       

@@ -695,27 +695,37 @@ export const insertAiCallInsightsSchema = z.object({
 export const insertLeadSchema = z.object({
   firstName: z.string().max(100),
   lastName: z.string().max(100),
-  email: z.string().max(255).optional(),
-  phone: z.string().max(20).optional(),
-  company: z.string().max(255).optional(),
-  jobTitle: z.string().max(100).optional(),
-  industry: z.string().max(100).optional(),
-  leadSource: z.string().max(100),
-  leadStatus: z.string().max(50).default("new"),
-  leadScore: z.number().default(0),
-  assignedTo: z.number().optional(),
-  estimatedValue: z.number().optional(),
-  conversionProbability: z.number().default(0),
-  languageInterests: z.array(z.string()).default([]),
-  learningGoals: z.string().optional(),
-  currentLanguageLevel: z.string().max(20).optional(),
-  preferredContactMethod: z.string().max(50).default("email"),
-  timezone: z.string().max(100).optional(),
-  notes: z.string().optional(),
-  tags: z.array(z.string()).default([]),
-  customFields: z.any().optional(),
-  lastEngagementType: z.string().max(100).optional(),
-  totalInteractions: z.number().default(0)
+  email: z.string().max(255).optional().nullable(),
+  phoneNumber: z.string().max(20).optional().nullable(),
+  source: z.string().max(100).optional().nullable(),
+  status: z.string().max(50).optional().nullable(),
+  priority: z.string().max(50).optional().nullable(),
+  interestedLanguage: z.string().max(100).optional().nullable(),
+  level: z.string().max(50).optional().nullable(),
+  budget: z.number().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  assignedTo: z.number().optional().nullable(),
+  nextFollowUpDate: z.any().optional().nullable(),
+  lastContactDate: z.any().optional().nullable(),
+  conversionDate: z.any().optional().nullable(),
+  studentId: z.number().optional().nullable(),
+  interestedLevel: z.string().max(50).optional().nullable(),
+  preferredFormat: z.string().max(50).optional().nullable(),
+  assignedAgentId: z.number().optional().nullable(),
+  age: z.number().optional().nullable(),
+  gender: z.string().max(20).optional().nullable(),
+  courseTarget: z.string().max(100).optional().nullable(),
+  courseModule: z.string().max(100).optional().nullable(),
+  workflowStatus: z.string().max(50).optional().nullable(),
+  nationalId: z.string().max(20).optional().nullable(),
+  workflowStage: z.string().max(50).optional().default('contact_desk'),
+  deliveryType: z.string().max(50).optional().nullable(),
+  classType: z.string().max(50).optional().nullable(),
+  referralSource: z.string().max(100).optional().nullable(),
+  goalScore: z.string().max(50).optional().nullable(),
+  branch: z.string().max(100).optional().nullable(),
+  message: z.string().optional().nullable(),
+  timeLimit: z.string().max(50).optional().nullable()
 });
 
 export const insertCommunicationLogSchema = z.object({
@@ -1305,10 +1315,45 @@ export const leads = pgTable("leads", {
   smsReminderEnabled: boolean("sms_reminder_enabled").default(false),
   smsReminderSentAt: timestamp("sms_reminder_sent_at"),
   nationalId: varchar("national_id", { length: 20 }),
-  workflowStage: varchar("workflow_stage", { length: 50 }).default('follow_up'),
+  workflowStage: varchar("workflow_stage", { length: 50 }).default('contact_desk'),
   callAttempts: integer("call_attempts").default(0),
   lastCallOutcome: varchar("last_call_outcome", { length: 50 }),
-  stageChangedAt: timestamp("stage_changed_at")
+  stageChangedAt: timestamp("stage_changed_at"),
+  withdrawalDate: timestamp("withdrawal_date"),
+  withdrawalReason: varchar("withdrawal_reason", { length: 255 }),
+  lastAttemptAt: timestamp("last_attempt_at"),
+  nextRetryAt: timestamp("next_retry_at"),
+  followUpCount: integer("follow_up_count").default(0),
+  followUpColor: varchar("follow_up_color", { length: 20 }),
+  assessmentMethod: varchar("assessment_method", { length: 50 }),
+  assessmentStartTime: timestamp("assessment_start_time"),
+  assessmentEndTime: timestamp("assessment_end_time"),
+  goalScore: varchar("goal_score", { length: 50 }),
+  deliveryType: varchar("delivery_type", { length: 50 }),
+  classType: varchar("class_type", { length: 50 }),
+  referralSource: varchar("referral_source", { length: 100 }),
+  timeLimit: varchar("time_limit", { length: 50 }),
+  branch: varchar("branch", { length: 100 }),
+  message: text("message"),
+  evaluationNotes: text("evaluation_notes"),
+  consultationNotes: text("consultation_notes"),
+  paymentMethod: varchar("payment_method", { length: 50 }),
+  installmentPlan: jsonb("installment_plan"),
+  idCardUploaded: boolean("id_card_uploaded").default(false),
+  classNumber: varchar("class_number", { length: 50 }),
+  teacherId: integer("teacher_id").references(() => users.id),
+  enrolledCourseId: integer("enrolled_course_id")
+});
+
+export const leadActivityLog = pgTable("lead_activity_log", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => leads.id).notNull(),
+  fromStage: varchar("from_stage", { length: 50 }),
+  toStage: varchar("to_stage", { length: 50 }).notNull(),
+  operatorId: integer("operator_id").references(() => users.id),
+  reason: text("reason"),
+  snapshot: jsonb("snapshot"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 // Communication Logs table for tracking all lead interactions
@@ -6192,11 +6237,13 @@ export type AiDatasetItem = typeof aiDatasetItems.$inferSelect;
 
 // LEAD MANAGEMENT SYSTEM (Call Center)
 
-// Insert schema for leads
-
 // Lead types
 export type Lead = typeof leads.$inferSelect;
 export type InsertLead = typeof leads.$inferInsert;
+
+// Lead Activity Log types
+export type LeadActivityLogEntry = typeof leadActivityLog.$inferSelect;
+export type InsertLeadActivityLog = typeof leadActivityLog.$inferInsert;
 
 // COMMUNICATION LOGS (Call Center)
 

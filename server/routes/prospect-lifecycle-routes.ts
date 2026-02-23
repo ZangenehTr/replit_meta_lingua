@@ -7,7 +7,7 @@ import { authenticate, authorizePermission } from "../auth";
 import { z } from "zod";
 import { db } from "../db";
 import { leads, placementTestSessions } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -81,7 +81,7 @@ router.patch("/enrich/:leadId", authenticate, async (req: any, res) => {
     const leadId = parseInt(req.params.leadId);
     const data = prospectDataSchema.parse(req.body);
     
-    const enrichedProspect = await ProspectLifecycleService.enrichProspect(leadId, data);
+    const enrichedProspect = await ProspectLifecycleService.enrichProspect(leadId, data as any);
     
     res.json({
       success: true,

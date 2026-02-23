@@ -215,7 +215,11 @@ import {
   type PhoneCallLog,
   type InsertPhoneCallLog,
   type FrontDeskTask,
-  type InsertFrontDeskTask
+  type InsertFrontDeskTask,
+  LEAD_STAGE_TRANSITIONS,
+  LEAD_WORKFLOW_STAGE,
+  type LeadWorkflowStage,
+  leadActivityLog
 } from "@shared/schema";
 import mammoth from "mammoth";
 import { 
@@ -13973,15 +13977,16 @@ Return JSON format:
   // Get workflow statistics for unified call center (MUST be before /api/leads/:id)
   app.get("/api/leads/workflow-stats", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
-      const stats = {
-        contactDesk: 0,
-        newIntake: 0,
-        noResponse: 0,
-        followUp: 0,
-        levelAssessment: 0,
-        withdrawal: 0,
-        total: 0
-      };
+      const counts = await db.select({
+        stage: leads.workflowStage,
+        count: sql<number>`count(*)::int`
+      }).from(leads).groupBy(leads.workflowStage);
+
+      const stats: Record<string, number> = { total: 0 };
+      counts.forEach(({ stage, count }) => {
+        if (stage) stats[stage] = count;
+        stats.total = (stats.total || 0) + count;
+      });
       res.json(stats);
     } catch (error) {
       console.error('Error fetching workflow stats:', error);
@@ -14354,14 +14359,16 @@ Return JSON format:
   // LEAD WORKFLOW PIPELINE ROUTES
   // ============================================================================
 
+  // All valid workflow stages from shared schema
+  const ALL_WORKFLOW_STAGES = Object.values(LEAD_WORKFLOW_STAGE);
+
   // Get leads by workflow stage
-  app.get("/api/leads/by-stage/:stage", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+  app.get("/api/leads/by-stage/:stage", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk']), async (req: any, res) => {
     try {
       const { stage } = req.params;
-      const validStages = ['contact_desk', 'new_intake', 'follow_up', 'no_response', 'level_assessment', 'withdrawal', 'enrolled'];
-      
-      if (!validStages.includes(stage)) {
-        return res.status(400).json({ message: "Invalid workflow stage", validStages });
+
+      if (!ALL_WORKFLOW_STAGES.includes(stage as LeadWorkflowStage)) {
+        return res.status(400).json({ message: "Invalid workflow stage", validStages: ALL_WORKFLOW_STAGES });
       }
 
       const stageLeads = await db.select().from(leads).where(eq(leads.workflowStage, stage)).orderBy(desc(leads.updatedAt));
@@ -14372,90 +14379,137 @@ Return JSON format:
     }
   });
 
-
-  // Transition lead to new workflow stage
-  app.post("/api/leads/:id/transition", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+  // Get activity log for a lead
+  app.get("/api/leads/:id/activity-log", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk']), async (req: any, res) => {
     try {
       const leadId = parseInt(req.params.id);
       if (isNaN(leadId)) {
         return res.status(400).json({ message: "Invalid lead ID" });
       }
 
-      const transitionSchema = z.object({
-        toStage: z.enum(['contact_desk', 'new_intake', 'follow_up', 'no_response', 'level_assessment', 'withdrawal', 'enrolled']),
-        reason: z.string().optional(),
-        notes: z.string().optional(),
-        metadata: z.object({
-          level: z.string().optional(),
-          conversionDate: z.string().optional()
-        }).optional()
-      });
+      const log = await db.select().from(leadActivityLog).where(eq(leadActivityLog.leadId, leadId)).orderBy(desc(leadActivityLog.createdAt));
+      res.json(log);
+    } catch (error) {
+      console.error('Error fetching activity log:', error);
+      res.status(500).json({ message: "Failed to fetch activity log" });
+    }
+  });
 
-      const { toStage, reason, notes, metadata } = transitionSchema.parse(req.body);
+  // Transition lead to new workflow stage (supports all 24 stages)
+  app.post("/api/leads/:id/transition", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
 
-      // Get current lead
+      const { toStage, reason, notes, metadata } = req.body;
+
+      if (!toStage || !ALL_WORKFLOW_STAGES.includes(toStage)) {
+        return res.status(400).json({ message: "Invalid target stage", validStages: ALL_WORKFLOW_STAGES });
+      }
+
       const [lead] = await db.select().from(leads).where(eq(leads.id, leadId));
       if (!lead) {
         return res.status(404).json({ message: "Lead not found" });
       }
 
-      const fromStage = lead.workflowStage || 'follow_up';
+      const fromStage = (lead.workflowStage || 'contact_desk') as LeadWorkflowStage;
 
-      // Define valid transitions
-      const validTransitions: Record<string, string[]> = {
-        'contact_desk': ['new_intake'],
-        'new_intake': ['follow_up', 'no_response', 'withdrawal'],
-        'follow_up': ['level_assessment', 'no_response', 'withdrawal'],
-        'no_response': ['follow_up', 'withdrawal'],
-        'level_assessment': ['enrolled', 'follow_up', 'withdrawal'],
-        'withdrawal': ['follow_up'],
-        'enrolled': []
-      };
-
-      // Check if transition is valid
-      const allowedTargets = validTransitions[fromStage] || [];
-      if (!allowedTargets.includes(toStage)) {
-        return res.status(400).json({ 
+      const allowedTargets = LEAD_STAGE_TRANSITIONS[fromStage] || [];
+      if (!allowedTargets.includes(toStage as LeadWorkflowStage)) {
+        return res.status(400).json({
           message: `Cannot transition from '${fromStage}' to '${toStage}'`,
           allowedTransitions: allowedTargets
         });
       }
 
-      // Build update object based on target stage
       const updateData: any = {
         workflowStage: toStage,
         stageChangedAt: new Date(),
-        updatedAt: new Date(),
-        notes: notes ? `${lead.notes || ''}
-[${new Date().toISOString()}] Stage changed: ${fromStage} → ${toStage}${reason ? ` (${reason})` : ''}` : lead.notes
+        updatedAt: new Date()
       };
 
-      // Handle enrolled stage with metadata
+      if (notes) {
+        updateData.notes = `${lead.notes || ''}\n[${new Date().toISOString()}] ${fromStage} → ${toStage}${reason ? ` (${reason})` : ''}`;
+      }
+
       if (toStage === 'enrolled' && metadata) {
         if (metadata.level) updateData.interestedLevel = metadata.level;
         if (metadata.conversionDate) updateData.conversionDate = new Date(metadata.conversionDate);
         updateData.status = 'converted';
       }
 
-      // Handle withdrawal stage
       if (toStage === 'withdrawal') {
         updateData.withdrawalDate = new Date();
+        if (metadata?.withdrawalReason) updateData.withdrawalReason = metadata.withdrawalReason;
       }
 
-      // Handle reactivation from withdrawal
       if (fromStage === 'withdrawal' && toStage === 'follow_up') {
         updateData.withdrawalDate = null;
         updateData.withdrawalReason = null;
         updateData.callAttempts = 0;
       }
 
-      // Update lead workflow stage
+      if (toStage === 'no_response') {
+        updateData.callAttempts = (lead.callAttempts || 0);
+      }
+
+      if (toStage === 'follow_up') {
+        updateData.followUpCount = (lead.followUpCount || 0) + 1;
+        if (metadata?.followUpStart) updateData.followUpStart = new Date(metadata.followUpStart);
+        if (metadata?.followUpEnd) updateData.followUpEnd = new Date(metadata.followUpEnd);
+        if (metadata?.followUpColor) updateData.followUpColor = metadata.followUpColor;
+      }
+
+      if (toStage === 'level_assessment') {
+        if (metadata?.assessmentMethod) updateData.assessmentMethod = metadata.assessmentMethod;
+        if (metadata?.assessmentStartTime) updateData.assessmentStartTime = new Date(metadata.assessmentStartTime);
+        if (metadata?.assessmentEndTime) updateData.assessmentEndTime = new Date(metadata.assessmentEndTime);
+      }
+
+      if (toStage === 'evaluation' && metadata?.evaluationNotes) {
+        updateData.evaluationNotes = metadata.evaluationNotes;
+      }
+
+      if ((toStage === 'consultation_cc' || toStage === 'consultation_sup') && metadata?.consultationNotes) {
+        updateData.consultationNotes = metadata.consultationNotes;
+      }
+
+      if (toStage === 'pre_registration' || toStage === 'final_registration') {
+        if (metadata?.paymentMethod) updateData.paymentMethod = metadata.paymentMethod;
+        if (metadata?.nationalId) updateData.nationalId = metadata.nationalId;
+        if (metadata?.idCardUploaded) updateData.idCardUploaded = metadata.idCardUploaded;
+      }
+
+      if (toStage === 'set_class_number' && metadata?.classNumber) {
+        updateData.classNumber = metadata.classNumber;
+      }
+
+      if (toStage === 'private_class_setup' && metadata?.teacherId) {
+        updateData.teacherId = metadata.teacherId;
+      }
+
+      if (metadata?.deliveryType) updateData.deliveryType = metadata.deliveryType;
+      if (metadata?.classType) updateData.classType = metadata.classType;
+      if (metadata?.courseTarget) updateData.courseTarget = metadata.courseTarget;
+      if (metadata?.goalScore) updateData.goalScore = metadata.goalScore;
+
       const [updatedLead] = await db.update(leads)
         .set(updateData)
         .where(eq(leads.id, leadId))
         .returning();
 
-      // Log the transition
+      const leadSnapshot = { ...lead };
+      await db.insert(leadActivityLog).values({
+        leadId,
+        fromStage,
+        toStage,
+        operatorId: req.user.id,
+        reason: reason || null,
+        snapshot: leadSnapshot
+      });
+
       await storage.createCommunicationLog({
         fromUserId: req.user.id,
         toUserId: null,
@@ -14469,8 +14523,8 @@ Return JSON format:
         studentId: null
       });
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         lead: updatedLead,
         transition: { from: fromStage, to: toStage }
       });

@@ -278,7 +278,7 @@ export function userToProspectDTO(user: any): ProspectDTO {
     email: user.email,
     phoneNumber: user.phoneNumber, // Already canonical in DB
     
-    source: 'converted', // User is a converted lead
+    source: 'converted' as any, // User is a converted lead
     status: ProspectStatus.CONVERTED,
     priority: ProspectPriority.NORMAL,
     
