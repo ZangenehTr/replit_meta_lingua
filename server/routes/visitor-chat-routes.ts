@@ -79,7 +79,7 @@ router.post('/sessions', async (req, res) => {
           userAgent: req.headers['user-agent'],
           ip: req.ip
         }
-      })
+      } as any)
       .returning();
 
     res.json({ 
@@ -172,12 +172,12 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
         message,
         messageType: 'text',
         isRead: false
-      })
+      } as any)
       .returning();
 
     await db
       .update(visitorChatSessions)
-      .set({ lastMessageAt: new Date() })
+      .set({ lastMessageAt: new Date() } as any)
       .where(eq(visitorChatSessions.id, session.id));
 
     let aiResponse = null;
@@ -206,7 +206,7 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
                 shouldEscalate: agentResponse.shouldEscalate,
                 suggestedActions: agentResponse.suggestedActions 
               }
-            })
+            } as any)
             .returning();
 
           aiResponse = aiMsg;
@@ -214,7 +214,7 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
           if (agentResponse.shouldEscalate) {
             await db
               .update(visitorChatSessions)
-              .set({ chatMode: 'human' })
+              .set({ chatMode: 'human' } as any)
               .where(eq(visitorChatSessions.id, session.id));
           }
         } catch (aiError) {
@@ -306,6 +306,23 @@ router.patch('/sessions/:sessionId/contact', async (req, res) => {
           }
         }
       }
+
+      if (!matchedLead && (visitorPhone || visitorEmail)) {
+        const [newLead] = await db.insert(guestLeads).values({
+          name: visitorName || 'Visitor',
+          email: visitorEmail || '',
+          phone: visitorPhone || null,
+          source: 'visitor_chat',
+          status: 'new',
+          notes: 'Auto-created from visitor chat contact submission'
+        } as any).returning();
+        
+        if (newLead) {
+          matchedLead = newLead;
+          updates.matchedLeadId = newLead.id;
+          console.log(`📋 Created guest lead #${newLead.id} from visitor chat`);
+        }
+      }
     }
 
     const [updatedSession] = await db
@@ -332,7 +349,7 @@ router.patch('/sessions/:sessionId/contact', async (req, res) => {
         messageType: 'contact_capture',
         metadata: { visitorName, visitorEmail, visitorPhone },
         isRead: false
-      });
+      } as any);
 
     res.json({ 
       session: updatedSession, 
@@ -357,7 +374,7 @@ router.patch('/sessions/:sessionId/rate', async (req, res) => {
 
     const [updatedSession] = await db
       .update(visitorChatSessions)
-      .set({ rating, ratingComment, status: 'closed', closedAt: new Date() })
+      .set({ rating, ratingComment, status: 'closed', closedAt: new Date() } as any)
       .where(eq(visitorChatSessions.sessionId, sessionId))
       .returning();
 
@@ -497,7 +514,7 @@ router.get('/admin/sessions/:sessionId', async (req, res) => {
       matchedLead = lead || null;
     }
 
-    await db.update(visitorChatMessages).set({ isRead: true })
+    await db.update(visitorChatMessages).set({ isRead: true } as any)
       .where(and(
         eq(visitorChatMessages.sessionId, session.id),
         eq(visitorChatMessages.isRead, false)
@@ -517,7 +534,7 @@ router.patch('/admin/sessions/:sessionId/assign', async (req, res) => {
 
     const [updatedSession] = await db
       .update(visitorChatSessions)
-      .set({ assignedTo, chatMode: 'human' })
+      .set({ assignedTo, chatMode: 'human' } as any)
       .where(eq(visitorChatSessions.sessionId, sessionId))
       .returning();
 
@@ -538,7 +555,7 @@ router.patch('/admin/sessions/:sessionId/close', async (req, res) => {
 
     const [updatedSession] = await db
       .update(visitorChatSessions)
-      .set({ status: 'closed', closedAt: new Date() })
+      .set({ status: 'closed', closedAt: new Date() } as any)
       .where(eq(visitorChatSessions.sessionId, sessionId))
       .returning();
 

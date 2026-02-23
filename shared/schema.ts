@@ -8897,15 +8897,32 @@ export const visitorChatMessages = pgTable("visitor_chat_messages", {
 });
 
 // Zod schemas for visitor chat
-export const insertVisitorChatSessionSchema = createInsertSchema(visitorChatSessions).omit({
-  id: true,
-  createdAt: true,
-  closedAt: true
+export const insertVisitorChatSessionSchema = z.object({
+  sessionId: z.string().max(255),
+  visitorName: z.string().max(255).optional().nullable(),
+  visitorEmail: z.string().max(255).optional().nullable(),
+  visitorPhone: z.string().max(50).optional().nullable(),
+  language: z.string().max(10).default("fa"),
+  status: z.string().max(20).default("active"),
+  assignedTo: z.number().optional().nullable(),
+  matchedUserId: z.number().optional().nullable(),
+  matchedLeadId: z.number().optional().nullable(),
+  chatMode: z.string().max(20).default("hybrid"),
+  rating: z.number().optional().nullable(),
+  ratingComment: z.string().optional().nullable(),
+  lastMessageAt: z.any().optional().nullable(),
+  metadata: z.any().optional().nullable()
 });
 
-export const insertVisitorChatMessageSchema = createInsertSchema(visitorChatMessages).omit({
-  id: true,
-  createdAt: true
+export const insertVisitorChatMessageSchema = z.object({
+  sessionId: z.number(),
+  senderType: z.string().max(20),
+  senderName: z.string().max(255).optional().nullable(),
+  senderId: z.number().optional().nullable(),
+  message: z.string(),
+  messageType: z.string().max(20).default("text"),
+  metadata: z.any().optional().nullable(),
+  isRead: z.boolean().default(false)
 });
 
 // Visitor Chat Canned Responses - Quick reply templates for admins
