@@ -2813,12 +2813,40 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         ? Math.round((completedEnrollments / allEnrollments.length) * 100) 
         : 0;
       
-      // System health (basic check)
+      // System health (real checks)
+      let dbHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
+      try {
+        await db.execute(sql`SELECT 1`);
+      } catch {
+        dbHealth = 'critical';
+      }
+
+      let aiHealth: 'healthy' | 'warning' | 'critical' = 'critical';
+      try {
+        const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        const ollamaRes = await fetch(`${ollamaHost}/api/tags`, { signal: controller.signal }).catch(() => null);
+        clearTimeout(timeout);
+        if (ollamaRes?.ok) {
+          aiHealth = 'healthy';
+        } else if (process.env.OPENAI_API_KEY) {
+          aiHealth = 'healthy';
+        } else {
+          aiHealth = 'warning';
+        }
+      } catch {
+        aiHealth = process.env.OPENAI_API_KEY ? 'healthy' : 'warning';
+      }
+
+      const voipHealth: 'healthy' | 'warning' | 'critical' = 
+        process.env.ISABEL_VOIP_ENABLED === 'true' ? 'healthy' : 'warning';
+
       const systemHealth = {
-        database: 'healthy' as const,
+        database: dbHealth,
         server: 'healthy' as const,
-        ai: 'warning' as const,
-        voip: 'healthy' as const
+        ai: aiHealth,
+        voip: voipHealth
       };
       
       // Revenue data for last 6 months

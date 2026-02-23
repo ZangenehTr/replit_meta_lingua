@@ -96,7 +96,13 @@
     "difficulty": {
       "beginner": "Beginner",
       "intermediate": "Intermediate",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "A1": "A1 - Beginner",
+      "A2": "A2 - Elementary",
+      "B1": "B1 - Intermediate",
+      "B2": "B2 - Upper Intermediate",
+      "C1": "C1 - Advanced",
+      "C2": "C2 - Mastery"
     },
     "types": {
       "vocabulary": "Vocabulary",
@@ -368,6 +374,12 @@
     "checkBack": "Check back soon for new content!",
     "startScene": "Start Scene",
     "xpReward": "XP",
-    "minutes": "min"
+    "minutes": "min",
+    "ctaTitle": "Ready to Explore?",
+    "ctaDescription": "Dive into immersive 3D environments and learn vocabulary naturally",
+    "ctaFeature1": "Interactive object recognition",
+    "ctaFeature2": "Real-world scenario practice",
+    "ctaFeature3": "AI-powered pronunciation feedback",
+    "ctaButton": "Start Learning Now"
   }
 }
