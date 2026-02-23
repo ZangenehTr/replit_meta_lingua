@@ -14523,6 +14523,33 @@ Return JSON format:
         studentId: null
       });
 
+      // Auto-SMS triggers on key transitions (fire-and-forget)
+      if (updatedLead.phoneNumber) {
+        const phone = updatedLead.phoneNumber;
+        const name = `${updatedLead.firstName || ''} ${updatedLead.lastName || ''}`.trim();
+        try {
+          const { KavenegarService } = await import('./kavenegar-service');
+          const sms = new KavenegarService();
+          
+          const smsTemplates: Record<string, string> = {
+            'level_assessment': `${name} عزیز، وقت آزمون تعیین سطح شما ثبت شد. منتظر حضور شما هستیم. 🎯 متالینگوا`,
+            'pre_registration': `${name} عزیز، پیش‌ثبت‌نام شما انجام شد. لطفاً مدارک لازم را آماده کنید. 📋 متالینگوا`,
+            'final_registration': `${name} عزیز، ثبت‌نام نهایی شما تکمیل شد! به خانواده متالینگوا خوش آمدید. 🎉`,
+            'enrolled': `${name} عزیز، شما با موفقیت در دوره ثبت‌نام شدید! کلاس‌های شما به زودی آغاز می‌شود. 📚 متالینگوا`,
+            'withdrawal': `${name} عزیز، درخواست انصراف شما ثبت شد. امیدواریم دوباره شما را ببینیم. متالینگوا`
+          };
+          
+          const template = smsTemplates[toStage];
+          if (template) {
+            sms.sendSimpleSMS(phone, template).catch((err: any) => {
+              console.warn(`⚠️ SMS trigger failed for lead #${leadId} → ${toStage}:`, err.message);
+            });
+          }
+        } catch (smsErr: any) {
+          console.warn('⚠️ SMS service unavailable:', smsErr.message);
+        }
+      }
+
       res.json({
         success: true,
         lead: updatedLead,
