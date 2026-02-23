@@ -97,13 +97,14 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   };
 
   useEffect(() => {
-    document.documentElement.classList.remove('dark');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white" dir={direction}>
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950" dir={direction}>
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-950/60">
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
           {/* Logo */}
           <div className="flex lg:flex-1">
