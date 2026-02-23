@@ -93,7 +93,7 @@ export class WalletService {
           status: 'completed',
           ...metadata,
           completedAt: new Date(),
-        }).returning();
+        } as any).returning();
 
         return {
           success: true,
@@ -194,7 +194,7 @@ export class WalletService {
           status: 'completed',
           ...metadata,
           completedAt: new Date(),
-        }).returning();
+        } as any).returning();
 
         return {
           success: true,
@@ -342,7 +342,7 @@ export class WalletService {
             status: 'completed',
             completedAt: new Date(),
           },
-        ]);
+        ] as any);
 
         return {
           success: true,

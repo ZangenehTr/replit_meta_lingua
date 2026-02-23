@@ -113,7 +113,7 @@ router.post('/shetab/initiate', authenticate, async (req: AuthenticatedRequest, 
  */
 router.post('/shetab/callback', async (req: Request, res: Response) => {
   try {
-    const payload = verifyCallbackSchema.parse(req.body);
+    const payload = verifyCallbackSchema.parse(req.body) as any;
 
     // Verify and process callback
     const success = await ShetabPaymentService.verifyCallback(payload);
@@ -149,7 +149,7 @@ router.get('/shetab/transaction/:transactionId', authenticate, async (req: Authe
   try {
     const { transactionId } = req.params;
 
-    const transaction = await storage.getPaymentByExternalTransactionId(transactionId);
+    const transaction = await (storage as any).getPaymentByExternalTransactionId(transactionId);
     
     if (!transaction) {
       return res.status(404).json({
@@ -199,7 +199,7 @@ router.post('/shetab/refund', authenticate, async (req: AuthenticatedRequest, re
     }
 
     // Verify transaction belongs to user
-    const transaction = await storage.getPaymentByExternalTransactionId(transactionId);
+    const transaction = await (storage as any).getPaymentByExternalTransactionId(transactionId);
     if (!transaction || transaction.userId !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -260,7 +260,7 @@ router.get('/shetab/history', authenticate, async (req: AuthenticatedRequest, re
     const offset = parseInt(req.query.offset as string) || 0;
 
     // Get payment transactions for user
-    const payments = await storage.getPaymentTransactionsByUser(req.user.id, limit, offset);
+    const payments = await (storage as any).getPaymentTransactionsByUser(req.user.id, limit, offset);
 
     res.json({
       success: true,

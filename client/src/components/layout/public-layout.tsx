@@ -40,7 +40,10 @@ import {
   Linkedin,
   ChevronDown,
   GraduationCap,
+  Moon,
+  Sun,
 } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -52,6 +55,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { direction } = useLanguage();
   const breadcrumbs = useBreadcrumbs();
+  const { isDark, toggleTheme } = useTheme();
 
   // Fetch active curriculum categories for navigation
   const { data: curriculumCategories = [] } = useQuery<any[]>({
@@ -197,9 +201,12 @@ export function PublicLayout({ children }: PublicLayoutProps) {
             })}
           </div>
 
-          {/* Right Side - Language & Auth */}
+          {/* Right Side - Language, Theme & Auth */}
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-4 items-center">
             <LanguageSelector />
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9" data-testid="button-theme-toggle">
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <Button asChild variant="outline" size="sm" data-testid="button-login">
               <Link href="/auth" className="flex items-center gap-2">
                 <LogIn className="h-4 w-4" />
