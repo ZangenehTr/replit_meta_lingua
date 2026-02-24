@@ -891,12 +891,12 @@
     }
   },
   "blog": {
-    "heading": "Latest Articles",
-    "subheading": "Tips, insights, and stories from our community"
+    "seoTitle": "Blog - Meta Lingua",
+    "seoDescription": "Read the latest articles, tips, and insights about language learning from Meta Lingua."
   },
   "videos": {
-    "heading": "Featured Videos",
-    "subheading": "Watch and learn from our expert instructors"
+    "seoTitle": "Video Library - Meta Lingua",
+    "seoDescription": "Learn from expert instructors with our video tutorials and language courses"
   },
   "cta": {
     "startLearning": "Start Learning Free",
@@ -963,11 +963,92 @@
     "priceRange": "Price Range",
     "rating": "Rating",
     "sort": {
-      "relevance": "Relevance",
-      "date": "Date",
-      "rating": "Rating",
-      "alphabetical": "Alphabetical"
-    }
+      "relevance": "Most Relevant",
+      "date": "Most Recent",
+      "rating": "Highest Rated",
+      "alphabetical": "A-Z"
+    },
+    "noResults": "No Results Found",
+    "noResultsDescription": "Try different keywords or adjust your search filters",
+    "tryThese": "Try these",
+    "trending": "Trending Searches",
+    "recent": "Recent Searches",
+    "results": "results",
+    "suggestions": "Suggestions",
+    "noSuggestions": "No suggestions found",
+    "clearAll": "Clear All",
+    "clearAllFilters": "Clear All Filters",
+    "selectLanguages": "Select Languages",
+    "selectLevels": "Select Levels",
+    "aboutResults": "About {{count}} results for",
+    "noResultsFor": "No results found for",
+    "searchError": "Search Error",
+    "searchErrorDescription": "There was an error performing your search. Please try again.",
+    "tryAgain": "Try Again",
+    "loadMore": "Load More Results",
+    "loading": "Loading...",
+    "more": "+{{count}} more",
+    "selected": "selected",
+    "andUp": "& up",
+    "free": "Free",
+    "maxPrice": "10M+ IRR",
+    "contentType": {
+      "book": "Books",
+      "course": "Courses",
+      "user": "People",
+      "test": "Tests",
+      "homework": "Homework",
+      "session": "Sessions",
+      "roadmap": "Roadmaps",
+      "dictionary": "Dictionary"
+    },
+    "language": {
+      "en": "English",
+      "fa": "Persian (Farsi)",
+      "ar": "Arabic",
+      "de": "German",
+      "es": "Spanish",
+      "fr": "French",
+      "it": "Italian",
+      "ru": "Russian",
+      "zh": "Chinese",
+      "ja": "Japanese",
+      "ko": "Korean"
+    },
+    "level": {
+      "beginner": "Beginner",
+      "elementary": "Elementary",
+      "intermediate": "Intermediate",
+      "upper_intermediate": "Upper Intermediate",
+      "advanced": "Advanced",
+      "proficient": "Proficient"
+    },
+    "category": {
+      "general": "General",
+      "academic": "Academic",
+      "business": "Business",
+      "test_prep": "Test Preparation",
+      "conversation": "Conversation",
+      "grammar": "Grammar",
+      "vocabulary": "Vocabulary",
+      "pronunciation": "Pronunciation",
+      "writing": "Writing",
+      "listening": "Listening",
+      "speaking": "Speaking",
+      "reading": "Reading"
+    },
+    "searchPage": "Search",
+    "trendingSearches": "Trending Searches",
+    "searchTips": "Search Tips",
+    "searchTipsTitle1": "Use Keywords",
+    "searchTipsDesc1": "Try specific keywords like course names, topics, or teacher names for better results.",
+    "searchTipsTitle2": "Use Filters",
+    "searchTipsDesc2": "Narrow down results by content type, language, level, or price range.",
+    "searchTipsTitle3": "Try Different Languages",
+    "searchTipsDesc3": "Search in Persian, English, or Arabic to find content in your preferred language.",
+    "searchTipsTitle4": "Browse Categories",
+    "searchTipsDesc4": "Explore courses by category if you're not sure what to search for.",
+    "activeFilters": "Active Filters"
   },
   "reviews": {
     "title": "Reviews",
@@ -1106,13 +1187,5 @@
     "successMessage": "We'll get back to you soon.",
     "errorTitle": "Error",
     "errorMessage": "Failed to send message"
-  },
-  "blog": {
-    "seoTitle": "Blog - Meta Lingua",
-    "seoDescription": "Read the latest articles, tips, and insights about language learning from Meta Lingua."
-  },
-  "videos": {
-    "seoTitle": "Video Library - Meta Lingua",
-    "seoDescription": "Learn from expert instructors with our video tutorials and language courses"
   }
 }

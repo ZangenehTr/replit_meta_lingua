@@ -105,16 +105,7 @@ const CONTENT_TYPE_ICONS = {
   dictionary: BookOpen
 };
 
-const CONTENT_TYPE_LABELS = {
-  book: 'Books',
-  course: 'Courses',
-  user: 'People',
-  test: 'Tests',
-  homework: 'Homework',
-  session: 'Sessions',
-  roadmap: 'Roadmaps',
-  dictionary: 'Dictionary'
-};
+const CONTENT_TYPE_KEYS = ['book', 'course', 'user', 'test', 'homework', 'session', 'roadmap', 'dictionary'] as const;
 
 export function UniversalSearchBar({
   placeholder,
@@ -137,36 +128,31 @@ export function UniversalSearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Get search suggestions
   const { data: suggestions = [] } = useQuery<SuggestionResponse>({
     queryKey: ['/api/search/suggestions', query],
     enabled: query.length >= 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Get recent searches for logged-in users
   const { data: recentSearches } = useQuery<RecentSearchData>({
     queryKey: ['/api/search/history'],
     enabled: !!user && query.length === 0,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 
-  // Get trending searches
   const { data: trendingData } = useQuery<TrendingData>({
     queryKey: ['/api/search/trending'],
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 30 * 60 * 1000,
   });
 
   const trending: TrendingItem[] = trendingData?.trending || [];
 
-  // Debounced search function
   const debouncedSearch = useCallback(
     debounce((searchQuery: string, searchFilters: SearchFilters) => {
       if (searchQuery.trim()) {
         if (onSearch) {
           onSearch(searchQuery, searchFilters);
         } else {
-          // Navigate to search results page
           const params = new URLSearchParams({
             q: searchQuery,
             ...Object.entries(searchFilters).reduce((acc, [key, value]) => {
@@ -189,7 +175,6 @@ export function UniversalSearchBar({
     [onSearch, setLocation]
   );
 
-  // Handle search execution
   const handleSearch = useCallback(() => {
     if (query.trim()) {
       setShowSuggestions(false);
@@ -197,14 +182,12 @@ export function UniversalSearchBar({
     }
   }, [query, filters, debouncedSearch]);
 
-  // Handle suggestion selection
   const handleSuggestionSelect = useCallback((suggestion: string) => {
     setQuery(suggestion);
     setShowSuggestions(false);
     debouncedSearch(suggestion, filters);
   }, [filters, debouncedSearch]);
 
-  // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!showSuggestions) return;
 
@@ -243,14 +226,12 @@ export function UniversalSearchBar({
     }
   }, [showSuggestions, trending, suggestions, recentSearches, selectedSuggestion, handleSuggestionSelect, handleSearch]);
 
-  // Auto focus
   useEffect(() => {
     if (autoFocus && inputRef.current) {
       inputRef.current.focus();
     }
   }, [autoFocus]);
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
@@ -262,17 +243,14 @@ export function UniversalSearchBar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle filter changes
   const handleFilterChange = useCallback((key: keyof SearchFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  // Clear all filters
   const clearFilters = useCallback(() => {
     setFilters({});
   }, []);
 
-  // Get active filter count
   const activeFilterCount = Object.values(filters).filter(value => {
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === 'object' && value !== null) return Object.keys(value).length > 0;
@@ -283,7 +261,7 @@ export function UniversalSearchBar({
 
   if (variant === 'compact') {
     return (
-      <div className={cn("relative flex items-center space-x-2", isRTL && "space-x-reverse", className)}>
+      <div className={cn("relative flex items-center gap-2", className)}>
         <div className="relative flex-1">
           <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground", isRTL ? "right-3" : "left-3")} />
           <Input
@@ -320,7 +298,7 @@ export function UniversalSearchBar({
     <div className={cn("relative", className)} ref={suggestionsRef}>
       {/* Main Search Input */}
       <div className="relative">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground", isRTL ? "right-4" : "left-4")} />
             <Input
@@ -356,17 +334,17 @@ export function UniversalSearchBar({
                   className="relative"
                   data-testid="search-filters-button"
                 >
-                  <Filter className="h-4 w-4 mr-2" />
+                  <Filter className="h-4 w-4 me-2" />
                   {t('search.filters')}
                   {activeFilterCount > 0 && (
-                    <Badge variant="secondary" className="ml-2 h-5 px-1 text-xs">
+                    <Badge variant="secondary" className="ms-2 h-5 px-1 text-xs">
                       {activeFilterCount}
                     </Badge>
                   )}
-                  <ChevronDown className="h-4 w-4 ml-2" />
+                  <ChevronDown className="h-4 w-4 ms-2" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96 p-0" align={isRTL ? "end" : "start"}>
+              <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0" align={isRTL ? "end" : "start"}>
                 <SearchFiltersPanel
                   filters={filters}
                   onFilterChange={handleFilterChange}
@@ -382,45 +360,41 @@ export function UniversalSearchBar({
             disabled={!query.trim()}
             data-testid="search-submit-button"
           >
-            <Search className="h-4 w-4 mr-2" />
+            <Search className="h-4 w-4 me-2" />
             {t('search.search')}
           </Button>
         </div>
 
         {/* Active Filters Display */}
         {activeFilterCount > 0 && (
-          <div className="flex items-center space-x-2 mt-2 flex-wrap gap-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             {filters.contentTypes?.map((type) => (
-              <Badge key={type} variant="secondary" className="text-xs">
-                {CONTENT_TYPE_LABELS[type as keyof typeof CONTENT_TYPE_LABELS] || type}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+              <Badge key={type} variant="secondary" className="text-xs py-1.5 ps-2 pe-1 gap-1">
+                {t(`search.contentType.${type}`) || type}
+                <button
+                  className="inline-flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted-foreground/20 transition-colors"
                   onClick={() => {
                     const newTypes = filters.contentTypes?.filter(t => t !== type) || [];
                     handleFilterChange('contentTypes', newTypes.length > 0 ? newTypes : undefined);
                   }}
                 >
                   <X className="h-3 w-3" />
-                </Button>
+                </button>
               </Badge>
             ))}
             {filters.languages?.map((lang) => (
-              <Badge key={lang} variant="secondary" className="text-xs">
-                <Languages className="h-3 w-3 mr-1" />
+              <Badge key={lang} variant="secondary" className="text-xs py-1.5 ps-2 pe-1 gap-1">
+                <Languages className="h-3 w-3" />
                 {lang}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                <button
+                  className="inline-flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted-foreground/20 transition-colors"
                   onClick={() => {
                     const newLangs = filters.languages?.filter(l => l !== lang) || [];
                     handleFilterChange('languages', newLangs.length > 0 ? newLangs : undefined);
                   }}
                 >
                   <X className="h-3 w-3" />
-                </Button>
+                </button>
               </Badge>
             ))}
             {activeFilterCount > 0 && (
@@ -440,8 +414,8 @@ export function UniversalSearchBar({
               {/* Trending Searches */}
               {query.length === 0 && trending.length > 0 && (
                 <CommandGroup heading={
-                  <div className="flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2" />
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
                     {t('search.trending')}
                   </div>
                 }>
@@ -453,10 +427,10 @@ export function UniversalSearchBar({
                       className={cn(selectedSuggestion === index && "bg-muted")}
                       data-testid={`trending-suggestion-${index}`}
                     >
-                      <TrendingUp className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <TrendingUp className="h-4 w-4 me-2 text-muted-foreground" />
                       {item.query}
                       {item.volume && (
-                        <Badge variant="outline" className="ml-auto text-xs">
+                        <Badge variant="outline" className="ms-auto text-xs">
                           {item.volume}
                         </Badge>
                       )}
@@ -470,8 +444,8 @@ export function UniversalSearchBar({
                 <>
                   <CommandSeparator />
                   <CommandGroup heading={
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-2" />
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
                       {t('search.recent')}
                     </div>
                   }>
@@ -483,9 +457,9 @@ export function UniversalSearchBar({
                         className={cn(selectedSuggestion === (trending.length + index) && "bg-muted")}
                         data-testid={`recent-suggestion-${index}`}
                       >
-                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <Clock className="h-4 w-4 me-2 text-muted-foreground" />
                         {item.query}
-                        <span className="ml-auto text-xs text-muted-foreground">
+                        <span className="ms-auto text-xs text-muted-foreground">
                           {item.resultsCount} {t('search.results')}
                         </span>
                       </CommandItem>
@@ -511,7 +485,7 @@ export function UniversalSearchBar({
                           className={cn(selectedSuggestion === adjustedIndex && "bg-muted")}
                           data-testid={`search-suggestion-${index}`}
                         >
-                          <Search className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <Search className="h-4 w-4 me-2 text-muted-foreground" />
                           {suggestionText}
                         </CommandItem>
                       );
@@ -532,7 +506,6 @@ export function UniversalSearchBar({
   );
 }
 
-// Search Filters Panel Component
 interface SearchFiltersPanelProps {
   filters: SearchFilters;
   onFilterChange: (key: keyof SearchFilters, value: any) => void;
@@ -542,7 +515,7 @@ interface SearchFiltersPanelProps {
 function SearchFiltersPanel({ filters, onFilterChange, onClearFilters }: SearchFiltersPanelProps) {
   const { t } = useTranslation(['common', 'courses']);
 
-  const contentTypes = Object.keys(CONTENT_TYPE_LABELS) as (keyof typeof CONTENT_TYPE_LABELS)[];
+  const contentTypes = [...CONTENT_TYPE_KEYS];
   const languages = ['en', 'fa', 'ar', 'de', 'es', 'fr'];
   const levels = ['beginner', 'elementary', 'intermediate', 'upper_intermediate', 'advanced', 'proficient'];
   const categories = ['general', 'academic', 'business', 'test_prep', 'conversation'];
@@ -579,8 +552,8 @@ function SearchFiltersPanel({ filters, onFilterChange, onClearFilters }: SearchF
                 className="justify-start"
                 data-testid={`filter-content-type-${type}`}
               >
-                <Icon className="h-4 w-4 mr-2" />
-                {CONTENT_TYPE_LABELS[type]}
+                <Icon className="h-4 w-4 me-2" />
+                {t(`search.contentType.${type}`)}
               </Button>
             );
           })}
@@ -602,7 +575,7 @@ function SearchFiltersPanel({ filters, onFilterChange, onClearFilters }: SearchF
           <SelectContent>
             {languages.map((lang) => (
               <SelectItem key={lang} value={lang}>
-                {t(`languages.${lang}`)}
+                {t(`search.language.${lang}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -622,7 +595,7 @@ function SearchFiltersPanel({ filters, onFilterChange, onClearFilters }: SearchF
           <SelectContent>
             {levels.map((level) => (
               <SelectItem key={level} value={level}>
-                {t(`levels.${level}`)}
+                {t(`search.level.${level}`)}
               </SelectItem>
             ))}
           </SelectContent>

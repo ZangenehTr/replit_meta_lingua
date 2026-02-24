@@ -62,22 +62,11 @@ const CONTENT_TYPE_ICONS = {
   dictionary: BookOpen
 };
 
-const CONTENT_TYPE_LABELS = {
-  book: 'Books',
-  course: 'Courses',
-  user: 'People',
-  test: 'Tests',
-  homework: 'Homework',
-  session: 'Sessions',
-  roadmap: 'Roadmaps',
-  dictionary: 'Dictionary'
-};
-
 const SORT_OPTIONS = [
-  { value: 'relevance', label: 'Most Relevant' },
-  { value: 'date', label: 'Most Recent' },
-  { value: 'rating', label: 'Highest Rated' },
-  { value: 'alphabetical', label: 'A-Z' }
+  { value: 'relevance' },
+  { value: 'date' },
+  { value: 'rating' },
+  { value: 'alphabetical' }
 ];
 
 export function SearchResults({ 
@@ -95,7 +84,6 @@ export function SearchResults({
 
   const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
 
-  // Search query with infinite loading
   const {
     data,
     error,
@@ -139,10 +127,9 @@ export function SearchResults({
       return hasMore ? lastPage.page + 1 : undefined;
     },
     enabled: !!query,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Log search analytics
   const logSearchMutation = useMutation({
     mutationFn: async (data: { query: string; resultId?: string; resultType?: string; action?: string }) => {
       return apiRequest('/api/search/log', {
@@ -152,12 +139,10 @@ export function SearchResults({
     }
   });
 
-  // Flatten results from all pages
   const allResults = useMemo(() => {
     return data?.pages.flatMap(page => page.results) || [];
   }, [data]);
 
-  // Group results by type
   const groupedResults = useMemo(() => {
     const groups: Record<string, SearchResultItem[]> = {};
     allResults.forEach(result => {
@@ -169,7 +154,6 @@ export function SearchResults({
     return groups;
   }, [allResults]);
 
-  // Handle result click
   const handleResultClick = (result: SearchResultItem) => {
     logSearchMutation.mutate({
       query,
@@ -179,7 +163,6 @@ export function SearchResults({
     });
   };
 
-  // Load more results
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -190,12 +173,12 @@ export function SearchResults({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Search className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Search Error</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('search.searchError')}</h3>
         <p className="text-muted-foreground mb-4">
-          There was an error performing your search. Please try again.
+          {t('search.searchErrorDescription')}
         </p>
         <Button onClick={() => window.location.reload()}>
-          Try Again
+          {t('search.tryAgain')}
         </Button>
       </div>
     );
@@ -220,20 +203,20 @@ export function SearchResults({
           <div className="text-sm text-muted-foreground">
             {totalResults > 0 ? (
               <>
-                About {totalResults.toLocaleString()} results for 
+                {t('search.aboutResults', { count: totalResults.toLocaleString() })}
                 <span className="font-medium text-foreground"> "{query}"</span>
-                <span className="ml-2">({responseTime}ms)</span>
+                <span className="ms-2">({responseTime}ms)</span>
               </>
             ) : (
-              <>No results found for <span className="font-medium text-foreground">"{query}"</span></>
+              <>{t('search.noResultsFor')} <span className="font-medium text-foreground">"{query}"</span></>
             )}
           </div>
         </div>
 
         {totalResults > 0 && (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 border rounded-lg p-1">
+            <div className="flex items-center gap-1 border rounded-lg p-1">
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
@@ -255,12 +238,12 @@ export function SearchResults({
             {/* Sort Options */}
             <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
               <SelectTrigger className="w-48" data-testid="sort-select">
-                <SelectValue placeholder="Sort by..." />
+                <SelectValue placeholder={t('search.sort.relevance')} />
               </SelectTrigger>
               <SelectContent>
                 {SORT_OPTIONS.map(option => (
                   <SelectItem key={option.value} value={option.value}>
-                    {t(`search.sort.${option.value}`) || option.label}
+                    {t(`search.sort.${option.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -304,12 +287,12 @@ export function SearchResults({
         <div className="space-y-8">
           {Object.entries(groupedResults).map(([type, results]) => (
             <div key={type}>
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center gap-2 mb-4">
                 {React.createElement(CONTENT_TYPE_ICONS[type as keyof typeof CONTENT_TYPE_ICONS], {
                   className: "h-5 w-5"
                 })}
                 <h2 className="text-lg font-semibold">
-                  {CONTENT_TYPE_LABELS[type as keyof typeof CONTENT_TYPE_LABELS]} ({results.length})
+                  {t(`search.contentType.${type}`)} ({results.length})
                 </h2>
               </div>
 
@@ -342,13 +325,13 @@ export function SearchResults({
               >
                 {isFetchingNextPage ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                    Loading...
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin me-2" />
+                    {t('search.loading')}
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-4 w-4 mr-2" />
-                    Load More Results
+                    <ChevronDown className="h-4 w-4 me-2" />
+                    {t('search.loadMore')}
                   </>
                 )}
               </Button>
@@ -367,7 +350,6 @@ export function SearchResults({
   );
 }
 
-// Individual Search Result Card Component
 interface SearchResultCardProps {
   result: SearchResultItem;
   query: string;
@@ -376,7 +358,6 @@ interface SearchResultCardProps {
   'data-testid'?: string;
 }
 
-// Helper function to generate URLs for different result types
 function generateResultUrl(result: SearchResultItem): string {
   switch (result.type) {
     case 'course':
@@ -412,7 +393,7 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
     >
       <Link href={generateResultUrl(result)} onClick={handleClick}>
         <CardHeader className={cn("space-y-2", viewMode === 'grid' && "pb-3")}>
-          <div className="flex items-start space-x-3">
+          <div className="flex items-start gap-3">
             {result.imageUrl ? (
               <img 
                 src={result.imageUrl} 
@@ -449,16 +430,16 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
 
         <CardContent className="pt-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+            <div className="flex items-center flex-wrap gap-3 text-sm text-muted-foreground">
               {/* Content Type Badge */}
               <Badge variant="outline" className="text-xs">
-                <Icon className="h-3 w-3 mr-1" />
-                {CONTENT_TYPE_LABELS[result.type]}
+                <Icon className="h-3 w-3 me-1" />
+                {t(`search.contentType.${result.type}`)}
               </Badge>
 
               {/* Rating */}
               {result.metadata.rating && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   <span>{result.metadata.rating.toFixed(1)}</span>
                 </div>
@@ -466,7 +447,7 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
 
               {/* Price */}
               {result.metadata.price !== undefined && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <DollarSign className="h-4 w-4" />
                   <span>{formatCurrency(result.metadata.price, 'IRR')}</span>
                 </div>
@@ -474,7 +455,7 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
 
               {/* Author/Instructor */}
               {(result.metadata.author || result.metadata.instructor) && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
                   <span>{result.metadata.author || result.metadata.instructor}</span>
                 </div>
@@ -497,7 +478,7 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
 
             {/* Relevance Score */}
             {result.relevanceScore && result.relevanceScore > 0 && (
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <TrendingUp className="h-3 w-3" />
                 <span>{Math.round(result.relevanceScore)}%</span>
               </div>
@@ -514,7 +495,7 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
               ))}
               {result.metadata.tags.length > 3 && (
                 <Badge variant="secondary" className="text-xs">
-                  +{result.metadata.tags.length - 3} more
+                  {t('search.more', { count: result.metadata.tags.length - 3 })}
                 </Badge>
               )}
             </div>
@@ -525,7 +506,6 @@ function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-tes
   );
 }
 
-// Search Results Skeleton Loader
 function SearchResultsSkeleton() {
   return (
     <div className="space-y-6">
@@ -540,7 +520,7 @@ function SearchResultsSkeleton() {
         {Array.from({ length: 5 }).map((_, index) => (
           <Card key={index}>
             <CardHeader>
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start gap-3">
                 <Skeleton className="w-12 h-12 rounded-lg" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-5 w-3/4" />
@@ -550,7 +530,7 @@ function SearchResultsSkeleton() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-4">
                 <Skeleton className="h-5 w-16" />
                 <Skeleton className="h-5 w-20" />
                 <Skeleton className="h-5 w-12" />

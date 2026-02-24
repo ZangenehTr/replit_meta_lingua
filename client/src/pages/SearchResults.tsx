@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-// Removed Helmet import - not available
 import { UniversalSearchBar } from '@/components/search/UniversalSearchBar';
 import { SearchResults as SearchResultsComponent } from '@/components/search/SearchResults';
 import { SearchFilters } from '@/components/search/SearchFilters';
@@ -29,7 +28,6 @@ import {
 import { cn } from '@/lib/utils';
 import type { SearchFilters as SearchFiltersType } from '@shared/schema';
 
-// Type definitions for API responses
 interface TrendingItem {
   query: string;
   volume?: number;
@@ -50,7 +48,6 @@ interface FacetsResponse {
   };
 }
 
-// Helper function to parse URL search params into filters
 function parseSearchParams(searchParams: URLSearchParams): {
   query: string;
   filters: SearchFiltersType;
@@ -59,7 +56,6 @@ function parseSearchParams(searchParams: URLSearchParams): {
   
   const filters: SearchFiltersType = {};
   
-  // Parse array parameters
   const categories = searchParams.get('categories');
   if (categories) filters.categories = categories.split(',');
   
@@ -78,7 +74,6 @@ function parseSearchParams(searchParams: URLSearchParams): {
   const ratings = searchParams.get('ratings');
   if (ratings) filters.ratings = ratings.split(',').map(Number).filter(n => !isNaN(n));
   
-  // Parse price range
   const priceMin = searchParams.get('priceMin');
   const priceMax = searchParams.get('priceMax');
   if (priceMin || priceMax) {
@@ -88,7 +83,6 @@ function parseSearchParams(searchParams: URLSearchParams): {
     };
   }
   
-  // Parse date range
   const dateStart = searchParams.get('dateStart');
   const dateEnd = searchParams.get('dateEnd');
   if (dateStart || dateEnd) {
@@ -101,7 +95,6 @@ function parseSearchParams(searchParams: URLSearchParams): {
   return { query, filters };
 }
 
-// Helper function to convert filters back to URL params
 function filtersToURLParams(query: string, filters: SearchFiltersType): string {
   const params = new URLSearchParams({ q: query });
   
@@ -127,44 +120,37 @@ export default function SearchResultsPage() {
   
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   
-  // Parse current search state from URL
   const { query: currentQuery, filters: currentFilters } = useMemo(() => {
     return parseSearchParams(searchParams);
   }, [searchParams]);
   
   const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
 
-  // Get search facets for filters
   const { data: facetsData } = useQuery<FacetsResponse>({
     queryKey: ['/api/search/facets', currentQuery],
     enabled: !!currentQuery,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Get trending searches for empty state
   const { data: trendingData } = useQuery<TrendingResponse>({
     queryKey: ['/api/search/trending'],
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 30 * 60 * 1000,
   });
 
-  // Handle search from search bar
   const handleSearch = (newQuery: string, newFilters: SearchFiltersType = {}) => {
     const params = filtersToURLParams(newQuery, newFilters);
     setLocation(`/search?${params}`);
   };
 
-  // Handle filter changes
   const handleFiltersChange = (newFilters: SearchFiltersType) => {
     const params = filtersToURLParams(currentQuery, newFilters);
     setLocation(`/search?${params}`);
   };
 
-  // Clear all filters
   const clearAllFilters = () => {
     setLocation(`/search?q=${encodeURIComponent(currentQuery)}`);
   };
 
-  // Get active filter count
   const activeFilterCount = Object.values(currentFilters).filter(value => {
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === 'object' && value !== null) return Object.keys(value).length > 0;
@@ -182,14 +168,14 @@ export default function SearchResultsPage() {
         <div className="container mx-auto px-4 py-6 space-y-6">
           {/* Search Header */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <Search className="h-6 w-6 text-primary" />
                 <h1 className="text-2xl font-bold">{t('search.universalSearch')}</h1>
               </div>
               {currentQuery && (
                 <Badge variant="outline" className="text-sm">
-                  <Sparkles className="h-3 w-3 mr-1" />
+                  <Sparkles className="h-3 w-3 me-1" />
                   AI-Enhanced
                 </Badge>
               )}
@@ -212,7 +198,7 @@ export default function SearchResultsPage() {
               {trendingData?.trending && trendingData.trending.length > 0 && (
                 <Card>
                   <CardContent className="p-6">
-                    <div className="flex items-center space-x-2 mb-4">
+                    <div className="flex items-center gap-2 mb-4">
                       <TrendingUp className="h-5 w-5 text-primary" />
                       <h2 className="text-lg font-semibold">{t('search.trendingSearches')}</h2>
                     </div>
@@ -225,10 +211,10 @@ export default function SearchResultsPage() {
                           onClick={() => handleSearch(trend.query)}
                           data-testid={`trending-search-${index}`}
                         >
-                          <TrendingUp className="h-3 w-3 mr-1" />
+                          <TrendingUp className="h-3 w-3 me-1" />
                           {trend.query}
                           {trend.volume && (
-                            <span className="ml-2 text-xs opacity-75">
+                            <span className="ms-2 text-xs opacity-75">
                               {trend.volume}
                             </span>
                           )}
@@ -286,16 +272,16 @@ export default function SearchResultsPage() {
                   <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
                     <SheetTrigger asChild>
                       <Button variant="outline" className="relative" data-testid="mobile-filters-button">
-                        <Filter className="h-4 w-4 mr-2" />
+                        <Filter className="h-4 w-4 me-2" />
                         {t('search.filters')}
                         {activeFilterCount > 0 && (
-                          <Badge variant="secondary" className="ml-2 h-5 px-1 text-xs">
+                          <Badge variant="secondary" className="ms-2 h-5 px-1 text-xs">
                             {activeFilterCount}
                           </Badge>
                         )}
                       </Button>
                     </SheetTrigger>
-                    <SheetContent side={isRTL ? "right" : "left"} className="w-80 overflow-y-auto">
+                    <SheetContent side={isRTL ? "right" : "left"} className="w-[calc(100vw-3rem)] sm:w-80 overflow-y-auto">
                       <SheetHeader>
                         <SheetTitle>{t('search.filters')}</SheetTitle>
                         <SheetDescription>
@@ -324,7 +310,7 @@ export default function SearchResultsPage() {
                       className="text-muted-foreground hover:text-foreground"
                       data-testid="mobile-clear-filters"
                     >
-                      <X className="h-4 w-4 mr-1" />
+                      <X className="h-4 w-4 me-1" />
                       {t('search.clearAll')}
                     </Button>
                   )}
@@ -337,12 +323,10 @@ export default function SearchResultsPage() {
                     
                     {/* Content Types */}
                     {currentFilters.contentTypes?.map((type) => (
-                      <Badge key={type} variant="secondary" className="text-xs">
+                      <Badge key={type} variant="secondary" className="text-xs py-1.5 ps-2 pe-1 gap-1">
                         {type}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                        <button
+                          className="inline-flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted-foreground/20 transition-colors"
                           onClick={() => {
                             const newTypes = currentFilters.contentTypes?.filter(t => t !== type) || [];
                             handleFiltersChange({
@@ -352,18 +336,16 @@ export default function SearchResultsPage() {
                           }}
                         >
                           <X className="h-3 w-3" />
-                        </Button>
+                        </button>
                       </Badge>
                     ))}
 
                     {/* Languages */}
                     {currentFilters.languages?.map((lang) => (
-                      <Badge key={lang} variant="secondary" className="text-xs">
+                      <Badge key={lang} variant="secondary" className="text-xs py-1.5 ps-2 pe-1 gap-1">
                         {lang}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                        <button
+                          className="inline-flex items-center justify-center h-5 w-5 rounded-full hover:bg-muted-foreground/20 transition-colors"
                           onClick={() => {
                             const newLangs = currentFilters.languages?.filter(l => l !== lang) || [];
                             handleFiltersChange({
@@ -373,7 +355,7 @@ export default function SearchResultsPage() {
                           }}
                         >
                           <X className="h-3 w-3" />
-                        </Button>
+                        </button>
                       </Badge>
                     ))}
 

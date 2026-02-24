@@ -63,54 +63,13 @@ const CONTENT_TYPE_ICONS = {
   dictionary: BookOpen
 };
 
-const CONTENT_TYPE_LABELS = {
-  book: 'Books',
-  course: 'Courses',
-  user: 'People',
-  test: 'Tests',
-  homework: 'Homework',
-  session: 'Sessions',
-  roadmap: 'Roadmaps',
-  dictionary: 'Dictionary'
-};
+const CONTENT_TYPE_KEYS = ['book', 'course', 'user', 'test', 'homework', 'session', 'roadmap', 'dictionary'];
 
-const LANGUAGE_LABELS = {
-  en: 'English',
-  fa: 'Persian (Farsi)',
-  ar: 'Arabic',
-  de: 'German',
-  es: 'Spanish',
-  fr: 'French',
-  it: 'Italian',
-  ru: 'Russian',
-  zh: 'Chinese',
-  ja: 'Japanese',
-  ko: 'Korean'
-};
+const LANGUAGE_KEYS = ['en', 'fa', 'ar', 'de', 'es', 'fr', 'it', 'ru', 'zh', 'ja', 'ko'];
 
-const LEVEL_LABELS = {
-  beginner: 'Beginner',
-  elementary: 'Elementary',
-  intermediate: 'Intermediate',
-  upper_intermediate: 'Upper Intermediate',
-  advanced: 'Advanced',
-  proficient: 'Proficient'
-};
+const LEVEL_KEYS = ['beginner', 'elementary', 'intermediate', 'upper_intermediate', 'advanced', 'proficient'];
 
-const CATEGORY_LABELS = {
-  general: 'General',
-  academic: 'Academic',
-  business: 'Business',
-  test_prep: 'Test Preparation',
-  conversation: 'Conversation',
-  grammar: 'Grammar',
-  vocabulary: 'Vocabulary',
-  pronunciation: 'Pronunciation',
-  writing: 'Writing',
-  listening: 'Listening',
-  speaking: 'Speaking',
-  reading: 'Reading'
-};
+const CATEGORY_KEYS = ['general', 'academic', 'business', 'test_prep', 'conversation', 'grammar', 'vocabulary', 'pronunciation', 'writing', 'listening', 'speaking', 'reading'];
 
 export function SearchFilters({
   filters,
@@ -132,13 +91,11 @@ export function SearchFilters({
 
   const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
 
-  // Handle filter changes
   const handleFilterChange = useCallback((key: keyof SearchFilters, value: any) => {
     const newFilters = { ...filters, [key]: value };
     onFiltersChange(newFilters);
   }, [filters, onFiltersChange]);
 
-  // Toggle array filter item
   const toggleArrayFilter = useCallback((key: keyof SearchFilters, item: string) => {
     const currentArray = (filters[key] as string[]) || [];
     const newArray = currentArray.includes(item)
@@ -148,19 +105,16 @@ export function SearchFilters({
     handleFilterChange(key, newArray.length > 0 ? newArray : undefined);
   }, [filters, handleFilterChange]);
 
-  // Clear all filters
   const clearAllFilters = useCallback(() => {
     onFiltersChange({});
   }, [onFiltersChange]);
 
-  // Get active filter count
   const activeFilterCount = Object.values(filters).filter(value => {
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === 'object' && value !== null) return Object.keys(value).length > 0;
     return value !== undefined;
   }).length;
 
-  // Toggle section expansion
   const toggleSection = useCallback((section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -172,11 +126,11 @@ export function SearchFilters({
     <Card className={cn("w-full", className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
             <span>{t('search.filters')}</span>
             {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ms-2">
                 {activeFilterCount}
               </Badge>
             )}
@@ -202,7 +156,7 @@ export function SearchFilters({
           onOpenChange={() => toggleSection('contentTypes')}
         >
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <h4 className="font-medium">{t('search.contentTypes')}</h4>
               {filters.contentTypes && filters.contentTypes.length > 0 && (
                 <Badge variant="outline" className="text-xs">
@@ -217,27 +171,28 @@ export function SearchFilters({
             )}
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-2">
-            {Object.entries(CONTENT_TYPE_LABELS).map(([key, label]) => {
+            {CONTENT_TYPE_KEYS.map((key) => {
               const Icon = CONTENT_TYPE_ICONS[key as keyof typeof CONTENT_TYPE_ICONS];
               const isSelected = filters.contentTypes?.includes(key) || false;
               const count = facets?.contentTypes.find(f => f.name === key)?.count || 0;
               
               return (
-                <div key={key} className="flex items-center space-x-2">
+                <div key={key} className="flex items-center gap-2 min-h-[44px] py-1">
                   <Checkbox
                     id={`content-type-${key}`}
                     checked={isSelected}
                     onCheckedChange={() => toggleArrayFilter('contentTypes', key)}
+                    className="h-5 w-5"
                     data-testid={`filter-content-type-${key}`}
                   />
                   <Label
                     htmlFor={`content-type-${key}`}
-                    className="flex items-center space-x-2 cursor-pointer flex-1"
+                    className="flex items-center gap-2 cursor-pointer flex-1 min-h-[44px] py-2"
                   >
                     <Icon className="h-4 w-4" />
-                    <span>{label}</span>
+                    <span>{t(`search.contentType.${key}`)}</span>
                     {count > 0 && (
-                      <span className="text-xs text-muted-foreground ml-auto">
+                      <span className="text-xs text-muted-foreground ms-auto">
                         ({count})
                       </span>
                     )}
@@ -256,7 +211,7 @@ export function SearchFilters({
           onOpenChange={() => toggleSection('languages')}
         >
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <h4 className="font-medium">{t('search.languages')}</h4>
               {filters.languages && filters.languages.length > 0 && (
                 <Badge variant="outline" className="text-xs">
@@ -271,25 +226,26 @@ export function SearchFilters({
             )}
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-2">
-            {Object.entries(LANGUAGE_LABELS).map(([key, label]) => {
+            {LANGUAGE_KEYS.map((key) => {
               const isSelected = filters.languages?.includes(key) || false;
               const count = facets?.languages.find(f => f.name === key)?.count || 0;
               
               return (
-                <div key={key} className="flex items-center space-x-2">
+                <div key={key} className="flex items-center gap-2 min-h-[44px] py-1">
                   <Checkbox
                     id={`language-${key}`}
                     checked={isSelected}
                     onCheckedChange={() => toggleArrayFilter('languages', key)}
+                    className="h-5 w-5"
                     data-testid={`filter-language-${key}`}
                   />
                   <Label
                     htmlFor={`language-${key}`}
-                    className="flex items-center justify-between cursor-pointer flex-1"
+                    className="flex items-center justify-between cursor-pointer flex-1 min-h-[44px] py-2"
                   >
-                    <span className="flex items-center space-x-2">
+                    <span className="flex items-center gap-2">
                       <Languages className="h-4 w-4" />
-                      <span>{label}</span>
+                      <span>{t(`search.language.${key}`)}</span>
                     </span>
                     {count > 0 && (
                       <span className="text-xs text-muted-foreground">
@@ -311,7 +267,7 @@ export function SearchFilters({
           onOpenChange={() => toggleSection('categories')}
         >
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <h4 className="font-medium">{t('search.categories')}</h4>
               {filters.categories && filters.categories.length > 0 && (
                 <Badge variant="outline" className="text-xs">
@@ -326,23 +282,24 @@ export function SearchFilters({
             )}
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-2">
-            {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
+            {CATEGORY_KEYS.map((key) => {
               const isSelected = filters.categories?.includes(key) || false;
               const count = facets?.categories.find(f => f.name === key)?.count || 0;
               
               return (
-                <div key={key} className="flex items-center space-x-2">
+                <div key={key} className="flex items-center gap-2 min-h-[44px] py-1">
                   <Checkbox
                     id={`category-${key}`}
                     checked={isSelected}
                     onCheckedChange={() => toggleArrayFilter('categories', key)}
+                    className="h-5 w-5"
                     data-testid={`filter-category-${key}`}
                   />
                   <Label
                     htmlFor={`category-${key}`}
-                    className="flex items-center justify-between cursor-pointer flex-1"
+                    className="flex items-center justify-between cursor-pointer flex-1 min-h-[44px] py-2"
                   >
-                    <span>{label}</span>
+                    <span>{t(`search.category.${key}`)}</span>
                     {count > 0 && (
                       <span className="text-xs text-muted-foreground">
                         ({count})
@@ -363,7 +320,7 @@ export function SearchFilters({
           onOpenChange={() => toggleSection('levels')}
         >
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <h4 className="font-medium">{t('search.levels')}</h4>
               {filters.levels && filters.levels.length > 0 && (
                 <Badge variant="outline" className="text-xs">
@@ -378,23 +335,24 @@ export function SearchFilters({
             )}
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-2">
-            {Object.entries(LEVEL_LABELS).map(([key, label]) => {
+            {LEVEL_KEYS.map((key) => {
               const isSelected = filters.levels?.includes(key) || false;
               const count = facets?.levels.find(f => f.name === key)?.count || 0;
               
               return (
-                <div key={key} className="flex items-center space-x-2">
+                <div key={key} className="flex items-center gap-2 min-h-[44px] py-1">
                   <Checkbox
                     id={`level-${key}`}
                     checked={isSelected}
                     onCheckedChange={() => toggleArrayFilter('levels', key)}
+                    className="h-5 w-5"
                     data-testid={`filter-level-${key}`}
                   />
                   <Label
                     htmlFor={`level-${key}`}
-                    className="flex items-center justify-between cursor-pointer flex-1"
+                    className="flex items-center justify-between cursor-pointer flex-1 min-h-[44px] py-2"
                   >
-                    <span>{label}</span>
+                    <span>{t(`search.level.${key}`)}</span>
                     {count > 0 && (
                       <span className="text-xs text-muted-foreground">
                         ({count})
@@ -415,7 +373,7 @@ export function SearchFilters({
           onOpenChange={() => toggleSection('price')}
         >
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
               <h4 className="font-medium">{t('search.priceRange')}</h4>
               {filters.priceRange && (
@@ -433,8 +391,8 @@ export function SearchFilters({
           <CollapsibleContent className="mt-3 space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Free</span>
-                <span>10M+ IRR</span>
+                <span>{t('search.free')}</span>
+                <span>{t('search.maxPrice')}</span>
               </div>
               <Slider
                 value={[
@@ -472,12 +430,12 @@ export function SearchFilters({
           onOpenChange={() => toggleSection('rating')}
         >
           <CollapsibleTrigger className="flex items-center justify-between w-full p-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Star className="h-4 w-4" />
               <h4 className="font-medium">{t('search.rating')}</h4>
               {filters.ratings && filters.ratings.length > 0 && (
                 <Badge variant="outline" className="text-xs">
-                  {filters.ratings.length} selected
+                  {filters.ratings.length} {t('search.selected')}
                 </Badge>
               )}
             </div>
@@ -492,16 +450,17 @@ export function SearchFilters({
               const isSelected = filters.ratings?.includes(rating) || false;
               
               return (
-                <div key={rating} className="flex items-center space-x-2">
+                <div key={rating} className="flex items-center gap-2 min-h-[44px] py-1">
                   <Checkbox
                     id={`rating-${rating}`}
                     checked={isSelected}
                     onCheckedChange={() => toggleArrayFilter('ratings', rating.toString())}
+                    className="h-5 w-5"
                     data-testid={`filter-rating-${rating}`}
                   />
                   <Label
                     htmlFor={`rating-${rating}`}
-                    className="flex items-center space-x-1 cursor-pointer"
+                    className="flex items-center gap-1 cursor-pointer min-h-[44px] py-2"
                   >
                     {Array.from({ length: 5 }).map((_, index) => (
                       <Star
@@ -514,7 +473,7 @@ export function SearchFilters({
                         )}
                       />
                     ))}
-                    <span className="ml-2">& up</span>
+                    <span className="ms-2">{t('search.andUp')}</span>
                   </Label>
                 </div>
               );
