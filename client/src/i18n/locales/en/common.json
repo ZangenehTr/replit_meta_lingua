@@ -1058,5 +1058,61 @@
   "discard": "Discard Changes",
   "saveChanges": "Save Changes",
   "back": "Back",
-  "availableFor": "Available for"
+  "availableFor": "Available for",
+  "about": {
+    "seoTitle": "About Us",
+    "seoDescription": "Meta Lingua is a comprehensive language learning platform designed to make language education accessible, effective, and enjoyable for everyone.",
+    "badge": "About Us",
+    "title": "Empowering Language Learners Globally",
+    "subtitle": "Meta Lingua is a comprehensive language learning platform designed to make language education accessible, effective, and enjoyable for everyone.",
+    "mission": "Our Mission",
+    "missionText1": "We believe that language learning should be accessible to everyone, regardless of location or background. Our mission is to provide world-class language education through innovative technology and proven teaching methods.",
+    "missionText2": "Since our founding, we've helped thousands of students achieve their language learning goals through personalized instruction, AI-powered tools, and a supportive global community.",
+    "ourValues": "Our Values",
+    "whyChoose": "Why Choose Meta Lingua?",
+    "languagesSupported": "Languages Supported",
+    "activeStudents": "Active Students",
+    "studentSatisfaction": "Student Satisfaction",
+    "values": {
+      "globalReach": "Global Reach",
+      "globalReachDesc": "Connecting learners worldwide with quality language education",
+      "studentCentered": "Student-Centered",
+      "studentCenteredDesc": "Every decision we make prioritizes student success and satisfaction",
+      "excellence": "Excellence",
+      "excellenceDesc": "Committed to delivering the highest quality teaching and resources",
+      "innovation": "Innovation",
+      "innovationDesc": "Leveraging AI and technology to enhance the learning experience"
+    }
+  },
+  "contact": {
+    "seoTitle": "Contact Us",
+    "seoDescription": "Get in touch with Meta Lingua. We're here to answer your questions and help you start your language learning journey.",
+    "badge": "Contact Us",
+    "title": "Get in Touch",
+    "subtitle": "Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+    "email": "Email",
+    "phone": "Phone",
+    "phoneHours": "Mon-Fri, 9am-6pm EST",
+    "location": "Location",
+    "country": "United States",
+    "sendMessage": "Send us a Message",
+    "formDescription": "Fill out the form below and we'll get back to you shortly",
+    "name": "Name",
+    "emailLabel": "Email",
+    "subject": "Subject",
+    "message": "Message",
+    "sendButton": "Send Message",
+    "successTitle": "Message Sent!",
+    "successMessage": "We'll get back to you soon.",
+    "errorTitle": "Error",
+    "errorMessage": "Failed to send message"
+  },
+  "blog": {
+    "seoTitle": "Blog - Meta Lingua",
+    "seoDescription": "Read the latest articles, tips, and insights about language learning from Meta Lingua."
+  },
+  "videos": {
+    "seoTitle": "Video Library - Meta Lingua",
+    "seoDescription": "Learn from expert instructors with our video tutorials and language courses"
+  }
 }
