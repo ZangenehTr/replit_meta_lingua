@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, User, Phone, Star, Bot, Headphones, ChevronDown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/hooks/use-language';
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 import io, { Socket } from 'socket.io-client';
 
 interface Message {
@@ -58,9 +59,12 @@ export function VisitorChatWidget() {
   const [ratingComment, setRatingComment] = useState('');
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [sessionLoading, setSessionLoading] = useState(false);
+  const [sessionError, setSessionError] = useState(false);
 
   const { language } = useLanguage();
   const { t } = useTranslation('common');
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRTL = ['fa', 'ar'].includes(language);
@@ -115,6 +119,8 @@ export function VisitorChatWidget() {
     if (!isOpen || session) return;
 
     const initSession = async () => {
+      setSessionLoading(true);
+      setSessionError(false);
       const storedSessionId = localStorage.getItem('visitorChatSessionId');
       
       if (storedSessionId) {
@@ -129,6 +135,7 @@ export function VisitorChatWidget() {
             if (data.session.visitorPhone || data.session.visitorName) {
               setChatStep('chat');
             }
+            setSessionLoading(false);
             return;
           }
         } catch (error) {
@@ -152,6 +159,9 @@ export function VisitorChatWidget() {
         }
       } catch (error) {
         console.error('Error creating chat session:', error);
+        setSessionError(true);
+      } finally {
+        setSessionLoading(false);
       }
     };
 
@@ -216,7 +226,15 @@ export function VisitorChatWidget() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !session) return;
+    if (!newMessage.trim()) return;
+    if (!session) {
+      toast({
+        title: t('visitorChat.notConnected', 'Not connected'),
+        description: t('visitorChat.notConnectedDesc', 'Please wait while we connect you, then try again.'),
+        variant: 'destructive'
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/messages`, {
@@ -290,7 +308,7 @@ export function VisitorChatWidget() {
     <>
       <button
         onClick={() => { setIsOpen(!isOpen); if (!isOpen) setUnreadCount(0); }}
-        className={`fixed bottom-4 ${isRTL ? 'left-4' : 'right-4'} z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 bg-gradient-to-br from-blue-600 to-cyan-500 text-white ${adminOnline ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
+        className={`fixed bottom-4 ${isRTL ? 'left-4' : 'right-4'} z-[60] h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 bg-gradient-to-br from-blue-600 to-cyan-500 text-white ${adminOnline ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
         data-testid="button-visitor-chat-toggle"
         aria-label={isOpen ? t('visitorChat.close', 'Close chat') : t('visitorChat.open', 'Open chat')}
       >
@@ -434,6 +452,27 @@ export function VisitorChatWidget() {
 
           {chatStep === 'chat' && (
             <>
+              {sessionError && (
+                <div className="bg-red-50 border-b border-red-100 px-4 py-2 flex items-center justify-between gap-2 shrink-0">
+                  <p className="text-xs text-red-700 flex-1">
+                    {t('visitorChat.connectionError', 'Connection failed. Please try again.')}
+                  </p>
+                  <button
+                    onClick={() => { setSession(null); setSessionError(false); }}
+                    className="text-xs text-red-600 underline shrink-0 font-medium"
+                  >
+                    {t('visitorChat.retry', 'Retry')}
+                  </button>
+                </div>
+              )}
+              {sessionLoading && !session && (
+                <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-center gap-2 shrink-0">
+                  <div className="h-3 w-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin shrink-0" />
+                  <p className="text-xs text-blue-700">
+                    {t('visitorChat.connecting', 'Connecting...')}
+                  </p>
+                </div>
+              )}
               <div className="flex-1 overflow-y-auto px-4 py-3 bg-gray-50 space-y-3" style={{ overscrollBehavior: 'contain' }}>
                 {messages.map((msg, index) => (
                   <div
@@ -487,22 +526,27 @@ export function VisitorChatWidget() {
                 <div className="flex gap-2 items-center">
                   <Input
                     type="text"
-                    placeholder={t('visitorChat.messagePlaceholder', 'Type your message...')}
+                    placeholder={sessionLoading && !session
+                      ? t('visitorChat.connecting', 'Connecting...')
+                      : t('visitorChat.messagePlaceholder', 'Type your message...')}
                     value={newMessage}
                     onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
                     onKeyDown={handleKeyDown}
                     className="flex-1 h-9 text-sm border-gray-200 rounded-full px-4 focus:border-blue-400 focus:ring-blue-400"
-                    disabled={isLoading}
+                    disabled={isLoading || (sessionLoading && !session)}
                     data-testid="input-chat-message"
                   />
                   <Button
                     onClick={sendMessage}
-                    disabled={!newMessage.trim() || isLoading}
+                    disabled={!newMessage.trim() || isLoading || (sessionLoading && !session)}
                     size="icon"
-                    className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shrink-0"
+                    className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shrink-0 disabled:opacity-50"
                     data-testid="button-send-message"
                   >
-                    <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} />
+                    {isLoading
+                      ? <div className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      : <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} />
+                    }
                   </Button>
                 </div>
                 <p className="text-[10px] text-gray-300 mt-1 text-center">
