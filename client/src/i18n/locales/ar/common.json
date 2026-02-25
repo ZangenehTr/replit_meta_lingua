@@ -964,7 +964,26 @@
     "seoTitle": "ميتا لينغوا - تعلم اللغات بالذكاء الاصطناعي",
     "seoDescription": "تعلم اللغات مع دروس خصوصية مدعومة بالذكاء الاصطناعي، ودورات تفاعلية، ومجتمع عالمي داعم. ابدأ رحلة تعلم اللغة اليوم!"
   },
-  "profile": "الملف الشخصي",
+  "profile": {
+    "title": "الملف الشخصي",
+    "updateSuccess": "تم تحديث الملف الشخصي",
+    "updateSuccessDesc": "تم تحديث ملفك الشخصي بنجاح.",
+    "updateError": "فشل التحديث",
+    "updateErrorDesc": "فشل تحديث الملف الشخصي. يرجى المحاولة مرة أخرى.",
+    "learningProfileUpdateSuccess": "تم حفظ ملف التعلم",
+    "learningProfileUpdateSuccessDesc": "تم حفظ ملف تعلمك.",
+    "culturalBackground": "الخلفية الثقافية",
+    "culturalBackgroundDesc": "ساعدنا على فهم سياقك الثقافي للحصول على توصيات تعلم أفضل.",
+    "selectCulturalBackground": "اختر الخلفية الثقافية",
+    "personalityType": "نوع الشخصية",
+    "selectPersonalityType": "اختر نوع الشخصية",
+    "learningGoals": "أهداف التعلم",
+    "certDownloadSuccess": "تم تنزيل الشهادة",
+    "certDownloadSuccessDesc": "تم تنزيل شهادتك. افتحها في متصفح للطباعة بصيغة PDF.",
+    "certDownloadError": "خطأ في التنزيل",
+    "certDownloadErrorDesc": "حدث خطأ أثناء تنزيل شهادتك.",
+    "userNotLoaded": "لم يتم تحميل بيانات المستخدم. يرجى الانتظار والمحاولة مرة أخرى."
+  },
   "courses": {
     "title": "الدورات"
   },

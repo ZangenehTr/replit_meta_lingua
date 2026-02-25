@@ -81,7 +81,7 @@ export function MobileLayout({
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 mobile-scroll px-4 pb-24">
+      <main className="flex-1 mobile-scroll px-3 pt-2 pb-20">
         <AnimatePresence mode="wait">
           <motion.div
             key={gradient}

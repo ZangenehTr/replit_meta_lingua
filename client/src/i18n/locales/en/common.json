@@ -35,7 +35,26 @@
     "seoDescription": "Learn languages with AI-powered tutoring, interactive courses, and a supportive global community. Start your language learning journey today!"
   },
   "yesterday": "Yesterday",
-  "profile": "Profile",
+  "profile": {
+    "title": "Profile",
+    "updateSuccess": "Profile Updated",
+    "updateSuccessDesc": "Your profile has been updated successfully.",
+    "updateError": "Update Failed",
+    "updateErrorDesc": "Failed to update profile. Please try again.",
+    "learningProfileUpdateSuccess": "Learning Profile Saved",
+    "learningProfileUpdateSuccessDesc": "Your learning profile has been saved.",
+    "culturalBackground": "Cultural Background",
+    "culturalBackgroundDesc": "Help us understand your cultural context for better learning recommendations.",
+    "selectCulturalBackground": "Select cultural background",
+    "personalityType": "Personality Type",
+    "selectPersonalityType": "Select personality type",
+    "learningGoals": "Learning Goals",
+    "certDownloadSuccess": "Certificate Downloaded",
+    "certDownloadSuccessDesc": "Your certificate has been downloaded. Open it in a browser to print as PDF.",
+    "certDownloadError": "Download Error",
+    "certDownloadErrorDesc": "An error occurred while downloading your certificate.",
+    "userNotLoaded": "User data not loaded. Please wait and try again."
+  },
   "courses": {
     "title": "Courses"
   },

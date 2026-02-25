@@ -125,15 +125,21 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
   if (!user) return null;
   
   const navigationItems = getRoleNavigation(user.role, t);
+  // For RTL languages, reverse nav items so the logical first item appears on the right
+  const displayItems = isRTL ? [...navigationItems].reverse() : navigationItems;
   
   return (
-    <nav className={cn(
-      "fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border safe-area-inset-bottom",
-      "md:hidden", // Only show on mobile
-      className
-    )}>
+    <nav
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border",
+        "md:hidden",
+        className
+      )}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
       <div className="grid grid-cols-4 h-16">
-        {navigationItems.map((item) => {
+        {displayItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.route || (location.startsWith(item.route) && item.route !== "/");
           
@@ -146,25 +152,33 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
                 setLocation(item.route);
               }}
               className={cn(
-                "flex flex-col items-center justify-center space-y-1 relative touch-target",
+                "flex flex-col items-center justify-center gap-0.5 relative min-w-0 px-1",
                 isActive 
                   ? "text-primary bg-primary/10" 
                   : "text-muted-foreground"
               )}
             >
               <div className="relative">
-                <Icon className="h-6 w-6" />
+                <Icon className="h-5 w-5" />
                 {item.badge && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </div>
-              <span className="text-xs leading-none truncate max-w-full">
+              <span
+                className="text-[10px] leading-tight w-full text-center"
+                style={{
+                  fontFamily: isRTL ? "'Vazir', 'Tahoma', 'Arial', sans-serif" : undefined,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}
+              >
                 {item.label}
               </span>
               
-              {/* Active indicator */}
               {isActive && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
               )}

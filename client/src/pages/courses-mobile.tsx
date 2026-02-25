@@ -136,47 +136,22 @@ export default function CoursesCatalogMobile() {
       showBack={true}
       gradient="cool"
     >
-      {/* Hero Section */}
-      <motion.div
-        className="glass-card p-6 mb-6 text-center"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2 className="text-white text-2xl font-bold mb-2">
-          {t('courses:exploreOurCourses')}
-        </h2>
-        <p className="text-white/70">
-          {t('courses:discoverLanguageOptions')}
-        </p>
-      </motion.div>
-
-      {/* Search Bar */}
-      <motion.div 
-        className="mb-4"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="glass-card p-3 flex items-center gap-3">
-          <Search className="w-5 h-5 text-white/50" />
+      {/* Search Bar — compact, right under header */}
+      <div className="mb-3 mt-1">
+        <div className="glass-card px-3 py-2 flex items-center gap-2">
+          <Search className="w-4 h-4 text-white/50 shrink-0" />
           <input
             type="text"
             placeholder={t('courses:searchCourses')}
-            className="flex-1 bg-transparent text-white placeholder-white/50 outline-none"
+            className="flex-1 bg-transparent text-white placeholder-white/50 outline-none text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      </motion.div>
+      </div>
 
-      {/* Delivery Mode Tabs */}
-      <motion.div 
-        className="flex gap-2 mb-4"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
+      {/* Delivery Mode Tabs — compact pill row */}
+      <div className="flex gap-2 mb-3">
         {[
           { id: 'all', label: t('common:all'), icon: Sparkles },
           { id: 'in_person', label: t('courses:inPerson'), icon: MapPin },
@@ -188,27 +163,22 @@ export default function CoursesCatalogMobile() {
               key={mode.id}
               onClick={() => setDeliveryMode(mode.id as any)}
               className={`
-                flex-1 py-2 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2
+                flex-1 py-1.5 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5
                 ${deliveryMode === mode.id 
                   ? 'bg-white/30 text-white font-medium' 
                   : 'bg-white/10 text-white/70'}
                 tap-scale
               `}
             >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm">{mode.label}</span>
+              <Icon className="w-3.5 h-3.5" />
+              <span className="text-xs">{mode.label}</span>
             </button>
           );
         })}
-      </motion.div>
+      </div>
 
-      {/* Category Filter */}
-      <motion.div 
-        className="flex gap-2 mb-6 overflow-x-auto pb-2"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
+      {/* Category Filter — horizontal scroll */}
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
         {categories.map((category) => {
           const Icon = category.icon;
           return (
@@ -216,146 +186,119 @@ export default function CoursesCatalogMobile() {
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               className={`
-                px-4 py-2 rounded-xl whitespace-nowrap transition-all flex items-center gap-2
+                px-3 py-1.5 rounded-xl whitespace-nowrap transition-all flex items-center gap-1.5 text-xs shrink-0
                 ${selectedCategory === category.id 
-                  ? 'bg-purple-500/30 text-purple-300' 
+                  ? 'bg-purple-500/40 text-white font-medium' 
                   : 'bg-white/10 text-white/70'}
                 tap-scale
               `}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5" />
               {category.label}
             </button>
           );
         })}
-      </motion.div>
+      </div>
 
-      {/* Courses Grid */}
+      {/* Results count */}
+      {!isLoading && (
+        <p className="text-white/50 text-xs mb-2 px-1">
+          {filteredCourses.length} {t('courses:coursesFound', 'courses')}
+        </p>
+      )}
+
+      {/* Courses List */}
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="glass-card p-4 animate-pulse">
-              <div className="h-32 bg-white/20 rounded-lg mb-3"></div>
-              <div className="h-4 bg-white/20 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-white/20 rounded w-1/2"></div>
+            <div key={i} className="glass-card p-3 animate-pulse">
+              <div className="h-24 bg-white/20 rounded-lg mb-2" />
+              <div className="h-3 bg-white/20 rounded w-3/4 mb-1.5" />
+              <div className="h-2.5 bg-white/20 rounded w-1/2" />
             </div>
           ))}
         </div>
       ) : filteredCourses.length === 0 ? (
-        <MobileCard className="text-center py-12">
-          <BookOpen className="w-16 h-16 text-white/50 mx-auto mb-4" />
-          <p className="text-white/70">{t('courses:noCoursesFound')}</p>
+        <MobileCard className="text-center py-10">
+          <BookOpen className="w-12 h-12 text-white/50 mx-auto mb-3" />
+          <p className="text-white/70 text-sm">{t('courses:noCoursesFound')}</p>
         </MobileCard>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredCourses.map((course, index) => {
             const DeliveryIcon = getDeliveryIcon(course.deliveryMode);
             return (
               <motion.div
                 key={course.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(index * 0.05, 0.3) }}
                 onClick={() => navigate(`/course/${course.id}`)}
               >
-                <MobileCard className="relative overflow-hidden">
-                  {/* Thumbnail or Gradient */}
-                  <div className="h-32 mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
-                    {course.thumbnail ? (
-                      <img 
-                        src={course.thumbnail} 
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen className="w-12 h-12 text-white/50" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Course Info */}
-                  <div>
-                    {/* Title and Level */}
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-white font-semibold text-lg flex-1">
-                        {course.title}
-                      </h3>
-                      <Badge className={`${getLevelColor(course.level)} border-0`}>
-                        {t(`courses:level.${course.level}`)}
-                      </Badge>
+                <MobileCard className="relative overflow-hidden p-3">
+                  <div className="flex gap-3">
+                    {/* Thumbnail */}
+                    <div className="h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
+                      {course.thumbnail ? (
+                        <img
+                          src={course.thumbnail}
+                          alt={course.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BookOpen className="w-8 h-8 text-white/50" />
+                        </div>
+                      )}
                     </div>
 
-                    {/* Description */}
-                    <p className="text-white/60 text-sm mb-3 line-clamp-2">
-                      {course.description}
-                    </p>
-
-                    {/* Meta Info */}
-                    <div className="flex flex-wrap gap-3 mb-3">
-                      <div className="flex items-center gap-1">
-                        <DeliveryIcon className="w-4 h-4 text-white/50" />
-                        <span className="text-white/60 text-xs">
+                    {/* Course Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-1 mb-1">
+                        <h3 className="text-white font-semibold text-sm leading-tight line-clamp-2 flex-1">
+                          {course.title}
+                        </h3>
+                        <Badge className={`${getLevelColor(course.level)} border-0 text-xs shrink-0`}>
+                          {t(`courses:level.${course.level}`)}
+                        </Badge>
+                      </div>
+                      <p className="text-white/55 text-xs mb-2 line-clamp-1">
+                        {course.instructorName}
+                      </p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                        <span className="flex items-center gap-1 text-white/55 text-xs">
+                          <DeliveryIcon className="w-3 h-3" />
                           {t(`courses:${course.deliveryMode}`)}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4 text-white/50" />
-                        <span className="text-white/60 text-xs">
+                        <span className="flex items-center gap-1 text-white/55 text-xs">
+                          <Clock className="w-3 h-3" />
                           {course.duration}
                         </span>
-                      </div>
-                      {course.maxStudents && (
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4 text-white/50" />
-                          <span className="text-white/60 text-xs">
-                            {course.currentStudents || 0}/{course.maxStudents}
-                          </span>
-                        </div>
-                      )}
-                      {course.rating && (
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                          <span className="text-white/60 text-xs">
+                        {course.rating && (
+                          <span className="flex items-center gap-1 text-white/55 text-xs">
+                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                             {typeof course.rating === 'number' ? course.rating.toFixed(1) : course.rating}
                           </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Schedule for In-Person */}
-                    {course.deliveryMode === 'in_person' && course.weekdays && (
-                      <div className="glass-card p-2 mb-3">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-3 h-3 text-white/50" />
-                          <span className="text-white/70 text-xs">
-                            {course.weekdays.join(', ')} • {course.startTime} - {course.endTime}
-                          </span>
-                        </div>
-                        {course.location && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <MapPin className="w-3 h-3 text-white/50" />
-                            <span className="text-white/70 text-xs">{course.location}</span>
-                          </div>
                         )}
                       </div>
-                    )}
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/60 text-xs">{t('courses:instructor')}</p>
-                        <p className="text-white text-sm font-medium">
-                          {course.instructorName}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-white font-bold text-lg">
-                          {formatPrice(course.price)}
-                        </p>
-                        <ChevronRight className="w-5 h-5 text-white/30 ml-auto" />
-                      </div>
                     </div>
+                  </div>
+
+                  {/* Schedule strip for In-Person */}
+                  {course.deliveryMode === 'in_person' && course.weekdays && (
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10">
+                      <Calendar className="w-3 h-3 text-white/40 shrink-0" />
+                      <span className="text-white/60 text-xs truncate">
+                        {course.weekdays.join(', ')} · {course.startTime}–{course.endTime}
+                        {course.location ? ` · ${course.location}` : ''}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Price row */}
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
+                    <p className="text-white font-bold text-sm">{formatPrice(course.price)}</p>
+                    <ChevronRight className="w-4 h-4 text-white/30" />
                   </div>
                 </MobileCard>
               </motion.div>
@@ -364,8 +307,7 @@ export default function CoursesCatalogMobile() {
         </div>
       )}
 
-      {/* Bottom Spacing */}
-      <div className="h-20" />
+      <div className="h-6" />
     </MobileLayout>
   );
 }

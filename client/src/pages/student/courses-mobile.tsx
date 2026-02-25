@@ -216,37 +216,37 @@ export default function StudentCoursesMobile() {
         </div>
       </motion.header>
 
-      {/* Main Content - Clean White Cards */}
-      <div className="px-4 py-6 pb-24 space-y-6">
-        {/* Stats Overview */}
+      {/* Main Content */}
+      <div className="px-3 py-3 pb-24 space-y-3">
+        {/* Stats Overview — compact 3-tile row */}
         <motion.div
-          className="grid grid-cols-3 gap-3"
+          className="grid grid-cols-3 gap-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
-            <BookOpen className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-            <p className="text-gray-900 text-xl font-bold">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-lg text-center">
+            <BookOpen className="w-6 h-6 text-blue-500 mx-auto mb-1" />
+            <p className="text-gray-900 text-lg font-bold leading-tight">
               {activeCourses.length}
             </p>
-            <p className="text-gray-600 text-xs">{t('student:active')}</p>
+            <p className="text-gray-500 text-[10px]">{t('student:active')}</p>
           </div>
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
-            <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="text-gray-900 text-xl font-bold">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-lg text-center">
+            <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1" />
+            <p className="text-gray-900 text-lg font-bold leading-tight">
               {completedCourses.length}
             </p>
-            <p className="text-gray-600 text-xs">{t('student:completed')}</p>
+            <p className="text-gray-500 text-[10px]">{t('student:completed')}</p>
           </div>
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg text-center">
-            <TrendingUp className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-            <p className="text-gray-900 text-xl font-bold">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-lg text-center">
+            <TrendingUp className="w-6 h-6 text-purple-500 mx-auto mb-1" />
+            <p className="text-gray-900 text-lg font-bold leading-tight">
               {Math.round(
                 courses.reduce((acc, c) => acc + c.progress, 0) / Math.max(courses.length, 1)
               )}%
             </p>
-            <p className="text-gray-600 text-xs">{t('student:avgProgress')}</p>
+            <p className="text-gray-500 text-[10px]">{t('student:avgProgress')}</p>
           </div>
         </motion.div>
 
@@ -321,27 +321,27 @@ export default function StudentCoursesMobile() {
 
         {/* Filter Tabs */}
         <motion.div
-          className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+          className="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-900">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-base font-bold text-gray-900">
               {t('student:myCourses')}
             </h3>
-            <Badge className="bg-blue-500 text-white px-3 py-1">
+            <Badge className="bg-blue-500 text-white px-2 py-0.5 text-xs">
               {courses.length} {t('student:total')}
             </Badge>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {['all', 'active', 'upcoming', 'completed'].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 className={cn(
-                  "flex-1 py-2 px-3 rounded-xl transition-all duration-200 text-sm font-medium",
+                  "flex-1 py-1.5 px-2 rounded-xl transition-all duration-200 text-xs font-medium",
                   filterStatus === status 
                     ? 'bg-blue-500 text-white shadow-md' 
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -356,35 +356,35 @@ export default function StudentCoursesMobile() {
 
         {/* Courses List */}
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="h-2 bg-gray-200 rounded w-full"></div>
+              <div key={i} className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg animate-pulse">
+                <div className="h-3.5 bg-gray-200 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-3" />
+                <div className="h-2 bg-gray-200 rounded w-full" />
               </div>
             ))}
           </div>
         ) : courses.length === 0 ? (
           <motion.div 
-            className="bg-white/95 backdrop-blur-sm rounded-2xl p-12 shadow-lg text-center"
+            className="bg-white/95 backdrop-blur-sm rounded-2xl p-10 shadow-lg text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">{t('student:noCourses')}</p>
+            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600 text-sm">{t('student:noCourses')}</p>
           </motion.div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {courses.map((course, index) => (
               <motion.div
                 key={course.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+                transition={{ duration: 0.25, delay: 0.2 + Math.min(index * 0.07, 0.4) }}
               >
-                <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg relative overflow-hidden">
                   {/* Status Indicator */}
                   <div className={cn(
                     "absolute top-0 left-0 w-1 h-full",
@@ -565,18 +565,18 @@ export default function StudentCoursesMobile() {
 
         {/* Explore More Button */}
         <motion.div
-          className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg mt-6 mb-24"
+          className="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.4 }}
         >
           <Button 
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2"
             data-testid="button-explore-more-courses"
           >
-            <Target className="w-6 h-6" />
-            <span className="text-lg">{t('student:exploreMoreCourses')}</span>
-            <ChevronRight className="w-6 h-6" />
+            <Target className="w-4 h-4" />
+            <span>{t('student:exploreMoreCourses')}</span>
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </motion.div>
       </div>

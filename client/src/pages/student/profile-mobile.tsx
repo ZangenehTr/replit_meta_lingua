@@ -149,7 +149,7 @@ export default function StudentProfileMobile() {
 
   if (isLoading) {
     return (
-      <MobileLayout title={t('common:profile')} showBack={false} gradient="primary">
+      <MobileLayout title={t('common:profile.title')} showBack={false} gradient="primary">
         <div className="space-y-4">
           <div className="glass-card p-6 animate-pulse">
             <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-4" />
@@ -163,31 +163,31 @@ export default function StudentProfileMobile() {
 
   return (
     <MobileLayout
-      title={t('common:profile')}
+      title={t('common:profile.title')}
       showBack={false}
       gradient="primary"
     >
       {/* Profile Header */}
       <motion.div
-        className="glass-card p-6 mb-6 text-center relative"
+        className="glass-card p-4 mb-3 text-center relative"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.4 }}
       >
         {/* Edit Button */}
         <button 
-          className="absolute top-4 right-4 p-2 rounded-full glass-button"
+          className="absolute top-3 right-3 p-1.5 rounded-full glass-button"
           onClick={() => setIsEditing(!isEditing)}
           data-testid={isEditing ? "button-save-profile" : "button-edit-profile"}
         >
           {isEditing ? (
-            <Check className="w-5 h-5 text-white" />
+            <Check className="w-4 h-4 text-white" />
           ) : (
-            <Edit className="w-5 h-5 text-white" />
+            <Edit className="w-4 h-4 text-white" />
           )}
         </button>
-        <div className="relative inline-block mb-4">
-          <Avatar className="w-24 h-24 border-4 border-white/20">
+        <div className="relative inline-block mb-3">
+          <Avatar className="w-20 h-20 border-4 border-white/20">
             <AvatarImage src={profile?.avatar} />
             <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-2xl">
               {profile?.firstName?.[0]}{profile?.lastName?.[0]}
@@ -217,23 +217,23 @@ export default function StudentProfileMobile() {
         </div>
 
         {isEditing ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <input
               type="text"
-              className="w-full p-2 bg-white/10 rounded-lg text-white placeholder-white/50 text-center outline-none"
+              className="w-full p-2 bg-white/10 rounded-lg text-white placeholder-white/50 text-center outline-none text-sm"
               value={editedProfile.firstName || profile?.firstName}
               onChange={(e) => setEditedProfile({...editedProfile, firstName: e.target.value})}
               placeholder={t('student:firstName')}
             />
             <input
               type="text"
-              className="w-full p-2 bg-white/10 rounded-lg text-white placeholder-white/50 text-center outline-none"
+              className="w-full p-2 bg-white/10 rounded-lg text-white placeholder-white/50 text-center outline-none text-sm"
               value={editedProfile.lastName || profile?.lastName}
               onChange={(e) => setEditedProfile({...editedProfile, lastName: e.target.value})}
               placeholder={t('student:lastName')}
             />
             <textarea
-              className="w-full p-2 bg-white/10 rounded-lg text-white placeholder-white/50 text-center outline-none resize-none"
+              className="w-full p-2 bg-white/10 rounded-lg text-white placeholder-white/50 text-center outline-none resize-none text-sm"
               rows={2}
               value={editedProfile.bio || profile?.bio}
               onChange={(e) => setEditedProfile({...editedProfile, bio: e.target.value})}
@@ -242,15 +242,15 @@ export default function StudentProfileMobile() {
           </div>
         ) : (
           <>
-            <h2 className="text-white text-2xl font-bold mb-1">
+            <h2 className="text-white text-xl font-bold mb-0.5">
               {profile?.firstName} {profile?.lastName}
             </h2>
             {profile?.bio && (
-              <p className="text-white/70 text-sm mb-3">{profile.bio}</p>
+              <p className="text-white/70 text-xs mb-2 line-clamp-2">{profile.bio}</p>
             )}
-            <div className="flex items-center justify-center gap-2">
-              <Calendar className="w-4 h-4 text-white/50" />
-              <span className="text-white/60 text-sm">
+            <div className="flex items-center justify-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-white/50" />
+              <span className="text-white/55 text-xs">
                 {t('student:memberSince')} {formatDate(profile?.joinedDate || '')}
               </span>
             </div>
@@ -258,108 +258,95 @@ export default function StudentProfileMobile() {
         )}
       </motion.div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid — 4 compact tiles */}
       <motion.div
-        className="grid grid-cols-2 gap-3 mb-6"
+        className="grid grid-cols-4 gap-2 mb-3"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <div className="glass-card p-4 text-center">
-          <p className="text-white text-2xl font-bold">
-            {profile?.stats.coursesCompleted || 0}
-          </p>
-          <p className="text-white/60 text-sm">{t('student:coursesCompleted')}</p>
-        </div>
-        <div className="glass-card p-4 text-center">
-          <p className="text-white text-2xl font-bold">
-            {profile?.stats.hoursLearned || 0}
-          </p>
-          <p className="text-white/60 text-sm">{t('student:hoursLearned')}</p>
-        </div>
-        <div className="glass-card p-4 text-center">
-          <p className="text-white text-2xl font-bold">
-            {profile?.stats.achievements || 0}
-          </p>
-          <p className="text-white/60 text-sm">{t('student:achievements')}</p>
-        </div>
-        <div className="glass-card p-4 text-center">
-          <p className="text-white text-2xl font-bold">
-            {profile?.stats.certificates || 0}
-          </p>
-          <p className="text-white/60 text-sm">{t('student:certificates')}</p>
-        </div>
+        {[
+          { value: profile?.stats.coursesCompleted || 0, label: t('student:coursesCompleted') },
+          { value: profile?.stats.hoursLearned || 0, label: t('student:hoursLearned') },
+          { value: profile?.stats.achievements || 0, label: t('student:achievements') },
+          { value: profile?.stats.certificates || 0, label: t('student:certificates') },
+        ].map(({ value, label }) => (
+          <div key={label} className="glass-card p-2 text-center">
+            <p className="text-white text-lg font-bold leading-tight">{value}</p>
+            <p className="text-white/55 text-[10px] leading-tight mt-0.5 line-clamp-2">{label}</p>
+          </div>
+        ))}
       </motion.div>
 
       {/* Contact Information */}
       <motion.div
-        className="space-y-3 mb-6"
+        className="space-y-2 mb-3"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
-        <h3 className="text-white font-semibold mb-3">
+        <h3 className="text-white font-semibold text-sm mb-2">
           {t('student:contactInfo')}
         </h3>
         
-        <MobileCard className="flex items-center gap-3">
-          <Mail className="w-5 h-5 text-white/50" />
-          <div className="flex-1">
-            <p className="text-white/60 text-xs">{t('student:email')}</p>
+        <MobileCard className="flex items-center gap-2.5 p-3">
+          <Mail className="w-4 h-4 text-white/50 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-white/55 text-[10px]">{t('student:email')}</p>
             {isEditing ? (
               <input
                 type="email"
-                className="w-full bg-transparent text-white outline-none"
+                className="w-full bg-transparent text-white outline-none text-sm"
                 value={editedProfile.email || profile?.email}
                 onChange={(e) => setEditedProfile({...editedProfile, email: e.target.value})}
               />
             ) : (
-              <p className="text-white">{profile?.email}</p>
+              <p className="text-white text-sm truncate">{profile?.email}</p>
             )}
           </div>
         </MobileCard>
 
-        <MobileCard className="flex items-center gap-3">
-          <Phone className="w-5 h-5 text-white/50" />
-          <div className="flex-1">
-            <p className="text-white/60 text-xs">{t('student:phone')}</p>
+        <MobileCard className="flex items-center gap-2.5 p-3">
+          <Phone className="w-4 h-4 text-white/50 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-white/55 text-[10px]">{t('student:phone')}</p>
             {isEditing ? (
               <input
                 type="tel"
-                className="w-full bg-transparent text-white outline-none"
+                className="w-full bg-transparent text-white outline-none text-sm"
                 value={editedProfile.phone || profile?.phone}
                 onChange={(e) => setEditedProfile({...editedProfile, phone: e.target.value})}
                 placeholder={t('student:addPhone')}
               />
             ) : (
-              <p className="text-white">{profile?.phone || t('student:notProvided')}</p>
+              <p className="text-white text-sm">{profile?.phone || t('student:notProvided')}</p>
             )}
           </div>
         </MobileCard>
 
-        <MobileCard className="flex items-center gap-3">
-          <MapPin className="w-5 h-5 text-white/50" />
-          <div className="flex-1">
-            <p className="text-white/60 text-xs">{t('student:location')}</p>
+        <MobileCard className="flex items-center gap-2.5 p-3">
+          <MapPin className="w-4 h-4 text-white/50 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-white/55 text-[10px]">{t('student:location')}</p>
             {isEditing ? (
               <div className="flex gap-2">
                 <input
                   type="text"
-                  className="flex-1 bg-transparent text-white outline-none"
+                  className="flex-1 bg-transparent text-white outline-none text-sm"
                   value={editedProfile.city || profile?.city}
                   onChange={(e) => setEditedProfile({...editedProfile, city: e.target.value})}
                   placeholder={t('student:city')}
                 />
                 <input
                   type="text"
-                  className="flex-1 bg-transparent text-white outline-none"
+                  className="flex-1 bg-transparent text-white outline-none text-sm"
                   value={editedProfile.country || profile?.country}
                   onChange={(e) => setEditedProfile({...editedProfile, country: e.target.value})}
                   placeholder={t('student:country')}
                 />
               </div>
             ) : (
-              <p className="text-white">
+              <p className="text-white text-sm">
                 {profile?.city && profile?.country 
                   ? `${profile.city}, ${profile.country}`
                   : t('student:notProvided')}
@@ -371,19 +358,19 @@ export default function StudentProfileMobile() {
 
       {/* Settings */}
       <motion.div
-        className="space-y-3 mb-6"
+        className="space-y-2 mb-3"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.3 }}
       >
-        <h3 className="text-white font-semibold mb-3">
+        <h3 className="text-white font-semibold text-sm mb-2">
           {t('student:settings')}
         </h3>
 
-        <MobileCard className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Bell className="w-5 h-5 text-white/50" />
-            <span className="text-white">{t('student:notifications')}</span>
+        <MobileCard className="flex items-center justify-between py-3 px-3">
+          <div className="flex items-center gap-2.5">
+            <Bell className="w-4 h-4 text-white/50" />
+            <span className="text-white text-sm">{t('student:notifications')}</span>
           </div>
           <Switch
             checked={profile?.settings.notifications}
@@ -393,10 +380,10 @@ export default function StudentProfileMobile() {
           />
         </MobileCard>
 
-        <MobileCard className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Mail className="w-5 h-5 text-white/50" />
-            <span className="text-white">{t('student:emailAlerts')}</span>
+        <MobileCard className="flex items-center justify-between py-3 px-3">
+          <div className="flex items-center gap-2.5">
+            <Mail className="w-4 h-4 text-white/50" />
+            <span className="text-white text-sm">{t('student:emailAlerts')}</span>
           </div>
           <Switch
             checked={profile?.settings.emailAlerts}
@@ -406,26 +393,26 @@ export default function StudentProfileMobile() {
           />
         </MobileCard>
 
-        <MobileCard className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Globe className="w-5 h-5 text-white/50" />
-            <span className="text-white">{t('student:language')}</span>
+        <MobileCard className="flex items-center justify-between py-3 px-3">
+          <div className="flex items-center gap-2.5">
+            <Globe className="w-4 h-4 text-white/50" />
+            <span className="text-white text-sm">{t('student:language')}</span>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/50" />
+          <ChevronRight className="w-4 h-4 text-white/50" />
         </MobileCard>
 
-        <MobileCard className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-white/50" />
-            <span className="text-white">{t('student:privacy')}</span>
+        <MobileCard className="flex items-center justify-between py-3 px-3">
+          <div className="flex items-center gap-2.5">
+            <Shield className="w-4 h-4 text-white/50" />
+            <span className="text-white text-sm">{t('student:privacy')}</span>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/50" />
+          <ChevronRight className="w-4 h-4 text-white/50" />
         </MobileCard>
       </motion.div>
 
       {/* Action Buttons */}
       {isEditing ? (
-        <div className="flex gap-3 mb-20">
+        <div className="flex gap-3 mb-6">
           <Button
             variant="outline"
             className="flex-1"
@@ -446,15 +433,15 @@ export default function StudentProfileMobile() {
         </div>
       ) : (
         <motion.button
-          className="w-full glass-card p-4 mb-20 flex items-center justify-center gap-3 text-red-400"
+          className="w-full glass-card p-3 mb-6 flex items-center justify-center gap-2.5 text-red-400"
           whileTap={{ scale: 0.98 }}
           onClick={handleLogout}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.4 }}
         >
-          <LogOut className="w-5 h-5" />
-          <span className="font-medium">{t('common:logout')}</span>
+          <LogOut className="w-4 h-4" />
+          <span className="font-medium text-sm">{t('common:logout')}</span>
         </motion.button>
       )}
     </MobileLayout>

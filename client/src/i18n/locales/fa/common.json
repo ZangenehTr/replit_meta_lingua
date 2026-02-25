@@ -277,7 +277,26 @@
     "seoTitle": "متالینگوا - یادگیری زبان با هوش مصنوعی",
     "seoDescription": "با آموزش هوش مصنوعی، دوره‌های تعاملی و جامعه پشتیبان جهانی، زبان یاد بگیرید. سفر یادگیری زبان خود را امروز شروع کنید!"
   },
-  "profile": "پروفایل",
+  "profile": {
+    "title": "پروفایل",
+    "updateSuccess": "پروفایل به‌روزرسانی شد",
+    "updateSuccessDesc": "پروفایل شما با موفقیت به‌روزرسانی شد.",
+    "updateError": "به‌روزرسانی ناموفق بود",
+    "updateErrorDesc": "به‌روزرسانی پروفایل ناموفق بود. لطفاً دوباره امتحان کنید.",
+    "learningProfileUpdateSuccess": "پروفایل یادگیری ذخیره شد",
+    "learningProfileUpdateSuccessDesc": "پروفایل یادگیری شما ذخیره شد.",
+    "culturalBackground": "پس‌زمینه فرهنگی",
+    "culturalBackgroundDesc": "به ما کمک کنید زمینه فرهنگی شما را برای توصیه‌های یادگیری بهتر بفهمیم.",
+    "selectCulturalBackground": "انتخاب پس‌زمینه فرهنگی",
+    "personalityType": "نوع شخصیت",
+    "selectPersonalityType": "انتخاب نوع شخصیت",
+    "learningGoals": "اهداف یادگیری",
+    "certDownloadSuccess": "گواهی‌نامه دانلود شد",
+    "certDownloadSuccessDesc": "گواهی‌نامه شما دانلود شد. برای چاپ به عنوان PDF آن را در مرورگر باز کنید.",
+    "certDownloadError": "خطای دانلود",
+    "certDownloadErrorDesc": "خطایی هنگام دانلود گواهی‌نامه شما رخ داد.",
+    "userNotLoaded": "داده‌های کاربر بارگذاری نشده است. لطفاً صبر کنید و دوباره امتحان کنید."
+  },
   "viewAll": "مشاهده همه",
   "student": {
     "navigation": {

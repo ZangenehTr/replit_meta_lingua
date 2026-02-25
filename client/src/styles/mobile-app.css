@@ -238,3 +238,12 @@
 [dir="rtl"] .ios-toggle.active .ios-toggle-thumb {
   transform: translateX(-20px);
 }
+
+/* Hide scrollbar while keeping scroll functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

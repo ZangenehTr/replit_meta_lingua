@@ -281,8 +281,8 @@ export default function UserProfile() {
   const onUserSubmit = (data: UserFormData) => {
     if (!user?.id) {
       toast({
-        title: "Error",
-        description: "User data not loaded. Please wait and try again.",
+        title: t('profile.updateError'),
+        description: t('profile.userNotLoaded'),
         variant: "destructive"
       });
       return;
@@ -305,10 +305,10 @@ export default function UserProfile() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         toast({
-          title: "Download Failed",
-          description: errorData.message || "Failed to generate certificate.",
+          title: t('profile.certDownloadError'),
+          description: errorData.message || t('profile.certDownloadErrorDesc'),
           variant: "destructive"
         });
         return;
@@ -326,13 +326,13 @@ export default function UserProfile() {
       window.URL.revokeObjectURL(url);
 
       toast({
-        title: "Certificate Downloaded",
-        description: "Your certificate has been downloaded successfully. You can open it in a browser and print it as PDF.",
+        title: t('profile.certDownloadSuccess'),
+        description: t('profile.certDownloadSuccessDesc'),
       });
     } catch (error) {
       toast({
-        title: "Download Error",
-        description: "An error occurred while downloading your certificate.",
+        title: t('profile.certDownloadError'),
+        description: t('profile.certDownloadErrorDesc'),
         variant: "destructive"
       });
     }
