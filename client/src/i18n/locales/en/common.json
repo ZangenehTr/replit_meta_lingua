@@ -713,6 +713,8 @@
   "previousMonth": "Previous Month",
   "calculating": "Calculating...",
   "cancel": "Cancel",
+  "save": "Save",
+  "logout": "Sign Out",
   "customPeriod": "Custom Period",
   "loadingPaymentData": "Loading payment data...",
   "evaluations": "In-person Evaluations",

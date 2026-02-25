@@ -219,8 +219,10 @@ export default function StudentHomeworkMobile() {
     return true;
   });
 
-  // Calculate completion percentage
-  const completionPercentage = stats ? Math.round(((stats.submitted + stats.graded) / stats.total) * 100) : 0;
+  // Calculate completion percentage (guard against division by zero)
+  const completionPercentage = (stats && stats.total > 0)
+    ? Math.round(((stats.submitted + stats.graded) / stats.total) * 100)
+    : 0;
 
   return (
     <div className={cn("min-h-screen bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500", isRTL && "rtl")}>

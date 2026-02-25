@@ -153,7 +153,19 @@
     "level": "المستوى",
     "streak": "السلسلة"
   },
-  "homework": "الواجبات",
+  "homework": {
+    "title": "الواجبات",
+    "overallProgress": "التقدم الإجمالي",
+    "submitted": "مُسلَّم",
+    "graded": "مُقيَّم",
+    "pending": "معلق",
+    "xpEarned": "XP المكتسب",
+    "avgGrade": "متوسط الدرجة",
+    "total": "إجمالي",
+    "all": "الكل",
+    "noHomework": "لم يتم العثور على واجبات",
+    "checkBackLater": "تحقق لاحقاً من الواجبات الجديدة"
+  },
   "payment": {
     "title": "المحفظة والاعتمادات",
     "subtitle": "إدارة رصيد المحفظة ومزايا العضوية"

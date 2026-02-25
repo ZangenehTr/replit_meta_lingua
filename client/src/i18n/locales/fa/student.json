@@ -164,7 +164,19 @@
   "goodMorning": "صبح بخیر",
   "goodEvening": "شب بخیر",
   "messages": "پیام‌ها",
-  "homework": "تکالیف",
+  "homework": {
+    "title": "تکالیف",
+    "overallProgress": "پیشرفت کلی",
+    "submitted": "تحویل داده شده",
+    "graded": "نمره‌دهی شده",
+    "pending": "در انتظار",
+    "xpEarned": "XP کسب شده",
+    "avgGrade": "میانگین نمره",
+    "total": "کل",
+    "all": "همه",
+    "noHomework": "تکلیفی یافت نشد",
+    "checkBackLater": "بعداً برای تکالیف جدید بررسی کنید"
+  },
   "searchCourses": "جستجو در کلاس‌ها...",
   "videoCourses": {
     "title": "کلاس‌های ویدیویی",

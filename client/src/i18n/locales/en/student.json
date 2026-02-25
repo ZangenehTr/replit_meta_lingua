@@ -143,7 +143,19 @@
     "subtitle": "Practice conversations with AI in English or Farsi. Hold the microphone button to speak."
   },
   "sessions": "Sessions",
-  "homework": "Homework",
+  "homework": {
+    "title": "Homework",
+    "overallProgress": "Overall Progress",
+    "submitted": "Submitted",
+    "graded": "Graded",
+    "pending": "Pending",
+    "xpEarned": "XP Earned",
+    "avgGrade": "Avg Grade",
+    "total": "total",
+    "all": "All",
+    "noHomework": "No homework found",
+    "checkBackLater": "Check back later for new assignments"
+  },
   "messages": "Messages",
   "payment": {
     "title": "Wallet & Credits",
