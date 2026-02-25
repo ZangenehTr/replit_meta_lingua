@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
 import { MobileCard } from '@/components/mobile/MobileCard';
 import { motion } from 'framer-motion';
@@ -63,34 +63,18 @@ export default function StudentProfileMobile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Partial<ProfileData>>({});
 
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   // Fetch profile data
   const { data: profile, isLoading } = useQuery<ProfileData>({
     queryKey: ['/api/profile'],
-    queryFn: async () => {
-      const response = await fetch('/api/profile', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch profile');
-      return response.json();
-    }
+    queryFn: () => apiRequest('/api/profile')
   });
 
   // Update profile mutation
   const updateProfile = useMutation({
-    mutationFn: async (data: Partial<ProfileData>) => {
-      const response = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Failed to update profile');
-      return response.json();
-    },
+    mutationFn: (data: Partial<ProfileData>) =>
+      apiRequest('/api/profile', { method: 'PATCH', body: data }),
     onSuccess: () => {
       toast({
         title: t('student:profileUpdated'),
@@ -103,24 +87,45 @@ export default function StudentProfileMobile() {
 
   // Update settings mutation
   const updateSettings = useMutation({
-    mutationFn: async (settings: any) => {
-      const response = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ settings })
-      });
-      if (!response.ok) throw new Error('Failed to update settings');
-      return response.json();
-    },
+    mutationFn: (settings: any) =>
+      apiRequest('/api/profile', { method: 'PATCH', body: { settings } }),
     onSuccess: () => {
       toast({
         title: t('student:settingsUpdated'),
         description: t('student:settingsUpdatedDesc'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
+    }
+  });
+
+  // Avatar upload mutation
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/users/me/avatar', {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData
+      });
+      if (!response.ok) throw new Error('Failed to upload avatar');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t('student:avatarUpdated', 'Avatar Updated'),
+        description: t('student:avatarUpdatedDesc', 'Your profile photo has been updated.'),
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
+    },
+    onError: () => {
+      toast({
+        title: t('student:avatarError', 'Upload Failed'),
+        description: t('student:avatarErrorDesc', 'Failed to update profile photo.'),
+        variant: 'destructive'
+      });
     }
   });
 
@@ -189,9 +194,25 @@ export default function StudentProfileMobile() {
             </AvatarFallback>
           </Avatar>
           {isEditing && (
-            <button className="absolute bottom-0 right-0 p-2 bg-purple-500 rounded-full">
-              <Camera className="w-4 h-4 text-white" />
-            </button>
+            <>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadAvatar.mutate(file);
+                }}
+              />
+              <button
+                className="absolute bottom-0 right-0 p-2 bg-purple-500 rounded-full"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadAvatar.isPending}
+              >
+                <Camera className="w-4 h-4 text-white" />
+              </button>
+            </>
           )}
         </div>
 

@@ -163,7 +163,10 @@
     "progressTracking": "Progress Tracking",
     "myClasses": "My Classes",
     "schedule": "Schedule",
-    "resources": "Resources"
+    "resources": "Resources",
+    "walkins": "Walk-Ins",
+    "callerHistory": "Caller History",
+    "frontdesk": "Front Desk"
   },
   "toast": {
     "success": "Success",

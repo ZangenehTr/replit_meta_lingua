@@ -448,7 +448,10 @@
     "supervisor": "سرپرست",
     "callCenter": "مرکز تماس",
     "accountant": "حسابدار",
-    "signOut": "خروج"
+    "signOut": "خروج",
+    "walkins": "مراجعین حضوری",
+    "callerHistory": "تاریخچه تماس‌ها",
+    "frontdesk": "پذیرش"
   },
   "dashboard": {
     "title": "داشبورد مدیریت",

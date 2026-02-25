@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -172,11 +173,20 @@ export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("basic");
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
+  const [, setLocation] = useLocation();
 
   // Fetch current user data
-  const { data: user, isLoading: userLoading } = useQuery<User>({
-    queryKey: ["/api/users/me"]
+  const { data: user, isLoading: userLoading, error: userError } = useQuery<User>({
+    queryKey: ["/api/users/me"],
+    retry: false
   });
+
+  // Redirect to auth if user fetch fails (e.g. 401)
+  useEffect(() => {
+    if (userError) {
+      setLocation("/auth");
+    }
+  }, [userError, setLocation]);
 
   // Fetch user profile
   const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
@@ -232,14 +242,14 @@ export default function UserProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
       toast({
-        title: "Profile Updated",
-        description: "Your basic information has been updated successfully."
+        title: t('profile.updateSuccess'),
+        description: t('profile.updateSuccessDesc')
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update profile.",
+        title: t('profile.updateError'),
+        description: error.message || t('profile.updateErrorDesc'),
         variant: "destructive"
       });
     }
@@ -255,14 +265,14 @@ export default function UserProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
       toast({
-        title: "Learning Profile Updated",
-        description: "Your learning preferences have been updated successfully."
+        title: t('profile.learningProfileUpdateSuccess'),
+        description: t('profile.learningProfileUpdateSuccessDesc')
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update learning profile.",
+        title: t('profile.updateError'),
+        description: error.message || t('profile.updateErrorDesc'),
         variant: "destructive"
       });
     }
@@ -682,7 +692,14 @@ export default function UserProfile() {
 
                   <div className="space-y-2">
                     <Label>{t('student:interfaceLanguage', 'Interface Language')}</Label>
-                    <Select defaultValue={user?.preferences?.language || "en"}>
+                    <Select
+                      defaultValue={user?.preferences?.language || i18n.language || "en"}
+                      onValueChange={(value) => {
+                        i18n.changeLanguage(value);
+                        document.documentElement.dir = (value === 'fa' || value === 'ar') ? 'rtl' : 'ltr';
+                        document.documentElement.lang = value;
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -712,18 +729,18 @@ export default function UserProfile() {
         <TabsContent value="cultural">
           <Card>
             <CardHeader>
-              <CardTitle>Cultural Background</CardTitle>
+              <CardTitle>{t('profile.culturalBackground')}</CardTitle>
               <CardDescription>
-                Help us provide culturally relevant content and learning materials
+                {t('profile.culturalBackgroundDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div>
-                  <Label>Cultural Background</Label>
+                  <Label>{t('profile.culturalBackground')}</Label>
                   <Select defaultValue={profile?.culturalBackground}>
                     <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select your cultural background" />
+                      <SelectValue placeholder={t('profile.selectCulturalBackground')} />
                     </SelectTrigger>
                     <SelectContent>
                       {culturalBackgrounds.map((bg) => (
@@ -736,10 +753,10 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <Label>Personality Type</Label>
+                  <Label>{t('profile.personalityType')}</Label>
                   <Select defaultValue={profile?.personalityType}>
                     <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="How would you describe yourself?" />
+                      <SelectValue placeholder={t('profile.selectPersonalityType')} />
                     </SelectTrigger>
                     <SelectContent>
                       {personalityTypes.map((type) => (
@@ -752,7 +769,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <Label>Learning Goals</Label>
+                  <Label>{t('profile.learningGoals')}</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     {availableGoals.map((goal) => (
                       <div key={goal} className="flex items-center space-x-2">
@@ -769,7 +786,7 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <Label>Interests</Label>
+                  <Label>{t('student:interests', 'Interests')}</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {interests.map((interest) => (
                       <Badge 

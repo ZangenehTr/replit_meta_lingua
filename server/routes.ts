@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -2201,6 +2201,43 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
+  // Avatar upload endpoint
+  const avatarStorage = multer.diskStorage({
+    destination: function (req: any, file: any, cb: any) {
+      const dir = path.join(process.cwd(), 'uploads', 'avatars');
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: function (req: any, file: any, cb: any) {
+      const ext = path.extname(file.originalname) || '.jpg';
+      cb(null, `user_${(req as any).user?.id}_${Date.now()}${ext}`);
+    }
+  });
+  const uploadAvatar = multer({
+    storage: avatarStorage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req: any, file: any, cb: any) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('Only image files are allowed'));
+    }
+  });
+
+  app.post("/api/users/me/avatar", authenticateToken, uploadAvatar.single('avatar'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+      await db.update(users).set({ avatar: avatarUrl }).where(eq(users.id, req.user.id));
+      res.json({ avatarUrl });
+    } catch (error) {
+      console.error("Avatar upload error:", error);
+      res.status(500).json({ message: "Failed to upload avatar" });
+    }
+  });
+
+  app.use('/uploads/avatars', express.static(path.join(process.cwd(), 'uploads', 'avatars')));
+
   // Certificate download endpoint
   app.get("/api/users/me/certificate", authenticateToken, async (req: any, res) => {
     try {
@@ -2520,12 +2557,27 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           darkMode: (user.preferences as any)?.darkMode ?? false,
           language: (user.preferences as any)?.language || 'fa'
         },
-        stats: {
-          coursesCompleted: 0,
-          hoursLearned: 0,
-          achievements: 0,
-          certificates: 0
-        }
+        stats: await (async () => {
+          const completedEnrollments = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(enrollments)
+            .where(and(eq(enrollments.userId, req.user.id), eq(enrollments.status, 'completed')));
+          const totalEnrollments = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(enrollments)
+            .where(eq(enrollments.userId, req.user.id));
+          const achievementCount = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(userAchievements)
+            .where(eq(userAchievements.userId, req.user.id));
+          const completed = Number(completedEnrollments[0]?.count ?? 0);
+          return {
+            coursesCompleted: completed,
+            hoursLearned: Math.round(Number(totalEnrollments[0]?.count ?? 0) * 1.5),
+            achievements: Number(achievementCount[0]?.count ?? 0),
+            certificates: completed
+          };
+        })()
       };
       
       res.json(profileData);

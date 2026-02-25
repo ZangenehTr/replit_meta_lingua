@@ -157,7 +157,10 @@
     "roadmapDesigner": "مصمم خارطة الطريق",
     "callernPackageMaker": "منشئ حزم CallerN",
     "apiSmokeTest": "اختبار API السريع",
-    "unifiedWorkflow": "سير العمل الموحد"
+    "unifiedWorkflow": "سير العمل الموحد",
+    "walkins": "الزوار",
+    "callerHistory": "سجل المتصلين",
+    "frontdesk": "الاستقبال"
   },
   "toast": {
     "success": "نجح",

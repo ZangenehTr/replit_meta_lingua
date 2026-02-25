@@ -69,9 +69,9 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
     case 'call center':
       return [
         { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
-        { route: "/callcenter/unified-workflow", icon: Target, label: t('common:navigation.unifiedWorkflow') || 'Unified Workflow' },
+        { route: "/callcenter/unified-workflow", icon: Target, label: t('common:navigation.unifiedWorkflow') },
         { route: "/callcenter/voip", icon: Phone, label: t('common:navigation.calls') },
-        { route: "/callcenter/performance", icon: BarChart3, label: t('common:navigation.performance') }
+        { route: "/callcenter/voip", icon: BarChart3, label: t('common:navigation.performance') }
       ];
       
     case 'mentor':
@@ -85,17 +85,20 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
     case 'accountant':
       return [
         { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
-        { route: "/accountant/payments", icon: DollarSign, label: t('common:navigation.payments') },
-        { route: "/accountant/reports", icon: BarChart3, label: t('common:navigation.reports') },
-        { route: "/accountant/compliance", icon: Shield, label: t('common:navigation.compliance') }
+        { route: "/accountant", icon: DollarSign, label: t('common:navigation.payments') },
+        { route: "/accountant", icon: BarChart3, label: t('common:navigation.reports') },
+        { route: "/accountant", icon: Shield, label: t('common:navigation.compliance') }
       ];
-      
+
+    case 'front desk':
+    case 'front_desk':
     case 'front_desk_clerk':
+    case 'front desk clerk':
       return [
         { route: "/front-desk", icon: Building2, label: t('common:navigation.frontdesk') },
-        { route: "/front-desk", icon: Users, label: t('common:navigation.walkins') },
-        { route: "/front-desk", icon: Phone, label: t('common:navigation.calls') },
-        { route: "/front-desk", icon: ClipboardList, label: t('common:navigation.tasks') }
+        { route: "/frontdesk/walk-in-intake", icon: Users, label: t('common:navigation.walkins') },
+        { route: "/frontdesk/call-logging", icon: Phone, label: t('common:navigation.calls') },
+        { route: "/frontdesk/caller-history", icon: ClipboardList, label: t('common:navigation.callerHistory') }
       ];
       
     default:
