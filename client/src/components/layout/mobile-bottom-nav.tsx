@@ -71,7 +71,7 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
         { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
         { route: "/callcenter/unified-workflow", icon: Target, label: t('common:navigation.unifiedWorkflow') },
         { route: "/callcenter/voip", icon: Phone, label: t('common:navigation.calls') },
-        { route: "/callcenter/voip", icon: BarChart3, label: t('common:navigation.performance') }
+        { route: "/callcenter/dashboard", icon: BarChart3, label: t('common:navigation.performance') }
       ];
       
     case 'mentor':
@@ -86,8 +86,8 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
       return [
         { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
         { route: "/accountant", icon: DollarSign, label: t('common:navigation.payments') },
-        { route: "/accountant", icon: BarChart3, label: t('common:navigation.reports') },
-        { route: "/accountant", icon: Shield, label: t('common:navigation.compliance') }
+        { route: "/admin/financial-reports", icon: BarChart3, label: t('common:navigation.reports') },
+        { route: "/admin/financial", icon: Shield, label: t('common:navigation.compliance') }
       ];
 
     case 'front desk':

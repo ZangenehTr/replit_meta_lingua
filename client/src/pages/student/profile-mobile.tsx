@@ -104,9 +104,12 @@ export default function StudentProfileMobile() {
       const formData = new FormData();
       formData.append('avatar', file);
       const token = localStorage.getItem('auth_token');
+      const authHeaders: Record<string, string> = {};
+      if (token) authHeaders['Authorization'] = `Bearer ${token}`;
       const response = await fetch('/api/users/me/avatar', {
         method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        headers: authHeaders,
+        credentials: 'include',
         body: formData
       });
       if (!response.ok) throw new Error('Failed to upload avatar');

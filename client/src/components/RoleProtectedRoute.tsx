@@ -56,6 +56,7 @@ export function RoleProtectedRoute({
       'callcenter': 'call_center',
       'accountant': 'accountant',
       'manager': 'manager',
+      'front desk': 'front_desk_clerk',
       'front desk clerk': 'front_desk_clerk',
       'frontdesk': 'front_desk_clerk',
       'front_desk': 'front_desk_clerk',
@@ -111,11 +112,14 @@ function getRoleName(role: string): string {
   const roleNames: Record<string, string> = {
     'Admin': 'مدیر سیستم',
     'Teacher': 'استاد',
+    'Teacher/Tutor': 'استاد',
     'Student': 'دانشجو',
     'Mentor': 'مربی',
     'Supervisor': 'ناظر',
     'Call Center Agent': 'کارشناس تماس',
-    'Accountant': 'حسابدار'
+    'Accountant': 'حسابدار',
+    'Front Desk': 'پذیرش',
+    'Front Desk Clerk': 'پذیرش'
   };
   return roleNames[role] || role;
 }
