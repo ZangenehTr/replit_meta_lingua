@@ -167,13 +167,15 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
                 )}
               </div>
               <span
-                className="text-[10px] leading-tight w-full text-center"
+                className="leading-tight w-full text-center"
                 style={{
                   fontFamily: isRTL ? "'Vazir', 'Tahoma', 'Arial', sans-serif" : undefined,
+                  fontSize: isRTL ? '9px' : '10px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
+                  wordBreak: 'break-word',
                 }}
               >
                 {item.label}
