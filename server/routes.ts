@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -5612,9 +5612,29 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     try {
       const courseId = parseInt(req.params.id);
       const course = await storage.getCourse(courseId);
-      
+
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Paid courses must go through the payment pipeline
+      if (course.price && course.price > 0) {
+        return res.status(400).json({
+          message: "This course requires payment to enroll",
+          paymentRequired: true,
+          price: course.price,
+          instruction: "Use POST /api/courses/enroll with paymentMethod: 'wallet' or 'shetab'"
+        });
+      }
+
+      // Check for duplicate enrollment before inserting
+      const [existing] = await db
+        .select({ id: enrollments.id })
+        .from(enrollments)
+        .where(and(eq(enrollments.userId, req.user.id), eq(enrollments.courseId, courseId)));
+
+      if (existing) {
+        return res.status(409).json({ message: "Already enrolled in this course" });
       }
 
       const enrollment = await storage.enrollInCourse({
@@ -6620,27 +6640,63 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         return res.status(503).json({ message: "Payment service unavailable" });
       }
 
-      // Handle callback
+      // Handle callback — updates the payments table and verifies with Shetab
       const payment = await shetabService.handleCallback(callbackData);
-      
+
       if (!payment) {
         return res.status(404).json({ message: "Payment not found" });
+      }
+
+      let redirectPath = 'dashboard';
+
+      if (payment.status === 'completed' && payment.transactionId) {
+        const txId = payment.transactionId;
+        const gatewayData = {
+          shetabTransactionId: callbackData.gatewayTransactionId || '',
+          shetabReferenceNumber: callbackData.referenceNumber || '',
+          cardNumber: callbackData.cardNumber || ''
+        };
+
+        // Case A: course enrollment payment — finalize coursePayments + trigger enrollment
+        if (txId.startsWith('COURSE_')) {
+          const [coursePayment] = await db
+            .select()
+            .from(coursePayments)
+            .where(eq(coursePayments.merchantTransactionId, txId));
+
+          if (coursePayment && coursePayment.status !== 'completed') {
+            await storage.updateCoursePaymentStatus(coursePayment.id, 'completed', gatewayData);
+          }
+          redirectPath = 'courses';
+        }
+
+        // Case B: wallet top-up — finalize walletTransactions + credit user balance
+        if (txId.startsWith('WALLET_')) {
+          const [walletTxn] = await db
+            .select()
+            .from(walletTransactions)
+            .where(eq(walletTransactions.merchantTransactionId, txId));
+
+          if (walletTxn && walletTxn.status !== 'completed') {
+            await storage.updateWalletTransactionStatus(walletTxn.id, 'completed', gatewayData);
+          }
+          redirectPath = 'student/wallet';
+        }
       }
 
       // Create notification for user
       await storage.createNotification({
         userId: payment.userId,
         title: payment.status === 'completed' ? "Payment Successful" : "Payment Failed",
-        message: payment.status === 'completed' 
-          ? `Your payment of ${payment.amount} IRR was successful. ${payment.creditsAwarded} credits have been added to your account.`
+        message: payment.status === 'completed'
+          ? `Your payment of ${payment.amount} IRR was successful.`
           : `Your payment of ${payment.amount} IRR failed. ${payment.failureReason || 'Please try again.'}`,
         type: payment.status === 'completed' ? "success" : "error"
       });
 
-      // Redirect user based on payment status
-      const redirectUrl = payment.status === 'completed' 
-        ? `${process.env.FRONTEND_URL}/dashboard?payment=success`
-        : `${process.env.FRONTEND_URL}/dashboard?payment=failed`;
+      const redirectUrl = payment.status === 'completed'
+        ? `${process.env.FRONTEND_URL || ''}/${redirectPath}?payment=success`
+        : `${process.env.FRONTEND_URL || ''}/dashboard?payment=failed`;
 
       res.redirect(redirectUrl);
 
