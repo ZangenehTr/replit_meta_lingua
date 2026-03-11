@@ -1,8 +1,14 @@
 import { EventEmitter } from 'events';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const AsteriskManager = require('asterisk-manager');
 
 /**
- * Isabel VoIP Service - Real SIP Integration
- * Connects to Isabel VoIP server at configured IP address for real call initiation
+ * Isabel VoIP Service — Asterisk Manager Interface (AMI)
+ * Connects to Issabel 4 / Asterisk 11.25.3 via AMI TCP on port 5038.
+ * Supports: click-to-call (Originate), call recording (MixMonitor), Hangup.
+ * Does NOT use HTTP REST, SIP libraries, or simulated responses.
  */
 
 export interface VoipCall {
@@ -16,6 +22,8 @@ export interface VoipCall {
   duration?: number;
   recordingEnabled: boolean;
   recordingUrl?: string;
+  /** AMI channel name captured from Bridge event, used for Hangup/MixMonitor */
+  _channel?: string;
 }
 
 export interface VoipSettings {
@@ -31,120 +39,214 @@ export interface VoipSettings {
 export class IsabelVoipService extends EventEmitter {
   private settings: VoipSettings | null = null;
   private activeCalls: Map<string, VoipCall> = new Map();
-  private isConnected: boolean = false;
-  private connectionAttempts: number = 0;
-  private maxConnectionAttempts: number = 3;
+  private _isConnected: boolean = false;
+  private ami: any = null;
 
   constructor() {
     super();
   }
 
-  /**
-   * Configure Isabel VoIP service with server settings
-   * Returns true if real connection established, false if using simulation/failed
-   */
-  async configure(settings: VoipSettings): Promise<boolean> {
-    this.settings = settings;
-    console.log(`Isabel VoIP configured: ${settings.serverAddress}:${settings.port} (${settings.username})`);
-    
-    if (settings.enabled) {
-      return await this.connect();
+  get isConnected(): boolean {
+    if (!this.ami) return false;
+    try {
+      return typeof this.ami.isConnected === 'function'
+        ? this.ami.isConnected()
+        : this._isConnected;
+    } catch {
+      return this._isConnected;
     }
-    return false;
+  }
+
+  isServiceConnected(): boolean {
+    return this.isConnected;
   }
 
   /**
-   * Connect to Isabel VoIP server via SIP protocol
-   * In production, throws error if connection fails (no simulation)
+   * Configure the AMI service and connect.
+   * Returns true if the AMI connection is established.
+   */
+  async configure(settings: VoipSettings): Promise<boolean> {
+    this.settings = settings;
+
+    if (!settings.enabled) {
+      return false;
+    }
+
+    // Tear down any previous connection before reconfiguring
+    await this.disconnect();
+
+    return this.connect();
+  }
+
+  /**
+   * Connect to Issabel/Asterisk AMI on port 5038.
    */
   async connect(): Promise<boolean> {
     if (!this.settings) {
       throw new Error('VoIP service not configured');
     }
 
-    this.connectionAttempts++;
-    console.log(`Connecting to Isabel VoIP server ${this.settings.serverAddress}:${this.settings.port} (attempt ${this.connectionAttempts}/${this.maxConnectionAttempts})`);
+    const { serverAddress, port, username, password } = this.settings;
 
-    try {
-      // Real SIP connection to Isabel server
-      const connectionResult = await this.establishSipConnection();
-      
-      if (connectionResult.success) {
-        this.isConnected = true;
-        this.connectionAttempts = 0;
-        console.log('Isabel VoIP connection established successfully');
-        this.emit('connected', {
-          server: this.settings.serverAddress,
-          port: this.settings.port,
-          username: this.settings.username
+    return new Promise<boolean>((resolve) => {
+      let resolved = false;
+
+      const safeResolve = (value: boolean) => {
+        if (!resolved) {
+          resolved = true;
+          resolve(value);
+        }
+      };
+
+      const connectTimeout = setTimeout(() => {
+        console.error(`Isabel AMI connect timeout to ${serverAddress}:${port}`);
+        this._isConnected = false;
+        safeResolve(false);
+      }, 8000);
+
+      try {
+        // asterisk-manager auto-connects and auto-logins on construction when port is provided
+        this.ami = new AsteriskManager(port, serverAddress, username, password, true);
+        this.ami.keepConnected();
+
+        this.ami.on('connect', () => {
+          clearTimeout(connectTimeout);
+          this._isConnected = true;
+          console.log(`Isabel AMI connected to ${serverAddress}:${port}`);
+          this.emit('connected', { server: serverAddress, port, username });
+          safeResolve(true);
         });
-        return true;
-      } else {
-        throw new Error(connectionResult.error || 'Connection failed');
+
+        this.ami.on('close', () => {
+          this._isConnected = false;
+          this.emit('disconnected');
+          console.log('Isabel AMI connection closed');
+        });
+
+        this.ami.on('end', () => {
+          this._isConnected = false;
+          this.emit('disconnected');
+        });
+
+        this.ami.on('error', (err: any) => {
+          this._isConnected = false;
+          console.error('Isabel AMI error:', err?.message || err);
+          safeResolve(false);
+        });
+
+        // Subscribe to call lifecycle events
+        this.ami.on('bridge', this.onBridgeEvent.bind(this));
+        this.ami.on('hangup', this.onHangupEvent.bind(this));
+
+      } catch (err: any) {
+        clearTimeout(connectTimeout);
+        console.error('Isabel AMI failed to initialize:', err?.message || err);
+        this._isConnected = false;
+        safeResolve(false);
       }
-    } catch (error) {
-      console.error('Isabel VoIP connection failed:', error);
-      this.isConnected = false;
-      this.emit('connectionFailed', error);
-      
-      // In production, throw error (no simulation fallback)
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error(`Isabel VoIP connection failed in production: ${error.message || error}`);
-      }
-      
-      // In development, allow retry and eventual simulation fallback
-      if (this.connectionAttempts < this.maxConnectionAttempts) {
-        console.log(`Retrying Isabel VoIP connection in 5 seconds...`);
-        setTimeout(() => this.connect(), 5000);
-      }
-      
-      return false;
-    }
+    });
   }
 
   /**
-   * Establish real SIP connection to Isabel VoIP server
+   * Test the AMI connection by sending a Ping action and expecting a Pong response.
+   * Uses a short-lived connection so it does not affect the persistent connection.
    */
-  private async establishSipConnection(): Promise<{ success: boolean; error?: string }> {
+  async testConnection(): Promise<{ success: boolean; message: string; details?: any }> {
     if (!this.settings) {
-      return { success: false, error: 'No settings configured' };
+      return { success: false, message: 'VoIP service not configured' };
     }
 
-    try {
-      // Create SIP connection to Isabel server
-      const sipUri = `sip:${this.settings.username}@${this.settings.serverAddress}:${this.settings.port}`;
-      
-      // In production, this would use a real SIP library like sip.js or node-sip
-      // For now, implementing HTTP-based API call to Isabel VoIP system
-      const response = await this.makeIsabelApiCall('connect', {
-        username: this.settings.username,
-        password: this.settings.password,
-        server: this.settings.serverAddress,
-        port: this.settings.port
-      });
+    const { serverAddress, port, username, password } = this.settings;
 
-      return { success: response.connected };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown connection error';
-      return { success: false, error: errorMessage };
-    }
+    return new Promise((resolve) => {
+      let settled = false;
+
+      const done = (result: { success: boolean; message: string; details?: any }) => {
+        if (!settled) {
+          settled = true;
+          try { testAmi.disconnect(); } catch { /* ignore */ }
+          resolve(result);
+        }
+      };
+
+      const timeout = setTimeout(() => {
+        done({
+          success: false,
+          message: `AMI connection timeout to ${serverAddress}:${port}`,
+          details: { status: 'timeout', server: serverAddress, port }
+        });
+      }, 8000);
+
+      let testAmi: any;
+      try {
+        testAmi = new AsteriskManager(port, serverAddress, username, password, false);
+
+        testAmi.on('connect', () => {
+          // Send Ping to verify authentication and responsiveness
+          testAmi.action({ action: 'ping' }, (err: any, res: any) => {
+            clearTimeout(timeout);
+            if (err) {
+              done({
+                success: false,
+                message: `AMI authenticated but Ping failed: ${err.message || err}`,
+                details: { status: 'ping_failed', server: serverAddress, port, error: err.message }
+              });
+            } else {
+              done({
+                success: true,
+                message: `Isabel AMI connection verified (${serverAddress}:${port})`,
+                details: {
+                  status: 'connected',
+                  server: serverAddress,
+                  port,
+                  username,
+                  ping: res?.ping || 'Pong',
+                  asteriskVersion: res?.asteriskversionstring || 'Asterisk 11'
+                }
+              });
+            }
+          });
+        });
+
+        testAmi.on('error', (err: any) => {
+          clearTimeout(timeout);
+          done({
+            success: false,
+            message: `AMI connection failed: ${err?.message || 'Connection refused or credentials invalid'}`,
+            details: { status: 'error', server: serverAddress, port, error: err?.message }
+          });
+        });
+
+      } catch (err: any) {
+        clearTimeout(timeout);
+        done({
+          success: false,
+          message: `AMI initialization error: ${err?.message || err}`,
+          details: { status: 'init_error', error: err?.message }
+        });
+      }
+    });
   }
 
   /**
-   * Initiate outbound call through Isabel VoIP line
+   * Initiate an outbound call via AMI Originate (Asterisk 11 click-to-call).
+   * Rings the agent's SIP extension first; on answer, bridges to the customer number.
    */
-  async initiateCall(phoneNumber: string, contactName: string, options: { recordCall?: boolean } = {}): Promise<VoipCall> {
+  async initiateCall(
+    phoneNumber: string,
+    contactName: string,
+    options: { recordCall?: boolean } = {}
+  ): Promise<VoipCall> {
     if (!this.settings) {
       throw new Error('VoIP service not configured');
     }
-
-    // Allow test calls even if connection failed (will use simulation)
-    if (!this.isConnected) {
-      console.log('Isabel VoIP server not connected - using development simulation for test call');
+    if (!this.isConnected || !this.ami) {
+      throw new Error('Isabel AMI is not connected. Check VoIP server address and credentials.');
     }
 
-    const callId = `isabel_${Date.now()}_${performance.now().toString(36).replace('.', '')}`;
-    
+    const callId = `ami_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const recordingEnabled = options.recordCall ?? this.settings.callRecordingEnabled;
+
     const call: VoipCall = {
       callId,
       phoneNumber,
@@ -152,593 +254,162 @@ export class IsabelVoipService extends EventEmitter {
       callType: 'outbound',
       status: 'initiated',
       startTime: new Date(),
-      recordingEnabled: options.recordCall ?? this.settings.callRecordingEnabled,
+      recordingEnabled,
     };
 
     this.activeCalls.set(callId, call);
 
-    try {
-      const serverInfo = this.isConnected ? 
-        `${this.settings.serverAddress}:${this.settings.port}` : 
-        `${this.settings.serverAddress}:${this.settings.port} (simulation)`;
-      
-      console.log(`Initiating Isabel VoIP call to ${phoneNumber} via ${serverInfo}`);
-      
-      // Make call via Isabel VoIP API (with simulation fallback)
-      const callResult = await this.makeIsabelApiCall('call', {
-        from: this.settings.username,
-        to: phoneNumber,
-        callId: callId,
-        recordCall: call.recordingEnabled,
-        callerName: contactName
-      });
+    return new Promise((resolve, reject) => {
+      const originateAction: Record<string, any> = {
+        action: 'originate',
+        channel: `SIP/${this.settings!.username}`,
+        context: 'from-internal',
+        exten: phoneNumber,
+        priority: 1,
+        callerid: `${contactName} <${phoneNumber}>`,
+        async: 'true',
+        actionid: callId,
+        variable: { CALLID: callId }
+      };
 
-      if (callResult.success) {
-        call.status = 'ringing';
-        this.emit('callInitiated', call);
-        
-        // Monitor call status (handles both real and simulated calls)
-        this.monitorCallStatus(callId);
-        
-        const statusMsg = callResult.simulated ? 
-          `Isabel VoIP call initiated (simulation). Call ID: ${callId}` :
-          `Isabel VoIP call initiated successfully. Call ID: ${callId}`;
-        console.log(statusMsg);
-        return call;
-      } else {
-        call.status = 'failed';
-        this.activeCalls.delete(callId);
-        throw new Error(callResult.error || 'Call initiation failed');
-      }
-    } catch (error) {
-      call.status = 'failed';
-      call.endTime = new Date();
-      this.activeCalls.delete(callId);
-      console.error('Isabel VoIP call failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Monitor call status and handle call events
-   */
-  private async monitorCallStatus(callId: string): Promise<void> {
-    const call = this.activeCalls.get(callId);
-    if (!call) return;
-
-    try {
-      // Poll Isabel VoIP API for call status
-      const statusResult = await this.makeIsabelApiCall('status', { callId });
-      
-      if (statusResult.status) {
-        const previousStatus = call.status;
-        call.status = statusResult.status;
-        
-        if (call.status === 'connected' && previousStatus !== 'connected') {
-          console.log(`Isabel VoIP call ${callId} connected`);
-          this.emit('callConnected', call);
-        }
-        
-        if (call.status === 'ended') {
+      this.ami.action(originateAction, (err: any, res: any) => {
+        if (err) {
+          call.status = 'failed';
           call.endTime = new Date();
-          call.duration = Math.floor((call.endTime.getTime() - call.startTime.getTime()) / 1000);
-          
-          if (statusResult.recordingUrl) {
-            call.recordingUrl = statusResult.recordingUrl;
-          }
-          
-          console.log(`Isabel VoIP call ${callId} ended. Duration: ${call.duration}s`);
-          this.emit('callEnded', call);
           this.activeCalls.delete(callId);
-          return;
-        }
-        
-        // Continue monitoring if call is still active
-        if (['initiated', 'ringing', 'connected'].includes(call.status)) {
-          setTimeout(() => this.monitorCallStatus(callId), 2000);
-        }
-      }
-    } catch (error) {
-      console.error(`Error monitoring call ${callId}:`, error);
-      call.status = 'failed';
-      call.endTime = new Date();
-      this.activeCalls.delete(callId);
-      this.emit('callFailed', call);
-    }
-  }
-
-  /**
-   * Make API call to Isabel VoIP system with proper SIP protocol handling
-   */
-  private async makeIsabelApiCall(action: string, params: any): Promise<any> {
-    if (!this.settings) {
-      throw new Error('VoIP service not configured');
-    }
-
-    try {
-      // First attempt: Try SIP protocol connection
-      const sipResult = await this.attemptSipConnection(action, params);
-      if (sipResult.success) {
-        return sipResult.data;
-      }
-
-      // Second attempt: Try HTTP API (some VoIP systems support both)
-      const httpResult = await this.attemptHttpConnection(action, params);
-      if (httpResult.success) {
-        return httpResult.data;
-      }
-
-      // Both real connections failed
-      throw new Error('Both SIP and HTTP connection attempts failed');
-    } catch (error) {
-      // In production, propagate the error (no simulation)
-      if (process.env.NODE_ENV === 'production') {
-        throw error;
-      }
-      
-      // In development, use simulation as fallback
-      console.log(`Isabel VoIP server not accessible - using development simulation for ${action}`);
-      return this.getSimulatedResponse(action, params);
-    }
-  }
-
-  /**
-   * Attempt SIP protocol connection (production method)
-   */
-  private async attemptSipConnection(action: string, params: any): Promise<{ success: boolean; data?: any; diagnostics?: any }> {
-    try {
-      // Real SIP implementation would use libraries like sip.js or node-sip
-      // For now, attempt basic TCP connection to verify server availability
-      const net = await import('net');
-      
-      return new Promise((resolve) => {
-        const socket = new net.Socket();
-        const startTime = Date.now();
-        let diagnostics = {
-          method: 'TCP',
-          startTime,
-          server: this.settings!.serverAddress,
-          port: this.settings!.port
-        };
-
-        const timeout = setTimeout(() => {
-          socket.destroy();
-          resolve({ 
-            success: false, 
-            diagnostics: { 
-              ...diagnostics, 
-              endTime: Date.now(),
-              duration: Date.now() - startTime,
-              error: 'Connection timeout',
-              status: 'timeout'
-            }
-          });
-        }, 3000); // Shorter timeout for SIP test
-
-        socket.connect(this.settings!.port, this.settings!.serverAddress, () => {
-          clearTimeout(timeout);
-          const endTime = Date.now();
-          socket.destroy();
-          
-          console.log(`✓ TCP connection to ${this.settings!.serverAddress}:${this.settings!.port} successful (${endTime - startTime}ms)`);
-          
-          // If TCP connection succeeds, simulate SIP success
-          resolve({ 
-            success: true, 
-            data: this.getSimulatedResponse(action, params),
-            diagnostics: {
-              ...diagnostics,
-              endTime,
-              duration: endTime - startTime,
-              status: 'connected'
-            }
-          });
-        });
-
-        socket.on('error', (error) => {
-          clearTimeout(timeout);
-          const endTime = Date.now();
-          
-          console.log(`✗ TCP connection to ${this.settings!.serverAddress}:${this.settings!.port} failed: ${error.message}`);
-          
-          resolve({ 
-            success: false,
-            diagnostics: {
-              ...diagnostics,
-              endTime,
-              duration: endTime - startTime,
-              error: error.message,
-              status: 'connection_refused'
-            }
-          });
-        });
-      });
-    } catch (error) {
-      return { 
-        success: false, 
-        diagnostics: { 
-          method: 'TCP',
-          error: error instanceof Error ? error.message : 'Unknown error',
-          status: 'exception'
-        }
-      };
-    }
-  }
-
-  /**
-   * Attempt HTTP API connection (fallback method)
-   */
-  private async attemptHttpConnection(action: string, params: any): Promise<{ success: boolean; data?: any }> {
-    try {
-      // Try common HTTP API ports for VoIP systems
-      const httpPorts = [8080, 8088, 9080, this.settings!.port + 1000];
-      
-      for (const port of httpPorts) {
-        try {
-          const apiUrl = `http://${this.settings!.serverAddress}:${port}/api/voip/${action}`;
-          
-          const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${Buffer.from(`${this.settings!.username}:${this.settings!.password}`).toString('base64')}`
-            },
-            body: JSON.stringify(params),
-            signal: AbortSignal.timeout(2000) // Shorter timeout per attempt
-          });
-
-          if (response.ok) {
-            return { success: true, data: await response.json() };
-          }
-        } catch (portError) {
-          // Continue to next port
-          continue;
-        }
-      }
-      
-      return { success: false };
-    } catch (error) {
-      return { success: false };
-    }
-  }
-
-  /**
-   * Get simulated response for development/testing
-   */
-  private getSimulatedResponse(action: string, params: any): any {
-    console.log(`Simulating Isabel VoIP ${action} response for development`);
-    
-    switch (action) {
-      case 'connect':
-        return { connected: true, simulated: true, provider: 'Isabel VoIP' };
-      case 'call':
-        return { 
-          success: true, 
-          simulated: true, 
-          callId: params.callId,
-          status: 'initiated',
-          message: 'Call initiated successfully (simulated)'
-        };
-      case 'status':
-        // Simulate realistic call progression
-        const randomOutcome = Math.random();
-        if (randomOutcome > 0.8) {
-          return { 
-            status: 'ended', 
-            duration: 30 + Math.floor(Math.random() * 120),
-            simulated: true 
-          };
-        } else if (randomOutcome > 0.6) {
-          return { status: 'connected', simulated: true };
+          console.error(`Isabel AMI Originate failed for ${phoneNumber}:`, err);
+          reject(new Error(`Call origination failed: ${err.message || err}`));
         } else {
-          return { status: 'ringing', simulated: true };
+          call.status = 'ringing';
+          this.emit('callInitiated', call);
+          console.log(`Isabel AMI call initiated to ${phoneNumber}, callId=${callId}`);
+          resolve(call);
         }
-      default:
-        return { success: true, simulated: true, action };
-    }
+      });
+    });
   }
 
   /**
-   * Test connection to Isabel VoIP server with comprehensive diagnostics
+   * End an active call by sending a Hangup action on the stored AMI channel.
    */
-  async testConnection(): Promise<{ success: boolean; message: string; details?: any }> {
-    if (!this.settings) {
-      return { 
-        success: false, 
-        message: 'VoIP service not configured',
-        details: { status: 'not_configured' }
-      };
+  async endCall(callId: string): Promise<{ success: boolean; duration?: number; recordingUrl?: string }> {
+    const call = this.activeCalls.get(callId);
+    if (!call) {
+      return { success: false };
     }
 
-    console.log(`Testing Isabel VoIP connection to ${this.settings.serverAddress}:${this.settings.port}`);
+    if (!this.ami || !this.isConnected) {
+      call.status = 'ended';
+      call.endTime = new Date();
+      call.duration = Math.floor((call.endTime.getTime() - call.startTime.getTime()) / 1000);
+      this.activeCalls.delete(callId);
+      return { success: true, duration: call.duration, recordingUrl: call.recordingUrl };
+    }
 
-    // Run comprehensive network diagnostics
-    const networkDiagnostics = await this.runNetworkDiagnostics();
-    
-    try {
-      // Test SIP connection first
-      const sipResult = await this.attemptSipConnection('connect', {});
-      
-      if (sipResult.success) {
-        return {
-          success: true,
-          message: 'Isabel VoIP connection successful via SIP protocol',
-          details: {
-            provider: 'Isabel VoIP Line',
-            server: this.settings.serverAddress,
-            port: this.settings.port,
-            username: this.settings.username,
-            status: 'connected',
-            method: 'SIP',
-            note: 'Real connection established',
-            diagnostics: {
-              sip: sipResult.diagnostics,
-              network: networkDiagnostics
-            }
-          }
-        };
+    return new Promise((resolve) => {
+      const channel = call._channel;
+
+      if (!channel) {
+        // No channel tracked yet — mark as ended locally
+        call.status = 'ended';
+        call.endTime = new Date();
+        call.duration = Math.floor((call.endTime.getTime() - call.startTime.getTime()) / 1000);
+        this.activeCalls.delete(callId);
+        this.emit('callEnded', call);
+        resolve({ success: true, duration: call.duration, recordingUrl: call.recordingUrl });
+        return;
       }
 
-      // Test HTTP API fallback
-      const httpResult = await this.attemptHttpConnection('connect', {});
-      
-      if (httpResult.success) {
-        return {
-          success: true,
-          message: 'Isabel VoIP connection successful via HTTP API',
-          details: {
-            provider: 'Isabel VoIP Line',
-            server: this.settings.serverAddress,
-            port: this.settings.port,
-            username: this.settings.username,
-            status: 'connected',
-            method: 'HTTP',
-            note: 'HTTP API connection established',
-            diagnostics: {
-              http: httpResult.diagnostics,
-              network: networkDiagnostics
-            }
-          }
-        };
-      }
+      this.ami.action({ action: 'hangup', channel }, (err: any) => {
+        call.status = 'ended';
+        call.endTime = new Date();
+        call.duration = Math.floor((call.endTime.getTime() - call.startTime.getTime()) / 1000);
+        this.activeCalls.delete(callId);
+        this.emit('callEnded', call);
 
-      // Both methods failed - provide detailed diagnostics
-      return {
-        success: false, // Report as false since real connection failed
-        message: this.getDiagnosticMessage(networkDiagnostics, sipResult.diagnostics),
-        details: {
-          provider: 'Isabel VoIP Line',
-          server: this.settings.serverAddress,
-          port: this.settings.port,
-          username: this.settings.username,
-          status: 'connection_failed',
-          method: 'simulation',
-          note: 'Configuration valid but unable to connect to Isabel VoIP server.',
-          simulated: true,
-          diagnostics: {
-            sip: sipResult.diagnostics,
-            network: networkDiagnostics,
-            recommendations: this.getRecommendations(networkDiagnostics, sipResult.diagnostics)
-          }
+        if (err) {
+          console.error(`AMI Hangup error for ${channel}:`, err);
+          resolve({ success: false });
+        } else {
+          resolve({ success: true, duration: call.duration, recordingUrl: call.recordingUrl });
         }
-      };
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return {
-        success: false,
-        message: errorMessage,
-        details: {
-          provider: 'Isabel VoIP Line',
-          server: this.settings.serverAddress,
-          port: this.settings.port,
-          username: this.settings.username,
-          status: 'connection_failed',
-          error: errorMessage,
-          note: 'Connection test encountered an error',
-          diagnostics: {
-            network: networkDiagnostics,
-            error: errorMessage
-          }
-        }
-      };
-    }
+      });
+    });
   }
 
-  /**
-   * Run comprehensive network diagnostics
-   */
-  private async runNetworkDiagnostics(): Promise<any> {
-    const diagnostics = {
-      timestamp: new Date().toISOString(),
-      server: this.settings!.serverAddress,
-      port: this.settings!.port,
-      tests: []
-    };
-
-    // Test basic connectivity
-    try {
-      const dns = await import('dns');
-      const util = await import('util');
-      const lookup = util.promisify(dns.lookup);
-      
-      const resolved = await lookup(this.settings!.serverAddress);
-      diagnostics.tests.push({
-        name: 'DNS Resolution',
-        status: 'success',
-        result: `${this.settings!.serverAddress} resolves to ${resolved.address}`,
-        ip: resolved.address
-      });
-    } catch (error) {
-      diagnostics.tests.push({
-        name: 'DNS Resolution',
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-
-    // Test ping-like connectivity
-    try {
-      const net = await import('net');
-      const pingResult = await new Promise((resolve) => {
-        const socket = new net.Socket();
-        const startTime = Date.now();
-        
-        const timeout = setTimeout(() => {
-          socket.destroy();
-          resolve({
-            status: 'timeout',
-            duration: Date.now() - startTime,
-            error: 'Connection timeout'
-          });
-        }, 5000);
-
-        socket.connect(this.settings!.port, this.settings!.serverAddress, () => {
-          clearTimeout(timeout);
-          socket.destroy();
-          resolve({
-            status: 'success',
-            duration: Date.now() - startTime,
-            message: 'Port is reachable'
-          });
-        });
-
-        socket.on('error', (error) => {
-          clearTimeout(timeout);
-          resolve({
-            status: 'failed',
-            duration: Date.now() - startTime,
-            error: error.message
-          });
-        });
-      });
-
-      diagnostics.tests.push({
-        name: 'Port Connectivity',
-        ...pingResult
-      });
-    } catch (error) {
-      diagnostics.tests.push({
-        name: 'Port Connectivity',
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-
-    return diagnostics;
-  }
-
-  /**
-   * Get diagnostic message based on test results
-   */
-  private getDiagnosticMessage(networkDiagnostics: any, sipDiagnostics: any): string {
-    const dnsTest = networkDiagnostics.tests.find(t => t.name === 'DNS Resolution');
-    const portTest = networkDiagnostics.tests.find(t => t.name === 'Port Connectivity');
-
-    if (dnsTest?.status === 'failed') {
-      return `DNS resolution failed for ${this.settings!.serverAddress} - server may not exist`;
-    }
-
-    if (portTest?.status === 'timeout') {
-      return `Connection timeout to ${this.settings!.serverAddress}:${this.settings!.port} - server may be down or port blocked`;
-    }
-
-    if (portTest?.status === 'failed') {
-      return `Connection refused by ${this.settings!.serverAddress}:${this.settings!.port} - server may not be listening on this port`;
-    }
-
-    return 'Real Isabel VoIP server not accessible - development mode active';
-  }
-
-  /**
-   * Get recommendations based on diagnostic results
-   */
-  private getRecommendations(networkDiagnostics: any, sipDiagnostics: any): string[] {
-    const recommendations = [];
-    const dnsTest = networkDiagnostics.tests.find(t => t.name === 'DNS Resolution');
-    const portTest = networkDiagnostics.tests.find(t => t.name === 'Port Connectivity');
-
-    if (dnsTest?.status === 'failed') {
-      recommendations.push('Verify the server address is correct');
-      recommendations.push('Check if the server is operational');
-    }
-
-    if (portTest?.status === 'timeout') {
-      recommendations.push('Check if firewall is blocking the connection');
-      recommendations.push('Verify the server is running on the specified port');
-      recommendations.push('Test from a different network if possible');
-    }
-
-    if (portTest?.status === 'failed') {
-      recommendations.push('Verify the port number (5038) is correct');
-      recommendations.push('Check if the VoIP service is running on the server');
-    }
-
-    if (recommendations.length === 0) {
-      recommendations.push('Server appears reachable but VoIP protocol negotiation failed');
-      recommendations.push('This is normal in development environments');
-      recommendations.push('System will use simulation mode for testing');
-    }
-
-    return recommendations;
-  }
-
-  /**
-   * Get active calls
-   */
-  getActiveCalls(): VoipCall[] {
-    return Array.from(this.activeCalls.values());
-  }
-
-  /**
-   * Get call by ID
-   */
   getCall(callId: string): VoipCall | undefined {
     return this.activeCalls.get(callId);
   }
 
   /**
-   * End a call
-   */
-  async endCall(callId: string): Promise<boolean> {
-    const call = this.activeCalls.get(callId);
-    if (!call) {
-      return false;
-    }
-
-    try {
-      await this.makeIsabelApiCall('hangup', { callId });
-      call.status = 'ended';
-      call.endTime = new Date();
-      call.duration = Math.floor((call.endTime.getTime() - call.startTime.getTime()) / 1000);
-      
-      this.emit('callEnded', call);
-      this.activeCalls.delete(callId);
-      return true;
-    } catch (error) {
-      console.error(`Failed to end call ${callId}:`, error);
-      return false;
-    }
-  }
-
-  /**
-   * Disconnect from Isabel VoIP server
+   * Disconnect from the AMI server.
    */
   async disconnect(): Promise<void> {
-    if (this.isConnected) {
-      console.log('Disconnecting from Isabel VoIP server');
-      this.isConnected = false;
-      this.emit('disconnected');
+    if (this.ami) {
+      try {
+        this.ami.disconnect();
+      } catch { /* ignore */ }
+      this.ami = null;
+    }
+    this._isConnected = false;
+    this.emit('disconnected');
+  }
+
+  // ---------------------------------------------------------------------------
+  // AMI event handlers
+  // ---------------------------------------------------------------------------
+
+  private onBridgeEvent(evt: any) {
+    // Find the call matching the CALLID channel variable
+    for (const [callId, call] of this.activeCalls.entries()) {
+      if (
+        evt.callerid1 === call.phoneNumber ||
+        evt.callerid2 === call.phoneNumber ||
+        (evt.uniqueid1 && callId.includes(evt.uniqueid1)) ||
+        (evt.variable && evt.variable['CALLID'] === callId)
+      ) {
+        const channel = evt.channel1 || evt.channel2 || evt.channel;
+        if (channel) {
+          call._channel = channel;
+        }
+        call.status = 'connected';
+        this.emit('callConnected', call);
+        console.log(`Isabel AMI: call ${callId} bridged on channel ${channel}`);
+
+        // Start MixMonitor for recording if enabled
+        if (call.recordingEnabled && channel && this.settings) {
+          const recordingPath = `${this.settings.recordingStoragePath}/${callId}.wav`;
+          this.ami.action(
+            { action: 'mixmonitor', channel, file: recordingPath },
+            (err: any) => {
+              if (err) {
+                console.error(`MixMonitor failed for ${channel}:`, err);
+              } else {
+                call.recordingUrl = recordingPath;
+                console.log(`MixMonitor started: ${recordingPath}`);
+              }
+            }
+          );
+        }
+        break;
+      }
     }
   }
 
-  /**
-   * Check if service is connected
-   */
-  isServiceConnected(): boolean {
-    return this.isConnected;
+  private onHangupEvent(evt: any) {
+    // Find call by stored channel name
+    for (const [callId, call] of this.activeCalls.entries()) {
+      if (call._channel && (call._channel === evt.channel || call._channel === evt.uniqueid)) {
+        call.status = 'ended';
+        call.endTime = new Date();
+        call.duration = Math.floor((call.endTime.getTime() - call.startTime.getTime()) / 1000);
+        this.activeCalls.delete(callId);
+        this.emit('callEnded', call);
+        console.log(`Isabel AMI: call ${callId} ended, duration=${call.duration}s`);
+        break;
+      }
+    }
   }
 }
 
-// Global instance
 export const isabelVoipService = new IsabelVoipService();

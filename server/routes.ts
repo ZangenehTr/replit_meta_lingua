@@ -1089,10 +1089,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         port: number;
         username: string;
         tests: {
-          tcpConnectivity?: any;
-          alternativeSipPort?: any;
-          httpApiPort?: any;
-          voipServiceConnection?: any;
+          amiTcpPort?: any;
+          sipTcpPort?: any;
+          amiLogin?: any;
         };
       } = {
         server: serverAddress,
@@ -1101,116 +1100,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tests: {}
       };
 
-      // Test 1: Basic TCP connectivity
-      try {
-        console.log(`\n1. Testing TCP connectivity to ${serverAddress}:${port}...`);
-        const tcpTest = await fetch(`http://${serverAddress}:${port}/`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(3000)
+      // Helper: probe a raw TCP port using a Net socket (correct for AMI/SIP — not HTTP)
+      const probeTcpPort = async (host: string, targetPort: number, label: string): Promise<any> => {
+        const net = await import('net');
+        return new Promise((resolve) => {
+          const socket = new net.Socket();
+          const start = Date.now();
+          const timer = setTimeout(() => {
+            socket.destroy();
+            resolve({ status: 'failed', message: `${label} — connection timeout`, duration: Date.now() - start });
+          }, 3000);
+          socket.connect(targetPort, host, () => {
+            clearTimeout(timer);
+            socket.destroy();
+            resolve({ status: 'success', message: `${label} — port reachable`, duration: Date.now() - start });
+          });
+          socket.on('error', (err: any) => {
+            clearTimeout(timer);
+            const reason = err.message.includes('ECONNREFUSED') ? 'Connection refused' :
+                           err.message.includes('ENOTFOUND') ? 'Host not found' : err.message;
+            resolve({ status: 'failed', message: `${label} — ${reason}`, duration: Date.now() - start });
+          });
         });
-        diagnostics.tests.tcpConnectivity = { 
-          status: 'success', 
-          message: 'TCP connection successful',
-          httpStatus: tcpTest.status
-        };
-        console.log(`✓ TCP connection successful (HTTP ${tcpTest.status})`);
-      } catch (error) {
-        const errorMsg = error.message.includes('timeout') ? 'Connection timeout' : 
-                        error.message.includes('ECONNREFUSED') ? 'Connection refused' :
-                        error.message.includes('ENOTFOUND') ? 'Host not found' : error.message;
-        diagnostics.tests.tcpConnectivity = { 
-          status: 'failed', 
-          message: errorMsg 
-        };
-        console.log(`✗ TCP connection failed: ${errorMsg}`);
-      }
+      };
 
-      // Test 2: SIP port alternative check
-      try {
-        console.log(`\n2. Testing alternative SIP port ${serverAddress}:5060...`);
-        const sipTest = await fetch(`http://${serverAddress}:5060/`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(3000)
-        });
-        diagnostics.tests.alternativeSipPort = { 
-          status: 'success', 
-          message: 'Alternative SIP port (5060) accessible',
-          httpStatus: sipTest.status
-        };
-        console.log(`✓ Alternative SIP port accessible (HTTP ${sipTest.status})`);
-      } catch (error) {
-        diagnostics.tests.alternativeSipPort = { 
-          status: 'failed', 
-          message: 'Alternative SIP port not accessible' 
-        };
-        console.log(`✗ Alternative SIP port not accessible`);
-      }
+      // Test 1: AMI TCP port 5038
+      console.log(`\n1. TCP probe AMI port ${serverAddress}:${port}...`);
+      diagnostics.tests.amiTcpPort = await probeTcpPort(serverAddress, port, `AMI port ${port}`);
+      console.log(`${diagnostics.tests.amiTcpPort.status === 'success' ? '✓' : '✗'} ${diagnostics.tests.amiTcpPort.message}`);
 
-      // Test 3: HTTP API port check
-      try {
-        console.log(`\n3. Testing HTTP API port ${serverAddress}:${port + 1000}...`);
-        const apiTest = await fetch(`http://${serverAddress}:${port + 1000}/`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(3000)
-        });
-        diagnostics.tests.httpApiPort = { 
-          status: 'success', 
-          message: 'HTTP API port accessible',
-          httpStatus: apiTest.status
-        };
-        console.log(`✓ HTTP API port accessible (HTTP ${apiTest.status})`);
-      } catch (error) {
-        diagnostics.tests.httpApiPort = { 
-          status: 'failed', 
-          message: 'HTTP API port not accessible' 
-        };
-        console.log(`✗ HTTP API port not accessible`);
-      }
+      // Test 2: SIP TCP port 5060
+      console.log(`\n2. TCP probe SIP port ${serverAddress}:5060...`);
+      diagnostics.tests.sipTcpPort = await probeTcpPort(serverAddress, 5060, 'SIP port 5060');
+      console.log(`${diagnostics.tests.sipTcpPort.status === 'success' ? '✓' : '✗'} ${diagnostics.tests.sipTcpPort.message}`);
 
-      // Test 4: Isabel VoIP service real connection attempt
+      // Test 3: Real AMI login (Ping action)
       try {
-        console.log(`\n4. Testing real Isabel VoIP service connection...`);
+        console.log(`\n3. Testing AMI login and Ping on ${serverAddress}:${port}...`);
         const { isabelVoipService } = await import('./isabel-voip-service');
-        
-        await isabelVoipService.configure({
-          serverAddress: serverAddress,
-          port: port,
-          username: username,
-          password: settings.voipPassword || '',
-          enabled: true,
-          callRecordingEnabled: settings.callRecordingEnabled || false,
-          recordingStoragePath: settings.recordingStoragePath || '/var/recordings'
-        });
-        
         const testResult = await isabelVoipService.testConnection();
-        diagnostics.tests.voipServiceConnection = testResult;
-        console.log(`${testResult.success ? '✓' : '✗'} VoIP service test: ${testResult.message}`);
-      } catch (error) {
-        diagnostics.tests.voipServiceConnection = { 
-          success: false, 
-          message: `VoIP service error: ${error.message}` 
+        diagnostics.tests.amiLogin = {
+          status: testResult.success ? 'success' : 'failed',
+          success: testResult.success,
+          message: testResult.message,
+          details: testResult.details
         };
-        console.log(`✗ VoIP service error: ${error.message}`);
+        console.log(`${testResult.success ? '✓' : '✗'} AMI login test: ${testResult.message}`);
+      } catch (error: any) {
+        diagnostics.tests.amiLogin = { status: 'failed', success: false, message: `AMI login error: ${error.message}` };
+        console.log(`✗ AMI login error: ${error.message}`);
       }
 
       console.log(`\n=== DIAGNOSTIC COMPLETE ===\n`);
 
       // Generate summary and recommendations
-      const passedTests = Object.values(diagnostics.tests).filter(test => test.status === 'success' || test.success).length;
+      const passedTests = Object.values(diagnostics.tests).filter((t: any) => t.status === 'success' || t.success).length;
       const totalTests = Object.keys(diagnostics.tests).length;
-      
-      let recommendations = [];
-      if (diagnostics.tests.tcpConnectivity?.status === 'failed') {
-        recommendations.push("Check firewall settings - port may be blocked");
-        recommendations.push("Verify server IP address is correct");
-        recommendations.push("Ensure you're connecting from an allowed IP range");
+
+      let recommendations: string[] = [];
+      if (diagnostics.tests.amiTcpPort?.status === 'failed') {
+        recommendations.push("AMI port 5038 is not reachable — check firewall rules on the Issabel server");
+        recommendations.push("Run: iptables -I INPUT -p tcp --dport 5038 -j ACCEPT on the Issabel host");
+        recommendations.push("Verify /etc/asterisk/manager.conf has 'permit' entry for this server's IP");
       }
-      if (diagnostics.tests.alternativeSipPort?.status === 'success') {
-        recommendations.push("Consider using port 5060 instead of 5038");
+      if (diagnostics.tests.amiTcpPort?.status === 'success' && diagnostics.tests.amiLogin?.status === 'failed') {
+        recommendations.push("Port 5038 is open but AMI login failed — check username/password in /etc/asterisk/manager.conf");
+        recommendations.push("Ensure the AMI user has 'read = all' and 'write = all' (or at minimum 'call,originate') permissions");
       }
       if (passedTests === 0) {
-        recommendations.push("Server appears to be unreachable from this environment");
-        recommendations.push("Consider using VPN or allowlisting this IP address");
+        recommendations.push("Issabel server appears completely unreachable — verify IP address and network connectivity");
+        recommendations.push("Consider adding this server's IP to the Issabel AMI permit list");
       }
 
       res.json({
