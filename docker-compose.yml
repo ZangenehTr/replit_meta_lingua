@@ -24,7 +24,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis for session storage and caching
+  # Redis for queue processing and caching
   redis:
     image: redis:7-alpine
     container_name: metalingua-redis
@@ -57,16 +57,46 @@ services:
     environment:
       NODE_ENV: production
       PORT: 5000
+
+      # Database
       DATABASE_URL: postgresql://${DB_USER:-metalingua}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-metalingua}
+
+      # Redis — queue-service.ts reads individual vars (REDIS_HOST / REDIS_PORT / REDIS_PASSWORD)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       REDIS_URL: redis://redis:6379
+
+      # JWT
       JWT_SECRET: ${JWT_SECRET}
       REFRESH_SECRET: ${REFRESH_SECRET}
-      OLLAMA_HOST: ${OLLAMA_HOST}
+
+      # Domain — all three must equal your public-facing URL
+      APP_URL: ${APP_URL}
+      BASE_URL: ${APP_URL}
+      FRONTEND_URL: ${APP_URL}
+
+      # AI
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+
+      # Iranian SMS
       KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY}
+
+      # Iranian Payments (Shetab)
       SHETAB_MERCHANT_ID: ${SHETAB_MERCHANT_ID}
       SHETAB_TERMINAL_ID: ${SHETAB_TERMINAL_ID}
-      APP_URL: ${APP_URL:-http://localhost:5000}
+      SHETAB_API_KEY: ${SHETAB_API_KEY}
+      # This URL must be registered exactly as-is with your Shetab merchant account
+      SHETAB_CALLBACK_URL: ${APP_URL}/api/payments/shetab/callback
+
+      # Isabel VoIP — AMI port is 5038, NOT the SIP port 5060
+      ISABEL_VOIP_ENABLED: ${ISABEL_VOIP_ENABLED:-false}
+      ISABEL_VOIP_SERVER: ${ISABEL_VOIP_SERVER:-}
+      ISABEL_VOIP_PORT: ${ISABEL_VOIP_PORT:-5038}
+      ISABEL_VOIP_USERNAME: ${ISABEL_VOIP_USERNAME:-}
+      ISABEL_VOIP_PASSWORD: ${ISABEL_VOIP_PASSWORD:-}
+
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
