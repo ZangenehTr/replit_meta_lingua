@@ -383,82 +383,336 @@ To log in, go to `https://yourdomain.com`, enter the phone number you inserted, 
 
 Ollama powers the AI placement test, lesson content generation, Lexi chatbot, and CallerN AI coaching.
 
-### On the application server (simple setup)
+### Option A — Script install (when internet access is available)
 
 ```bash
-# The installation script is included in the repository
+# Included helper script (handles mirrors for Iran)
 bash install-ollama-iran.sh
 
-# Or install manually
+# Or the standard upstream method
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Start the service
+# Enable and start
 systemctl enable ollama
 systemctl start ollama
 
-# Pull the default model (3B parameters — needs ~2GB disk, ~4GB RAM)
+# Pull the default model (3B params — ~2 GB disk, ~4 GB RAM)
 ollama pull llama3.2:3b
 
-# Verify it works
+# Verify
 curl http://localhost:11434/api/tags
+curl http://localhost:11434/api/version
 ```
 
-Then set `OLLAMA_HOST=http://localhost:11434` in your `.env` and restart:
+### Option B — Manual binary install (for Iranian servers where ollama.ai is blocked)
+
+```bash
+# Step 1: Create directories
+sudo mkdir -p /usr/local/bin
+sudo mkdir -p /usr/local/lib/ollama
+
+# Step 2: Download binary from GitHub (not ollama.ai)
+sudo wget -O /usr/local/bin/ollama \
+  https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64
+
+# Or with curl:
+sudo curl -L -o /usr/local/bin/ollama \
+  https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64
+
+# Step 3: Make executable
+sudo chmod +x /usr/local/bin/ollama
+
+# Step 4: Create system user
+sudo useradd -r -s /bin/false -m -d /usr/share/ollama ollama
+
+# Step 5: Create systemd service
+sudo tee /etc/systemd/system/ollama.service > /dev/null << 'EOF'
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="OLLAMA_HOST=0.0.0.0"
+
+[Install]
+WantedBy=default.target
+EOF
+
+# Step 6: Enable and start
+sudo systemctl daemon-reload
+sudo systemctl enable ollama
+sudo systemctl start ollama
+sudo systemctl status ollama
+
+# Step 7: Download a model
+ollama pull llama3.2:3b
+# If llama3.2 is blocked, try:
+ollama pull llama2:7b
+```
+
+### Option C — Separate GPU server (recommended for production)
+
+```bash
+# On the AI server: start Ollama bound to all interfaces
+OLLAMA_HOST=0.0.0.0 ollama serve
+
+# In the app server .env, point to the AI server:
+OLLAMA_HOST=http://AI_SERVER_IP:11434
+```
+
+### Configure the application
+
+```env
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=llama3.2:3b
+# Optional fallback if Ollama is unavailable:
+AI_FALLBACK_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+```
+
+Restart after updating `.env`:
 ```bash
 docker compose restart app
 ```
 
-### On a separate GPU server (recommended for production)
+### Verify AI is connected
 
+Check admin panel: `Admin → Infrastructure → AI Status`
+
+Or check startup logs:
 ```bash
-# On the AI server, start Ollama bound to all interfaces
-OLLAMA_HOST=0.0.0.0 ollama serve
+docker compose logs app | grep -i "ollama\|AI provider"
+# Should show: ✅ Ollama service initialized with host: http://localhost:11434
+```
 
-# On the application server, point to the AI server IP
-OLLAMA_HOST=http://AI_SERVER_IP:11434
+### Connect Speech and TTS Services (optional)
+
+**Whisper (speech-to-text for CallerN):**
+```env
+WHISPER_API_URL=http://localhost:8000
+WHISPER_ENABLED=true
+```
+Test: `curl -X POST http://localhost:8000/transcribe -F "audio=@test.wav"`
+
+**Coqui TTS (text-to-speech):**
+```env
+TTS_API_URL=http://localhost:5002
+TTS_ENABLED=true
+TTS_VOICE_MODEL=tts_models/multilingual/multi-dataset/xtts_v2
+TTS_LANGUAGE=fa
+```
+Test: `curl -X POST http://localhost:5002/tts -H "Content-Type: application/json" -d '{"text":"سلام","language":"fa"}'`
+
+Verify all AI-related services are up:
+```bash
+netstat -tulpn | grep -E '11434|8000|5002'
 ```
 
 ---
 
 ## 14. Install TURN Server for Video Calls (Optional)
 
-CallerN (on-demand video tutoring) works without a TURN server on a local network. For internet-based calls across NAT (students at home), a TURN server is required.
+CallerN (on-demand video tutoring) uses WebRTC. On a local network it works without a TURN server. For internet-based calls where students are at home behind NAT/firewalls, a TURN server is **required**.
+
+- **STUN**: helps clients discover their public IP address
+- **TURN**: relays media when peer-to-peer connection is impossible (most home users)
+
+### When you need a TURN server
+
+| Scenario | TURN needed? |
+|---|---|
+| All users on the same institute LAN | No |
+| Students connecting from home (different ISPs) | **Yes** |
+| Students in restricted networks / VPN | **Yes** |
+
+### Install coturn
 
 ```bash
-# Install coturn
+sudo apt update
 sudo apt install -y coturn
-
-# Configure
-sudo nano /etc/turnserver.conf
 ```
 
-Minimum `turnserver.conf`:
-```conf
+### Generate credentials
+
+```bash
+sudo mkdir -p /etc/coturn
+openssl rand -hex 32 | sudo tee /etc/coturn/static-auth-secret.txt > /dev/null
+
+# Generate a credential password for the static user
+TURN_PASS=$(openssl rand -hex 24)
+echo "Turn password: $TURN_PASS"   # Save this for the .env file
+```
+
+### Configure coturn
+
+```bash
+sudo tee /etc/coturn/turnserver.conf > /dev/null << EOF
+# Meta Lingua TURN/STUN Configuration
 listening-port=3478
 tls-listening-port=5349
+listening-ip=0.0.0.0
+relay-ip=YOUR_SERVER_INTERNAL_IP
+external-ip=YOUR_SERVER_PUBLIC_IP
+
+# Credentials
+lt-cred-mech
+user=metalingua:${TURN_PASS}
 realm=yourdomain.com
 server-name=yourdomain.com
-lt-cred-mech
-user=turnuser:STRONG_PASSWORD
 fingerprint
+
+# TLS (use Let's Encrypt certs if available)
 cert=/etc/letsencrypt/live/yourdomain.com/fullchain.pem
 pkey=/etc/letsencrypt/live/yourdomain.com/privkey.pem
-log-file=/var/log/turnserver/turnserver.log
+
+# Security
+no-cli
+no-software-attribute
+no-multicast-peers
+denied-peer-ip=0.0.0.0-0.255.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+cipher-list=HIGH
+
+# Performance
+min-port=49152
+max-port=65535
+max-clients=500
+bps-capacity=0
+
+# Logging
+log-file=/var/log/coturn/turnserver.log
+verbosity=0
+EOF
 ```
+
+### Enable coturn service
 
 ```bash
+# Enable the systemd service (requires editing the defaults file)
+sudo sed -i 's/#TURNSERVER_ENABLED/TURNSERVER_ENABLED/' /etc/default/coturn
+
 sudo systemctl enable coturn
 sudo systemctl start coturn
+sudo systemctl status coturn
 ```
 
-Then update `.env`:
+### Open firewall ports
+
+```bash
+sudo ufw allow 3478/tcp
+sudo ufw allow 3478/udp
+sudo ufw allow 5349/tcp
+sudo ufw allow 5349/udp
+sudo ufw allow 49152:65535/udp   # Media relay range
+```
+
+### Configure the application
+
+Add to `.env`:
 ```env
-TURN_SERVER_URL=turn:yourdomain.com:3478
-TURN_SERVER_USERNAME=turnuser
-TURN_SERVER_PASSWORD=STRONG_PASSWORD
+WEBRTC_TURN_SERVER=turn:yourdomain.com:3478
+WEBRTC_TURN_USERNAME=metalingua
+WEBRTC_TURN_PASSWORD=YOUR_TURN_PASS
+WEBRTC_STUN_SERVER=stun:yourdomain.com:3478
 ```
 
-Restart the app: `docker compose restart app`
+Restart: `docker compose restart app`
+
+### Test the TURN server
+
+```bash
+# Quick TCP reachability test
+timeout 5 bash -c 'exec 3<>/dev/tcp/YOUR_SERVER_IP/3478' \
+  && echo "TURN server reachable" || echo "TURN server unreachable"
+
+# Full test with turnutils (install: sudo apt install coturn)
+turnutils_uclient -v -u metalingua -w YOUR_TURN_PASS yourdomain.com
+
+# Check logs for connection activity
+sudo journalctl -u coturn -f
+```
+
+Browser test — open browser console on the platform and run:
+```javascript
+const pc = new RTCPeerConnection({
+  iceServers: [{ urls: 'turn:yourdomain.com:3478',
+                 username: 'metalingua', credential: 'YOUR_TURN_PASS' }]
+});
+pc.createDataChannel('test');
+pc.createOffer().then(o => pc.setLocalDescription(o));
+pc.onicecandidate = e => {
+  if (e.candidate?.candidate.includes('relay'))
+    console.log('TURN working!', e.candidate.candidate);
+};
+```
+
+### Performance tuning (for high concurrency)
+
+```bash
+# Increase file descriptor limits
+sudo systemctl edit coturn
+# Add under [Service]:
+# LimitNOFILE=1000000
+# LimitNPROC=unlimited
+
+# Kernel network tuning
+sudo tee -a /etc/sysctl.conf > /dev/null << 'EOF'
+net.core.rmem_max=134217728
+net.core.wmem_max=134217728
+net.ipv4.tcp_rmem=4096 87380 67108864
+net.ipv4.tcp_wmem=4096 65536 67108864
+net.core.somaxconn=65535
+EOF
+sudo sysctl -p
+```
+
+Expected performance on a 4-core server:
+
+| Metric | Value |
+|---|---|
+| Max concurrent calls | 500+ |
+| Bandwidth per call | 1–5 Mbps |
+| CPU at 50 calls | ~15% |
+| RAM at 50 calls | ~200 MB |
+
+### TLS/DTLS without Let's Encrypt (self-signed)
+
+```bash
+openssl req -new -x509 -days 365 -nodes \
+  -out /etc/coturn/coturn.crt \
+  -keyout /etc/coturn/coturn.key \
+  -subj "/CN=yourdomain.com"
+```
+
+Then replace the `cert=` and `pkey=` lines in `turnserver.conf` with these paths.
+
+### Docker alternative
+
+If you prefer to run coturn in a container alongside the platform:
+```yaml
+services:
+  coturn:
+    image: coturn/coturn:latest
+    network_mode: host
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    restart: unless-stopped
+```
+
+### Production checklist
+
+- [ ] TURN server is on a machine with a public static IP
+- [ ] Credentials are random and not "changeme"
+- [ ] Firewall allows 3478 (TCP/UDP), 5349 (TCP/UDP), 49152-65535 (UDP)
+- [ ] SSL/TLS certificate is valid
+- [ ] Tested with browser ICE candidate checker (relay candidate appears)
+- [ ] Monitoring via `journalctl -u coturn -f`
 
 ---
 
