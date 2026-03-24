@@ -26,10 +26,26 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 ### Backend
 - **Framework**: Express.js with TypeScript, Node.js ESM modules.
 - **Database**: PostgreSQL with Drizzle ORM.
-- **Authentication**: JWT with refresh tokens, role-based access control (8 user roles), phone-only OTP authentication.
+- **Authentication**: JWT with refresh tokens, role-based access control (8 user roles), phone-only OTP authentication via Kavenegar. No email/password logins exist anywhere.
 - **API Design**: RESTful.
-- **Key Features**: User & Course Management, payment & wallet system, AI Integration (adaptive micro-sessions, content generation via Ollama, AI Lesson Generator, AI Supervisor for video calls, AI 24/7 Sales Agent), Video & Communication (24/7 on-demand video tutoring via WebRTC, screen sharing, call recording, AI features like live vocab/auto-transcript/grammar rewrite, VoIP), Gamification (XP/level system, achievements), Testing System (8 question types, MST Placement Test), Unified Class Scheduling, CMS Platform (Blog, Video, Media library), CallerN Storage Layer for session management, roadmap tracking, and OTP Service (SMS, Email).
 - **Phone Number Normalization**: Centralized normalization to +98XXXXXXXXXX format.
+- **Key Features**: User & Course Management, payment & wallet system, AI Integration (adaptive micro-sessions, content generation via Ollama, AI Lesson Generator, AI Supervisor for video calls, AI 24/7 Sales Agent), Video & Communication (24/7 on-demand video tutoring via WebRTC, screen sharing, call recording, AI features like live vocab/auto-transcript/grammar rewrite, VoIP), Gamification (XP/level system, achievements), Testing System (8 question types, MST Placement Test), Unified Class Scheduling, CMS Platform (Blog, Video, Media library), CallerN Storage Layer for session management, roadmap tracking, and OTP Service (SMS).
+
+### Payment & Enrollment Pipeline (Fixed)
+- **Shetab callback** (`POST /api/payments/shetab/callback`) — after verifying the bank transaction, dispatches by `transactionId` prefix:
+  - `COURSE_*` → calls `updateCoursePaymentStatus(..., 'completed')` which triggers enrollment, awards XP, and sends notification. Redirects to `/courses`.
+  - `WALLET_*` → calls `updateWalletTransactionStatus(..., 'completed')` which credits wallet balance for top-up transactions. Redirects to `/student/wallet`.
+- **Enroll route** (`POST /api/courses/:id/enroll`) — gated: paid courses (price > 0) return HTTP 400 pointing to the payment endpoint; duplicate enrollments return HTTP 409. Free courses (price = 0) enroll directly.
+- **Callback URL** (critical): must be registered in Shetab merchant portal as exactly `/api/payments/shetab/callback` (plural `payments`, with `/shetab/` in the path).
+
+### Isabel VoIP Integration (Issabel PBX)
+- **Protocol**: AMI (Asterisk Manager Interface) TCP on **port 5038** — not SIP port 5060, not HTTP.
+- **Library**: `asterisk-manager` package v0.2.0.
+- **File**: `server/isabel-voip-service.ts` — fully real implementation, no simulation code.
+- **Capabilities**: Originate calls (`SIP/<username>` channel, `from-internal` context), MixMonitor recording on bridge, Hangup, Ping/testConnection, auto-reconnect via `keepConnected()`.
+- **VoIP diagnostic route**: Uses `net.Socket` TCP probe + AMI Ping/Pong authentication, no HTTP fetch to port 5038.
+- **Env vars**: `ISABEL_VOIP_ENABLED`, `ISABEL_VOIP_SERVER`, `ISABEL_VOIP_PORT` (default: 5038), `ISABEL_VOIP_USERNAME`, `ISABEL_VOIP_PASSWORD`.
+- **Issabel version note**: Issabel 4.0.0 / Asterisk 11.25.3 does NOT support ARI, PJSIP, or WebRTC↔PSTN. CallerN WebRTC is browser-to-browser and works independently of Asterisk.
 
 ### Call Center ERP (24-Stage Pipeline)
 - **Workflow Stages**: contact_desk → new_intake → follow_up/no_response → level_assessment → evaluation → consultation_cc/sup → pre_registration → final_registration → enrolled/private_class_setup → active class lifecycle
@@ -41,15 +57,35 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 
 ### Database Design
 - **ORM**: Drizzle.
+- **Migration command**: `npm run db:push` (development) or `docker compose exec app npm run db:push` (production).
 - **Schema**: Supports comprehensive user, course, payment, gamification, mood intelligence, guest progress, LinguaQuest lessons, dynamic forms, curriculum categories, guest leads, visitor chat, custom fonts, CallerN session tracking, Daily Challenges, AI Supervisor Analysis, and Call Center ERP (lead_activity_log for audit trail).
 
 ### AI Provider Configuration
 - Flexible selection via environment variables, supporting Ollama (default for self-hosting) and OpenAI, with automatic retry and fallback. Admin dashboard widget for monitoring and selection.
 
+### Queue System (Redis)
+- BullMQ queues via `ioredis` for content generation jobs.
+- Redis connection reads **individual vars**: `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` — NOT `REDIS_URL`.
+- In Docker Compose, `REDIS_HOST=redis` (container service name).
+
 ### Deployment Strategy
-- **Development**: Replit hosting with Neon PostgreSQL.
-- **Production**: Replit Deploy, downloadable as ZIP, Docker containerization. Designed for Iranian hosting, requiring PostgreSQL 14+, Node.js 18+, Nginx, and Docker (optional).
-- **Optimization**: Multi-stage Dockerfiles, package cleanup, PWA precaching, code splitting, Terser minification.
+- **Development**: Replit with Neon PostgreSQL. Run `npm run dev`.
+- **Production**: Docker Compose on Iranian self-hosted server. See `COMPREHENSIVE_DEPLOYMENT_GUIDE.md` for full step-by-step instructions.
+- **Build**: `npm run build` → Vite frontend + esbuild server bundle → `npm start` runs from `dist/`.
+- **Docker**: Multi-stage Dockerfile (non-root `nodejs:1001` user, Iran timezone `Asia/Tehran`, `dumb-init` entrypoint). `docker-compose.yml` includes PostgreSQL 14 + Redis 7 with health checks and dependency ordering.
+- **Nginx**: `nginx-example.conf` provides SSL termination, WebSocket upgrade, 100 MB upload limit, gzip, security headers.
+
+## Critical Environment Variable Notes
+
+The following three vars must always be set to the same value (your public domain). They control different parts of the payment flow:
+
+| Variable | Used by |
+|---|---|
+| `APP_URL` | docker-compose reference variable |
+| `BASE_URL` | Shetab callback URL fallback in shetab-service.ts |
+| `FRONTEND_URL` | Post-payment redirect in routes.ts |
+
+In `docker-compose.yml`, all three are derived from `${APP_URL}` automatically.
 
 ## External Dependencies
 
@@ -58,15 +94,34 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Testing**: Playwright (E2E), Vitest (unit)
 
 ### Production Environment (Iranian Self-Hosting)
-- **Database**: Self-hosted PostgreSQL
-- **Payment Gateway**: Shetab (Iranian network)
-- **SMS Service**: Kavenegar (Iranian provider)
-- **VoIP**: Isabel VoIP line (Iranian telecom)
-- **AI Services**: Ollama server (local AI processing); configurable with OpenAI as an alternative.
+- **Database**: Self-hosted PostgreSQL 14+ (container or bare metal)
+- **Queue**: Redis 7 (container)
+- **Payment Gateway**: Shetab (Iranian network) — callback path: `/api/payments/shetab/callback`
+- **SMS Service**: Kavenegar (Iranian provider) — mandatory for OTP login
+- **VoIP**: Issabel PBX via AMI on port 5038
+- **AI Services**: Ollama server (local AI processing); configurable with OpenAI as an alternative
 - **TTS Services**: Microsoft Edge TTS (self-hosted)
-- **Speech Recognition**: Faster-Whisper (self-hosted); configurable with OpenAI Whisper as an alternative.
+- **Speech Recognition**: Faster-Whisper (self-hosted); configurable with OpenAI Whisper as an alternative
 - **Fonts**: Self-hosted Arabic/Persian fonts
-- **WebRTC**: Self-hosted TURN/STUN server
-- **Email**: Iranian SMTP infrastructure
+- **WebRTC**: Self-hosted TURN/STUN server (coturn) — required for cross-NAT video calls
+- **Email**: Iranian SMTP infrastructure (optional)
 - **Video Infrastructure**: Local filesystem storage and streaming
-- **File Storage**: Local server filesystem
+- **File Storage**: Local server filesystem (`./uploads` volume mounted in Docker)
+
+## Key Files
+
+| File | Purpose |
+|---|---|
+| `server/isabel-voip-service.ts` | Isabel VoIP AMI integration (port 5038, asterisk-manager) |
+| `server/shetab-service.ts` | Iranian payment gateway |
+| `server/routes.ts` | All API routes including payment callback dispatch logic |
+| `server/database-storage.ts` | All database operations |
+| `shared/schema.ts` | Drizzle schema + LEAD_STAGE_TRANSITIONS map |
+| `Dockerfile` | Multi-stage production build |
+| `docker-compose.yml` | Production stack (app + postgres + redis) |
+| `.env.example` | Canonical reference for all environment variables |
+| `nginx-example.conf` | Production Nginx reverse proxy config |
+| `COMPREHENSIVE_DEPLOYMENT_GUIDE.md` | Step-by-step self-hosting guide (current, Docker-based) |
+| `scripts/deploy.sh` | Automated deployment script |
+| `scripts/backup-daily.sh` | Database + uploads backup script |
+| `install-ollama-iran.sh` | Ollama installation helper for Iranian servers |
