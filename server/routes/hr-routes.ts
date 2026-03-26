@@ -15,6 +15,7 @@ import { db } from "../db";
 import { eq, and, desc, sql, asc, gte, lte } from "drizzle-orm";
 import {
   employees, contracts, leaveRequests, payrollRecords, performanceReviews, performanceScores, users,
+  attendanceRecords,
   type InsertEmployee, type InsertContract, type InsertLeaveRequest,
   type InsertPayrollRecord, type InsertPerformanceReview, type InsertPerformanceScore,
 } from "@shared/schema";
@@ -510,8 +511,24 @@ router.post("/payroll/calculate", authenticate, isAdmin, async (req: AuthRequest
         .filter(l => l.leaveType === "unpaid")
         .reduce((s, l) => s + Number(l.daysRequested ?? 0), 0);
       const leaveDeductions = unpaidLeaveDays * dailyRate;
-      const grossPay = baseSalary - leaveDeductions;
-      const netPay = grossPay; // v1: no tax deduction
+
+      // Count actual present days from attendance records for this employee's user account
+      const [attendanceRow] = await db
+        .select({ presentDays: sql<number>`COUNT(DISTINCT DATE(${attendanceRecords.checkInTime}))` })
+        .from(attendanceRecords)
+        .where(
+          and(
+            eq(attendanceRecords.userId, emp.userId),
+            sql`${attendanceRecords.attendanceType} IN ('present', 'late')`,
+            gte(attendanceRecords.checkInTime, periodStart),
+            lte(attendanceRecords.checkInTime, periodEnd)
+          )
+        );
+      const presentDays = Number(attendanceRow?.presentDays ?? workingDaysInMonth - Math.round(leaveDays));
+      const absentDays = Math.max(0, workingDaysInMonth - presentDays - Math.round(leaveDays));
+      const absenceDeductions = absentDays * dailyRate;
+      const grossPay = baseSalary - leaveDeductions - absenceDeductions;
+      const netPay = grossPay;
 
       const existing = await db
         .select()
@@ -534,7 +551,7 @@ router.post("/payroll/calculate", authenticate, isAdmin, async (req: AuthRequest
             grossPay: grossPay.toFixed(2),
             netPay: netPay.toFixed(2),
             workingDays: workingDaysInMonth,
-            presentDays: workingDaysInMonth - Math.round(leaveDays),
+            presentDays,
             leavesDays: leaveDays.toFixed(1),
             updatedAt: new Date(),
           })
@@ -556,7 +573,7 @@ router.post("/payroll/calculate", authenticate, isAdmin, async (req: AuthRequest
             grossPay: grossPay.toFixed(2),
             netPay: netPay.toFixed(2),
             workingDays: workingDaysInMonth,
-            presentDays: workingDaysInMonth - Math.round(leaveDays),
+            presentDays,
             leavesDays: leaveDays.toFixed(1),
             status: "draft",
           })

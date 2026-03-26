@@ -31,6 +31,13 @@ interface Employee {
   role: string;
 }
 
+interface UserOption {
+  id: number;
+  firstName: string | null;
+  lastName: string | null;
+  role: string;
+}
+
 interface Contract {
   id: number;
   employeeId: number;
@@ -67,7 +74,7 @@ export default function HREmployeesPage() {
   const [contractForm, setContractForm] = useState<Record<string, string>>({});
 
   const { data: employees = [], isLoading } = useQuery<Employee[]>({ queryKey: ["/api/hr/employees"] });
-  const { data: users = [] } = useQuery<any[]>({ queryKey: ["/api/admin/users"] });
+  const { data: users = [] } = useQuery<UserOption[]>({ queryKey: ["/api/admin/users"] });
   const { data: expiringContracts = [] } = useQuery<Contract[]>({
     queryKey: ["/api/hr/employees/contracts/expiring"],
     queryFn: () => fetch("/api/hr/employees/contracts/expiring?days=30", { headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` } }).then(r => r.json()),
@@ -298,7 +305,7 @@ export default function HREmployeesPage() {
                 <Select onValueChange={v => setForm(f => ({ ...f, userId: v }))}>
                   <SelectTrigger><SelectValue placeholder="Select user..." /></SelectTrigger>
                   <SelectContent>
-                    {users.filter((u: any) => !["Student"].includes(u.role)).map((u: any) => (
+                    {users.filter((u: UserOption) => !["Student"].includes(u.role)).map((u: UserOption) => (
                       <SelectItem key={u.id} value={String(u.id)}>{u.firstName} {u.lastName} ({u.role})</SelectItem>
                     ))}
                   </SelectContent>

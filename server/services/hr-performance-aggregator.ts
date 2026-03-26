@@ -73,7 +73,7 @@ async function computeTeacherMetrics(
         SELECT 1 FROM courses c
         WHERE c.id = ${enrollments.courseId}
         AND c.instructor_id = ${userId}
-        AND ${enrollments.createdAt} BETWEEN ${periodStart} AND ${periodEnd}
+        AND ${enrollments.enrolledAt} BETWEEN ${periodStart} AND ${periodEnd}
       )`
     );
   const enrollCount = Number(teacherEnrollments?.count ?? 0);

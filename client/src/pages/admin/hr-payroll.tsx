@@ -57,11 +57,11 @@ export default function HRPayrollPage() {
 
   const calcMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/hr/employees/payroll/calculate", { year, month }),
-    onSuccess: (data: any) => {
+    onSuccess: (data: { calculatedCount: number; records: PayrollRecord[] }) => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees/payroll/period", year, month] });
-      toast({ title: `Payroll calculated for ${records.length > 0 ? data.calculatedCount : "all"} employees` });
+      toast({ title: `Payroll calculated for ${data.calculatedCount} employees` });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }),
   });
 
   const approveMutation = useMutation({
@@ -70,7 +70,7 @@ export default function HRPayrollPage() {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees/payroll/period", year, month] });
       toast({ title: "Payroll record approved" });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }),
   });
 
   const exportCSV = () => {

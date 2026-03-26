@@ -38,6 +38,18 @@ interface Employee {
   department: string | null;
 }
 
+interface AnomalyRecord {
+  id: number;
+  employeeId: number;
+  reviewYear: number;
+  reviewMonth: number;
+  overallScore: string | null;
+  anomalyDetails: string | null;
+  createdAt: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CURRENT_YEAR = new Date().getFullYear();
 const CURRENT_MONTH = new Date().getMonth() + 1;
@@ -64,7 +76,7 @@ export default function HRPerformancePage() {
     queryKey: ["/api/hr/employees"],
   });
 
-  const { data: anomalies = [] } = useQuery<any[]>({
+  const { data: anomalies = [] } = useQuery<AnomalyRecord[]>({
     queryKey: ["/api/hr/employees/performance/anomalies"],
   });
 
@@ -83,7 +95,7 @@ export default function HRPerformancePage() {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees/performance/anomalies"] });
       toast({ title: "Performance review generated" });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }),
   });
 
   const publishMutation = useMutation({
@@ -93,7 +105,7 @@ export default function HRPerformancePage() {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees", selectedEmployee, "performance"] });
       toast({ title: "Review published" });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }),
   });
 
   const selectedEmp = employees.find(e => e.id === selectedEmployee);
