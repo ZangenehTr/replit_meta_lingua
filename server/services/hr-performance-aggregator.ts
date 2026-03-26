@@ -84,6 +84,21 @@ async function computeTeacherMetrics(
     );
   const enrollCount = Number(teacherEnrollments?.count ?? 0);
 
+  // Session quality from AI Supervisor observations (overallRating 1-10 → 0-100)
+  const [obsRow] = await db
+    .select({ avgRating: sql<number>`AVG(CAST(${supervisionObservations.overallRating} AS FLOAT))`, obsCount: sql<number>`count(*)` })
+    .from(supervisionObservations)
+    .where(
+      and(
+        eq(supervisionObservations.teacherId, userId),
+        gte(supervisionObservations.observationDate, periodStart),
+        lte(supervisionObservations.observationDate, periodEnd)
+      )
+    );
+  const obsCount = Number(obsRow?.obsCount ?? 0);
+  const avgObsRating = obsRow?.avgRating != null ? Number(obsRow.avgRating) : null;
+
+  // Fall back to CallerN scoring events if no direct supervision observations
   const [scoringRow] = await db
     .select({ score: sql<number>`AVG(CAST(${callernScoringEvents.scoreImpact} AS FLOAT))` })
     .from(callernScoringEvents)
@@ -94,8 +109,13 @@ async function computeTeacherMetrics(
         lte(callernScoringEvents.createdAt, periodEnd)
       )
     );
-  const rawScore = Number(scoringRow?.score ?? 0);
-  const avgSessionScore = Math.min(100, Math.max(0, 50 + rawScore * 10));
+  const rawCallerNScore = Number(scoringRow?.score ?? 0);
+  const callerNQuality = Math.min(100, Math.max(0, 50 + rawCallerNScore * 10));
+
+  // Prefer AI Supervisor observation rating; fall back to CallerN scoring
+  const avgSessionScore = avgObsRating != null
+    ? Math.round(avgObsRating * 10) // 1-10 → 10-100 scale
+    : callerNQuality;
 
   const [sessions] = await db
     .select({ total: sql<number>`count(*)` })
@@ -121,9 +141,10 @@ async function computeTeacherMetrics(
     breakdown: {
       student_outcome_rate: Math.min(100, enrollCount * 10),
       session_quality_score: Math.round(avgSessionScore),
+      ai_supervisor_observations: obsCount,
       attendance_reliability: Math.min(100, attendanceScore),
     },
-    dataPoints: enrollCount + sessionCount,
+    dataPoints: enrollCount + sessionCount + obsCount,
   };
 }
 

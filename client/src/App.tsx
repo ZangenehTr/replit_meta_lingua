@@ -73,6 +73,7 @@ import VoIPCenter from "@/pages/callcenter/voip-center";
 import SubsystemPermissions from "@/pages/admin/subsystem-permissions";
 import HREmployeesPage from "@/pages/admin/hr-employees";
 import HRLeavePage from "@/pages/admin/hr-leave";
+import HrMyLeavePage from "@/pages/hr-my-leave";
 import HRPayrollPage from "@/pages/admin/hr-payroll";
 import HRPerformancePage from "@/pages/admin/hr-performance";
 import TeacherDashboardNew from "@/pages/teacher/dashboard";
@@ -575,6 +576,11 @@ function Router() {
       <Route path="/admin/hr/performance">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor']}>
           <HRPerformancePage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/hr/my-leave">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'teacher', 'mentor', 'call_center', 'accountant', 'front_desk']}>
+          <HrMyLeavePage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/callcenter">
