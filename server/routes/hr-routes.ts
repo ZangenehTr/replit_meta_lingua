@@ -236,14 +236,15 @@ router.post("/:id(\\d+)/contracts", authenticate, isAdmin, async (req: AuthReque
 // PUT update contract — Admin only
 router.put("/:empId(\\d+)/contracts/:contractId(\\d+)", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    const empId = parseInt(req.params.empId);
     const contractId = parseInt(req.params.contractId);
     const { salaryAmount, startDate, endDate, contractType, notes } = req.body;
     const [updated] = await db
       .update(contracts)
       .set({ salaryAmount, startDate, endDate, contractType, notes, updatedAt: new Date() })
-      .where(eq(contracts.id, contractId))
+      .where(and(eq(contracts.id, contractId), eq(contracts.employeeId, empId)))
       .returning();
-    if (!updated) { res.status(404).json({ message: "Contract not found" }); return; }
+    if (!updated) { res.status(404).json({ message: "Contract not found for this employee" }); return; }
     res.json(updated);
   } catch (err: unknown) {
     res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
@@ -253,14 +254,15 @@ router.put("/:empId(\\d+)/contracts/:contractId(\\d+)", authenticate, isAdmin, a
 // PUT terminate contract — Admin only
 router.put("/:empId(\\d+)/contracts/:contractId(\\d+)/terminate", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    const empId = parseInt(req.params.empId);
     const contractId = parseInt(req.params.contractId);
     const { notes } = req.body as { notes?: string };
     const [updated] = await db
       .update(contracts)
       .set({ status: "terminated", endDate: new Date().toISOString().split("T")[0], notes: notes ?? null, updatedAt: new Date() })
-      .where(eq(contracts.id, contractId))
+      .where(and(eq(contracts.id, contractId), eq(contracts.employeeId, empId)))
       .returning();
-    if (!updated) { res.status(404).json({ message: "Contract not found" }); return; }
+    if (!updated) { res.status(404).json({ message: "Contract not found for this employee" }); return; }
     res.json(updated);
   } catch (err: unknown) {
     res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
@@ -389,6 +391,7 @@ router.post("/leaves/self", authenticate, async (req: AuthRequest, res: Response
       res.status(404).json({ message: "No employee record found for your account. Contact HR." });
       return;
     }
+    const VALID_LEAVE_TYPES = ["annual", "sick", "emergency", "personal", "unpaid", "maternity", "paternity"];
     const { leaveType, startDate, endDate, daysRequested, reason } = req.body as {
       leaveType: string;
       startDate: string;
@@ -400,12 +403,25 @@ router.post("/leaves/self", authenticate, async (req: AuthRequest, res: Response
       res.status(400).json({ message: "leaveType, startDate, and endDate are required" });
       return;
     }
+    if (!VALID_LEAVE_TYPES.includes(leaveType)) {
+      res.status(400).json({ message: `Invalid leaveType. Must be one of: ${VALID_LEAVE_TYPES.join(", ")}` });
+      return;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      res.status(400).json({ message: "startDate must be on or before endDate" });
+      return;
+    }
+    const days = Number(daysRequested ?? 1);
+    if (!Number.isFinite(days) || days < 1) {
+      res.status(400).json({ message: "daysRequested must be a positive integer" });
+      return;
+    }
     const body: InsertLeaveRequest = {
       employeeId: emp.id,
       leaveType,
       startDate,
       endDate,
-      daysRequested: daysRequested ?? 1,
+      daysRequested: days,
       reason: reason ?? null,
       status: "pending",
     };
@@ -784,14 +800,15 @@ router.post("/:id(\\d+)/performance/generate", authenticate, isAdmin, async (req
 // Publish review — Admin only
 router.put("/:empId(\\d+)/performance/:reviewId(\\d+)/publish", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
+    const empId = parseInt(req.params.empId);
     const reviewId = parseInt(req.params.reviewId);
     const adminId = req.user!.id;
     const [updated] = await db
       .update(performanceReviews)
       .set({ status: "published", reviewedBy: adminId, updatedAt: new Date() })
-      .where(eq(performanceReviews.id, reviewId))
+      .where(and(eq(performanceReviews.id, reviewId), eq(performanceReviews.employeeId, empId)))
       .returning();
-    if (!updated) { res.status(404).json({ message: "Review not found" }); return; }
+    if (!updated) { res.status(404).json({ message: "Review not found for this employee" }); return; }
     res.json(updated);
   } catch (err: unknown) {
     res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
