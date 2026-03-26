@@ -31,12 +31,23 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Phone Number Normalization**: Centralized normalization to +98XXXXXXXXXX format.
 - **Key Features**: User & Course Management, payment & wallet system, AI Integration (adaptive micro-sessions, content generation via Ollama, AI Lesson Generator, AI Supervisor for video calls, AI 24/7 Sales Agent), Video & Communication (24/7 on-demand video tutoring via WebRTC, screen sharing, call recording, AI features like live vocab/auto-transcript/grammar rewrite, VoIP), Gamification (XP/level system, achievements), Testing System (8 question types, MST Placement Test), Unified Class Scheduling, CMS Platform (Blog, Video, Media library), CallerN Storage Layer for session management, roadmap tracking, and OTP Service (SMS).
 
-### Payment & Enrollment Pipeline (Fixed)
-- **Shetab callback** (`POST /api/payments/shetab/callback`) — after verifying the bank transaction, dispatches by `transactionId` prefix:
-  - `COURSE_*` → calls `updateCoursePaymentStatus(..., 'completed')` which triggers enrollment, awards XP, and sends notification. Redirects to `/courses`.
-  - `WALLET_*` → calls `updateWalletTransactionStatus(..., 'completed')` which credits wallet balance for top-up transactions. Redirects to `/student/wallet`.
-- **Enroll route** (`POST /api/courses/:id/enroll`) — gated: paid courses (price > 0) return HTTP 400 pointing to the payment endpoint; duplicate enrollments return HTTP 409. Free courses (price = 0) enroll directly.
-- **Callback URL** (critical): must be registered in Shetab merchant portal as exactly `/api/payments/shetab/callback` (plural `payments`, with `/shetab/` in the path).
+### Payment & Enrollment Pipeline (Multi-Gateway)
+- **Active gateway** is read from `adminSettings.activePaymentGateway` (default: `shetab`).
+- **Gateway factory** at `server/payment/gateway-factory.ts` returns the active `PaymentGateway` implementation.
+- **Supported gateways**: `shetab`, `zarinpal`, `idpay`, `zibal`, `mellat` (mellat UI only, no SOAP yet).
+- **Wallet topup** and **course enroll** routes both use `getActiveGateway()` — no longer hardcoded to Shetab.
+- **Shetab callback** (legacy, unchanged): `POST /api/payments/shetab/callback` — dispatches by `transactionId` prefix:
+  - `COURSE_*` → calls `updateCoursePaymentStatus(..., 'completed')`. Redirects to `/courses`.
+  - `WALLET_*` → calls `updateWalletTransactionStatus(..., 'completed')`. Redirects to `/student/wallet`.
+- **New gateway callbacks**:
+  - `GET /api/payments/zarinpal/callback` — verifies Authority, dispatches by orderId prefix.
+  - `POST /api/payments/idpay/callback` — verifies id+order_id, dispatches by orderId prefix.
+  - `GET /api/payments/zibal/callback` — verifies trackId+orderId, dispatches by orderId prefix.
+- **Admin config UI**: `/admin/payment-gateway` — select active gateway, configure credentials, test connectivity.
+- **Admin API**: `GET/PUT /api/admin/payment-gateway/config`, `POST /api/admin/payment-gateway/test`.
+- **Gateway transactionId storage**: Stored in `walletTransactions.shetabTransactionId` / `coursePayments.gatewayTransactionId` for Zarinpal authority lookup during callbacks.
+- **New schema fields**: `adminSettings` gains 15 gateway config columns; `walletTransactions` gains `gatewayName`; `coursePayments` gains `merchantTransactionId`, `gatewayTransactionId`, `gatewayReferenceNumber`, `gatewayName`, `cardNumber`, `originalPrice`, `discountPercentage`, `finalPrice`, `creditsAwarded`.
+- **Enroll route** (`POST /api/courses/enroll`) — accepts paymentMethod: `wallet | shetab | zarinpal | idpay | zibal | mellat | gateway`. Free courses (price = 0) enroll directly. Wallet payment immediate.
 
 ### Isabel VoIP Integration (Issabel PBX)
 - **Protocol**: AMI (Asterisk Manager Interface) TCP on **port 5038** — not SIP port 5060, not HTTP.

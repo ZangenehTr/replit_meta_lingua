@@ -346,6 +346,26 @@ export const adminSettings = pgTable("admin_settings", {
   aiOllamaUrl: varchar("ai_ollama_url", { length: 255 }),
   whisperProvider: varchar("whisper_provider", { length: 50 }).default("faster-whisper"),
   whisperUrl: varchar("whisper_url", { length: 255 }),
+  // Multi-gateway payment configuration
+  activePaymentGateway: varchar("active_payment_gateway", { length: 50 }).default("shetab"),
+  // Zarinpal
+  zarinpalMerchantId: varchar("zarinpal_merchant_id", { length: 255 }),
+  zarinpalEnabled: boolean("zarinpal_enabled").default(false),
+  zarinpalSandbox: boolean("zarinpal_sandbox").default(true),
+  // IDPay
+  idpayApiKey: varchar("idpay_api_key", { length: 255 }),
+  idpayEnabled: boolean("idpay_enabled").default(false),
+  idpaySandbox: boolean("idpay_sandbox").default(true),
+  // Zibal
+  zibalMerchantId: varchar("zibal_merchant_id", { length: 255 }),
+  zibalEnabled: boolean("zibal_enabled").default(false),
+  zibalSandbox: boolean("zibal_sandbox").default(true),
+  // Mellat
+  mellatTerminalId: varchar("mellat_terminal_id", { length: 255 }),
+  mellatUsername: varchar("mellat_username", { length: 255 }),
+  mellatPassword: text("mellat_password"),
+  mellatEnabled: boolean("mellat_enabled").default(false),
+  mellatSandbox: boolean("mellat_sandbox").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -424,6 +444,7 @@ export const walletTransactions = pgTable("wallet_transactions", {
   shetabReferenceNumber: varchar("shetab_reference_number", { length: 255 }),
   cardNumber: varchar("card_number", { length: 20 }),
   gatewayResponse: jsonb("gateway_response"),
+  gatewayName: varchar("gateway_name", { length: 50 }).default("shetab"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at")
 });
@@ -450,6 +471,15 @@ export const coursePayments = pgTable("course_payments", {
   currency: varchar("currency", { length: 3 }).default("IRR"),
   paymentMethod: varchar("payment_method", { length: 50 }),
   status: varchar("status", { length: 20 }).default("pending"),
+  merchantTransactionId: varchar("merchant_transaction_id", { length: 255 }),
+  gatewayTransactionId: varchar("gateway_transaction_id", { length: 255 }),
+  gatewayReferenceNumber: varchar("gateway_reference_number", { length: 255 }),
+  gatewayName: varchar("gateway_name", { length: 50 }).default("shetab"),
+  cardNumber: varchar("card_number", { length: 20 }),
+  originalPrice: decimal("original_price", { precision: 10, scale: 2 }),
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }),
+  finalPrice: decimal("final_price", { precision: 10, scale: 2 }),
+  creditsAwarded: integer("credits_awarded").default(0),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()

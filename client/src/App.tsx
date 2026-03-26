@@ -49,6 +49,7 @@ import AiTrainingDashboard from "@/pages/admin/ai-training";
 import AIServicesManagement from "@/pages/admin/AIServicesManagement";
 import { GameAccessControl } from "@/pages/admin/game-access-control";
 import AdminTeacherPaymentsPage from "@/pages/admin/teacher-payments";
+import PaymentGatewayConfigPage from "@/pages/admin/payment-gateway-config";
 import WhiteLabelPage from "@/pages/admin/white-label";
 import FontManagementPage from "@/pages/admin/font-management";
 import SupervisionPage from "@/pages/admin/supervision";
@@ -378,6 +379,11 @@ function Router() {
       <Route path="/admin/financial-reports">
         <RoleProtectedRoute allowedRoles={["admin", "accountant"]}>
           <FinancialReportsPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/payment-gateway">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <PaymentGatewayConfigPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/ai-training">

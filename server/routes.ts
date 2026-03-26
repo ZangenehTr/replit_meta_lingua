@@ -6366,44 +6366,45 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         merchantTransactionId: `WALLET_${Date.now()}_${req.user.id}`
       });
 
-      // Import Shetab service for payment processing
-      const { createShetabService } = await import('./shetab-service');
-      const shetabService = createShetabService();
-      
-      if (!shetabService) {
+      // Use active payment gateway for wallet top-up
+      const { getActiveGateway } = await import('./payment/gateway-factory');
+      const gateway = await getActiveGateway();
+
+      if (!gateway) {
         return res.status(503).json({ 
           message: "Payment gateway not configured. Please contact support." 
         });
       }
 
-      // Initialize Shetab payment for wallet top-up
-      const paymentRequest = {
+      const base = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const callbackUrl = `${base}/api/payments/${gateway.name}/callback`;
+
+      const initResult = await gateway.initiate({
         amount,
         orderId: transaction.merchantTransactionId!,
         description: `Wallet Top-up - ${amount.toLocaleString('fa-IR')} IRR`,
-        customerEmail: req.user.email,
-        customerPhone: req.user.phoneNumber,
-        metadata: { 
-          transactionId: transaction.id, 
-          type: 'wallet_topup' 
-        }
-      };
+        callbackUrl,
+        customerEmail: req.user.email || undefined,
+        customerPhone: req.user.phoneNumber || undefined,
+        metadata: { transactionId: transaction.id, userId: req.user.id, type: 'wallet_topup' }
+      });
 
-      // Real Shetab gateway integration - redirect user to payment page
-      const ipAddress = req.ip || req.connection.remoteAddress;
-      const userAgent = req.get('User-Agent');
-      
-      const result = await shetabService.initializePayment(
-        req.user.id,
-        paymentRequest,
-        ipAddress,
-        userAgent
-      );
+      if (!initResult.success) {
+        return res.status(502).json({ message: initResult.error || "Gateway rejected payment initiation" });
+      }
+
+      // Store gateway transactionId for callback lookup (e.g. Zarinpal authority)
+      if (initResult.transactionId) {
+        await db.update(walletTransactions)
+          .set({ shetabTransactionId: initResult.transactionId, gatewayName: gateway.name })
+          .where(eq(walletTransactions.id, transaction.id));
+      }
 
       res.json({
         success: true,
-        paymentUrl: result.gatewayUrl,
-        transactionId: result.payment.merchantTransactionId,
+        paymentUrl: initResult.gatewayUrl,
+        transactionId: transaction.merchantTransactionId,
+        gateway: gateway.name,
         message: "Redirecting to payment gateway",
         transaction
       });
@@ -6434,7 +6435,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         return res.status(400).json({ message: "Course ID and payment method required" });
       }
 
-      if (!['wallet', 'shetab'].includes(paymentMethod)) {
+      if (!['wallet', 'shetab', 'zarinpal', 'idpay', 'zibal', 'mellat', 'gateway'].includes(paymentMethod)) {
         return res.status(400).json({ message: "Invalid payment method" });
       }
 
@@ -6479,44 +6480,45 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           payment: coursePayment
         });
       } else {
-        // For Shetab payment, return payment URL
-        const { createShetabService } = await import('./shetab-service');
-        const shetabService = createShetabService();
-        
-        if (!shetabService) {
+        // For gateway payment, use active payment gateway
+        const { getActiveGateway } = await import('./payment/gateway-factory');
+        const gateway = await getActiveGateway();
+
+        if (!gateway) {
           return res.status(503).json({ 
             message: "Payment gateway not configured. Please contact support." 
           });
         }
 
-        // Real Shetab gateway integration for course payment
-        const ipAddress = req.ip || req.connection.remoteAddress;
-        const userAgent = req.get('User-Agent');
-        
-        const paymentRequest = {
+        const base = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+        const callbackUrl = `${base}/api/payments/${gateway.name}/callback`;
+
+        const initResult = await gateway.initiate({
           amount: priceData.finalPrice,
           orderId: coursePayment.merchantTransactionId!,
-          description: `Course Enrollment Payment - ${priceData.finalPrice.toLocaleString('fa-IR')} IRR`,
-          customerEmail: req.user.email,
-          customerPhone: req.user.phoneNumber,
-          metadata: {
-            paymentId: coursePayment.id,
-            courseId,
-            type: 'course_enrollment'
-          }
-        };
+          description: `Course Enrollment - ${priceData.finalPrice.toLocaleString('fa-IR')} IRR`,
+          callbackUrl,
+          customerEmail: req.user.email || undefined,
+          customerPhone: req.user.phoneNumber || undefined,
+          metadata: { paymentId: coursePayment.id, courseId, userId: req.user.id, type: 'course_enrollment' }
+        });
 
-        const result = await shetabService.initializePayment(
-          req.user.id,
-          paymentRequest,
-          ipAddress,
-          userAgent
-        );
+        if (!initResult.success) {
+          return res.status(502).json({ message: initResult.error || "Gateway rejected payment initiation" });
+        }
+
+        // Store gateway transactionId for callback lookup (e.g. Zarinpal authority)
+        if (initResult.transactionId) {
+          await db.update(coursePayments)
+            .set({ gatewayTransactionId: initResult.transactionId, gatewayName: gateway.name })
+            .where(eq(coursePayments.id, coursePayment.id));
+        }
 
         res.json({
           success: true,
-          paymentUrl: result.gatewayUrl,
-          transactionId: result.payment.merchantTransactionId,
+          paymentUrl: initResult.gatewayUrl,
+          transactionId: coursePayment.merchantTransactionId,
+          gateway: gateway.name,
           message: "Redirecting to payment gateway",
           payment: coursePayment
         });
@@ -24260,6 +24262,12 @@ Meta Lingua Academy`;
   // Setup Phase 2 AI routes (Persian NLP, Real-time Processing, Knowledge RAG)
   const { registerPhase2AIRoutes } = await import('./ai-phase2-routes');
   registerPhase2AIRoutes(app);
+
+  // Multi-gateway payment routes (Zarinpal, IDPay, Zibal callbacks + admin config)
+  const { registerPaymentGatewayRoutes } = await import('./payment/payment-gateway-routes');
+  registerPaymentGatewayRoutes(app, authenticateToken, requireRole);
+  console.log('✅ Multi-gateway payment routes registered (Zarinpal, IDPay, Zibal)');
+
 
   // ===== STUDENT ENROLLMENT STATUS API =====
   

@@ -747,15 +747,15 @@ export function AdminFinancial() {
                   </div>
                   <Badge className="bg-green-100 text-green-800">{t('admin:financial.active')}</Badge>
                 </div>
-                
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium">International Credit Cards</h4>
-                    <p className="text-sm text-gray-600">Visa, Mastercard, etc.</p>
+                    <h4 className="font-medium">Zarinpal / IDPay / Zibal</h4>
+                    <p className="text-sm text-gray-600">درگاه‌های پرداخت ایرانی</p>
                   </div>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
+                  <a href="/admin/payment-gateway" className="text-sm text-primary underline">
+                    {t('common.configure', 'Configure')}
+                  </a>
                 </div>
-
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Bank Transfer</h4>
