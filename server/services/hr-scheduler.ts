@@ -1,28 +1,43 @@
 /**
  * HR Performance Scheduler
  *
- * Uses setInterval to schedule monthly performance review generation for all
- * active employees. In production this runs once per day and only generates
- * reviews for the current month if they have not been generated yet.
- *
- * BullMQ / Redis is optional: if REDIS_HOST is not set we fall back to an
- * in-process cron-like interval (runs the job on server start + daily).
+ * Uses BullMQ repeatable jobs (monthly cron) to auto-generate missing
+ * performance reviews for all active employees.
+ * Falls back gracefully to setInterval when Redis is unavailable (dev/test).
  */
 
+import { Queue, Worker, type Job } from "bullmq";
 import { db } from "../db";
 import { eq, and } from "drizzle-orm";
-import { employees, performanceReviews } from "@shared/schema";
+import { employees, performanceReviews, type InsertPerformanceReview } from "@shared/schema";
 import { computeEmployeeMetrics } from "./hr-performance-aggregator";
 import { generateAiNarrative, type AiNarrativeResult } from "./hr-ai-narratives";
-import type { InsertPerformanceReview } from "@shared/schema";
+import { redisConnection } from "./queue-service";
 
-const SCHEDULE_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const QUEUE_NAME = "hr-performance-reviews";
 
-async function generateMissingReviews(year: number, month: number): Promise<void> {
-  const activeEmployees = await db.select().from(employees).where(eq(employees.status, "active"));
+// ─── Job payload ─────────────────────────────────────────────────────────────
 
-  for (const emp of activeEmployees) {
-    const existing = await db
+interface HrReviewJobData {
+  year: number;
+  month: number;
+}
+
+// ─── Core logic (shared by BullMQ worker and setInterval fallback) ─────────
+
+async function generateMissingReviewsForMonth(year: number, month: number): Promise<void> {
+  console.log(`[HR Scheduler] Generating missing reviews for ${year}-${String(month).padStart(2, "0")} …`);
+
+  const allActive = await db
+    .select()
+    .from(employees)
+    .where(eq(employees.status, "active"));
+
+  let generated = 0;
+  let skipped = 0;
+
+  for (const emp of allActive) {
+    const [existing] = await db
       .select({ id: performanceReviews.id })
       .from(performanceReviews)
       .where(
@@ -34,7 +49,7 @@ async function generateMissingReviews(year: number, month: number): Promise<void
       )
       .limit(1);
 
-    if (existing.length > 0) continue; // Already generated this month
+    if (existing) { skipped++; continue; }
 
     try {
       const metrics = await computeEmployeeMetrics(emp.id, year, month);
@@ -52,6 +67,7 @@ async function generateMissingReviews(year: number, month: number): Promise<void
         improvementPlan: aiResult.improvementPlan,
         anomalyDetected: aiResult.anomalyDetected,
         anomalyDetails: aiResult.anomalyDetails,
+        adminNotified: aiResult.anomalyDetected,
         previousMonthScore: aiResult.previousMonthScore != null ? String(aiResult.previousMonthScore) : null,
         threeMonthAvgScore: aiResult.threeMonthAvgScore != null ? String(aiResult.threeMonthAvgScore) : null,
         generatedAt: new Date(),
@@ -59,49 +75,114 @@ async function generateMissingReviews(year: number, month: number): Promise<void
       };
 
       await db.insert(performanceReviews).values(reviewData);
+      generated++;
       console.log(`[HR Scheduler] Generated review for employee ${emp.id} (${year}-${month})`);
-    } catch (err) {
-      console.error(`[HR Scheduler] Failed to generate review for employee ${emp.id}:`, err);
+    } catch (err: unknown) {
+      console.error(`[HR Scheduler] Failed for employee ${emp.id}:`, err instanceof Error ? err.message : err);
     }
+  }
+
+  console.log(`[HR Scheduler] ${year}-${month}: generated=${generated}, skipped=${skipped}`);
+}
+
+// ─── Period helper ────────────────────────────────────────────────────────────
+
+function getPreviousMonthPeriod(): { year: number; month: number } {
+  const now = new Date();
+  const month = now.getMonth() === 0 ? 12 : now.getMonth();
+  const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  return { year, month };
+}
+
+// ─── BullMQ scheduler ─────────────────────────────────────────────────────────
+
+let hrQueue: Queue | null = null;
+let hrWorker: Worker | null = null;
+
+async function setupBullMQScheduler(): Promise<void> {
+  hrQueue = new Queue<HrReviewJobData>(QUEUE_NAME, { connection: redisConnection });
+
+  hrWorker = new Worker<HrReviewJobData>(
+    QUEUE_NAME,
+    async (job: Job<HrReviewJobData>) => {
+      const { year, month } = job.data;
+      // Cron jobs carry static payload; compute previous month when cron fires
+      const period = (year === 0 && month === 0) ? getPreviousMonthPeriod() : { year, month };
+      await generateMissingReviewsForMonth(period.year, period.month);
+    },
+    { connection: redisConnection, concurrency: 1 }
+  );
+
+  hrWorker.on("completed", (job) => {
+    console.log(`[HR Scheduler] BullMQ job ${job.id} completed`);
+  });
+  hrWorker.on("failed", (job, err) => {
+    console.error(`[HR Scheduler] BullMQ job ${job?.id} failed:`, err.message);
+  });
+
+  // Monthly repeatable job: 03:00 on the 1st of every month
+  await hrQueue.add(
+    "monthly-review-generation",
+    { year: 0, month: 0 },
+    {
+      repeat: { pattern: "0 3 1 * *" },
+      jobId: "hr-monthly-cron",
+      removeOnComplete: { count: 5 },
+      removeOnFail: { count: 10 },
+    }
+  );
+
+  // Startup backfill: generate prior-month reviews 5 minutes after server start
+  const { year, month } = getPreviousMonthPeriod();
+  await hrQueue.add(
+    "startup-backfill",
+    { year, month },
+    {
+      delay: 5 * 60 * 1000,
+      jobId: `hr-backfill-${year}-${month}`,
+      removeOnComplete: true,
+      removeOnFail: { count: 3 },
+    }
+  );
+
+  console.log("✅ [HR Scheduler] BullMQ scheduler registered (monthly cron + startup backfill)");
+}
+
+// ─── setInterval fallback ────────────────────────────────────────────────────
+
+function setupFallbackScheduler(): void {
+  console.log("[HR Scheduler] Redis unavailable — using setInterval fallback");
+
+  const runBackfill = async (): Promise<void> => {
+    const { year, month } = getPreviousMonthPeriod();
+    await generateMissingReviewsForMonth(year, month);
+  };
+
+  setTimeout(() => {
+    runBackfill().catch(console.error);
+    setInterval(() => runBackfill().catch(console.error), 24 * 60 * 60 * 1000);
+  }, 5 * 60 * 1000);
+
+  console.log("✅ [HR Scheduler] setInterval fallback initialized (runs daily)");
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+export async function startHrScheduler(): Promise<void> {
+  try {
+    await setupBullMQScheduler();
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[HR Scheduler] BullMQ unavailable (${msg}), falling back to setInterval`);
+    setupFallbackScheduler();
   }
 }
 
-function shouldRunThisMonth(): boolean {
-  // Only run if we are in the last 5 days of the month or the first 3 days (to catch prior month)
-  const today = new Date();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const dayOfMonth = today.getDate();
-  return dayOfMonth >= daysInMonth - 4 || dayOfMonth <= 3;
-}
-
-export function startHrScheduler(): void {
-  const run = async () => {
-    try {
-      const now = new Date();
-      let year = now.getFullYear();
-      let month = now.getMonth() + 1;
-
-      // If we're in the first 3 days of the month, generate for the previous month too
-      if (now.getDate() <= 3) {
-        const prev = new Date(year, month - 2, 1);
-        console.log(`[HR Scheduler] Running end-of-month generation for ${prev.getFullYear()}-${prev.getMonth() + 1}`);
-        await generateMissingReviews(prev.getFullYear(), prev.getMonth() + 1);
-      }
-
-      if (shouldRunThisMonth()) {
-        console.log(`[HR Scheduler] Running performance generation for ${year}-${month}`);
-        await generateMissingReviews(year, month);
-      }
-    } catch (err) {
-      console.error("[HR Scheduler] Error during scheduled run:", err);
-    }
-  };
-
-  // Run once shortly after startup (5-minute delay to let app stabilize)
-  setTimeout(run, 5 * 60 * 1000);
-
-  // Then run every 24 hours
-  setInterval(run, SCHEDULE_INTERVAL_MS);
-
-  console.log("✅ HR Performance Scheduler initialized (runs daily, generates reviews at month-end)");
+export async function stopHrScheduler(): Promise<void> {
+  try {
+    await hrWorker?.close();
+    await hrQueue?.close();
+  } catch {
+    // Best-effort cleanup
+  }
 }

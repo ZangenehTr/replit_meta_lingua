@@ -366,6 +366,9 @@ export const adminSettings = pgTable("admin_settings", {
   mellatPassword: text("mellat_password"),
   mellatEnabled: boolean("mellat_enabled").default(false),
   mellatSandbox: boolean("mellat_sandbox").default(true),
+  // HR Module configuration
+  hrAnomalyThreshold: decimal("hr_anomaly_threshold", { precision: 5, scale: 2 }).default("15"), // points drop to trigger anomaly alert
+  hrAnomalyNotifyAdmin: boolean("hr_anomaly_notify_admin").default(true), // queue admin notification on anomaly
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

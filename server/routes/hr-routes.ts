@@ -343,6 +343,62 @@ router.post("/:id(\\d+)/leaves", authenticate, isAdmin, async (req: AuthRequest,
   }
 });
 
+// POST self-service leave submission — any authenticated employee
+// Staff submit their OWN leave requests; the route resolves their employee record from JWT identity.
+router.post("/leaves/self", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const [emp] = await db.select().from(employees).where(eq(employees.userId, userId));
+    if (!emp) {
+      res.status(404).json({ message: "No employee record found for your account. Contact HR." });
+      return;
+    }
+    const { leaveType, startDate, endDate, daysRequested, reason, notes } = req.body as {
+      leaveType: string;
+      startDate: string;
+      endDate: string;
+      daysRequested?: number;
+      reason?: string;
+      notes?: string;
+    };
+    if (!leaveType || !startDate || !endDate) {
+      res.status(400).json({ message: "leaveType, startDate, and endDate are required" });
+      return;
+    }
+    const body: InsertLeaveRequest = {
+      employeeId: emp.id,
+      leaveType,
+      startDate,
+      endDate,
+      daysRequested: daysRequested ?? 1,
+      reason: reason ?? null,
+      notes: notes ?? null,
+      status: "pending",
+    };
+    const [created] = await db.insert(leaveRequests).values(body).returning();
+    res.status(201).json(created);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
+// GET self — employee views their own leave history
+router.get("/leaves/self", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const [emp] = await db.select().from(employees).where(eq(employees.userId, userId));
+    if (!emp) { res.status(404).json({ message: "No employee record found" }); return; }
+    const rows = await db
+      .select()
+      .from(leaveRequests)
+      .where(eq(leaveRequests.employeeId, emp.id))
+      .orderBy(desc(leaveRequests.createdAt));
+    res.json(rows);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
 // PUT review (approve/reject) leave — Admin + Supervisor
 router.put("/leaves/:leaveId(\\d+)/review", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {

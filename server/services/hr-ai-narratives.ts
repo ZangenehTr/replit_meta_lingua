@@ -1,15 +1,16 @@
 /**
  * HR AI Narratives Service
- * Uses Ollama (or OpenAI fallback) to generate monthly performance summaries,
- * improvement plans, and anomaly notifications for HR.
+ * Generates monthly performance narratives, improvement plans, and anomaly alerts.
+ * Anomaly threshold is configurable via admin_settings.hr_anomaly_threshold.
  */
 
 import { db } from "../db";
 import { eq, and, desc } from "drizzle-orm";
-import { users, employees, performanceReviews } from "@shared/schema";
+import { users, employees, performanceReviews, adminSettings } from "@shared/schema";
 import { ollamaService } from "../ollama-service";
+import { notificationQueue } from "./queue-service";
 
-const PERFORMANCE_DROP_THRESHOLD = 15; // points below 3-month average
+const DEFAULT_ANOMALY_THRESHOLD = 15; // points below 3-month average
 
 export interface AiNarrativeResult {
   narrative: string;
@@ -18,6 +19,25 @@ export interface AiNarrativeResult {
   anomalyDetails: string | null;
   threeMonthAvgScore: number | null;
   previousMonthScore: number | null;
+}
+
+/** Read configurable threshold + notification preference from adminSettings. */
+async function getHrConfig(): Promise<{ threshold: number; notifyAdmin: boolean }> {
+  try {
+    const [settings] = await db.select({
+      hrAnomalyThreshold: adminSettings.hrAnomalyThreshold,
+      hrAnomalyNotifyAdmin: adminSettings.hrAnomalyNotifyAdmin,
+    }).from(adminSettings).limit(1);
+
+    return {
+      threshold: settings?.hrAnomalyThreshold != null
+        ? Number(settings.hrAnomalyThreshold)
+        : DEFAULT_ANOMALY_THRESHOLD,
+      notifyAdmin: settings?.hrAnomalyNotifyAdmin ?? true,
+    };
+  } catch {
+    return { threshold: DEFAULT_ANOMALY_THRESHOLD, notifyAdmin: true };
+  }
 }
 
 export async function generateAiNarrative(
@@ -33,6 +53,8 @@ export async function generateAiNarrative(
   const employeeName = user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() : "Staff member";
   const role = user?.role ?? "Staff";
   const monthName = new Date(year, month - 1, 1).toLocaleString("en", { month: "long" });
+
+  const { threshold, notifyAdmin } = await getHrConfig();
 
   // Get 3-month history for anomaly detection (published reviews only)
   const history = await db
@@ -57,9 +79,9 @@ export async function generateAiNarrative(
     history.length > 0 ? Number(history[0].overallScore ?? 0) : null;
 
   const anomalyDetected =
-    threeMonthAvgScore !== null && overallScore < threeMonthAvgScore - PERFORMANCE_DROP_THRESHOLD;
+    threeMonthAvgScore !== null && overallScore < threeMonthAvgScore - threshold;
   const anomalyDetails: string | null = anomalyDetected
-    ? `Score dropped ${(threeMonthAvgScore! - overallScore).toFixed(1)} points below 3-month average of ${threeMonthAvgScore!.toFixed(1)}.`
+    ? `Score dropped ${(threeMonthAvgScore! - overallScore).toFixed(1)} points below the ${threshold}-point threshold (3-month avg: ${threeMonthAvgScore!.toFixed(1)}).`
     : null;
 
   const metricLines = Object.entries(metrics)
@@ -103,6 +125,30 @@ Format: plain text bullet points starting with "•". No headers.`;
       improvementPlan = await ollamaService.generateText(improvementPrompt);
     } catch {
       improvementPlan = `• Schedule a 1-on-1 review session to discuss performance goals.\n• Identify specific training resources to address weak metric areas.\n• Set weekly check-in milestones to track improvement over 30 days.`;
+    }
+  }
+
+  // Notify admin via queue if anomaly detected and notification is enabled
+  if (anomalyDetected && notifyAdmin) {
+    try {
+      await notificationQueue.add("hr-anomaly-alert", {
+        type: "hr_performance_anomaly",
+        employeeId,
+        employeeName,
+        role,
+        year,
+        month,
+        overallScore,
+        threeMonthAvgScore,
+        anomalyDetails,
+        generatedAt: new Date().toISOString(),
+      }, {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 2000 },
+      });
+    } catch (queueErr) {
+      // Non-critical: log but don't fail the review generation
+      console.warn("[HR Narratives] Could not enqueue anomaly notification:", queueErr);
     }
   }
 

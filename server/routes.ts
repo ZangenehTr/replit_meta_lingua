@@ -28431,9 +28431,9 @@ Meta Lingua Academy`;
   app.use('/api/hr/employees', hrRoutes);
   console.log('✅ HR Module routes registered (Employees, Contracts, Leave, Payroll, Performance)');
 
-  // HR Scheduler — monthly performance review auto-generation
+  // HR Scheduler — monthly performance review auto-generation (BullMQ with setInterval fallback)
   const { startHrScheduler } = await import('./services/hr-scheduler');
-  startHrScheduler();
+  await startHrScheduler();
 
   return app;
 }
