@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,9 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
-import { Bot, AlertTriangle, TrendingUp, RefreshCw, Eye, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Bot, AlertTriangle, TrendingUp, RefreshCw, Eye, CheckCircle, Settings2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 interface PerformanceReview {
@@ -75,9 +77,36 @@ export default function HRPerformancePage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [month, setMonth] = useState(CURRENT_MONTH);
   const [detailReview, setDetailReview] = useState<PerformanceReview | null>(null);
+  const [thresholdForm, setThresholdForm] = useState({ anomaly: "15", improvement: "60" });
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/hr/employees"],
+  });
+
+  const { data: adminSettings } = useQuery<Record<string, unknown>>({
+    queryKey: ["/api/admin/settings"],
+    enabled: isAdmin,
+  });
+
+  useEffect(() => {
+    if (adminSettings) {
+      setThresholdForm({
+        anomaly: String(adminSettings.hrAnomalyThreshold ?? 15),
+        improvement: String(adminSettings.hrImprovementThreshold ?? 60),
+      });
+    }
+  }, [adminSettings]);
+
+  const saveThresholdsMutation = useMutation({
+    mutationFn: () => apiRequest("/api/admin/settings", { method: "PATCH", body: {
+      hrAnomalyThreshold: thresholdForm.anomaly,
+      hrImprovementThreshold: thresholdForm.improvement,
+    }}),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      toast({ title: "HR thresholds updated" });
+    },
+    onError: (e: unknown) => toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }),
   });
 
   const { data: anomalies = [] } = useQuery<AnomalyRecord[]>({
@@ -123,6 +152,33 @@ export default function HRPerformancePage() {
         </div>
         <Link href="/admin/hr/employees"><Button variant="outline">← Employees</Button></Link>
       </div>
+
+      {isAdmin && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2"><Settings2 className="h-4 w-4" /> HR Evaluation Thresholds</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-6 items-end">
+              <div className="space-y-1">
+                <Label className="text-xs">Anomaly Alert Threshold (score drop, pts)</Label>
+                <Input type="number" min={0} max={100} step={1} className="w-32" value={thresholdForm.anomaly}
+                  onChange={e => setThresholdForm(f => ({ ...f, anomaly: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">Drop vs 3-month avg that triggers alert</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Improvement Plan Threshold (absolute score)</Label>
+                <Input type="number" min={0} max={100} step={1} className="w-32" value={thresholdForm.improvement}
+                  onChange={e => setThresholdForm(f => ({ ...f, improvement: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">Scores below this trigger a 30-day plan</p>
+              </div>
+              <Button size="sm" onClick={() => saveThresholdsMutation.mutate()} disabled={saveThresholdsMutation.isPending}>
+                {saveThresholdsMutation.isPending ? "Saving…" : "Save Thresholds"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {anomalies.length > 0 && (
         <Card className="border-orange-200 bg-orange-50">
