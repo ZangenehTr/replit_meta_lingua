@@ -160,13 +160,16 @@ async function handleUnifiedCallback(
         break;
       }
       case 'idpay': {
-        const body = req.body as Record<string, string>;
-        const { id, order_id, status } = body;
+        const body = req.body as Record<string, unknown>;
+        const id = String(body.id ?? '');
+        const order_id = String(body.order_id ?? '');
+        // IDPay delivers status as either numeric 10 or string "10" — normalize
+        const statusCode = String(body.status ?? '');
         if (!order_id) {
           res.redirect(`${frontendUrl}/dashboard?payment=failed`);
           return;
         }
-        if (status !== '10') {
+        if (statusCode !== '10') {
           await handleGatewayCallback('idpay', order_id, id ?? '', undefined, {}, 'failed', res);
           return;
         }

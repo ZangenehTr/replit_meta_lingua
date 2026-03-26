@@ -88,7 +88,7 @@ export class IDPayAdapter implements PaymentGateway {
 
       return {
         success: false,
-        status: result.status === 2 ? 'cancelled' : 'failed',
+        status: String(result.status) === '2' ? 'cancelled' : 'failed',
         error: (result.error_message as string) ?? `IDPay verify error: ${result.error_code}`,
       };
     } catch (error: unknown) {
