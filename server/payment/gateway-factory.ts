@@ -34,6 +34,9 @@ export async function getActiveGateway(): Promise<PaymentGateway | null> {
         return createIDPayAdapter(settings, buildCallbackUrl('idpay'));
       case 'zibal':
         return createZibalAdapter(settings, buildCallbackUrl('zibal'));
+      case 'mellat':
+        console.error('Mellat gateway selected but not yet implemented. Please choose another gateway.');
+        return null;
       case 'shetab':
       default: {
         const { createShetabService } = await import('../shetab-service.js');

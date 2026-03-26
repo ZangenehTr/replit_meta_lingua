@@ -386,6 +386,11 @@ function Router() {
           <PaymentGatewayConfigPage />
         </RoleProtectedRoute>
       </Route>
+      <Route path="/admin/payment-gateway-config">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <PaymentGatewayConfigPage />
+        </RoleProtectedRoute>
+      </Route>
       <Route path="/admin/ai-training">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <AiTrainingDashboard />

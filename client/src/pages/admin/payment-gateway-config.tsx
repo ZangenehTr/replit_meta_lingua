@@ -168,6 +168,14 @@ export default function PaymentGatewayConfigPage() {
   };
 
   const handleSave = () => {
+    if (form.activePaymentGateway === "mellat") {
+      toast({
+        title: t("common.error", "Error"),
+        description: t("admin:paymentGateway.mellatNotReady", "Mellat Bank gateway is not yet fully implemented. Please select another active gateway."),
+        variant: "destructive",
+      });
+      return;
+    }
     saveMutation.mutate(form);
   };
 
