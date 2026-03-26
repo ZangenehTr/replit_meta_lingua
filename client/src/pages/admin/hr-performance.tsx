@@ -48,6 +48,7 @@ interface AnomalyRecord {
   createdAt: string;
   firstName: string | null;
   lastName: string | null;
+  employeeCode: string | null;
 }
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];

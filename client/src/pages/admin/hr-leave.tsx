@@ -54,7 +54,7 @@ interface BalanceResponse {
 }
 
 function statusBadge(status: string) {
-  const map: Record<string, { cls: string; icon: React.FC<{ className?: string }> }> = {
+  const map: Record<string, { cls: string; icon: (props: { className?: string }) => JSX.Element }> = {
     pending: { cls: "bg-yellow-100 text-yellow-800", icon: ({ className }) => <Clock className={className} /> },
     approved: { cls: "bg-green-100 text-green-800", icon: ({ className }) => <CheckCircle className={className} /> },
     rejected: { cls: "bg-red-100 text-red-800", icon: ({ className }) => <XCircle className={className} /> },

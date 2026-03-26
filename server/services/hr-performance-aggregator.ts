@@ -41,17 +41,23 @@ export async function computeEmployeeMetrics(
 
   const periodStart = new Date(year, month - 1, 1);
   const periodEnd = new Date(year, month, 0, 23, 59, 59);
-  const role = userRow.role;
+  const rawRole = userRow.role ?? "";
+  const roleLower = rawRole.toLowerCase();
+  const isTeacher = roleLower === "teacher" || roleLower.includes("tutor");
+  const isCcAgent = roleLower.includes("call center") || roleLower.includes("agent");
+  const isMentor = roleLower === "mentor";
+  const isSupervisor = roleLower === "supervisor";
+  const isFrontDesk = roleLower.includes("front desk");
 
-  if (role === "Teacher/Tutor") {
+  if (isTeacher) {
     return computeTeacherMetrics(emp.userId, periodStart, periodEnd);
-  } else if (role === "Call Center Agent") {
+  } else if (isCcAgent) {
     return computeCallCenterMetrics(emp.userId, periodStart, periodEnd);
-  } else if (role === "Mentor") {
+  } else if (isMentor) {
     return computeMentorMetrics(emp.userId, periodStart, periodEnd);
-  } else if (role === "Supervisor") {
+  } else if (isSupervisor) {
     return computeSupervisorMetrics(emp.userId, periodStart, periodEnd);
-  } else if (role === "Front Desk Clerk") {
+  } else if (isFrontDesk) {
     return computeFrontDeskMetrics(emp.userId, periodStart, periodEnd);
   } else {
     return computeGenericMetrics();

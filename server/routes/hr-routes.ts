@@ -354,13 +354,12 @@ router.post("/leaves/self", authenticate, async (req: AuthRequest, res: Response
       res.status(404).json({ message: "No employee record found for your account. Contact HR." });
       return;
     }
-    const { leaveType, startDate, endDate, daysRequested, reason, notes } = req.body as {
+    const { leaveType, startDate, endDate, daysRequested, reason } = req.body as {
       leaveType: string;
       startDate: string;
       endDate: string;
       daysRequested?: number;
       reason?: string;
-      notes?: string;
     };
     if (!leaveType || !startDate || !endDate) {
       res.status(400).json({ message: "leaveType, startDate, and endDate are required" });
@@ -373,7 +372,6 @@ router.post("/leaves/self", authenticate, async (req: AuthRequest, res: Response
       endDate,
       daysRequested: daysRequested ?? 1,
       reason: reason ?? null,
-      notes: notes ?? null,
       status: "pending",
     };
     const [created] = await db.insert(leaveRequests).values(body).returning();
