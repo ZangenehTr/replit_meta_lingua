@@ -473,8 +473,11 @@ router.post("/payroll/calculate", authenticate, isAdmin, async (req: AuthRequest
 
     const periodStart = new Date(year, month - 1, 1);
     const periodEnd = new Date(year, month, 0, 23, 59, 59);
-    // Iranian work week is Sat–Wed; simplified to Mon–Fri for international math
-    const workingDaysInMonth = Math.ceil((periodEnd.getDate() * 5) / 7);
+    // Count actual working days: Iranian work week is Sat–Thu; Friday is the weekly holiday
+    let workingDaysInMonth = 0;
+    for (let d = new Date(year, month - 1, 1); d <= periodEnd; d.setDate(d.getDate() + 1)) {
+      if (d.getDay() !== 5) workingDaysInMonth++; // 5 = Friday in JS (0=Sun…6=Sat)
+    }
 
     const allEmployees = await db.select().from(employees).where(eq(employees.status, "active"));
     const results = [];

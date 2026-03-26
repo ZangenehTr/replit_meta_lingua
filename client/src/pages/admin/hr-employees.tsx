@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Search, Pencil, Users2, FileText, AlertTriangle, RefreshCw } from "lucide-react";
 import { Link } from "wouter";
@@ -66,6 +67,8 @@ function statusBadge(status: string) {
 export default function HREmployeesPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [contractDialog, setContractDialog] = useState<{ open: boolean; employeeId: number | null }>({ open: false, employeeId: null });
@@ -74,7 +77,7 @@ export default function HREmployeesPage() {
   const [contractForm, setContractForm] = useState<Record<string, string>>({});
 
   const { data: employees = [], isLoading } = useQuery<Employee[]>({ queryKey: ["/api/hr/employees"] });
-  const { data: users = [] } = useQuery<UserOption[]>({ queryKey: ["/api/admin/users"] });
+  const { data: users = [] } = useQuery<UserOption[]>({ queryKey: ["/api/admin/users"], enabled: isAdmin });
   const { data: expiringContracts = [] } = useQuery<Contract[]>({
     queryKey: ["/api/hr/employees/contracts/expiring"],
     queryFn: () => fetch("/api/hr/employees/contracts/expiring?days=30", { headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` } }).then(r => r.json()),
@@ -160,7 +163,7 @@ export default function HREmployeesPage() {
           <Link href="/admin/hr/leave"><Button variant="outline">Leave</Button></Link>
           <Link href="/admin/hr/payroll"><Button variant="outline">Payroll</Button></Link>
           <Link href="/admin/hr/performance"><Button variant="outline">Performance</Button></Link>
-          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Add Employee</Button>
+          {isAdmin && <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Add Employee</Button>}
         </div>
       </div>
 
