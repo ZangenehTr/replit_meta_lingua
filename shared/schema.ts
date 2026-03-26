@@ -9521,6 +9521,24 @@ export const performanceReviews = pgTable("performance_reviews", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+/**
+ * performance_scores — raw per-metric snapshots before AI aggregation.
+ * One row per employee per month per data source/metric.
+ * Consumed by hr-performance-aggregator.ts to build the overall score.
+ */
+export const performanceScores = pgTable("performance_scores", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  periodYear: integer("period_year").notNull(),
+  periodMonth: integer("period_month").notNull(), // 1-12
+  metricName: varchar("metric_name", { length: 100 }).notNull(), // e.g. 'session_quality', 'class_hours'
+  metricValue: decimal("metric_value", { precision: 10, scale: 4 }).notNull(), // raw value
+  normalizedScore: decimal("normalized_score", { precision: 5, scale: 2 }), // 0-100 after normalization
+  dataSource: varchar("data_source", { length: 80 }), // e.g. 'callern', 'ai_supervisor', 'crm', 'tests'
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type Employee = typeof employees.$inferSelect;
 export type InsertEmployee = typeof employees.$inferInsert;
 export type Contract = typeof contracts.$inferSelect;
@@ -9531,6 +9549,8 @@ export type PayrollRecord = typeof payrollRecords.$inferSelect;
 export type InsertPayrollRecord = typeof payrollRecords.$inferInsert;
 export type PerformanceReview = typeof performanceReviews.$inferSelect;
 export type InsertPerformanceReview = typeof performanceReviews.$inferInsert;
+export type PerformanceScore = typeof performanceScores.$inferSelect;
+export type InsertPerformanceScore = typeof performanceScores.$inferInsert;
 
 // ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables

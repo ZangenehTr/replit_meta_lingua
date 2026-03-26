@@ -5,11 +5,20 @@
  */
 
 import { db } from "../db";
-import { eq, and, lte, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { users, employees, performanceReviews } from "@shared/schema";
 import { ollamaService } from "../ollama-service";
 
 const PERFORMANCE_DROP_THRESHOLD = 15; // points below 3-month average
+
+export interface AiNarrativeResult {
+  narrative: string;
+  improvementPlan: string | null;
+  anomalyDetected: boolean;
+  anomalyDetails: string | null;
+  threeMonthAvgScore: number | null;
+  previousMonthScore: number | null;
+}
 
 export async function generateAiNarrative(
   employeeId: number,
@@ -17,7 +26,7 @@ export async function generateAiNarrative(
   month: number,
   metrics: Record<string, number>,
   overallScore: number
-): Promise<{ narrative: string; improvementPlan: string | null; anomalyDetected: boolean; anomalyDetails: string | null }> {
+): Promise<AiNarrativeResult> {
   const [emp] = await db.select().from(employees).where(eq(employees.id, employeeId));
   const [user] = emp ? await db.select().from(users).where(eq(users.id, emp.userId)) : [undefined];
 
@@ -25,7 +34,7 @@ export async function generateAiNarrative(
   const role = user?.role ?? "Staff";
   const monthName = new Date(year, month - 1, 1).toLocaleString("en", { month: "long" });
 
-  // Get 3-month history for anomaly detection
+  // Get 3-month history for anomaly detection (published reviews only)
   const history = await db
     .select()
     .from(performanceReviews)
@@ -38,16 +47,19 @@ export async function generateAiNarrative(
     .orderBy(desc(performanceReviews.createdAt))
     .limit(3);
 
-  const threeMonthAvg =
+  const threeMonthAvgScore: number | null =
     history.length > 0
-      ? history.reduce((s, r) => s + Number(r.overallScore ?? 0), 0) / history.length
+      ? parseFloat(
+          (history.reduce((s, r) => s + Number(r.overallScore ?? 0), 0) / history.length).toFixed(2)
+        )
       : null;
-  const previousMonthScore = history.length > 0 ? Number(history[0].overallScore ?? 0) : null;
+  const previousMonthScore: number | null =
+    history.length > 0 ? Number(history[0].overallScore ?? 0) : null;
 
   const anomalyDetected =
-    threeMonthAvg !== null && overallScore < threeMonthAvg - PERFORMANCE_DROP_THRESHOLD;
-  const anomalyDetails = anomalyDetected
-    ? `Score dropped ${(threeMonthAvg! - overallScore).toFixed(1)} points below 3-month average of ${threeMonthAvg!.toFixed(1)}.`
+    threeMonthAvgScore !== null && overallScore < threeMonthAvgScore - PERFORMANCE_DROP_THRESHOLD;
+  const anomalyDetails: string | null = anomalyDetected
+    ? `Score dropped ${(threeMonthAvgScore! - overallScore).toFixed(1)} points below 3-month average of ${threeMonthAvgScore!.toFixed(1)}.`
     : null;
 
   const metricLines = Object.entries(metrics)
@@ -62,7 +74,7 @@ Overall Score: ${overallScore}/100
 Metric Breakdown:
 ${metricLines}
 ${previousMonthScore !== null ? `Previous Month Score: ${previousMonthScore}/100` : ""}
-${threeMonthAvg !== null ? `3-Month Average: ${threeMonthAvg.toFixed(1)}/100` : ""}
+${threeMonthAvgScore !== null ? `3-Month Average: ${threeMonthAvgScore.toFixed(1)}/100` : ""}
 ${anomalyDetected ? `⚠️ Anomaly: significant performance drop detected.` : ""}
 Start with "This month, ${employeeName}" and end with a motivational closing sentence.
 Respond only with the summary text, no extra formatting.`;
@@ -99,8 +111,7 @@ Format: plain text bullet points starting with "•". No headers.`;
     improvementPlan: improvementPlan?.trim() ?? null,
     anomalyDetected,
     anomalyDetails,
-    // Pass through for caller to use
-    ...(threeMonthAvg !== null ? { threeMonthAvgScore: parseFloat(threeMonthAvg.toFixed(2)) } : {}),
-    ...(previousMonthScore !== null ? { previousMonthScore } : {}),
-  } as any;
+    threeMonthAvgScore,
+    previousMonthScore,
+  };
 }

@@ -28431,6 +28431,10 @@ Meta Lingua Academy`;
   app.use('/api/hr/employees', hrRoutes);
   console.log('✅ HR Module routes registered (Employees, Contracts, Leave, Payroll, Performance)');
 
+  // HR Scheduler — monthly performance review auto-generation
+  const { startHrScheduler } = await import('./services/hr-scheduler');
+  startHrScheduler();
+
   return app;
 }
 

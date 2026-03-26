@@ -1,39 +1,57 @@
 /**
  * HR Module — REST API Routes
- * Accessible to Admin, Supervisor (read-only), and Accountant (payroll only).
+ *
+ * RBAC policy:
+ *  Admin     → full read/write across all HR resources
+ *  Supervisor → read employees/contracts/leaves/performance; approve or reject leaves
+ *  Accountant → read payroll records only
+ *
+ * All mutating operations (create, update, delete employees/contracts, calculate/approve payroll,
+ * generate/publish performance reviews) require Admin role.
  */
 
-import { Router, type Request, type Response } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "../db";
-import { eq, and, desc, sql, asc } from "drizzle-orm";
+import { eq, and, desc, sql, asc, gte, lte } from "drizzle-orm";
 import {
-  employees, contracts, leaveRequests, payrollRecords, performanceReviews, users,
+  employees, contracts, leaveRequests, payrollRecords, performanceReviews, performanceScores, users,
   type InsertEmployee, type InsertContract, type InsertLeaveRequest,
-  type InsertPayrollRecord, type InsertPerformanceReview,
+  type InsertPayrollRecord, type InsertPerformanceReview, type InsertPerformanceScore,
 } from "@shared/schema";
 import { authenticate } from "../auth";
 import { computeEmployeeMetrics } from "../services/hr-performance-aggregator";
-import { generateAiNarrative } from "../services/hr-ai-narratives";
+import { generateAiNarrative, type AiNarrativeResult } from "../services/hr-ai-narratives";
 
 const router = Router();
 
-// ─── Guards ──────────────────────────────────────────────────────────────────
+// ─── Typed request ────────────────────────────────────────────────────────────
 
-const isHrRole = (req: any, res: Response, next: () => void) => {
-  const role = req.user?.role;
-  if (["Admin", "Supervisor"].includes(role)) return next();
-  return res.status(403).json({ message: "HR access requires Admin or Supervisor role" });
-};
+interface AuthRequest extends Request {
+  user?: { id: number; role: string; phoneNumber?: string };
+}
 
-const isHrOrAccountant = (req: any, res: Response, next: () => void) => {
+// ─── Guards ───────────────────────────────────────────────────────────────────
+
+function isAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
+  if (req.user?.role === "Admin") { next(); return; }
+  res.status(403).json({ message: "Admin access required" });
+}
+
+function isHrReadRole(req: AuthRequest, res: Response, next: NextFunction): void {
   const role = req.user?.role;
-  if (["Admin", "Supervisor", "Accountant"].includes(role)) return next();
-  return res.status(403).json({ message: "Access denied" });
-};
+  if (role === "Admin" || role === "Supervisor") { next(); return; }
+  res.status(403).json({ message: "HR access requires Admin or Supervisor role" });
+}
+
+function isPayrollReadRole(req: AuthRequest, res: Response, next: NextFunction): void {
+  const role = req.user?.role;
+  if (role === "Admin" || role === "Supervisor" || role === "Accountant") { next(); return; }
+  res.status(403).json({ message: "Payroll access requires Admin, Supervisor, or Accountant role" });
+}
 
 // ─── Employee CRUD ────────────────────────────────────────────────────────────
 
-router.get("/", authenticate, isHrRole, async (req: Request, res: Response) => {
+router.get("/", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const rows = await db
       .select({
@@ -59,12 +77,12 @@ router.get("/", authenticate, isHrRole, async (req: Request, res: Response) => {
       .leftJoin(users, eq(employees.userId, users.id))
       .orderBy(asc(employees.employeeCode));
     res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.get("/:id", authenticate, isHrRole, async (req: Request, res: Response) => {
+router.get("/:id(\\d+)", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     const [emp] = await db
@@ -96,77 +114,128 @@ router.get("/:id", authenticate, isHrRole, async (req: Request, res: Response) =
       .from(employees)
       .leftJoin(users, eq(employees.userId, users.id))
       .where(eq(employees.id, id));
-    if (!emp) return res.status(404).json({ message: "Employee not found" });
+    if (!emp) { res.status(404).json({ message: "Employee not found" }); return; }
     res.json(emp);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.post("/", authenticate, isHrRole, async (req: Request, res: Response) => {
+router.post("/", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const body = req.body as InsertEmployee;
-    // Generate employee code if not provided
     if (!body.employeeCode) {
       const [cnt] = await db.select({ c: sql<number>`count(*)` }).from(employees);
       body.employeeCode = `EMP${String(Number(cnt?.c ?? 0) + 1).padStart(4, "0")}`;
     }
     const [created] = await db.insert(employees).values(body).returning();
     res.status(201).json(created);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.put("/:id", authenticate, isHrRole, async (req: Request, res: Response) => {
+router.put("/:id(\\d+)", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     const updates = { ...req.body, updatedAt: new Date() };
     delete updates.id;
     const [updated] = await db.update(employees).set(updates).where(eq(employees.id, id)).returning();
-    if (!updated) return res.status(404).json({ message: "Employee not found" });
+    if (!updated) { res.status(404).json({ message: "Employee not found" }); return; }
     res.json(updated);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.delete("/:id", authenticate, isHrRole, async (req: Request, res: Response) => {
+router.delete("/:id(\\d+)", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     await db.delete(employees).where(eq(employees.id, id));
     res.json({ message: "Employee deleted" });
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
 // ─── Contracts ────────────────────────────────────────────────────────────────
 
-router.get("/:id/contracts", authenticate, isHrRole, async (req: Request, res: Response) => {
+router.get("/:id(\\d+)/contracts", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const employeeId = parseInt(req.params.id);
     const rows = await db.select().from(contracts).where(eq(contracts.employeeId, employeeId)).orderBy(desc(contracts.createdAt));
-    res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+
+    // Annotate contracts expiring within 30 days
+    const today = new Date();
+    const in30 = new Date();
+    in30.setDate(today.getDate() + 30);
+    const annotated = rows.map(c => ({
+      ...c,
+      renewalAlert: c.endDate && new Date(c.endDate) >= today && new Date(c.endDate) <= in30,
+      isExpired: c.endDate && new Date(c.endDate) < today,
+    }));
+    res.json(annotated);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.post("/:id/contracts", authenticate, isHrRole, async (req: Request, res: Response) => {
+// GET /contracts/expiring — contracts expiring within N days (default 30)
+router.get("/contracts/expiring", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
+  try {
+    const days = parseInt(String(req.query.days ?? "30"));
+    const today = new Date().toISOString().split("T")[0];
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() + days);
+    const cutoffStr = cutoff.toISOString().split("T")[0];
+
+    const rows = await db
+      .select({
+        id: contracts.id,
+        employeeId: contracts.employeeId,
+        contractType: contracts.contractType,
+        startDate: contracts.startDate,
+        endDate: contracts.endDate,
+        salaryAmount: contracts.salaryAmount,
+        status: contracts.status,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        employeeCode: employees.employeeCode,
+        department: employees.department,
+      })
+      .from(contracts)
+      .leftJoin(employees, eq(contracts.employeeId, employees.id))
+      .leftJoin(users, eq(employees.userId, users.id))
+      .where(
+        and(
+          eq(contracts.status, "active"),
+          gte(contracts.endDate, today),
+          lte(contracts.endDate, cutoffStr)
+        )
+      )
+      .orderBy(asc(contracts.endDate));
+    res.json(rows);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
+router.post("/:id(\\d+)/contracts", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const employeeId = parseInt(req.params.id);
-    const body: InsertContract = { ...req.body, employeeId, createdBy: (req as any).user.id };
+    const adminId = req.user!.id;
+    const body: InsertContract = { ...req.body, employeeId, createdBy: adminId };
     const [created] = await db.insert(contracts).values(body).returning();
     res.status(201).json(created);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
 // ─── Leave Requests ───────────────────────────────────────────────────────────
 
-router.get("/leaves/all", authenticate, isHrRole, async (req: Request, res: Response) => {
+// GET all leave requests (HR view) — Admin + Supervisor
+router.get("/leaves/all", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const rows = await db
       .select({
@@ -189,57 +258,125 @@ router.get("/leaves/all", authenticate, isHrRole, async (req: Request, res: Resp
       .leftJoin(users, eq(employees.userId, users.id))
       .orderBy(desc(leaveRequests.createdAt));
     res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.get("/:id/leaves", authenticate, isHrRole, async (req: Request, res: Response) => {
+// GET leave balance summary for an employee
+router.get("/:id(\\d+)/leaves/balance", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const employeeId = parseInt(req.params.id);
-    const rows = await db.select().from(leaveRequests).where(eq(leaveRequests.employeeId, employeeId)).orderBy(desc(leaveRequests.createdAt));
-    res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    const year = parseInt(String(req.query.year ?? new Date().getFullYear()));
+    const yearStart = `${year}-01-01`;
+    const yearEnd = `${year}-12-31`;
+
+    const yearLeaves = await db
+      .select()
+      .from(leaveRequests)
+      .where(
+        and(
+          eq(leaveRequests.employeeId, employeeId),
+          gte(leaveRequests.startDate, yearStart),
+          lte(leaveRequests.endDate, yearEnd)
+        )
+      );
+
+    const ANNUAL_ENTITLEMENT: Record<string, number> = {
+      annual: 21,
+      sick: 10,
+      emergency: 3,
+      unpaid: 0,
+      maternity: 90,
+      paternity: 10,
+    };
+
+    const used: Record<string, number> = {};
+    const pending: Record<string, number> = {};
+    for (const lr of yearLeaves) {
+      const days = Number(lr.daysRequested ?? 0);
+      if (lr.status === "approved") {
+        used[lr.leaveType] = (used[lr.leaveType] ?? 0) + days;
+      } else if (lr.status === "pending") {
+        pending[lr.leaveType] = (pending[lr.leaveType] ?? 0) + days;
+      }
+    }
+
+    const balance = Object.entries(ANNUAL_ENTITLEMENT).map(([type, entitled]) => ({
+      leaveType: type,
+      entitled,
+      used: used[type] ?? 0,
+      pending: pending[type] ?? 0,
+      remaining: Math.max(0, entitled - (used[type] ?? 0)),
+    }));
+
+    res.json({ employeeId, year, balance });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.post("/:id/leaves", authenticate, async (req: Request, res: Response) => {
+// GET employee's own leaves
+router.get("/:id(\\d+)/leaves", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
+  try {
+    const employeeId = parseInt(req.params.id);
+    const rows = await db
+      .select()
+      .from(leaveRequests)
+      .where(eq(leaveRequests.employeeId, employeeId))
+      .orderBy(desc(leaveRequests.createdAt));
+    res.json(rows);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
+// POST create leave request — Admin only (HR staff manage on behalf of employees)
+router.post("/:id(\\d+)/leaves", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const employeeId = parseInt(req.params.id);
     const body: InsertLeaveRequest = { ...req.body, employeeId };
     const [created] = await db.insert(leaveRequests).values(body).returning();
     res.status(201).json(created);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.put("/leaves/:leaveId/review", authenticate, isHrRole, async (req: Request, res: Response) => {
+// PUT review (approve/reject) leave — Admin + Supervisor
+router.put("/leaves/:leaveId(\\d+)/review", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const leaveId = parseInt(req.params.leaveId);
     const { status, reviewNotes } = req.body as { status: string; reviewNotes?: string };
     if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "status must be 'approved' or 'rejected'" });
+      res.status(400).json({ message: "status must be 'approved' or 'rejected'" });
+      return;
     }
+    const reviewerId = req.user!.id;
     const [updated] = await db
       .update(leaveRequests)
-      .set({ status, reviewNotes: reviewNotes ?? null, reviewedBy: (req as any).user.id, reviewedAt: new Date(), updatedAt: new Date() })
+      .set({
+        status,
+        reviewNotes: reviewNotes ?? null,
+        reviewedBy: reviewerId,
+        reviewedAt: new Date(),
+        updatedAt: new Date(),
+      })
       .where(eq(leaveRequests.id, leaveId))
       .returning();
-    if (!updated) return res.status(404).json({ message: "Leave request not found" });
+    if (!updated) { res.status(404).json({ message: "Leave request not found" }); return; }
     res.json(updated);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
 // ─── Payroll ──────────────────────────────────────────────────────────────────
 
-router.get("/payroll/period", authenticate, isHrOrAccountant, async (req: Request, res: Response) => {
+router.get("/payroll/period", authenticate, isPayrollReadRole, async (req: AuthRequest, res: Response) => {
   try {
-    const year = parseInt(req.query.year as string) || new Date().getFullYear();
-    const month = parseInt(req.query.month as string) || new Date().getMonth() + 1;
+    const year = parseInt(String(req.query.year ?? new Date().getFullYear()));
+    const month = parseInt(String(req.query.month ?? new Date().getMonth() + 1));
     const rows = await db
       .select({
         id: payrollRecords.id,
@@ -268,30 +405,26 @@ router.get("/payroll/period", authenticate, isHrOrAccountant, async (req: Reques
       .where(and(eq(payrollRecords.periodYear, year), eq(payrollRecords.periodMonth, month)))
       .orderBy(asc(employees.employeeCode));
     res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-// Calculate (or recalculate) payroll for a period — auto-computes from contract + approved leaves
-router.post("/payroll/calculate", authenticate, isHrRole, async (req: Request, res: Response) => {
+// Calculate payroll — Admin only
+router.post("/payroll/calculate", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { year, month } = req.body as { year: number; month: number };
-    if (!year || !month) return res.status(400).json({ message: "year and month are required" });
+    if (!year || !month) { res.status(400).json({ message: "year and month are required" }); return; }
 
     const periodStart = new Date(year, month - 1, 1);
     const periodEnd = new Date(year, month, 0, 23, 59, 59);
-
-    // Working days in month (Mon-Fri excluding Iranian weekends: Fri-Sat here simplified to standard)
-    const workingDaysInMonth = Math.ceil(
-      (periodEnd.getDate() * 5) / 7
-    );
+    // Iranian work week is Sat–Wed; simplified to Mon–Fri for international math
+    const workingDaysInMonth = Math.ceil((periodEnd.getDate() * 5) / 7);
 
     const allEmployees = await db.select().from(employees).where(eq(employees.status, "active"));
     const results = [];
 
     for (const emp of allEmployees) {
-      // Get active contract
       const [activeContract] = await db
         .select()
         .from(contracts)
@@ -300,8 +433,9 @@ router.post("/payroll/calculate", authenticate, isHrRole, async (req: Request, r
         .limit(1);
 
       const baseSalary = activeContract ? Number(activeContract.salaryAmount) : Number(emp.baseSalary ?? 0);
+      const periodStartStr = periodStart.toISOString().split("T")[0];
+      const periodEndStr = periodEnd.toISOString().split("T")[0];
 
-      // Get approved leaves in period
       const approvedLeaves = await db
         .select()
         .from(leaveRequests)
@@ -309,24 +443,30 @@ router.post("/payroll/calculate", authenticate, isHrRole, async (req: Request, r
           and(
             eq(leaveRequests.employeeId, emp.id),
             eq(leaveRequests.status, "approved"),
-            sql`${leaveRequests.startDate} <= ${periodEnd.toISOString().split("T")[0]}`,
-            sql`${leaveRequests.endDate} >= ${periodStart.toISOString().split("T")[0]}`
+            lte(leaveRequests.startDate, periodEndStr),
+            gte(leaveRequests.endDate, periodStartStr)
           )
         );
 
       const leaveDays = approvedLeaves.reduce((s, l) => s + Number(l.daysRequested ?? 0), 0);
       const dailyRate = workingDaysInMonth > 0 ? baseSalary / workingDaysInMonth : 0;
-      const unpaidLeaveDays = approvedLeaves.filter(l => l.leaveType === "unpaid").reduce((s, l) => s + Number(l.daysRequested ?? 0), 0);
+      const unpaidLeaveDays = approvedLeaves
+        .filter(l => l.leaveType === "unpaid")
+        .reduce((s, l) => s + Number(l.daysRequested ?? 0), 0);
       const leaveDeductions = unpaidLeaveDays * dailyRate;
-
       const grossPay = baseSalary - leaveDeductions;
-      const netPay = grossPay; // Simplified — no tax in v1
+      const netPay = grossPay; // v1: no tax deduction
 
-      // Upsert payroll record
       const existing = await db
         .select()
         .from(payrollRecords)
-        .where(and(eq(payrollRecords.employeeId, emp.id), eq(payrollRecords.periodYear, year), eq(payrollRecords.periodMonth, month)))
+        .where(
+          and(
+            eq(payrollRecords.employeeId, emp.id),
+            eq(payrollRecords.periodYear, year),
+            eq(payrollRecords.periodMonth, month)
+          )
+        )
         .limit(1);
 
       if (existing.length > 0) {
@@ -370,29 +510,60 @@ router.post("/payroll/calculate", authenticate, isHrRole, async (req: Request, r
     }
 
     res.json({ calculatedCount: results.length, records: results });
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.put("/payroll/:recordId/approve", authenticate, isHrRole, async (req: Request, res: Response) => {
+// Approve payroll record — Admin only
+router.put("/payroll/:recordId(\\d+)/approve", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const recordId = parseInt(req.params.recordId);
+    const adminId = req.user!.id;
     const [updated] = await db
       .update(payrollRecords)
-      .set({ status: "approved", approvedBy: (req as any).user.id, updatedAt: new Date() })
+      .set({ status: "approved", approvedBy: adminId, updatedAt: new Date() })
       .where(eq(payrollRecords.id, recordId))
       .returning();
-    if (!updated) return res.status(404).json({ message: "Payroll record not found" });
+    if (!updated) { res.status(404).json({ message: "Payroll record not found" }); return; }
     res.json(updated);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
+// ─── Performance Scores (raw metric snapshots) ────────────────────────────────
+
+// GET raw metric scores for an employee
+router.get("/:id(\\d+)/scores", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
+  try {
+    const employeeId = parseInt(req.params.id);
+    const rows = await db
+      .select()
+      .from(performanceScores)
+      .where(eq(performanceScores.employeeId, employeeId))
+      .orderBy(desc(performanceScores.periodYear), desc(performanceScores.periodMonth));
+    res.json(rows);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
+// POST upsert raw score snapshot — Admin only
+router.post("/:id(\\d+)/scores", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const employeeId = parseInt(req.params.id);
+    const body = req.body as InsertPerformanceScore;
+    const [created] = await db.insert(performanceScores).values({ ...body, employeeId }).returning();
+    res.status(201).json(created);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
 // ─── Performance Reviews ──────────────────────────────────────────────────────
 
-router.get("/:id/performance", authenticate, isHrRole, async (req: Request, res: Response) => {
+router.get("/:id(\\d+)/performance", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const employeeId = parseInt(req.params.id);
     const rows = await db
@@ -401,21 +572,22 @@ router.get("/:id/performance", authenticate, isHrRole, async (req: Request, res:
       .where(eq(performanceReviews.employeeId, employeeId))
       .orderBy(desc(performanceReviews.reviewYear), desc(performanceReviews.reviewMonth));
     res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-// Generate (or regenerate) performance review for a given month
-router.post("/:id/performance/generate", authenticate, isHrRole, async (req: Request, res: Response) => {
+// Generate/regenerate performance review — Admin only
+router.post("/:id(\\d+)/performance/generate", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const employeeId = parseInt(req.params.id);
     const { year, month } = req.body as { year: number; month: number };
-    if (!year || !month) return res.status(400).json({ message: "year and month are required" });
+    if (!year || !month) { res.status(400).json({ message: "year and month are required" }); return; }
 
     const metrics = await computeEmployeeMetrics(employeeId, year, month);
-    const { narrative, improvementPlan, anomalyDetected, anomalyDetails, threeMonthAvgScore, previousMonthScore } =
-      await generateAiNarrative(employeeId, year, month, metrics.breakdown, metrics.overallScore) as any;
+    const aiResult: AiNarrativeResult = await generateAiNarrative(
+      employeeId, year, month, metrics.breakdown, metrics.overallScore
+    );
 
     const reviewData: InsertPerformanceReview = {
       employeeId,
@@ -423,53 +595,65 @@ router.post("/:id/performance/generate", authenticate, isHrRole, async (req: Req
       reviewMonth: month,
       overallScore: metrics.overallScore.toFixed(2),
       metricBreakdown: metrics.breakdown,
-      aiNarrative: narrative,
-      improvementPlan: improvementPlan ?? null,
-      anomalyDetected,
-      anomalyDetails: anomalyDetails ?? null,
-      previousMonthScore: previousMonthScore != null ? String(previousMonthScore) : null,
-      threeMonthAvgScore: threeMonthAvgScore != null ? String(threeMonthAvgScore) : null,
+      aiNarrative: aiResult.narrative,
+      improvementPlan: aiResult.improvementPlan,
+      anomalyDetected: aiResult.anomalyDetected,
+      anomalyDetails: aiResult.anomalyDetails,
+      previousMonthScore: aiResult.previousMonthScore != null ? String(aiResult.previousMonthScore) : null,
+      threeMonthAvgScore: aiResult.threeMonthAvgScore != null ? String(aiResult.threeMonthAvgScore) : null,
       generatedAt: new Date(),
       status: "draft",
     };
 
-    // Upsert
     const existing = await db
       .select()
       .from(performanceReviews)
-      .where(and(eq(performanceReviews.employeeId, employeeId), eq(performanceReviews.reviewYear, year), eq(performanceReviews.reviewMonth, month)))
+      .where(
+        and(
+          eq(performanceReviews.employeeId, employeeId),
+          eq(performanceReviews.reviewYear, year),
+          eq(performanceReviews.reviewMonth, month)
+        )
+      )
       .limit(1);
 
     let review;
     if (existing.length > 0) {
-      [review] = await db.update(performanceReviews).set({ ...reviewData, updatedAt: new Date() }).where(eq(performanceReviews.id, existing[0].id)).returning();
+      [review] = await db
+        .update(performanceReviews)
+        .set({ ...reviewData, updatedAt: new Date() })
+        .where(eq(performanceReviews.id, existing[0].id))
+        .returning();
     } else {
       [review] = await db.insert(performanceReviews).values(reviewData).returning();
     }
 
     res.json(review);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-router.put("/:id/performance/:reviewId/publish", authenticate, isHrRole, async (req: Request, res: Response) => {
+// Publish review — Admin only
+router.put("/:empId(\\d+)/performance/:reviewId(\\d+)/publish", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const reviewId = parseInt(req.params.reviewId);
+    const adminId = req.user!.id;
     const [updated] = await db
       .update(performanceReviews)
-      .set({ status: "published", reviewedBy: (req as any).user.id, updatedAt: new Date() })
+      .set({ status: "published", reviewedBy: adminId, updatedAt: new Date() })
       .where(eq(performanceReviews.id, reviewId))
       .returning();
-    if (!updated) return res.status(404).json({ message: "Review not found" });
+    if (!updated) { res.status(404).json({ message: "Review not found" }); return; }
     res.json(updated);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 
-// ─── Performance Anomalies (admin alert endpoint) ─────────────────────────────
-router.get("/performance/anomalies", authenticate, isHrRole, async (req: Request, res: Response) => {
+// ─── Performance Anomalies ────────────────────────────────────────────────────
+
+router.get("/performance/anomalies", authenticate, isHrReadRole, async (req: AuthRequest, res: Response) => {
   try {
     const rows = await db
       .select({
@@ -490,8 +674,8 @@ router.get("/performance/anomalies", authenticate, isHrRole, async (req: Request
       .where(eq(performanceReviews.anomalyDetected, true))
       .orderBy(desc(performanceReviews.createdAt));
     res.json(rows);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
   }
 });
 

@@ -59,12 +59,17 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Issabel version note**: Issabel 4.0.0 / Asterisk 11.25.3 does NOT support ARI, PJSIP, or WebRTC↔PSTN. CallerN WebRTC is browser-to-browser and works independently of Asterisk.
 
 ### HR Module (Human Resources)
-- **Schema Tables**: `employees`, `contracts`, `leave_requests`, `payroll_records`, `performance_reviews` in `shared/schema.ts`.
-- **Backend**: `server/routes/hr-routes.ts` — full CRUD for employees, contracts, leave approval workflow, payroll calculation, and AI-powered performance review generation/publishing.
-- **Services**: `server/services/hr-performance-aggregator.ts` computes role-specific KPI metrics pulling from CallerN scoring events, AI supervisor observations, lead activity, test scores. `server/services/hr-ai-narratives.ts` calls Ollama/OpenAI to generate monthly narratives, improvement plans, and anomaly alerts (15-point drop detection vs 3-month rolling average).
-- **Route prefix**: `/api/hr/employees` — sub-paths: `/:id/contracts`, `/:id/leaves`, `/leaves/all`, `/leaves/:id/review`, `/payroll/period`, `/payroll/calculate`, `/payroll/:id/approve`, `/:id/performance`, `/:id/performance/generate`, `/:id/performance/:id/publish`, `/performance/anomalies`.
-- **Frontend pages**: `/admin/hr/employees`, `/admin/hr/leave`, `/admin/hr/payroll`, `/admin/hr/performance`.
-- **Role access**: Admin = full access; Supervisor = employees/leave/performance (read + leave approve); Accountant = payroll read-only.
+- **Schema Tables**: `employees`, `contracts`, `leave_requests`, `payroll_records`, `performance_reviews`, `performance_scores` in `shared/schema.ts`.
+  - `performance_scores` stores raw per-metric snapshots (metricName, metricValue, normalizedScore, dataSource) before AI aggregation.
+- **Backend**: `server/routes/hr-routes.ts` — full CRUD + role-strict RBAC.
+  - Admin-only mutations: create/update/delete employees, add contracts, payroll calculate/approve, performance generate/publish, leave create.
+  - Admin + Supervisor: all reads, leave approve/reject, anomaly view.
+  - Accountant: payroll read-only.
+- **Services**: `server/services/hr-performance-aggregator.ts` computes role-specific KPI metrics from CallerN scoring events, AI supervisor observations, lead activity, test scores. `server/services/hr-ai-narratives.ts` (typed `AiNarrativeResult`, no `as any`) calls Ollama/OpenAI for narratives, improvement plans, and anomaly alerts.
+- **Scheduler**: `server/services/hr-scheduler.ts` — daily interval-based auto-generation of missing month-end performance reviews for all active employees (no Redis required in dev; runs 5 min after startup then every 24 hrs).
+- **Route prefix**: `/api/hr/employees` — key endpoints: `GET/POST /`, `GET/PUT /:id`, `DELETE /:id`, `GET /:id/contracts`, `POST /:id/contracts`, `GET /contracts/expiring`, `GET /leaves/all`, `GET /:id/leaves`, `GET /:id/leaves/balance`, `PUT /leaves/:id/review`, `GET /payroll/period`, `POST /payroll/calculate`, `PUT /payroll/:id/approve`, `GET/POST /:id/scores`, `GET /:id/performance`, `POST /:id/performance/generate`, `PUT /:id/performance/:id/publish`, `GET /performance/anomalies`.
+- **Frontend pages**: `/admin/hr/employees` (tabbed: employees + contracts with renewal alerts), `/admin/hr/leave` (tabbed: requests + leave balance tracker with visual bars), `/admin/hr/payroll` (period select + CSV export), `/admin/hr/performance` (AI review + metric breakdown + anomaly panel + publish flow).
+- **Role access**: Admin = full write; Supervisor = read + leave approve; Accountant = payroll read.
 - **Subsystem keys**: `hr_employees`, `hr_leave`, `hr_payroll`, `hr_performance` in `SUBSYSTEM_ROUTES` and `SUBSYSTEM_TREE`.
 
 ### Call Center ERP (24-Stage Pipeline)
