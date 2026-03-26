@@ -370,6 +370,23 @@ export const adminSettings = pgTable("admin_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// ─── Payment Gateway Config table (one row per gateway) ────────────────────
+// Dedicated table for multi-gateway credentials & settings, separate from
+// admin_settings. Each gateway has exactly one row identified by gatewayName.
+export const paymentGatewayConfigs = pgTable("payment_gateway_configs", {
+  id: serial("id").primaryKey(),
+  gatewayName: varchar("gateway_name", { length: 50 }).notNull().unique(),
+  isEnabled: boolean("is_enabled").default(false).notNull(),
+  sandboxMode: boolean("sandbox_mode").default(true).notNull(),
+  // JSONB blob of AES-256-GCM encrypted credential strings keyed by field name
+  // e.g. { "merchantId": "ENC:...", "apiKey": "ENC:..." }
+  encryptedCredentials: jsonb("encrypted_credentials"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type PaymentGatewayConfigRow = typeof paymentGatewayConfigs.$inferSelect;
+
 // AI Progress Tracking table
 export const aiProgressTracking = pgTable("ai_progress_tracking", {
   id: serial("id").primaryKey(),

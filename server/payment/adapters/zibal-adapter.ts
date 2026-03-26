@@ -102,11 +102,14 @@ export class ZibalAdapter implements PaymentGateway {
   }
 }
 
-export function createZibalAdapter(settings: Record<string, unknown>, _callbackUrl: string): ZibalAdapter | null {
-  if (!settings?.zibalEnabled || !settings?.zibalMerchantId) return null;
-  const merchantId = decryptCredential(String(settings.zibalMerchantId));
+export function createZibalAdapter(
+  settings: { zibalEnabled?: boolean; zibalMerchantId?: string; zibalSandbox?: boolean },
+  _callbackUrl: string
+): ZibalAdapter | null {
+  if (!settings.zibalEnabled || !settings.zibalMerchantId) return null;
+  const merchantId = decryptCredential(settings.zibalMerchantId);
   return new ZibalAdapter({
     merchantId,
-    sandbox: (settings.zibalSandbox as boolean) ?? true,
+    sandbox: settings.zibalSandbox ?? true,
   });
 }

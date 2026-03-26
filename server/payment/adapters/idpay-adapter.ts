@@ -107,11 +107,14 @@ export class IDPayAdapter implements PaymentGateway {
   }
 }
 
-export function createIDPayAdapter(settings: Record<string, unknown>, _callbackUrl: string): IDPayAdapter | null {
-  if (!settings?.idpayEnabled || !settings?.idpayApiKey) return null;
-  const apiKey = decryptCredential(String(settings.idpayApiKey));
+export function createIDPayAdapter(
+  settings: { idpayEnabled?: boolean; idpayApiKey?: string; idpaySandbox?: boolean },
+  _callbackUrl: string
+): IDPayAdapter | null {
+  if (!settings.idpayEnabled || !settings.idpayApiKey) return null;
+  const apiKey = decryptCredential(settings.idpayApiKey);
   return new IDPayAdapter({
     apiKey,
-    sandbox: (settings.idpaySandbox as boolean) ?? true,
+    sandbox: settings.idpaySandbox ?? true,
   });
 }

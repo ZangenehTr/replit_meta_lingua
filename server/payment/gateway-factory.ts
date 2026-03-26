@@ -1,19 +1,11 @@
-import { storage } from '../storage.js';
 import type { PaymentGateway } from './gateway.interface.js';
 import { createZarinpalAdapter } from './adapters/zarinpal-adapter.js';
 import { createIDPayAdapter } from './adapters/idpay-adapter.js';
 import { createZibalAdapter } from './adapters/zibal-adapter.js';
+import { getGatewaySettings, getActiveGatewayName, getAllGatewaySettings } from './gateway-config-store.js';
+import type { GatewayName } from './gateway-config-store.js';
 
-export type GatewayName = 'shetab' | 'zarinpal' | 'idpay' | 'zibal' | 'mellat';
-
-export interface GatewayConfig {
-  activeGateway: GatewayName;
-  shetab: { sandbox: boolean; enabled: boolean };
-  zarinpal: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
-  idpay: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
-  zibal: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
-  mellat: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
-}
+export type { GatewayName };
 
 function buildCallbackUrl(gateway: GatewayName): string {
   const base = process.env.BASE_URL ?? process.env.APP_URL ?? 'http://localhost:5000';
@@ -22,18 +14,36 @@ function buildCallbackUrl(gateway: GatewayName): string {
 
 export async function getActiveGateway(): Promise<PaymentGateway | null> {
   try {
-    const settings = (await storage.getAdminSettings()) as Record<string, unknown>;
-    if (!settings) return null;
-
-    const activeGateway = (settings.activePaymentGateway as GatewayName) ?? 'shetab';
+    const activeGateway = await getActiveGatewayName();
 
     switch (activeGateway) {
-      case 'zarinpal':
-        return createZarinpalAdapter(settings, buildCallbackUrl('zarinpal'));
-      case 'idpay':
-        return createIDPayAdapter(settings, buildCallbackUrl('idpay'));
-      case 'zibal':
-        return createZibalAdapter(settings, buildCallbackUrl('zibal'));
+      case 'zarinpal': {
+        const cfg = await getGatewaySettings('zarinpal');
+        if (!cfg.isEnabled || !cfg.credentials.merchantId) return null;
+        return createZarinpalAdapter({
+          zarinpalEnabled: cfg.isEnabled,
+          zarinpalMerchantId: cfg.credentials.merchantId,
+          zarinpalSandbox: cfg.sandboxMode,
+        }, buildCallbackUrl('zarinpal'));
+      }
+      case 'idpay': {
+        const cfg = await getGatewaySettings('idpay');
+        if (!cfg.isEnabled || !cfg.credentials.apiKey) return null;
+        return createIDPayAdapter({
+          idpayEnabled: cfg.isEnabled,
+          idpayApiKey: cfg.credentials.apiKey,
+          idpaySandbox: cfg.sandboxMode,
+        }, buildCallbackUrl('idpay'));
+      }
+      case 'zibal': {
+        const cfg = await getGatewaySettings('zibal');
+        if (!cfg.isEnabled || !cfg.credentials.merchantId) return null;
+        return createZibalAdapter({
+          zibalEnabled: cfg.isEnabled,
+          zibalMerchantId: cfg.credentials.merchantId,
+          zibalSandbox: cfg.sandboxMode,
+        }, buildCallbackUrl('zibal'));
+      }
       case 'mellat':
         console.error('Mellat gateway selected but not yet implemented. Please choose another gateway.');
         return null;
@@ -63,8 +73,7 @@ export async function getActiveGateway(): Promise<PaymentGateway | null> {
                 transactionId: result.payment.merchantTransactionId ?? undefined,
               };
             } catch (e: unknown) {
-              const msg = e instanceof Error ? e.message : 'Unknown error';
-              return { success: false, error: msg };
+              return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
             }
           },
           verify: async (req) => {
@@ -92,33 +101,32 @@ export async function getActiveGateway(): Promise<PaymentGateway | null> {
   }
 }
 
-export async function getGatewayConfig(): Promise<GatewayConfig> {
-  const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
+export interface PublicGatewayConfig {
+  activeGateway: GatewayName;
+  gateways: Record<GatewayName, {
+    isEnabled: boolean;
+    sandboxMode: boolean;
+    hasCredentials: boolean;
+  }>;
+}
+
+export async function getPublicGatewayConfig(): Promise<PublicGatewayConfig> {
+  const [activeGateway, allSettings] = await Promise.all([
+    getActiveGatewayName(),
+    getAllGatewaySettings(),
+  ]);
+
+  const gateways: Record<string, { isEnabled: boolean; sandboxMode: boolean; hasCredentials: boolean }> = {};
+  for (const [name, settings] of Object.entries(allSettings)) {
+    gateways[name] = {
+      isEnabled: settings.isEnabled,
+      sandboxMode: settings.sandboxMode,
+      hasCredentials: settings.hasCredentials,
+    };
+  }
+
   return {
-    activeGateway: (settings.activePaymentGateway as GatewayName) ?? 'shetab',
-    shetab: {
-      sandbox: settings.shetabEnvironment === 'sandbox',
-      enabled: (settings.shetabEnabled as boolean) ?? false,
-    },
-    zarinpal: {
-      hasCredentials: !!settings.zarinpalMerchantId,
-      sandbox: (settings.zarinpalSandbox as boolean) ?? true,
-      enabled: (settings.zarinpalEnabled as boolean) ?? false,
-    },
-    idpay: {
-      hasCredentials: !!settings.idpayApiKey,
-      sandbox: (settings.idpaySandbox as boolean) ?? true,
-      enabled: (settings.idpayEnabled as boolean) ?? false,
-    },
-    zibal: {
-      hasCredentials: !!settings.zibalMerchantId,
-      sandbox: (settings.zibalSandbox as boolean) ?? true,
-      enabled: (settings.zibalEnabled as boolean) ?? false,
-    },
-    mellat: {
-      hasCredentials: !!(settings.mellatTerminalId && settings.mellatUsername && settings.mellatPassword),
-      sandbox: (settings.mellatSandbox as boolean) ?? true,
-      enabled: (settings.mellatEnabled as boolean) ?? false,
-    },
+    activeGateway,
+    gateways: gateways as Record<GatewayName, { isEnabled: boolean; sandboxMode: boolean; hasCredentials: boolean }>,
   };
 }

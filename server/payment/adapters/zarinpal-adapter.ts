@@ -115,11 +115,14 @@ export class ZarinpalAdapter implements PaymentGateway {
   }
 }
 
-export function createZarinpalAdapter(settings: Record<string, unknown>, _callbackUrl: string): ZarinpalAdapter | null {
-  if (!settings?.zarinpalEnabled || !settings?.zarinpalMerchantId) return null;
-  const merchantId = decryptCredential(String(settings.zarinpalMerchantId));
+export function createZarinpalAdapter(
+  settings: { zarinpalEnabled?: boolean; zarinpalMerchantId?: string; zarinpalSandbox?: boolean },
+  _callbackUrl: string
+): ZarinpalAdapter | null {
+  if (!settings.zarinpalEnabled || !settings.zarinpalMerchantId) return null;
+  const merchantId = decryptCredential(settings.zarinpalMerchantId);
   return new ZarinpalAdapter({
     merchantId,
-    sandbox: (settings.zarinpalSandbox as boolean) ?? true,
+    sandbox: settings.zarinpalSandbox ?? true,
   });
 }
