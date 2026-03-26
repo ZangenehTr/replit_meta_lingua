@@ -5,7 +5,7 @@
  */
 
 import { db } from "../db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or } from "drizzle-orm";
 import { users, employees, performanceReviews, adminSettings } from "@shared/schema";
 import { ollamaService } from "../ollama-service";
 import { notificationQueue } from "./queue-service";
@@ -61,18 +61,28 @@ export async function generateAiNarrative(
 
   const { threshold, notifyAdmin, improvementThreshold } = await getHrConfig();
 
-  // Get 3-month history for anomaly detection (published reviews only)
+  // Build prior 3 calendar months relative to evaluation period
+  const prev3 = [-3, -2, -1].map(offset => {
+    const d = new Date(year, month - 1 + offset, 1);
+    return { y: d.getFullYear(), m: d.getMonth() + 1 };
+  });
+
+  // Get history strictly from the previous 3 calendar months (not just latest 3 by createdAt)
   const history = await db
     .select()
     .from(performanceReviews)
     .where(
       and(
         eq(performanceReviews.employeeId, employeeId),
-        eq(performanceReviews.status, "published")
+        eq(performanceReviews.status, "published"),
+        or(
+          and(eq(performanceReviews.reviewYear, prev3[0].y), eq(performanceReviews.reviewMonth, prev3[0].m)),
+          and(eq(performanceReviews.reviewYear, prev3[1].y), eq(performanceReviews.reviewMonth, prev3[1].m)),
+          and(eq(performanceReviews.reviewYear, prev3[2].y), eq(performanceReviews.reviewMonth, prev3[2].m))
+        )
       )
     )
-    .orderBy(desc(performanceReviews.createdAt))
-    .limit(3);
+    .orderBy(desc(performanceReviews.reviewYear), desc(performanceReviews.reviewMonth));
 
   const threeMonthAvgScore: number | null =
     history.length > 0

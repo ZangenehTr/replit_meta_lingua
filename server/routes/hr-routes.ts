@@ -702,6 +702,37 @@ router.post("/:id(\\d+)/performance/generate", authenticate, isAdmin, async (req
       [review] = await db.insert(performanceReviews).values(reviewData).returning();
     }
 
+    // Persist per-metric snapshots into performance_scores for this period
+    // Delete existing scores for this employee/period, then re-insert
+    await db.delete(performanceScores).where(
+      and(
+        eq(performanceScores.employeeId, employeeId),
+        eq(performanceScores.periodYear, year),
+        eq(performanceScores.periodMonth, month)
+      )
+    );
+    const scoreRows: InsertPerformanceScore[] = Object.entries(metrics.breakdown).map(([metricName, metricValue]) => {
+      const mn = metricName.toLowerCase();
+      const dataSource =
+        mn.includes("ai_supervisor") || mn.includes("session_quality") ? "ai_supervisor" :
+        mn.includes("lead") || mn.includes("followup") || mn.includes("response_speed") ? "crm" :
+        mn.includes("attendance") ? "attendance" :
+        mn.includes("student_outcome") || mn.includes("enrollment") ? "enrollments" :
+        "aggregator";
+      return {
+        employeeId,
+        periodYear: year,
+        periodMonth: month,
+        metricName,
+        metricValue: String(metricValue),
+        normalizedScore: String(Math.min(100, Math.max(0, metricValue))),
+        dataSource,
+      };
+    });
+    if (scoreRows.length > 0) {
+      await db.insert(performanceScores).values(scoreRows);
+    }
+
     res.json(review);
   } catch (err: unknown) {
     res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
