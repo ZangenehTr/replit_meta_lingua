@@ -136,12 +136,15 @@ async function handleUnifiedCallback(
           res.status(503).json({ message: 'Zarinpal not configured' });
           return;
         }
-        // Look up order by stored authority token
+        // Look up order by stored authority token — check both columns for backward compat
         const [walletByAuth] = await db.select().from(walletTransactions)
-          .where(eq(walletTransactions.shetabTransactionId, Authority));
+          .where(eq(walletTransactions.gatewayTransactionId, Authority));
+        const [walletByLegacyAuth] = !walletByAuth
+          ? await db.select().from(walletTransactions).where(eq(walletTransactions.shetabTransactionId, Authority))
+          : [undefined];
         const [courseByAuth] = await db.select().from(coursePayments)
           .where(eq(coursePayments.gatewayTransactionId, Authority));
-        const record = walletByAuth ?? courseByAuth;
+        const record = walletByAuth ?? walletByLegacyAuth ?? courseByAuth;
         if (!record?.merchantTransactionId) {
           console.error('Zarinpal callback: no matching order for authority', Authority);
           res.redirect(`${frontendUrl}/dashboard?payment=failed`);

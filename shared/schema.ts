@@ -377,6 +377,7 @@ export const paymentGatewayConfigs = pgTable("payment_gateway_configs", {
   id: serial("id").primaryKey(),
   gatewayName: varchar("gateway_name", { length: 50 }).notNull().unique(),
   isEnabled: boolean("is_enabled").default(false).notNull(),
+  isActive: boolean("is_active").default(false).notNull(),
   sandboxMode: boolean("sandbox_mode").default(true).notNull(),
   // JSONB blob of AES-256-GCM encrypted credential strings keyed by field name
   // e.g. { "merchantId": "ENC:...", "apiKey": "ENC:..." }
@@ -462,6 +463,7 @@ export const walletTransactions = pgTable("wallet_transactions", {
   cardNumber: varchar("card_number", { length: 20 }),
   gatewayResponse: jsonb("gateway_response"),
   gatewayName: varchar("gateway_name", { length: 50 }).default("shetab"),
+  gatewayTransactionId: varchar("gateway_transaction_id", { length: 512 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at")
 });

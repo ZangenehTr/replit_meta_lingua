@@ -1,8 +1,7 @@
 import { db } from '../db.js';
 import { paymentGatewayConfigs } from '../../shared/schema.js';
-import { eq } from 'drizzle-orm';
-import { encryptCredential, decryptCredential, isCredentialSet } from '../utils/gateway-crypto.js';
-import { storage } from '../storage.js';
+import { eq, ne } from 'drizzle-orm';
+import { encryptCredential, decryptCredential } from '../utils/gateway-crypto.js';
 
 export type GatewayName = 'shetab' | 'zarinpal' | 'idpay' | 'zibal' | 'mellat';
 
@@ -17,19 +16,19 @@ export interface GatewayCredentials {
 export interface GatewaySettings {
   gatewayName: GatewayName;
   isEnabled: boolean;
+  isActive: boolean;
   sandboxMode: boolean;
   credentials: GatewayCredentials;
   hasCredentials: boolean;
 }
 
-export interface ActiveGatewayPreference {
-  activeGateway: GatewayName;
-}
+const DEFAULT_ACTIVE: GatewayName = 'shetab';
 
 async function getOrCreateRow(gatewayName: GatewayName) {
   const [row] = await db.select().from(paymentGatewayConfigs).where(eq(paymentGatewayConfigs.gatewayName, gatewayName));
   if (row) return row;
-  const [created] = await db.insert(paymentGatewayConfigs).values({ gatewayName }).returning();
+  const isActive = gatewayName === DEFAULT_ACTIVE;
+  const [created] = await db.insert(paymentGatewayConfigs).values({ gatewayName, isActive }).returning();
   return created;
 }
 
@@ -47,6 +46,7 @@ export async function getGatewaySettings(gatewayName: GatewayName): Promise<Gate
   return {
     gatewayName,
     isEnabled: row.isEnabled,
+    isActive: row.isActive,
     sandboxMode: row.sandboxMode,
     credentials,
     hasCredentials,
@@ -91,10 +91,34 @@ export async function updateGatewaySettings(
 }
 
 export async function getActiveGatewayName(): Promise<GatewayName> {
-  const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
-  return (settings.activePaymentGateway as GatewayName) ?? 'shetab';
+  const [activeRow] = await db.select()
+    .from(paymentGatewayConfigs)
+    .where(eq(paymentGatewayConfigs.isActive, true));
+  if (activeRow) return activeRow.gatewayName as GatewayName;
+
+  // Fallback: check admin_settings for backward compatibility on existing installs
+  try {
+    const { storage } = await import('../storage.js');
+    const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
+    const gwName = (settings.activePaymentGateway as GatewayName) ?? DEFAULT_ACTIVE;
+    // Migrate: set is_active in payment_gateway_configs
+    await setActiveGatewayName(gwName);
+    return gwName;
+  } catch {
+    return DEFAULT_ACTIVE;
+  }
 }
 
 export async function setActiveGatewayName(gatewayName: GatewayName): Promise<void> {
-  await storage.updateAdminSettings({ activePaymentGateway: gatewayName });
+  // Ensure the row exists
+  await getOrCreateRow(gatewayName);
+
+  // Clear all existing is_active flags, then set the chosen one
+  await db.update(paymentGatewayConfigs)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(ne(paymentGatewayConfigs.gatewayName, gatewayName));
+
+  await db.update(paymentGatewayConfigs)
+    .set({ isActive: true, updatedAt: new Date() })
+    .where(eq(paymentGatewayConfigs.gatewayName, gatewayName));
 }

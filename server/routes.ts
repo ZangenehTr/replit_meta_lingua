@@ -6396,7 +6396,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       // Store gateway transactionId for callback lookup (e.g. Zarinpal authority)
       if (initResult.transactionId) {
         await db.update(walletTransactions)
-          .set({ shetabTransactionId: initResult.transactionId, gatewayName: gateway.name })
+          .set({ shetabTransactionId: initResult.transactionId, gatewayTransactionId: initResult.transactionId, gatewayName: gateway.name })
           .where(eq(walletTransactions.id, transaction.id));
       }
 
