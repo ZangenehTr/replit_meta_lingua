@@ -58,6 +58,15 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **Env vars**: `ISABEL_VOIP_ENABLED`, `ISABEL_VOIP_SERVER`, `ISABEL_VOIP_PORT` (default: 5038), `ISABEL_VOIP_USERNAME`, `ISABEL_VOIP_PASSWORD`.
 - **Issabel version note**: Issabel 4.0.0 / Asterisk 11.25.3 does NOT support ARI, PJSIP, or WebRTC↔PSTN. CallerN WebRTC is browser-to-browser and works independently of Asterisk.
 
+### HR Module (Human Resources)
+- **Schema Tables**: `employees`, `contracts`, `leave_requests`, `payroll_records`, `performance_reviews` in `shared/schema.ts`.
+- **Backend**: `server/routes/hr-routes.ts` — full CRUD for employees, contracts, leave approval workflow, payroll calculation, and AI-powered performance review generation/publishing.
+- **Services**: `server/services/hr-performance-aggregator.ts` computes role-specific KPI metrics pulling from CallerN scoring events, AI supervisor observations, lead activity, test scores. `server/services/hr-ai-narratives.ts` calls Ollama/OpenAI to generate monthly narratives, improvement plans, and anomaly alerts (15-point drop detection vs 3-month rolling average).
+- **Route prefix**: `/api/hr/employees` — sub-paths: `/:id/contracts`, `/:id/leaves`, `/leaves/all`, `/leaves/:id/review`, `/payroll/period`, `/payroll/calculate`, `/payroll/:id/approve`, `/:id/performance`, `/:id/performance/generate`, `/:id/performance/:id/publish`, `/performance/anomalies`.
+- **Frontend pages**: `/admin/hr/employees`, `/admin/hr/leave`, `/admin/hr/payroll`, `/admin/hr/performance`.
+- **Role access**: Admin = full access; Supervisor = employees/leave/performance (read + leave approve); Accountant = payroll read-only.
+- **Subsystem keys**: `hr_employees`, `hr_leave`, `hr_payroll`, `hr_performance` in `SUBSYSTEM_ROUTES` and `SUBSYSTEM_TREE`.
+
 ### Call Center ERP (24-Stage Pipeline)
 - **Workflow Stages**: contact_desk → new_intake → follow_up/no_response → level_assessment → evaluation → consultation_cc/sup → pre_registration → final_registration → enrolled/private_class_setup → active class lifecycle
 - **Transitions**: Validated via LEAD_STAGE_TRANSITIONS map in shared/schema.ts, covering all 24 stages with forward/backward paths

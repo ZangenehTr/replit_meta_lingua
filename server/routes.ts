@@ -28426,6 +28426,11 @@ Meta Lingua Academy`;
     });
   });
 
+  // HR Module routes
+  const { default: hrRoutes } = await import('./routes/hr-routes');
+  app.use('/api/hr/employees', hrRoutes);
+  console.log('✅ HR Module routes registered (Employees, Contracts, Leave, Payroll, Performance)');
+
   return app;
 }
 

@@ -9419,6 +9419,120 @@ export type SceneProgress = typeof sceneProgress.$inferSelect;
 export type InsertSceneProgress = z.infer<typeof insertSceneProgressSchema>;
 
 // ============================================================================
+// HR MODULE — Human Resources & AI Performance Evaluation
+// ============================================================================
+
+export const employees = pgTable("employees", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  employeeCode: varchar("employee_code", { length: 30 }).notNull().unique(),
+  department: varchar("department", { length: 100 }),
+  jobTitle: varchar("job_title", { length: 100 }),
+  contractType: varchar("contract_type", { length: 50 }).default("full_time"), // full_time | part_time | hourly | contract
+  baseSalary: decimal("base_salary", { precision: 12, scale: 2 }).default("0"),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  hireDate: date("hire_date").notNull(),
+  terminationDate: date("termination_date"),
+  status: varchar("status", { length: 30 }).default("active"), // active | on_leave | terminated
+  bankAccountNumber: varchar("bank_account_number", { length: 50 }),
+  nationalId: varchar("national_id", { length: 20 }),
+  emergencyContact: varchar("emergency_contact", { length: 255 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const contracts = pgTable("contracts", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  contractType: varchar("contract_type", { length: 50 }).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  salaryAmount: decimal("salary_amount", { precision: 12, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("IRR"),
+  workingHoursPerWeek: integer("working_hours_per_week").default(40),
+  benefits: jsonb("benefits"),
+  status: varchar("status", { length: 30 }).default("active"), // active | expired | terminated
+  documentUrl: text("document_url"),
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const leaveRequests = pgTable("leave_requests", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  leaveType: varchar("leave_type", { length: 50 }).notNull(), // annual | sick | emergency | maternity | unpaid
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  daysRequested: decimal("days_requested", { precision: 5, scale: 1 }).notNull(),
+  reason: text("reason"),
+  status: varchar("status", { length: 30 }).default("pending"), // pending | approved | rejected | cancelled
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const payrollRecords = pgTable("payroll_records", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  periodYear: integer("period_year").notNull(),
+  periodMonth: integer("period_month").notNull(), // 1-12
+  baseSalary: decimal("base_salary", { precision: 12, scale: 2 }).notNull(),
+  overtimePay: decimal("overtime_pay", { precision: 12, scale: 2 }).default("0"),
+  bonus: decimal("bonus", { precision: 12, scale: 2 }).default("0"),
+  deductions: decimal("deductions", { precision: 12, scale: 2 }).default("0"),
+  leaveDeductions: decimal("leave_deductions", { precision: 12, scale: 2 }).default("0"),
+  grossPay: decimal("gross_pay", { precision: 12, scale: 2 }).notNull(),
+  netPay: decimal("net_pay", { precision: 12, scale: 2 }).notNull(),
+  workingDays: integer("working_days").default(0),
+  presentDays: integer("present_days").default(0),
+  leavesDays: decimal("leaves_days", { precision: 5, scale: 1 }).default("0"),
+  notes: text("notes"),
+  status: varchar("status", { length: 30 }).default("draft"), // draft | approved | paid
+  approvedBy: integer("approved_by").references(() => users.id),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const performanceReviews = pgTable("performance_reviews", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id).notNull(),
+  reviewYear: integer("review_year").notNull(),
+  reviewMonth: integer("review_month").notNull(), // 1-12
+  overallScore: decimal("overall_score", { precision: 5, scale: 2 }), // 0-100
+  metricBreakdown: jsonb("metric_breakdown"), // { metricName: score }
+  aiNarrative: text("ai_narrative"), // Ollama-generated monthly summary
+  improvementPlan: text("improvement_plan"), // Ollama-generated when below threshold
+  anomalyDetected: boolean("anomaly_detected").default(false),
+  anomalyDetails: text("anomaly_details"),
+  adminNotified: boolean("admin_notified").default(false),
+  performanceThreshold: decimal("performance_threshold", { precision: 5, scale: 2 }).default("60"),
+  previousMonthScore: decimal("previous_month_score", { precision: 5, scale: 2 }),
+  threeMonthAvgScore: decimal("three_month_avg_score", { precision: 5, scale: 2 }),
+  generatedAt: timestamp("generated_at"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  status: varchar("status", { length: 30 }).default("draft"), // draft | published
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Employee = typeof employees.$inferSelect;
+export type InsertEmployee = typeof employees.$inferInsert;
+export type Contract = typeof contracts.$inferSelect;
+export type InsertContract = typeof contracts.$inferInsert;
+export type LeaveRequest = typeof leaveRequests.$inferSelect;
+export type InsertLeaveRequest = typeof leaveRequests.$inferInsert;
+export type PayrollRecord = typeof payrollRecords.$inferSelect;
+export type InsertPayrollRecord = typeof payrollRecords.$inferInsert;
+export type PerformanceReview = typeof performanceReviews.$inferSelect;
+export type InsertPerformanceReview = typeof performanceReviews.$inferInsert;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 

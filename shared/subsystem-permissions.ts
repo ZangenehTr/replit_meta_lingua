@@ -154,6 +154,18 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
     ]
   },
   {
+    id: "hr_module",
+    name: "منابع انسانی",
+    nameEn: "Human Resources",
+    icon: "Users2",
+    children: [
+      { id: "hr_employees", name: "مدیریت کارکنان", nameEn: "Employee Management", icon: "UserCircle" },
+      { id: "hr_leave", name: "مدیریت مرخصی", nameEn: "Leave Management", icon: "CalendarOff" },
+      { id: "hr_payroll", name: "حقوق و دستمزد", nameEn: "Payroll", icon: "Banknote" },
+      { id: "hr_performance", name: "ارزیابی عملکرد AI", nameEn: "AI Performance Evaluation", icon: "Bot" },
+    ]
+  },
+  {
     id: "mentor_platform",
     name: "پلتفرم منتور",
     nameEn: "Mentor Platform",
@@ -256,15 +268,25 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "financial_management", "reports_analytics", "communication_center", 
       "quality_assurance", "schedule_review", "sms_management", "mentor_matching",
       // Call Center
-      "unified_workflow", "call_logs", "prospects", "call_campaigns"
+      "unified_workflow", "call_logs", "prospects", "call_campaigns",
+      // HR Module (read-only for supervisor)
+      "hr_employees", "hr_leave", "hr_performance"
     ],
-    actions: {}
+    actions: {
+      "hr_employees": ["read", "view", "list"],
+      "hr_leave": ["read", "view", "list", "update"],
+      "hr_performance": ["read", "view", "list"]
+    }
   },
   "Accountant": {
     subsystems: [
-      "financial_management", "teacher_payment_management", "reports_analytics"
+      "financial_management", "teacher_payment_management", "reports_analytics",
+      // HR Payroll access
+      "hr_payroll"
     ],
-    actions: {}
+    actions: {
+      "hr_payroll": ["read", "view", "list"]
+    }
   },
   "Admin": {
     subsystems: [
@@ -296,7 +318,9 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "form_management", "font_management", "subsystem_permissions", "api_smoke_test",
       "visitor_chat", "admin_settings", "book_ecommerce", "social_media_scraper",
       "review_moderation", "shopping_cart_settings", "system_status", "financial_reports",
-      "curriculum_categories", "sms_test", "3d_lesson_builder"
+      "curriculum_categories", "sms_test", "3d_lesson_builder",
+      // HR Module
+      "hr_employees", "hr_leave", "hr_payroll", "hr_performance"
     ],
     actions: {
       // Admin has ALL actions on ALL resources - full system access
@@ -440,6 +464,12 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "curriculum_categories": "/admin/curriculum-categories",
   "sms_test": "/admin/sms-test",
   "3d_lesson_builder": "/admin/3d-lesson-builder",
+
+  // HR Module
+  "hr_employees": "/admin/hr/employees",
+  "hr_leave": "/admin/hr/leave",
+  "hr_payroll": "/admin/hr/payroll",
+  "hr_performance": "/admin/hr/performance",
 
   // Call Center
   "unified_workflow": "/callcenter/unified-workflow",

@@ -71,6 +71,10 @@ import CallCenterDashboard from "@/pages/callcenter/dashboard";
 import UnifiedCallCenterWorkflow from "@/pages/callcenter/unified-workflow";
 import VoIPCenter from "@/pages/callcenter/voip-center";
 import SubsystemPermissions from "@/pages/admin/subsystem-permissions";
+import HREmployeesPage from "@/pages/admin/hr-employees";
+import HRLeavePage from "@/pages/admin/hr-leave";
+import HRPayrollPage from "@/pages/admin/hr-payroll";
+import HRPerformancePage from "@/pages/admin/hr-performance";
 import TeacherDashboardNew from "@/pages/teacher/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
@@ -551,6 +555,26 @@ function Router() {
       <Route path="/admin/subsystem-permissions">
         <RoleProtectedRoute allowedRoles={['admin']}>
           <SubsystemPermissions />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/hr/employees">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor']}>
+          <HREmployeesPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/hr/leave">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor']}>
+          <HRLeavePage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/hr/payroll">
+        <RoleProtectedRoute allowedRoles={['admin', 'accountant']}>
+          <HRPayrollPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/hr/performance">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor']}>
+          <HRPerformancePage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/callcenter">
