@@ -233,6 +233,40 @@ router.post("/:id(\\d+)/contracts", authenticate, isAdmin, async (req: AuthReque
   }
 });
 
+// PUT update contract — Admin only
+router.put("/:empId(\\d+)/contracts/:contractId(\\d+)", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const contractId = parseInt(req.params.contractId);
+    const { salaryAmount, startDate, endDate, contractType, notes } = req.body;
+    const [updated] = await db
+      .update(contracts)
+      .set({ salaryAmount, startDate, endDate, contractType, notes, updatedAt: new Date() })
+      .where(eq(contracts.id, contractId))
+      .returning();
+    if (!updated) { res.status(404).json({ message: "Contract not found" }); return; }
+    res.json(updated);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
+// PUT terminate contract — Admin only
+router.put("/:empId(\\d+)/contracts/:contractId(\\d+)/terminate", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const contractId = parseInt(req.params.contractId);
+    const { notes } = req.body as { notes?: string };
+    const [updated] = await db
+      .update(contracts)
+      .set({ status: "terminated", endDate: new Date().toISOString().split("T")[0], notes: notes ?? null, updatedAt: new Date() })
+      .where(eq(contracts.id, contractId))
+      .returning();
+    if (!updated) { res.status(404).json({ message: "Contract not found" }); return; }
+    res.json(updated);
+  } catch (err: unknown) {
+    res.status(500).json({ message: err instanceof Error ? err.message : "Internal error" });
+  }
+});
+
 // ─── Leave Requests ───────────────────────────────────────────────────────────
 
 // GET all leave requests (HR view) — Admin + Supervisor

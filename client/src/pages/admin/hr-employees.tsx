@@ -115,6 +115,16 @@ export default function HREmployeesPage() {
     onError: (e: unknown) => toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }),
   });
 
+  const terminateContractMutation = useMutation({
+    mutationFn: ({ empId, contractId }: { empId: number; contractId: number }) =>
+      apiRequest(`/api/hr/employees/${empId}/contracts/${contractId}/terminate`, { method: "PUT", body: {} }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/hr/employees", contractDialog.employeeId, "contracts"] });
+      toast({ title: "Contract terminated" });
+    },
+    onError: (e: unknown) => toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }),
+  });
+
   const filtered = employees.filter(e =>
     `${e.firstName} ${e.lastName} ${e.employeeCode} ${e.department ?? ""}`.toLowerCase().includes(search.toLowerCase())
   );
@@ -423,11 +433,12 @@ export default function HREmployeesPage() {
                     <TableHead>End</TableHead>
                     <TableHead>Salary</TableHead>
                     <TableHead>Status</TableHead>
+                    {isAdmin && <TableHead>Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {selectedEmployeeContracts.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-4">No contracts yet</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={isAdmin ? 6 : 5} className="text-center text-muted-foreground py-4">No contracts yet</TableCell></TableRow>
                   ) : selectedEmployeeContracts.map(c => (
                     <TableRow key={c.id}>
                       <TableCell className="capitalize">{c.contractType?.replace("_", " ")}</TableCell>
@@ -435,10 +446,24 @@ export default function HREmployeesPage() {
                       <TableCell>{c.endDate?.split("T")[0] ?? "Open"}</TableCell>
                       <TableCell className="font-mono">{Number(c.salaryAmount).toLocaleString()}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${c.renewalAlert ? "bg-orange-100 text-orange-800" : c.isExpired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${c.renewalAlert ? "bg-orange-100 text-orange-800" : c.isExpired ? "bg-red-100 text-red-800" : c.status === "terminated" ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-800"}`}>
                           {c.renewalAlert ? "Renew Soon" : c.isExpired ? "Expired" : c.status}
                         </span>
                       </TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          {c.status === "active" && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => contractDialog.employeeId && terminateContractMutation.mutate({ empId: contractDialog.employeeId, contractId: c.id })}
+                              disabled={terminateContractMutation.isPending}
+                            >
+                              Terminate
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
