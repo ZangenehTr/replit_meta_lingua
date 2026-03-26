@@ -90,7 +90,7 @@ export default function HRPerformancePage() {
   });
 
   const generateMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/hr/employees/${selectedEmployee}/performance/generate`, { year, month }),
+    mutationFn: () => apiRequest(`/api/hr/employees/${selectedEmployee}/performance/generate`, { method: "POST", body: { year, month } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees", selectedEmployee, "performance"] });
       qc.invalidateQueries({ queryKey: ["/api/hr/employees/performance/anomalies"] });
@@ -101,7 +101,7 @@ export default function HRPerformancePage() {
 
   const publishMutation = useMutation({
     mutationFn: ({ reviewId }: { reviewId: number }) =>
-      apiRequest("PUT", `/api/hr/employees/${selectedEmployee}/performance/${reviewId}/publish`, {}),
+      apiRequest(`/api/hr/employees/${selectedEmployee}/performance/${reviewId}/publish`, { method: "PUT" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees", selectedEmployee, "performance"] });
       toast({ title: "Review published" });

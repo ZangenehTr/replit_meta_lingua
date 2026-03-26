@@ -56,7 +56,7 @@ export default function HRPayrollPage() {
   });
 
   const calcMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/hr/employees/payroll/calculate", { year, month }),
+    mutationFn: () => apiRequest("/api/hr/employees/payroll/calculate", { method: "POST", body: { year, month } }),
     onSuccess: (data: { calculatedCount: number; records: PayrollRecord[] }) => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees/payroll/period", year, month] });
       toast({ title: `Payroll calculated for ${data.calculatedCount} employees` });
@@ -65,7 +65,7 @@ export default function HRPayrollPage() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("PUT", `/api/hr/employees/payroll/${id}/approve`, {}),
+    mutationFn: (id: number) => apiRequest(`/api/hr/employees/payroll/${id}/approve`, { method: "PUT" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees/payroll/period", year, month] });
       toast({ title: "Payroll record approved" });

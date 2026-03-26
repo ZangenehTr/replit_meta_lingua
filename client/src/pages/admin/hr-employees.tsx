@@ -91,8 +91,8 @@ export default function HREmployeesPage() {
   const saveMutation = useMutation({
     mutationFn: (data: Record<string, string>) =>
       editEmployee
-        ? apiRequest("PUT", `/api/hr/employees/${editEmployee.id}`, data)
-        : apiRequest("POST", `/api/hr/employees`, data),
+        ? apiRequest(`/api/hr/employees/${editEmployee.id}`, { method: "PUT", body: data })
+        : apiRequest(`/api/hr/employees`, { method: "POST", body: data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees"] });
       setDialogOpen(false);
@@ -103,7 +103,7 @@ export default function HREmployeesPage() {
 
   const saveContractMutation = useMutation({
     mutationFn: (data: Record<string, string>) =>
-      apiRequest("POST", `/api/hr/employees/${contractDialog.employeeId}/contracts`, data),
+      apiRequest(`/api/hr/employees/${contractDialog.employeeId}/contracts`, { method: "POST", body: data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees", contractDialog.employeeId, "contracts"] });
       setContractForm({});

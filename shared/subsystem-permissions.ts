@@ -269,12 +269,13 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "quality_assurance", "schedule_review", "sms_management", "mentor_matching",
       // Call Center
       "unified_workflow", "call_logs", "prospects", "call_campaigns",
-      // HR Module (read-only for supervisor)
-      "hr_employees", "hr_leave", "hr_performance"
+      // HR Module (read-only for supervisor, including payroll view)
+      "hr_employees", "hr_leave", "hr_payroll", "hr_performance"
     ],
     actions: {
       "hr_employees": ["read", "view", "list"],
       "hr_leave": ["read", "view", "list", "update"],
+      "hr_payroll": ["read", "view", "list"],
       "hr_performance": ["read", "view", "list"]
     }
   },

@@ -89,7 +89,7 @@ export default function HRLeavePage() {
 
   const reviewMutation = useMutation({
     mutationFn: (data: { status: string; reviewNotes: string }) =>
-      apiRequest("PUT", `/api/hr/employees/leaves/${reviewDialog.leaveId}/review`, data),
+      apiRequest(`/api/hr/employees/leaves/${reviewDialog.leaveId}/review`, { method: "PUT", body: data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/hr/employees/leaves/all"] });
       setReviewDialog({ open: false, leaveId: null, action: "approved" });

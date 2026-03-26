@@ -568,7 +568,7 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/hr/payroll">
-        <RoleProtectedRoute allowedRoles={['admin', 'accountant']}>
+        <RoleProtectedRoute allowedRoles={['admin', 'accountant', 'supervisor']}>
           <HRPayrollPage />
         </RoleProtectedRoute>
       </Route>
