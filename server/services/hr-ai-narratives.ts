@@ -11,6 +11,7 @@ import { ollamaService } from "../ollama-service";
 import { notificationQueue } from "./queue-service";
 
 const DEFAULT_ANOMALY_THRESHOLD = 15; // points below 3-month average
+const DEFAULT_IMPROVEMENT_THRESHOLD = 60; // absolute score below which improvement plan is generated
 
 export interface AiNarrativeResult {
   narrative: string;
@@ -21,12 +22,13 @@ export interface AiNarrativeResult {
   previousMonthScore: number | null;
 }
 
-/** Read configurable threshold + notification preference from adminSettings. */
-async function getHrConfig(): Promise<{ threshold: number; notifyAdmin: boolean }> {
+/** Read configurable thresholds + notification preference from adminSettings. */
+async function getHrConfig(): Promise<{ threshold: number; notifyAdmin: boolean; improvementThreshold: number }> {
   try {
     const [settings] = await db.select({
       hrAnomalyThreshold: adminSettings.hrAnomalyThreshold,
       hrAnomalyNotifyAdmin: adminSettings.hrAnomalyNotifyAdmin,
+      hrImprovementThreshold: adminSettings.hrImprovementThreshold,
     }).from(adminSettings).limit(1);
 
     return {
@@ -34,9 +36,12 @@ async function getHrConfig(): Promise<{ threshold: number; notifyAdmin: boolean 
         ? Number(settings.hrAnomalyThreshold)
         : DEFAULT_ANOMALY_THRESHOLD,
       notifyAdmin: settings?.hrAnomalyNotifyAdmin ?? true,
+      improvementThreshold: settings?.hrImprovementThreshold != null
+        ? Number(settings.hrImprovementThreshold)
+        : DEFAULT_IMPROVEMENT_THRESHOLD,
     };
   } catch {
-    return { threshold: DEFAULT_ANOMALY_THRESHOLD, notifyAdmin: true };
+    return { threshold: DEFAULT_ANOMALY_THRESHOLD, notifyAdmin: true, improvementThreshold: DEFAULT_IMPROVEMENT_THRESHOLD };
   }
 }
 
@@ -54,7 +59,7 @@ export async function generateAiNarrative(
   const role = user?.role ?? "Staff";
   const monthName = new Date(year, month - 1, 1).toLocaleString("en", { month: "long" });
 
-  const { threshold, notifyAdmin } = await getHrConfig();
+  const { threshold, notifyAdmin, improvementThreshold } = await getHrConfig();
 
   // Get 3-month history for anomaly detection (published reviews only)
   const history = await db
@@ -111,13 +116,13 @@ Respond only with the summary text, no extra formatting.`;
   }
 
   let improvementPlan: string | null = null;
-  if (overallScore < 60 || anomalyDetected) {
+  if (overallScore < improvementThreshold || anomalyDetected) {
     const improvementPrompt = `You are an HR coach. Create a concise, actionable 30-day improvement plan (3 bullet points) for:
 Employee: ${employeeName} (${role})
 Current Score: ${overallScore}/100
 Weak metrics:
 ${Object.entries(metrics)
-  .filter(([, v]) => v < 60)
+  .filter(([, v]) => v < improvementThreshold)
   .map(([k, v]) => `  - ${k.replace(/_/g, " ")}: ${v}/100`)
   .join("\n")}
 Format: plain text bullet points starting with "•". No headers.`;
