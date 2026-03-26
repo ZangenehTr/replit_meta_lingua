@@ -67,14 +67,15 @@ export async function generateAiNarrative(
     return { y: d.getFullYear(), m: d.getMonth() + 1 };
   });
 
-  // Get history strictly from the previous 3 calendar months (not just latest 3 by createdAt)
+  // Get history strictly from the previous 3 calendar months.
+  // Include all statuses (draft + published) so monthly scheduler runs are counted
+  // even before admin manually publishes, ensuring continuous anomaly detection.
   const history = await db
     .select()
     .from(performanceReviews)
     .where(
       and(
         eq(performanceReviews.employeeId, employeeId),
-        eq(performanceReviews.status, "published"),
         or(
           and(eq(performanceReviews.reviewYear, prev3[0].y), eq(performanceReviews.reviewMonth, prev3[0].m)),
           and(eq(performanceReviews.reviewYear, prev3[1].y), eq(performanceReviews.reviewMonth, prev3[1].m)),

@@ -506,11 +506,18 @@ router.post("/payroll/calculate", authenticate, isAdmin, async (req: AuthRequest
           )
         );
 
-      const leaveDays = approvedLeaves.reduce((s, l) => s + Number(l.daysRequested ?? 0), 0);
+      // Prorate leave days: count only the overlap between each leave and the payroll period
+      // This handles cross-month leaves correctly (avoids over-counting)
+      const countOverlapDays = (startStr: string, endStr: string): number => {
+        const ls = new Date(Math.max(new Date(startStr).getTime(), periodStart.getTime()));
+        const le = new Date(Math.min(new Date(endStr).getTime(), periodEnd.getTime()));
+        return le >= ls ? Math.ceil((le.getTime() - ls.getTime()) / 86400000) + 1 : 0;
+      };
+      const leaveDays = approvedLeaves.reduce((s, l) => s + countOverlapDays(l.startDate, l.endDate), 0);
       const dailyRate = workingDaysInMonth > 0 ? baseSalary / workingDaysInMonth : 0;
       const unpaidLeaveDays = approvedLeaves
         .filter(l => l.leaveType === "unpaid")
-        .reduce((s, l) => s + Number(l.daysRequested ?? 0), 0);
+        .reduce((s, l) => s + countOverlapDays(l.startDate, l.endDate), 0);
       const leaveDeductions = unpaidLeaveDays * dailyRate;
 
       // Count actual present days from attendance records for this employee's user account
