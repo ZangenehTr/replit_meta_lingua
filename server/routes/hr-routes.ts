@@ -321,6 +321,7 @@ router.get("/:id(\\d+)/leaves/balance", authenticate, isHrReadRole, async (req: 
       annual: 21,
       sick: 10,
       emergency: 3,
+      personal: 3,
       unpaid: 0,
       maternity: 90,
       paternity: 10,
