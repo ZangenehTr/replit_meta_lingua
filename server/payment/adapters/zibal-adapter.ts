@@ -1,9 +1,13 @@
-import type { PaymentGateway, PaymentInitRequest, PaymentInitResponse, PaymentVerifyRequest, PaymentVerifyResponse } from '../gateway.interface.js';
+import type {
+  PaymentGateway, PaymentInitRequest, PaymentInitResponse,
+  PaymentVerifyRequest, PaymentVerifyResponse,
+  PaymentRefundRequest, PaymentRefundResponse
+} from '../gateway.interface.js';
+import { decryptCredential } from '../../utils/gateway-crypto.js';
 
 interface ZibalConfig {
   merchantId: string;
   sandbox: boolean;
-  callbackUrl: string;
 }
 
 export class ZibalAdapter implements PaymentGateway {
@@ -14,14 +18,17 @@ export class ZibalAdapter implements PaymentGateway {
     this.config = config;
   }
 
+  private get effectiveMerchant(): string {
+    return this.config.sandbox ? 'zibal' : this.config.merchantId;
+  }
+
   async initiate(request: PaymentInitRequest): Promise<PaymentInitResponse> {
     try {
-      const merchant = this.config.sandbox ? 'zibal' : this.config.merchantId;
       const response = await fetch('https://gateway.zibal.ir/v1/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          merchant,
+          merchant: this.effectiveMerchant,
           amount: request.amount,
           callbackUrl: request.callbackUrl,
           description: request.description,
@@ -42,22 +49,22 @@ export class ZibalAdapter implements PaymentGateway {
 
       return {
         success: false,
-        error: `Zibal error: result code ${result.result} (${result.message || 'unknown'})`,
+        error: `Zibal error: result code ${result.result} (${(result.message as string) ?? 'unknown'})`,
       };
-    } catch (error: any) {
-      console.error('Zibal initiate error:', error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Zibal initiate error:', msg);
       return { success: false, error: 'Network error contacting Zibal' };
     }
   }
 
   async verify(request: PaymentVerifyRequest): Promise<PaymentVerifyResponse> {
     try {
-      const merchant = this.config.sandbox ? 'zibal' : this.config.merchantId;
       const response = await fetch('https://gateway.zibal.ir/v1/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          merchant,
+          merchant: this.effectiveMerchant,
           trackId: Number(request.transactionId),
         }),
       });
@@ -67,9 +74,9 @@ export class ZibalAdapter implements PaymentGateway {
       if (result.result === 100) {
         return {
           success: true,
-          referenceNumber: String(result.refNumber || result.trackId),
-          cardNumber: result.cardNumber,
-          amount: result.amount,
+          referenceNumber: String(result.refNumber ?? result.trackId),
+          cardNumber: result.cardNumber as string | undefined,
+          amount: result.amount as number | undefined,
           status: 'completed',
         };
       }
@@ -79,18 +86,27 @@ export class ZibalAdapter implements PaymentGateway {
         status: result.status === -2 ? 'cancelled' : 'failed',
         error: `Zibal verify error: result ${result.result}`,
       };
-    } catch (error: any) {
-      console.error('Zibal verify error:', error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Zibal verify error:', msg);
       return { success: false, status: 'failed', error: 'Network error verifying Zibal payment' };
     }
   }
+
+  async refund(_request: PaymentRefundRequest): Promise<PaymentRefundResponse> {
+    return {
+      success: false,
+      status: 'not_supported',
+      error: 'Zibal does not support programmatic refunds. Use the Zibal merchant dashboard.',
+    };
+  }
 }
 
-export function createZibalAdapter(settings: any, callbackUrl: string): ZibalAdapter | null {
+export function createZibalAdapter(settings: Record<string, unknown>, _callbackUrl: string): ZibalAdapter | null {
   if (!settings?.zibalEnabled || !settings?.zibalMerchantId) return null;
+  const merchantId = decryptCredential(String(settings.zibalMerchantId));
   return new ZibalAdapter({
-    merchantId: settings.zibalMerchantId,
-    sandbox: settings.zibalSandbox ?? true,
-    callbackUrl,
+    merchantId,
+    sandbox: (settings.zibalSandbox as boolean) ?? true,
   });
 }

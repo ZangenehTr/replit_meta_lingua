@@ -8,24 +8,24 @@ export type GatewayName = 'shetab' | 'zarinpal' | 'idpay' | 'zibal' | 'mellat';
 
 export interface GatewayConfig {
   activeGateway: GatewayName;
-  shetab: { merchantId: string; terminalId: string; apiKey: string; secretKey: string; sandbox: boolean; enabled: boolean };
-  zarinpal: { merchantId: string; sandbox: boolean; enabled: boolean };
-  idpay: { apiKey: string; sandbox: boolean; enabled: boolean };
-  zibal: { merchantId: string; sandbox: boolean; enabled: boolean };
-  mellat: { terminalId: string; username: string; password: string; sandbox: boolean; enabled: boolean };
+  shetab: { sandbox: boolean; enabled: boolean };
+  zarinpal: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
+  idpay: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
+  zibal: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
+  mellat: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
 }
 
 function buildCallbackUrl(gateway: GatewayName): string {
-  const base = process.env.BASE_URL || process.env.APP_URL || 'http://localhost:5000';
+  const base = process.env.BASE_URL ?? process.env.APP_URL ?? 'http://localhost:5000';
   return `${base}/api/payments/${gateway}/callback`;
 }
 
 export async function getActiveGateway(): Promise<PaymentGateway | null> {
   try {
-    const settings = await storage.getAdminSettings() as any;
+    const settings = (await storage.getAdminSettings()) as Record<string, unknown>;
     if (!settings) return null;
 
-    const activeGateway = (settings.activePaymentGateway as GatewayName) || 'shetab';
+    const activeGateway = (settings.activePaymentGateway as GatewayName) ?? 'shetab';
 
     switch (activeGateway) {
       case 'zarinpal':
@@ -44,7 +44,7 @@ export async function getActiveGateway(): Promise<PaymentGateway | null> {
           initiate: async (req) => {
             try {
               const result = await shetabSvc.initializePayment(
-                (req.metadata as any)?.userId || 0,
+                ((req.metadata as Record<string, unknown>)?.userId as number) ?? 0,
                 {
                   amount: req.amount,
                   orderId: req.orderId,
@@ -59,8 +59,9 @@ export async function getActiveGateway(): Promise<PaymentGateway | null> {
                 gatewayUrl: result.gatewayUrl,
                 transactionId: result.payment.merchantTransactionId ?? undefined,
               };
-            } catch (e: any) {
-              return { success: false, error: e.message };
+            } catch (e: unknown) {
+              const msg = e instanceof Error ? e.message : 'Unknown error';
+              return { success: false, error: msg };
             }
           },
           verify: async (req) => {
@@ -74,6 +75,11 @@ export async function getActiveGateway(): Promise<PaymentGateway | null> {
               error: result.error,
             };
           },
+          refund: async (_req) => ({
+            success: false,
+            status: 'not_supported' as const,
+            error: 'Shetab refunds must be processed through your bank/merchant portal.',
+          }),
         };
       }
     }
@@ -84,38 +90,32 @@ export async function getActiveGateway(): Promise<PaymentGateway | null> {
 }
 
 export async function getGatewayConfig(): Promise<GatewayConfig> {
-  const settings = (await storage.getAdminSettings()) as any || {};
+  const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
   return {
-    activeGateway: (settings.activePaymentGateway as GatewayName) || 'shetab',
+    activeGateway: (settings.activePaymentGateway as GatewayName) ?? 'shetab',
     shetab: {
-      merchantId: settings.shetabMerchantId || '',
-      terminalId: settings.shetabTerminalId || '',
-      apiKey: settings.shetabApiKey || '',
-      secretKey: settings.shetabSecretKey || '',
       sandbox: settings.shetabEnvironment === 'sandbox',
-      enabled: settings.shetabEnabled || false,
+      enabled: (settings.shetabEnabled as boolean) ?? false,
     },
     zarinpal: {
-      merchantId: settings.zarinpalMerchantId || '',
-      sandbox: settings.zarinpalSandbox ?? true,
-      enabled: settings.zarinpalEnabled || false,
+      hasCredentials: !!settings.zarinpalMerchantId,
+      sandbox: (settings.zarinpalSandbox as boolean) ?? true,
+      enabled: (settings.zarinpalEnabled as boolean) ?? false,
     },
     idpay: {
-      apiKey: settings.idpayApiKey || '',
-      sandbox: settings.idpaySandbox ?? true,
-      enabled: settings.idpayEnabled || false,
+      hasCredentials: !!settings.idpayApiKey,
+      sandbox: (settings.idpaySandbox as boolean) ?? true,
+      enabled: (settings.idpayEnabled as boolean) ?? false,
     },
     zibal: {
-      merchantId: settings.zibalMerchantId || '',
-      sandbox: settings.zibalSandbox ?? true,
-      enabled: settings.zibalEnabled || false,
+      hasCredentials: !!settings.zibalMerchantId,
+      sandbox: (settings.zibalSandbox as boolean) ?? true,
+      enabled: (settings.zibalEnabled as boolean) ?? false,
     },
     mellat: {
-      terminalId: settings.mellatTerminalId || '',
-      username: settings.mellatUsername || '',
-      password: settings.mellatPassword || '',
-      sandbox: settings.mellatSandbox ?? true,
-      enabled: settings.mellatEnabled || false,
+      hasCredentials: !!(settings.mellatTerminalId && settings.mellatUsername && settings.mellatPassword),
+      sandbox: (settings.mellatSandbox as boolean) ?? true,
+      enabled: (settings.mellatEnabled as boolean) ?? false,
     },
   };
 }

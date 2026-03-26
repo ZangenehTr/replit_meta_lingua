@@ -8,85 +8,105 @@ import type { GatewayName } from './gateway-factory.js';
 import { createZarinpalAdapter } from './adapters/zarinpal-adapter.js';
 import { createIDPayAdapter } from './adapters/idpay-adapter.js';
 import { createZibalAdapter } from './adapters/zibal-adapter.js';
+import { encryptCredential, isCredentialSet } from '../utils/gateway-crypto.js';
+
+const SENTINEL = '***';
+
+function shouldUpdate(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value !== SENTINEL;
+}
 
 export function registerPaymentGatewayRoutes(
   app: Express,
-  authenticateToken: any,
-  requireRole: any
-) {
-  // ─── Admin: Get gateway config ─────────────────────────────────────────────
+  authenticateToken: unknown,
+  requireRole: (roles: string[]) => unknown
+): void {
+  // ─── Admin: Get gateway config (no secrets returned) ──────────────────────
   app.get(
     '/api/admin/payment-gateway/config',
-    authenticateToken,
-    requireRole(['Admin']),
-    async (_req: any, res: any) => {
+    authenticateToken as never,
+    requireRole(['Admin']) as never,
+    async (_req: never, res: { json: (v: unknown) => void; status: (c: number) => { json: (v: unknown) => void } }) => {
       try {
         const config = await getGatewayConfig();
-        // Mask sensitive fields for the response
-        const safeConfig = {
-          ...config,
-          shetab: { ...config.shetab, apiKey: config.shetab.apiKey ? '***' : '', secretKey: '***' },
-          idpay: { ...config.idpay, apiKey: config.idpay.apiKey ? '***' : '' },
-          mellat: { ...config.mellat, password: config.mellat.password ? '***' : '' },
-        };
-        res.json(safeConfig);
-      } catch (e: any) {
-        res.status(500).json({ message: 'Failed to fetch gateway config', error: e.message });
+        res.json(config);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Unknown error';
+        res.status(500).json({ message: 'Failed to fetch gateway config', error: msg });
       }
     }
   );
 
-  // ─── Admin: Update gateway config ─────────────────────────────────────────
+  // ─── Admin: Update gateway config (encrypt sensitive fields) ──────────────
   app.put(
     '/api/admin/payment-gateway/config',
-    authenticateToken,
-    requireRole(['Admin']),
-    async (req: any, res: any) => {
+    authenticateToken as never,
+    requireRole(['Admin']) as never,
+    async (req: { body: Record<string, unknown> }, res: { json: (v: unknown) => void; status: (c: number) => { json: (v: unknown) => void } }) => {
       try {
-        const updates: Record<string, any> = {};
-        const {
-          activePaymentGateway,
-          zarinpalMerchantId, zarinpalEnabled, zarinpalSandbox,
-          idpayApiKey, idpayEnabled, idpaySandbox,
-          zibalMerchantId, zibalEnabled, zibalSandbox,
-          mellatTerminalId, mellatUsername, mellatPassword, mellatEnabled, mellatSandbox,
-        } = req.body;
+        const updates: Record<string, unknown> = {};
+        const body = req.body;
 
-        if (activePaymentGateway !== undefined) updates.activePaymentGateway = activePaymentGateway;
-        if (zarinpalMerchantId !== undefined) updates.zarinpalMerchantId = zarinpalMerchantId;
-        if (zarinpalEnabled !== undefined) updates.zarinpalEnabled = zarinpalEnabled;
-        if (zarinpalSandbox !== undefined) updates.zarinpalSandbox = zarinpalSandbox;
-        if (idpayApiKey !== undefined) updates.idpayApiKey = idpayApiKey;
-        if (idpayEnabled !== undefined) updates.idpayEnabled = idpayEnabled;
-        if (idpaySandbox !== undefined) updates.idpaySandbox = idpaySandbox;
-        if (zibalMerchantId !== undefined) updates.zibalMerchantId = zibalMerchantId;
-        if (zibalEnabled !== undefined) updates.zibalEnabled = zibalEnabled;
-        if (zibalSandbox !== undefined) updates.zibalSandbox = zibalSandbox;
-        if (mellatTerminalId !== undefined) updates.mellatTerminalId = mellatTerminalId;
-        if (mellatUsername !== undefined) updates.mellatUsername = mellatUsername;
-        if (mellatPassword !== undefined) updates.mellatPassword = mellatPassword;
-        if (mellatEnabled !== undefined) updates.mellatEnabled = mellatEnabled;
-        if (mellatSandbox !== undefined) updates.mellatSandbox = mellatSandbox;
+        if (body.activePaymentGateway !== undefined) {
+          updates.activePaymentGateway = body.activePaymentGateway;
+        }
 
-        const saved = await storage.updateAdminSettings(updates);
-        res.json({ success: true, settings: saved });
-      } catch (e: any) {
-        res.status(500).json({ message: 'Failed to update gateway config', error: e.message });
+        // Boolean / non-sensitive fields — always update if present
+        const boolFields = [
+          'zarinpalEnabled', 'zarinpalSandbox',
+          'idpayEnabled', 'idpaySandbox',
+          'zibalEnabled', 'zibalSandbox',
+          'mellatEnabled', 'mellatSandbox',
+        ] as const;
+        for (const f of boolFields) {
+          if (body[f] !== undefined) updates[f] = body[f];
+        }
+
+        // Sensitive string fields — only write when client sends a real value (not '***')
+        if (shouldUpdate(body.zarinpalMerchantId)) {
+          updates.zarinpalMerchantId = encryptCredential(body.zarinpalMerchantId);
+        }
+        if (shouldUpdate(body.idpayApiKey)) {
+          updates.idpayApiKey = encryptCredential(body.idpayApiKey);
+        }
+        if (shouldUpdate(body.zibalMerchantId)) {
+          updates.zibalMerchantId = encryptCredential(body.zibalMerchantId);
+        }
+        if (shouldUpdate(body.mellatTerminalId)) {
+          updates.mellatTerminalId = encryptCredential(body.mellatTerminalId);
+        }
+        if (shouldUpdate(body.mellatUsername)) {
+          updates.mellatUsername = encryptCredential(body.mellatUsername);
+        }
+        if (shouldUpdate(body.mellatPassword)) {
+          updates.mellatPassword = encryptCredential(body.mellatPassword);
+        }
+
+        if (Object.keys(updates).length === 0) {
+          res.json({ success: true, message: 'No changes to save' });
+          return;
+        }
+
+        await storage.updateAdminSettings(updates);
+        const config = await getGatewayConfig();
+        res.json({ success: true, config });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Unknown error';
+        res.status(500).json({ message: 'Failed to update gateway config', error: msg });
       }
     }
   );
 
-  // ─── Admin: Test active gateway connectivity ────────────────────────────────
+  // ─── Admin: Test gateway connectivity ─────────────────────────────────────
   app.post(
     '/api/admin/payment-gateway/test',
-    authenticateToken,
-    requireRole(['Admin']),
-    async (req: any, res: any) => {
+    authenticateToken as never,
+    requireRole(['Admin']) as never,
+    async (req: { body: { gateway: GatewayName } }, res: { json: (v: unknown) => void; status: (c: number) => { json: (v: unknown) => void } }) => {
       try {
-        const { gateway } = req.body as { gateway: GatewayName };
-        const settings = (await storage.getAdminSettings()) as any;
-        const base = process.env.BASE_URL || 'http://localhost:5000';
-
+        const { gateway } = req.body;
+        const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
+        const base = process.env.BASE_URL ?? 'http://localhost:5000';
         let testResult: { success: boolean; error?: string } = { success: false, error: 'Unknown gateway' };
 
         if (gateway === 'zarinpal') {
@@ -135,13 +155,14 @@ export function registerPaymentGatewayRoutes(
         }
 
         res.json(testResult);
-      } catch (e: any) {
-        res.status(500).json({ success: false, error: e.message });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Unknown error';
+        res.status(500).json({ success: false, error: msg });
       }
     }
   );
 
-  // ─── Shared callback handler (used by all gateways) ────────────────────────
+  // ─── Shared callback dispatcher ────────────────────────────────────────────
   async function handleGatewayCallback(
     gatewayName: GatewayName,
     orderId: string,
@@ -149,42 +170,40 @@ export function registerPaymentGatewayRoutes(
     amount: number | undefined,
     gatewayData: { transactionId?: string; referenceNumber?: string; cardNumber?: string },
     status: 'completed' | 'failed' | 'cancelled',
-    res: any
-  ) {
+    res: { redirect: (url: string) => void; status: (c: number) => { json: (v: unknown) => void } }
+  ): Promise<void> {
     let redirectPath = 'dashboard';
     let userId = 0;
 
     if (status === 'completed') {
       if (orderId.startsWith('COURSE_')) {
-        const [coursePayment] = await db
-          .select()
-          .from(coursePayments)
+        const [coursePayment] = await db.select().from(coursePayments)
           .where(eq(coursePayments.merchantTransactionId, orderId));
-
         if (coursePayment && coursePayment.status !== 'completed') {
           userId = coursePayment.userId;
           await storage.updateCoursePaymentStatus(coursePayment.id, 'completed', {
-            shetabTransactionId: gatewayData.transactionId || '',
-            shetabReferenceNumber: gatewayData.referenceNumber || '',
-            cardNumber: gatewayData.cardNumber || '',
+            shetabTransactionId: gatewayData.transactionId ?? '',
+            shetabReferenceNumber: gatewayData.referenceNumber ?? '',
+            cardNumber: gatewayData.cardNumber ?? '',
           });
           await db.update(coursePayments)
-            .set({ gatewayName, gatewayTransactionId: gatewayData.transactionId, gatewayReferenceNumber: gatewayData.referenceNumber })
+            .set({
+              gatewayName,
+              gatewayTransactionId: gatewayData.transactionId,
+              gatewayReferenceNumber: gatewayData.referenceNumber,
+            })
             .where(eq(coursePayments.id, coursePayment.id));
         }
         redirectPath = 'courses';
       } else if (orderId.startsWith('WALLET_')) {
-        const [walletTxn] = await db
-          .select()
-          .from(walletTransactions)
+        const [walletTxn] = await db.select().from(walletTransactions)
           .where(eq(walletTransactions.merchantTransactionId, orderId));
-
         if (walletTxn && walletTxn.status !== 'completed') {
           userId = walletTxn.userId;
           await storage.updateWalletTransactionStatus(walletTxn.id, 'completed', {
-            shetabTransactionId: gatewayData.transactionId || '',
-            shetabReferenceNumber: gatewayData.referenceNumber || '',
-            cardNumber: gatewayData.cardNumber || '',
+            shetabTransactionId: gatewayData.transactionId ?? '',
+            shetabReferenceNumber: gatewayData.referenceNumber ?? '',
+            cardNumber: gatewayData.cardNumber ?? '',
           });
           await db.update(walletTransactions)
             .set({ gatewayName })
@@ -197,28 +216,22 @@ export function registerPaymentGatewayRoutes(
         await storage.createNotification({
           userId,
           title: 'Payment Successful',
-          message: `Your payment of ${amount?.toLocaleString('fa-IR') || ''} IRR was successful. Reference: ${gatewayData.referenceNumber || transactionId}`,
+          message: `Your payment of ${amount?.toLocaleString('fa-IR') ?? ''} IRR was successful. Reference: ${gatewayData.referenceNumber ?? transactionId}`,
           type: 'success',
         });
       }
     } else {
       if (orderId.startsWith('COURSE_')) {
-        const [coursePayment] = await db
-          .select()
-          .from(coursePayments)
-          .where(eq(coursePayments.merchantTransactionId, orderId));
-        if (coursePayment) {
-          userId = coursePayment.userId;
-          await storage.updateCoursePaymentStatus(coursePayment.id, 'failed', {});
+        const [cp] = await db.select().from(coursePayments).where(eq(coursePayments.merchantTransactionId, orderId));
+        if (cp) {
+          userId = cp.userId;
+          await storage.updateCoursePaymentStatus(cp.id, 'failed', {});
         }
       } else if (orderId.startsWith('WALLET_')) {
-        const [walletTxn] = await db
-          .select()
-          .from(walletTransactions)
-          .where(eq(walletTransactions.merchantTransactionId, orderId));
-        if (walletTxn) {
-          userId = walletTxn.userId;
-          await storage.updateWalletTransactionStatus(walletTxn.id, 'failed', {});
+        const [wt] = await db.select().from(walletTransactions).where(eq(walletTransactions.merchantTransactionId, orderId));
+        if (wt) {
+          userId = wt.userId;
+          await storage.updateWalletTransactionStatus(wt.id, 'failed', {});
         }
       }
 
@@ -232,7 +245,7 @@ export function registerPaymentGatewayRoutes(
       }
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || '';
+    const frontendUrl = process.env.FRONTEND_URL ?? '';
     const redirectUrl = status === 'completed'
       ? `${frontendUrl}/${redirectPath}?payment=success`
       : `${frontendUrl}/dashboard?payment=failed`;
@@ -240,111 +253,129 @@ export function registerPaymentGatewayRoutes(
     res.redirect(redirectUrl);
   }
 
-  // ─── Zarinpal callback ──────────────────────────────────────────────────────
-  app.get('/api/payments/zarinpal/callback', async (req: any, res: any) => {
+  // ─── Zarinpal GET callback ─────────────────────────────────────────────────
+  app.get('/api/payments/zarinpal/callback', async (req: { query: Record<string, string> }, res: never) => {
     try {
-      const { Authority, Status } = req.query;
+      const { Authority, Status } = (req as unknown as { query: Record<string, string> }).query;
       if (!Authority || Status !== 'OK') {
-        return res.redirect(`${process.env.FRONTEND_URL || ''}/dashboard?payment=cancelled`);
+        return (res as unknown as { redirect: (u: string) => void }).redirect(
+          `${process.env.FRONTEND_URL ?? ''}/dashboard?payment=cancelled`
+        );
       }
 
-      const settings = (await storage.getAdminSettings()) as any;
-      const base = process.env.BASE_URL || 'http://localhost:5000';
+      const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
+      const base = process.env.BASE_URL ?? 'http://localhost:5000';
       const adapter = createZarinpalAdapter(settings, `${base}/api/payments/zarinpal/callback`);
-      if (!adapter) return res.status(503).json({ message: 'Zarinpal not configured' });
+      if (!adapter) {
+        return (res as unknown as { status: (c: number) => { json: (v: unknown) => void } })
+          .status(503).json({ message: 'Zarinpal not configured' });
+      }
 
-      // Look up orderId from authority
+      // Find order by stored authority
       const [walletTxn] = await db.select().from(walletTransactions)
-        .where(eq(walletTransactions.shetabTransactionId, Authority as string));
+        .where(eq(walletTransactions.shetabTransactionId, Authority));
       const [coursePmt] = await db.select().from(coursePayments)
-        .where(eq(coursePayments.gatewayTransactionId, Authority as string));
+        .where(eq(coursePayments.gatewayTransactionId, Authority));
 
-      const record = walletTxn || coursePmt;
+      const record = walletTxn ?? coursePmt;
       const orderId = record?.merchantTransactionId;
 
       if (!orderId) {
         console.error('Zarinpal callback: no matching order for authority', Authority);
-        return res.redirect(`${process.env.FRONTEND_URL || ''}/dashboard?payment=failed`);
+        return (res as unknown as { redirect: (u: string) => void }).redirect(
+          `${process.env.FRONTEND_URL ?? ''}/dashboard?payment=failed`
+        );
       }
 
       const amount = record && 'amount' in record ? Number(record.amount) : undefined;
-      const verifyResult = await adapter.verify({ orderId, transactionId: Authority as string, amount });
+      const verifyResult = await adapter.verify({ orderId, transactionId: Authority, amount });
 
       await handleGatewayCallback(
-        'zarinpal',
-        orderId,
-        Authority as string,
-        amount,
-        { transactionId: Authority as string, referenceNumber: verifyResult.referenceNumber, cardNumber: verifyResult.cardNumber },
+        'zarinpal', orderId, Authority, amount,
+        { transactionId: Authority, referenceNumber: verifyResult.referenceNumber, cardNumber: verifyResult.cardNumber },
         verifyResult.status,
-        res
+        res as unknown as { redirect: (u: string) => void; status: (c: number) => { json: (v: unknown) => void } }
       );
-    } catch (e: any) {
-      console.error('Zarinpal callback error:', e);
-      res.redirect(`${process.env.FRONTEND_URL || ''}/dashboard?payment=error`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      console.error('Zarinpal callback error:', msg);
+      (res as unknown as { redirect: (u: string) => void }).redirect(
+        `${process.env.FRONTEND_URL ?? ''}/dashboard?payment=error`
+      );
     }
   });
 
-  // ─── IDPay callback ─────────────────────────────────────────────────────────
-  app.post('/api/payments/idpay/callback', async (req: any, res: any) => {
+  // ─── IDPay POST callback ───────────────────────────────────────────────────
+  app.post('/api/payments/idpay/callback', async (req: { body: Record<string, string> }, res: never) => {
     try {
-      const { id, order_id, status } = req.body;
-      if (!order_id) return res.redirect(`${process.env.FRONTEND_URL || ''}/dashboard?payment=failed`);
+      const { id, order_id, status } = (req as unknown as { body: Record<string, string> }).body;
+      if (!order_id) {
+        return (res as unknown as { redirect: (u: string) => void }).redirect(
+          `${process.env.FRONTEND_URL ?? ''}/dashboard?payment=failed`
+        );
+      }
 
       if (status !== '10') {
-        await handleGatewayCallback('idpay', order_id, id, undefined, {}, 'failed', res);
+        await handleGatewayCallback('idpay', order_id, id, undefined, {}, 'failed',
+          res as unknown as { redirect: (u: string) => void; status: (c: number) => { json: (v: unknown) => void } });
         return;
       }
 
-      const settings = (await storage.getAdminSettings()) as any;
-      const base = process.env.BASE_URL || 'http://localhost:5000';
+      const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
+      const base = process.env.BASE_URL ?? 'http://localhost:5000';
       const adapter = createIDPayAdapter(settings, `${base}/api/payments/idpay/callback`);
-      if (!adapter) return res.status(503).json({ message: 'IDPay not configured' });
+      if (!adapter) {
+        return (res as unknown as { status: (c: number) => { json: (v: unknown) => void } })
+          .status(503).json({ message: 'IDPay not configured' });
+      }
 
       const verifyResult = await adapter.verify({ orderId: order_id, transactionId: id });
-
       await handleGatewayCallback(
-        'idpay',
-        order_id,
-        id,
-        verifyResult.amount,
+        'idpay', order_id, id, verifyResult.amount,
         { transactionId: id, referenceNumber: verifyResult.referenceNumber, cardNumber: verifyResult.cardNumber },
         verifyResult.status,
-        res
+        res as unknown as { redirect: (u: string) => void; status: (c: number) => { json: (v: unknown) => void } }
       );
-    } catch (e: any) {
-      console.error('IDPay callback error:', e);
-      res.redirect(`${process.env.FRONTEND_URL || ''}/dashboard?payment=error`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      console.error('IDPay callback error:', msg);
+      (res as unknown as { redirect: (u: string) => void }).redirect(
+        `${process.env.FRONTEND_URL ?? ''}/dashboard?payment=error`
+      );
     }
   });
 
-  // ─── Zibal callback ─────────────────────────────────────────────────────────
-  app.get('/api/payments/zibal/callback', async (req: any, res: any) => {
+  // ─── Zibal GET callback ────────────────────────────────────────────────────
+  app.get('/api/payments/zibal/callback', async (req: { query: Record<string, string> }, res: never) => {
     try {
-      const { trackId, success, orderId } = req.query;
+      const { trackId, success, orderId } = (req as unknown as { query: Record<string, string> }).query;
       if (!orderId || success !== '1') {
-        return res.redirect(`${process.env.FRONTEND_URL || ''}/dashboard?payment=cancelled`);
+        return (res as unknown as { redirect: (u: string) => void }).redirect(
+          `${process.env.FRONTEND_URL ?? ''}/dashboard?payment=cancelled`
+        );
       }
 
-      const settings = (await storage.getAdminSettings()) as any;
-      const base = process.env.BASE_URL || 'http://localhost:5000';
+      const settings = ((await storage.getAdminSettings()) ?? {}) as Record<string, unknown>;
+      const base = process.env.BASE_URL ?? 'http://localhost:5000';
       const adapter = createZibalAdapter(settings, `${base}/api/payments/zibal/callback`);
-      if (!adapter) return res.status(503).json({ message: 'Zibal not configured' });
+      if (!adapter) {
+        return (res as unknown as { status: (c: number) => { json: (v: unknown) => void } })
+          .status(503).json({ message: 'Zibal not configured' });
+      }
 
-      const verifyResult = await adapter.verify({ orderId: orderId as string, transactionId: trackId as string });
-
+      const verifyResult = await adapter.verify({ orderId, transactionId: trackId });
       await handleGatewayCallback(
-        'zibal',
-        orderId as string,
-        trackId as string,
-        verifyResult.amount,
-        { transactionId: trackId as string, referenceNumber: verifyResult.referenceNumber, cardNumber: verifyResult.cardNumber },
+        'zibal', orderId, trackId, verifyResult.amount,
+        { transactionId: trackId, referenceNumber: verifyResult.referenceNumber, cardNumber: verifyResult.cardNumber },
         verifyResult.status,
-        res
+        res as unknown as { redirect: (u: string) => void; status: (c: number) => { json: (v: unknown) => void } }
       );
-    } catch (e: any) {
-      console.error('Zibal callback error:', e);
-      res.redirect(`${process.env.FRONTEND_URL || ''}/dashboard?payment=error`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      console.error('Zibal callback error:', msg);
+      (res as unknown as { redirect: (u: string) => void }).redirect(
+        `${process.env.FRONTEND_URL ?? ''}/dashboard?payment=error`
+      );
     }
   });
 }

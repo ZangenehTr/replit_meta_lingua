@@ -30,8 +30,23 @@ export interface PaymentVerifyResponse {
   error?: string;
 }
 
+export interface PaymentRefundRequest {
+  transactionId: string;
+  orderId: string;
+  amount: number;
+  reason?: string;
+}
+
+export interface PaymentRefundResponse {
+  success: boolean;
+  refundId?: string;
+  status: 'refunded' | 'pending' | 'not_supported' | 'failed';
+  error?: string;
+}
+
 export interface PaymentGateway {
   name: string;
   initiate(request: PaymentInitRequest): Promise<PaymentInitResponse>;
   verify(request: PaymentVerifyRequest): Promise<PaymentVerifyResponse>;
+  refund(request: PaymentRefundRequest): Promise<PaymentRefundResponse>;
 }

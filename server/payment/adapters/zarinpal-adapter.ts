@@ -1,9 +1,13 @@
-import type { PaymentGateway, PaymentInitRequest, PaymentInitResponse, PaymentVerifyRequest, PaymentVerifyResponse } from '../gateway.interface.js';
+import type {
+  PaymentGateway, PaymentInitRequest, PaymentInitResponse,
+  PaymentVerifyRequest, PaymentVerifyResponse,
+  PaymentRefundRequest, PaymentRefundResponse
+} from '../gateway.interface.js';
+import { decryptCredential } from '../../utils/gateway-crypto.js';
 
 interface ZarinpalConfig {
   merchantId: string;
   sandbox: boolean;
-  callbackUrl: string;
 }
 
 export class ZarinpalAdapter implements PaymentGateway {
@@ -47,7 +51,7 @@ export class ZarinpalAdapter implements PaymentGateway {
       const result = await response.json();
 
       if (result.data?.code === 100) {
-        const authority = result.data.authority;
+        const authority = result.data.authority as string;
         return {
           success: true,
           gatewayUrl: `${this.redirectBase}/${authority}`,
@@ -57,10 +61,11 @@ export class ZarinpalAdapter implements PaymentGateway {
 
       return {
         success: false,
-        error: result.errors?.message || `Zarinpal error code: ${result.data?.code}`,
+        error: result.errors?.message ?? `Zarinpal error code: ${result.data?.code}`,
       };
-    } catch (error: any) {
-      console.error('Zarinpal initiate error:', error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Zarinpal initiate error:', msg);
       return { success: false, error: 'Network error contacting Zarinpal' };
     }
   }
@@ -83,8 +88,8 @@ export class ZarinpalAdapter implements PaymentGateway {
         return {
           success: true,
           referenceNumber: String(result.data.ref_id),
-          cardNumber: result.data.card_pan,
-          amount: result.data.fee,
+          cardNumber: result.data.card_pan as string | undefined,
+          amount: result.data.fee as number | undefined,
           status: 'completed',
         };
       }
@@ -92,20 +97,29 @@ export class ZarinpalAdapter implements PaymentGateway {
       return {
         success: false,
         status: 'failed',
-        error: result.errors?.message || `Zarinpal verify error: ${result.data?.code}`,
+        error: result.errors?.message ?? `Zarinpal verify error: ${result.data?.code}`,
       };
-    } catch (error: any) {
-      console.error('Zarinpal verify error:', error);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Zarinpal verify error:', msg);
       return { success: false, status: 'failed', error: 'Network error verifying Zarinpal payment' };
     }
   }
+
+  async refund(_request: PaymentRefundRequest): Promise<PaymentRefundResponse> {
+    return {
+      success: false,
+      status: 'not_supported',
+      error: 'Zarinpal does not support programmatic refunds via API. Issue refund from Zarinpal merchant panel.',
+    };
+  }
 }
 
-export function createZarinpalAdapter(settings: any, callbackUrl: string): ZarinpalAdapter | null {
+export function createZarinpalAdapter(settings: Record<string, unknown>, _callbackUrl: string): ZarinpalAdapter | null {
   if (!settings?.zarinpalEnabled || !settings?.zarinpalMerchantId) return null;
+  const merchantId = decryptCredential(String(settings.zarinpalMerchantId));
   return new ZarinpalAdapter({
-    merchantId: settings.zarinpalMerchantId,
-    sandbox: settings.zarinpalSandbox ?? true,
-    callbackUrl,
+    merchantId,
+    sandbox: (settings.zarinpalSandbox as boolean) ?? true,
   });
 }
