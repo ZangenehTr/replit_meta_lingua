@@ -127,13 +127,15 @@ async function handleUnifiedCallback(
           return;
         }
         const cfg = await getGatewaySettings('zarinpal');
+        // Force-enabled during callback: in-flight payments must be verified
+        // regardless of whether admin has since disabled the gateway
         const adapter = createZarinpalAdapter({
-          zarinpalEnabled: cfg.isEnabled,
+          zarinpalEnabled: true,
           zarinpalMerchantId: cfg.credentials.merchantId ?? '',
           zarinpalSandbox: cfg.sandboxMode,
         }, `${base}/api/payments/zarinpal/callback`);
         if (!adapter) {
-          res.status(503).json({ message: 'Zarinpal not configured' });
+          res.status(503).json({ message: 'Zarinpal merchant ID not configured' });
           return;
         }
         // Look up order by stored authority token — check both columns for backward compat
@@ -175,7 +177,7 @@ async function handleUnifiedCallback(
         }
         const cfg = await getGatewaySettings('idpay');
         const adapter = createIDPayAdapter({
-          idpayEnabled: cfg.isEnabled,
+          idpayEnabled: true,
           idpayApiKey: cfg.credentials.apiKey ?? '',
           idpaySandbox: cfg.sandboxMode,
         }, `${base}/api/payments/idpay/callback`);
@@ -199,7 +201,7 @@ async function handleUnifiedCallback(
         }
         const cfg = await getGatewaySettings('zibal');
         const adapter = createZibalAdapter({
-          zibalEnabled: cfg.isEnabled,
+          zibalEnabled: true,
           zibalMerchantId: cfg.credentials.merchantId ?? '',
           zibalSandbox: cfg.sandboxMode,
         }, `${base}/api/payments/zibal/callback`);
@@ -277,6 +279,10 @@ export function registerPaymentGatewayRoutes(
         };
 
         if (body.activePaymentGateway) {
+          if (body.activePaymentGateway === 'mellat') {
+            res.status(422).json({ message: 'Mellat Bank gateway is not yet fully implemented. Please select another gateway.' });
+            return;
+          }
           await setActiveGatewayName(body.activePaymentGateway);
         }
 

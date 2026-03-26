@@ -491,7 +491,7 @@ export const coursePayments = pgTable("course_payments", {
   paymentMethod: varchar("payment_method", { length: 50 }),
   status: varchar("status", { length: 20 }).default("pending"),
   merchantTransactionId: varchar("merchant_transaction_id", { length: 255 }),
-  gatewayTransactionId: varchar("gateway_transaction_id", { length: 255 }),
+  gatewayTransactionId: varchar("gateway_transaction_id", { length: 512 }),
   gatewayReferenceNumber: varchar("gateway_reference_number", { length: 255 }),
   gatewayName: varchar("gateway_name", { length: 50 }).default("shetab"),
   cardNumber: varchar("card_number", { length: 20 }),
