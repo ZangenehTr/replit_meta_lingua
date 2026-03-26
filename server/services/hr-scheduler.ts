@@ -9,7 +9,7 @@
 import { Queue, Worker, type Job } from "bullmq";
 import { db } from "../db";
 import { eq, and } from "drizzle-orm";
-import { employees, performanceReviews, type InsertPerformanceReview } from "@shared/schema";
+import { employees, performanceReviews, performanceScores, type InsertPerformanceReview, type InsertPerformanceScore } from "@shared/schema";
 import { computeEmployeeMetrics } from "./hr-performance-aggregator";
 import { generateAiNarrative, type AiNarrativeResult } from "./hr-ai-narratives";
 import { redisConnection } from "./queue-service";
@@ -75,6 +75,37 @@ async function generateMissingReviewsForMonth(year: number, month: number): Prom
       };
 
       await db.insert(performanceReviews).values(reviewData);
+
+      // Persist per-metric snapshots into performance_scores (mirrors manual generation path)
+      await db.delete(performanceScores).where(
+        and(
+          eq(performanceScores.employeeId, emp.id),
+          eq(performanceScores.periodYear, year),
+          eq(performanceScores.periodMonth, month)
+        )
+      );
+      const scoreRows: InsertPerformanceScore[] = Object.entries(metrics.breakdown).map(([metricName, metricValue]) => {
+        const mn = metricName.toLowerCase();
+        const dataSource =
+          mn.includes("ai_supervisor") || mn.includes("session_quality") ? "ai_supervisor" :
+          mn.includes("lead") || mn.includes("followup") || mn.includes("response_speed") ? "crm" :
+          mn.includes("attendance") ? "attendance" :
+          mn.includes("student_outcome") || mn.includes("enrollment") ? "enrollments" :
+          "aggregator";
+        return {
+          employeeId: emp.id,
+          periodYear: year,
+          periodMonth: month,
+          metricName,
+          metricValue: String(metricValue),
+          normalizedScore: String(Math.min(100, Math.max(0, metricValue))),
+          dataSource,
+        };
+      });
+      if (scoreRows.length > 0) {
+        await db.insert(performanceScores).values(scoreRows);
+      }
+
       generated++;
       console.log(`[HR Scheduler] Generated review for employee ${emp.id} (${year}-${month})`);
     } catch (err: unknown) {
