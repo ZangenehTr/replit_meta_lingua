@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Bot, AlertTriangle, TrendingUp, RefreshCw, Eye, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -64,6 +65,8 @@ function scoreColor(score: number) {
 export default function HRPerformancePage() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toLowerCase() === "admin";
   const [location] = useLocation();
   const params = new URLSearchParams(location.split("?")[1] ?? "");
   const preselectedEmployee = params.get("employee");
@@ -177,14 +180,16 @@ export default function HRPerformancePage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              onClick={() => generateMutation.mutate()}
-              disabled={!selectedEmployee || generateMutation.isPending}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${generateMutation.isPending ? "animate-spin" : ""}`} />
-              {generateMutation.isPending ? "Generating..." : "Generate Review"}
-            </Button>
+            {isAdmin && (
+              <Button
+                onClick={() => generateMutation.mutate()}
+                disabled={!selectedEmployee || generateMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${generateMutation.isPending ? "animate-spin" : ""}`} />
+                {generateMutation.isPending ? "Generating..." : "Generate Review"}
+              </Button>
+            )}
           </div>
         </CardHeader>
 
@@ -241,7 +246,7 @@ export default function HRPerformancePage() {
                       <TableCell>
                         <div className="flex gap-1">
                           <Button size="sm" variant="ghost" onClick={() => setDetailReview(r)}><Eye className="h-4 w-4" /></Button>
-                          {r.status === "draft" && (
+                          {isAdmin && r.status === "draft" && (
                             <Button size="sm" variant="ghost" onClick={() => publishMutation.mutate({ reviewId: r.id })}>
                               <CheckCircle className="h-4 w-4" />
                             </Button>

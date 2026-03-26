@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Banknote, Calculator, CheckCheck } from "lucide-react";
 import { Link } from "wouter";
@@ -47,6 +48,8 @@ function statusColor(status: string) {
 export default function HRPayrollPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toLowerCase() === "admin";
   const [year, setYear] = useState(CURRENT_YEAR);
   const [month, setMonth] = useState(CURRENT_MONTH);
 
@@ -120,9 +123,11 @@ export default function HRPayrollPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => calcMutation.mutate()} disabled={calcMutation.isPending} className="flex items-center gap-2">
-              <Calculator className="h-4 w-4" />{calcMutation.isPending ? "Calculating..." : "Calculate Payroll"}
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => calcMutation.mutate()} disabled={calcMutation.isPending} className="flex items-center gap-2">
+                <Calculator className="h-4 w-4" />{calcMutation.isPending ? "Calculating..." : "Calculate Payroll"}
+              </Button>
+            )}
             <Button variant="outline" onClick={exportCSV} disabled={records.length === 0}>Export CSV</Button>
           </div>
         </CardHeader>
@@ -189,7 +194,7 @@ export default function HRPayrollPage() {
                     <TableCell className="text-sm">{r.presentDays}/{r.workingDays}</TableCell>
                     <TableCell><span className={`px-2 py-1 rounded text-xs font-medium ${statusColor(r.status)}`}>{r.status}</span></TableCell>
                     <TableCell>
-                      {r.status === "draft" && (
+                      {isAdmin && r.status === "draft" && (
                         <Button size="sm" variant="outline" onClick={() => approveMutation.mutate(r.id)} disabled={approveMutation.isPending}>
                           <CheckCheck className="h-4 w-4" />
                         </Button>

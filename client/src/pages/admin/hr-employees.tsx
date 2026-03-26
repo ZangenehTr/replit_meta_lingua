@@ -68,7 +68,7 @@ export default function HREmployeesPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role?.toLowerCase() === "admin";
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [contractDialog, setContractDialog] = useState<{ open: boolean; employeeId: number | null }>({ open: false, employeeId: null });
@@ -234,10 +234,12 @@ export default function HREmployeesPage() {
                         <TableCell><span className={`px-2 py-1 rounded-full text-xs font-medium ${statusBadge(emp.status)}`}>{emp.status}</span></TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => openEdit(emp)}><Pencil className="h-4 w-4" /></Button>
-                            <Button size="sm" variant="ghost" onClick={() => setContractDialog({ open: true, employeeId: emp.id })} title="Manage contracts">
-                              <FileText className="h-4 w-4" />
-                            </Button>
+                            {isAdmin && <Button size="sm" variant="ghost" onClick={() => openEdit(emp)}><Pencil className="h-4 w-4" /></Button>}
+                            {isAdmin && (
+                              <Button size="sm" variant="ghost" onClick={() => setContractDialog({ open: true, employeeId: emp.id })} title="Manage contracts">
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Link href={`/admin/hr/performance?employee=${emp.id}`}>
                               <Button size="sm" variant="ghost" title="Performance"><RefreshCw className="h-4 w-4" /></Button>
                             </Link>
