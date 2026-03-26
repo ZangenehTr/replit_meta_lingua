@@ -1,0 +1,612 @@
+# Meta Lingua — System Architecture
+
+> **Last updated:** 2026-03-26
+> **Status:** Current — reflects full platform including all post-spec hardening
+
+---
+
+## 1. Three-Tier Overview
+
+```
+                    +------------------+
+                    |   Nginx (proxy)  |  :80 / :443
+                    +--------+---------+
+                             |
+              +--------------+--------------+
+              |                             |
+     +--------v--------+          +--------v--------+
+     |  Frontend (Vite) |          |  Dev Server      |
+     |  React 18 SPA    |          |  Express.js      |
+     |  Port 5173 (dev) |          |  Port 5000 (dev) |
+     |  Port 80 (prod)  |          |  Port 3000 (prod)|
+     +---------+--------+          +--------+---------+
+               |                            |
+               |  localStorage              |  Drizzle ORM / in-memory
+               |  (mock stores)             |
+               v                   +--------v--------+
+        Browser Storage            |  PostgreSQL 14+  |
+        SessionStorage (auth)      +---------+--------+
+        PWA / Service Worker                 |
+                                   +---------v--------+
+                                   |  Ollama / OpenAI |
+                                   |  (AI services)   |
+                                   +------------------+
+```
+
+**Key constraint for Iranian deployment:** All services run on-premise. Ollama handles AI locally; Kavenegar handles SMS domestically; Zarinpal/IDPay/Zibal handle payments via Shaparak. No data leaves the server when configured for local-only operation.
+
+---
+
+## 2. Frontend Architecture
+
+### 2.1 Technology Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 18 + TypeScript |
+| Build tool | Vite |
+| Routing | `react-router` (Data mode, `createBrowserRouter`) |
+| Styling | Tailwind CSS v4 |
+| Validation | Zod (77 schemas in `src/lib/schemas.ts`) |
+| Toast notifications | `sonner@2.0.3` |
+| Icons | Lucide React |
+| State | localStorage mock stores (see §2.3) |
+| Auth state | `sessionStorage` via `AuthContext` |
+| Real-time | Socket.IO client |
+| PWA | Service worker (`/public/sw.js`) + Web App Manifest |
+| i18n | Custom `useLanguage()` + `pick()` helpers |
+| Calendar | Jalali (Solar Hijri) throughout |
+
+### 2.2 Routing (React Router Data Mode)
+
+All routes defined in `/routes.ts` using `createBrowserRouter`. Root layout is `AppShell` (sidebar + topbar + language switcher). Authentication enforced via `AuthGuard`. Every CRM route is additionally guarded by a role-specific or feature-specific guard wrapper.
+
+**Guard hierarchy:**
+
+| Guard | Allowed Roles |
+|-------|--------------|
+| `AdminGuard` | admin |
+| `SupervisorGuard` | admin, supervisor |
+| `StaffGuard` | admin, supervisor, accountant, front\_desk, marketing |
+| `FinanceGuard` | admin, supervisor, accountant |
+| `CRMGuard` | admin, call\_center, supervisor, front\_desk, marketing, mentor, teacher, accountant |
+| `FeatureCRMGuard` | CRM roles + dynamic FACS check |
+| `TeacherGuard` | teacher |
+| `StudentGuard` | student |
+| `MentorGuard` | mentor |
+| `CourseViewGuard` | all authenticated roles |
+
+**Route map (complete):**
+
+```
+/login                            → LoginPage (unauthenticated)
+
+/                                 → DashboardRouter (role-aware redirect)
+
+── CRM Pipeline (34 pages) ───────────────────────────────────────────
+/crm/contacts                     → ContactBook           [FeatureCRM: crm.contacts]
+/crm/new-lead                     → NewLead               [FeatureCRM: crm.new_lead]
+/crm/no-answer                    → NoAnswer              [FeatureCRM: crm.no_answer]
+/crm/follow-up                    → PrePlacementFollowUp  [FeatureCRM: crm.follow_up]
+/crm/placement-test               → PlacementTest         [FeatureCRM: crm.placement]
+/crm/no-show                      → NoShow                [FeatureCRM: crm.no_show]
+/crm/withdrawal                   → Withdrawal            [FeatureCRM: crm.withdrawal]
+/crm/consult-call-center          → ConsultationCallCenter [FeatureCRM: crm.consultation]
+/crm/consult-counter              → ConsultationCounter   [FeatureCRM: crm.consultation]
+/crm/final-registration           → FinalRegistration     [FeatureCRM: crm.registration]
+/crm/private-class-setup          → PrivateClassSetup     [FeatureCRM: crm.class_setup]
+/crm/room-assignment              → RoomAssignment        [FeatureCRM: crm.room_assign]
+/crm/active-private               → ActivePrivateClasses  [FeatureCRM: crm.active_classes]
+/crm/mentor-assignment            → MentorAssignmentCRM   [FeatureCRM: crm.active_classes]
+/crm/completed-private            → CompletedPrivate      [FeatureCRM: crm.active_classes]
+/crm/group-class-setup            → GroupClassSetup       [FeatureCRM: crm.class_setup]
+/crm/active-groups                → ActiveGroupClasses    [FeatureCRM: crm.active_classes]
+/crm/completed-groups             → CompletedGroups       [FeatureCRM: crm.active_classes]
+/crm/attendance-online            → AttendanceOnline      [FeatureCRM: crm.attendance]
+/crm/attendance-offsite           → AttendanceOffsite     [FeatureCRM: crm.attendance]
+/crm/attendance-inperson          → AttendanceInperson    [FeatureCRM: crm.attendance]
+/crm/attendance-analytics         → AttendanceAnalytics   [Supervisor]
+/crm/substitution-history         → SubstitutionHistory   [Supervisor]
+/crm/installments                 → Installments          [FeatureCRM: crm.financial]
+/crm/checks                       → Checks                [FeatureCRM: crm.financial]
+/crm/charge-extension             → ChargeExtension       [FeatureCRM: crm.financial]
+/crm/hold                         → HoldCalendar          [FeatureCRM: crm.financial]
+/crm/log-book                     → LogBook               [FeatureCRM: crm.log_book]
+/crm/spa                          → SPACards              [FeatureCRM: crm.quality]
+/crm/qc-private                   → QCCards               [FeatureCRM: crm.quality]
+/crm/observer-private             → Observer              [FeatureCRM: crm.quality]
+/crm/teacher-availability         → TeacherAvailability   [FeatureCRM: crm.teacher_availability]
+/crm/pipeline-analytics           → PipelineAnalytics     [FeatureCRM: admin.reports]
+
+── Config ────────────────────────────────────────────────────────────
+/config/pricing                   → CoursePricing         [Staff]
+/config/bank-accounts             → BankAccounts          [Staff]
+/config/classrooms                → Classrooms            [Staff]
+/config/timetable                 → Timetable             [CRM]
+/config/calendar                  → CalendarConfig        [Admin]
+
+── System Management ─────────────────────────────────────────────────
+/users                            → UserManagement        [Admin]
+/students                         → Students              [Staff]
+/students/:id                     → StudentDetail         [Staff]
+/teachers                         → Teachers              [Staff]
+/teachers/:id                     → TeacherDetail         [Staff]
+/programs                         → Programs              [Admin]
+/courses                          → Courses               [CourseView]
+/recordings-admin                 → RecordingsAdmin       [Supervisor]
+/analytics                        → Analytics             [Staff]
+/reports/financial                → FinancialReports      [Finance]
+/invoices                         → Invoices              [Finance]
+/sms-panel                        → SMSPanel              [Admin]
+/settings                         → SystemSettings        [Admin]
+/gamification-admin               → GamificationAdmin     [Admin]
+/certificates                     → Certificates          [Admin]
+/payment-gateway-config           → PaymentGatewayConfig  [Admin]
+
+── HR Module (8 pages) ───────────────────────────────────────────────
+/hr/dashboard                     → HRDashboardPage       [Admin]
+/hr/employees                     → EmployeesPage         [Admin]
+/hr/departments                   → DepartmentsPage       [Admin]
+/hr/leave-requests                → LeaveRequestsPage     [Admin]
+/hr/contracts                     → ContractsPage         [Admin]
+/hr/contract-templates            → ContractTemplatesPage [Admin]
+/hr/performance-reviews           → PerformanceReviewsPage [Admin]
+/hr/payroll                       → PayrollPage           [Finance]
+
+── Student Portal ────────────────────────────────────────────────────
+/student/dashboard                → StudentDashboard      [Student]
+/student/home                     → StudentHomePage       [Student]  ← bottom-nav UX
+/student/learn                    → StudentLearnPage      [Student]
+/student/play                     → StudentPlayPage       [Student]
+/student/lexi                     → StudentLexiPage       [Student]
+/student/my-classes               → MyClasses             [Student]
+/student/my-grades                → MyGrades              [Student]
+/student/my-payments              → MyPayments            [Student]
+/student/my-homework              → MyHomework            [Student]
+/student/profile                  → StudentProfile        [Student]
+/student/my-flashcards            → MyFlashcardsPage      [Student]
+/student/flashcard-import         → FlashcardImportPage   [Student]
+/student/my-recordings            → MyRecordings          [Student]
+/student/prerequisite-tracker     → PrerequisiteTracker   [Student]
+/student/notifications            → StudentNotifications  [Student]
+/student/enrollments              → EnrollmentsPage       [Student]
+/student/group-classes            → GroupClassesPage      [Student]
+/student/class-catalog            → ClassCatalog          [Student]
+/student/private-class-enrollment → PrivateClassEnrollment [Student]
+/student/callern-enrollment       → CallerNEnrollment     [Student]
+/student/checkout                 → Checkout              [Student]
+/student/video-courses            → VideoCourses          [Public]
+/student/video-courses/:slug      → VideoCourseDetail     [Public]
+/student/teacher/:teacherId       → TeacherPublicPage     [Public]
+/student/video-cart               → VideoCartPage         [Public]
+/student/ai-grammar               → AIGrammarCheck        [Student]
+/student/ai-writing               → AIWritingAssist       [Student]
+/student/linguaquest              → LinguaQuestPage       [Student]
+/student/callern                  → CallerNPage           [Student]
+/student/duel                     → DuelPage              [Student]
+/student/diaspora                 → DiasporaPage          [Student]
+/student/challenge                → ChallengePage         [Student]
+/student/challenge-crush          → ChallengeCrushPage    [Student]
+/student/session-crashers         → SessionCrashersPage   [Student]
+/student/social                   → SocialPage            [Student]
+── Gamification legacy redirects  → /student/linguaquest  [Student]
+
+── Teacher Portal ────────────────────────────────────────────────────
+/teacher/my-students              → MyStudents            [Teacher]
+/teacher/earnings                 → Earnings              [Teacher]
+/teacher/profile                  → TeacherProfilePage    [Teacher]
+/teacher/performance              → TeacherPerformancePage [Teacher]
+/teacher/recordings               → SessionRecordings     [Teacher]
+/teacher/class-errors             → TeacherClassErrors    [Teacher]
+
+── Mentor Portal ─────────────────────────────────────────────────────
+/mentor/sessions                  → MentorSessions        [Mentor]
+/mentor/students                  → MentorStudents        [Mentor]
+/mentor/mini-tests                → MentorMiniTests       [Mentor]
+/mentor/reports                   → MentorReports         [Mentor]
+
+── Supervisor ────────────────────────────────────────────────────────
+/supervisor/sessions              → SupervisorSessionsPage [Supervisor]
+
+── CMS ───────────────────────────────────────────────────────────────
+/cms/announcements                → Announcements         [All authenticated]
+/cms/blog                         → BlogPosts             [Staff]
+/cms/media                        → MediaLibrary          [Staff]
+/cms/overview                     → CMSOverview           [Staff]
+
+── Admin Tools ───────────────────────────────────────────────────────
+/admin/linguaquest                → LinguaQuestAdminPage  [Admin]
+/admin/feature-access             → FeatureAccessControl  [Admin]
+/admin/callern-config             → CallerNAdminPage      [Admin]
+/admin/callern-analytics          → CallerNAnalytics      [Admin]
+/admin/video-access               → VideoCourseAccessAdmin [Admin]
+/admin/video-course-management    → VideoCourseManagement [Admin]
+/admin/onboarding-analytics       → OnboardingAnalytics   [Admin]
+/admin/self-study-module-editor   → SelfStudyModuleEditor [Admin]
+/admin/daily-path-config          → DailyPathConfig       [Admin]
+/admin/kids-mode-analytics        → KidsModeAnalytics     [Admin]
+/admin/lexi-config                → LexiAIConfig          [Admin]
+/admin/guest-conversion           → GuestConversionAnalytics [Admin]
+/admin/learning-goals             → LearningGoalsManagement [Admin]
+/admin/ai-management              → AIManagement          [Admin]
+/admin/activity-error-analytics   → ActivityErrorAnalytics [Admin]
+/admin/class-error-analytics      → ClassErrorAnalytics   [Admin]
+/admin/report-scheduling          → WeeklyReportScheduling [Admin]
+/admin/course-price-definition    → CoursePriceDefinition [Admin]
+/staff/notifications              → StaffNotifications    [CRM]
+
+── Messaging ─────────────────────────────────────────────────────────
+/messaging                        → MessagingCenter       [All authenticated]
+
+── Reports ───────────────────────────────────────────────────────────
+/reports/overview                 → ReportsOverview       [Admin]
+
+── Payment (standalone — no AppShell sidebar) ────────────────────────
+/payment/gateway                  → ShetabGatewaySimulator [All authenticated]
+/payment/callback                 → PaymentCallback        [All authenticated]
+```
+
+### 2.3 State Management (localStorage Mock Stores)
+
+Each domain has a dedicated store in `src/lib/`. All follow the same reactive publish-subscribe pattern and are designed for zero-friction migration to real API calls via `api.ts`.
+
+**Pattern:**
+```typescript
+let data: T[] = [];
+const listeners = new Set<() => void>();
+function notify() { listeners.forEach(fn => fn()); }
+export function subscribe(fn: () => void): () => void { listeners.add(fn); return () => listeners.delete(fn); }
+export function getAll(): T[] { return data; }
+export function seed(): void { /* idempotent demo data */ }
+```
+
+**Complete store inventory (31 stores):**
+
+| Store | File | Purpose |
+|-------|------|---------|
+| Academic | `academic-store.ts` | Programs, courses, prerequisites, completion tracking |
+| Auto-Attendance | `auto-attendance-store.ts` | Automatic attendance from CallerN/WebRTC join events |
+| CallerN Config | `callern-config-store.ts` | Video call room settings, wave notifications, timeouts |
+| CallerN | `callern-store.ts` | Session lifecycle, credit management, discovery matching |
+| Classes | `class-store.ts` | Class lifecycle: create, enroll, attend, complete, substitute |
+| Course Pricing | `course-pricing-store.ts` | Per-course, per-session price definitions |
+| CRM | `crm-store.ts` | Lead pipeline, agents, follow-ups, conversion tracking |
+| Email Schedule | `email-schedule-store.ts` | Weekly report SMTP scheduling |
+| Feature Permissions | `feature-permissions-store.ts` | FACS matrix (feature × role), runtime-toggleable |
+| Flashcard | `flashcard-store.ts` | Spaced-repetition card decks, import/export |
+| Game Config | `game-config-store.ts` | LinguaQuest per-game configuration |
+| Gamification | `gamification-store.ts` | XP, levels, badges, streaks, leaderboard |
+| HR Types | `hr-types.ts` | Employee, contract, leave, payroll type definitions |
+| Kids Mode | `kids-mode-store.ts` | Parental PIN, screen time limits, sticker rewards |
+| Mentor | `mentor-store.ts` | Mentor assignments, session notes, mini-test results |
+| Notification | `notification-store.ts` | In-app notification feed (cross-role) |
+| Payment Gateway | `payment-gateway-store.ts` | Zarinpal/IDPay/Zibal/Mellat/Tejarat/Stripe transactions |
+| Payment | `payment-store.ts` | PaymentRecord persistence from consultation flows |
+| Promo Code | `promo-code-store.ts` | Discount codes, usage tracking, expiry |
+| Question Bank | `question-bank-store.ts` | LinguaQuest question repository |
+| Report History | `report-history-store.ts` | Generated report cache |
+| Self-Study Module | `selfstudy-module-store.ts` | Admin-authored self-study lesson packages |
+| Settings | `settings-store.ts` | Institute-wide config (branches, terms, working hours) |
+| Student Error | `student-error-store.ts` | Per-student recurring error pattern aggregation |
+| Student Onboarding | `student-onboarding-store.ts` | Goal, age group, preferences captured at first login |
+| Substitute | `substitute-store.ts` | Teacher substitution requests and history |
+| Teacher Pay | `teacher-pay-store.ts` | Teacher rate cards, payment calculations |
+| Teacher Preference | `teacher-preference-store.ts` | Student-teacher pairing preferences |
+| Teacher Registry | `teacher-registry-store.ts` | Teacher profiles, availability, specialties, QC scores |
+| Video Course | `video-course-store.ts` | Pre-recorded course catalog and access control |
+| VoIP | `voip-store.ts` | Softphone widget state, call records, SIP config |
+| WebRTC | `webrtc-store.ts` | WebRTC peer connection state, TURN server config |
+
+**Additional utility/service modules in `src/lib/`:**
+
+| File | Purpose |
+|------|---------|
+| `ai-service.ts` | Frontend AI request façade |
+| `api.ts` | HTTP client with real-API-first / mock-API fallback |
+| `attendance-notifications.ts` | Attendance alert store and severity routing |
+| `auth.ts` | Auth utilities and token helpers |
+| `calendar-utils.ts` | Jalali ↔ Gregorian conversion |
+| `day-labels.ts` | Weekday name translations |
+| `error-utils.ts` | `zodParse`, `zodValidate`, `getErrorMessage` |
+| `hr-types.ts` | HR domain type definitions |
+| `html-escape.ts` | XSS-safe string escaping |
+| `i18n.ts` | Translation key lookup |
+| `iranian-services.ts` | Kavenegar, payment gateway, calendar Iranian-specific helpers |
+| `jalali-cron.ts` | Cron scheduling in Jalali dates |
+| `linguaquest-types.ts` | LinguaQuest activity and game type definitions |
+| `mockApi.ts` | Full mock backend for offline/preview operation |
+| `notifications.ts` | Cross-role notification store with 18 notification types |
+| `otp-auth-service.ts` | Kavenegar OTP login (send/verify/rate-limit) |
+| `pwa.ts` | Service worker registration and install prompt |
+| `question-bank-seed.ts` | Default question bank seed data |
+| `room-signaling.ts` | Socket.IO room join/leave → auto-attendance bridge |
+| `schemas.ts` | 77 Zod schemas for runtime validation |
+| `sync-log.ts` | Offline-first sync queue |
+| `teacher-matching.ts` | 7-factor teacher scoring algorithm (0–100 pts) |
+| `types.ts` | CRM domain types (leads, classes, attendance, goals) |
+| `use-bank-questions.ts` | React hook for question bank access |
+| `useTranslation.ts` | `pick(lang, en, fa, ar)` helper |
+| `utils.ts` | General utility functions |
+| `validators.ts` | Custom Zod refinements |
+| `webhook-notifications.ts` | Telegram Bot + SMS attendance webhook delivery |
+
+### 2.4 Validation Layer (Zod)
+
+All data parsing uses Zod schemas from `src/lib/schemas.ts` (77 named schemas). Zero `as any` casts in the codebase. The deprecated `safeJsonParse<T>` has been fully migrated to `zodParse`.
+
+```typescript
+import { zodParse, zodValidate } from '../lib/error-utils';
+import { LeadCardSchema } from '../lib/schemas';
+
+// Safe parse with fallback — never throws
+const lead = zodParse(LeadCardSchema, rawJson, fallbackValue);
+
+// Validated parse — returns { success, data, error }
+const { success, data, error } = zodValidate(LeadCardSchema, input);
+```
+
+### 2.5 Internationalization (i18n)
+
+Three-language support (English, Farsi, Arabic) with full RTL support via the `useLanguage()` hook:
+
+```typescript
+const { language, setLanguage, t, isRTL } = useLanguage();
+
+// Key-based lookup (src/translations/{en,fa,ar}.ts)
+t('dashboard');  // → "Dashboard" | "داشبورد" | "لوحة القيادة"
+
+// Inline pick for component-level strings (most common pattern)
+import { pick } from '../lib/useTranslation';
+const label = pick(language as Lang, 'English', 'فارسی', 'العربية');
+```
+
+**CSS directional rules (P0 audit completed):**
+- Use logical properties only: `ms-4`, `me-2`, `ps-`, `pe-`, `text-start`, `text-end`, `border-s`, `border-e`
+- Never use `ml-`, `mr-`, `pl-`, `pr-`, `left-`, `right-` (break RTL layout)
+- The `dir` attribute is set on `<html>` based on `isRTL`
+
+Translation files: `src/translations/en.ts`, `fa.ts`, `ar.ts`.
+
+### 2.6 Calendar
+
+Jalali (Solar Hijri) calendar is used throughout the platform:
+- `src/lib/calendar-utils.ts` — Jalali ↔ Gregorian conversions
+- `src/utils/persianCalendar.ts` — Persian date formatting
+- `src/lib/jalali-cron.ts` — Cron scheduling in Jalali dates
+- `src/components/common/PersianDatePicker.tsx` — Date picker component
+- `src/components/common/PersianDateTimePicker.tsx` — Date + time picker
+
+### 2.7 Progressive Web App (PWA)
+
+Full PWA support implemented:
+- **Service Worker:** `/public/sw.js` — offline caching, background sync
+- **Web App Manifest:** `/public/manifest.json` — installable, standalone display
+- **Icons:** 8 sizes (72×72 to 512×512), all `maskable`
+- **Shortcuts:** My Courses, LinguaQuest, CallerN Tutoring
+- **Theme:** `#4f46e5` (indigo)
+- **Install Prompt:** `src/components/pwa/InstallPrompt.tsx`
+- **Helper:** `src/lib/pwa.ts` — SW registration and install event capture
+
+---
+
+## 3. Backend Architecture
+
+### 3.1 Dev Server (`/server/`)
+
+Express.js server for local development with in-memory fallback:
+- **Port:** 5000 (configurable via `PORT` env)
+- **Route modules (29):** `ai`, `assignments`, `attendance`, `auth`, `callern`, `callern-enhanced`, `campaigns`, `classes`, `courses`, `crm`, `documents`, `employees`, `financial`, `gamification`, `lessons`, `linguaquest`, `member-tiers`, `messaging`, `notifications`, `notifications-enhanced`, `payments`, `programs`, `progress`, `quizzes`, `sms`, `students`, `teachers`, `users`, `wallet`
+- **Real-time:** Socket.IO server (`/server/socket/index.ts`) — messaging presence, typing indicators, room join/leave, CRM lead updates, attendance events
+- **Auth:** JWT via `server/middleware/auth.ts`
+- **AI:** `server/services/ollama.ts` (Ollama-first, OpenAI fallback)
+
+### 3.2 Production Server (`/backend/`)
+
+Production-grade Express server:
+- Drizzle ORM with 24 PostgreSQL table schemas (`backend/src/db/schema/`)
+- Rate limiting, Helmet security headers, CORS
+- Structured logging via Winston
+- Kavenegar SMS service (`backend/src/utils/kavenegar.ts`)
+- Shetab/Shaparak payment gateway (`backend/src/services/`)
+- IRT (Item Response Theory) engine for adaptive placement tests
+- MST (Multi-Stage Testing) router for adaptive test paths
+
+### 3.3 Database Schema (Drizzle ORM)
+
+**Tables:** `users`, `courses`, `quizzes`, `assignments`, `attendance`, `wallet`, `gamification`, `crm`, `callern`, `messages`, `notifications`, `documents`, `marketing`, `hr`, `payroll`, `programs`, `projects`, `security`, `placement`, `student_progress`, `ai_scoring`, `assessment`, `linguaquest`, `cms`, `achievement_tests`.
+
+**Dev server in-memory schemas (`/server/db/`):** `schema.ts` (core), `financial-schema.ts`, `callern-schema.ts`, `messaging-schema.ts`, `attendance-schema.ts`, `gamification-schema.ts`, `linguaquest-schema.ts`, `accounting.ts`.
+
+### 3.4 AI Provider Fallback
+
+```
+Request → Ollama (localhost:11434) → OK? Return result.
+                                   → Fail? → OpenAI API → OK? Return result.
+                                             → Fail? → Graceful degradation.
+```
+
+**AI services implemented:**
+- Essay scoring (IELTS/TOEFL/academic writing)
+- Speaking evaluation (fluency, pronunciation, coherence)
+- Grammar checking and correction
+- Flashcard generation from text
+- Homework generation per course level
+- Dropout risk prediction (attendance + engagement signals)
+- Attendance anomaly detection
+- Skill radar analysis (4-axis CEFR profiling)
+- Content generation (lesson materials)
+- Session summaries (auto-generated after each class)
+- Lesson plan generation
+- Mentor preparation briefs
+- Mid-class quiz generation
+- Study time optimization suggestions
+- Vocabulary suggestions from context
+
+---
+
+## 4. Security Model
+
+### 4.1 Three-Layer Access Control
+
+**Layer 1 — Route-level Role Guards** (`GuardedCRM.tsx`, `AuthGuard`):
+```typescript
+const CRM_ROLES = ['admin', 'call_center', 'supervisor', 'front_desk', 'marketing', 'mentor', 'teacher', 'accountant'];
+const STAFF_ROLES = ['admin', 'supervisor', 'accountant', 'front_desk', 'marketing'];
+const FINANCE_ROLES = ['admin', 'supervisor', 'accountant'];
+const ADMIN_ROLES = ['admin', 'supervisor'];
+```
+
+**Layer 2 — FACS (Feature Access Control System)** (`feature-permissions-store.ts`):
+Granular boolean matrix of `feature_key × role`. Admins can toggle features per role at runtime from `/admin/feature-access`. Changes persist in localStorage and take effect immediately without reload.
+
+**Layer 3 — In-page data filtering** (via `useAuth()` + role checks):
+CRM pages filter displayed records based on the current user's role — teachers see only their own classes; call center agents see only their own leads.
+
+Key security boundaries:
+- **Teacher:** CRM access for own classes only; no financial data; no staff panels
+- **Student:** Learning portal only; no CRM; no admin
+- **Call Center:** CRM pipeline + VoIP; no financial reports; filtered by agentId
+- **Accountant:** Financial pages view-only in CRM; no pipeline actions
+
+### 4.2 Authentication
+
+- **Session storage:** Auth state in `sessionStorage` via `AuthContext` (clears on tab close)
+- **JWT tokens:** Backend API requests authenticated via Bearer token
+- **OTP login:** Kavenegar SMS — 6-digit code, 5-minute TTL, rate-limited (3 requests / 10 min per phone)
+- **PIN 2FA:** Admin/supervisor secondary PIN check
+- **DevRoleSwitcher:** `src/components/dev/DevRoleSwitcher.tsx` — disabled in production via env flag
+
+---
+
+## 5. Real-Time Communication
+
+### 5.1 Socket.IO (Server → `/server/socket/index.ts`)
+
+| Event | Direction | Purpose |
+|-------|-----------|---------|
+| `room:join` | client → server | Student/teacher enters a class room |
+| `room:leave` | client → server | Participant exits |
+| `room:participant-joined` | server → clients | Broadcast join event |
+| `room:participant-left` | server → clients | Broadcast leave event |
+| `message:send` | client → server | Send chat message |
+| `message:received` | server → clients | Deliver message to recipient |
+| `typing:start` / `typing:stop` | bidirectional | Typing indicators |
+| `presence:update` | client → server | Online/away/busy status |
+| `notification:new` | server → client | Push notification to user |
+
+### 5.2 WebRTC / CallerN
+
+- **Signaling:** Socket.IO (room-based, via `room-signaling.ts`)
+- **Peer connections:** WebRTC `RTCPeerConnection` with STUN/TURN config from `webrtc-store.ts`
+- **Auto-attendance bridge:** `RTCPeerConnection.onconnectionstatechange === 'connected'` → `room-signaling.ts` → `auto-attendance-store.recordJoin()`
+- **CallerN discovery:** `callern-store.ts` handles teacher-student matching, credit deduction, session lifecycle
+- **Video call room:** `src/components/callern/VideoCallRoom.tsx` + `SessionRoom.tsx`
+
+### 5.3 Webhook Notifications
+
+Attendance alerts delivered to external channels via `webhook-notifications.ts`:
+- **Telegram Bot API** (chat\_id + bot token, configurable per institute)
+- **SMS gateways** (Kavenegar, Melipayamak, or custom webhook endpoint)
+- Full delivery log stored in localStorage with severity levels (`critical`, `warning`, `info`, `success`)
+
+---
+
+## 6. Payment Infrastructure
+
+### 6.1 Supported Gateways
+
+| Provider | Type | Status |
+|----------|------|--------|
+| Zarinpal | Iranian (Shaparak) | Primary |
+| IDPay | Iranian (Shaparak) | Supported |
+| Zibal | Iranian (Shaparak) | Supported |
+| Mellat | Iranian (Shaparak) | Supported |
+| Tejarat | Iranian (Shaparak) | Supported |
+| Stripe | International | Sandbox only |
+
+Active gateway and credentials configured at `/payment-gateway-config` (admin-only). Sandbox mode per gateway. All transactions logged in `payment-gateway-store.ts`.
+
+### 6.2 Payment Flow
+
+```
+Student Checkout → Gateway Redirect → /payment/gateway (ShetabGatewaySimulator in dev)
+               → Payment Callback → /payment/callback → PaymentCallback.tsx
+               → PaymentRecord stored in payment-store.ts
+               → emitPaymentReceived() → Accountant notification
+```
+
+---
+
+## 7. Testing Architecture
+
+```
+src/tests/
+  lib/              # 10 Vitest unit test files
+    academic-store.test.ts
+    crm-store.test.ts
+    error-utils.test.ts
+    feature-permissions.test.ts
+    html-escape.test.ts
+    mentor-store.smoke.test.ts
+    schemas.test.ts
+    teacher-matching.test.ts
+    teacher-preference-store.test.ts
+    utils.test.ts
+  integration/      # 4 integration tests
+    class-enrollment.test.ts
+    crm-pipeline.test.ts
+    role-guards.test.ts
+    x15-group-enrollment.test.ts
+  components/       # 5 component tests
+    Button.test.tsx
+    CourseCard.test.tsx
+    LoginForm.test.tsx
+    MentorDashboard.test.tsx
+    SupervisorDashboard.test.tsx
+  helpers/
+    mock-providers.tsx
+    test-utils.tsx
+
+tests/
+  e2e/              # 4 Playwright E2E tests
+    login-flow.test.ts
+    crm-workflow.test.ts
+    class-scheduling.test.ts
+    pages.test.ts
+  api/
+    endpoints.test.ts
+  i18n/
+    language-support.test.ts
+
+server/tests/       # Backend tests
+  auth.test.ts
+  gamification.test.ts
+  gamification-enhanced.test.ts
+  integration/
+    courses.test.ts
+    quizzes.test.ts
+    wallet.test.ts
+```
+
+Coverage targets: stores and validation utilities at 80%+; critical user flows via Playwright E2E.
+
+---
+
+## 8. Post-Spec Hardening (completed)
+
+All items below were implemented after the 68/68 original spec tasks were closed:
+
+| Area | Detail |
+|------|--------|
+| **Zod validation** | 77 schemas; all localStorage reads and API responses validated at boundary |
+| **AI features** | 15 AI-powered features across learning, assessment, and operations |
+| **Kavenegar OTP** | Full OTP auth with rate limiting (3/10 min), 5-attempt verify lockout |
+| **Iranian payments** | 5 domestic gateways (Zarinpal, IDPay, Zibal, Mellat, Tejarat) + Stripe sandbox |
+| **WebRTC/CallerN** | Peer-to-peer video with Socket.IO signaling and auto-attendance |
+| **Teacher matching** | 7-factor scoring algorithm: specialty, delivery, availability, conflicts, QC score |
+| **Webhook notifications** | Telegram + SMS delivery of attendance alerts |
+| **PWA** | Service worker, manifest, 8 icon sizes, install prompt |
+| **P0 CSS audit** | All 34 CRM pages + shared components: logical CSS properties only (no `ml-`/`mr-`) |
+| **P1 Accessibility** | ARIA roles, labels, keyboard navigation, focus management across all 34 CRM pages |
+| **Code quality audits** | Recurring sessions fixing stale closures, hardcoded strings, missing error boundaries, dead props |
+| **Mobile responsive messaging** | Single-pane mobile layout with back-navigation in `MessageCenter` |
