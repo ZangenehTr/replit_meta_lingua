@@ -75,12 +75,18 @@ async function handleGatewayCallback(
       if (cp) {
         userId = cp.userId;
         await storage.updateCoursePaymentStatus(cp.id, 'failed', {});
+        await db.update(coursePayments)
+          .set({ gatewayName, gatewayTransactionId: transactionId || undefined })
+          .where(eq(coursePayments.id, cp.id));
       }
     } else if (orderId.startsWith('WALLET_')) {
       const [wt] = await db.select().from(walletTransactions).where(eq(walletTransactions.merchantTransactionId, orderId));
       if (wt) {
         userId = wt.userId;
         await storage.updateWalletTransactionStatus(wt.id, 'failed', {});
+        await db.update(walletTransactions)
+          .set({ gatewayName })
+          .where(eq(walletTransactions.id, wt.id));
       }
     }
     if (userId) {

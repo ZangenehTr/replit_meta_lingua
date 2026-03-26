@@ -14,13 +14,15 @@ import { CheckCircle2, XCircle, Loader2, Wifi } from "lucide-react";
 
 type GatewayName = "shetab" | "zarinpal" | "idpay" | "zibal" | "mellat";
 
+interface GatewayInfo {
+  isEnabled: boolean;
+  sandboxMode: boolean;
+  hasCredentials: boolean;
+}
+
 interface GatewayConfig {
   activeGateway: GatewayName;
-  shetab: { sandbox: boolean; enabled: boolean };
-  zarinpal: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
-  idpay: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
-  zibal: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
-  mellat: { hasCredentials: boolean; sandbox: boolean; enabled: boolean };
+  gateways: Record<GatewayName, GatewayInfo>;
 }
 
 interface GatewayFormState {
@@ -119,17 +121,18 @@ export default function PaymentGatewayConfigPage() {
 
   useEffect(() => {
     if (config) {
+      const gw = config.gateways;
       setForm(prev => ({
         ...prev,
         activePaymentGateway: config.activeGateway,
-        zarinpalEnabled: config.zarinpal.enabled,
-        zarinpalSandbox: config.zarinpal.sandbox,
-        idpayEnabled: config.idpay.enabled,
-        idpaySandbox: config.idpay.sandbox,
-        zibalEnabled: config.zibal.enabled,
-        zibalSandbox: config.zibal.sandbox,
-        mellatEnabled: config.mellat.enabled,
-        mellatSandbox: config.mellat.sandbox,
+        zarinpalEnabled: gw.zarinpal?.isEnabled ?? false,
+        zarinpalSandbox: gw.zarinpal?.sandboxMode ?? true,
+        idpayEnabled: gw.idpay?.isEnabled ?? false,
+        idpaySandbox: gw.idpay?.sandboxMode ?? true,
+        zibalEnabled: gw.zibal?.isEnabled ?? false,
+        zibalSandbox: gw.zibal?.sandboxMode ?? true,
+        mellatEnabled: gw.mellat?.isEnabled ?? false,
+        mellatSandbox: gw.mellat?.sandboxMode ?? true,
       }));
     }
   }, [config]);
@@ -282,7 +285,7 @@ export default function PaymentGatewayConfigPage() {
               </div>
               <div className="space-y-2">
                 <Label>{t("admin:paymentGateway.merchantId", "Merchant ID")}</Label>
-                {config?.zarinpal.hasCredentials && !form.zarinpalMerchantId && (
+                {config?.gateways.zarinpal?.hasCredentials && !form.zarinpalMerchantId && (
                   <p className="text-xs text-muted-foreground">
                     {t("admin:paymentGateway.credentialSet", "A credential is already set. Enter a new value to replace it.")}
                   </p>
@@ -291,7 +294,7 @@ export default function PaymentGatewayConfigPage() {
                   value={form.zarinpalMerchantId}
                   onChange={e => setForm(p => ({ ...p, zarinpalMerchantId: e.target.value }))}
                   placeholder={
-                    config?.zarinpal.hasCredentials
+                    config?.gateways.zarinpal?.hasCredentials
                       ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep existing credential")
                       : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                   }
@@ -328,7 +331,7 @@ export default function PaymentGatewayConfigPage() {
               </div>
               <div className="space-y-2">
                 <Label>{t("admin:paymentGateway.apiKey", "API Key")}</Label>
-                {config?.idpay.hasCredentials && !form.idpayApiKey && (
+                {config?.gateways.idpay?.hasCredentials && !form.idpayApiKey && (
                   <p className="text-xs text-muted-foreground">
                     {t("admin:paymentGateway.credentialSet", "A credential is already set. Enter a new value to replace it.")}
                   </p>
@@ -337,7 +340,7 @@ export default function PaymentGatewayConfigPage() {
                   value={form.idpayApiKey}
                   onChange={e => setForm(p => ({ ...p, idpayApiKey: e.target.value }))}
                   placeholder={
-                    config?.idpay.hasCredentials
+                    config?.gateways.idpay?.hasCredentials
                       ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep existing credential")
                       : t("admin:paymentGateway.apiKeyPlaceholder", "Your IDPay API key")
                   }
@@ -375,7 +378,7 @@ export default function PaymentGatewayConfigPage() {
               </div>
               <div className="space-y-2">
                 <Label>{t("admin:paymentGateway.merchantId", "Merchant ID")}</Label>
-                {config?.zibal.hasCredentials && !form.zibalMerchantId && (
+                {config?.gateways.zibal?.hasCredentials && !form.zibalMerchantId && (
                   <p className="text-xs text-muted-foreground">
                     {t("admin:paymentGateway.credentialSet", "A credential is already set. Enter a new value to replace it.")}
                   </p>
@@ -384,7 +387,7 @@ export default function PaymentGatewayConfigPage() {
                   value={form.zibalMerchantId}
                   onChange={e => setForm(p => ({ ...p, zibalMerchantId: e.target.value }))}
                   placeholder={
-                    config?.zibal.hasCredentials
+                    config?.gateways.zibal?.hasCredentials
                       ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep existing credential")
                       : t("admin:paymentGateway.merchantIdPlaceholder", "Your Zibal merchant ID")
                   }
@@ -427,7 +430,7 @@ export default function PaymentGatewayConfigPage() {
                 <Input
                   value={form.mellatTerminalId}
                   onChange={e => setForm(p => ({ ...p, mellatTerminalId: e.target.value }))}
-                  placeholder={config?.mellat.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Terminal ID"}
+                  placeholder={config?.gateways.mellat?.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Terminal ID"}
                   dir="ltr"
                 />
               </div>
@@ -436,7 +439,7 @@ export default function PaymentGatewayConfigPage() {
                 <Input
                   value={form.mellatUsername}
                   onChange={e => setForm(p => ({ ...p, mellatUsername: e.target.value }))}
-                  placeholder={config?.mellat.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Username"}
+                  placeholder={config?.gateways.mellat?.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Username"}
                   dir="ltr"
                 />
               </div>
@@ -446,7 +449,7 @@ export default function PaymentGatewayConfigPage() {
                   value={form.mellatPassword}
                   onChange={e => setForm(p => ({ ...p, mellatPassword: e.target.value }))}
                   type="password"
-                  placeholder={config?.mellat.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Password"}
+                  placeholder={config?.gateways.mellat?.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Password"}
                   dir="ltr"
                 />
               </div>
