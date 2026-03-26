@@ -579,7 +579,7 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/hr/my-leave">
-        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'teacher', 'mentor', 'call_center', 'accountant', 'front_desk']}>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'teacher', 'mentor', 'call_center', 'accountant', 'front_desk', 'front_desk_clerk']}>
           <HrMyLeavePage />
         </RoleProtectedRoute>
       </Route>

@@ -44,10 +44,10 @@ export async function computeEmployeeMetrics(
   const rawRole = userRow.role ?? "";
   const roleLower = rawRole.toLowerCase();
   const isTeacher = roleLower === "teacher" || roleLower.includes("tutor");
-  const isCcAgent = roleLower.includes("call center") || roleLower.includes("agent");
+  const isCcAgent = roleLower.includes("call center") || roleLower === "call_center" || roleLower.includes("agent");
   const isMentor = roleLower === "mentor";
   const isSupervisor = roleLower === "supervisor";
-  const isFrontDesk = roleLower.includes("front desk");
+  const isFrontDesk = roleLower.includes("front desk") || roleLower === "front_desk_clerk" || roleLower === "front_desk";
 
   if (isTeacher) {
     return computeTeacherMetrics(emp.userId, periodStart, periodEnd);

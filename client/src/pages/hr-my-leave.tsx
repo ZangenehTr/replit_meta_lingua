@@ -55,13 +55,13 @@ export default function HrMyLeavePage() {
   });
 
   const { data: leaves = [], isLoading } = useQuery<LeaveRequest[]>({
-    queryKey: ["/api/hr/leaves/self"],
-    queryFn: () => apiRequest("/api/hr/leaves/self"),
+    queryKey: ["/api/hr/employees/leaves/self"],
+    queryFn: () => apiRequest("/api/hr/employees/leaves/self"),
   });
 
   const submitMutation = useMutation({
     mutationFn: (data: typeof form) =>
-      apiRequest("/api/hr/leaves/self", {
+      apiRequest("/api/hr/employees/leaves/self", {
         method: "POST",
         body: {
           ...data,
@@ -69,7 +69,7 @@ export default function HrMyLeavePage() {
         },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hr/leaves/self"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hr/employees/leaves/self"] });
       toast({ title: "Leave request submitted successfully" });
       setOpen(false);
       setForm({ leaveType: "annual", startDate: "", endDate: "", daysRequested: "", reason: "" });
