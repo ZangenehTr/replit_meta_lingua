@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#7c3aed" />
+  <title>آفلاین — متا لینگوا</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #6d28d9 0%, #a21caf 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: white;
+    }
+    .card {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon svg { width: 40px; height: 40px; fill: white; }
+    h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
+    p { font-size: 1rem; opacity: 0.85; line-height: 1.6; margin-bottom: 8px; }
+    .en { font-size: 0.875rem; opacity: 0.65; margin-top: 4px; }
+    .btn {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 12px 28px;
+      background: white;
+      color: #6d28d9;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover { background: #f3f4f6; }
+    .logo { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 16px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/pwa-192x192.png" alt="Meta Lingua" class="logo" />
+    <div class="icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/>
+      </svg>
+    </div>
+    <h1>اتصال اینترنت ندارید</h1>
+    <p>به نظر می‌رسد اتصال اینترنت شما قطع شده است.</p>
+    <p>محتوای ذخیره‌شده همچنان در دسترس است.</p>
+    <p class="en">You are offline. Cached content is still available.</p>
+    <button class="btn" onclick="window.location.reload()">
+      تلاش دوباره / Retry
+    </button>
+  </div>
+</body>
+</html>
