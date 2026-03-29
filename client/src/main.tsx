@@ -5,6 +5,22 @@ import "./index.css";
 import "./i18n";
 import { ErrorHandler } from "./error-handler";
 import { installWebRTCErrorHandler } from "./lib/webrtc-error-handler";
+import { registerSW } from "virtual:pwa-register";
+
+registerSW({
+  onRegisteredSW(_url: string) {
+    console.info("[PWA] Service Worker registered.");
+  },
+  onOfflineReady() {
+    console.info("[PWA] App ready for offline use.");
+  },
+  onNeedRefresh() {
+    console.info("[PWA] New SW version available.");
+  },
+  onRegisterError(error: unknown) {
+    console.warn("[PWA] SW registration failed:", error);
+  },
+});
 
 // Show startup errors visibly in production
 const showStartupError = (error: Error | string) => {

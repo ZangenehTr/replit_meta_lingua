@@ -27,6 +27,35 @@ export function useOfflineSync() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queueSize, setQueueSize] = useState(() => loadQueue().length);
 
+  const replayQueue = useCallback(async () => {
+    const queue = loadQueue();
+    if (queue.length === 0) return;
+
+    const remaining: OfflineQueueItem[] = [];
+    for (const item of queue) {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(item.url, {
+          method: item.method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: item.body != null ? JSON.stringify(item.body) : undefined,
+        });
+        if (!res.ok) {
+          console.warn(`[OfflineSync] Replay failed for ${item.url}: HTTP ${res.status}`);
+          remaining.push(item);
+        }
+      } catch (err) {
+        console.warn(`[OfflineSync] Network error replaying ${item.url}:`, err);
+        remaining.push(item);
+      }
+    }
+    saveQueue(remaining);
+    setQueueSize(remaining.length);
+  }, []);
+
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -40,31 +69,7 @@ export function useOfflineSync() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
-
-  const replayQueue = useCallback(async () => {
-    const queue = loadQueue();
-    if (queue.length === 0) return;
-
-    const remaining: OfflineQueueItem[] = [];
-    for (const item of queue) {
-      try {
-        const token = localStorage.getItem('auth_token');
-        await fetch(item.url, {
-          method: item.method,
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: item.body != null ? JSON.stringify(item.body) : undefined,
-        });
-      } catch {
-        remaining.push(item);
-      }
-    }
-    saveQueue(remaining);
-    setQueueSize(remaining.length);
-  }, []);
+  }, [replayQueue]);
 
   const enqueue = useCallback((url: string, method: string, body: unknown, tag: string) => {
     const item: OfflineQueueItem = {
@@ -80,9 +85,11 @@ export function useOfflineSync() {
     saveQueue(queue);
     setQueueSize(queue.length);
     if ('serviceWorker' in navigator && 'sync' in ServiceWorkerRegistration.prototype) {
-      navigator.serviceWorker.ready.then(reg => {
-        (reg as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register('api-sync-queue').catch(() => {});
-      });
+      navigator.serviceWorker.ready
+        .then(reg =>
+          (reg as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register('api-sync-queue')
+        )
+        .catch(() => {});
     }
   }, []);
 

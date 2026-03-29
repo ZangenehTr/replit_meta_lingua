@@ -1,33 +1,23 @@
-import { useEffect, useState } from 'react';
-import { WifiOff, Wifi } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { WifiOff, Wifi, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { useOfflineSync } from '@/hooks/use-offline-sync';
 
 export function OfflineIndicator() {
   const { t } = useTranslation(['common']);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showReconnected, setShowReconnected] = useState(false);
+  const { isOnline, queueSize } = useOfflineSync();
 
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
+    if (isOnline) {
       setShowReconnected(true);
-      setTimeout(() => setShowReconnected(false), 3000);
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
+      const timer = setTimeout(() => setShowReconnected(false), 3000);
+      return () => clearTimeout(timer);
+    } else {
       setShowReconnected(false);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+    }
+  }, [isOnline]);
 
   if (isOnline && !showReconnected) {
     return null;
@@ -55,6 +45,14 @@ export function OfflineIndicator() {
           <span className="text-sm font-medium">
             {t('pwa.offline', 'You are offline')}
           </span>
+          {queueSize > 0 && (
+            <>
+              <Clock className="h-3 w-3 opacity-80" />
+              <span className="text-xs opacity-90">
+                {queueSize} {t('pwa.pendingSync', 'در صف همگام‌سازی')}
+              </span>
+            </>
+          )}
         </>
       )}
     </div>
