@@ -1,8 +1,8 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award, Download, Share2, ExternalLink, CheckCircle2, Loader2 } from "lucide-react";
@@ -46,22 +46,29 @@ export default function StudentCertificatesPage() {
     queryFn: () => apiRequest("/api/student/completed-enrollments"),
   });
 
-  const claimMutation = useMutation({
+  const autoIssueMutation = useMutation({
     mutationFn: (courseId: number) =>
       apiRequest(`/api/courses/${courseId}/complete`, { method: "POST" }),
     onSuccess: () => {
-      toast({ title: "گواهینامه با موفقیت صادر شد" });
       queryClient.invalidateQueries({ queryKey: ["/api/student/my-certificates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/student/completed-enrollments"] });
     },
     onError: (err: any) => {
-      toast({
-        title: "خطا در صدور گواهینامه",
-        description: err?.message || "لطفاً دوباره تلاش کنید",
-        variant: "destructive",
-      });
+      if (!err?.message?.includes("قبلاً")) {
+        console.warn("Auto cert issuance failed silently:", err?.message);
+      }
     },
   });
+
+  // Automatically issue certificates for all completed enrollments without certs
+  useEffect(() => {
+    if (completedEnrollments.length > 0) {
+      completedEnrollments.forEach((enr) => {
+        autoIssueMutation.mutate(enr.courseId);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedEnrollments.length]);
 
   function handleShare(cert: MyCertificate) {
     const url = `${window.location.origin}/verify-certificate/${cert.certificateNumber}`;
@@ -163,21 +170,22 @@ export default function StudentCertificatesPage() {
         </p>
       </div>
 
-      {/* Claimable certificates section */}
-      {completedEnrollments.length > 0 && (
+      {/* Auto-processing certificates — shows briefly while back-end issues them */}
+      {completedEnrollments.length > 0 && autoIssueMutation.isPending && (
         <Card className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-900">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2 text-green-700 dark:text-green-400">
-              <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-              دوره‌های قابل دریافت گواهینامه
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              در حال صدور گواهینامه‌ها…
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {completedEnrollments.map((enr) => (
               <div
                 key={enr.enrollmentId}
-                className="flex items-center justify-between gap-3 p-3 rounded-lg bg-background border"
+                className="flex items-center gap-3 p-3 rounded-lg bg-background border"
               >
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" aria-hidden="true" />
                 <div>
                   <p className="font-medium text-sm">{enr.courseTitle || "دوره آموزشی"}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -186,18 +194,6 @@ export default function StudentCertificatesPage() {
                     {enr.courseLanguage}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => claimMutation.mutate(enr.courseId)}
-                  disabled={claimMutation.isPending}
-                >
-                  {claimMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin me-1.5" />
-                  ) : (
-                    <Award className="h-4 w-4 me-1.5" aria-hidden="true" />
-                  )}
-                  دریافت گواهینامه
-                </Button>
               </div>
             ))}
           </CardContent>
