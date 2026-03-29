@@ -6461,19 +6461,20 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         if (promo.maxUsages !== null && promo.usedCount >= promo.maxUsages) {
           return res.status(400).json({ message: "این کد تخفیف به حداکثر استفاده رسیده است" });
         }
-        // Prevent the same user from using the same promo code more than once
+        // Prevent the same user from using the same promo code for the same course again
         const [previousUse] = await db
           .select({ id: coursePayments.id })
           .from(coursePayments)
           .where(
             and(
               eq(coursePayments.userId, req.user.id),
+              eq(coursePayments.courseId, Number(courseId)),
               eq(coursePayments.promoCodeId, promo.id),
               eq(coursePayments.status, 'completed')
             )
           );
         if (previousUse) {
-          return res.status(400).json({ message: "شما قبلاً از این کد تخفیف استفاده کرده‌اید" });
+          return res.status(400).json({ message: "شما قبلاً از این کد تخفیف برای این دوره استفاده کرده‌اید" });
         }
         if (promo.minAmount && finalPrice < promo.minAmount) {
           return res.status(400).json({ message: `حداقل مبلغ سفارش برای این کد ${promo.minAmount.toLocaleString('fa-IR')} تومان است` });
@@ -6526,35 +6527,6 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           await db.update(promoCodes)
             .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
             .where(eq(promoCodes.id, appliedPromoCodeId));
-        }
-
-        // Auto-issue a digital certificate upon successful enrollment
-        try {
-          const certDate = new Date();
-          const y = certDate.getFullYear();
-          const m = String(certDate.getMonth() + 1).padStart(2, "0");
-          const d = String(certDate.getDate()).padStart(2, "0");
-          const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
-          const certNumber = `CERT-${y}${m}${d}-${rand}`;
-          const [existingCert] = await db
-            .select({ id: certificates.id })
-            .from(certificates)
-            .where(and(
-              eq(certificates.studentId, req.user.id),
-              eq(certificates.courseId, Number(courseId)),
-              eq(certificates.status, "active")
-            ));
-          if (!existingCert) {
-            await db.insert(certificates).values({
-              certificateNumber: certNumber,
-              studentId: req.user.id,
-              courseId: Number(courseId),
-              issuedBy: req.user.id,
-              status: "active",
-            });
-          }
-        } catch (certErr) {
-          console.error("Auto-certificate issuance failed (non-fatal):", certErr);
         }
 
         res.json({
@@ -11215,6 +11187,71 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       res.json({ message: "Lesson marked as complete", completion });
     } catch (error) {
       res.status(500).json({ message: "Failed to mark lesson complete" });
+    }
+  });
+
+  // POST /api/courses/:courseId/complete — mark course as complete and issue digital certificate
+  app.post("/api/courses/:courseId/complete", authenticateToken, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const userId = req.user.id || req.user.userId;
+
+      if (!userId || isNaN(courseId)) {
+        return res.status(400).json({ message: "Invalid request" });
+      }
+
+      // Verify the student is enrolled in this course
+      const [enrollment] = await db
+        .select()
+        .from(enrollments)
+        .where(and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId)));
+
+      if (!enrollment) {
+        return res.status(403).json({ message: "شما در این دوره ثبت‌نام نکرده‌اید" });
+      }
+
+      // Check if an active certificate already exists (idempotent)
+      const [existingCert] = await db
+        .select({ id: certificates.id, certificateNumber: certificates.certificateNumber })
+        .from(certificates)
+        .where(and(
+          eq(certificates.studentId, userId),
+          eq(certificates.courseId, courseId),
+          eq(certificates.status, "active")
+        ));
+
+      if (existingCert) {
+        return res.json({
+          message: "گواهینامه قبلاً صادر شده است",
+          certificateNumber: existingCert.certificateNumber,
+          alreadyIssued: true,
+        });
+      }
+
+      // Generate a unique certificate number
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const certNumber = `CERT-${y}${m}${d}-${rand}`;
+
+      const [cert] = await db.insert(certificates).values({
+        certificateNumber: certNumber,
+        studentId: userId,
+        courseId,
+        issuedBy: userId,
+        status: "active",
+      }).returning();
+
+      res.status(201).json({
+        message: "گواهینامه با موفقیت صادر شد",
+        certificateNumber: cert.certificateNumber,
+        certificate: cert,
+      });
+    } catch (error: any) {
+      console.error("Error issuing course completion certificate:", error);
+      res.status(500).json({ message: "Failed to issue certificate" });
     }
   });
 

@@ -135,19 +135,22 @@ router.post("/api/promo-codes/validate", authenticate, async (req, res) => {
       });
     }
 
-    // Prevent re-use: check if this user has already used this promo code in a completed payment
-    const [previousUse] = await db
-      .select({ id: coursePayments.id })
-      .from(coursePayments)
-      .where(
-        and(
-          eq(coursePayments.userId, (req as any).user.id),
-          eq(coursePayments.promoCodeId, promo.id),
-          eq(coursePayments.status, 'completed')
-        )
-      );
-    if (previousUse) {
-      return res.status(400).json({ valid: false, message: "شما قبلاً از این کد تخفیف استفاده کرده‌اید" });
+    // Prevent re-use: check if this user has already applied this promo to the same course
+    if (courseId) {
+      const [previousUse] = await db
+        .select({ id: coursePayments.id })
+        .from(coursePayments)
+        .where(
+          and(
+            eq(coursePayments.userId, (req as any).user.id),
+            eq(coursePayments.courseId, Number(courseId)),
+            eq(coursePayments.promoCodeId, promo.id),
+            eq(coursePayments.status, 'completed')
+          )
+        );
+      if (previousUse) {
+        return res.status(400).json({ valid: false, message: "شما قبلاً از این کد تخفیف برای این دوره استفاده کرده‌اید" });
+      }
     }
 
     // Check applicable courses
