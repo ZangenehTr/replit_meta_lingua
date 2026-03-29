@@ -1,6 +1,6 @@
 # Meta Lingua Academy — Deployment Guide
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Last Updated:** March 29, 2026  
 **Audience:** System Administrators, DevOps Engineers
 
@@ -650,6 +650,85 @@ docker compose exec postgres psql -U metalingua metalingua \
 ```
 
 All migration files use `IF NOT EXISTS` and `EXCEPTION WHEN duplicate_column` handling, so they are **safe to re-run** if you are unsure whether they were applied.
+
+### v1.1.0 Migration — Marketing & Attribution Tables
+
+If upgrading from v1.0.0 to v1.1.0, apply the following changes. These are all additive (no data loss):
+
+```sql
+-- Course Reviews
+CREATE TABLE IF NOT EXISTS course_reviews (
+  id SERIAL PRIMARY KEY,
+  course_id INTEGER NOT NULL REFERENCES courses(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  title VARCHAR(200),
+  body TEXT,
+  is_approved BOOLEAN DEFAULT false,
+  is_featured BOOLEAN DEFAULT false,
+  helpful_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  UNIQUE(course_id, user_id)
+);
+
+-- Referral Program
+CREATE TABLE IF NOT EXISTS referral_codes (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+  code VARCHAR(20) NOT NULL UNIQUE,
+  total_referrals INTEGER DEFAULT 0,
+  total_converted INTEGER DEFAULT 0,
+  total_credits_earned INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS referral_events (
+  id SERIAL PRIMARY KEY,
+  referral_code_id INTEGER NOT NULL REFERENCES referral_codes(id),
+  referrer_id INTEGER NOT NULL REFERENCES users(id),
+  referred_user_id INTEGER REFERENCES users(id),
+  event_type VARCHAR(50) NOT NULL,
+  credit_amount INTEGER DEFAULT 0,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+-- CallerN Session Ratings
+CREATE TABLE IF NOT EXISTS session_ratings (
+  id SERIAL PRIMARY KEY,
+  session_id VARCHAR(255) NOT NULL,
+  teacher_id INTEGER NOT NULL REFERENCES users(id),
+  student_id INTEGER NOT NULL REFERENCES users(id),
+  teacher_rating INTEGER CHECK (teacher_rating BETWEEN 1 AND 5),
+  student_rating INTEGER CHECK (student_rating BETWEEN 1 AND 5),
+  teacher_comment TEXT,
+  student_comment TEXT,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+-- UTM Attribution columns on users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_code VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS callern_rating NUMERIC(3,2) DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS callern_session_count INTEGER DEFAULT 0;
+
+-- UTM Attribution columns on course_payments
+ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100);
+ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100);
+ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100);
+```
+
+Run this block against the production database:
+
+```bash
+docker compose exec postgres psql -U metalingua metalingua < /opt/metalingua/migrations/0040_marketing_attribution.sql
+```
 
 ---
 

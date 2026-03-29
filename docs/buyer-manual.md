@@ -1,6 +1,6 @@
 # Meta Lingua Academy — Buyer Manual
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Last Updated:** March 29, 2026  
 **Audience:** Institute Owners, Administrators, Department Heads
 
@@ -25,16 +25,18 @@ Congratulations on choosing Meta Lingua Academy. This manual covers everything y
 9. [Call Center ERP](#9-call-center-erp)
 10. [Class Scheduling](#10-class-scheduling)
 11. [CallerN — 24/7 Video Tutoring](#11-callern--247-video-tutoring)
-12. [LinguaQuest Gamification](#12-linguaquest-gamification)
-13. [Testing & Placement](#13-testing--placement)
-14. [HR Module](#14-hr-module)
-15. [VoIP Integration](#15-voip-integration)
-16. [AI Features](#16-ai-features)
-17. [CMS — Blog & Video Library](#17-cms--blog--video-library)
-18. [SMS Campaigns](#18-sms-campaigns)
-19. [Settings & Configuration](#19-settings--configuration)
-20. [User Roles Reference](#20-user-roles-reference)
-21. [Troubleshooting Common Issues](#21-troubleshooting-common-issues)
+12. [Course Reviews](#12-course-reviews)
+13. [Referral Program](#13-referral-program)
+14. [LinguaQuest Gamification](#14-linguaquest-gamification)
+15. [Testing & Placement](#15-testing--placement)
+16. [HR Module](#16-hr-module)
+17. [VoIP Integration](#17-voip-integration)
+18. [AI Features](#18-ai-features)
+19. [CMS — Blog & Video Library](#19-cms--blog--video-library)
+20. [SMS Campaigns](#20-sms-campaigns)
+21. [Settings & Configuration](#21-settings--configuration)
+22. [User Roles Reference](#22-user-roles-reference)
+23. [Troubleshooting Common Issues](#23-troubleshooting-common-issues)
 
 ---
 
@@ -368,9 +370,85 @@ During sessions, the AI Supervisor can:
 - Flag vocabulary or grammar issues for follow-up
 - Generate a post-session report
 
+### Post-Session Ratings
+After every CallerN session ends, both parties are prompted to rate:
+- **Student rates the teacher** (1–5 stars, optional comment)
+- **Teacher rates the student** (1–5 stars, internal note)
+
+Teacher ratings are **aggregated in real time** and displayed to students when browsing available tutors. This creates a quality feedback loop with no admin effort required. Admins can view raw rating data from **Admin → CallerN → Session Reports**.
+
 ---
 
-## 12. LinguaQuest Gamification
+## 12. Course Reviews
+
+Course reviews let enrolled students publicly rate and comment on courses they have completed, building trust for prospective students.
+
+### How Students Submit Reviews
+1. Student navigates to their enrolled course and opens the **Reviews** tab inside the course player
+2. They select a star rating (1–5) and optionally write a title and review text
+3. The review is submitted and enters the **moderation queue** — it is not yet visible publicly
+
+### Admin Moderation Queue
+Go to **Admin → Review Moderation** to see all pending reviews.
+
+For each review you can:
+- **Approve** — makes the review visible on the public course page
+- **Reject** — hides the review permanently (the student is not notified)
+- **Feature** — marks the review as highlighted; featured reviews appear at the top of the course listing
+
+### Public Display
+Approved reviews appear on the course page with:
+- Star rating and average rating summary
+- Reviewer first name and date
+- Featured reviews shown first
+
+### Helpful Votes
+Logged-in students can mark reviews as "helpful". The helpful count is shown next to each review and influences the display order.
+
+### Admin Tips
+- Approve reviews quickly — they are a powerful enrollment conversion tool
+- Feature 2–3 of your best reviews per course for maximum impact
+- A course with no approved reviews shows no rating — run a review campaign via SMS after course completion
+
+---
+
+## 13. Referral Program
+
+The referral program rewards existing students for bringing new students to the institute. It runs automatically with no manual administration needed day-to-day.
+
+### How It Works
+1. Each student receives a **unique referral code** (auto-generated on first access)
+2. They share their personal referral link via WhatsApp, SMS, or copy-paste
+3. When a new person registers using that link, the referral is recorded
+4. When that new person **completes their first enrollment and payment**, both receive wallet credits automatically:
+   - **Referrer** receives a credit to their wallet (configurable amount)
+   - **New student** receives a welcome credit applied to their first purchase
+
+### Student Referral Page
+Students access their referral dashboard from **My Account → Referral Program** (or the Referral item in their navigation). They can see:
+- Their personal referral link (general)
+- Per-course referral links (same code, pre-filled course parameter — useful for sharing a specific course)
+- One-tap share buttons: **WhatsApp**, **SMS**, and **Copy Link**
+- Live stats: total clicks, sign-ups, and total credits earned
+
+### Admin Referral Leaderboard
+**Admin → Referral Leaderboard** shows:
+- Rankings of top referring students
+- Total referrals, total converted, and total credits paid per student
+- Global program stats: total referrals, conversion rate, and total credits issued
+
+### Configuring Credit Amounts
+**Admin → Settings → Referral Program**:
+- **Referrer Credit Amount** — wallet credit paid to the student who shared the link (in Toman)
+- **Referred Credit Amount** — welcome wallet credit paid to the newly registered student (in Toman)
+- **Active** — toggle the entire program on or off
+
+### UTM Attribution (for Marketing Teams)
+All referral links automatically include UTM parameters. If your marketing team runs campaigns on social media or email, append `?utm_source=instagram&utm_medium=post&utm_campaign=spring2026` to any registration URL. These values are captured at registration and on every payment, enabling cost-per-acquisition reporting.
+
+---
+
+## 14. LinguaQuest Gamification
 
 LinguaQuest turns language learning into an engaging experience.
 
@@ -401,7 +479,7 @@ Admins can see leaderboards, XP distribution, and which games are most popular f
 
 ---
 
-## 13. Testing & Placement
+## 15. Testing & Placement
 
 ### Placement Test (Guest Flow)
 Prospective students can take a placement test **without creating an account**:
@@ -439,7 +517,7 @@ The testing system supports 8 question formats:
 
 ---
 
-## 14. HR Module
+## 16. HR Module
 
 ### Employee Directory
 **Admin → HR → Employees** lists all staff. Each employee record contains:
@@ -483,7 +561,7 @@ Anomaly detection alerts admins when performance drops significantly. Thresholds
 
 ---
 
-## 15. VoIP Integration
+## 17. VoIP Integration
 
 Meta Lingua integrates with **Issabel PBX** via the AMI (Asterisk Manager Interface).
 
@@ -505,7 +583,7 @@ Meta Lingua integrates with **Issabel PBX** via the AMI (Asterisk Manager Interf
 
 ---
 
-## 16. AI Features
+## 18. AI Features
 
 ### Lexi — AI Teaching Assistant
 Students interact with Lexi, the AI assistant, from their dashboard. Lexi can:
@@ -539,7 +617,7 @@ The placement test uses AI-adaptive questioning (IRT model) to determine student
 
 ---
 
-## 17. CMS — Blog & Video Library
+## 19. CMS — Blog & Video Library
 
 ### Blog
 **Admin → CMS → Blog**:
@@ -559,7 +637,7 @@ The placement test uses AI-adaptive questioning (IRT model) to determine student
 
 ---
 
-## 18. SMS Campaigns
+## 20. SMS Campaigns
 
 ### Creating a Campaign
 **Admin → SMS Campaigns → New Campaign**:
@@ -581,7 +659,7 @@ After sending, the campaign shows:
 
 ---
 
-## 19. Settings & Configuration
+## 21. Settings & Configuration
 
 Go to **Admin → Settings** for all global configuration.
 
@@ -632,7 +710,7 @@ Go to **Admin → Settings** for all global configuration.
 
 ---
 
-## 20. User Roles Reference
+## 22. User Roles Reference
 
 ### Admin
 Full access to everything. Only admins can:
@@ -662,6 +740,9 @@ Full access to everything. Only admins can:
 - View gamification stats
 - Download certificates
 - Book CallerN tutoring sessions
+- Rate tutors after CallerN sessions
+- Submit course reviews (on completed courses)
+- Access personal referral program (share links, view stats, earn credits)
 - Manage wallet (top-up, view history)
 
 ### Front Desk
@@ -690,7 +771,7 @@ Full access to everything. Only admins can:
 
 ---
 
-## 21. Troubleshooting Common Issues
+## 23. Troubleshooting Common Issues
 
 ### Student Cannot Receive OTP
 1. Check that the Kavenegar API key is set in Settings
@@ -726,6 +807,22 @@ Full access to everything. Only admins can:
 2. Check server disk space (videos require significant storage)
 3. For CallerN WebRTC: confirm the coturn TURN server is running and accessible
 4. Ensure WebSocket connections are not being blocked by Nginx (check upgrade headers)
+
+### Reviews Not Appearing on Course Page
+1. Reviews must be **approved** from **Admin → Review Moderation** before they display publicly
+2. If a student submitted a review but cannot submit another, check whether they already have a review for that course (only one review per student per course is allowed)
+3. Average rating on the course card updates immediately after the first approved review
+
+### Referral Credits Not Being Awarded
+1. Credits are paid **on the new student's first completed payment**, not on registration — this is by design to prevent abuse
+2. Confirm the referral program is **Active** in **Admin → Settings → Referral Program**
+3. Confirm the credit amounts are set to a non-zero value in settings
+4. Check the referral code was present in the registration URL (`?ref=XXXX`) — if the new student navigated directly to the site without the link, the referral is not tracked
+
+### UTM Tracking Not Showing in Analytics
+1. UTM parameters must be appended to the **registration URL** (e.g., `https://yourdomain.com/register?utm_source=instagram`)
+2. They are captured at the moment of account creation — UTM data from later visits is not retroactively applied
+3. To view captured data, query the `users` table: `utm_source`, `utm_medium`, `utm_campaign` columns
 
 ---
 

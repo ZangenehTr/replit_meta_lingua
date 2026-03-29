@@ -1,6 +1,6 @@
 # Meta Lingua Academy — Platform Overview
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Last Updated:** March 29, 2026  
 **Status:** Production-Ready
 
@@ -10,7 +10,7 @@
 
 Meta Lingua is a comprehensive, AI-enhanced multilingual language institute management platform built for Iranian and regional language schools. It is designed for **complete self-hosting** with zero dependency on foreign cloud services, making it ideal for institutes that require data sovereignty, speed, and full ownership of their infrastructure.
 
-It combines institute administration, student management, course delivery, live tutoring, gamification, CRM, HR management, payment processing, and AI-powered teaching tools into a single integrated system.
+It combines institute administration, student management, course delivery, live tutoring, gamification, CRM, HR management, payment processing, marketing tools, and AI-powered teaching tools into a single integrated system.
 
 ---
 
@@ -54,6 +54,8 @@ It combines institute administration, student management, course delivery, live 
 - Screen sharing and call recording
 - AI supervisor for real-time session analysis
 - Quiz generation from session content
+- Post-session mutual ratings (student rates teacher, teacher rates student)
+- Live teacher ratings displayed to students when browsing available tutors
 
 ### 5. LinguaQuest Gamification
 - XP and leveling system
@@ -88,13 +90,19 @@ It combines institute administration, student management, course delivery, live 
 - Promo code engine (percentage/fixed, single-use-per-user, expiry)
 - Full transaction history and receipts
 
-### 10. Communication
+### 10. Marketing & Growth
+- **Course Reviews**: Students submit star ratings and written reviews after course completion. Admin moderation queue with approve/reject/feature controls. Approved reviews display on the public course page.
+- **Referral Program**: Each student receives a unique referral code. Sharing the link rewards both the referrer (wallet credit) and the new student (welcome credit) on their first enrollment. Per-course share links, WhatsApp/SMS one-tap sharing, and a live leaderboard for admins.
+- **UTM Attribution**: Marketing campaign source, medium, and campaign are captured at registration and on every payment transaction, enabling ROI tracking per channel.
+- **SMS Campaign Management**: Bulk SMS to filtered groups of students
+
+### 11. Communication
 - Kavenegar SMS integration
 - SMS campaign management
 - Visitor live chat widget
 - VoIP click-to-call via Issabel PBX (AMI protocol)
 
-### 11. Content Management
+### 12. Content Management
 - Blog with rich text editor
 - Video library with streaming
 - Media file manager
@@ -174,6 +182,19 @@ npm run dev
 ```
 
 The application will be available at `http://localhost:5000`.
+
+---
+
+## Changelog
+
+### v1.1.0 — March 29, 2026
+- **Course Reviews**: Full review submission, moderation, and public display system
+- **Referral Program**: Unique codes per student, wallet credit rewards, admin leaderboard
+- **UTM Attribution**: Campaign tracking from registration through to payment
+- **CallerN Real Ratings**: Post-session mutual ratings with live aggregate display
+
+### v1.0.0 — March 2026
+- Initial production-ready release
 
 ---
 
