@@ -8,7 +8,7 @@ import crypto from "crypto";
 const router = Router();
 
 // ── Helper: generate or fetch a student's unique referral code ──
-async function getOrCreateReferralCode(userId: number): Promise<typeof referralCodes.$inferSelect> {
+export async function getOrCreateReferralCode(userId: number): Promise<typeof referralCodes.$inferSelect> {
   const [existing] = await db
     .select()
     .from(referralCodes)
@@ -288,11 +288,11 @@ export async function processReferralFirstPayment(paidUserId: number, coursePaym
 
     await db.insert(walletTransactions).values({
       userId: event.referrerId,
-      amount: REFERRER_CREDIT,
+      amount: String(REFERRER_CREDIT),
       type: "credit",
       description: "پاداش معرفی دانشجوی جدید",
       status: "completed"
-    } as any);
+    });
 
     // Credit referred user
     await db.update(users)
@@ -301,11 +301,11 @@ export async function processReferralFirstPayment(paidUserId: number, coursePaym
 
     await db.insert(walletTransactions).values({
       userId: paidUserId,
-      amount: REFERRED_CREDIT,
+      amount: String(REFERRED_CREDIT),
       type: "credit",
       description: "پاداش ثبت‌نام با کد معرفی",
       status: "completed"
-    } as any);
+    });
 
     // Record the first_payment event
     await db.insert(referralEvents).values({

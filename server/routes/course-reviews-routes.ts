@@ -28,8 +28,8 @@ router.post("/api/courses/:courseId/reviews", authenticate, async (req: any, res
       return res.status(403).json({ message: "فقط دانشجویان ثبت‌نام‌شده می‌توانند نظر بگذارند" });
     }
 
-    if (!["active", "completed"].includes(enrollment.status ?? "")) {
-      return res.status(403).json({ message: "فقط دانشجویانی که دوره را آغاز کرده‌اند می‌توانند نظر بگذارند" });
+    if (enrollment.status !== "completed") {
+      return res.status(403).json({ message: "فقط دانشجویانی که دوره را به پایان رسانده‌اند می‌توانند نظر بگذارند" });
     }
 
     // Prevent duplicate review
@@ -148,7 +148,7 @@ router.get("/api/admin/course-reviews", authenticate, authorize(["Admin", "Super
       .from(courseReviews)
       .leftJoin(courses, eq(courseReviews.courseId, courses.id))
       .leftJoin(users, eq(courseReviews.studentId, users.id))
-      .where(status === "all" ? undefined : eq(courseReviews.status, status as any))
+      .where(status === "all" ? undefined : eq(courseReviews.status, status as "pending" | "approved" | "rejected"))
       .orderBy(desc(courseReviews.createdAt));
 
     res.json(reviews);

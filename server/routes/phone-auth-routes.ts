@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import { storage } from '../storage';
 import { OtpService } from '../services/otp-service';
 import { generateTokens } from '../auth';
-import { recordReferralRegistration } from './referral-routes.js';
+import { recordReferralRegistration, getOrCreateReferralCode } from './referral-routes.js';
 
 const router = Router();
 
@@ -318,6 +318,9 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
       referralCode: null, // user's own referral code; generated later
       referredByCode: referralCode || null // code used to invite this user
     } as any);
+
+    // Eagerly assign a unique referral code to every new user
+    getOrCreateReferralCode(newUser.id).catch(() => {});
 
     // If referred via a referral code, record the event directly (no HTTP round-trip)
     if (referralCode) {

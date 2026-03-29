@@ -30,6 +30,7 @@ export default function CallernVideoSession() {
   const [activeTab, setActiveTab] = useState("teachers");
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
+  const [completedTeacherId, setCompletedTeacherId] = useState<number>(0);
   
   // Fetch online teachers
   const { data: onlineTeachers, isLoading: teachersLoading, refetch: refetchTeachers } = useQuery({
@@ -87,6 +88,7 @@ export default function CallernVideoSession() {
 
   const handleEndCall = () => {
     const roomId = callRoomId;
+    const teacherId = selectedTeacher?.id ?? 0;
     setIsInCall(false);
     setCallRoomId(null);
 
@@ -95,9 +97,10 @@ export default function CallernVideoSession() {
       description: t('callern:thankYouForSession')
     });
 
-    // Show post-session rating prompt
+    // Capture teacher before clearing state, then show rating prompt
     if (roomId) {
       setCompletedSessionId(roomId);
+      setCompletedTeacherId(teacherId);
       setShowRatingModal(true);
     }
 
@@ -400,9 +403,9 @@ export default function CallernVideoSession() {
       {showRatingModal && completedSessionId && (
         <PostSessionRatingModal
           isOpen={showRatingModal}
-          onClose={() => { setShowRatingModal(false); setCompletedSessionId(null); }}
+          onClose={() => { setShowRatingModal(false); setCompletedSessionId(null); setCompletedTeacherId(0); }}
           sessionId={completedSessionId}
-          teacherId={0}
+          teacherId={completedTeacherId}
           studentId={user?.id || 0}
           teacherName={t('callern:teacher', 'Teacher')}
           userRole="student"

@@ -57,12 +57,14 @@ export default function PostSessionRatingModal({
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/callern/rate", {
+      return apiRequest("/api/callern/session-rating", {
         method: "POST",
         body: JSON.stringify({
           sessionId,
+          teacherId,
+          studentId,
           role: userRole,
-          score: rating,
+          rating,
           comment: comment || undefined,
         }),
       });

@@ -47,9 +47,10 @@ CREATE TABLE IF NOT EXISTS referral_events (
   referral_code_id INTEGER NOT NULL REFERENCES referral_codes(id),
   referrer_id INTEGER NOT NULL REFERENCES users(id),
   referred_user_id INTEGER REFERENCES users(id),
-  event_type VARCHAR(50) NOT NULL,
-  credit_amount INTEGER DEFAULT 0,
-  metadata JSONB,
+  event_type VARCHAR(30) NOT NULL,
+  course_payment_id INTEGER,
+  referrer_credit_awarded INTEGER DEFAULT 0,
+  referred_credit_awarded INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 

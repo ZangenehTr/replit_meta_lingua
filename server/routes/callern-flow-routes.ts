@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { storage } from '../storage';
 import * as callernStorage from '../storage/callern-storage';
 import { authenticate, type AuthenticatedRequest } from '../auth';
+import { db } from '../db.js';
+import { sessionRatings } from '../../shared/schema.js';
+import { and, eq } from 'drizzle-orm';
 
 // Use centralized authentication middleware
 const requireAuth = authenticate;
@@ -452,6 +455,63 @@ router.post('/activities/:activityInstanceId/score', requireAuth, async (req, re
   } catch (error) {
     console.error('Error scoring activity:', error);
     res.status(500).json({ message: 'Failed to score activity' });
+  }
+});
+
+// ===========================
+// NEW POST-SESSION RATINGS (uses session_ratings table with string sessionId)
+// ===========================
+
+const sessionRatingSchema = z.object({
+  sessionId: z.string().min(1),
+  teacherId: z.number().int().positive(),
+  studentId: z.number().int().positive(),
+  role: z.enum(["student", "teacher"]),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(500).optional()
+});
+
+router.post('/api/callern/session-rating', requireAuth, async (req, res) => {
+  try {
+    const { sessionId, teacherId, studentId, role, rating, comment } = sessionRatingSchema.parse(req.body);
+
+    const raterId = (req as AuthenticatedRequest).user.id;
+    // Verify the requester is the actual rater
+    const expectedId = role === "student" ? studentId : teacherId;
+    if (raterId !== expectedId) {
+      return res.status(403).json({ message: "Unauthorized to submit this rating" });
+    }
+
+    // Check for duplicate rating by this user for this session
+    const [existing] = await db
+      .select({ id: sessionRatings.id })
+      .from(sessionRatings)
+      .where(and(
+        eq(sessionRatings.sessionId, sessionId),
+        role === "student"
+          ? eq(sessionRatings.studentId, studentId)
+          : eq(sessionRatings.teacherId, teacherId)
+      ))
+      .limit(1);
+
+    if (existing) {
+      return res.status(409).json({ message: "Rating already submitted for this session" });
+    }
+
+    await db.insert(sessionRatings).values({
+      sessionId,
+      teacherId,
+      studentId,
+      teacherRating: role === "student" ? rating : null,
+      studentRating: role === "teacher" ? rating : null,
+      teacherComment: role === "student" ? (comment ?? null) : null,
+      studentComment: role === "teacher" ? (comment ?? null) : null
+    });
+
+    res.status(201).json({ message: "Rating submitted successfully" });
+  } catch (error) {
+    console.error("Error submitting session rating:", error);
+    res.status(500).json({ message: "Failed to submit rating" });
   }
 });
 
