@@ -38,6 +38,27 @@ interface Course {
   level: string;
 }
 
+interface PayoutRecord {
+  id: number;
+  referrerCreditAwarded: string;
+  referredCreditAwarded: string;
+  coursePaymentId: number | null;
+  createdAt: string;
+  referrerId: number | null;
+  referrerFirst: string | null;
+  referrerLast: string | null;
+  referrerPhone: string | null;
+  referredId: number | null;
+}
+
+interface PayoutAuditResponse {
+  payouts: PayoutRecord[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export default function ReferralsPage() {
   const [settings, setSettings] = useState<ReferralSettings | null>(null);
   const [stats, setStats] = useState<ReferralStats | null>(null);
@@ -45,6 +66,9 @@ export default function ReferralsPage() {
   const [referrerPercentage, setReferrerPercentage] = useState(15);
   const [referredPercentage, setReferredPercentage] = useState(5);
   const [loading, setLoading] = useState(true);
+  const [payoutData, setPayoutData] = useState<PayoutAuditResponse | null>(null);
+  const [payoutPage, setPayoutPage] = useState(1);
+  const [payoutLoading, setPayoutLoading] = useState(false);
   const { toast } = useToast();
   const { currentLanguage, t, isRTL } = useLanguage();
 
@@ -160,6 +184,24 @@ export default function ReferralsPage() {
     }
   };
 
+  const fetchPayoutAudit = async (pg: number) => {
+    setPayoutLoading(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch(`/api/admin/referrals/payout-audit?page=${pg}&pageSize=20`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPayoutData(data);
+      }
+    } catch (err) {
+      console.error("Error fetching payout audit:", err);
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
+
   const generateCourseReferralLink = async (courseId: number) => {
     try {
       const response = await fetch(`/api/courses/${courseId}/refer`, {
@@ -226,8 +268,8 @@ export default function ReferralsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="settings" className="w-full" onValueChange={(v) => { if (v === "payout-audit") fetchPayoutAudit(1); }}>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="settings">
             {currentLanguage === 'fa' ? 'تنظیمات کمیسیون' : 
              currentLanguage === 'ar' ? 'إعدادات العمولة' : 
@@ -237,6 +279,11 @@ export default function ReferralsPage() {
             {currentLanguage === 'fa' ? 'آمار و گزارش' : 
              currentLanguage === 'ar' ? 'الإحصائيات والتقارير' : 
              'Statistics & Reports'}
+          </TabsTrigger>
+          <TabsTrigger value="payout-audit">
+            {currentLanguage === 'fa' ? 'حسابرسی پرداخت‌ها' : 
+             currentLanguage === 'ar' ? 'تدقيق المدفوعات' : 
+             'Payout Audit'}
           </TabsTrigger>
         </TabsList>
 
@@ -426,6 +473,122 @@ export default function ReferralsPage() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="payout-audit" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                {currentLanguage === 'fa' ? 'گزارش پرداخت کمیسیون‌ها' :
+                 currentLanguage === 'ar' ? 'تقرير مدفوعات العمولات' :
+                 'Referral Commission Payout Report'}
+              </CardTitle>
+              <CardDescription>
+                {currentLanguage === 'fa' ? 'تمام کمیسیون‌های پرداخت‌شده به معرفان و دانشجویان معرفی‌شده' :
+                 currentLanguage === 'ar' ? 'جميع العمولات المدفوعة للمحيلين والطلاب المحالين' :
+                 'All commissions paid to referrers and referred students'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {payoutLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                </div>
+              ) : !payoutData || payoutData.payouts.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">
+                  {currentLanguage === 'fa' ? 'هنوز پرداختی ثبت نشده است' :
+                   currentLanguage === 'ar' ? 'لا توجد مدفوعات مسجلة بعد' :
+                   'No payouts recorded yet'}
+                </p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-gray-500">
+                          <th className="pb-2 text-start">
+                            {currentLanguage === 'fa' ? 'معرف' : 'Referrer'}
+                          </th>
+                          <th className="pb-2 text-start">
+                            {currentLanguage === 'fa' ? 'تلفن معرف' : 'Referrer Phone'}
+                          </th>
+                          <th className="pb-2 text-start">
+                            {currentLanguage === 'fa' ? 'کمیسیون معرف' : 'Referrer Credit'}
+                          </th>
+                          <th className="pb-2 text-start">
+                            {currentLanguage === 'fa' ? 'کمیسیون دانشجو' : 'Referred Credit'}
+                          </th>
+                          <th className="pb-2 text-start">
+                            {currentLanguage === 'fa' ? 'تاریخ' : 'Date'}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {payoutData.payouts.map((row) => (
+                          <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td className="py-2">
+                              {row.referrerFirst || row.referrerLast
+                                ? `${row.referrerFirst ?? ''} ${row.referrerLast ?? ''}`.trim()
+                                : `ID ${row.referrerId ?? '—'}`}
+                            </td>
+                            <td className="py-2 text-gray-500 text-xs">{row.referrerPhone ?? '—'}</td>
+                            <td className="py-2 font-medium text-green-600">
+                              {Number(row.referrerCreditAwarded).toLocaleString()} 
+                              {currentLanguage === 'fa' ? ' تومان' : ''}
+                            </td>
+                            <td className="py-2 font-medium text-blue-600">
+                              {Number(row.referredCreditAwarded).toLocaleString()}
+                              {currentLanguage === 'fa' ? ' تومان' : ''}
+                            </td>
+                            <td className="py-2 text-gray-500 text-xs">
+                              {new Date(row.createdAt).toLocaleDateString(
+                                currentLanguage === 'fa' ? 'fa-IR' : 'en-US'
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {payoutData.totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={payoutPage <= 1 || payoutLoading}
+                        onClick={() => {
+                          const next = payoutPage - 1;
+                          setPayoutPage(next);
+                          fetchPayoutAudit(next);
+                        }}
+                      >
+                        {currentLanguage === 'fa' ? 'قبلی' : 'Prev'}
+                      </Button>
+                      <span className="text-sm text-gray-500">
+                        {currentLanguage === 'fa'
+                          ? `صفحه ${payoutPage} از ${payoutData.totalPages}`
+                          : `Page ${payoutPage} of ${payoutData.totalPages}`}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={payoutPage >= payoutData.totalPages || payoutLoading}
+                        onClick={() => {
+                          const next = payoutPage + 1;
+                          setPayoutPage(next);
+                          fetchPayoutAudit(next);
+                        }}
+                      >
+                        {currentLanguage === 'fa' ? 'بعدی' : 'Next'}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

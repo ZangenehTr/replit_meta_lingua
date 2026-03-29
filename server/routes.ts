@@ -1696,14 +1696,17 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         }
       }
 
+      // Eagerly assign a unique referral code to every new user
+      try {
+        const { getOrCreateReferralCode } = await import('./routes/referral-routes.js');
+        getOrCreateReferralCode(user.id).catch(() => {});
+      } catch (_) {}
+
       // Record referral registration event if a referral code was provided
       if (referralCode && typeof referralCode === 'string') {
         try {
-          await fetch(`${req.protocol}://${req.get('host')}/api/referrals/record-registration`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ referralCode: referralCode.toUpperCase().trim(), newUserId: user.id })
-          });
+          const { recordReferralRegistration } = await import('./routes/referral-routes.js');
+          await recordReferralRegistration(referralCode.toUpperCase().trim(), user.id);
         } catch (refErr) {
           console.error('⚠️ Referral registration recording failed (non-fatal):', refErr);
         }
@@ -11584,16 +11587,16 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       console.log(`Connected teacher IDs:`, connectedTeacherIds);
       
       // Get live rating aggregates from session_ratings table keyed by teacher id
+      // teacherRating is set when a student rates the teacher (role='student')
       const ratingRows = await db
         .select({
-          teacherId: callSessions.teacherId,
-          avgRating: sql<string>`coalesce(avg(${sessionRatings.score})::numeric(3,2), 0)`,
-          sessionCount: sql<number>`count(distinct ${callSessions.id})`
+          teacherId: sessionRatings.teacherId,
+          avgRating: sql<string>`coalesce(avg(${sessionRatings.teacherRating})::numeric(3,2), 0)`,
+          sessionCount: sql<number>`count(${sessionRatings.id})`
         })
         .from(sessionRatings)
-        .leftJoin(callSessions, eq(sessionRatings.sessionId, callSessions.id))
-        .where(eq(sessionRatings.raterRole, 'student'))
-        .groupBy(callSessions.teacherId);
+        .where(sql`${sessionRatings.teacherRating} IS NOT NULL`)
+        .groupBy(sessionRatings.teacherId);
 
       const ratingMap = new Map(ratingRows.map(r => [r.teacherId, r]));
 

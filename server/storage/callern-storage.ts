@@ -302,33 +302,37 @@ export async function updateRoadmapProgressFromSession(
 }
 
 // ── Create a session rating record ──
+// sessionId: string (either stringified call_sessions.id or room ID)
+// role: 'student' → student rates the teacher → sets teacherRating
+// role: 'teacher' → teacher rates the student → sets studentRating
 export async function createSessionRating(data: {
-  sessionId: number;
-  raterRole: string;
-  raterId: number;
+  sessionId: string;
+  teacherId: number;
+  studentId: number;
+  role: 'student' | 'teacher';
   score: number;
   comment?: string;
-  aspectRatings?: Record<string, any>;
 }): Promise<typeof sessionRatings.$inferSelect> {
   const [rating] = await db
     .insert(sessionRatings)
     .values({
       sessionId: data.sessionId,
-      raterId: data.raterId,
-      raterRole: data.raterRole,
-      score: data.score,
-      comment: data.comment || null,
-      aspectRatings: data.aspectRatings || null
+      teacherId: data.teacherId,
+      studentId: data.studentId,
+      teacherRating: data.role === 'student' ? data.score : null,
+      studentRating: data.role === 'teacher' ? data.score : null,
+      teacherComment: data.role === 'student' ? (data.comment ?? null) : null,
+      studentComment: data.role === 'teacher' ? (data.comment ?? null) : null
     })
     .returning();
   return rating;
 }
 
-// ── Get an existing session rating ──
+// ── Get an existing session rating for the given user+role in a session ──
 export async function getSessionRating(
-  sessionId: number,
+  sessionId: string,
   raterId: number,
-  raterRole: string
+  role: string
 ): Promise<typeof sessionRatings.$inferSelect | undefined> {
   const [rating] = await db
     .select()
@@ -336,8 +340,9 @@ export async function getSessionRating(
     .where(
       and(
         eq(sessionRatings.sessionId, sessionId),
-        eq(sessionRatings.raterId, raterId),
-        eq(sessionRatings.raterRole, raterRole)
+        role === 'student'
+          ? eq(sessionRatings.studentId, raterId)
+          : eq(sessionRatings.teacherId, raterId)
       )
     )
     .limit(1);
@@ -354,18 +359,17 @@ export async function updateOverallRatings(
 
   const teacherId = session.teacherId;
 
-  // Compute live average from all student ratings on sessions taught by this teacher
+  // Compute live average from all student-submitted ratings for this teacher
   const [agg] = await db
     .select({
-      avgScore: avg(sessionRatings.score),
+      avgScore: avg(sessionRatings.teacherRating),
       sessionCount: count(sessionRatings.id)
     })
     .from(sessionRatings)
-    .leftJoin(callSessions, eq(sessionRatings.sessionId, callSessions.id))
     .where(
       and(
-        eq((callSessions as any).teacherId, teacherId),
-        eq(sessionRatings.raterRole, 'student')
+        eq(sessionRatings.teacherId, teacherId),
+        sql`${sessionRatings.teacherRating} IS NOT NULL`
       )
     );
 

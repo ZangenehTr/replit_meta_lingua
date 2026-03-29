@@ -93,6 +93,21 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
     queryKey: [`/api/courses/${courseId}/player`],
   });
 
+  // Check if current user has a completed enrollment (for review eligibility)
+  const { data: enrollmentStatus } = useQuery<{ canReview: boolean }>({
+    queryKey: [`/api/courses/${courseId}/my-enrollment-status`],
+    queryFn: async () => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return { canReview: false };
+      const res = await fetch(`/api/courses/${courseId}/my-enrollment-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return { canReview: false };
+      return res.json();
+    },
+    retry: false,
+  });
+
   // Get current lesson (only after course is loaded)
   const currentLesson = course?.lessons?.find(lesson => 
     currentLessonId ? lesson.id === currentLessonId : lesson.order === 1
@@ -548,7 +563,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
               <TabsContent value="reviews">
                 <CourseReviews
                   courseId={parseInt(courseId)}
-                  isEnrolled={true}
+                  isEnrolled={enrollmentStatus?.canReview ?? false}
                 />
               </TabsContent>
             </Tabs>

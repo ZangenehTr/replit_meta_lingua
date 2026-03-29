@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
-import { Star, MessageSquare, Clock, CheckCircle } from "lucide-react";
+import { Star, MessageSquare, Clock, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Review {
@@ -26,6 +26,9 @@ interface ReviewsResponse {
   reviews: Review[];
   averageRating: string | null;
   totalReviews: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 interface CourseReviewsProps {
@@ -72,11 +75,13 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const { data: reviewsData, isLoading } = useQuery<ReviewsResponse>({
-    queryKey: [`/api/courses/${courseId}/reviews`],
+    queryKey: [`/api/courses/${courseId}/reviews`, page],
     queryFn: async () => {
-      const res = await fetch(`/api/courses/${courseId}/reviews`);
+      const res = await fetch(`/api/courses/${courseId}/reviews?page=${page}&pageSize=${pageSize}`);
       if (!res.ok) throw new Error("Failed to fetch reviews");
       return res.json();
     },
@@ -85,6 +90,7 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
   const reviews = reviewsData?.reviews ?? [];
   const serverAvgRating = reviewsData?.averageRating ?? null;
   const totalReviews = reviewsData?.totalReviews ?? 0;
+  const totalPages = reviewsData?.totalPages ?? 1;
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -128,14 +134,6 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
 
   const avgRating = serverAvgRating;
 
-  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
-    star,
-    count: reviews.filter((r) => r.rating === star).length,
-    pct: totalReviews > 0
-      ? (reviews.filter((r) => r.rating === star).length / totalReviews) * 100
-      : 0,
-  }));
-
   return (
     <div className={`space-y-6 ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
       {/* Summary */}
@@ -150,30 +148,13 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {reviews.length > 0 ? (
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex flex-col items-center justify-center p-4">
-                <span className="text-5xl font-bold text-yellow-500">{avgRating}</span>
-                <StarRating rating={Math.round(Number(avgRating))} readonly />
-                <span className="text-sm text-gray-500 mt-1">
-                  {reviews.length} {t("نظر", "reviews")}
-                </span>
-              </div>
-              <div className="flex-1 space-y-2">
-                {ratingDistribution.map(({ star, count, pct }) => (
-                  <div key={star} className="flex items-center gap-2 text-sm">
-                    <span className="w-4 text-center">{star}</span>
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-yellow-400 h-full rounded-full transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="w-6 text-gray-500">{count}</span>
-                  </div>
-                ))}
-              </div>
+          {totalReviews > 0 ? (
+            <div className="flex flex-col items-center justify-center p-4">
+              <span className="text-5xl font-bold text-yellow-500">{avgRating}</span>
+              <StarRating rating={Math.round(Number(avgRating))} readonly />
+              <span className="text-sm text-gray-500 mt-1">
+                {totalReviews} {t("نظر", "reviews")}
+              </span>
             </div>
           ) : (
             <p className="text-gray-400 text-sm">{t("هنوز نظری ثبت نشده است", "No reviews yet")}</p>
@@ -284,6 +265,31 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
           ))
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1 || isLoading}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-gray-500">
+            {t(`صفحه ${page} از ${totalPages}`, `Page ${page} of ${totalPages}`)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages || isLoading}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

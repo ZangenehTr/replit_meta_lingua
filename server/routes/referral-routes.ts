@@ -223,6 +223,52 @@ router.get("/api/admin/referrals/leaderboard", authenticate, authorize(["Admin",
   }
 });
 
+// ── Admin payout audit: all first_payment referral events with user details ──
+router.get("/api/admin/referrals/payout-audit", authenticate, authorize(["Admin", "Supervisor"]), async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page || "1")));
+    const pageSize = Math.min(50, Math.max(1, parseInt(String(req.query.pageSize || "20"))));
+    const offset = (page - 1) * pageSize;
+
+    const payouts = await db
+      .select({
+        id: referralEvents.id,
+        referrerCreditAwarded: referralEvents.referrerCreditAwarded,
+        referredCreditAwarded: referralEvents.referredCreditAwarded,
+        coursePaymentId: referralEvents.coursePaymentId,
+        createdAt: referralEvents.createdAt,
+        referrerId: referralCodes.userId,
+        referrerFirst: users.firstName,
+        referrerLast: users.lastName,
+        referrerPhone: users.phoneNumber,
+        referredId: referralEvents.referredUserId
+      })
+      .from(referralEvents)
+      .leftJoin(referralCodes, eq(referralEvents.referralCodeId, referralCodes.id))
+      .leftJoin(users, eq(referralCodes.userId, users.id))
+      .where(eq(referralEvents.eventType, "first_payment"))
+      .orderBy(desc(referralEvents.createdAt))
+      .limit(pageSize)
+      .offset(offset);
+
+    const [{ total }] = await db
+      .select({ total: count(referralEvents.id) })
+      .from(referralEvents)
+      .where(eq(referralEvents.eventType, "first_payment"));
+
+    res.json({
+      payouts,
+      total: Number(total),
+      page,
+      pageSize,
+      totalPages: Math.ceil(Number(total) / pageSize)
+    });
+  } catch (error) {
+    console.error("Error fetching payout audit:", error);
+    res.status(500).json({ message: "خطا در دریافت گزارش پرداخت‌ها" });
+  }
+});
+
 // ── Internal helper: record a referral registration event ──
 // Called directly from the phone-auth registration flow — NOT exposed as a public HTTP endpoint.
 export async function recordReferralRegistration(referralCode: string, newUserId: number): Promise<void> {

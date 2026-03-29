@@ -68,10 +68,42 @@ router.post("/api/courses/:courseId/reviews", authenticate, async (req: any, res
   }
 });
 
-// ── Get approved reviews for a course (public) ──
+// ── Check if authenticated user has a completed enrollment (for review eligibility) ──
+router.get("/api/courses/:courseId/my-enrollment-status", authenticate, async (req: any, res) => {
+  try {
+    const courseId = parseInt(req.params.courseId);
+    const [enrollment] = await db
+      .select({ status: enrollments.status })
+      .from(enrollments)
+      .where(and(eq(enrollments.userId, req.user.id), eq(enrollments.courseId, courseId)))
+      .limit(1);
+
+    res.json({
+      hasEnrollment: !!enrollment,
+      status: enrollment?.status ?? null,
+      canReview: enrollment?.status === "completed"
+    });
+  } catch (error) {
+    console.error("Error checking enrollment status:", error);
+    res.status(500).json({ message: "خطا در بررسی وضعیت ثبت‌نام" });
+  }
+});
+
+// ── Get approved reviews for a course (public, paginated) ──
 router.get("/api/courses/:courseId/reviews", async (req, res) => {
   try {
     const courseId = parseInt(req.params.courseId);
+    const page = Math.max(1, parseInt(String(req.query.page || "1")));
+    const pageSize = Math.min(20, Math.max(1, parseInt(String(req.query.pageSize || "10"))));
+    const offset = (page - 1) * pageSize;
+
+    const [agg] = await db
+      .select({
+        avgRating: avg(courseReviews.rating),
+        totalCount: count(courseReviews.id)
+      })
+      .from(courseReviews)
+      .where(and(eq(courseReviews.courseId, courseId), eq(courseReviews.status, "approved")));
 
     const reviews = await db
       .select({
@@ -90,17 +122,11 @@ router.get("/api/courses/:courseId/reviews", async (req, res) => {
       .from(courseReviews)
       .leftJoin(users, eq(courseReviews.studentId, users.id))
       .where(and(eq(courseReviews.courseId, courseId), eq(courseReviews.status, "approved")))
-      .orderBy(desc(courseReviews.createdAt));
+      .orderBy(desc(courseReviews.createdAt))
+      .limit(pageSize)
+      .offset(offset);
 
-    // Compute aggregate
-    const [agg] = await db
-      .select({
-        avgRating: avg(courseReviews.rating),
-        totalCount: count(courseReviews.id)
-      })
-      .from(courseReviews)
-      .where(and(eq(courseReviews.courseId, courseId), eq(courseReviews.status, "approved")));
-
+    const totalReviews = Number(agg?.totalCount || 0);
     const sanitized = reviews.map((r) => ({
       id: r.id,
       rating: r.rating,
@@ -116,7 +142,10 @@ router.get("/api/courses/:courseId/reviews", async (req, res) => {
     res.json({
       reviews: sanitized,
       averageRating: agg?.avgRating ? parseFloat(String(agg.avgRating)).toFixed(1) : null,
-      totalReviews: Number(agg?.totalCount || 0)
+      totalReviews,
+      page,
+      pageSize,
+      totalPages: Math.ceil(totalReviews / pageSize)
     });
   } catch (error) {
     console.error("Error fetching course reviews:", error);

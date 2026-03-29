@@ -568,9 +568,9 @@ export class DatabaseStorage implements IStorage {
         userId: enrollment.userId,
         courseId: enrollment.courseId,
         progress: enrollment.progress || 0,
-        utmSource: (enrollment as any).utmSource ?? userUtm.utmSource ?? null,
-        utmMedium: (enrollment as any).utmMedium ?? userUtm.utmMedium ?? null,
-        utmCampaign: (enrollment as any).utmCampaign ?? userUtm.utmCampaign ?? null
+        utmSource: userUtm.utmSource ?? null,
+        utmMedium: userUtm.utmMedium ?? null,
+        utmCampaign: userUtm.utmCampaign ?? null
       }).returning();
       
       // Automatically create or join group chat for the course
