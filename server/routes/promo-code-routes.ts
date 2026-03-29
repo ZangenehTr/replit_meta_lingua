@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db.js";
-import { promoCodes } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { promoCodes, coursePayments } from "@shared/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { authenticate } from "../auth.js";
 
 const router = Router();
@@ -133,6 +133,21 @@ router.post("/api/promo-codes/validate", authenticate, async (req, res) => {
         valid: false,
         message: `حداقل مبلغ سفارش برای استفاده از این کد ${promo.minAmount.toLocaleString('fa-IR')} تومان است`
       });
+    }
+
+    // Prevent re-use: check if this user has already used this promo code in a completed payment
+    const [previousUse] = await db
+      .select({ id: coursePayments.id })
+      .from(coursePayments)
+      .where(
+        and(
+          eq(coursePayments.userId, (req as any).user.id),
+          eq(coursePayments.promoCodeId, promo.id),
+          eq(coursePayments.status, 'completed')
+        )
+      );
+    if (previousUse) {
+      return res.status(400).json({ valid: false, message: "شما قبلاً از این کد تخفیف استفاده کرده‌اید" });
     }
 
     // Check applicable courses

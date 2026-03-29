@@ -33,7 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, Plus, XCircle, Copy, Search } from "lucide-react";
+import { Award, Plus, XCircle, Copy, Search, RefreshCw } from "lucide-react";
 
 interface CertificateRow {
   id: number;
@@ -63,6 +63,7 @@ export default function CertificatesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [revokeId, setRevokeId] = useState<number | null>(null);
   const [revokeReason, setRevokeReason] = useState("");
+  const [reissueCert, setReissueCert] = useState<CertificateRow | null>(null);
   const [search, setSearch] = useState("");
   const [issueForm, setIssueForm] = useState({
     studentId: "",
@@ -123,6 +124,25 @@ export default function CertificatesPage() {
     },
   });
 
+  const reissueMutation = useMutation({
+    mutationFn: (cert: CertificateRow) =>
+      apiRequest("/api/admin/certificates", {
+        method: "POST",
+        body: {
+          studentId: cert.studentId,
+          courseId: cert.courseId,
+        },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/certificates"] });
+      toast({ title: "گواهینامه جدید صادر شد" });
+      setReissueCert(null);
+    },
+    onError: (err: any) => {
+      toast({ title: err.message || "خطا در صدور مجدد", variant: "destructive" });
+    },
+  });
+
   function copyNumber(num: string) {
     navigator.clipboard.writeText(num);
     toast({ title: "شماره گواهینامه کپی شد" });
@@ -157,6 +177,32 @@ export default function CertificatesPage() {
           <Plus className="h-4 w-4 me-2" aria-hidden="true" />
           صدور گواهینامه
         </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{certs.length}</div>
+            <div className="text-sm text-muted-foreground">کل گواهینامه‌ها</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-green-600">
+              {certs.filter(c => c.status === "active").length}
+            </div>
+            <div className="text-sm text-muted-foreground">فعال</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-destructive">
+              {certs.filter(c => c.status === "revoked").length}
+            </div>
+            <div className="text-sm text-muted-foreground">باطل شده</div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -241,17 +287,31 @@ export default function CertificatesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {cert.status === "active" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setRevokeId(cert.id)}
-                          aria-label="باطل کردن گواهینامه"
-                        >
-                          <XCircle className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {cert.status === "active" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setRevokeId(cert.id)}
+                            aria-label="باطل کردن گواهینامه"
+                          >
+                            <XCircle className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        )}
+                        {cert.status === "revoked" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-primary hover:text-primary"
+                            onClick={() => setReissueCert(cert)}
+                            aria-label="صدور مجدد گواهینامه"
+                            title="صدور مجدد"
+                          >
+                            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -325,6 +385,34 @@ export default function CertificatesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Re-issue Confirmation */}
+      <AlertDialog open={reissueCert !== null} onOpenChange={() => setReissueCert(null)}>
+        <AlertDialogContent dir={isRTL ? "rtl" : "ltr"}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>صدور مجدد گواهینامه</AlertDialogTitle>
+            <AlertDialogDescription>
+              یک گواهینامه جدید با شماره جدید برای این دانشجو و دوره صادر می‌شود.
+              گواهینامه قبلی باطل باقی خواهد ماند.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {reissueCert && (
+            <div className="px-6 pb-2 text-sm">
+              <p>دانشجو: <strong>{reissueCert.studentFirstName} {reissueCert.studentLastName}</strong></p>
+              <p>دوره: <strong>{reissueCert.courseTitle}</strong></p>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>انصراف</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => reissueCert && reissueMutation.mutate(reissueCert)}
+              disabled={reissueMutation.isPending}
+            >
+              صدور مجدد
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Revoke Confirmation */}
       <AlertDialog open={revokeId !== null} onOpenChange={() => setRevokeId(null)}>

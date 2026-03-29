@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -6461,6 +6461,20 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         if (promo.maxUsages !== null && promo.usedCount >= promo.maxUsages) {
           return res.status(400).json({ message: "این کد تخفیف به حداکثر استفاده رسیده است" });
         }
+        // Prevent the same user from using the same promo code more than once
+        const [previousUse] = await db
+          .select({ id: coursePayments.id })
+          .from(coursePayments)
+          .where(
+            and(
+              eq(coursePayments.userId, req.user.id),
+              eq(coursePayments.promoCodeId, promo.id),
+              eq(coursePayments.status, 'completed')
+            )
+          );
+        if (previousUse) {
+          return res.status(400).json({ message: "شما قبلاً از این کد تخفیف استفاده کرده‌اید" });
+        }
         if (promo.minAmount && finalPrice < promo.minAmount) {
           return res.status(400).json({ message: `حداقل مبلغ سفارش برای این کد ${promo.minAmount.toLocaleString('fa-IR')} تومان است` });
         }
@@ -6512,6 +6526,35 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           await db.update(promoCodes)
             .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
             .where(eq(promoCodes.id, appliedPromoCodeId));
+        }
+
+        // Auto-issue a digital certificate upon successful enrollment
+        try {
+          const certDate = new Date();
+          const y = certDate.getFullYear();
+          const m = String(certDate.getMonth() + 1).padStart(2, "0");
+          const d = String(certDate.getDate()).padStart(2, "0");
+          const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+          const certNumber = `CERT-${y}${m}${d}-${rand}`;
+          const [existingCert] = await db
+            .select({ id: certificates.id })
+            .from(certificates)
+            .where(and(
+              eq(certificates.studentId, req.user.id),
+              eq(certificates.courseId, Number(courseId)),
+              eq(certificates.status, "active")
+            ));
+          if (!existingCert) {
+            await db.insert(certificates).values({
+              certificateNumber: certNumber,
+              studentId: req.user.id,
+              courseId: Number(courseId),
+              issuedBy: req.user.id,
+              status: "active",
+            });
+          }
+        } catch (certErr) {
+          console.error("Auto-certificate issuance failed (non-fatal):", certErr);
         }
 
         res.json({
