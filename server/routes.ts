@@ -11264,7 +11264,9 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         if (allDone) {
           try {
             const { issueCertificate } = await import("./routes/certificate-routes.js");
-            await issueCertificate({ studentId: userId, courseId });
+            // Pass the actual completion date so the PDF reflects when the course was finished
+            const completionDate = enrollment.completedAt ?? new Date();
+            await issueCertificate({ studentId: userId, courseId, completionDate });
             certIssued = true;
           } catch (certErr: any) {
             if (certErr?.code === "CERT_REVOKED") {

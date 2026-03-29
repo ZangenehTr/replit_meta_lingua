@@ -36,10 +36,12 @@ export async function issueCertificate(opts: {
   issuedBy?: number | null;
   expiresAt?: Date | null;
   metadata?: Record<string, any> | null;
-  /** Only admin-triggered paths should set this to true. Revives a revoked cert. */
+  /** Pass enrollments.completedAt so the cert reflects actual course completion date */
+  completionDate?: Date | null;
+  /** Only admin-triggered paths should set this to true. Creates new cert even after revocation. */
   adminForce?: boolean;
 }): Promise<typeof certificates.$inferSelect> {
-  const { studentId, courseId, issuedBy = null, expiresAt = null, metadata = null, adminForce = false } = opts;
+  const { studentId, courseId, issuedBy = null, expiresAt = null, metadata = null, completionDate = null, adminForce = false } = opts;
 
   // Check for any existing certificate (active or revoked)
   const [existing] = await db
@@ -121,7 +123,7 @@ export async function issueCertificate(opts: {
       courseTitle: course?.title || `دوره #${courseId}`,
       courseLevel: course?.level,
       courseLanguage: course?.language,
-      issuedAt: created.issuedAt,
+      issuedAt: completionDate ?? created.issuedAt,
       instituteName: templateConfig.instituteNameEn,
       instituteNameFa: templateConfig.instituteNameFa,
       logo: templateConfig.logoUrl,
@@ -309,18 +311,26 @@ router.get("/api/admin/promo-codes/:id/usages", authenticate, requireAdmin, asyn
 // ─────────────────────────────────────────────────────────────────────────────
 
 // GET /api/student/my-certificates — student's own certificates
-// Also auto-issues certificates for completed enrollments with no existing cert (active or revoked)
+// Auto-issues certs for *recently* completed enrollments (within 30 days) with no existing cert.
+// Older completions are skipped to avoid expensive backfill of historical data.
 router.get("/api/student/my-certificates", authenticate, async (req: any, res) => {
   try {
     const userId = req.user.id;
 
-    // Auto-issue: find completed enrollments with no cert of any status
-    const completedEnrollments = await db
+    // Gate: only consider completions in the last 30 days to avoid backfilling all history
+    const WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+    const windowStart = new Date(Date.now() - WINDOW_MS);
+
+    const recentCompleted = await db
       .select({ courseId: enrollments.courseId, progress: enrollments.progress, completedAt: enrollments.completedAt })
       .from(enrollments)
-      .where(and(eq(enrollments.userId, userId), eq(enrollments.status, "completed")));
+      .where(and(
+        eq(enrollments.userId, userId),
+        eq(enrollments.status, "completed"),
+        sql`${enrollments.completedAt} >= ${windowStart.toISOString()}`,
+      ));
 
-    if (completedEnrollments.length > 0) {
+    if (recentCompleted.length > 0) {
       const existingCerts = await db
         .select({ courseId: certificates.courseId })
         .from(certificates)
@@ -328,14 +338,16 @@ router.get("/api/student/my-certificates", authenticate, async (req: any, res) =
 
       const certifiedCourseIds = new Set(existingCerts.map((c) => c.courseId));
 
-      // Auto-issue for any completed course that has NO cert at all (not even a revoked one)
-      const pendingAutoIssue = completedEnrollments.filter(
-        (e) => !certifiedCourseIds.has(e.courseId) && ((e.progress ?? 0) >= 100 || e.completedAt)
-      );
+      // Auto-issue only if there is NO cert at all (not even a revoked one)
+      const pendingAutoIssue = recentCompleted.filter((e) => !certifiedCourseIds.has(e.courseId));
 
       await Promise.allSettled(
         pendingAutoIssue.map((e) =>
-          issueCertificate({ studentId: userId, courseId: e.courseId }).catch((err) => {
+          issueCertificate({
+            studentId: userId,
+            courseId: e.courseId,
+            completionDate: e.completedAt ?? undefined,
+          }).catch((err) => {
             if (err?.code !== "CERT_REVOKED") {
               console.error(`Auto-issue failed for course ${e.courseId}:`, err);
             }
