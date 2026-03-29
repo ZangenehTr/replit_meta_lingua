@@ -6,6 +6,7 @@ import { authenticate } from "../auth.js";
 import { generateCertificatePdf, getCertificatePdfPath } from "../services/certificate-pdf.js";
 import fs from "fs";
 import path from "path";
+import multer from "multer";
 
 const router = Router();
 
@@ -66,19 +67,9 @@ export async function issueCertificate(opts: {
           status: 403,
         });
       }
-      // Admin re-issue: revive the revoked cert in-place (preserves history, single record)
-      const [revived] = await db
-        .update(certificates)
-        .set({
-          status: "active",
-          revokedAt: null,
-          revokeReason: null,
-          issuedBy: issuedBy ?? existing.issuedBy,
-          issuedAt: new Date(),
-        })
-        .where(eq(certificates.id, existing.id))
-        .returning();
-      return revived;
+      // Admin re-issue: create a brand-new certificate record with a new number.
+      // The revoked cert remains as historical audit record.
+      // Fall through to the normal creation logic below.
     }
   }
 
@@ -156,6 +147,45 @@ export async function issueCertificate(opts: {
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN routes
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Logo upload storage — saves to uploads/logos/
+const LOGO_DIR = path.join(process.cwd(), "uploads", "logos");
+if (!fs.existsSync(LOGO_DIR)) fs.mkdirSync(LOGO_DIR, { recursive: true });
+
+const logoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, LOGO_DIR),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || ".png";
+      cb(null, `logo-${Date.now()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(png|jpeg|jpg|gif|webp|svg\+xml)$/.test(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
+  },
+});
+
+// POST /api/admin/upload-logo — upload a logo image for certificate template
+router.post("/api/admin/upload-logo", authenticate, requireAdmin, logoUpload.single("logo"), async (req: any, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    // Return a public-accessible URL so it can be embedded in PDFs
+    const host = req.headers["x-forwarded-host"] || req.headers["host"] || "localhost:5000";
+    const proto = req.headers["x-forwarded-proto"] || "http";
+    const url = `${proto}://${host}/uploads/logos/${req.file.filename}`;
+    res.json({ url, filename: req.file.filename });
+  } catch (error: any) {
+    console.error("Logo upload error:", error);
+    res.status(500).json({ message: error.message || "Failed to upload logo" });
+  }
+});
 
 // GET /api/admin/certificates — list all certificates with student + course info
 router.get("/api/admin/certificates", authenticate, requireAdmin, async (req, res) => {
@@ -279,8 +309,41 @@ router.get("/api/admin/promo-codes/:id/usages", authenticate, requireAdmin, asyn
 // ─────────────────────────────────────────────────────────────────────────────
 
 // GET /api/student/my-certificates — student's own certificates
+// Also auto-issues certificates for completed enrollments with no existing cert (active or revoked)
 router.get("/api/student/my-certificates", authenticate, async (req: any, res) => {
   try {
+    const userId = req.user.id;
+
+    // Auto-issue: find completed enrollments with no cert of any status
+    const completedEnrollments = await db
+      .select({ courseId: enrollments.courseId, progress: enrollments.progress, completedAt: enrollments.completedAt })
+      .from(enrollments)
+      .where(and(eq(enrollments.userId, userId), eq(enrollments.status, "completed")));
+
+    if (completedEnrollments.length > 0) {
+      const existingCerts = await db
+        .select({ courseId: certificates.courseId })
+        .from(certificates)
+        .where(eq(certificates.studentId, userId));
+
+      const certifiedCourseIds = new Set(existingCerts.map((c) => c.courseId));
+
+      // Auto-issue for any completed course that has NO cert at all (not even a revoked one)
+      const pendingAutoIssue = completedEnrollments.filter(
+        (e) => !certifiedCourseIds.has(e.courseId) && ((e.progress ?? 0) >= 100 || e.completedAt)
+      );
+
+      await Promise.allSettled(
+        pendingAutoIssue.map((e) =>
+          issueCertificate({ studentId: userId, courseId: e.courseId }).catch((err) => {
+            if (err?.code !== "CERT_REVOKED") {
+              console.error(`Auto-issue failed for course ${e.courseId}:`, err);
+            }
+          })
+        )
+      );
+    }
+
     const result = await db
       .select({
         id: certificates.id,
@@ -298,7 +361,7 @@ router.get("/api/student/my-certificates", authenticate, async (req: any, res) =
       })
       .from(certificates)
       .leftJoin(courses, eq(certificates.courseId, courses.id))
-      .where(eq(certificates.studentId, req.user.id))
+      .where(eq(certificates.studentId, userId))
       .orderBy(desc(certificates.issuedAt));
 
     // Map: expose hasPdf flag (don't expose raw server path)
@@ -371,7 +434,7 @@ router.get("/api/certificates/:number/download", authenticate, async (req: any, 
     const certNumber = number.toUpperCase();
 
     const [cert] = await db
-      .select({ id: certificates.id, studentId: certificates.studentId, pdfPath: certificates.pdfPath, status: certificates.status })
+      .select({ id: certificates.id, studentId: certificates.studentId, pdfPath: certificates.pdfPath, status: certificates.status, issuedAt: certificates.issuedAt })
       .from(certificates)
       .where(eq(certificates.certificateNumber, certNumber));
 

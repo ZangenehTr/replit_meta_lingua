@@ -262,14 +262,50 @@ export default function CertificatesPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="logo-url">آدرس لوگو (URL، اختیاری)</Label>
-              <Input
-                id="logo-url"
-                value={templateForm.logoUrl}
-                onChange={(e) => setTemplateForm({ ...templateForm, logoUrl: e.target.value })}
-                placeholder="https://..."
-                dir="ltr"
-              />
+              <Label htmlFor="logo-url">لوگو (آپلود یا آدرس URL)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="logo-url"
+                  value={templateForm.logoUrl}
+                  onChange={(e) => setTemplateForm({ ...templateForm, logoUrl: e.target.value })}
+                  placeholder="https://..."
+                  dir="ltr"
+                  className="flex-1"
+                />
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const formData = new FormData();
+                      formData.append("logo", file);
+                      try {
+                        const res = await fetch("/api/admin/upload-logo", {
+                          method: "POST",
+                          headers: { Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}` },
+                          body: formData,
+                        });
+                        if (!res.ok) throw new Error("Upload failed");
+                        const data = await res.json();
+                        setTemplateForm((prev) => ({ ...prev, logoUrl: data.url }));
+                        toast({ title: "لوگو با موفقیت آپلود شد" });
+                      } catch {
+                        toast({ title: "خطا در آپلود لوگو", variant: "destructive" });
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <span>آپلود</span>
+                  </Button>
+                </label>
+              </div>
+              {templateForm.logoUrl && (
+                <img src={templateForm.logoUrl} alt="پیش‌نمایش لوگو" className="h-12 mt-1 object-contain rounded border p-1" />
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="sig-title">عنوان امضا</Label>
