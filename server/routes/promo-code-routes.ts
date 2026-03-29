@@ -29,7 +29,7 @@ router.post("/api/admin/promo-codes", authenticate, requireAdmin, async (req: an
   try {
     const {
       code, description, discountType, discountValue, minAmount,
-      maxUsages, expiresAt, applicableCourseIds, isActive
+      maxUsages, expiresAt, applicableCourseIds, singleUsePerUser, isActive
     } = req.body;
 
     if (!code || !discountType || discountValue == null) {
@@ -51,6 +51,7 @@ router.post("/api/admin/promo-codes", authenticate, requireAdmin, async (req: an
       maxUsages: maxUsages ? Number(maxUsages) : null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       applicableCourseIds: applicableCourseIds || null,
+      singleUsePerUser: singleUsePerUser === true,
       isActive: isActive !== false,
       createdBy: req.user.id,
     }).returning();
@@ -71,7 +72,7 @@ router.put("/api/admin/promo-codes/:id", authenticate, requireAdmin, async (req,
     const id = parseInt(req.params.id);
     const {
       description, discountType, discountValue, minAmount,
-      maxUsages, expiresAt, applicableCourseIds, isActive
+      maxUsages, expiresAt, applicableCourseIds, singleUsePerUser, isActive
     } = req.body;
 
     const updates: Record<string, any> = { updatedAt: new Date() };
@@ -82,6 +83,7 @@ router.put("/api/admin/promo-codes/:id", authenticate, requireAdmin, async (req,
     if (maxUsages !== undefined) updates.maxUsages = maxUsages ? Number(maxUsages) : null;
     if (expiresAt !== undefined) updates.expiresAt = expiresAt ? new Date(expiresAt) : null;
     if (applicableCourseIds !== undefined) updates.applicableCourseIds = applicableCourseIds;
+    if (singleUsePerUser !== undefined) updates.singleUsePerUser = singleUsePerUser === true;
     if (isActive !== undefined) updates.isActive = isActive;
 
     const [updated] = await db.update(promoCodes).set(updates).where(eq(promoCodes.id, id)).returning();
@@ -135,8 +137,8 @@ router.post("/api/promo-codes/validate", authenticate, async (req, res) => {
       });
     }
 
-    // Prevent re-use: check if this user has already applied this promo to the same course
-    if (courseId) {
+    // If singleUsePerUser is enabled, check if this user already used this promo for the same course
+    if (promo.singleUsePerUser && courseId) {
       const [previousUse] = await db
         .select({ id: coursePayments.id })
         .from(coursePayments)

@@ -9572,6 +9572,7 @@ export const promoCodes = pgTable("promo_codes", {
   usedCount: integer("used_count").default(0).notNull(),
   expiresAt: timestamp("expires_at"), // null = never expires
   applicableCourseIds: jsonb("applicable_course_ids"), // null = applies to all courses; array of course IDs
+  singleUsePerUser: boolean("single_use_per_user").default(false).notNull(), // if true, each user can only use this code once (per course)
   isActive: boolean("is_active").default(true).notNull(),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),

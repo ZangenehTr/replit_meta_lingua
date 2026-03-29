@@ -6461,20 +6461,22 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         if (promo.maxUsages !== null && promo.usedCount >= promo.maxUsages) {
           return res.status(400).json({ message: "این کد تخفیف به حداکثر استفاده رسیده است" });
         }
-        // Prevent the same user from using the same promo code for the same course again
-        const [previousUse] = await db
-          .select({ id: coursePayments.id })
-          .from(coursePayments)
-          .where(
-            and(
-              eq(coursePayments.userId, req.user.id),
-              eq(coursePayments.courseId, Number(courseId)),
-              eq(coursePayments.promoCodeId, promo.id),
-              eq(coursePayments.status, 'completed')
-            )
-          );
-        if (previousUse) {
-          return res.status(400).json({ message: "شما قبلاً از این کد تخفیف برای این دوره استفاده کرده‌اید" });
+        // If singleUsePerUser is enabled, prevent the same user from reusing the code for the same course
+        if (promo.singleUsePerUser) {
+          const [previousUse] = await db
+            .select({ id: coursePayments.id })
+            .from(coursePayments)
+            .where(
+              and(
+                eq(coursePayments.userId, req.user.id),
+                eq(coursePayments.courseId, Number(courseId)),
+                eq(coursePayments.promoCodeId, promo.id),
+                eq(coursePayments.status, 'completed')
+              )
+            );
+          if (previousUse) {
+            return res.status(400).json({ message: "شما قبلاً از این کد تخفیف برای این دوره استفاده کرده‌اید" });
+          }
         }
         if (promo.minAmount && finalPrice < promo.minAmount) {
           return res.status(400).json({ message: `حداقل مبلغ سفارش برای این کد ${promo.minAmount.toLocaleString('fa-IR')} تومان است` });
@@ -11200,7 +11202,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         return res.status(400).json({ message: "Invalid request" });
       }
 
-      // Verify the student is enrolled in this course
+      // Verify the student is enrolled and has completed the course (progress = 100 or completedAt set)
       const [enrollment] = await db
         .select()
         .from(enrollments)
@@ -11208,6 +11210,14 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
 
       if (!enrollment) {
         return res.status(403).json({ message: "شما در این دوره ثبت‌نام نکرده‌اید" });
+      }
+
+      const isCompleted = (enrollment.progress ?? 0) >= 100 || enrollment.completedAt !== null;
+      if (!isCompleted) {
+        return res.status(400).json({
+          message: "این دوره هنوز تکمیل نشده است",
+          progress: enrollment.progress ?? 0,
+        });
       }
 
       // Check if an active certificate already exists (idempotent)

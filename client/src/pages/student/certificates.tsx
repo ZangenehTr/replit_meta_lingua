@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Award, Download, Share2, ExternalLink } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Award, Download, Share2, ExternalLink, CheckCircle2, Loader2 } from "lucide-react";
 
 interface MyCertificate {
   id: number;
@@ -20,14 +20,47 @@ interface MyCertificate {
   metadata: Record<string, any> | null;
 }
 
+interface CompletedEnrollment {
+  enrollmentId: number;
+  courseId: number;
+  progress: number | null;
+  completedAt: string | null;
+  courseTitle: string | null;
+  courseLevel: string | null;
+  courseLanguage: string | null;
+}
+
 export default function StudentCertificatesPage() {
   const { i18n } = useTranslation(["common"]);
   const isRTL = i18n.dir() === "rtl";
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: certs = [], isLoading } = useQuery<MyCertificate[]>({
     queryKey: ["/api/student/my-certificates"],
     queryFn: () => apiRequest("/api/student/my-certificates"),
+  });
+
+  const { data: completedEnrollments = [] } = useQuery<CompletedEnrollment[]>({
+    queryKey: ["/api/student/completed-enrollments"],
+    queryFn: () => apiRequest("/api/student/completed-enrollments"),
+  });
+
+  const claimMutation = useMutation({
+    mutationFn: (courseId: number) =>
+      apiRequest(`/api/courses/${courseId}/complete`, { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: "گواهینامه با موفقیت صادر شد" });
+      queryClient.invalidateQueries({ queryKey: ["/api/student/my-certificates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/student/completed-enrollments"] });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "خطا در صدور گواهینامه",
+        description: err?.message || "لطفاً دوباره تلاش کنید",
+        variant: "destructive",
+      });
+    },
   });
 
   function handleShare(cert: MyCertificate) {
@@ -92,7 +125,7 @@ export default function StudentCertificatesPage() {
     d ? new Date(d).toLocaleDateString("fa-IR") : "—";
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="p-6 space-y-8 max-w-4xl mx-auto" dir={isRTL ? "rtl" : "ltr"}>
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Award className="h-6 w-6 text-yellow-500" aria-hidden="true" />
@@ -103,9 +136,51 @@ export default function StudentCertificatesPage() {
         </p>
       </div>
 
+      {/* Claimable certificates section */}
+      {completedEnrollments.length > 0 && (
+        <Card className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-900">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2 text-green-700 dark:text-green-400">
+              <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+              دوره‌های قابل دریافت گواهینامه
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {completedEnrollments.map((enr) => (
+              <div
+                key={enr.enrollmentId}
+                className="flex items-center justify-between gap-3 p-3 rounded-lg bg-background border"
+              >
+                <div>
+                  <p className="font-medium text-sm">{enr.courseTitle || "دوره آموزشی"}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {enr.courseLevel && `سطح ${enr.courseLevel}`}
+                    {enr.courseLevel && enr.courseLanguage && " · "}
+                    {enr.courseLanguage}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => claimMutation.mutate(enr.courseId)}
+                  disabled={claimMutation.isPending}
+                >
+                  {claimMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin me-1.5" />
+                  ) : (
+                    <Award className="h-4 w-4 me-1.5" aria-hidden="true" />
+                  )}
+                  دریافت گواهینامه
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Existing certificates */}
       {isLoading ? (
         <div className="text-center py-20 text-muted-foreground">در حال بارگذاری...</div>
-      ) : certs.length === 0 ? (
+      ) : certs.length === 0 && completedEnrollments.length === 0 ? (
         <div className="text-center py-20">
           <Award className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" aria-hidden="true" />
           <h2 className="text-xl font-semibold mb-2">هنوز گواهینامه‌ای ندارید</h2>
@@ -113,7 +188,7 @@ export default function StudentCertificatesPage() {
             با تکمیل موفقیت‌آمیز دوره‌ها، گواهینامه دیجیتال دریافت خواهید کرد.
           </p>
         </div>
-      ) : (
+      ) : certs.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           {certs.map((cert) => (
             <Card
@@ -183,7 +258,7 @@ export default function StudentCertificatesPage() {
             </Card>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

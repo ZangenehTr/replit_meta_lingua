@@ -54,6 +54,7 @@ interface PromoCode {
   usedCount: number;
   expiresAt: string | null;
   applicableCourseIds: number[] | null;
+  singleUsePerUser: boolean;
   isActive: boolean;
   createdAt: string;
 }
@@ -66,6 +67,7 @@ interface PromoCodePayload {
   minAmount: number;
   maxUsages: number | null;
   expiresAt: string | null;
+  singleUsePerUser: boolean;
   isActive: boolean;
 }
 
@@ -77,6 +79,7 @@ const emptyForm = {
   minAmount: "",
   maxUsages: "",
   expiresAt: "",
+  singleUsePerUser: false,
   isActive: true,
 };
 
@@ -151,6 +154,7 @@ export default function PromoCodesPage() {
       minAmount: code.minAmount ? String(code.minAmount) : "",
       maxUsages: code.maxUsages ? String(code.maxUsages) : "",
       expiresAt: code.expiresAt ? new Date(code.expiresAt).toISOString().split("T")[0] : "",
+      singleUsePerUser: code.singleUsePerUser,
       isActive: code.isActive,
     });
     setDialogOpen(true);
@@ -171,6 +175,7 @@ export default function PromoCodesPage() {
       minAmount: form.minAmount ? Number(form.minAmount) : 0,
       maxUsages: form.maxUsages ? Number(form.maxUsages) : null,
       expiresAt: form.expiresAt || null,
+      singleUsePerUser: form.singleUsePerUser,
       isActive: form.isActive,
     };
     if (editingCode) {
@@ -403,6 +408,20 @@ export default function PromoCodesPage() {
                 value={form.expiresAt}
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
               />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                id="single-use"
+                checked={form.singleUsePerUser}
+                onCheckedChange={(v) => setForm({ ...form, singleUsePerUser: v })}
+              />
+              <div>
+                <Label htmlFor="single-use">یک‌بار مصرف به ازای هر کاربر</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  هر کاربر فقط یک بار می‌تواند از این کد برای هر دوره استفاده کند
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">

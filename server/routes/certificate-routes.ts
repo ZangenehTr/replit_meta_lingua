@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db.js";
-import { certificates, users, courses } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { certificates, users, courses, enrollments } from "@shared/schema";
+import { eq, desc, and, notInArray } from "drizzle-orm";
 import { authenticate } from "../auth.js";
 
 const router = Router();
@@ -121,6 +121,52 @@ router.put("/api/admin/certificates/:id/revoke", authenticate, requireAdmin, asy
   } catch (error: any) {
     console.error("Error revoking certificate:", error);
     res.status(500).json({ message: "Failed to revoke certificate" });
+  }
+});
+
+// GET /api/student/completed-enrollments — completed courses without an active cert (for claiming)
+router.get("/api/student/completed-enrollments", authenticate, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get active certificate courseIds for this student
+    const activeCerts = await db
+      .select({ courseId: certificates.courseId })
+      .from(certificates)
+      .where(and(eq(certificates.studentId, userId), eq(certificates.status, "active")));
+
+    const certifiedCourseIds = activeCerts.map(c => c.courseId);
+
+    // Get enrollments where progress = 100 or completedAt is set, excluding already certified courses
+    const completedQuery = db
+      .select({
+        enrollmentId: enrollments.id,
+        courseId: enrollments.courseId,
+        progress: enrollments.progress,
+        completedAt: enrollments.completedAt,
+        courseTitle: courses.title,
+        courseLevel: courses.level,
+        courseLanguage: courses.language,
+      })
+      .from(enrollments)
+      .leftJoin(courses, eq(enrollments.courseId, courses.id))
+      .where(
+        and(
+          eq(enrollments.userId, userId),
+          certifiedCourseIds.length > 0
+            ? notInArray(enrollments.courseId, certifiedCourseIds)
+            : undefined
+        )
+      );
+
+    const all = await completedQuery;
+    // Filter to only those with progress >= 100 or completedAt set
+    const completed = all.filter(e => (e.progress ?? 0) >= 100 || e.completedAt !== null);
+
+    res.json(completed);
+  } catch (error: any) {
+    console.error("Error fetching completed enrollments:", error);
+    res.status(500).json({ message: "Failed to fetch completed enrollments" });
   }
 });
 
