@@ -3518,7 +3518,10 @@ export const enrollments = pgTable("enrollments", {
   progress: integer("progress").default(0),
   enrolledAt: timestamp("enrolled_at").defaultNow(),
   completedAt: timestamp("completed_at"),
-  status: varchar("status", { length: 20 }).default("active")
+  status: varchar("status", { length: 20 }).default("active"),
+  utmSource: varchar("utm_source", { length: 100 }),
+  utmMedium: varchar("utm_medium", { length: 100 }),
+  utmCampaign: varchar("utm_campaign", { length: 100 })
 });
 
 // Front Desk Operations table
@@ -9720,12 +9723,13 @@ export type InsertReferralEvent = typeof referralEvents.$inferInsert;
 // Stores individual post-session ratings submitted by student and teacher
 export const sessionRatings = pgTable("session_ratings", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => callSessions.id).notNull(),
-  raterId: integer("rater_id").references(() => users.id).notNull(),
-  raterRole: varchar("rater_role", { length: 20 }).notNull(), // student | teacher
-  score: integer("score").notNull(), // 1–5
-  comment: text("comment"),
-  aspectRatings: jsonb("aspect_ratings"), // e.g. { pronunciation: 4, grammar: 5 }
+  sessionId: varchar("session_id", { length: 255 }).notNull(), // CallerN session identifier string
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  teacherRating: integer("teacher_rating"), // 1–5, teacher's rating by student
+  studentRating: integer("student_rating"), // 1–5, student's rating by teacher
+  teacherComment: text("teacher_comment"),
+  studentComment: text("student_comment"),
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 

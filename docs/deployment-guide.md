@@ -660,16 +660,23 @@ If upgrading from v1.0.0 to v1.1.0, apply the following changes. These are all a
 CREATE TABLE IF NOT EXISTS course_reviews (
   id SERIAL PRIMARY KEY,
   course_id INTEGER NOT NULL REFERENCES courses(id),
-  user_id INTEGER NOT NULL REFERENCES users(id),
+  student_id INTEGER REFERENCES users(id),
+  enrollment_id INTEGER,
   rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  title VARCHAR(200),
-  body TEXT,
+  review_text TEXT,
+  review_text_fa TEXT,
+  review_text_ar TEXT,
+  status VARCHAR(20) DEFAULT 'pending' NOT NULL,
+  rejection_reason TEXT,
+  approved_by INTEGER REFERENCES users(id),
+  approved_at TIMESTAMP,
   is_approved BOOLEAN DEFAULT false,
   is_featured BOOLEAN DEFAULT false,
+  is_anonymous BOOLEAN DEFAULT false,
   helpful_count INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
-  UNIQUE(course_id, user_id)
+  UNIQUE(course_id, student_id)
 );
 
 -- Referral Program
@@ -722,6 +729,11 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS callern_session_count INTEGER DEFAULT
 ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100);
 ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100);
 ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100);
+
+-- UTM Attribution columns on enrollments
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100);
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100);
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100);
 ```
 
 Run this block against the production database:

@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { VideoCall } from "@/components/callern/VideoCallFinal";
+import PostSessionRatingModal from "@/components/callern/PostSessionRatingModal";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
@@ -27,6 +28,8 @@ export default function CallernVideoSession() {
   const [callRoomId, setCallRoomId] = useState<string | null>(null);
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("teachers");
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
   
   // Fetch online teachers
   const { data: onlineTeachers, isLoading: teachersLoading, refetch: refetchTeachers } = useQuery({
@@ -83,15 +86,22 @@ export default function CallernVideoSession() {
   };
 
   const handleEndCall = () => {
+    const roomId = callRoomId;
     setIsInCall(false);
     setCallRoomId(null);
-    setSelectedTeacher(null);
-    
+
     toast({
       title: t('callern:callEnded'),
       description: t('callern:thankYouForSession')
     });
 
+    // Show post-session rating prompt
+    if (roomId) {
+      setCompletedSessionId(roomId);
+      setShowRatingModal(true);
+    }
+
+    setSelectedTeacher(null);
     // Refresh history and packages
     refetchTeachers();
   };
@@ -386,6 +396,18 @@ export default function CallernVideoSession() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {showRatingModal && completedSessionId && (
+        <PostSessionRatingModal
+          isOpen={showRatingModal}
+          onClose={() => { setShowRatingModal(false); setCompletedSessionId(null); }}
+          sessionId={completedSessionId}
+          teacherId={0}
+          studentId={user?.id || 0}
+          teacherName={t('callern:teacher', 'Teacher')}
+          userRole="student"
+        />
+      )}
     </div>
   );
 }

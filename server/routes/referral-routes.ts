@@ -223,20 +223,17 @@ router.get("/api/admin/referrals/leaderboard", authenticate, authorize(["Admin",
   }
 });
 
-// ── Record a referral registration event (called internally after registration) ──
-// This route is called from the registration flow when a ref code is present.
-router.post("/api/referrals/record-registration", async (req, res) => {
+// ── Internal helper: record a referral registration event ──
+// Called directly from the phone-auth registration flow — NOT exposed as a public HTTP endpoint.
+export async function recordReferralRegistration(referralCode: string, newUserId: number): Promise<void> {
   try {
-    const { referralCode, newUserId } = req.body;
-    if (!referralCode || !newUserId) return res.status(400).json({ message: "Missing params" });
-
     const [refRecord] = await db
       .select()
       .from(referralCodes)
       .where(eq(referralCodes.code, referralCode))
       .limit(1);
 
-    if (!refRecord || !refRecord.isActive) return res.json({ recorded: false });
+    if (!refRecord || !refRecord.isActive) return;
 
     await db.insert(referralEvents).values({
       referralCodeId: refRecord.id,
@@ -248,13 +245,10 @@ router.post("/api/referrals/record-registration", async (req, res) => {
     await db.update(referralCodes)
       .set({ totalReferrals: sql`${referralCodes.totalReferrals} + 1`, updatedAt: new Date() })
       .where(eq(referralCodes.id, refRecord.id));
-
-    res.json({ recorded: true });
   } catch (error) {
     console.error("Error recording referral registration:", error);
-    res.status(500).json({ message: "خطا در ثبت معرفی" });
   }
-});
+}
 
 // ── Process first-payment referral credit ──
 // Called from enrollment/payment completion when the paying user was referred.

@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { storage } from '../storage';
 import { OtpService } from '../services/otp-service';
 import { generateTokens } from '../auth';
+import { recordReferralRegistration } from './referral-routes.js';
 
 const router = Router();
 
@@ -318,13 +319,9 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
       referredByCode: referralCode || null // code used to invite this user
     } as any);
 
-    // If referred via a referral code, record the event asynchronously
+    // If referred via a referral code, record the event directly (no HTTP round-trip)
     if (referralCode) {
-      fetch(`${process.env.APP_URL || 'http://localhost:5000'}/api/referrals/record-registration`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ referralCode, newUserId: newUser.id })
-      }).catch(() => {});
+      recordReferralRegistration(referralCode, newUser.id).catch(() => {});
     }
 
     // Generate tokens

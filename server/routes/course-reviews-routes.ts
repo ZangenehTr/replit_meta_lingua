@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db.js";
 import { courseReviews, courses, enrollments, users } from "../../shared/schema.js";
-import { eq, and, avg, count, desc } from "drizzle-orm";
+import { eq, and, avg, count, desc, sql } from "drizzle-orm";
 import { authenticate, authorize } from "../auth.js";
 
 const router = Router();
@@ -17,7 +17,7 @@ router.post("/api/courses/:courseId/reviews", authenticate, async (req: any, res
       return res.status(400).json({ message: "امتیاز باید بین ۱ تا ۵ باشد" });
     }
 
-    // Check that the student has an enrollment in this course
+    // Check that the student has an active or completed enrollment in this course
     const [enrollment] = await db
       .select({ id: enrollments.id, status: enrollments.status })
       .from(enrollments)
@@ -26,6 +26,10 @@ router.post("/api/courses/:courseId/reviews", authenticate, async (req: any, res
 
     if (!enrollment) {
       return res.status(403).json({ message: "فقط دانشجویان ثبت‌نام‌شده می‌توانند نظر بگذارند" });
+    }
+
+    if (!["active", "completed"].includes(enrollment.status ?? "")) {
+      return res.status(403).json({ message: "فقط دانشجویانی که دوره را آغاز کرده‌اند می‌توانند نظر بگذارند" });
     }
 
     // Prevent duplicate review
@@ -155,22 +159,33 @@ router.get("/api/admin/course-reviews", authenticate, authorize(["Admin", "Super
 });
 
 // ── Admin: approve or reject a review ──
+// Accepts both { status: 'approved'|'rejected' } (frontend) and { action: 'approve'|'reject' } (legacy)
 router.patch("/api/admin/course-reviews/:id", authenticate, authorize(["Admin", "Supervisor"]), async (req: any, res) => {
   try {
     const reviewId = parseInt(req.params.id);
-    const { action, rejectionReason } = req.body; // action: "approve" | "reject"
+    const { action, status: statusField, rejectionReason } = req.body;
 
-    if (!["approve", "reject"].includes(action)) {
-      return res.status(400).json({ message: "action باید approve یا reject باشد" });
+    // Normalize: accept either `action` or `status` field
+    let resolvedStatus: "approved" | "rejected" | undefined;
+    if (statusField === "approved" || statusField === "rejected") {
+      resolvedStatus = statusField;
+    } else if (action === "approve") {
+      resolvedStatus = "approved";
+    } else if (action === "reject") {
+      resolvedStatus = "rejected";
+    }
+
+    if (!resolvedStatus) {
+      return res.status(400).json({ message: "status باید approved یا rejected باشد" });
     }
 
     const [updated] = await db
       .update(courseReviews)
       .set({
-        status: action === "approve" ? "approved" : "rejected",
-        approvedBy: action === "approve" ? req.user.id : null,
-        approvedAt: action === "approve" ? new Date() : null,
-        rejectionReason: action === "reject" ? (rejectionReason || null) : null,
+        status: resolvedStatus,
+        approvedBy: resolvedStatus === "approved" ? req.user.id : null,
+        approvedAt: resolvedStatus === "approved" ? new Date() : null,
+        rejectionReason: resolvedStatus === "rejected" ? (rejectionReason || null) : null,
         updatedAt: new Date()
       })
       .where(eq(courseReviews.id, reviewId))
@@ -180,7 +195,7 @@ router.patch("/api/admin/course-reviews/:id", authenticate, authorize(["Admin", 
       return res.status(404).json({ message: "نظر پیدا نشد" });
     }
 
-    res.json({ message: action === "approve" ? "نظر تأیید شد" : "نظر رد شد", review: updated });
+    res.json({ message: resolvedStatus === "approved" ? "نظر تأیید شد" : "نظر رد شد", review: updated });
   } catch (error) {
     console.error("Error moderating course review:", error);
     res.status(500).json({ message: "خطا در مدیریت نظر" });

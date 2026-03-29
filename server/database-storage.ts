@@ -553,10 +553,24 @@ export class DatabaseStorage implements IStorage {
 
   async enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment> {
     try {
+      // Pull UTM attribution from the enrolling user's account for propagation
+      let userUtm: { utmSource?: string | null; utmMedium?: string | null; utmCampaign?: string | null } = {};
+      try {
+        const [userRecord] = await db
+          .select({ utmSource: users.utmSource, utmMedium: users.utmMedium, utmCampaign: users.utmCampaign })
+          .from(users)
+          .where(eq(users.id, enrollment.userId))
+          .limit(1);
+        if (userRecord) userUtm = userRecord;
+      } catch (_) {}
+
       const [newEnrollment] = await db.insert(enrollments).values({
         userId: enrollment.userId,
         courseId: enrollment.courseId,
-        progress: enrollment.progress || 0
+        progress: enrollment.progress || 0,
+        utmSource: (enrollment as any).utmSource ?? userUtm.utmSource ?? null,
+        utmMedium: (enrollment as any).utmMedium ?? userUtm.utmMedium ?? null,
+        utmCampaign: (enrollment as any).utmCampaign ?? userUtm.utmCampaign ?? null
       }).returning();
       
       // Automatically create or join group chat for the course

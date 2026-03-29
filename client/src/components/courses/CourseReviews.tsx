@@ -12,16 +12,20 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface Review {
   id: number;
-  courseId: number;
-  studentId: number;
   rating: number;
-  reviewText: string;
-  status: "pending" | "approved" | "rejected";
+  reviewText?: string;
+  reviewTextFa?: string;
   isAnonymous: boolean;
   helpfulCount: number;
   createdAt: string;
-  studentFirstName?: string;
-  studentLastName?: string;
+  studentName?: string;
+  studentAvatar?: string | null;
+}
+
+interface ReviewsResponse {
+  reviews: Review[];
+  averageRating: string | null;
+  totalReviews: number;
 }
 
 interface CourseReviewsProps {
@@ -69,7 +73,7 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
   const [reviewText, setReviewText] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
 
-  const { data: reviews = [], isLoading } = useQuery<Review[]>({
+  const { data: reviewsData, isLoading } = useQuery<ReviewsResponse>({
     queryKey: [`/api/courses/${courseId}/reviews`],
     queryFn: async () => {
       const res = await fetch(`/api/courses/${courseId}/reviews`);
@@ -77,6 +81,10 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
       return res.json();
     },
   });
+
+  const reviews = reviewsData?.reviews ?? [];
+  const serverAvgRating = reviewsData?.averageRating ?? null;
+  const totalReviews = reviewsData?.totalReviews ?? 0;
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -118,16 +126,13 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
     },
   });
 
-  const avgRating =
-    reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-      : null;
+  const avgRating = serverAvgRating;
 
   const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
     count: reviews.filter((r) => r.rating === star).length,
-    pct: reviews.length > 0
-      ? (reviews.filter((r) => r.rating === star).length / reviews.length) * 100
+    pct: totalReviews > 0
+      ? (reviews.filter((r) => r.rating === star).length / totalReviews) * 100
       : 0,
   }));
 
@@ -139,8 +144,8 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
             {t("نظرات دانشجویان", "Student Reviews")}
-            {reviews.length > 0 && (
-              <Badge variant="secondary">{reviews.length}</Badge>
+            {totalReviews > 0 && (
+              <Badge variant="secondary">{totalReviews}</Badge>
             )}
           </CardTitle>
         </CardHeader>
@@ -239,22 +244,20 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
                     <AvatarFallback className="bg-blue-100 text-blue-700 text-sm">
                       {review.isAnonymous
                         ? "?"
-                        : `${review.studentFirstName?.[0] ?? ""}${review.studentLastName?.[0] ?? ""}`}
+                        : (review.studentName?.[0] ?? "?")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm">
-                        {review.isAnonymous
-                          ? t("کاربر ناشناس", "Anonymous")
-                          : `${review.studentFirstName ?? ""} ${review.studentLastName ?? ""}`.trim()}
+                        {review.studentName || t("کاربر ناشناس", "Anonymous")}
                       </span>
                       <StarRating rating={review.rating} readonly />
-                      {review.status === "approved" && (
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                      )}
+                      <CheckCircle className="h-3 w-3 text-green-500" />
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{review.reviewText}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {currentLanguage === "fa" ? (review.reviewTextFa || review.reviewText) : review.reviewText}
+                    </p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />

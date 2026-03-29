@@ -7,16 +7,26 @@
 CREATE TABLE IF NOT EXISTS course_reviews (
   id SERIAL PRIMARY KEY,
   course_id INTEGER NOT NULL REFERENCES courses(id),
-  user_id INTEGER NOT NULL REFERENCES users(id),
+  user_id INTEGER REFERENCES users(id),       -- legacy column, kept for compatibility
+  student_id INTEGER REFERENCES users(id),    -- primary reference used by application
+  enrollment_id INTEGER,                      -- optional link to enrollment record
   rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
   title VARCHAR(200),
-  body TEXT,
+  body TEXT,                                  -- legacy text column
+  review_text TEXT,                           -- application text column
+  review_text_fa TEXT,
+  review_text_ar TEXT,
+  status VARCHAR(20) DEFAULT 'pending' NOT NULL, -- pending | approved | rejected
+  rejection_reason TEXT,
+  approved_by INTEGER REFERENCES users(id),
+  approved_at TIMESTAMP,
   is_approved BOOLEAN DEFAULT false,
   is_featured BOOLEAN DEFAULT false,
+  is_anonymous BOOLEAN DEFAULT false,
   helpful_count INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
-  UNIQUE(course_id, user_id)
+  UNIQUE(course_id, student_id)
 );
 
 -- ─── Referral Program ────────────────────────────────────────────────────────
@@ -69,3 +79,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS callern_session_count INTEGER DEFAULT
 ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100);
 ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100);
 ALTER TABLE course_payments ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100);
+
+-- ─── UTM Attribution — enrollments table ─────────────────────────────────────
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS utm_source VARCHAR(100);
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100);
+ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100);
