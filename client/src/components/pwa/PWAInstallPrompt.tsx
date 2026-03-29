@@ -38,9 +38,11 @@ export function PWAInstallPrompt() {
     const visitCount = incrementVisitCount();
     const dismissed = localStorage.getItem('pwa-install-dismissed');
     const dismissedTime = dismissed ? parseInt(dismissed, 10) : 0;
-    const shouldShow = !dismissed || (Date.now() - dismissedTime) > 7 * 24 * 60 * 60 * 1000;
+    const cooldownPassed = !dismissed || (Date.now() - dismissedTime) > 7 * 24 * 60 * 60 * 1000;
+    const loggedIn = localStorage.getItem('pwa-login-occurred') === '1';
 
-    if (!shouldShow || visitCount < 2) return;
+    const shouldShow = cooldownPassed && (visitCount >= 2 || loggedIn);
+    if (!shouldShow) return;
 
     if (isIOS()) {
       setTimeout(() => setShowIOS(true), 3000);

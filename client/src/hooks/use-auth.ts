@@ -93,6 +93,7 @@ export function useAuth() {
       }
     },
     onSuccess: async (data) => {
+      localStorage.setItem('pwa-login-occurred', '1');
       // Immediately invalidate and refetch the user data
       await queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
       await queryClient.refetchQueries({ queryKey: ["/api/users/me"] });

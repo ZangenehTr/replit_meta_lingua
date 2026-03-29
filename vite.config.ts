@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "images/*.png", "images/*.jpg", "offline.html"],
       manifest: {
-        name: "متالینگوآ",
+        name: "متالینگوآ — Meta Lingua",
         short_name: "متالینگوآ",
-        description: "پلتفرم یادگیری زبان هوشمند - AI-Powered Language Learning Platform",
+        description: "پلتفرم یادگیری زبان هوشمند — AI-Powered Language Learning Platform",
         theme_color: "#7c3aed",
         background_color: "#ffffff",
         display: "standalone",
@@ -26,14 +26,9 @@ export default defineConfig({
         lang: "fa",
         dir: "rtl",
         icons: [
-          { src: "/pwa-192x192.png", sizes: "72x72",   type: "image/png", purpose: "any maskable" },
-          { src: "/pwa-192x192.png", sizes: "96x96",   type: "image/png", purpose: "any maskable" },
-          { src: "/pwa-192x192.png", sizes: "128x128", type: "image/png", purpose: "any maskable" },
-          { src: "/pwa-192x192.png", sizes: "144x144", type: "image/png", purpose: "any maskable" },
-          { src: "/pwa-192x192.png", sizes: "152x152", type: "image/png", purpose: "any maskable" },
           { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-          { src: "/pwa-512x512.png", sizes: "384x384", type: "image/png", purpose: "any maskable" },
           { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-maskable-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
         shortcuts: [
           {

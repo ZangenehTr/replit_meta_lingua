@@ -23,14 +23,15 @@ function saveQueue(queue: OfflineQueueItem[]): void {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 
-export function useOfflineSync() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [queueSize, setQueueSize] = useState(() => loadQueue().length);
+let replayInProgress = false;
 
-  const replayQueue = useCallback(async () => {
-    const queue = loadQueue();
-    if (queue.length === 0) return;
+export async function runReplay(): Promise<void> {
+  if (replayInProgress) return;
+  const queue = loadQueue();
+  if (queue.length === 0) return;
 
+  replayInProgress = true;
+  try {
     const remaining: OfflineQueueItem[] = [];
     for (const item of queue) {
       try {
@@ -44,7 +45,7 @@ export function useOfflineSync() {
           body: item.body != null ? JSON.stringify(item.body) : undefined,
         });
         if (!res.ok) {
-          console.warn(`[OfflineSync] Replay failed for ${item.url}: HTTP ${res.status}`);
+          console.warn(`[OfflineSync] Replay HTTP ${res.status} for ${item.url}`);
           remaining.push(item);
         }
       } catch (err) {
@@ -53,7 +54,18 @@ export function useOfflineSync() {
       }
     }
     saveQueue(remaining);
-    setQueueSize(remaining.length);
+  } finally {
+    replayInProgress = false;
+  }
+}
+
+export function useOfflineSync() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [queueSize, setQueueSize] = useState(() => loadQueue().length);
+
+  const replayQueue = useCallback(async () => {
+    await runReplay();
+    setQueueSize(loadQueue().length);
   }, []);
 
   useEffect(() => {
