@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -6529,6 +6529,15 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           await db.update(promoCodes)
             .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
             .where(eq(promoCodes.id, appliedPromoCodeId));
+          // Record detailed usage in promo_code_usages audit table
+          await db.insert(promoCodeUsages).values({
+            promoCodeId: appliedPromoCodeId,
+            userId: req.user.id,
+            courseId: Number(courseId),
+            discountAmount: promoDiscountAmount,
+            originalAmount: priceData.finalPrice,
+            finalAmount: finalPrice,
+          }).catch((e: any) => console.error("Failed to record promo usage:", e));
         }
 
         res.json({
@@ -6730,6 +6739,15 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
               await db.update(promoCodes)
                 .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
                 .where(eq(promoCodes.id, coursePayment.promoCodeId));
+              // Record detailed usage in promo_code_usages audit table
+              await db.insert(promoCodeUsages).values({
+                promoCodeId: coursePayment.promoCodeId,
+                userId: coursePayment.userId,
+                courseId: coursePayment.courseId,
+                discountAmount: coursePayment.originalPrice - coursePayment.finalPrice,
+                originalAmount: coursePayment.originalPrice,
+                finalAmount: coursePayment.finalPrice,
+              }).catch((e: any) => console.error("Failed to record gateway promo usage:", e));
             }
           }
           redirectPath = 'courses';
@@ -11192,7 +11210,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
-  // POST /api/courses/:courseId/complete — mark course as complete and issue digital certificate
+  // POST /api/courses/:courseId/complete — mark course as complete and auto-issue digital certificate
   app.post("/api/courses/:courseId/complete", authenticateToken, async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.courseId);
@@ -11220,44 +11238,23 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         });
       }
 
-      // Check if an active certificate already exists (idempotent)
-      const [existingCert] = await db
-        .select({ id: certificates.id, certificateNumber: certificates.certificateNumber })
-        .from(certificates)
-        .where(and(
-          eq(certificates.studentId, userId),
-          eq(certificates.courseId, courseId),
-          eq(certificates.status, "active")
-        ));
-
-      if (existingCert) {
-        return res.json({
-          message: "گواهینامه قبلاً صادر شده است",
-          certificateNumber: existingCert.certificateNumber,
-          alreadyIssued: true,
-        });
+      // Mark enrollment as completed if not already
+      if (!enrollment.completedAt) {
+        await db
+          .update(enrollments)
+          .set({ completedAt: new Date(), status: "completed" })
+          .where(eq(enrollments.id, enrollment.id));
       }
 
-      // Generate a unique certificate number
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const certNumber = `CERT-${y}${m}${d}-${rand}`;
-
-      const [cert] = await db.insert(certificates).values({
-        certificateNumber: certNumber,
-        studentId: userId,
-        courseId,
-        issuedBy: userId,
-        status: "active",
-      }).returning();
+      // Issue certificate via shared service (handles idempotency + PDF generation)
+      const { issueCertificate } = await import("./routes/certificate-routes.js");
+      const cert = await issueCertificate({ studentId: userId, courseId });
 
       res.status(201).json({
         message: "گواهینامه با موفقیت صادر شد",
         certificateNumber: cert.certificateNumber,
         certificate: cert,
+        alreadyIssued: false,
       });
     } catch (error: any) {
       console.error("Error issuing course completion certificate:", error);

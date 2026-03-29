@@ -33,7 +33,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, Plus, XCircle, Copy, Search, RefreshCw } from "lucide-react";
+import { Award, Plus, XCircle, Copy, Search, RefreshCw, Settings2, Save } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 
 interface CertificateRow {
   id: number;
@@ -70,10 +72,48 @@ export default function CertificatesPage() {
     courseId: "",
     expiresAt: "",
   });
+  const [templateForm, setTemplateForm] = useState({
+    instituteNameFa: "آکادمی متالینگوآ",
+    instituteNameEn: "Meta Lingua Academy",
+    logoUrl: "",
+    signatureTitle: "مدیر آموزش",
+    footerNote: "",
+  });
+  const [templateSaved, setTemplateSaved] = useState(false);
 
   const { data: certs = [], isLoading } = useQuery<CertificateRow[]>({
     queryKey: ["/api/admin/certificates"],
     queryFn: () => apiRequest("/api/admin/certificates"),
+  });
+
+  useQuery<any>({
+    queryKey: ["/api/admin/settings"],
+    queryFn: async () => {
+      const data = await apiRequest("/api/admin/settings");
+      if (data?.certificateTemplate) {
+        try {
+          const parsed = JSON.parse(data.certificateTemplate);
+          setTemplateForm((prev) => ({ ...prev, ...parsed }));
+        } catch { /* use defaults */ }
+      }
+      return data;
+    },
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("/api/admin/settings", {
+        method: "PATCH",
+        body: { certificateTemplate: JSON.stringify(templateForm) },
+      }),
+    onSuccess: () => {
+      setTemplateSaved(true);
+      setTimeout(() => setTemplateSaved(false), 3000);
+      toast({ title: "تنظیمات قالب گواهینامه ذخیره شد" });
+    },
+    onError: (err: any) => {
+      toast({ title: err.message || "خطا در ذخیره تنظیمات", variant: "destructive" });
+    },
   });
 
   const { data: courses = [] } = useQuery<Course[]>({
@@ -178,6 +218,82 @@ export default function CertificatesPage() {
           صدور گواهینامه
         </Button>
       </div>
+
+      {/* Certificate Template Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings2 className="h-5 w-5" aria-hidden="true" />
+            تنظیمات قالب گواهینامه
+          </CardTitle>
+          <CardDescription>
+            اطلاعاتی که روی تمامی گواهینامه‌های PDF درج می‌شود
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="inst-name-fa">نام موسسه (فارسی)</Label>
+              <Input
+                id="inst-name-fa"
+                value={templateForm.instituteNameFa}
+                onChange={(e) => setTemplateForm({ ...templateForm, instituteNameFa: e.target.value })}
+                placeholder="آکادمی متالینگوآ"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="inst-name-en">نام موسسه (انگلیسی)</Label>
+              <Input
+                id="inst-name-en"
+                value={templateForm.instituteNameEn}
+                onChange={(e) => setTemplateForm({ ...templateForm, instituteNameEn: e.target.value })}
+                placeholder="Meta Lingua Academy"
+                dir="ltr"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="logo-url">آدرس لوگو (URL، اختیاری)</Label>
+              <Input
+                id="logo-url"
+                value={templateForm.logoUrl}
+                onChange={(e) => setTemplateForm({ ...templateForm, logoUrl: e.target.value })}
+                placeholder="https://..."
+                dir="ltr"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="sig-title">عنوان امضا</Label>
+              <Input
+                id="sig-title"
+                value={templateForm.signatureTitle}
+                onChange={(e) => setTemplateForm({ ...templateForm, signatureTitle: e.target.value })}
+                placeholder="مدیر آموزش"
+              />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="footer-note">یادداشت پاورقی (اختیاری)</Label>
+              <Textarea
+                id="footer-note"
+                rows={2}
+                value={templateForm.footerNote}
+                onChange={(e) => setTemplateForm({ ...templateForm, footerNote: e.target.value })}
+                placeholder="این گواهینامه معتبر بوده و قابل تأیید الکترونیکی است."
+              />
+            </div>
+          </div>
+          <Separator className="my-4" />
+          <div className="flex justify-end">
+            <Button
+              onClick={() => saveTemplateMutation.mutate()}
+              disabled={saveTemplateMutation.isPending}
+              aria-label="ذخیره تنظیمات قالب"
+            >
+              <Save className="h-4 w-4 me-2" aria-hidden="true" />
+              {templateSaved ? "ذخیره شد ✓" : "ذخیره تنظیمات"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">

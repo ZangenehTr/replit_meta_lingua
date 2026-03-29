@@ -9597,12 +9597,31 @@ export const certificates = pgTable("certificates", {
   revokedAt: timestamp("revoked_at"),
   revokeReason: text("revoke_reason"),
   issuedBy: integer("issued_by").references(() => users.id), // admin who issued it; null = auto-issued
+  pdfPath: varchar("pdf_path", { length: 500 }), // server-side generated PDF file path
   metadata: jsonb("metadata"), // extra data: score, CEFR level, etc.
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export type Certificate = typeof certificates.$inferSelect;
 export type InsertCertificate = typeof certificates.$inferInsert;
+
+// ============================================================================
+// PROMO CODE USAGES — audit trail of every promo code redemption
+// ============================================================================
+
+export const promoCodeUsages = pgTable("promo_code_usages", {
+  id: serial("id").primaryKey(),
+  promoCodeId: integer("promo_code_id").references(() => promoCodes.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  discountAmount: integer("discount_amount").notNull(), // actual Toman discount applied
+  originalAmount: integer("original_amount").notNull(),
+  finalAmount: integer("final_amount").notNull(),
+  usedAt: timestamp("used_at").defaultNow().notNull(),
+});
+
+export type PromoCodeUsage = typeof promoCodeUsages.$inferSelect;
+export type InsertPromoCodeUsage = typeof promoCodeUsages.$inferInsert;
 
 // ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables

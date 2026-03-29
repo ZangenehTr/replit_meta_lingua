@@ -41,7 +41,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Tag, TicketPercent, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, TicketPercent, Copy, BarChart2, Users } from "lucide-react";
+
+interface PromoUsage {
+  id: number;
+  usedAt: string;
+  discountAmount: number;
+  originalAmount: number;
+  finalAmount: number;
+  studentFirstName: string | null;
+  studentLastName: string | null;
+  studentPhone: string | null;
+  courseTitle: string | null;
+}
 
 interface PromoCode {
   id: number;
@@ -93,6 +105,13 @@ export default function PromoCodesPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editingCode, setEditingCode] = useState<PromoCode | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [usagePromo, setUsagePromo] = useState<PromoCode | null>(null);
+
+  const { data: usages = [], isLoading: usagesLoading } = useQuery<PromoUsage[]>({
+    queryKey: ["/api/admin/promo-codes", usagePromo?.id, "usages"],
+    queryFn: () => apiRequest(`/api/admin/promo-codes/${usagePromo!.id}/usages`),
+    enabled: !!usagePromo,
+  });
 
   const { data: promoCodes = [], isLoading } = useQuery<PromoCode[]>({
     queryKey: ["/api/admin/promo-codes"],
@@ -287,6 +306,15 @@ export default function PromoCodesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => setUsagePromo(pc)}
+                          aria-label="مشاهده تاریخچه استفاده"
+                          title="تاریخچه استفاده"
+                        >
+                          <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => openEdit(pc)}
                           aria-label="ویرایش کد تخفیف"
                         >
@@ -468,6 +496,93 @@ export default function PromoCodesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Usage Analytics Dialog */}
+      <Dialog open={!!usagePromo} onOpenChange={(open) => !open && setUsagePromo(null)}>
+        <DialogContent className="max-w-2xl" dir={isRTL ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" aria-hidden="true" />
+              تاریخچه استفاده از کد:{" "}
+              <code className="font-mono text-primary bg-primary/10 px-2 py-0.5 rounded text-sm">
+                {usagePromo?.code}
+              </code>
+            </DialogTitle>
+          </DialogHeader>
+
+          {usagesLoading ? (
+            <div className="py-10 text-center text-muted-foreground">در حال بارگذاری...</div>
+          ) : usages.length === 0 ? (
+            <div className="py-10 text-center">
+              <BarChart2 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" aria-hidden="true" />
+              <p className="text-muted-foreground">هنوز هیچ استفاده‌ای ثبت نشده است.</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-2xl font-bold">{usages.length.toLocaleString("fa-IR")}</p>
+                    <p className="text-xs text-muted-foreground mt-1">تعداد استفاده</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-2xl font-bold">
+                      {usages.reduce((s, u) => s + u.discountAmount, 0).toLocaleString("fa-IR")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">کل تخفیف (تومان)</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-2xl font-bold">
+                      {new Set(usages.map((u) => u.studentPhone)).size.toLocaleString("fa-IR")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">کاربران یکتا</p>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="max-h-72 overflow-y-auto rounded border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>دانشجو</TableHead>
+                      <TableHead>دوره</TableHead>
+                      <TableHead>تخفیف (تومان)</TableHead>
+                      <TableHead>تاریخ</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {usages.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell className="text-sm">
+                          {u.studentFirstName || u.studentLastName
+                            ? `${u.studentFirstName || ""} ${u.studentLastName || ""}`.trim()
+                            : u.studentPhone || "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {u.courseTitle || "—"}
+                        </TableCell>
+                        <TableCell className="font-medium text-green-600">
+                          {u.discountAmount.toLocaleString("fa-IR")}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(u.usedAt).toLocaleDateString("fa-IR")}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUsagePromo(null)}>بستن</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

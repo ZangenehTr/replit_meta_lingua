@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { db } from "../db.js";
-import { certificates, users, courses, enrollments } from "@shared/schema";
-import { eq, desc, and, notInArray } from "drizzle-orm";
+import { certificates, users, courses, enrollments, promoCodeUsages, promoCodes, adminSettings } from "@shared/schema";
+import { eq, desc, and, notInArray, sql, count } from "drizzle-orm";
 import { authenticate } from "../auth.js";
+import { generateCertificatePdf, getCertificatePdfPath } from "../services/certificate-pdf.js";
+import fs from "fs";
+import path from "path";
 
 const router = Router();
 
@@ -13,7 +16,7 @@ function requireAdmin(req: any, res: any, next: any) {
   next();
 }
 
-function generateCertificateNumber(): string {
+export function generateCertificateNumber(): string {
   const date = new Date();
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -21,6 +24,107 @@ function generateCertificateNumber(): string {
   const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `CERT-${y}${m}${d}-${rand}`;
 }
+
+/**
+ * Core certificate issuance logic — shared by auto-issuance and admin manual issuance.
+ * Generates the PDF in the background (non-blocking).
+ */
+export async function issueCertificate(opts: {
+  studentId: number;
+  courseId: number;
+  issuedBy?: number | null;
+  expiresAt?: Date | null;
+  metadata?: Record<string, any> | null;
+}): Promise<typeof certificates.$inferSelect> {
+  const { studentId, courseId, issuedBy = null, expiresAt = null, metadata = null } = opts;
+
+  // Idempotency check
+  const [existing] = await db
+    .select()
+    .from(certificates)
+    .where(
+      and(
+        eq(certificates.studentId, studentId),
+        eq(certificates.courseId, courseId),
+        eq(certificates.status, "active")
+      )
+    );
+
+  if (existing) return existing;
+
+  // Fetch student + course for PDF generation
+  const [student] = await db
+    .select({ firstName: users.firstName, lastName: users.lastName })
+    .from(users)
+    .where(eq(users.id, studentId));
+
+  const [course] = await db
+    .select({ title: courses.title, level: courses.level, language: courses.language })
+    .from(courses)
+    .where(eq(courses.id, courseId));
+
+  const certNumber = generateCertificateNumber();
+
+  const [created] = await db
+    .insert(certificates)
+    .values({
+      certificateNumber: certNumber,
+      studentId,
+      courseId,
+      issuedBy,
+      expiresAt,
+      status: "active",
+      metadata,
+    })
+    .returning();
+
+  // Generate PDF asynchronously — don't block the API response
+  const studentName =
+    student
+      ? `${student.firstName || ""} ${student.lastName || ""}`.trim() || `دانشجو #${studentId}`
+      : `دانشجو #${studentId}`;
+
+  // Load certificate template config from admin settings (non-blocking)
+  const pdfGenerationPromise = (async () => {
+    let templateConfig: Record<string, string> = {};
+    try {
+      const [settingsRow] = await db.select().from(adminSettings).limit(1);
+      if (settingsRow?.certificateTemplate) {
+        templateConfig = JSON.parse(settingsRow.certificateTemplate as string);
+      }
+    } catch { /* use defaults */ }
+
+    return generateCertificatePdf({
+      certificateNumber: certNumber,
+      studentName,
+      courseTitle: course?.title || `دوره #${courseId}`,
+      courseLevel: course?.level,
+      courseLanguage: course?.language,
+      issuedAt: created.issuedAt,
+      instituteName: templateConfig.instituteNameEn,
+      instituteNameFa: templateConfig.instituteNameFa,
+      logo: templateConfig.logoUrl,
+      signatureTitle: templateConfig.signatureTitle,
+      footerNote: templateConfig.footerNote,
+    });
+  })();
+
+  pdfGenerationPromise
+    .then((pdfPath) =>
+      db
+        .update(certificates)
+        .set({ pdfPath })
+        .where(eq(certificates.id, created.id))
+        .catch((e) => console.error("Failed to update pdfPath:", e))
+    )
+    .catch((e) => console.error("Certificate PDF generation failed:", e));
+
+  return created;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN routes
+// ─────────────────────────────────────────────────────────────────────────────
 
 // GET /api/admin/certificates — list all certificates with student + course info
 router.get("/api/admin/certificates", authenticate, requireAdmin, async (req, res) => {
@@ -34,6 +138,7 @@ router.get("/api/admin/certificates", authenticate, requireAdmin, async (req, re
         expiresAt: certificates.expiresAt,
         revokedAt: certificates.revokedAt,
         revokeReason: certificates.revokeReason,
+        pdfPath: certificates.pdfPath,
         metadata: certificates.metadata,
         studentId: certificates.studentId,
         studentFirstName: users.firstName,
@@ -62,38 +167,15 @@ router.post("/api/admin/certificates", authenticate, requireAdmin, async (req: a
       return res.status(400).json({ message: "studentId and courseId are required" });
     }
 
-    // Check existing active certificate for this student+course
-    const [existing] = await db
-      .select()
-      .from(certificates)
-      .where(
-        and(
-          eq(certificates.studentId, Number(studentId)),
-          eq(certificates.courseId, Number(courseId)),
-          eq(certificates.status, "active")
-        )
-      );
-
-    if (existing) {
-      return res.status(409).json({
-        message: "An active certificate already exists for this student and course",
-        existingCertificate: existing,
-      });
-    }
-
-    const certNumber = generateCertificateNumber();
-
-    const [created] = await db.insert(certificates).values({
-      certificateNumber: certNumber,
+    const cert = await issueCertificate({
       studentId: Number(studentId),
       courseId: Number(courseId),
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
       issuedBy: req.user.id,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
       metadata: metadata || null,
-      status: "active",
-    }).returning();
+    });
 
-    res.status(201).json(created);
+    res.status(201).json(cert);
   } catch (error: any) {
     console.error("Error issuing certificate:", error);
     res.status(500).json({ message: "Failed to issue certificate" });
@@ -124,21 +206,96 @@ router.put("/api/admin/certificates/:id/revoke", authenticate, requireAdmin, asy
   }
 });
 
-// GET /api/student/completed-enrollments — completed courses without an active cert (for claiming)
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN promo code analytics
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /api/admin/promo-codes/:id/usages — list usages for a specific promo code
+router.get("/api/admin/promo-codes/:id/usages", authenticate, requireAdmin, async (req, res) => {
+  try {
+    const promoId = parseInt(req.params.id);
+
+    const usages = await db
+      .select({
+        id: promoCodeUsages.id,
+        usedAt: promoCodeUsages.usedAt,
+        discountAmount: promoCodeUsages.discountAmount,
+        originalAmount: promoCodeUsages.originalAmount,
+        finalAmount: promoCodeUsages.finalAmount,
+        userId: promoCodeUsages.userId,
+        courseId: promoCodeUsages.courseId,
+        studentFirstName: users.firstName,
+        studentLastName: users.lastName,
+        studentPhone: users.phoneNumber,
+        courseTitle: courses.title,
+      })
+      .from(promoCodeUsages)
+      .leftJoin(users, eq(promoCodeUsages.userId, users.id))
+      .leftJoin(courses, eq(promoCodeUsages.courseId, courses.id))
+      .where(eq(promoCodeUsages.promoCodeId, promoId))
+      .orderBy(desc(promoCodeUsages.usedAt));
+
+    res.json(usages);
+  } catch (error: any) {
+    console.error("Error fetching promo usages:", error);
+    res.status(500).json({ message: "Failed to fetch promo code usages" });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT routes
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /api/student/my-certificates — student's own certificates
+router.get("/api/student/my-certificates", authenticate, async (req: any, res) => {
+  try {
+    const result = await db
+      .select({
+        id: certificates.id,
+        certificateNumber: certificates.certificateNumber,
+        status: certificates.status,
+        issuedAt: certificates.issuedAt,
+        expiresAt: certificates.expiresAt,
+        revokedAt: certificates.revokedAt,
+        pdfPath: certificates.pdfPath,
+        metadata: certificates.metadata,
+        courseId: certificates.courseId,
+        courseTitle: courses.title,
+        courseLevel: courses.level,
+        courseLanguage: courses.language,
+      })
+      .from(certificates)
+      .leftJoin(courses, eq(certificates.courseId, courses.id))
+      .where(eq(certificates.studentId, req.user.id))
+      .orderBy(desc(certificates.issuedAt));
+
+    // Map: expose hasPdf flag (don't expose raw server path)
+    const mapped = result.map((c) => ({
+      ...c,
+      hasPdf: !!c.pdfPath,
+      pdfPath: undefined,
+    }));
+
+    res.json(mapped);
+  } catch (error: any) {
+    console.error("Error fetching student certificates:", error);
+    res.status(500).json({ message: "Failed to fetch certificates" });
+  }
+});
+
+// GET /api/student/completed-enrollments — completed courses not yet certified
 router.get("/api/student/completed-enrollments", authenticate, async (req: any, res) => {
   try {
     const userId = req.user.id;
 
-    // Get active certificate courseIds for this student
     const activeCerts = await db
       .select({ courseId: certificates.courseId })
       .from(certificates)
       .where(and(eq(certificates.studentId, userId), eq(certificates.status, "active")));
 
-    const certifiedCourseIds = activeCerts.map(c => c.courseId);
+    const certifiedCourseIds = activeCerts.map((c) => c.courseId);
 
-    // Get enrollments where progress = 100 or completedAt is set, excluding already certified courses
-    const completedQuery = db
+    const query = db
       .select({
         enrollmentId: enrollments.id,
         courseId: enrollments.courseId,
@@ -159,9 +316,10 @@ router.get("/api/student/completed-enrollments", authenticate, async (req: any, 
         )
       );
 
-    const all = await completedQuery;
-    // Filter to only those with progress >= 100 or completedAt set
-    const completed = all.filter(e => (e.progress ?? 0) >= 100 || e.completedAt !== null);
+    const all = await query;
+    const completed = all.filter(
+      (e) => (e.progress ?? 0) >= 100 || e.completedAt !== null
+    );
 
     res.json(completed);
   } catch (error: any) {
@@ -170,34 +328,94 @@ router.get("/api/student/completed-enrollments", authenticate, async (req: any, 
   }
 });
 
-// GET /api/student/my-certificates — student's own certificates
-router.get("/api/student/my-certificates", authenticate, async (req: any, res) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// DOWNLOAD endpoint — authenticated (student can download their own cert)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /api/certificates/:number/download — download stored PDF
+router.get("/api/certificates/:number/download", authenticate, async (req: any, res) => {
   try {
-    const result = await db
-      .select({
-        id: certificates.id,
-        certificateNumber: certificates.certificateNumber,
-        status: certificates.status,
-        issuedAt: certificates.issuedAt,
-        expiresAt: certificates.expiresAt,
-        revokedAt: certificates.revokedAt,
-        metadata: certificates.metadata,
-        courseId: certificates.courseId,
-        courseTitle: courses.title,
-        courseLevel: courses.level,
-        courseLanguage: courses.language,
-      })
+    const { number } = req.params;
+    const certNumber = number.toUpperCase();
+
+    const [cert] = await db
+      .select({ id: certificates.id, studentId: certificates.studentId, pdfPath: certificates.pdfPath, status: certificates.status })
+      .from(certificates)
+      .where(eq(certificates.certificateNumber, certNumber));
+
+    if (!cert) {
+      return res.status(404).json({ message: "Certificate not found" });
+    }
+
+    // Students can only download their own cert; admins can download any
+    const userId = req.user.id;
+    const role = req.user.role?.toLowerCase();
+    if (role !== "admin" && cert.studentId !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Check stored PDF
+    if (cert.pdfPath && fs.existsSync(cert.pdfPath)) {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${certNumber}.pdf"`);
+      return fs.createReadStream(cert.pdfPath).pipe(res);
+    }
+
+    // PDF not yet generated — try to generate it on demand
+    const [student] = await db
+      .select({ firstName: users.firstName, lastName: users.lastName })
+      .from(users)
+      .where(eq(users.id, cert.studentId));
+
+    const [course] = await db
+      .select({ title: courses.title, level: courses.level, language: courses.language, issuedAt: certificates.issuedAt })
       .from(certificates)
       .leftJoin(courses, eq(certificates.courseId, courses.id))
-      .where(eq(certificates.studentId, req.user.id))
-      .orderBy(desc(certificates.issuedAt));
+      .where(eq(certificates.id, cert.id));
 
-    res.json(result);
+    // Load certificate template config from admin settings
+    let templateConfig: Record<string, string> = {};
+    try {
+      const [settingsRow] = await db.select().from(adminSettings).limit(1);
+      if (settingsRow?.certificateTemplate) {
+        templateConfig = JSON.parse(settingsRow.certificateTemplate as string);
+      }
+    } catch { /* use defaults */ }
+
+    const pdfPath = await generateCertificatePdf({
+      certificateNumber: certNumber,
+      studentName: student
+        ? `${student.firstName || ""} ${student.lastName || ""}`.trim()
+        : `دانشجو`,
+      courseTitle: course?.title || `دوره`,
+      courseLevel: course?.level,
+      courseLanguage: course?.language,
+      issuedAt: new Date(),
+      instituteName: templateConfig.instituteNameEn,
+      instituteNameFa: templateConfig.instituteNameFa,
+      logo: templateConfig.logoUrl,
+      signatureTitle: templateConfig.signatureTitle,
+      footerNote: templateConfig.footerNote,
+    });
+
+    // Persist path
+    await db
+      .update(certificates)
+      .set({ pdfPath })
+      .where(eq(certificates.id, cert.id));
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${certNumber}.pdf"`);
+    fs.createReadStream(pdfPath).pipe(res);
   } catch (error: any) {
-    console.error("Error fetching student certificates:", error);
-    res.status(500).json({ message: "Failed to fetch certificates" });
+    console.error("Certificate download error:", error);
+    res.status(500).json({ message: "Failed to download certificate" });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUBLIC verification
+// ─────────────────────────────────────────────────────────────────────────────
 
 // GET /api/certificates/verify/:number — public verification (no auth needed)
 router.get("/api/certificates/verify/:number", async (req, res) => {
@@ -231,7 +449,6 @@ router.get("/api/certificates/verify/:number", async (req, res) => {
       });
     }
 
-    // Check expiry
     const isExpired = result.expiresAt && new Date() > new Date(result.expiresAt);
 
     res.json({

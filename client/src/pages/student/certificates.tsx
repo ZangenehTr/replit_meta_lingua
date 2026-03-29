@@ -69,6 +69,33 @@ export default function StudentCertificatesPage() {
     toast({ title: "لینک تأیید کپی شد" });
   }
 
+  async function handleDownload(cert: MyCertificate) {
+    try {
+      const response = await fetch(`/api/certificates/${cert.certificateNumber}/download`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
+        },
+      });
+
+      if (!response.ok) {
+        // Fallback to browser print if server PDF not available yet
+        handlePrint(cert);
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${cert.certificateNumber}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Fallback to browser print on network error
+      handlePrint(cert);
+    }
+  }
+
   function handlePrint(cert: MyCertificate) {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
@@ -226,12 +253,12 @@ export default function StudentCertificatesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handlePrint(cert)}
+                      onClick={() => handleDownload(cert)}
                       className="flex-1"
-                      aria-label="دانلود یا چاپ گواهینامه"
+                      aria-label="دانلود گواهینامه PDF"
                     >
                       <Download className="h-4 w-4 me-1.5" aria-hidden="true" />
-                      دانلود
+                      دانلود PDF
                     </Button>
                     <Button
                       size="sm"
