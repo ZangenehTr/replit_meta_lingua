@@ -11189,23 +11189,58 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
-  // Mark lesson as complete
+  // Mark lesson as complete — updates enrollment progress and auto-issues cert when all done
   app.post("/api/courses/:courseId/lessons/:lessonId/complete", authenticateToken, async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.courseId);
       const lessonId = parseInt(req.params.lessonId);
+      const userId = req.user.id || req.user.userId;
 
-      // Mark lesson as completed
-      const completion = {
-        userId: req.user.userId,
-        courseId,
+      // Get total lessons for this course to compute progress
+      const lessons = await storage.getVideoLessonsByCourse(courseId);
+      const totalLessons = lessons.length;
+
+      // Calculate new progress percentage based on which lesson was just completed
+      const lessonIdx = lessons.findIndex((l: any) => l.id === lessonId);
+      const lessonPosition = lessonIdx >= 0 ? lessonIdx + 1 : totalLessons;
+      const newProgress = totalLessons > 0 ? Math.round((lessonPosition / totalLessons) * 100) : 100;
+
+      // Update enrollment progress (only advance, never regress)
+      const userEnrollments = await storage.getUserEnrollments(userId);
+      const enrollment = userEnrollments.find((e: any) => e.courseId === courseId);
+
+      if (enrollment) {
+        const updatedProgress = Math.max(enrollment.progress || 0, newProgress);
+        await db
+          .update(enrollments)
+          .set({
+            progress: updatedProgress,
+            ...(updatedProgress >= 100 && !enrollment.completedAt
+              ? { completedAt: new Date(), status: "completed" }
+              : {}),
+          })
+          .where(eq(enrollments.id, enrollment.id));
+
+        // Auto-issue certificate if course is now complete
+        if (updatedProgress >= 100) {
+          try {
+            const { issueCertificate } = await import("./routes/certificate-routes.js");
+            await issueCertificate({ studentId: userId, courseId });
+          } catch (certErr) {
+            console.error("Auto-cert issuance failed:", certErr);
+            // Non-blocking: log but continue
+          }
+        }
+      }
+
+      res.json({
+        message: "Lesson marked as complete",
         lessonId,
-        isCompleted: true,
-        completedAt: new Date()
-      };
-
-      res.json({ message: "Lesson marked as complete", completion });
+        progress: newProgress,
+        courseCompleted: newProgress >= 100,
+      });
     } catch (error) {
+      console.error("Failed to mark lesson complete:", error);
       res.status(500).json({ message: "Failed to mark lesson complete" });
     }
   });

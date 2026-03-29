@@ -73,7 +73,7 @@ export default function StudentCertificatesPage() {
     try {
       const response = await fetch(`/api/certificates/${cert.certificateNumber}/download`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
+          Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
         },
       });
 

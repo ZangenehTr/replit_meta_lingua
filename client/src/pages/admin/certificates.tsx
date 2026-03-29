@@ -73,6 +73,7 @@ export default function CertificatesPage() {
     expiresAt: "",
   });
   const [templateForm, setTemplateForm] = useState({
+    certTitle: "گواهینامه پایان دوره",
     instituteNameFa: "آکادمی متالینگوآ",
     instituteNameEn: "Meta Lingua Academy",
     logoUrl: "",
@@ -232,6 +233,15 @@ export default function CertificatesPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="cert-title">عنوان گواهینامه</Label>
+              <Input
+                id="cert-title"
+                value={templateForm.certTitle}
+                onChange={(e) => setTemplateForm({ ...templateForm, certTitle: e.target.value })}
+                placeholder="گواهینامه پایان دوره"
+              />
+            </div>
             <div className="space-y-1">
               <Label htmlFor="inst-name-fa">نام موسسه (فارسی)</Label>
               <Input

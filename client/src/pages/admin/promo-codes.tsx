@@ -79,9 +79,12 @@ interface PromoCodePayload {
   minAmount: number;
   maxUsages: number | null;
   expiresAt: string | null;
+  applicableCourseIds: number[] | null;
   singleUsePerUser: boolean;
   isActive: boolean;
 }
+
+interface CourseOption { id: number; title: string; }
 
 const emptyForm = {
   code: "",
@@ -93,6 +96,8 @@ const emptyForm = {
   expiresAt: "",
   singleUsePerUser: false,
   isActive: true,
+  allCourses: true,
+  selectedCourseIds: [] as number[],
 };
 
 export default function PromoCodesPage() {
@@ -116,6 +121,11 @@ export default function PromoCodesPage() {
   const { data: promoCodes = [], isLoading } = useQuery<PromoCode[]>({
     queryKey: ["/api/admin/promo-codes"],
     queryFn: () => apiRequest("/api/admin/promo-codes"),
+  });
+
+  const { data: courseOptions = [] } = useQuery<CourseOption[]>({
+    queryKey: ["/api/courses"],
+    queryFn: () => apiRequest("/api/courses"),
   });
 
   const createMutation = useMutation({
@@ -165,6 +175,7 @@ export default function PromoCodesPage() {
 
   function openEdit(code: PromoCode) {
     setEditingCode(code);
+    const hasSpecificCourses = Array.isArray(code.applicableCourseIds) && code.applicableCourseIds.length > 0;
     setForm({
       code: code.code,
       description: code.description || "",
@@ -175,6 +186,8 @@ export default function PromoCodesPage() {
       expiresAt: code.expiresAt ? new Date(code.expiresAt).toISOString().split("T")[0] : "",
       singleUsePerUser: code.singleUsePerUser,
       isActive: code.isActive,
+      allCourses: !hasSpecificCourses,
+      selectedCourseIds: hasSpecificCourses ? (code.applicableCourseIds as number[]) : [],
     });
     setDialogOpen(true);
   }
@@ -194,6 +207,7 @@ export default function PromoCodesPage() {
       minAmount: form.minAmount ? Number(form.minAmount) : 0,
       maxUsages: form.maxUsages ? Number(form.maxUsages) : null,
       expiresAt: form.expiresAt || null,
+      applicableCourseIds: form.allCourses ? null : form.selectedCourseIds,
       singleUsePerUser: form.singleUsePerUser,
       isActive: form.isActive,
     };
@@ -436,6 +450,54 @@ export default function PromoCodesPage() {
                 value={form.expiresAt}
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
               />
+            </div>
+
+            {/* Course applicability */}
+            <div className="space-y-2">
+              <Label>قابل استفاده برای</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="course-scope"
+                    checked={form.allCourses}
+                    onChange={() => setForm({ ...form, allCourses: true, selectedCourseIds: [] })}
+                  />
+                  همه دوره‌ها
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="course-scope"
+                    checked={!form.allCourses}
+                    onChange={() => setForm({ ...form, allCourses: false })}
+                  />
+                  دوره‌های خاص
+                </label>
+              </div>
+              {!form.allCourses && (
+                <div className="max-h-36 overflow-y-auto border rounded-md p-2 space-y-1">
+                  {courseOptions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">در حال بارگذاری دوره‌ها...</p>
+                  ) : (
+                    courseOptions.map((c) => (
+                      <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-muted rounded px-1 py-0.5">
+                        <input
+                          type="checkbox"
+                          checked={form.selectedCourseIds.includes(c.id)}
+                          onChange={(e) => {
+                            const ids = e.target.checked
+                              ? [...form.selectedCourseIds, c.id]
+                              : form.selectedCourseIds.filter((id) => id !== c.id);
+                            setForm({ ...form, selectedCourseIds: ids });
+                          }}
+                        />
+                        {c.title}
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">

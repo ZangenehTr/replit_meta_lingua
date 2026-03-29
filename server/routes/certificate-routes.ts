@@ -104,6 +104,7 @@ export async function issueCertificate(opts: {
       instituteName: templateConfig.instituteNameEn,
       instituteNameFa: templateConfig.instituteNameFa,
       logo: templateConfig.logoUrl,
+      certTitle: templateConfig.certTitle,
       signatureTitle: templateConfig.signatureTitle,
       footerNote: templateConfig.footerNote,
     });
@@ -394,6 +395,7 @@ router.get("/api/certificates/:number/download", authenticate, async (req: any, 
       instituteName: templateConfig.instituteNameEn,
       instituteNameFa: templateConfig.instituteNameFa,
       logo: templateConfig.logoUrl,
+      certTitle: templateConfig.certTitle,
       signatureTitle: templateConfig.signatureTitle,
       footerNote: templateConfig.footerNote,
     });

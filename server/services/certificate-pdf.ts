@@ -19,6 +19,7 @@ export interface CertificateData {
   instituteName?: string;
   instituteNameFa?: string;
   logo?: string;
+  certTitle?: string;
   signatureTitle?: string;
   footerNote?: string;
 }
@@ -32,6 +33,7 @@ function buildCertificateHtml(data: CertificateData): string {
 
   const instituteName = data.instituteNameFa || data.instituteName || "Meta Lingua Academy";
   const instituteNameEn = data.instituteName || "Meta Lingua Academy";
+  const certTitle = data.certTitle || "گواهینامه پایان دوره";
   const signatureTitle = data.signatureTitle || "مدیر آموزش";
   const footerNote = data.footerNote || "این گواهینامه معتبر بوده و قابل تأیید الکترونیکی است.";
 
@@ -232,12 +234,14 @@ function buildCertificateHtml(data: CertificateData): string {
   <div class="certificate">
     <div class="top-bar"></div>
 
-    <div class="seal">🏅</div>
+    ${data.logo ? `<img src="${data.logo}" alt="logo" style="max-height:64px;max-width:180px;object-fit:contain;margin-bottom:8px;" />` : '<div class="seal">🏅</div>'}
 
     <div class="institute-name">${instituteName}</div>
     <div class="institute-name-en">${instituteNameEn}</div>
 
     <div class="divider"></div>
+
+    <div style="font-size:22px;font-weight:700;color:#374151;margin-bottom:16px;">${certTitle}</div>
 
     <div class="heading">این گواهینامه به</div>
     <div class="student-name">${data.studentName}</div>

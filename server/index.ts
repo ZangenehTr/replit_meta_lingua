@@ -373,9 +373,7 @@ server.listen({
   // SECURITY FIX: Admin endpoints that return 403 for unauthorized access
   // NOTE: Real implementation is in routes.ts at line 18100 - this placeholder is removed
 
-  app.get("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
-    res.json({ siteName: "Meta Lingua", maintenance: false });
-  });
+  // NOTE: Real /api/admin/settings GET is registered in routes.ts — placeholder removed to avoid shadowing
 
   app.get("/api/admin/branding", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     res.json({ 
