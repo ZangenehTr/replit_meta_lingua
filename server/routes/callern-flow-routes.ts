@@ -471,7 +471,7 @@ const sessionRatingSchema = z.object({
   comment: z.string().max(500).optional()
 });
 
-router.post('/api/callern/session-rating', requireAuth, async (req, res) => {
+router.post('/callern/session-rating', requireAuth, async (req, res) => {
   try {
     const { sessionId, teacherId, studentId, role, rating, comment } = sessionRatingSchema.parse(req.body);
 

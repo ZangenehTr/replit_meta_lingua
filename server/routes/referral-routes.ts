@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db.js";
-import { referralCodes, referralEvents, users, walletTransactions } from "../../shared/schema.js";
+import { referralCodes, referralEvents, users, walletTransactions, enrollments } from "../../shared/schema.js";
 import { eq, desc, sum, count, sql } from "drizzle-orm";
 import { authenticate, authorize } from "../auth.js";
 import crypto from "crypto";
@@ -197,6 +197,39 @@ router.get("/api/referrals/global-stats", authenticate, authorize(["Admin", "Sup
   }
 });
 
+// ── Validate a referral code (used at enrollment/registration time) ──
+router.get("/api/referrals/validate/:code", async (req, res) => {
+  try {
+    const code = String(req.params.code).trim().toUpperCase();
+    const [record] = await db
+      .select({
+        id: referralCodes.id,
+        code: referralCodes.code,
+        userId: referralCodes.userId,
+        ownerFirst: users.firstName,
+        ownerLast: users.lastName
+      })
+      .from(referralCodes)
+      .leftJoin(users, eq(referralCodes.userId, users.id))
+      .where(eq(referralCodes.code, code))
+      .limit(1);
+
+    if (!record) {
+      return res.status(404).json({ valid: false, message: "کد معرفی معتبر نیست" });
+    }
+
+    res.json({
+      valid: true,
+      code: record.code,
+      referrerId: record.userId,
+      referrerName: `${record.ownerFirst ?? ""} ${record.ownerLast ?? ""}`.trim() || null
+    });
+  } catch (error) {
+    console.error("Error validating referral code:", error);
+    res.status(500).json({ message: "خطا در بررسی کد معرفی" });
+  }
+});
+
 // ── Admin leaderboard ──
 router.get("/api/admin/referrals/leaderboard", authenticate, authorize(["Admin", "Supervisor"]), async (_req, res) => {
   try {
@@ -266,6 +299,39 @@ router.get("/api/admin/referrals/payout-audit", authenticate, authorize(["Admin"
   } catch (error) {
     console.error("Error fetching payout audit:", error);
     res.status(500).json({ message: "خطا در دریافت گزارش پرداخت‌ها" });
+  }
+});
+
+// ── Admin UTM attribution breakdown: enrollments grouped by utm_source/medium/campaign ──
+router.get("/api/admin/attribution/utm-breakdown", authenticate, authorize(["Admin", "Supervisor"]), async (_req, res) => {
+  try {
+    const rows = await db
+      .select({
+        utmSource: enrollments.utmSource,
+        utmMedium: enrollments.utmMedium,
+        utmCampaign: enrollments.utmCampaign,
+        totalEnrollments: count(enrollments.id)
+      })
+      .from(enrollments)
+      .groupBy(enrollments.utmSource, enrollments.utmMedium, enrollments.utmCampaign)
+      .orderBy(desc(count(enrollments.id)));
+
+    // Also compute user registrations by utm_source
+    const userRows = await db
+      .select({
+        utmSource: users.utmSource,
+        utmMedium: users.utmMedium,
+        utmCampaign: users.utmCampaign,
+        totalRegistrations: count(users.id)
+      })
+      .from(users)
+      .groupBy(users.utmSource, users.utmMedium, users.utmCampaign)
+      .orderBy(desc(count(users.id)));
+
+    res.json({ enrollmentsByUtm: rows, registrationsByUtm: userRows });
+  } catch (error) {
+    console.error("Error fetching UTM attribution breakdown:", error);
+    res.status(500).json({ message: "خطا در دریافت گزارش منبع ترافیک" });
   }
 });
 

@@ -69,6 +69,8 @@ export default function ReferralsPage() {
   const [payoutData, setPayoutData] = useState<PayoutAuditResponse | null>(null);
   const [payoutPage, setPayoutPage] = useState(1);
   const [payoutLoading, setPayoutLoading] = useState(false);
+  const [utmData, setUtmData] = useState<{ enrollmentsByUtm: any[]; registrationsByUtm: any[] } | null>(null);
+  const [utmLoading, setUtmLoading] = useState(false);
   const { toast } = useToast();
   const { currentLanguage, t, isRTL } = useLanguage();
 
@@ -184,6 +186,21 @@ export default function ReferralsPage() {
     }
   };
 
+  const fetchUtmBreakdown = async () => {
+    setUtmLoading(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch("/api/admin/attribution/utm-breakdown", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) setUtmData(await res.json());
+    } catch (err) {
+      console.error("Error fetching UTM breakdown:", err);
+    } finally {
+      setUtmLoading(false);
+    }
+  };
+
   const fetchPayoutAudit = async (pg: number) => {
     setPayoutLoading(true);
     try {
@@ -268,22 +285,30 @@ export default function ReferralsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="settings" className="w-full" onValueChange={(v) => { if (v === "payout-audit") fetchPayoutAudit(1); }}>
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="settings" className="w-full" onValueChange={(v) => {
+        if (v === "payout-audit") fetchPayoutAudit(1);
+        if (v === "attribution") fetchUtmBreakdown();
+      }}>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="settings">
-            {currentLanguage === 'fa' ? 'تنظیمات کمیسیون' : 
-             currentLanguage === 'ar' ? 'إعدادات العمولة' : 
-             'Commission Settings'}
+            {currentLanguage === 'fa' ? 'تنظیمات' : 
+             currentLanguage === 'ar' ? 'الإعدادات' : 
+             'Settings'}
           </TabsTrigger>
           <TabsTrigger value="stats">
-            {currentLanguage === 'fa' ? 'آمار و گزارش' : 
-             currentLanguage === 'ar' ? 'الإحصائيات والتقارير' : 
-             'Statistics & Reports'}
+            {currentLanguage === 'fa' ? 'آمار' : 
+             currentLanguage === 'ar' ? 'الإحصائيات' : 
+             'Stats'}
           </TabsTrigger>
           <TabsTrigger value="payout-audit">
-            {currentLanguage === 'fa' ? 'حسابرسی پرداخت‌ها' : 
-             currentLanguage === 'ar' ? 'تدقيق المدفوعات' : 
-             'Payout Audit'}
+            {currentLanguage === 'fa' ? 'حسابرسی' : 
+             currentLanguage === 'ar' ? 'التدقيق' : 
+             'Payouts'}
+          </TabsTrigger>
+          <TabsTrigger value="attribution">
+            {currentLanguage === 'fa' ? 'منبع ترافیک' : 
+             currentLanguage === 'ar' ? 'مصدر الزيارات' : 
+             'Attribution'}
           </TabsTrigger>
         </TabsList>
 
@@ -586,6 +611,103 @@ export default function ReferralsPage() {
                     </div>
                   )}
                 </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="attribution" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                {currentLanguage === 'fa' ? 'گزارش منبع ثبت‌نام‌ها' :
+                 currentLanguage === 'ar' ? 'تقرير مصادر التسجيل' :
+                 'Enrollment Attribution Report (UTM)'}
+              </CardTitle>
+              <CardDescription>
+                {currentLanguage === 'fa' ? 'تعداد ثبت‌نام‌ها و کاربران جدید به تفکیک منبع ترافیک (UTM)' :
+                 currentLanguage === 'ar' ? 'عدد التسجيلات والمستخدمين الجدد حسب مصدر الزيارات' :
+                 'Enrollments and new users grouped by UTM source, medium, and campaign'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {utmLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                </div>
+              ) : !utmData ? (
+                <p className="text-center text-gray-400 py-8">
+                  {currentLanguage === 'fa' ? 'داده‌ای موجود نیست' :
+                   currentLanguage === 'ar' ? 'لا توجد بيانات' :
+                   'No data available'}
+                </p>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-semibold text-sm mb-3 text-gray-700 dark:text-gray-300">
+                      {currentLanguage === 'fa' ? 'ثبت‌نام‌های دوره بر اساس UTM' : 'Course Enrollments by UTM'}
+                    </h3>
+                    {utmData.enrollmentsByUtm.length === 0 ? (
+                      <p className="text-sm text-gray-400">
+                        {currentLanguage === 'fa' ? 'هنوز داده‌ای ثبت نشده' : 'No enrollment UTM data yet'}
+                      </p>
+                    ) : (
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-gray-500">
+                            <th className="pb-2 text-start">{currentLanguage === 'fa' ? 'منبع' : 'Source'}</th>
+                            <th className="pb-2 text-start">{currentLanguage === 'fa' ? 'رسانه' : 'Medium'}</th>
+                            <th className="pb-2 text-start">{currentLanguage === 'fa' ? 'کمپین' : 'Campaign'}</th>
+                            <th className="pb-2 text-end">{currentLanguage === 'fa' ? 'تعداد' : 'Count'}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {utmData.enrollmentsByUtm.map((row: any, i: number) => (
+                            <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <td className="py-2">{row.utmSource ?? '—'}</td>
+                              <td className="py-2 text-gray-500">{row.utmMedium ?? '—'}</td>
+                              <td className="py-2 text-gray-500">{row.utmCampaign ?? '—'}</td>
+                              <td className="py-2 text-end font-medium">{row.totalEnrollments}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-sm mb-3 text-gray-700 dark:text-gray-300">
+                      {currentLanguage === 'fa' ? 'کاربران جدید بر اساس UTM' : 'New User Registrations by UTM'}
+                    </h3>
+                    {utmData.registrationsByUtm.length === 0 ? (
+                      <p className="text-sm text-gray-400">
+                        {currentLanguage === 'fa' ? 'هنوز داده‌ای ثبت نشده' : 'No registration UTM data yet'}
+                      </p>
+                    ) : (
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-gray-500">
+                            <th className="pb-2 text-start">{currentLanguage === 'fa' ? 'منبع' : 'Source'}</th>
+                            <th className="pb-2 text-start">{currentLanguage === 'fa' ? 'رسانه' : 'Medium'}</th>
+                            <th className="pb-2 text-start">{currentLanguage === 'fa' ? 'کمپین' : 'Campaign'}</th>
+                            <th className="pb-2 text-end">{currentLanguage === 'fa' ? 'کاربران' : 'Users'}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {utmData.registrationsByUtm.map((row: any, i: number) => (
+                            <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <td className="py-2">{row.utmSource ?? '—'}</td>
+                              <td className="py-2 text-gray-500">{row.utmMedium ?? '—'}</td>
+                              <td className="py-2 text-gray-500">{row.utmCampaign ?? '—'}</td>
+                              <td className="py-2 text-end font-medium">{row.totalRegistrations}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
