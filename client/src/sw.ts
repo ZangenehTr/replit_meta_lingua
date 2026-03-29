@@ -1,6 +1,6 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { NetworkFirst, NetworkOnly, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { BackgroundSyncPlugin } from 'workbox-background-sync';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
@@ -80,7 +80,6 @@ registerRoute(
     cacheName: 'api-cache',
     networkTimeoutSeconds: 10,
     plugins: [
-      bgSync,
       new CacheableResponsePlugin({ statuses: [0, 200] }),
       new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }),
     ],
@@ -92,13 +91,8 @@ registerRoute(
     url.pathname.startsWith('/api/') &&
     !url.pathname.startsWith('/api/auth') &&
     request.method !== 'GET',
-  new NetworkFirst({
-    cacheName: 'api-mutations',
-    networkTimeoutSeconds: 10,
-    plugins: [
-      bgSync,
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-    ],
+  new NetworkOnly({
+    plugins: [bgSync],
   })
 );
 
