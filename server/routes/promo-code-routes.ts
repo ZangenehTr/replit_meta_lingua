@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db.js";
-import { promoCodes, coursePayments } from "@shared/schema";
+import { promoCodes, coursePayments, promoCodeUsages, users, courses } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { authenticate } from "../auth.js";
 
@@ -184,6 +184,38 @@ router.post("/api/promo-codes/validate", authenticate, async (req, res) => {
   } catch (error: any) {
     console.error("Error validating promo code:", error);
     res.status(500).json({ valid: false, message: "خطا در بررسی کد تخفیف" });
+  }
+});
+
+// GET /api/admin/promo-codes/:id/usages — usage history for a specific promo code
+router.get("/api/admin/promo-codes/:id/usages", authenticate, requireAdmin, async (req, res) => {
+  try {
+    const promoId = parseInt(req.params.id);
+
+    const usages = await db
+      .select({
+        id: promoCodeUsages.id,
+        usedAt: promoCodeUsages.usedAt,
+        discountAmount: promoCodeUsages.discountAmount,
+        originalAmount: promoCodeUsages.originalAmount,
+        finalAmount: promoCodeUsages.finalAmount,
+        userId: promoCodeUsages.userId,
+        courseId: promoCodeUsages.courseId,
+        studentFirstName: users.firstName,
+        studentLastName: users.lastName,
+        studentPhone: users.phoneNumber,
+        courseTitle: courses.title,
+      })
+      .from(promoCodeUsages)
+      .leftJoin(users, eq(promoCodeUsages.userId, users.id))
+      .leftJoin(courses, eq(promoCodeUsages.courseId, courses.id))
+      .where(eq(promoCodeUsages.promoCodeId, promoId))
+      .orderBy(desc(promoCodeUsages.usedAt));
+
+    res.json(usages);
+  } catch (error: any) {
+    console.error("Error fetching promo usages:", error);
+    res.status(500).json({ message: "Failed to fetch promo code usages" });
   }
 });
 

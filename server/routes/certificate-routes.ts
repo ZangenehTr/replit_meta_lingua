@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db.js";
-import { certificates, users, courses, enrollments, promoCodeUsages, promoCodes, adminSettings } from "@shared/schema";
+import { certificates, users, courses, enrollments, adminSettings } from "@shared/schema";
 import { eq, desc, and, notInArray, sql, count } from "drizzle-orm";
 import { authenticate } from "../auth.js";
 import { generateCertificatePdf, getCertificatePdfPath } from "../services/certificate-pdf.js";
@@ -267,42 +267,6 @@ router.put("/api/admin/certificates/:id/revoke", authenticate, requireAdmin, asy
   } catch (error: any) {
     console.error("Error revoking certificate:", error);
     res.status(500).json({ message: "Failed to revoke certificate" });
-  }
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ADMIN promo code analytics
-// ─────────────────────────────────────────────────────────────────────────────
-
-// GET /api/admin/promo-codes/:id/usages — list usages for a specific promo code
-router.get("/api/admin/promo-codes/:id/usages", authenticate, requireAdmin, async (req, res) => {
-  try {
-    const promoId = parseInt(req.params.id);
-
-    const usages = await db
-      .select({
-        id: promoCodeUsages.id,
-        usedAt: promoCodeUsages.usedAt,
-        discountAmount: promoCodeUsages.discountAmount,
-        originalAmount: promoCodeUsages.originalAmount,
-        finalAmount: promoCodeUsages.finalAmount,
-        userId: promoCodeUsages.userId,
-        courseId: promoCodeUsages.courseId,
-        studentFirstName: users.firstName,
-        studentLastName: users.lastName,
-        studentPhone: users.phoneNumber,
-        courseTitle: courses.title,
-      })
-      .from(promoCodeUsages)
-      .leftJoin(users, eq(promoCodeUsages.userId, users.id))
-      .leftJoin(courses, eq(promoCodeUsages.courseId, courses.id))
-      .where(eq(promoCodeUsages.promoCodeId, promoId))
-      .orderBy(desc(promoCodeUsages.usedAt));
-
-    res.json(usages);
-  } catch (error: any) {
-    console.error("Error fetching promo usages:", error);
-    res.status(500).json({ message: "Failed to fetch promo code usages" });
   }
 });
 
