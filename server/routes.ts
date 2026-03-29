@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -11189,46 +11189,85 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
-  // Mark lesson as complete — updates enrollment progress and auto-issues cert when all done
+  // Mark lesson as complete — tracks per-lesson completion via video_progress, then computes real progress
   app.post("/api/courses/:courseId/lessons/:lessonId/complete", authenticateToken, async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.courseId);
       const lessonId = parseInt(req.params.lessonId);
       const userId = req.user.id || req.user.userId;
 
-      // Get total lessons for this course to compute progress
+      // Get all lessons for this course
       const lessons = await storage.getVideoLessonsByCourse(courseId);
       const totalLessons = lessons.length;
 
-      // Calculate new progress percentage based on which lesson was just completed
-      const lessonIdx = lessons.findIndex((l: any) => l.id === lessonId);
-      const lessonPosition = lessonIdx >= 0 ? lessonIdx + 1 : totalLessons;
-      const newProgress = totalLessons > 0 ? Math.round((lessonPosition / totalLessons) * 100) : 100;
+      // Upsert video_progress record — mark this specific lesson as completed (idempotent)
+      const existing = await db
+        .select()
+        .from(videoProgress)
+        .where(and(eq(videoProgress.videoId, lessonId), eq(videoProgress.studentId, userId)))
+        .limit(1);
 
-      // Update enrollment progress (only advance, never regress)
+      if (existing.length === 0) {
+        await db.insert(videoProgress).values({
+          videoId: lessonId,
+          studentId: userId,
+          isCompleted: true,
+          completedAt: new Date(),
+          progressPercentage: "100",
+          watchedDuration: 0,
+          watchCount: 1,
+          lastWatchedAt: new Date(),
+        });
+      } else if (!existing[0].isCompleted) {
+        await db
+          .update(videoProgress)
+          .set({ isCompleted: true, completedAt: new Date(), progressPercentage: "100" })
+          .where(and(eq(videoProgress.videoId, lessonId), eq(videoProgress.studentId, userId)));
+      }
+
+      // Count how many of this course's lessons the student has now completed
+      const lessonIds = lessons.map((l: any) => l.id);
+      const completedRows = lessonIds.length > 0
+        ? await db
+            .select({ videoId: videoProgress.videoId })
+            .from(videoProgress)
+            .where(
+              and(
+                eq(videoProgress.studentId, userId),
+                eq(videoProgress.isCompleted, true),
+                inArray(videoProgress.videoId, lessonIds)
+              )
+            )
+        : [];
+
+      const completedCount = new Set(completedRows.map((r) => r.videoId)).size;
+      const newProgress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 100;
+      const allDone = completedCount >= totalLessons;
+
+      // Update enrollment progress
       const userEnrollments = await storage.getUserEnrollments(userId);
       const enrollment = userEnrollments.find((e: any) => e.courseId === courseId);
 
+      let certIssued = false;
       if (enrollment) {
-        const updatedProgress = Math.max(enrollment.progress || 0, newProgress);
         await db
           .update(enrollments)
           .set({
-            progress: updatedProgress,
-            ...(updatedProgress >= 100 && !enrollment.completedAt
+            progress: newProgress,
+            ...(allDone && !enrollment.completedAt
               ? { completedAt: new Date(), status: "completed" }
               : {}),
           })
           .where(eq(enrollments.id, enrollment.id));
 
-        // Auto-issue certificate if course is now complete
-        if (updatedProgress >= 100) {
+        // Auto-issue certificate only when genuinely all lessons done
+        if (allDone) {
           try {
             const { issueCertificate } = await import("./routes/certificate-routes.js");
             await issueCertificate({ studentId: userId, courseId });
+            certIssued = true;
           } catch (certErr) {
             console.error("Auto-cert issuance failed:", certErr);
-            // Non-blocking: log but continue
           }
         }
       }
@@ -11236,8 +11275,11 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       res.json({
         message: "Lesson marked as complete",
         lessonId,
+        completedLessons: completedCount,
+        totalLessons,
         progress: newProgress,
-        courseCompleted: newProgress >= 100,
+        courseCompleted: allDone,
+        certificateIssued: certIssued,
       });
     } catch (error) {
       console.error("Failed to mark lesson complete:", error);
@@ -11281,15 +11323,24 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           .where(eq(enrollments.id, enrollment.id));
       }
 
+      // Check if cert already exists (idempotency)
+      const [existingCert] = await db
+        .select()
+        .from(certificates)
+        .where(and(eq(certificates.studentId, userId), eq(certificates.courseId, courseId)))
+        .limit(1);
+
+      const alreadyIssued = !!existingCert;
+
       // Issue certificate via shared service (handles idempotency + PDF generation)
       const { issueCertificate } = await import("./routes/certificate-routes.js");
       const cert = await issueCertificate({ studentId: userId, courseId });
 
-      res.status(201).json({
-        message: "گواهینامه با موفقیت صادر شد",
+      res.status(alreadyIssued ? 200 : 201).json({
+        message: alreadyIssued ? "گواهینامه قبلاً صادر شده است" : "گواهینامه با موفقیت صادر شد",
         certificateNumber: cert.certificateNumber,
         certificate: cert,
-        alreadyIssued: false,
+        alreadyIssued,
       });
     } catch (error: any) {
       console.error("Error issuing course completion certificate:", error);

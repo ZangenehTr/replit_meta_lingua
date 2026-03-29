@@ -2,6 +2,35 @@ import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 
+/**
+ * Validates a logo URL to prevent SSRF.
+ * Only allows http/https with non-private hosts.
+ */
+function isSafeLogoUrl(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return undefined;
+    const host = u.hostname.toLowerCase();
+    // Block private/loopback ranges
+    if (
+      host === "localhost" ||
+      /^127\./.test(host) ||
+      /^10\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+      /^::1$/.test(host) ||
+      /^0\.0\.0\.0$/.test(host) ||
+      /^169\.254\./.test(host)
+    ) {
+      return undefined;
+    }
+    return raw;
+  } catch {
+    return undefined;
+  }
+}
+
 const CERT_DIR = path.join(process.cwd(), "uploads", "certificates");
 
 // Ensure the certificates directory exists
@@ -36,6 +65,7 @@ function buildCertificateHtml(data: CertificateData): string {
   const certTitle = data.certTitle || "گواهینامه پایان دوره";
   const signatureTitle = data.signatureTitle || "مدیر آموزش";
   const footerNote = data.footerNote || "این گواهینامه معتبر بوده و قابل تأیید الکترونیکی است.";
+  const safeLogoUrl = isSafeLogoUrl(data.logo);
 
   return `<!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -234,7 +264,7 @@ function buildCertificateHtml(data: CertificateData): string {
   <div class="certificate">
     <div class="top-bar"></div>
 
-    ${data.logo ? `<img src="${data.logo}" alt="logo" style="max-height:64px;max-width:180px;object-fit:contain;margin-bottom:8px;" />` : '<div class="seal">🏅</div>'}
+    ${safeLogoUrl ? `<img src="${safeLogoUrl}" alt="logo" style="max-height:64px;max-width:180px;object-fit:contain;margin-bottom:8px;" />` : '<div class="seal">🏅</div>'}
 
     <div class="institute-name">${instituteName}</div>
     <div class="institute-name-en">${instituteNameEn}</div>
