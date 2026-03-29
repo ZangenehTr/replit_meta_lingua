@@ -8,8 +8,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
-import { Wallet, Plus, CreditCard, Star, Trophy, Crown, Gem, Clock, Calendar, User, BookOpen } from "lucide-react";
+import { Wallet, Plus, CreditCard, Star, Trophy, Crown, Gem, Clock, Calendar, User, BookOpen, Tag, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface WalletData {
   walletBalance: number;
@@ -75,6 +77,16 @@ export function WalletSystem() {
   const queryClient = useQueryClient();
   const [topupAmount, setTopupAmount] = useState(100000);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [promoValidation, setPromoValidation] = useState<{
+    valid: boolean;
+    message: string;
+    discountAmount?: number;
+    finalAmount?: number;
+    promoCodeId?: number;
+    code?: string;
+  } | null>(null);
+  const [promoValidating, setPromoValidating] = useState(false);
 
   // Fetch wallet data
   const { data: walletData, isLoading: walletLoading } = useQuery<WalletData>({
@@ -128,15 +140,41 @@ export function WalletSystem() {
     }
   });
 
+  const validatePromoCode = async (course: Course) => {
+    if (!promoCodeInput.trim()) return;
+    setPromoValidating(true);
+    try {
+      const result = await apiRequest("/api/promo-codes/validate", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCodeInput.trim(),
+          courseId: course.id,
+          amount: course.price,
+        }),
+      });
+      setPromoValidation(result);
+    } catch (err: any) {
+      setPromoValidation({ valid: false, message: err.message || "کد تخفیف نامعتبر است" });
+    } finally {
+      setPromoValidating(false);
+    }
+  };
+
+  const resetPromo = () => {
+    setPromoCodeInput("");
+    setPromoValidation(null);
+  };
+
   // Course enrollment mutation
   const courseEnrollmentMutation = useMutation({
-    mutationFn: async ({ courseId, paymentMethod }: { courseId: number; paymentMethod: 'wallet' | 'shetab' }) => {
+    mutationFn: async ({ courseId, paymentMethod, promoCode }: { courseId: number; paymentMethod: 'wallet' | 'shetab'; promoCode?: string }) => {
       return await apiRequest("/api/courses/enroll", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ courseId, paymentMethod })
+        body: JSON.stringify({ courseId, paymentMethod, promoCode: promoCode || undefined })
       });
     },
     onSuccess: () => {
@@ -148,6 +186,7 @@ export function WalletSystem() {
       queryClient.invalidateQueries({ queryKey: ["/api/courses/my"] });
       queryClient.invalidateQueries({ queryKey: ["/api/wallet/transactions"] });
       setSelectedCourse(null);
+      resetPromo();
     },
     onError: (error: any) => {
       toast({
@@ -354,7 +393,7 @@ export function WalletSystem() {
 
       {/* Course Enrollment Confirmation Dialog */}
       {selectedCourse && (
-        <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
+        <Dialog open={!!selectedCourse} onOpenChange={() => { setSelectedCourse(null); resetPromo(); }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>تأیید ثبت نام</DialogTitle>
@@ -364,21 +403,78 @@ export function WalletSystem() {
                 <h4 className="font-semibold mb-2">{selectedCourse.title}</h4>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>قیمت اصلی: {formatCurrency(selectedCourse.price)}</p>
-                  <p>تخفیف عضویت: {walletData?.discountPercentage}%</p>
+                  <p>تخفیف عضویت: {walletData?.discountPercentage || 0}%</p>
+                  {promoValidation?.valid && promoValidation.discountAmount ? (
+                    <p className="text-green-600">تخفیف کد: -{formatCurrency(promoValidation.discountAmount)}</p>
+                  ) : null}
                   <p className="font-semibold text-green-600">
-                    قیمت نهایی: {formatCurrency(calculateDiscountedPrice(selectedCourse.price))}
+                    قیمت نهایی: {formatCurrency(
+                      promoValidation?.valid && promoValidation.finalAmount !== undefined
+                        ? promoValidation.finalAmount
+                        : calculateDiscountedPrice(selectedCourse.price)
+                    )}
                   </p>
                 </div>
               </div>
+
+              {/* Promo Code Input */}
+              <div className="space-y-2">
+                <Label htmlFor="promo-input" className="text-sm font-medium flex items-center gap-1.5">
+                  <Tag className="h-4 w-4" />
+                  کد تخفیف (اختیاری)
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="promo-input"
+                    value={promoCodeInput}
+                    onChange={(e) => {
+                      setPromoCodeInput(e.target.value.toUpperCase());
+                      if (promoValidation) setPromoValidation(null);
+                    }}
+                    placeholder="مثال: SUMMER30"
+                    className="font-mono uppercase"
+                    disabled={promoValidation?.valid}
+                    dir="ltr"
+                  />
+                  {promoValidation?.valid ? (
+                    <Button type="button" variant="outline" size="sm" onClick={resetPromo} className="shrink-0">
+                      <XCircle className="h-4 w-4 text-destructive" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => validatePromoCode(selectedCourse)}
+                      disabled={!promoCodeInput.trim() || promoValidating}
+                    >
+                      {promoValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : "اعمال"}
+                    </Button>
+                  )}
+                </div>
+                {promoValidation && (
+                  <p className={`text-xs flex items-center gap-1 ${promoValidation.valid ? "text-green-600" : "text-destructive"}`}>
+                    {promoValidation.valid
+                      ? <CheckCircle2 className="h-3.5 w-3.5" />
+                      : <XCircle className="h-3.5 w-3.5" />}
+                    {promoValidation.message}
+                  </p>
+                )}
+              </div>
+
               <Button
                 className="w-full"
                 onClick={() => courseEnrollmentMutation.mutate({ 
                   courseId: selectedCourse.id, 
-                  paymentMethod: 'wallet' 
+                  paymentMethod: 'wallet',
+                  promoCode: promoValidation?.valid ? promoValidation.code : undefined,
                 })}
                 disabled={courseEnrollmentMutation.isPending}
               >
-                {courseEnrollmentMutation.isPending ? "در حال پردازش..." : "تأیید و ثبت نام"}
+                {courseEnrollmentMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin me-2" />در حال پردازش...</>
+                ) : "تأیید و ثبت نام"}
               </Button>
             </div>
           </DialogContent>
