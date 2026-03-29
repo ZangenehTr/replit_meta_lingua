@@ -6,7 +6,7 @@
  */
 
 import { db } from '../db';
-import { eq, and, desc, asc } from 'drizzle-orm';
+import { eq, and, desc, asc, avg, count, sql } from 'drizzle-orm';
 import { 
   callSessions, 
   callPostReports,
@@ -14,7 +14,8 @@ import {
   callernRoadmaps,
   studentRoadmapProgress,
   callernRoadmapSteps,
-  courseRoadmapProgress
+  courseRoadmapProgress,
+  sessionRatings
 } from '@shared/schema';
 import type { 
   CallSession, 
@@ -300,19 +301,85 @@ export async function updateRoadmapProgressFromSession(
   console.log(`Roadmap progress updated: ${currentProgress}% → ${newProgress}%`);
 }
 
+// ── Create a session rating record ──
+export async function createSessionRating(data: {
+  sessionId: number;
+  raterRole: string;
+  raterId: number;
+  score: number;
+  comment?: string;
+  aspectRatings?: Record<string, any>;
+}): Promise<typeof sessionRatings.$inferSelect> {
+  const [rating] = await db
+    .insert(sessionRatings)
+    .values({
+      sessionId: data.sessionId,
+      raterId: data.raterId,
+      raterRole: data.raterRole,
+      score: data.score,
+      comment: data.comment || null,
+      aspectRatings: data.aspectRatings || null
+    })
+    .returning();
+  return rating;
+}
+
+// ── Get an existing session rating ──
+export async function getSessionRating(
+  sessionId: number,
+  raterId: number,
+  raterRole: string
+): Promise<typeof sessionRatings.$inferSelect | undefined> {
+  const [rating] = await db
+    .select()
+    .from(sessionRatings)
+    .where(
+      and(
+        eq(sessionRatings.sessionId, sessionId),
+        eq(sessionRatings.raterId, raterId),
+        eq(sessionRatings.raterRole, raterRole)
+      )
+    )
+    .limit(1);
+  return rating;
+}
+
+// ── Recompute and persist teacher's average CallerN rating ──
 export async function updateOverallRatings(
   session: CallSession,
   role: string,
-  score: number
+  _score: number
 ): Promise<void> {
-  // Update overall teacher/student ratings
-  if (role === 'teacher') {
-    // Update teacher's average rating
-    console.log(`Teacher ${session.teacherId} rating updated: ${score}/5`);
-  } else if (role === 'student') {
-    // Update student's engagement score
-    console.log(`Student ${session.studentId} rating updated: ${score}/5`);
-  }
+  if (role !== 'student') return; // Only student ratings count toward teacher average
+
+  const teacherId = session.teacherId;
+
+  // Compute live average from all student ratings on sessions taught by this teacher
+  const [agg] = await db
+    .select({
+      avgScore: avg(sessionRatings.score),
+      sessionCount: count(sessionRatings.id)
+    })
+    .from(sessionRatings)
+    .leftJoin(callSessions, eq(sessionRatings.sessionId, callSessions.id))
+    .where(
+      and(
+        eq((callSessions as any).teacherId, teacherId),
+        eq(sessionRatings.raterRole, 'student')
+      )
+    );
+
+  if (!agg) return;
+
+  await db
+    .update(users)
+    .set({
+      callernRating: agg.avgScore ? String(parseFloat(String(agg.avgScore)).toFixed(2)) : '0',
+      callernSessionCount: Number(agg.sessionCount || 0)
+    })
+    .where(eq(users.id, teacherId));
+
+  console.log(`CallerN rating updated for teacher ${teacherId}: ${agg.avgScore} (${agg.sessionCount} sessions)`);
 }
 
 export async function createActivityEvidence(evidenceData: {

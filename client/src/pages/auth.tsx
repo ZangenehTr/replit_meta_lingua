@@ -25,6 +25,16 @@ export default function Auth() {
   const { t } = useTranslation(['auth', 'common']);
   const { isRTL } = useLanguage();
   const [, setLocation] = useLocation();
+  // Capture UTM params and referral code from URL on mount
+  const utmParams = (() => {
+    const p = new URLSearchParams(window.location.search);
+    return {
+      utmSource: p.get("utm_source") || undefined,
+      utmMedium: p.get("utm_medium") || undefined,
+      utmCampaign: p.get("utm_campaign") || undefined,
+      referralCode: p.get("ref") || undefined,
+    };
+  })();
   const [authError, setAuthError] = useState<string>("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -252,7 +262,8 @@ export default function Auth() {
           code: data.otp,
           purpose: 'registration',
           locale: 'fa',
-          role: 'Student'
+          role: 'Student',
+          ...utmParams,
         }),
       });
 

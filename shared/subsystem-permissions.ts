@@ -118,6 +118,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "book_ecommerce", name: "فروشگاه کتاب", nameEn: "Book E-Commerce", icon: "ShoppingBag" },
       { id: "social_media_scraper", name: "رصد شبکه‌های اجتماعی", nameEn: "Social Media Scraper", icon: "Globe" },
       { id: "review_moderation", name: "مدیریت نظرات", nameEn: "Review Moderation", icon: "Eye" },
+      { id: "referral_leaderboard", name: "تابلوی رتبه‌بندی معرفی", nameEn: "Referral Leaderboard", icon: "Trophy" },
       { id: "shopping_cart_settings", name: "تنظیمات سبد خرید", nameEn: "Shopping Cart Settings", icon: "ShoppingCart" },
       { id: "system_status", name: "وضعیت سیستم", nameEn: "System Status", icon: "Server" },
       { id: "financial_reports", name: "گزارش‌های مالی", nameEn: "Financial Reports", icon: "BarChart" },
@@ -321,7 +322,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "calendar_settings", "currency_settings",
       "form_management", "font_management", "subsystem_permissions", "api_smoke_test",
       "visitor_chat", "admin_settings", "book_ecommerce", "social_media_scraper",
-      "review_moderation", "shopping_cart_settings", "system_status", "financial_reports",
+      "review_moderation", "referral_leaderboard", "shopping_cart_settings", "system_status", "financial_reports",
       "curriculum_categories", "sms_test", "3d_lesson_builder",
       "promo_codes", "admin_certificates",
       // HR Module
@@ -396,7 +397,7 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "messages": "/messages",
   "progress": "/progress",
   "wallet": "/wallet",
-  "referrals": "/referrals",
+  "referrals": "/student/referral",
 
   // Teacher Platform
   "teacher_dashboard": "/dashboard",
@@ -463,6 +464,7 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "book_ecommerce": "/admin/book-ecommerce",
   "social_media_scraper": "/admin/social-media-scraper",
   "review_moderation": "/admin/review-moderation",
+  "referral_leaderboard": "/admin/referral-leaderboard",
   "shopping_cart_settings": "/admin/shopping-cart",
   "system_status": "/admin/system",
   "financial_reports": "/admin/financial-reports",
@@ -603,6 +605,7 @@ export const INSTITUTE_SECTION_MAP: Record<string, { fa: string; en: string }> =
   white_label: { fa: "وبسایت و محتوا", en: "Website & Content" },
   social_media_scraper: { fa: "وبسایت و محتوا", en: "Website & Content" },
   review_moderation: { fa: "وبسایت و محتوا", en: "Website & Content" },
+  referral_leaderboard: { fa: "وبسایت و محتوا", en: "Website & Content" },
   form_management: { fa: "وبسایت و محتوا", en: "Website & Content" },
   font_management: { fa: "وبسایت و محتوا", en: "Website & Content" },
 

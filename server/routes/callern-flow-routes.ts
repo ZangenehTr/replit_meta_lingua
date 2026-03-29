@@ -353,14 +353,14 @@ router.post('/callern/rate', requireAuth, async (req, res) => {
       return res.status(403).json({ message: 'Only the teacher can rate as teacher' });
     }
 
-    // Check if rating already exists
-    const existingRating = await storage.getSessionRating(sessionId, raterId, role);
+    // Check if rating already exists (now backed by session_ratings table via callernStorage)
+    const existingRating = await callernStorage.getSessionRating(sessionId, raterId, role);
     if (existingRating) {
       return res.status(409).json({ message: 'Rating already exists for this session' });
     }
 
-    // Create rating
-    const rating = await storage.createSessionRating({
+    // Create rating in session_ratings table
+    const rating = await callernStorage.createSessionRating({
       sessionId,
       raterRole: role,
       raterId,

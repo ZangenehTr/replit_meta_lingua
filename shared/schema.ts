@@ -168,7 +168,18 @@ export const users = pgTable("users", {
   teacherBio: text("teacher_bio"), // Extended teacher biography
   teacherSpecializations: text("teacher_specializations").array(), // Teacher specializations
   hourlyRate: integer("hourly_rate"), // Teacher hourly rate in Toman
-  teachingExperience: varchar("teaching_experience", { length: 50 }) // e.g., "5 years"
+  teachingExperience: varchar("teaching_experience", { length: 50 }), // e.g., "5 years"
+  // CallerN live rating aggregates
+  callernRating: decimal("callern_rating", { precision: 3, scale: 2 }).default("0"),
+  callernSessionCount: integer("callern_session_count").default(0),
+  // UTM acquisition tracking
+  utmSource: varchar("utm_source", { length: 100 }),
+  utmMedium: varchar("utm_medium", { length: 100 }),
+  utmCampaign: varchar("utm_campaign", { length: 100 }),
+  // Personal referral code for the referral program
+  referralCode: varchar("referral_code", { length: 20 }).unique(),
+  // Code that was used to invite this user (tracked for referral attribution)
+  referredByCode: varchar("referred_by_code", { length: 20 })
 });
 
 // Curriculum Categories table - Dynamic CMS for course categorization
@@ -508,7 +519,11 @@ export const coursePayments = pgTable("course_payments", {
   promoCodeId: integer("promo_code_id"),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // UTM tracking — copied from user record at payment time
+  utmSource: varchar("utm_source", { length: 100 }),
+  utmMedium: varchar("utm_medium", { length: 100 }),
+  utmCampaign: varchar("utm_campaign", { length: 100 })
 });
 
 // AI Training Data table
@@ -9639,3 +9654,80 @@ export type InsertPromoCodeUsage = typeof promoCodeUsages.$inferInsert;
 //   statusIndex: index('sms_templates_status_idx').on(smsTemplates.status),
 //   lastUsedIndex: index('sms_templates_last_used_at_idx').on(smsTemplates.lastUsedAt)
 // };
+
+// ============================================================================
+// TASK #6: MARKETING ADDITIONS
+// ============================================================================
+
+// ---- 1. Course Reviews ----
+// Separate from teacherReviews (tutor marketplace). These are for enrolled students rating courses.
+export const courseReviews = pgTable("course_reviews", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  enrollmentId: integer("enrollment_id"), // optional link to enrollment record
+  rating: integer("rating").notNull(), // 1–5
+  reviewText: text("review_text"),
+  reviewTextFa: text("review_text_fa"),
+  reviewTextAr: text("review_text_ar"),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending | approved | rejected
+  rejectionReason: text("rejection_reason"),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  isAnonymous: boolean("is_anonymous").default(false),
+  helpfulCount: integer("helpful_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export type CourseReview = typeof courseReviews.$inferSelect;
+export type InsertCourseReview = typeof courseReviews.$inferInsert;
+
+// ---- 2. Referral Program ----
+// referral_codes: one unique code per student
+export const referralCodes = pgTable("referral_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  totalReferrals: integer("total_referrals").default(0),
+  totalConverted: integer("total_converted").default(0),
+  totalCreditsEarned: integer("total_credits_earned").default(0), // in Toman
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export type ReferralCode = typeof referralCodes.$inferSelect;
+export type InsertReferralCode = typeof referralCodes.$inferInsert;
+
+// referral_events: tracks every referral click, registration, and conversion
+export const referralEvents = pgTable("referral_events", {
+  id: serial("id").primaryKey(),
+  referralCodeId: integer("referral_code_id").references(() => referralCodes.id).notNull(),
+  referrerId: integer("referrer_id").references(() => users.id).notNull(),
+  referredUserId: integer("referred_user_id").references(() => users.id), // null until they register
+  eventType: varchar("event_type", { length: 30 }).notNull(), // click | registration | first_payment
+  coursePaymentId: integer("course_payment_id"), // set on first_payment event
+  referrerCreditAwarded: integer("referrer_credit_awarded").default(0), // Toman added to referrer wallet
+  referredCreditAwarded: integer("referred_credit_awarded").default(0), // Toman added to referred wallet
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export type ReferralEvent = typeof referralEvents.$inferSelect;
+export type InsertReferralEvent = typeof referralEvents.$inferInsert;
+
+// ---- 3. CallerN Session Ratings ----
+// Stores individual post-session ratings submitted by student and teacher
+export const sessionRatings = pgTable("session_ratings", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => callSessions.id).notNull(),
+  raterId: integer("rater_id").references(() => users.id).notNull(),
+  raterRole: varchar("rater_role", { length: 20 }).notNull(), // student | teacher
+  score: integer("score").notNull(), // 1–5
+  comment: text("comment"),
+  aspectRatings: jsonb("aspect_ratings"), // e.g. { pronunciation: 4, grammar: 5 }
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export type SessionRating = typeof sessionRatings.$inferSelect;
+export type InsertSessionRating = typeof sessionRatings.$inferInsert;

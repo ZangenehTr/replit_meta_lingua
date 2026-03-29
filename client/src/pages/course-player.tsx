@@ -33,6 +33,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/ui/back-button";
 import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from "react-i18next";
+import CourseReviews from "@/components/courses/CourseReviews";
 
 interface CoursePlayerProps {
   courseId: string;
@@ -427,11 +428,14 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
 
             {/* Lesson Content Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-1">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm">{t('coursePlayer:overview')}</TabsTrigger>
                 <TabsTrigger value="transcript" className="text-xs sm:text-sm">{t('coursePlayer:transcript')}</TabsTrigger>
                 <TabsTrigger value="notes" className="text-xs sm:text-sm">{t('coursePlayer:notes')}</TabsTrigger>
                 <TabsTrigger value="resources" className="text-xs sm:text-sm">{t('coursePlayer:resources')}</TabsTrigger>
+                <TabsTrigger value="reviews" className="text-xs sm:text-sm flex items-center gap-1">
+                  <Star className="h-3 w-3" />{t('coursePlayer:reviews') || 'نظرات'}
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview" className="space-y-4">
@@ -539,6 +543,13 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="reviews">
+                <CourseReviews
+                  courseId={parseInt(courseId)}
+                  isEnrolled={true}
+                />
               </TabsContent>
             </Tabs>
           </div>

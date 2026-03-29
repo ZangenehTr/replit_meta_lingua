@@ -77,6 +77,7 @@ import HrMyLeavePage from "@/pages/hr-my-leave";
 import HRPayrollPage from "@/pages/admin/hr-payroll";
 import HRPerformancePage from "@/pages/admin/hr-performance";
 import PromoCodesPage from "@/pages/admin/promo-codes";
+import ReferralLeaderboardPage from "@/pages/admin/referral-leaderboard";
 import AdminCertificatesPage from "@/pages/admin/certificates";
 import StudentCertificatesPage from "@/pages/student/certificates";
 import VerifyCertificatePage from "@/pages/verify-certificate";
@@ -93,6 +94,8 @@ import CallerHistory from "@/pages/frontdesk/caller-history";
 import SmsTemplatesPage from "@/pages/frontdesk/sms-templates";
 import TrialLessonScheduling from "@/pages/frontdesk/trial-scheduling";
 import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
+
+import StudentReferralPage from "@/pages/student/referral";
 
 // Student pages
 import TutorsPage from "@/pages/student/tutors";
@@ -467,6 +470,11 @@ function Router() {
           <ReviewModerationPage />
         </RoleProtectedRoute>
       </Route>
+      <Route path="/admin/referral-leaderboard">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <ReferralLeaderboardPage />
+        </RoleProtectedRoute>
+      </Route>
       
       {/* New Admin Features */}
       <Route path="/admin/mst-test-builder">
@@ -705,6 +713,11 @@ function Router() {
       <Route path="/student/certificates">
         <ProtectedRoute>
           <StudentCertificatesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/referral">
+        <ProtectedRoute>
+          <StudentReferralPage />
         </ProtectedRoute>
       </Route>
       <Route path="/verify-certificate/:number">

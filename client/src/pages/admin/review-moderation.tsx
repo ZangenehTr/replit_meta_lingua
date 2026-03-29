@@ -59,11 +59,11 @@ export default function ReviewModerationPage() {
   };
 
   const { data: reviews = [], isLoading, refetch } = useQuery<Review[]>({
-    queryKey: ['/api/admin/reviews', { status: selectedStatus }],
+    queryKey: ['/api/admin/course-reviews', { status: selectedStatus }],
     queryFn: async () => {
       const url = selectedStatus 
-        ? `/api/admin/reviews?status=${selectedStatus}`
-        : '/api/admin/reviews';
+        ? `/api/admin/course-reviews?status=${selectedStatus}`
+        : '/api/admin/course-reviews';
       const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch reviews');
       return res.json();
@@ -76,13 +76,13 @@ export default function ReviewModerationPage() {
       status: 'approved' | 'rejected';
       rejectionReason?: string;
     }) => {
-      return apiRequest(`/api/admin/reviews/${reviewId}/status`, {
+      return apiRequest(`/api/admin/course-reviews/${reviewId}`, {
         method: 'PATCH',
         body: JSON.stringify({ status, rejectionReason })
       });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/course-reviews'] });
       toast({
         title: variables.status === 'approved' 
           ? getLocalizedText('Review Approved', 'نظر تأیید شد', 'تمت الموافقة على المراجعة')

@@ -296,6 +296,11 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
       });
     }
 
+    // Extract optional UTM and referral fields from request body
+    const { utmSource, utmMedium, utmCampaign, referralCode } = req.body as {
+      utmSource?: string; utmMedium?: string; utmCampaign?: string; referralCode?: string;
+    };
+
     // Create new user with NORMALIZED phone number (+98 format)
     const newUser = await storage.createUser({
       email: signupData.email || `${formattedPhone.replace('+', '')}@metalingua.local`,
@@ -305,8 +310,22 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
       password: '', // No password for phone-first auth
       isPhoneVerified: true,
       isActive: true,
-      phoneNumber: formattedPhone as any
+      phoneNumber: formattedPhone as any,
+      utmSource: utmSource || null,
+      utmMedium: utmMedium || null,
+      utmCampaign: utmCampaign || null,
+      referralCode: null, // user's own referral code; generated later
+      referredByCode: referralCode || null // code used to invite this user
     } as any);
+
+    // If referred via a referral code, record the event asynchronously
+    if (referralCode) {
+      fetch(`${process.env.APP_URL || 'http://localhost:5000'}/api/referrals/record-registration`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referralCode, newUserId: newUser.id })
+      }).catch(() => {});
+    }
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(newUser);

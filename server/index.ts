@@ -546,6 +546,16 @@ server.listen({
   const certificateRouter = (await import('./routes/certificate-routes.js')).default;
   app.use(certificateRouter);
   console.log('✅ Certificate routes registered');
+
+  // Register Course Reviews routes
+  const courseReviewsRouter = (await import('./routes/course-reviews-routes.js')).default;
+  app.use(courseReviewsRouter);
+  console.log('✅ Course Reviews routes registered');
+
+  // Register Referral Program routes
+  const referralRouter = (await import('./routes/referral-routes.js')).default;
+  app.use(referralRouter);
+  console.log('✅ Referral Program routes registered');
   
   // Register modular feature routes
   try {

@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -1659,7 +1659,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   // Legacy authentication endpoints (keeping for compatibility)
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { email, password, firstName, lastName, phoneNumber } = req.body;
+      const { email, password, firstName, lastName, phoneNumber, utmSource, utmMedium, utmCampaign, referralCode } = req.body;
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -1676,7 +1676,10 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         phoneNumber,
         firstName,
         lastName,
-        role: "student"
+        role: "student",
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null
       });
 
       // GUEST → USER MIGRATION: Link guest LinguaQuest progress to new user account
@@ -1690,6 +1693,19 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         } catch (migrationError) {
           console.error('⚠️ Guest progress migration failed:', migrationError);
           // Don't fail registration if migration fails
+        }
+      }
+
+      // Record referral registration event if a referral code was provided
+      if (referralCode && typeof referralCode === 'string') {
+        try {
+          await fetch(`${req.protocol}://${req.get('host')}/api/referrals/record-registration`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ referralCode: referralCode.toUpperCase().trim(), newUserId: user.id })
+          });
+        } catch (refErr) {
+          console.error('⚠️ Referral registration recording failed (non-fatal):', refErr);
         }
       }
 
@@ -6540,6 +6556,23 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           }).catch((e: any) => console.error("Failed to record promo usage:", e));
         }
 
+        // Copy UTM fields from user record to course_payments for attribution reporting
+        try {
+          const [userRecord] = await db.select({ utmSource: users.utmSource, utmMedium: users.utmMedium, utmCampaign: users.utmCampaign })
+            .from(users).where(eq(users.id, req.user.id)).limit(1);
+          if (userRecord && (userRecord.utmSource || userRecord.utmMedium || userRecord.utmCampaign)) {
+            await db.update(coursePayments)
+              .set({ utmSource: userRecord.utmSource, utmMedium: userRecord.utmMedium, utmCampaign: userRecord.utmCampaign })
+              .where(eq(coursePayments.id, coursePayment.id));
+          }
+        } catch (utmErr) { console.error('UTM copy failed (non-fatal):', utmErr); }
+
+        // Trigger referral first-payment credit (non-blocking)
+        try {
+          const { processReferralFirstPayment } = await import('./routes/referral-routes.js');
+          processReferralFirstPayment(req.user.id, coursePayment.id).catch(() => {});
+        } catch (_) {}
+
         res.json({
           success: true,
           message: "Course enrollment successful",
@@ -6753,6 +6786,21 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
                 finalAmount: coursePayment.finalPrice,
               }).catch((e: any) => console.error("Failed to record gateway promo usage:", e));
             }
+            // Copy UTM attribution from user record to payment
+            try {
+              const [userRec] = await db.select({ utmSource: users.utmSource, utmMedium: users.utmMedium, utmCampaign: users.utmCampaign })
+                .from(users).where(eq(users.id, coursePayment.userId)).limit(1);
+              if (userRec && (userRec.utmSource || userRec.utmMedium || userRec.utmCampaign)) {
+                await db.update(coursePayments)
+                  .set({ utmSource: userRec.utmSource, utmMedium: userRec.utmMedium, utmCampaign: userRec.utmCampaign })
+                  .where(eq(coursePayments.id, coursePayment.id));
+              }
+            } catch (_) {}
+            // Trigger referral first-payment credit (non-blocking)
+            try {
+              const { processReferralFirstPayment } = await import('./routes/referral-routes.js');
+              processReferralFirstPayment(coursePayment.userId, coursePayment.id).catch(() => {});
+            } catch (_) {}
           }
           redirectPath = 'courses';
         }
@@ -11535,6 +11583,20 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       console.log(`Found ${authorizedTeachers.length} authorized Callern teachers`);
       console.log(`Connected teacher IDs:`, connectedTeacherIds);
       
+      // Get live rating aggregates from session_ratings table keyed by teacher id
+      const ratingRows = await db
+        .select({
+          teacherId: callSessions.teacherId,
+          avgRating: sql<string>`coalesce(avg(${sessionRatings.score})::numeric(3,2), 0)`,
+          sessionCount: sql<number>`count(distinct ${callSessions.id})`
+        })
+        .from(sessionRatings)
+        .leftJoin(callSessions, eq(sessionRatings.sessionId, callSessions.id))
+        .where(eq(sessionRatings.raterRole, 'student'))
+        .groupBy(callSessions.teacherId);
+
+      const ratingMap = new Map(ratingRows.map(r => [r.teacherId, r]));
+
       // Format teachers for Callern display
       const teachers = authorizedTeachers.map((teacher) => {
         // Teacher is online only if they're connected via WebSocket AND have enabled Callern availability
@@ -11542,10 +11604,10 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         const hasCallernAvailability = teacher.isOnline === true;
         const isOnline = isConnected && hasCallernAvailability;
         
-        // Dynamic teacher data based on actual teacher info
         const teacherName = `${teacher.firstName || teacher.first_name} ${teacher.lastName || teacher.last_name}`;
-        const isEnglishTeacher = teacher.email?.includes('dr.smith') || teacher.email?.includes('teacher');
-        const isPersianTeacher = teacher.firstName?.includes('علی') || teacher.lastName?.includes('حسینی');
+        const liveRatings = ratingMap.get(teacher.id);
+        const rating = liveRatings ? parseFloat(String(liveRatings.avgRating)) : 0;
+        const sessionCount = liveRatings ? Number(liveRatings.sessionCount) : 0;
         
         return {
           id: teacher.id,
@@ -11554,27 +11616,19 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           name: teacherName,
           email: teacher.email,
           avatar: teacher.avatar || `https://ui-avatars.com/api/?name=${teacher.firstName || teacher.first_name}+${teacher.lastName || teacher.last_name}&background=random`,
-          specializations: isPersianTeacher ? 
-            ["Persian Grammar", "Persian Conversation", "Farsi Literature"] :
-            isEnglishTeacher ? 
-              ["English Grammar", "IELTS Preparation", "Business English", "Academic Writing"] :
-              ["General Language", "Conversation", "Grammar"],
-          languages: isPersianTeacher ? 
-            ["Persian", "English"] : 
-            ["English", "Persian"],
-          rating: teacher.id === 8600 ? 4.9 : teacher.id === 8601 ? 4.7 : 4.8, // Real teacher ratings
-          reviewCount: teacher.id === 8600 ? 234 : teacher.id === 8601 ? 156 : 89, // Dynamic review counts
-          totalMinutes: teacher.id === 8600 ? 12500 : teacher.id === 8601 ? 8900 : 4500, // Real experience
+          specializations: teacher.teacherSpecializations?.length
+            ? teacher.teacherSpecializations
+            : ["General Language", "Conversation", "Grammar"],
+          languages: ["Persian", "English"],
+          rating: rating > 0 ? rating : null,
+          reviewCount: sessionCount,
+          totalMinutes: sessionCount * 30, // estimate 30 min avg per session
           isOnline: isOnline,
           status: isOnline ? 'online' : 'offline',
-          responseTime: isOnline ? "Usually responds within 2 minutes" : "Currently offline",
-          hourlyRate: teacher.hourlyRate ? parseFloat(teacher.hourlyRate) : 500000,
-          successRate: teacher.id === 8600 ? 98 : teacher.id === 8601 ? 94 : 92, // Dynamic success rates
-          description: teacher.id === 8600 ? 
-            "Expert English instructor with PhD in Applied Linguistics. Specializes in IELTS preparation and academic English." :
-            teacher.id === 8601 ?
-              "Native Persian speaker with extensive experience in Persian language instruction and literature." :
-              "Experienced language instructor with focus on conversational skills and grammar.",
+          responseTime: isOnline ? "معمولاً در ۲ دقیقه پاسخ می‌دهد" : "آفلاین",
+          hourlyRate: teacher.hourlyRate ? parseInt(String(teacher.hourlyRate)) : 500000,
+          successRate: sessionCount > 0 ? Math.min(98, 80 + Math.round(rating * 3)) : null,
+          description: teacher.teacherBio || "مدرس زبان با تجربه در مکالمه و گرامر",
           isCallernAuthorized: teacher.isAuthorized === true
         };
       });
