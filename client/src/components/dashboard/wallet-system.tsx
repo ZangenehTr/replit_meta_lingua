@@ -150,13 +150,15 @@ export function WalletSystem() {
     if (!promoCodeInput.trim()) return;
     setPromoValidating(true);
     try {
+      // Use member-discounted price as the base so discounts stack correctly
+      const baseAmount = calculateDiscountedPrice(course.price);
       const result = await apiRequest("/api/promo-codes/validate", {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code: promoCodeInput.trim(),
           courseId: course.id,
-          amount: course.price,
+          amount: baseAmount,
         }),
       });
       setPromoValidation(result);
@@ -384,7 +386,6 @@ export function WalletSystem() {
                       variant="outline"
                       size="sm"
                       onClick={() => openEnrollmentDialog(course, 'wallet')}
-                      disabled={!walletData || walletData.walletBalance < discountedPrice}
                     >
                       <Wallet className="h-4 w-4 mr-2" />
                       پرداخت از کیف پول
