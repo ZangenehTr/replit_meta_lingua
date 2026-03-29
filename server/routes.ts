@@ -11352,8 +11352,10 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       const alreadyIssued = existingCert?.status === "active";
 
       // Issue certificate via shared service (handles idempotency + PDF generation)
+      // Pass the actual enrollment completion date so the PDF reflects when the course was finished
       const { issueCertificate } = await import("./routes/certificate-routes.js");
-      const cert = await issueCertificate({ studentId: userId, courseId });
+      const completionDate = enrollment.completedAt ?? new Date();
+      const cert = await issueCertificate({ studentId: userId, courseId, completionDate });
 
       res.status(alreadyIssued ? 200 : 201).json({
         message: alreadyIssued ? "گواهینامه قبلاً صادر شده است" : "گواهینامه با موفقیت صادر شد",
