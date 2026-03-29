@@ -58,6 +58,17 @@ interface PromoCode {
   createdAt: string;
 }
 
+interface PromoCodePayload {
+  code: string;
+  description: string;
+  discountType: string;
+  discountValue: number;
+  minAmount: number;
+  maxUsages: number | null;
+  expiresAt: string | null;
+  isActive: boolean;
+}
+
 const emptyForm = {
   code: "",
   description: "",
@@ -86,7 +97,7 @@ export default function PromoCodesPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: typeof form) =>
+    mutationFn: (data: PromoCodePayload) =>
       apiRequest("/api/admin/promo-codes", { method: "POST", body: data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/promo-codes"] });
@@ -152,17 +163,20 @@ export default function PromoCodesPage() {
   }
 
   function handleSubmit() {
-    const payload = {
-      ...form,
+    const payload: PromoCodePayload = {
+      code: form.code,
+      description: form.description,
+      discountType: form.discountType,
       discountValue: Number(form.discountValue),
       minAmount: form.minAmount ? Number(form.minAmount) : 0,
       maxUsages: form.maxUsages ? Number(form.maxUsages) : null,
       expiresAt: form.expiresAt || null,
+      isActive: form.isActive,
     };
     if (editingCode) {
       updateMutation.mutate({ id: editingCode.id, data: payload });
     } else {
-      createMutation.mutate(payload as any);
+      createMutation.mutate(payload);
     }
   }
 

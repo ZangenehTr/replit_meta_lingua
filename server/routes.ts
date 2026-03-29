@@ -6490,7 +6490,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         }
       }
 
-      // Create course payment record
+      // Create course payment record — store promoCodeId for confirmed-payment increment
       const coursePayment = await storage.createCoursePayment({
         userId: req.user.id,
         courseId,
@@ -6500,20 +6500,20 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         creditsAwarded: priceData.creditsAwarded,
         paymentMethod,
         status: 'pending',
-        merchantTransactionId: `COURSE_${Date.now()}_${req.user.id}_${courseId}`
+        merchantTransactionId: `COURSE_${Date.now()}_${req.user.id}_${courseId}`,
+        promoCodeId: appliedPromoCodeId || null
       });
-
-      // Increment promo code usage counter after successful payment record creation
-      if (appliedPromoCodeId) {
-        await db.update(promoCodes)
-          .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
-          .where(eq(promoCodes.id, appliedPromoCodeId));
-      }
 
       if (paymentMethod === 'wallet') {
         // Process wallet payment immediately
         await storage.updateCoursePaymentStatus(coursePayment.id, 'completed');
-        
+        // Increment promo code usage only after confirmed wallet payment
+        if (appliedPromoCodeId) {
+          await db.update(promoCodes)
+            .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
+            .where(eq(promoCodes.id, appliedPromoCodeId));
+        }
+
         res.json({
           success: true,
           message: "Course enrollment successful",
@@ -6708,6 +6708,12 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
 
           if (coursePayment && coursePayment.status !== 'completed') {
             await storage.updateCoursePaymentStatus(coursePayment.id, 'completed', gatewayData);
+            // Increment promo code usage only after gateway payment is confirmed
+            if (coursePayment.promoCodeId) {
+              await db.update(promoCodes)
+                .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
+                .where(eq(promoCodes.id, coursePayment.promoCodeId));
+            }
           }
           redirectPath = 'courses';
         }

@@ -503,6 +503,7 @@ export const coursePayments = pgTable("course_payments", {
   discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }),
   finalPrice: decimal("final_price", { precision: 10, scale: 2 }),
   creditsAwarded: integer("credits_awarded").default(0),
+  promoCodeId: integer("promo_code_id"),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
