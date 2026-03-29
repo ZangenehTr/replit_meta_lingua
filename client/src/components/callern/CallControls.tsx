@@ -60,11 +60,13 @@ export function CallControls({
                 size="icon"
                 className="h-12 w-12 rounded-full"
                 onClick={onToggleAudio}
+                aria-label={isAudioEnabled ? 'بی‌صدا کردن' : 'روشن کردن میکروفون'}
+                aria-pressed={!isAudioEnabled}
               >
                 {isAudioEnabled ? (
-                  <Mic className="h-5 w-5" />
+                  <Mic className="h-5 w-5" aria-hidden="true" />
                 ) : (
-                  <MicOff className="h-5 w-5" />
+                  <MicOff className="h-5 w-5" aria-hidden="true" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -81,11 +83,13 @@ export function CallControls({
                 size="icon"
                 className="h-12 w-12 rounded-full"
                 onClick={onToggleVideo}
+                aria-label={isVideoEnabled ? 'خاموش کردن دوربین' : 'روشن کردن دوربین'}
+                aria-pressed={!isVideoEnabled}
               >
                 {isVideoEnabled ? (
-                  <Video className="h-5 w-5" />
+                  <Video className="h-5 w-5" aria-hidden="true" />
                 ) : (
-                  <VideoOff className="h-5 w-5" />
+                  <VideoOff className="h-5 w-5" aria-hidden="true" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -102,11 +106,13 @@ export function CallControls({
                 size="icon"
                 className="h-12 w-12 rounded-full"
                 onClick={onToggleScreenShare}
+                aria-label={isScreenSharing ? 'توقف اشتراک‌گذاری صفحه' : 'اشتراک‌گذاری صفحه'}
+                aria-pressed={isScreenSharing}
               >
                 {isScreenSharing ? (
-                  <MonitorOff className="h-5 w-5" />
+                  <MonitorOff className="h-5 w-5" aria-hidden="true" />
                 ) : (
-                  <Monitor className="h-5 w-5" />
+                  <Monitor className="h-5 w-5" aria-hidden="true" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -116,7 +122,7 @@ export function CallControls({
           </Tooltip>
 
           {/* Separator */}
-          <div className="h-8 w-px bg-gray-700 mx-2" />
+          <div className="h-8 w-px bg-gray-700 mx-2" aria-hidden="true" />
 
           {/* Chat Toggle */}
           <Tooltip>
@@ -126,8 +132,10 @@ export function CallControls({
                 size="icon"
                 className="h-10 w-10 rounded-lg"
                 onClick={onToggleChat}
+                aria-label={showChat ? 'بستن چت' : 'باز کردن چت'}
+                aria-pressed={showChat}
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-4 w-4" aria-hidden="true" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -143,8 +151,10 @@ export function CallControls({
                 size="icon"
                 className="h-10 w-10 rounded-lg"
                 onClick={onToggleParticipants}
+                aria-label={showParticipants ? 'پنهان کردن شرکت‌کنندگان' : 'نمایش شرکت‌کنندگان'}
+                aria-pressed={showParticipants}
               >
-                <Users className="h-4 w-4" />
+                <Users className="h-4 w-4" aria-hidden="true" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -159,8 +169,9 @@ export function CallControls({
                 variant="secondary"
                 size="icon"
                 className="h-10 w-10 rounded-lg"
+                aria-label="گزینه‌های بیشتر"
               >
-                <MoreVertical className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4" aria-hidden="true" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -169,7 +180,7 @@ export function CallControls({
           </Tooltip>
 
           {/* Separator */}
-          <div className="h-8 w-px bg-gray-700 mx-2" />
+          <div className="h-8 w-px bg-gray-700 mx-2" aria-hidden="true" />
 
           {/* End Call */}
           <Tooltip>
@@ -179,8 +190,9 @@ export function CallControls({
                 size="icon"
                 className="h-12 w-16 rounded-full"
                 onClick={onEndCall}
+                aria-label="پایان تماس"
               >
-                <PhoneOff className="h-5 w-5" />
+                <PhoneOff className="h-5 w-5" aria-hidden="true" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>

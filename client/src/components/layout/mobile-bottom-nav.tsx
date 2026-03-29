@@ -137,8 +137,9 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
       )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       dir={isRTL ? 'rtl' : 'ltr'}
+      aria-label={isRTL ? 'ناوبری پایین صفحه' : 'Bottom navigation'}
     >
-      <div className="grid grid-cols-4 h-16">
+      <div className="grid grid-cols-4 h-16" role="list">
         {displayItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.route || (location.startsWith(item.route) && item.route !== "/");
@@ -146,6 +147,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
           return (
             <button
               key={item.route}
+              role="listitem"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -153,21 +155,28 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
               }}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 relative min-w-0 px-1",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                 isActive 
                   ? "text-primary bg-primary/10" 
                   : "text-muted-foreground"
               )}
+              aria-label={item.badge && item.badge > 0 ? `${item.label} (${item.badge})` : item.label}
+              aria-current={isActive ? "page" : undefined}
             >
               <div className="relative">
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" aria-hidden="true" />
                 {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                  <span
+                    className="absolute -top-1 -end-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center"
+                    aria-hidden="true"
+                  >
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </div>
               <span
                 className="leading-tight w-full text-center"
+                aria-hidden="true"
                 style={{
                   fontFamily: isRTL ? "'Vazir', 'Tahoma', 'Arial', sans-serif" : undefined,
                   fontSize: isRTL ? '9px' : '10px',
@@ -182,7 +191,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
               </span>
               
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" aria-hidden="true" />
               )}
             </button>
           );

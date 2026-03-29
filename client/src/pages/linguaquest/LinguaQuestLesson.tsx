@@ -446,7 +446,7 @@ export function LinguaQuestLesson() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800"
+                        className="hidden lg:flex absolute start-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800"
                         onClick={() => {
                           if (currentStepIndex > 0) {
                             setCurrentStepIndex(prev => prev - 1);
@@ -454,8 +454,9 @@ export function LinguaQuestLesson() {
                           }
                         }}
                         data-testid="button-previous-step"
+                        aria-label="مرحله قبلی"
                       >
-                        <ChevronLeft className="w-5 h-5" />
+                        <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                       </Button>
                     )}
                     <div className="hidden lg:block absolute right-2 top-4 text-sm text-gray-500 dark:text-gray-400">

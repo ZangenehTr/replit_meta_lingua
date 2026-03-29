@@ -175,9 +175,9 @@ export default function TeacherDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
+              <Button variant="ghost" size="icon" className="relative" aria-label="اعلان‌ها">
+                <Bell className="h-5 w-5" aria-hidden="true" />
+                <span className="absolute top-0 end-0 h-2 w-2 bg-red-500 rounded-full" aria-hidden="true" />
               </Button>
               <div className="text-right">
                 <p className="text-xs text-gray-500">{t('teacher:monthlyEarnings', 'درآمد ماهانه')}</p>

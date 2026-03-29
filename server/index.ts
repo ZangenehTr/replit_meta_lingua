@@ -538,6 +538,16 @@ server.listen({
   const shetabPaymentRouter = (await import('./routes/shetab-payment-routes.js')).default;
   app.use('/api/payment', shetabPaymentRouter);
   console.log('✅ Shetab Payment Gateway routes registered');
+
+  // Register Promo Code routes
+  const promoCodeRouter = (await import('./routes/promo-code-routes.js')).default;
+  app.use(promoCodeRouter);
+  console.log('✅ Promo Code routes registered');
+
+  // Register Certificate routes
+  const certificateRouter = (await import('./routes/certificate-routes.js')).default;
+  app.use(certificateRouter);
+  console.log('✅ Certificate routes registered');
   
   // Register modular feature routes
   try {

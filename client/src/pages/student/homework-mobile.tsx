@@ -262,20 +262,20 @@ export default function StudentHomeworkMobile() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-white" data-testid="button-menu">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-menu" aria-label="منو">
+                <Menu className="h-6 w-6" aria-hidden="true" />
               </Button>
               <div className="flex items-center gap-2">
                 <h1 className="text-white font-bold text-xl">{t('student:homework')}</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-white" data-testid="button-calendar">
-                <Calendar className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="text-white" data-testid="button-calendar" aria-label="تقویم">
+                <Calendar className="h-5 w-5" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="icon" className="relative text-white" data-testid="button-notifications">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+              <Button variant="ghost" size="icon" className="relative text-white" data-testid="button-notifications" aria-label="اعلان‌ها">
+                <Bell className="h-5 w-5" aria-hidden="true" />
+                <span className="absolute top-1 end-1 h-2 w-2 bg-red-500 rounded-full" aria-hidden="true" />
               </Button>
             </div>
           </div>

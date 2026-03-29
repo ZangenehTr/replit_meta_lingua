@@ -155,22 +155,24 @@ function SortableCategoryRow({ category, onEdit, onDelete, onToggle }: {
         </div>
       </div>
 
-      <div className="flex gap-2 ml-4">
+      <div className="flex gap-2 ms-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onEdit(category)}
           data-testid={`button-edit-${category.id}`}
+          aria-label="ویرایش دسته‌بندی"
         >
-          <Edit3 className="h-4 w-4" />
+          <Edit3 className="h-4 w-4" aria-hidden="true" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onDelete(category.id)}
           data-testid={`button-delete-${category.id}`}
+          aria-label="حذف دسته‌بندی"
         >
-          <Trash2 className="h-4 w-4 text-destructive" />
+          <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
         </Button>
       </div>
     </div>

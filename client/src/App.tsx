@@ -76,6 +76,10 @@ import HRLeavePage from "@/pages/admin/hr-leave";
 import HrMyLeavePage from "@/pages/hr-my-leave";
 import HRPayrollPage from "@/pages/admin/hr-payroll";
 import HRPerformancePage from "@/pages/admin/hr-performance";
+import PromoCodesPage from "@/pages/admin/promo-codes";
+import AdminCertificatesPage from "@/pages/admin/certificates";
+import StudentCertificatesPage from "@/pages/student/certificates";
+import VerifyCertificatePage from "@/pages/verify-certificate";
 import TeacherDashboardNew from "@/pages/teacher/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
@@ -578,6 +582,16 @@ function Router() {
           <HRPerformancePage />
         </RoleProtectedRoute>
       </Route>
+      <Route path="/admin/promo-codes">
+        <RoleProtectedRoute allowedRoles={['admin']}>
+          <PromoCodesPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/certificates">
+        <RoleProtectedRoute allowedRoles={['admin']}>
+          <AdminCertificatesPage />
+        </RoleProtectedRoute>
+      </Route>
       <Route path="/hr/my-leave">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'teacher', 'mentor', 'call_center', 'accountant', 'front_desk', 'front_desk_clerk']}>
           <HrMyLeavePage />
@@ -687,6 +701,17 @@ function Router() {
         <ProtectedRoute>
           <StudentCoursesMobile />
         </ProtectedRoute>
+      </Route>
+      <Route path="/student/certificates">
+        <ProtectedRoute>
+          <StudentCertificatesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/verify-certificate/:number">
+        <VerifyCertificatePage />
+      </Route>
+      <Route path="/verify-certificate">
+        <VerifyCertificatePage />
       </Route>
       <Route path="/course/:courseId">
         <ProtectedRoute>

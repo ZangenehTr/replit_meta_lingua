@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -6429,7 +6429,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
 
   app.post("/api/courses/enroll", authenticateToken, async (req: any, res) => {
     try {
-      const { courseId, paymentMethod } = req.body;
+      const { courseId, paymentMethod, promoCode } = req.body;
       
       if (!courseId || !paymentMethod) {
         return res.status(400).json({ message: "Course ID and payment method required" });
@@ -6445,13 +6445,46 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         return res.status(404).json({ message: "Course not found or price calculation failed" });
       }
 
+      // Apply promo code discount if provided
+      let appliedPromoCodeId: number | null = null;
+      let promoDiscountAmount = 0;
+      let finalPrice = priceData.finalPrice;
+
+      if (promoCode && typeof promoCode === 'string') {
+        const [promo] = await db.select().from(promoCodes).where(eq(promoCodes.code, promoCode.toUpperCase().trim()));
+        if (!promo || !promo.isActive) {
+          return res.status(400).json({ message: "کد تخفیف معتبر نیست یا غیرفعال است" });
+        }
+        if (promo.expiresAt && new Date() > new Date(promo.expiresAt)) {
+          return res.status(400).json({ message: "کد تخفیف منقضی شده است" });
+        }
+        if (promo.maxUsages !== null && promo.usedCount >= promo.maxUsages) {
+          return res.status(400).json({ message: "این کد تخفیف به حداکثر استفاده رسیده است" });
+        }
+        if (promo.minAmount && finalPrice < promo.minAmount) {
+          return res.status(400).json({ message: `حداقل مبلغ سفارش برای این کد ${promo.minAmount.toLocaleString('fa-IR')} تومان است` });
+        }
+        if (promo.applicableCourseIds && Array.isArray(promo.applicableCourseIds) && promo.applicableCourseIds.length > 0) {
+          if (!(promo.applicableCourseIds as number[]).includes(Number(courseId))) {
+            return res.status(400).json({ message: "این کد تخفیف برای این دوره قابل استفاده نیست" });
+          }
+        }
+        if (promo.discountType === 'percentage') {
+          promoDiscountAmount = Math.round(finalPrice * promo.discountValue / 100);
+        } else {
+          promoDiscountAmount = Math.min(promo.discountValue, finalPrice);
+        }
+        finalPrice = Math.max(0, finalPrice - promoDiscountAmount);
+        appliedPromoCodeId = promo.id;
+      }
+
       // Check wallet balance if paying from wallet
       if (paymentMethod === 'wallet') {
         const walletData = await storage.getUserWalletData(req.user.id);
-        if (!walletData || walletData.walletBalance < priceData.finalPrice) {
+        if (!walletData || walletData.walletBalance < finalPrice) {
           return res.status(400).json({ 
             message: "Insufficient wallet balance",
-            required: priceData.finalPrice,
+            required: finalPrice,
             available: walletData?.walletBalance || 0
           });
         }
@@ -6463,12 +6496,19 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         courseId,
         originalPrice: priceData.originalPrice,
         discountPercentage: priceData.discountPercentage,
-        finalPrice: priceData.finalPrice,
+        finalPrice,
         creditsAwarded: priceData.creditsAwarded,
         paymentMethod,
         status: 'pending',
         merchantTransactionId: `COURSE_${Date.now()}_${req.user.id}_${courseId}`
       });
+
+      // Increment promo code usage counter after successful payment record creation
+      if (appliedPromoCodeId) {
+        await db.update(promoCodes)
+          .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
+          .where(eq(promoCodes.id, appliedPromoCodeId));
+      }
 
       if (paymentMethod === 'wallet') {
         // Process wallet payment immediately
@@ -6494,9 +6534,9 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         const callbackUrl = `${base}/api/payments/${gateway.name}/callback`;
 
         const initResult = await gateway.initiate({
-          amount: priceData.finalPrice,
+          amount: finalPrice,
           orderId: coursePayment.merchantTransactionId!,
-          description: `Course Enrollment - ${priceData.finalPrice.toLocaleString('fa-IR')} IRR`,
+          description: `Course Enrollment - ${finalPrice.toLocaleString('fa-IR')} IRR`,
           callbackUrl,
           customerEmail: req.user.email || undefined,
           customerPhone: req.user.phoneNumber || undefined,

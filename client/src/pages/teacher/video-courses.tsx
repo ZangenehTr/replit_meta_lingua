@@ -550,15 +550,17 @@ export default function TeacherVideoCourses() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => window.open(lesson.videoUrl, '_blank')}
+                                    aria-label="مشاهده ویدئو"
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <Eye className="h-4 w-4" aria-hidden="true" />
                                   </Button>
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleEdit(lesson)}
+                                    aria-label="ویرایش درس"
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <Edit className="h-4 w-4" aria-hidden="true" />
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -568,8 +570,9 @@ export default function TeacherVideoCourses() {
                                         deleteLessonMutation.mutate(lesson.id);
                                       }
                                     }}
+                                    aria-label="حذف درس"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                                   </Button>
                                 </div>
                               </div>

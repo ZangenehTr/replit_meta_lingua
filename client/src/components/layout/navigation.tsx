@@ -229,8 +229,13 @@ export function Navigation() {
             </div>
 
             {/* Theme Toggle */}
-            <Button variant="ghost" size="sm" onClick={toggleTheme}>
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              aria-label={isDark ? t('common:theme.switchToLight', 'تغییر به حالت روشن') : t('common:theme.switchToDark', 'تغییر به حالت تیره')}
+            >
+              {isDark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
             </Button>
 
             {/* Dynamic Notifications - Hidden on small screens */}
@@ -242,12 +247,17 @@ export function Navigation() {
                   className="relative hidden sm:flex"
                   data-testid="notification-bell-button"
                   disabled={isLoadingCount}
+                  aria-label={notificationCount > 0
+                    ? t('common:notifications.unreadCount', `{{count}} اعلان خوانده‌نشده`, { count: notificationCount })
+                    : t('common:notifications.title', 'اعلان‌ها')}
+                  aria-haspopup="true"
                 >
-                  <Bell className="h-4 w-4" />
+                  <Bell className="h-4 w-4" aria-hidden="true" />
                   {notificationCount > 0 && (
                     <Badge 
-                      className="absolute -top-1 -right-1 w-5 h-5 text-xs flex items-center justify-center p-0"
+                      className="absolute -top-1 -end-1 w-5 h-5 text-xs flex items-center justify-center p-0"
                       data-testid="notification-count-badge"
+                      aria-hidden="true"
                     >
                       {notificationCount > 99 ? '99+' : notificationCount}
                     </Badge>

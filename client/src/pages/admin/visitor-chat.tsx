@@ -286,8 +286,9 @@ export default function AdminVisitorChatPage() {
                         disabled={!replyMessage.trim() || sendReply.isPending}
                         size="icon"
                         className="h-9 w-9 rounded-full bg-blue-600 hover:bg-blue-700"
+                        aria-label="ارسال پیام"
                       >
-                        <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} />
+                        <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} aria-hidden="true" />
                       </Button>
                     </div>
                   </div>

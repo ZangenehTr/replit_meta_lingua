@@ -48,7 +48,9 @@ import {
   Shield,
   Server,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Award,
+  TicketPercent
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -106,6 +108,8 @@ const iconMap = {
   Plug,
   CalendarDays,
   Coins,
+  Award,
+  TicketPercent,
   // Additional icon mappings for variations
   VideoIcon: Video,
   FileDownload: FileText,
@@ -273,7 +277,7 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
   return (
     <div className={`sidebar-container w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className={collapsed ? 'p-2' : 'p-4'}>
-        <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
+        <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'} aria-label={isRTL ? 'منوی ناوبری' : 'Main navigation'}>
           {groupedNavigation ? (
             groupedNavigation.map(({ section, items }) => {
               const isCollapsed = collapsedSections[section] ?? false;
@@ -284,20 +288,23 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                   {!collapsed && (
                     <button
                       onClick={() => toggleSection(section)}
-                      className={`w-full flex items-center ${isRTL ? 'flex-row-reverse' : ''} px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300 transition-colors`}
+                      className={`w-full flex items-center ${isRTL ? 'flex-row-reverse' : ''} px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded`}
+                      aria-expanded={!isCollapsed}
+                      aria-controls={`sidebar-section-${section.replace(/\s+/g, '-')}`}
                     >
                       {isCollapsed ? (
-                        <ChevronRight className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                        <ChevronRight className="h-3 w-3 me-1" aria-hidden="true" />
                       ) : (
-                        <ChevronDown className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                        <ChevronDown className="h-3 w-3 me-1" aria-hidden="true" />
                       )}
                       <span>{sectionLabel}</span>
-                      <span className={`${isRTL ? 'mr-auto' : 'ml-auto'} text-[10px] text-gray-400`}>
+                      <span className="ms-auto text-[10px] text-gray-400" aria-hidden="true">
                         {items.length}
                       </span>
                     </button>
                   )}
                   
+                  <div id={`sidebar-section-${section.replace(/\s+/g, '-')}`}>
                   {!isCollapsed && items.map((item, index) => {
                     const isActive = location === item.path;
                     const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
@@ -318,14 +325,15 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                             onClick={() => handleNavigate(item.path)}
                             title={item.label}
                             aria-label={item.label}
+                            aria-current={isActive ? "page" : undefined}
                           >
                             {isAdmin && (
                               <span 
-                                className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}
-                                title={`${item.roles?.join(', ')}`}
+                                className={`absolute start-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}
+                                aria-hidden="true"
                               ></span>
                             )}
-                            <Icon className="h-5 w-5" />
+                            <Icon className="h-5 w-5" aria-hidden="true" />
                           </Button>
                         </Link>
                       );
@@ -344,21 +352,22 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                           dir={isRTL ? 'rtl' : 'ltr'}
                           style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
                           title={`${t('common:availableFor', 'Available for')}: ${item.roles?.join(', ')}`}
+                          aria-current={isActive ? "page" : undefined}
                         >
                           {hasMultipleRoles ? (
-                            <div className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 flex flex-col gap-0.5`}>
+                            <div className="absolute start-1 top-1/2 -translate-y-1/2 flex flex-col gap-0.5" aria-hidden="true">
                               {roleColors.slice(0, 3).map((color, idx) => (
                                 <span key={idx} className={`w-0.5 h-2 rounded-full ${color}`}></span>
                               ))}
                             </div>
                           ) : (
-                            <span className={`absolute ${isRTL ? 'right-1' : 'left-1'} top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`}></span>
+                            <span className={`absolute start-1 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`} aria-hidden="true"></span>
                           )}
                           
-                          <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
+                          <Icon className="h-4 w-4 mx-3" aria-hidden="true" />
                           <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
                           {item.badge && (
-                            <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
+                            <Badge className="ms-auto" variant="secondary" aria-label={`${item.label}: ${item.badge}`}>
                               {item.badge}
                             </Badge>
                           )}
@@ -366,6 +375,7 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                       </Link>
                     );
                   })}
+                  </div>
                 </div>
               );
             })
@@ -374,7 +384,6 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
               const isActive = location === item.path;
               const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
               const roleColors = getRoleColors(item.roles);
-              const hasMultipleRoles = roleColors.length > 1;
 
               if (collapsed) {
                 return (
@@ -390,8 +399,9 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                       onClick={() => handleNavigate(item.path)}
                       title={item.label}
                       aria-label={item.label}
+                      aria-current={isActive ? "page" : undefined}
                     >
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-5 w-5" aria-hidden="true" />
                     </Button>
                   </Link>
                 );
@@ -409,11 +419,13 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
                     onClick={() => handleNavigate(item.path)}
                     dir={isRTL ? 'rtl' : 'ltr'}
                     style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
+                    aria-current={isActive ? "page" : undefined}
                   >
-                    <Icon className={`h-4 w-4 ${isRTL ? 'ml-3 mr-3' : 'mr-3 ml-3'}`} />
+                    <span className={`absolute start-1 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full ${roleColors[0]}`} aria-hidden="true"></span>
+                    <Icon className="h-4 w-4 mx-3" aria-hidden="true" />
                     <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
                     {item.badge && (
-                      <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
+                      <Badge className="ms-auto" variant="secondary" aria-label={`${item.label}: ${item.badge}`}>
                         {item.badge}
                       </Badge>
                     )}

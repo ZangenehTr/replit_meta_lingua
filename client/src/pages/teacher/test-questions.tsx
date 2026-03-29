@@ -366,8 +366,9 @@ export default function TestQuestions() {
                           variant="ghost"
                           size="icon"
                           onClick={() => setAudioFile(null)}
+                          aria-label="حذف فایل صوتی"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
                     </div>
@@ -492,11 +493,11 @@ export default function TestQuestions() {
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" aria-label="ویرایش سوال">
+                      <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                    <Button variant="ghost" size="icon">
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" aria-label="حذف سوال">
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>

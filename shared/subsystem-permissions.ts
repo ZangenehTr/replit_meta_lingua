@@ -39,6 +39,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "progress", name: "پیگیری پیشرفت", nameEn: "Progress Tracking", icon: "TrendingUp" },
       { id: "wallet", name: "کیف پول و اعتبار", nameEn: "Wallet & Credits", icon: "CreditCard" },
       { id: "referrals", name: "سیستم معرفی", nameEn: "Referral System", icon: "Share2" },
+      { id: "my_certificates", name: "گواهینامه‌های من", nameEn: "My Certificates", icon: "Award" },
     ]
   },
   {
@@ -123,6 +124,8 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "curriculum_categories", name: "دسته‌بندی برنامه درسی", nameEn: "Curriculum Categories", icon: "BookOpen" },
       { id: "sms_test", name: "تست پیامک", nameEn: "SMS Test", icon: "Send" },
       { id: "3d_lesson_builder", name: "سازنده درس سه‌بعدی", nameEn: "3D Lesson Builder", icon: "Box" },
+      { id: "promo_codes", name: "کدهای تخفیف", nameEn: "Promo Codes", icon: "TicketPercent" },
+      { id: "admin_certificates", name: "گواهینامه‌های دیجیتال", nameEn: "Digital Certificates", icon: "Award" },
     ]
   },
   {
@@ -185,7 +188,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     subsystems: [
       "student_dashboard", "courses", "video_courses", "callern_student", 
       "games", "tutors", "sessions", "tests", "homework", "messages", 
-      "progress", "wallet", "referrals"
+      "progress", "wallet", "referrals", "my_certificates"
     ],
     actions: {
       "student_dashboard": ["read", "view"],
@@ -320,6 +323,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "visitor_chat", "admin_settings", "book_ecommerce", "social_media_scraper",
       "review_moderation", "shopping_cart_settings", "system_status", "financial_reports",
       "curriculum_categories", "sms_test", "3d_lesson_builder",
+      "promo_codes", "admin_certificates",
       // HR Module
       "hr_employees", "hr_leave", "hr_payroll", "hr_performance"
     ],
@@ -465,6 +469,11 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "curriculum_categories": "/admin/curriculum-categories",
   "sms_test": "/admin/sms-test",
   "3d_lesson_builder": "/admin/3d-lesson-builder",
+  "promo_codes": "/admin/promo-codes",
+  "admin_certificates": "/admin/certificates",
+
+  // Student Platform
+  "my_certificates": "/student/certificates",
 
   // HR Module
   "hr_employees": "/admin/hr/employees",
@@ -511,7 +520,12 @@ const SUBSYSTEM_PRIMARY_ROLE: Record<string, string> = {
   "progress": "Student",
   "wallet": "Student",
   "referrals": "Student",
+  "my_certificates": "Student",
   
+  // Admin Platform
+  "promo_codes": "Admin",
+  "admin_certificates": "Admin",
+
   // Teacher Platform
   "teacher_dashboard": "Teacher/Tutor",
   "callern_teacher": "Teacher/Tutor",

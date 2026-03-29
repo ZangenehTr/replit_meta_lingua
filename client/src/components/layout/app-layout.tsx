@@ -25,6 +25,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from 'react-i18next';
 import { getNavigationForRole } from "@/lib/role-based-navigation";
+import { SkipToContent } from "@/components/accessibility/SkipToContent";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -97,8 +98,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background" dir={direction}>
+      <SkipToContent />
       {/* Mobile-First Global Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top" role="banner">
         <div className="flex h-16 items-center justify-between px-3 md:px-6">
           {/* Mobile Menu Button & Brand */}
           <div className="flex items-center space-x-3">
@@ -114,8 +116,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                   setMobileMenuOpen(true);
                 }}
                 data-testid="mobile-menu-button"
+                aria-label={t('common:navigation.openMenu', 'باز کردن منو')}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-sidebar"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-6 w-6" aria-hidden="true" />
               </Button>
             )}
             
@@ -128,9 +133,10 @@ export function AppLayout({ children }: AppLayoutProps) {
                 setLocation("/dashboard");
               }}
               className="flex items-center gap-2 touch-target"
+              aria-label={t('common:navigation.goToDashboard', 'رفتن به داشبورد')}
             >
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                <Home className="h-4 w-4 text-white" />
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg" aria-hidden="true">
+                <Home className="h-4 w-4 text-white" aria-hidden="true" />
               </div>
               <div className="hidden sm:flex flex-col items-start">
                 <span className="font-bold text-sm leading-none">Meta Lingua</span>
@@ -160,8 +166,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               className="md:hidden"
               onClick={() => setLocation('/search')}
               data-testid="mobile-search-button"
+              aria-label={t('common:search.openSearch', 'باز کردن جستجو')}
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5" aria-hidden="true" />
             </Button>
             
             {/* Language Selector - Always Visible */}
@@ -226,8 +233,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             {/* Mobile Sheet Sidebar */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetContent 
+                id="mobile-sidebar"
                 side="left" 
-                className="w-72 p-0 max-w-[75vw] z-[100] md:hidden" 
+                className="w-72 p-0 max-w-[75vw] z-[100] md:hidden"
+                aria-label={t('common:navigation.sidebarMenu', 'منوی ناوبری')}
                 onPointerDownOutside={() => setMobileMenuOpen(false)}
                 onEscapeKeyDown={() => setMobileMenuOpen(false)}
               >
@@ -265,13 +274,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         )}
         
         {/* Main Content - Dynamic margin based on sidebar state */}
-        <main 
-          className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 transition-all duration-300 ${
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 transition-all duration-300 outline-none ${
             user?.role?.toLowerCase() !== 'student' 
-              ? (sidebarCollapsed ? 'md:ml-16' : 'md:ml-64')  // Tablet/Desktop: dynamic sidebar margin
+              ? (sidebarCollapsed ? 'md:ms-16' : 'md:ms-64')  // Tablet/Desktop: dynamic sidebar margin
               : ''
           }`}
           dir="ltr"
+          aria-label={t('common:navigation.mainContent', 'محتوای اصلی')}
         >
           <div className="min-h-full">
             {/* Universal Container System */}

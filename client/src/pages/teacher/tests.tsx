@@ -399,22 +399,25 @@ export default function TeacherTests() {
                           variant="ghost"
                           size="icon"
                           onClick={() => window.location.href = `/teacher/tests/${test.id}`}
+                          aria-label="ویرایش آزمون"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDuplicateTest(test)}
+                          aria-label="کپی آزمون"
                         >
-                          <Copy className="h-4 w-4" />
+                          <Copy className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => deleteTestMutation.mutate(test.id)}
+                          aria-label="حذف آزمون"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </TableCell>

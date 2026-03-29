@@ -9557,6 +9557,52 @@ export type PerformanceScore = typeof performanceScores.$inferSelect;
 export type InsertPerformanceScore = typeof performanceScores.$inferInsert;
 
 // ============================================================================
+// PROMO CODES — Discount codes for course enrollment
+// ============================================================================
+
+export const promoCodes = pgTable("promo_codes", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  discountType: varchar("discount_type", { length: 20 }).notNull().default("percentage"), // "percentage" | "fixed"
+  discountValue: integer("discount_value").notNull(), // percent (0-100) or fixed Toman amount
+  minAmount: integer("min_amount").default(0), // minimum order amount to apply code
+  maxUsages: integer("max_usages"), // null = unlimited
+  usedCount: integer("used_count").default(0).notNull(),
+  expiresAt: timestamp("expires_at"), // null = never expires
+  applicableCourseIds: jsonb("applicable_course_ids"), // null = applies to all courses; array of course IDs
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type PromoCode = typeof promoCodes.$inferSelect;
+export type InsertPromoCode = typeof promoCodes.$inferInsert;
+
+// ============================================================================
+// CERTIFICATES — Digital completion certificates
+// ============================================================================
+
+export const certificates = pgTable("certificates", {
+  id: serial("id").primaryKey(),
+  certificateNumber: varchar("certificate_number", { length: 40 }).notNull().unique(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  issuedAt: timestamp("issued_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"), // null = never expires
+  status: varchar("status", { length: 20 }).default("active").notNull(), // "active" | "revoked"
+  revokedAt: timestamp("revoked_at"),
+  revokeReason: text("revoke_reason"),
+  issuedBy: integer("issued_by").references(() => users.id), // admin who issued it; null = auto-issued
+  metadata: jsonb("metadata"), // extra data: score, CEFR level, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type Certificate = typeof certificates.$inferSelect;
+export type InsertCertificate = typeof certificates.$inferInsert;
+
+// ============================================================================
 // CRITICAL INFRASTRUCTURE: Database Performance Indexes for SMS Tables
 // ============================================================================
 

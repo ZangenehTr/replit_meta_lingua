@@ -127,8 +127,8 @@ function VideoCourseCard({ course, onEdit, onDelete, onTogglePublish, onManageLe
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
+              <Button variant="ghost" size="icon" aria-label="بیشتر" aria-haspopup="true">
+                <MoreVertical className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -588,8 +588,8 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" aria-label="بیشتر" aria-haspopup="true">
+                            <MoreVertical className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -868,15 +868,19 @@ export default function AdminVideoCourses() {
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
+                aria-label="نمایش شبکه‌ای"
+                aria-pressed={viewMode === "grid"}
               >
-                <Grid className="h-4 w-4" />
+                <Grid className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
                 variant={viewMode === "list" ? "default" : "outline"}
                 size="icon"
                 onClick={() => setViewMode("list")}
+                aria-label="نمایش لیستی"
+                aria-pressed={viewMode === "list"}
               >
-                <List className="h-4 w-4" />
+                <List className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>

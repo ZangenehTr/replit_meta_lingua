@@ -218,9 +218,9 @@ export const AdminDashboard = () => {
               {/* Notifications Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
+                  <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications" aria-label="اعلان‌ها">
+                    <Bell className="h-5 w-5" aria-hidden="true" />
+                    <span className="absolute top-0 end-0 h-2 w-2 bg-red-500 rounded-full" aria-hidden="true" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -235,8 +235,8 @@ export const AdminDashboard = () => {
               </Dialog>
               
               <Link href="/admin/settings">
-                <Button variant="ghost" size="icon" data-testid="button-settings">
-                  <Settings className="h-5 w-5" />
+                <Button variant="ghost" size="icon" data-testid="button-settings" aria-label="تنظیمات">
+                  <Settings className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </Link>
             </div>
