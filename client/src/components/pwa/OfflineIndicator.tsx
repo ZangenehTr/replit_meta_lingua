@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { WifiOff, Wifi, Clock } from 'lucide-react';
+import { WifiOff, Wifi } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useOfflineSync } from '@/hooks/use-offline-sync';
@@ -7,7 +7,7 @@ import { useOfflineSync } from '@/hooks/use-offline-sync';
 export function OfflineIndicator() {
   const { t } = useTranslation(['common']);
   const [showReconnected, setShowReconnected] = useState(false);
-  const { isOnline, queueSize } = useOfflineSync();
+  const { isOnline } = useOfflineSync();
 
   useEffect(() => {
     if (isOnline) {
@@ -45,14 +45,6 @@ export function OfflineIndicator() {
           <span className="text-sm font-medium">
             {t('pwa.offline', 'You are offline')}
           </span>
-          {queueSize > 0 && (
-            <>
-              <Clock className="h-3 w-3 opacity-80" />
-              <span className="text-xs opacity-90">
-                {queueSize} {t('pwa.pendingSync', 'در صف همگام‌سازی')}
-              </span>
-            </>
-          )}
         </>
       )}
     </div>
