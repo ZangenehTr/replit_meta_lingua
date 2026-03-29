@@ -153,13 +153,24 @@ export default function StudentHomeworkMobile() {
       setSelectedHomework(null);
     },
     onError: (error: Error) => {
-      toast({
-        title: t('common:error'),
-        description: error.message === 'FILE_OFFLINE'
-          ? 'ارسال فایل نیاز به اینترنت دارد. لطفاً پس از اتصال دوباره امتحان کنید.'
-          : t('student:homeworkSubmitError'),
-        variant: 'destructive'
-      });
+      if (error.message === 'FILE_OFFLINE') {
+        toast({
+          title: t('common:error'),
+          description: 'ارسال فایل نیاز به اینترنت دارد. لطفاً پس از اتصال دوباره امتحان کنید.',
+          variant: 'destructive'
+        });
+      } else if (!navigator.onLine) {
+        toast({
+          title: 'در صف همگام‌سازی',
+          description: 'بدون اینترنت: تکلیف پس از اتصال مجدد ارسال می‌شود',
+        });
+      } else {
+        toast({
+          title: t('common:error'),
+          description: t('student:homeworkSubmitError'),
+          variant: 'destructive'
+        });
+      }
     }
   });
 

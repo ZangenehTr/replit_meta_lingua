@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { useOfflineSync } from '@/hooks/use-offline-sync';
 import { apiRequest } from '@/lib/queryClient';
 import { 
   CheckCircle, 
@@ -40,8 +39,6 @@ interface AttendanceMarkerProps {
 export function AttendanceMarker({ sessionId, sessionTitle, isGroupClass = false }: AttendanceMarkerProps) {
   const [selectedStudent, setSelectedStudent] = useState<AttendanceRecord | null>(null);
   const [notes, setNotes] = useState('');
-  const { isOnline } = useOfflineSync();
-
   // Fetch attendance data for the session
   const { data: attendanceData = [], isLoading, refetch } = useQuery<AttendanceRecord[]>({
     queryKey: [`/api/teacher/sessions/${sessionId}/attendance`],
@@ -60,20 +57,25 @@ export function AttendanceMarker({ sessionId, sessionTitle, isGroupClass = false
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/teacher/sessions/${sessionId}/attendance`] });
       toast({
-        title: isOnline ? 'Success' : 'در صف ارسال',
-        description: isOnline
-          ? 'Attendance marked successfully'
-          : 'حضور و غیاب ذخیره شد — پس از اتصال ارسال می‌شود'
+        title: 'Success',
+        description: 'Attendance marked successfully',
       });
       setSelectedStudent(null);
       setNotes('');
     },
     onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to mark attendance',
-        variant: 'destructive'
-      });
+      if (!navigator.onLine) {
+        toast({
+          title: 'در صف همگام‌سازی',
+          description: 'بدون اینترنت: حضور و غیاب پس از اتصال مجدد ارسال می‌شود',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to mark attendance',
+          variant: 'destructive'
+        });
+      }
     }
   });
 

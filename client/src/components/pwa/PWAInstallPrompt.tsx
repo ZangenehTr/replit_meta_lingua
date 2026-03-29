@@ -26,6 +26,18 @@ function incrementVisitCount(): number {
   return count;
 }
 
+function checkCooldown(): boolean {
+  const dismissed = localStorage.getItem('pwa-install-dismissed');
+  if (!dismissed) return true;
+  return Date.now() - parseInt(dismissed, 10) > 7 * 24 * 60 * 60 * 1000;
+}
+
+function checkEligible(): boolean {
+  const visitCount = parseInt(localStorage.getItem('pwa-visit-count') ?? '0', 10);
+  const loggedIn = localStorage.getItem('pwa-login-occurred') === '1';
+  return checkCooldown() && (visitCount >= 2 || loggedIn);
+}
+
 export function PWAInstallPrompt() {
   const { t } = useTranslation(['common']);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -35,24 +47,24 @@ export function PWAInstallPrompt() {
   useEffect(() => {
     if (isInStandaloneMode()) return;
 
-    const visitCount = incrementVisitCount();
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    const dismissedTime = dismissed ? parseInt(dismissed, 10) : 0;
-    const cooldownPassed = !dismissed || (Date.now() - dismissedTime) > 7 * 24 * 60 * 60 * 1000;
-    const loggedIn = localStorage.getItem('pwa-login-occurred') === '1';
+    incrementVisitCount();
 
-    const shouldShow = cooldownPassed && (visitCount >= 2 || loggedIn);
-    if (!shouldShow) return;
+    const tryShowPrompt = (prompt: BeforeInstallPromptEvent | null) => {
+      if (!checkEligible()) return;
+      if (isIOS()) {
+        setTimeout(() => setShowIOS(true), 3000);
+      } else if (prompt) {
+        setTimeout(() => setShowPrompt(true), 3000);
+      }
+    };
 
-    if (isIOS()) {
-      setTimeout(() => setShowIOS(true), 3000);
-      return;
-    }
+    let capturedPrompt: BeforeInstallPromptEvent | null = null;
 
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShowPrompt(true), 3000);
+      capturedPrompt = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(capturedPrompt);
+      tryShowPrompt(capturedPrompt);
     };
 
     const handleAppInstalled = () => {
@@ -60,12 +72,20 @@ export function PWAInstallPrompt() {
       setDeferredPrompt(null);
     };
 
+    const handleLoginTrigger = () => {
+      tryShowPrompt(capturedPrompt);
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('pwa-login-trigger', handleLoginTrigger);
+
+    tryShowPrompt(null);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('pwa-login-trigger', handleLoginTrigger);
     };
   }, []);
 
