@@ -77,6 +77,7 @@ export function WalletSystem() {
   const queryClient = useQueryClient();
   const [topupAmount, setTopupAmount] = useState(100000);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [pendingPaymentMethod, setPendingPaymentMethod] = useState<'wallet' | 'shetab'>('wallet');
   const [promoCodeInput, setPromoCodeInput] = useState("");
   const [promoValidation, setPromoValidation] = useState<{
     valid: boolean;
@@ -84,7 +85,6 @@ export function WalletSystem() {
     discountAmount?: number;
     finalAmount?: number;
     promoCodeId?: number;
-    code?: string;
   } | null>(null);
   const [promoValidating, setPromoValidating] = useState(false);
 
@@ -140,6 +140,12 @@ export function WalletSystem() {
     }
   });
 
+  const openEnrollmentDialog = (course: Course, method: 'wallet' | 'shetab') => {
+    setPendingPaymentMethod(method);
+    setSelectedCourse(course);
+    resetPromo();
+  };
+
   const validatePromoCode = async (course: Course) => {
     if (!promoCodeInput.trim()) return;
     setPromoValidating(true);
@@ -164,6 +170,14 @@ export function WalletSystem() {
   const resetPromo = () => {
     setPromoCodeInput("");
     setPromoValidation(null);
+  };
+
+  const getEffectivePrice = (originalPrice: number): number => {
+    const memberDiscounted = calculateDiscountedPrice(originalPrice);
+    if (promoValidation?.valid && promoValidation.finalAmount !== undefined) {
+      return promoValidation.finalAmount;
+    }
+    return memberDiscounted;
   };
 
   // Course enrollment mutation
@@ -369,7 +383,7 @@ export function WalletSystem() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedCourse(course)}
+                      onClick={() => openEnrollmentDialog(course, 'wallet')}
                       disabled={!walletData || walletData.walletBalance < discountedPrice}
                     >
                       <Wallet className="h-4 w-4 mr-2" />
@@ -377,7 +391,7 @@ export function WalletSystem() {
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => courseEnrollmentMutation.mutate({ courseId: course.id, paymentMethod: 'shetab' })}
+                      onClick={() => openEnrollmentDialog(course, 'shetab')}
                       disabled={courseEnrollmentMutation.isPending}
                     >
                       <CreditCard className="h-4 w-4 mr-2" />
@@ -403,17 +417,20 @@ export function WalletSystem() {
                 <h4 className="font-semibold mb-2">{selectedCourse.title}</h4>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>قیمت اصلی: {formatCurrency(selectedCourse.price)}</p>
-                  <p>تخفیف عضویت: {walletData?.discountPercentage || 0}%</p>
+                  {(walletData?.discountPercentage || 0) > 0 && (
+                    <p>تخفیف عضویت: {walletData?.discountPercentage}%</p>
+                  )}
                   {promoValidation?.valid && promoValidation.discountAmount ? (
                     <p className="text-green-600">تخفیف کد: -{formatCurrency(promoValidation.discountAmount)}</p>
                   ) : null}
                   <p className="font-semibold text-green-600">
-                    قیمت نهایی: {formatCurrency(
-                      promoValidation?.valid && promoValidation.finalAmount !== undefined
-                        ? promoValidation.finalAmount
-                        : calculateDiscountedPrice(selectedCourse.price)
-                    )}
+                    قیمت نهایی: {formatCurrency(getEffectivePrice(selectedCourse.price))}
                   </p>
+                  {pendingPaymentMethod === 'wallet' && (
+                    <p className={`text-xs ${walletData && walletData.walletBalance >= getEffectivePrice(selectedCourse.price) ? 'text-green-600' : 'text-destructive'}`}>
+                      موجودی کیف پول: {formatCurrency(walletData?.walletBalance || 0)}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -467,14 +484,23 @@ export function WalletSystem() {
                 className="w-full"
                 onClick={() => courseEnrollmentMutation.mutate({ 
                   courseId: selectedCourse.id, 
-                  paymentMethod: 'wallet',
-                  promoCode: promoValidation?.valid ? promoValidation.code : undefined,
+                  paymentMethod: pendingPaymentMethod,
+                  promoCode: promoValidation?.valid && promoCodeInput.trim() ? promoCodeInput.trim() : undefined,
                 })}
-                disabled={courseEnrollmentMutation.isPending}
+                disabled={
+                  courseEnrollmentMutation.isPending ||
+                  (pendingPaymentMethod === 'wallet' && 
+                   !!walletData && 
+                   walletData.walletBalance < getEffectivePrice(selectedCourse.price))
+                }
               >
                 {courseEnrollmentMutation.isPending ? (
                   <><Loader2 className="h-4 w-4 animate-spin me-2" />در حال پردازش...</>
-                ) : "تأیید و ثبت نام"}
+                ) : pendingPaymentMethod === 'wallet' ? (
+                  <><Wallet className="h-4 w-4 me-2" />تأیید و پرداخت از کیف پول</>
+                ) : (
+                  <><CreditCard className="h-4 w-4 me-2" />تأیید و پرداخت از طریق شتاب</>
+                )}
               </Button>
             </div>
           </DialogContent>
