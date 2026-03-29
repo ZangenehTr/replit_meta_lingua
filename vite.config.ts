@@ -26,15 +26,14 @@ export default defineConfig({
         lang: "fa",
         dir: "rtl",
         icons: [
-          { src: "/pwa-192x192.png", sizes: "72x72",   type: "image/png", purpose: "any" },
-          { src: "/pwa-192x192.png", sizes: "96x96",   type: "image/png", purpose: "any" },
-          { src: "/pwa-192x192.png", sizes: "128x128", type: "image/png", purpose: "any" },
-          { src: "/pwa-192x192.png", sizes: "144x144", type: "image/png", purpose: "any" },
-          { src: "/pwa-192x192.png", sizes: "152x152", type: "image/png", purpose: "any" },
-          { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "/pwa-512x512.png", sizes: "384x384", type: "image/png", purpose: "any" },
-          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-          { src: "/pwa-maskable-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "/pwa-192x192.png", sizes: "72x72",   type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-192x192.png", sizes: "96x96",   type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-192x192.png", sizes: "128x128", type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-192x192.png", sizes: "144x144", type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-192x192.png", sizes: "152x152", type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-512x512.png", sizes: "384x384", type: "image/png", purpose: "any maskable" },
+          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
         shortcuts: [
           {

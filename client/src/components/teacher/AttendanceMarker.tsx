@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
+import { useOfflineSync } from '@/hooks/use-offline-sync';
 import { 
   CheckCircle, 
   XCircle, 
@@ -38,6 +39,7 @@ interface AttendanceMarkerProps {
 export function AttendanceMarker({ sessionId, sessionTitle, isGroupClass = false }: AttendanceMarkerProps) {
   const [selectedStudent, setSelectedStudent] = useState<AttendanceRecord | null>(null);
   const [notes, setNotes] = useState('');
+  const { queueOrFetch } = useOfflineSync();
 
   // Fetch attendance data for the session
   const { data: attendanceData = [], isLoading, refetch } = useQuery<AttendanceRecord[]>({
@@ -45,25 +47,26 @@ export function AttendanceMarker({ sessionId, sessionTitle, isGroupClass = false
     enabled: !!sessionId
   });
 
-  // Mark attendance mutation
+  // Mark attendance mutation — queues automatically when offline
   const markAttendance = useMutation({
     mutationFn: async ({ studentId, status, notes }: { studentId: number; status: string; notes?: string }) => {
-      const response = await fetch(`/api/teacher/sessions/${sessionId}/attendance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({ studentId, status, notes })
-      });
-      if (!response.ok) throw new Error('Failed to mark attendance');
-      return response.json();
+      const result = await queueOrFetch(
+        `/api/teacher/sessions/${sessionId}/attendance`,
+        'POST',
+        { studentId, status, notes },
+        'attendance-sync'
+      );
+      if (result.queued) return { queued: true };
+      return result.data;
     },
-    onSuccess: () => {
+    onSuccess: (data: unknown) => {
+      const queued = (data as { queued?: boolean })?.queued;
       queryClient.invalidateQueries({ queryKey: [`/api/teacher/sessions/${sessionId}/attendance`] });
       toast({
-        title: 'Success',
-        description: 'Attendance marked successfully'
+        title: queued ? 'ذخیره آفلاین' : 'Success',
+        description: queued
+          ? 'حضور و غیاب ذخیره شد — پس از اتصال ارسال می‌شود'
+          : 'Attendance marked successfully'
       });
       setSelectedStudent(null);
       setNotes('');
