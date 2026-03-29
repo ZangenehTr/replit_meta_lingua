@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { useOfflineSync } from '@/hooks/use-offline-sync';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   CheckCircle, 
   XCircle, 
@@ -39,7 +40,7 @@ interface AttendanceMarkerProps {
 export function AttendanceMarker({ sessionId, sessionTitle, isGroupClass = false }: AttendanceMarkerProps) {
   const [selectedStudent, setSelectedStudent] = useState<AttendanceRecord | null>(null);
   const [notes, setNotes] = useState('');
-  const { queueOrFetch } = useOfflineSync();
+  const { isOnline } = useOfflineSync();
 
   // Fetch attendance data for the session
   const { data: attendanceData = [], isLoading, refetch } = useQuery<AttendanceRecord[]>({
@@ -47,26 +48,22 @@ export function AttendanceMarker({ sessionId, sessionTitle, isGroupClass = false
     enabled: !!sessionId
   });
 
-  // Mark attendance mutation — queues automatically when offline
+  // Mark attendance mutation — uses SW-intercepted fetch so Workbox backgroundSync
+  // handles automatic retry when the network request fails while offline
   const markAttendance = useMutation({
     mutationFn: async ({ studentId, status, notes }: { studentId: number; status: string; notes?: string }) => {
-      const result = await queueOrFetch(
-        `/api/teacher/sessions/${sessionId}/attendance`,
-        'POST',
-        { studentId, status, notes },
-        'attendance-sync'
-      );
-      if (result.queued) return { queued: true };
-      return result.data;
+      return apiRequest(`/api/teacher/sessions/${sessionId}/attendance`, {
+        method: 'POST',
+        body: { studentId, status, notes },
+      });
     },
-    onSuccess: (data: unknown) => {
-      const queued = (data as { queued?: boolean })?.queued;
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/teacher/sessions/${sessionId}/attendance`] });
       toast({
-        title: queued ? 'ذخیره آفلاین' : 'Success',
-        description: queued
-          ? 'حضور و غیاب ذخیره شد — پس از اتصال ارسال می‌شود'
-          : 'Attendance marked successfully'
+        title: isOnline ? 'Success' : 'در صف ارسال',
+        description: isOnline
+          ? 'Attendance marked successfully'
+          : 'حضور و غیاب ذخیره شد — پس از اتصال ارسال می‌شود'
       });
       setSelectedStudent(null);
       setNotes('');

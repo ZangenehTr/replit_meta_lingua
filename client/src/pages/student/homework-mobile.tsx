@@ -84,7 +84,7 @@ export default function StudentHomeworkMobile() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { queueOrFetch, isOnline } = useOfflineSync();
+  const { isOnline } = useOfflineSync();
 
   // Fetch homework
   const { data: homework = [], isLoading } = useQuery<Homework[]>({
@@ -114,9 +114,13 @@ export default function StudentHomeworkMobile() {
     }
   });
 
-  // Submit homework mutation — queues text submissions when offline
+  // Submit homework mutation — uses SW-intercepted fetch so Workbox backgroundSync
+  // handles automatic retry when the network request fails while offline.
+  // File uploads require connectivity; text-only submissions are queued by the SW.
   const submitHomework = useMutation({
     mutationFn: async ({ id, file, submission }: { id: number; file?: File; submission?: string }) => {
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
       if (file) {
         if (!isOnline) throw new Error('FILE_OFFLINE');
         const formData = new FormData();
@@ -124,29 +128,25 @@ export default function StudentHomeworkMobile() {
         if (submission) formData.append('submission', submission);
         const response = await fetch(`${API_ENDPOINTS.student.homework}/${id}/submit`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-          body: formData
+          headers,
+          body: formData,
         });
         if (!response.ok) throw new Error('Failed to submit homework');
         return response.json();
       }
-      const result = await queueOrFetch(
-        `${API_ENDPOINTS.student.homework}/${id}/submit`,
-        'POST',
-        { submission },
-        'homework-sync'
-      );
-      if (result.queued) return { queued: true };
-      return result.data;
+      const response = await fetch(`${API_ENDPOINTS.student.homework}/${id}/submit`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submission }),
+      });
+      if (!response.ok) throw new Error('Failed to submit homework');
+      return response.json();
     },
     onSuccess: (data: unknown) => {
-      const queued = (data as { queued?: boolean })?.queued;
       const xpAwarded = (data as { xpAwarded?: number })?.xpAwarded;
       toast({
-        title: queued ? 'ذخیره آفلاین' : t('student:homeworkSubmitted'),
-        description: queued
-          ? 'تکلیف ذخیره شد — پس از اتصال ارسال می‌شود'
-          : xpAwarded ? t('student:xpEarned', { xp: xpAwarded }) : t('student:homeworkSubmittedDesc'),
+        title: t('student:homeworkSubmitted'),
+        description: xpAwarded ? t('student:xpEarned', { xp: xpAwarded }) : t('student:homeworkSubmittedDesc'),
       });
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.student.homework] });
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.student.homeworkStats] });

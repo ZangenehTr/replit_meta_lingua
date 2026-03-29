@@ -26,9 +26,14 @@ export default defineConfig({
         lang: "fa",
         dir: "rtl",
         icons: [
-          { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
-          { src: "/pwa-maskable-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "/pwa-192x192.png", sizes: "72x72",   type: "image/png", purpose: "maskable" },
+          { src: "/pwa-192x192.png", sizes: "96x96",   type: "image/png", purpose: "maskable" },
+          { src: "/pwa-192x192.png", sizes: "128x128", type: "image/png", purpose: "maskable" },
+          { src: "/pwa-192x192.png", sizes: "144x144", type: "image/png", purpose: "maskable" },
+          { src: "/pwa-192x192.png", sizes: "152x152", type: "image/png", purpose: "maskable" },
+          { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+          { src: "/pwa-512x512.png", sizes: "384x384", type: "image/png", purpose: "maskable" },
+          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
         shortcuts: [
           {
@@ -58,8 +63,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         globIgnores: ["**/node_modules/**/*", "**/dist/**/*"],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-        navigateFallback: "/offline.html",
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api\//, /^\/offline\.html$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
