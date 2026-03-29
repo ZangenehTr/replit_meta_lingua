@@ -370,6 +370,8 @@ export const adminSettings = pgTable("admin_settings", {
   hrAnomalyThreshold: decimal("hr_anomaly_threshold", { precision: 5, scale: 2 }).default("15"), // points drop to trigger anomaly alert
   hrAnomalyNotifyAdmin: boolean("hr_anomaly_notify_admin").default(true), // queue admin notification on anomaly
   hrImprovementThreshold: decimal("hr_improvement_threshold", { precision: 5, scale: 2 }).default("60"), // absolute score below which improvement plan is generated
+  // Certificate template configuration — JSON string containing institue name, logo URL, signature title, etc.
+  certificateTemplate: text("certificate_template"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

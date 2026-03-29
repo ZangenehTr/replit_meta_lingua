@@ -6739,13 +6739,17 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
               await db.update(promoCodes)
                 .set({ usedCount: sql`${promoCodes.usedCount} + 1`, updatedAt: new Date() })
                 .where(eq(promoCodes.id, coursePayment.promoCodeId));
+              // originalAmount = price after member discount but before promo (consistent with wallet path)
+              const memberDiscountPct = coursePayment.discountPercentage ?? 0;
+              const priceBeforePromo = Math.round(coursePayment.originalPrice * (1 - memberDiscountPct / 100));
+              const promoDiscount = priceBeforePromo - coursePayment.finalPrice;
               // Record detailed usage in promo_code_usages audit table
               await db.insert(promoCodeUsages).values({
                 promoCodeId: coursePayment.promoCodeId,
                 userId: coursePayment.userId,
                 courseId: coursePayment.courseId,
-                discountAmount: coursePayment.originalPrice - coursePayment.finalPrice,
-                originalAmount: coursePayment.originalPrice,
+                discountAmount: promoDiscount,
+                originalAmount: priceBeforePromo,
                 finalAmount: coursePayment.finalPrice,
               }).catch((e: any) => console.error("Failed to record gateway promo usage:", e));
             }
