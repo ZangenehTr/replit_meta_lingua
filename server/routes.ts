@@ -11266,8 +11266,13 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
             const { issueCertificate } = await import("./routes/certificate-routes.js");
             await issueCertificate({ studentId: userId, courseId });
             certIssued = true;
-          } catch (certErr) {
-            console.error("Auto-cert issuance failed:", certErr);
+          } catch (certErr: any) {
+            if (certErr?.code === "CERT_REVOKED") {
+              // Admin revoked the cert — do not re-issue, log silently
+              console.info(`Auto-cert skipped for student ${userId} course ${courseId}: certificate was revoked by admin`);
+            } else {
+              console.error("Auto-cert issuance failed:", certErr);
+            }
           }
         }
       }
@@ -11323,14 +11328,22 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           .where(eq(enrollments.id, enrollment.id));
       }
 
-      // Check if cert already exists (idempotency)
+      // Check for any existing certificate (active or revoked)
       const [existingCert] = await db
         .select()
         .from(certificates)
         .where(and(eq(certificates.studentId, userId), eq(certificates.courseId, courseId)))
+        .orderBy(desc(certificates.issuedAt))
         .limit(1);
 
-      const alreadyIssued = !!existingCert;
+      if (existingCert?.status === "revoked") {
+        return res.status(403).json({
+          message: "گواهینامه شما توسط مدیر باطل شده است. برای صدور مجدد با پشتیبانی تماس بگیرید.",
+          code: "CERT_REVOKED",
+        });
+      }
+
+      const alreadyIssued = existingCert?.status === "active";
 
       // Issue certificate via shared service (handles idempotency + PDF generation)
       const { issueCertificate } = await import("./routes/certificate-routes.js");
@@ -11344,6 +11357,9 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       });
     } catch (error: any) {
       console.error("Error issuing course completion certificate:", error);
+      if (error?.code === "CERT_REVOKED") {
+        return res.status(403).json({ message: error.message, code: "CERT_REVOKED" });
+      }
       res.status(500).json({ message: "Failed to issue certificate" });
     }
   });

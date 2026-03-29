@@ -35,22 +35,52 @@ export async function issueCertificate(opts: {
   issuedBy?: number | null;
   expiresAt?: Date | null;
   metadata?: Record<string, any> | null;
+  /** Only admin-triggered paths should set this to true. Revives a revoked cert. */
+  adminForce?: boolean;
 }): Promise<typeof certificates.$inferSelect> {
-  const { studentId, courseId, issuedBy = null, expiresAt = null, metadata = null } = opts;
+  const { studentId, courseId, issuedBy = null, expiresAt = null, metadata = null, adminForce = false } = opts;
 
-  // Idempotency check
+  // Check for any existing certificate (active or revoked)
   const [existing] = await db
     .select()
     .from(certificates)
     .where(
       and(
         eq(certificates.studentId, studentId),
-        eq(certificates.courseId, courseId),
-        eq(certificates.status, "active")
+        eq(certificates.courseId, courseId)
       )
-    );
+    )
+    .orderBy(desc(certificates.issuedAt))
+    .limit(1);
 
-  if (existing) return existing;
+  if (existing) {
+    if (existing.status === "active") {
+      // Idempotent — return existing active cert
+      return existing;
+    }
+    if (existing.status === "revoked") {
+      if (!adminForce) {
+        // Students cannot bypass revocation — only admins can re-issue
+        throw Object.assign(new Error("Certificate has been revoked and cannot be reissued without admin action"), {
+          code: "CERT_REVOKED",
+          status: 403,
+        });
+      }
+      // Admin re-issue: revive the revoked cert in-place (preserves history, single record)
+      const [revived] = await db
+        .update(certificates)
+        .set({
+          status: "active",
+          revokedAt: null,
+          revokeReason: null,
+          issuedBy: issuedBy ?? existing.issuedBy,
+          issuedAt: new Date(),
+        })
+        .where(eq(certificates.id, existing.id))
+        .returning();
+      return revived;
+    }
+  }
 
   // Fetch student + course for PDF generation
   const [student] = await db
@@ -174,6 +204,7 @@ router.post("/api/admin/certificates", authenticate, requireAdmin, async (req: a
       issuedBy: req.user.id,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       metadata: metadata || null,
+      adminForce: true, // Admins can re-issue even after revocation
     });
 
     res.status(201).json(cert);
