@@ -130,7 +130,7 @@ export function PWAInstallPrompt() {
                 <Smartphone className="h-5 w-5 text-white" />
               </div>
               <CardTitle className="text-lg">
-                {t('pwa.installTitle', 'نصب متا لینگوا')}
+                {t('pwa.installTitle', 'نصب متالینگوآ')}
               </CardTitle>
             </div>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDismiss}>

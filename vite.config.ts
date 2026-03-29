@@ -13,8 +13,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "images/*.png", "images/*.jpg", "offline.html"],
       manifest: {
-        name: "متا لینگوا آکادمی",
-        short_name: "Meta Lingua",
+        name: "متالینگوآ",
+        short_name: "متالینگوآ",
         description: "پلتفرم یادگیری زبان هوشمند - AI-Powered Language Learning Platform",
         theme_color: "#7c3aed",
         background_color: "#ffffff",

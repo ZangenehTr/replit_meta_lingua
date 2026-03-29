@@ -326,7 +326,7 @@ export default function Auth() {
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            متا لینگوا
+            متالینگوآ
           </h1>
           <p className="text-white/90 text-sm sm:text-base flex items-center justify-center gap-2">
             <Languages className="w-4 h-4" />
