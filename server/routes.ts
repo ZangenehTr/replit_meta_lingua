@@ -24573,7 +24573,9 @@ Meta Lingua Academy`;
   app.use('/api', callernFlowRoutes);
 
   // Teacher public profiles + Notify-Me follow/unfollow + admin followers dashboard
+  // Mounted at both /api/teachers and /api/callern/teachers per API contract
   app.use('/api/teachers', teacherProfileRoutes);
+  app.use('/api/callern/teachers', teacherProfileRoutes);
   console.log('✅ Teacher Profile routes registered (public profile, follow/unfollow, followers dashboard)');
   
   // Register exam-focused roadmap routes

@@ -151,6 +151,7 @@ import {
   endOfDay,
 } from "date-fns";
 import { cn } from "@/lib/utils";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 // Enhanced interfaces for comprehensive dashboard
 interface FrontDeskOperation {
@@ -1921,7 +1922,7 @@ export default function FrontDeskDashboard() {
                         <p>
                           {trial.language} • {trial.level}
                         </p>
-                        <p>{trial.teacherName}</p>
+                        <p><TeacherNameLink teacherId={trial.teacherId} fullName={trial.teacherName} variant="subtle" /></p>
                         <p>{formatTime(trial.scheduledTime)}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-2">

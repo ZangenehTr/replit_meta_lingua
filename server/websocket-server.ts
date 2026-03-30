@@ -2,7 +2,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { Server } from 'http';
 import { db } from './db';
 import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus, callernTeacherFollowers, callSessions, liveClassSessions } from '../shared/schema';
-import { eq, and, like, sql, inArray, lte, gte, isNull } from 'drizzle-orm';
+import { eq, and, or, like, sql, inArray, lte, gte, isNull } from 'drizzle-orm';
 import { kavenegarService } from './kavenegar-service';
 import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
 

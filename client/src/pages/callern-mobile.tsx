@@ -37,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 interface CallernPackage {
   id: number;
@@ -555,7 +556,9 @@ export default function CallernMobilePage() {
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h3 className="font-semibold text-gray-800 dark:text-white">
-                          {call.teacherName}
+                          {call.teacherId ? (
+                            <TeacherNameLink teacherId={call.teacherId} fullName={call.teacherName} variant="subtle" />
+                          ) : call.teacherName}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {new Date(call.startedAt).toLocaleDateString()}

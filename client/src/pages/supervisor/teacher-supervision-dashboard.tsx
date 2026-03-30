@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useSocket } from "@/hooks/use-socket";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 import { 
   Users, 
   Clock, 
@@ -334,7 +335,7 @@ export default function TeacherSupervisionDashboard() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">{session.teacherName}</CardTitle>
+                          <CardTitle className="text-lg"><TeacherNameLink teacherId={session.teacherId} fullName={session.teacherName} variant="subtle" /></CardTitle>
                           <CardDescription>{session.courseTitle}</CardDescription>
                         </div>
                         <Badge variant={session.status === 'active' ? 'default' : 'destructive'}>

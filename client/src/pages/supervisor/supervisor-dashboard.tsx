@@ -22,6 +22,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from "@/hooks/useLanguage";
 import DynamicForm from "@/components/forms/DynamicForm";
 import { formatCurrency } from "@/lib/utils";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 import { 
   Users, 
   GraduationCap, 
@@ -802,7 +803,7 @@ export default function SupervisorDashboard() {
                         <AlertTriangle className="h-4 w-4 text-orange-500 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-gray-900 truncate">
-                            {observation.teacherName} - {observation.className}
+                            <TeacherNameLink teacherId={observation.teacherId} fullName={observation.teacherName} variant="subtle" /> - {observation.className}
                           </div>
                           <div className="text-xs text-gray-500">
                             {new Date(observation.scheduledDate).toLocaleDateString()} • {observation.observationType}
@@ -910,7 +911,7 @@ export default function SupervisorDashboard() {
                 teacherPerformance.map((teacher: any) => (
                   <Card key={teacher.teacherId} className="hover:shadow-lg transition-shadow">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">{teacher.teacherName}</CardTitle>
+                      <CardTitle className="text-sm font-medium"><TeacherNameLink teacherId={teacher.teacherId} fullName={teacher.teacherName} variant="subtle" /></CardTitle>
                       <CardDescription className="text-xs">
                         Performance Overview
                       </CardDescription>
