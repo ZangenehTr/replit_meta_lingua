@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Search,
   User,
@@ -20,13 +21,19 @@ import {
   ArrowRight,
   BookOpen,
   Award,
-  FileCheck
+  CreditCard,
+  DollarSign
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
-import { WORKFLOW_STATUS, LEAD_STATUS, LEAD_WORKFLOW_STAGE } from "@shared/schema";
 import { motion } from "framer-motion";
+
+interface Course {
+  id: number;
+  title: string;
+  price?: string | number;
+}
 
 function FinalRegistration() {
   const { t } = useTranslation(['callcenter', 'common']);
@@ -37,11 +44,57 @@ function FinalRegistration() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [enrollmentNotes, setEnrollmentNotes] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "pos" | "cheque">("cash");
+  const [amount, setAmount] = useState<string>("");
 
   const { data: finalRegLeads = [], isLoading, refetch } = useQuery<Lead[]>({
     queryKey: ["/api/leads/by-stage/final_registration"],
     queryFn: async () => {
       return await apiRequest(`/api/leads/by-stage/final_registration`);
+    }
+  });
+
+  const { data: coursesData = [] } = useQuery<Course[]>({
+    queryKey: ["/api/courses"],
+    queryFn: async () => {
+      return await apiRequest("/api/courses");
+    }
+  });
+
+  const finalizePaymentMutation = useMutation({
+    mutationFn: async ({ leadId, courseId, payMethod, amt, notes }: {
+      leadId: number;
+      courseId: number;
+      payMethod: "cash" | "pos" | "cheque";
+      amt: number;
+      notes?: string;
+    }) => {
+      return await apiRequest(`/api/leads/${leadId}/finalize-payment`, {
+        method: "POST",
+        body: JSON.stringify({
+          courseId,
+          paymentMethod: payMethod,
+          amount: amt,
+          notes
+        })
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: t('callcenter:stages.final_registration.enroll_success', 'ثبت‌نام موفق'),
+        description: t('callcenter:stages.final_registration.to_enrolled', 'دانش‌آموز با موفقیت ثبت‌نام شد و رکورد پرداخت ایجاد شد'),
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      refetch();
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('callcenter:stages.final_registration.error', 'خطا در ثبت‌نام'),
+        description: error.message || t('callcenter:stages.final_registration.error_desc', 'انتقال با مشکل مواجه شد'),
+        variant: "destructive"
+      });
     }
   });
 
@@ -52,12 +105,10 @@ function FinalRegistration() {
         body: JSON.stringify({ toStage, reason })
       });
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       toast({
         title: t('callcenter:stages.final_registration.transition_success', 'انتقال موفق'),
-        description: variables.toStage === 'private_class_setup'
-          ? t('callcenter:stages.final_registration.to_private', 'متقاضی به مرحله تنظیم کلاس خصوصی منتقل شد')
-          : t('callcenter:stages.final_registration.to_enrolled', 'دانش‌آموز با موفقیت ثبت‌نام شد'),
+        description: t('callcenter:stages.final_registration.to_private', 'متقاضی به مرحله تنظیم کلاس خصوصی منتقل شد'),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
       refetch();
@@ -75,7 +126,31 @@ function FinalRegistration() {
   const resetForm = () => {
     setSelectedLead(null);
     setEnrollmentNotes("");
+    setSelectedCourseId("");
+    setPaymentMethod("cash");
+    setAmount("");
     setDialogOpen(false);
+  };
+
+  const handleFinalizeEnrollment = () => {
+    if (!selectedLead) return;
+    const courseId = parseInt(selectedCourseId);
+    const amtNum = parseFloat(amount);
+    if (!selectedCourseId || isNaN(courseId)) {
+      toast({ title: 'خطا', description: 'لطفا یک دوره انتخاب کنید', variant: "destructive" });
+      return;
+    }
+    if (!amount || isNaN(amtNum) || amtNum <= 0) {
+      toast({ title: 'خطا', description: 'لطفا مبلغ معتبر وارد کنید', variant: "destructive" });
+      return;
+    }
+    finalizePaymentMutation.mutate({
+      leadId: selectedLead.id,
+      courseId,
+      payMethod: paymentMethod,
+      amt: amtNum,
+      notes: enrollmentNotes || undefined
+    });
   };
 
   const filteredLeads = finalRegLeads.filter(lead =>
@@ -83,6 +158,8 @@ function FinalRegistration() {
     lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.phoneNumber.includes(searchTerm)
   );
+
+  const isPending = finalizePaymentMutation.isPending || transitionMutation.isPending;
 
   return (
     <div className="p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
@@ -207,13 +284,71 @@ function FinalRegistration() {
                                     <span>{selectedLead.courseTarget}</span>
                                   </div>
                                 )}
-                                {selectedLead.notes && (
-                                  <div className="text-sm text-gray-600 mt-1">
-                                    {selectedLead.notes}
-                                  </div>
-                                )}
                               </div>
                             )}
+
+                            <div>
+                              <Label>{t('callcenter:stages.final_registration.select_course', 'انتخاب دوره')}</Label>
+                              <Select value={selectedCourseId} onValueChange={(val) => {
+                                setSelectedCourseId(val);
+                                const course = coursesData.find(c => c.id === parseInt(val));
+                                if (course?.price && !amount) {
+                                  setAmount(String(course.price));
+                                }
+                              }}>
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue placeholder={t('callcenter:stages.final_registration.course_placeholder', 'یک دوره انتخاب کنید...')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {coursesData.map(course => (
+                                    <SelectItem key={course.id} value={String(course.id)}>
+                                      {course.title}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label>{t('callcenter:stages.final_registration.payment_method', 'روش پرداخت')}</Label>
+                              <Select value={paymentMethod} onValueChange={(val) => setPaymentMethod(val as "cash" | "pos" | "cheque")}>
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cash">
+                                    <div className="flex items-center gap-2">
+                                      <DollarSign className="h-4 w-4" />
+                                      {t('callcenter:stages.final_registration.payment_cash', 'نقد')}
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="pos">
+                                    <div className="flex items-center gap-2">
+                                      <CreditCard className="h-4 w-4" />
+                                      {t('callcenter:stages.final_registration.payment_pos', 'کارتخوان (POS)')}
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="cheque">
+                                    <div className="flex items-center gap-2">
+                                      <BookOpen className="h-4 w-4" />
+                                      {t('callcenter:stages.final_registration.payment_cheque', 'چک')}
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label>{t('callcenter:stages.final_registration.amount', 'مبلغ پرداختی (تومان)')}</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                placeholder={t('callcenter:stages.final_registration.amount_placeholder', 'مبلغ را وارد کنید...')}
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
 
                             <div>
                               <Label>{t('callcenter:stages.final_registration.notes', 'یادداشت ثبت‌نام')}</Label>
@@ -222,6 +357,7 @@ function FinalRegistration() {
                                 value={enrollmentNotes}
                                 onChange={(e) => setEnrollmentNotes(e.target.value)}
                                 rows={3}
+                                className="mt-1"
                               />
                             </div>
 
@@ -229,29 +365,27 @@ function FinalRegistration() {
                               <Button
                                 size="sm"
                                 variant="default"
+                                className="bg-emerald-600 hover:bg-emerald-700"
+                                onClick={handleFinalizeEnrollment}
+                                disabled={isPending}
+                              >
+                                <Users className="h-4 w-4 mr-2" />
+                                {isPending
+                                  ? t('common:loading', 'در حال پردازش...')
+                                  : t('callcenter:stages.final_registration.enroll_group', 'ثبت‌نام و ثبت پرداخت')}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => selectedLead && transitionMutation.mutate({
                                   leadId: selectedLead.id,
                                   toStage: 'private_class_setup',
                                   reason: enrollmentNotes || 'تنظیم کلاس خصوصی'
                                 })}
-                                disabled={transitionMutation.isPending}
+                                disabled={isPending}
                               >
                                 <UserCheck className="h-4 w-4 mr-2" />
-                                {t('callcenter:stages.final_registration.setup_private', 'تنظیم کلاس خصوصی')}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="bg-emerald-600 hover:bg-emerald-700"
-                                onClick={() => selectedLead && transitionMutation.mutate({
-                                  leadId: selectedLead.id,
-                                  toStage: 'enrolled',
-                                  reason: enrollmentNotes || 'ثبت‌نام در کلاس گروهی'
-                                })}
-                                disabled={transitionMutation.isPending}
-                              >
-                                <Users className="h-4 w-4 mr-2" />
-                                {t('callcenter:stages.final_registration.enroll_group', 'ثبت‌نام در کلاس گروهی')}
+                                {t('callcenter:stages.final_registration.setup_private', 'انتقال به تنظیم کلاس خصوصی')}
                               </Button>
                             </div>
                           </div>
