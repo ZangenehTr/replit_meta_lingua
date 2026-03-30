@@ -277,6 +277,8 @@ function PrivateClassSetup() {
                                   <SelectItem value="pos">کارتخوان (POS)</SelectItem>
                                   <SelectItem value="cheque">چک</SelectItem>
                                   <SelectItem value="bank_transfer">انتقال بانکی</SelectItem>
+                                  <SelectItem value="wallet">کیف پول دانشجو</SelectItem>
+                                  <SelectItem value="gateway">درگاه آنلاین</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>

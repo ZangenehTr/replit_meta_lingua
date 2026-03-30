@@ -116,7 +116,7 @@ export function registerPrivateClassRoutes(app: Express) {
         leadId: z.number().int(),
         packageId: z.number().int(),
         teacherId: z.number().int(),
-        paymentMethod: z.enum(['cash', 'pos', 'cheque', 'wallet', 'bank_transfer']),
+        paymentMethod: z.enum(['cash', 'pos', 'cheque', 'wallet', 'bank_transfer', 'gateway']),
         amount: z.number().positive(),
         notes: z.string().optional(),
       });
