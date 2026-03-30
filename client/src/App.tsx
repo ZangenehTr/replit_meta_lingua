@@ -123,6 +123,7 @@ import StudentDashboardMobile from "@/pages/student/dashboard-mobile";
 import StudentCoursesMobile from "@/pages/student/courses-mobile";
 import BookReader from "@/pages/BookReader";
 import CourseDetail from "@/pages/course-detail";
+import CoursePublicDetail from "@/pages/course-public";
 import LevelAssessment from "@/pages/level-assessment";
 import MSTPage from "@/pages/mst";
 import GamesPage from "@/pages/games";
@@ -699,6 +700,9 @@ function Router() {
         <ProtectedRoute>
           <Courses />
         </ProtectedRoute>
+      </Route>
+      <Route path="/courses/:courseId">
+        <CoursePublicDetail />
       </Route>
       <Route path="/student/courses">
         <ProtectedRoute>

@@ -6,7 +6,7 @@
  */
 
 import { db } from '../db';
-import { eq, and, desc, asc, avg, count, sql } from 'drizzle-orm';
+import { eq, and, desc, asc, avg, count, sql, isNotNull } from 'drizzle-orm';
 import { 
   callSessions, 
   callPostReports,
@@ -313,6 +313,33 @@ export async function createSessionRating(data: {
   score: number;
   comment?: string;
 }): Promise<typeof sessionRatings.$inferSelect> {
+  // Check if a row already exists for this session (the other party may have rated first)
+  const [existingRow] = await db
+    .select({ id: sessionRatings.id })
+    .from(sessionRatings)
+    .where(
+      and(
+        eq(sessionRatings.sessionId, data.sessionId),
+        eq(sessionRatings.teacherId, data.teacherId),
+        eq(sessionRatings.studentId, data.studentId)
+      )
+    )
+    .limit(1);
+
+  if (existingRow) {
+    // Upsert: update only the role-specific column to keep the other party's data
+    const updates = data.role === 'student'
+      ? { teacherRating: data.score, teacherComment: data.comment ?? null }
+      : { studentRating: data.score, studentComment: data.comment ?? null };
+    const [updated] = await db
+      .update(sessionRatings)
+      .set(updates)
+      .where(eq(sessionRatings.id, existingRow.id))
+      .returning();
+    return updated;
+  }
+
+  // No row yet — insert fresh
   const [rating] = await db
     .insert(sessionRatings)
     .values({
@@ -329,6 +356,8 @@ export async function createSessionRating(data: {
 }
 
 // ── Get an existing session rating for the given user+role in a session ──
+// Returns a row only when the role-specific column is already filled in,
+// so teacher/student ratings are fully independent of each other.
 export async function getSessionRating(
   sessionId: string,
   raterId: number,
@@ -341,8 +370,8 @@ export async function getSessionRating(
       and(
         eq(sessionRatings.sessionId, sessionId),
         role === 'student'
-          ? eq(sessionRatings.studentId, raterId)
-          : eq(sessionRatings.teacherId, raterId)
+          ? and(eq(sessionRatings.studentId, raterId), isNotNull(sessionRatings.teacherRating))
+          : and(eq(sessionRatings.teacherId, raterId), isNotNull(sessionRatings.studentRating))
       )
     )
     .limit(1);
