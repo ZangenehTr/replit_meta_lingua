@@ -116,6 +116,15 @@ export function registerPrivateClassRoutes(app: Express) {
   });
 
   // ===== Private Class Creation (CRM agent action) =====
+  //
+  // Stage path decision: private class activation transitions the lead directly from
+  // `private_class_setup` → `active_private_class`, bypassing the `final_registration`
+  // stage. `final_registration` is reserved for group/course enrollment only.
+  // Private class leads follow a dedicated branch: private_class_setup → active_private_class
+  // → charge_renewal (on low-session threshold) → completed_private_class / private_class_withdrawal.
+  //
+  // Lead linkage: the created `student_session_packages` row stores `leadId` to enable
+  // reliable lead resolution in threshold alerts without relying on stage-based lookup.
 
   // POST /api/private-class/create — create student session package + payment record
   app.post("/api/private-class/create", authenticate, authorize(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk', 'Front Desk Clerk']), async (req: any, res) => {
