@@ -6488,11 +6488,12 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       const [userRecord] = await db.select({ phoneNumber: users.phoneNumber }).from(users).where(eq(users.id, opts.userId)).limit(1);
       if (!userRecord?.phoneNumber) return;
 
-      // Find an active lead for this phone that is NOT yet enrolled
+      // Find an active lead for this phone that is NOT yet enrolled or lost
       const [matchedLead] = await db.select().from(leads)
         .where(
           and(
             eq(leads.phoneNumber, userRecord.phoneNumber),
+            sql`${leads.status} IN ('new','contacted','qualified','converted')`,
             sql`${leads.workflowStage} != 'enrolled'`,
             sql`${leads.workflowStage} != 'withdrawal'`
           )
@@ -14969,66 +14970,70 @@ Return JSON format:
         return res.status(409).json({ message: "Student is already enrolled in this course" });
       }
 
-      // Create course payment record (completed, physical method)
-      // Drizzle decimal columns expect string values; amount is validated positive above
+      // Wrap all writes in a single transaction for atomicity
       const txId = `PHYSICAL_${Date.now()}_${lead.studentId}_${courseId}`;
       const amountStr = String(amount);
-      const [coursePaymentRecord] = await db.insert(coursePayments).values({
-        userId: lead.studentId,
-        courseId,
-        amount: amountStr,
-        originalPrice: amountStr,
-        discountPercentage: '0',
-        finalPrice: amountStr,
-        creditsAwarded: 0,
-        paymentMethod,
-        status: 'completed',
-        merchantTransactionId: txId,
-      }).returning();
-
-      // Create enrollment record
-      await db.insert(enrollments).values({
-        userId: lead.studentId,
-        courseId,
-        status: 'active',
-        enrolledAt: new Date()
-      });
-
-      // Transition lead to enrolled
       const fromStage = (lead.workflowStage || 'contact_desk') as string;
-      await db.update(leads).set({
-        workflowStage: 'enrolled',
-        status: 'converted',
-        conversionDate: new Date(),
-        enrolledCourseId: courseId,
-        paymentMethod,
-        updatedAt: new Date(),
-        stageChangedAt: new Date()
-      }).where(eq(leads.id, leadId));
+      const studentId = lead.studentId as number;
 
-      // Write activity log
-      await db.insert(leadActivityLog).values({
-        leadId,
-        fromStage,
-        toStage: 'enrolled',
-        operatorId: req.user.id,
-        reason: `Physical payment: ${paymentMethod}`,
-        snapshot: {
-          paymentMethod,
-          amount,
+      await db.transaction(async (trx) => {
+        // 1. Create course payment record (Drizzle decimal columns expect string values)
+        await trx.insert(coursePayments).values({
+          userId: studentId,
           courseId,
-          transactionId: txId,
-          notes: notes || null,
-          source: 'physical_payment_finalization'
-        }
+          amount: amountStr,
+          originalPrice: amountStr,
+          discountPercentage: '0',
+          finalPrice: amountStr,
+          creditsAwarded: 0,
+          paymentMethod,
+          status: 'completed',
+          merchantTransactionId: txId,
+        });
+
+        // 2. Create enrollment record
+        await trx.insert(enrollments).values({
+          userId: studentId,
+          courseId,
+          status: 'active',
+          enrolledAt: new Date()
+        });
+
+        // 3. Transition lead to enrolled
+        await trx.update(leads).set({
+          workflowStage: 'enrolled',
+          status: 'converted',
+          conversionDate: new Date(),
+          enrolledCourseId: courseId,
+          paymentMethod,
+          updatedAt: new Date(),
+          stageChangedAt: new Date()
+        }).where(eq(leads.id, leadId));
+
+        // 4. Write activity log
+        await trx.insert(leadActivityLog).values({
+          leadId,
+          fromStage,
+          toStage: 'enrolled',
+          operatorId: req.user.id,
+          reason: `Physical payment: ${paymentMethod}`,
+          snapshot: {
+            paymentMethod,
+            amount,
+            courseId,
+            transactionId: txId,
+            notes: notes || null,
+            source: 'physical_payment_finalization'
+          }
+        });
       });
 
-      console.log(`[CRM] Lead #${leadId} finalized with physical payment, enrollment created for userId=${lead.studentId} courseId=${courseId}`);
+      console.log(`[CRM] Lead #${leadId} finalized with physical payment, enrollment created for userId=${studentId} courseId=${courseId}`);
 
       res.json({
         success: true,
         message: "Payment finalized and enrollment created",
-        coursePaymentId: coursePaymentRecord?.id,
+        transactionId: txId,
         enrolledCourseId: courseId
       });
     } catch (error: any) {

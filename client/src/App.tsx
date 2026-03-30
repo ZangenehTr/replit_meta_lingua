@@ -958,11 +958,11 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
-      {/* Student Welcome / Onboarding */}
+      {/* Student Welcome / Onboarding — Student-only */}
       <Route path="/welcome">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={["student"]}>
           <StudentWelcomePage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
 
       {/* Teacher Routes */}
