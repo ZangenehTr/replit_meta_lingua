@@ -2667,12 +2667,17 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       // Exclude test users with lowercase roles
       let users = excludeTestUsers(allUsers);
       // Support optional role filter e.g. ?role=Teacher or ?role=Admin,Supervisor
+      // Teacher role filter also includes Teacher/Tutor for system compatibility
       const roleFilter = req.query.role as string | undefined;
       if (roleFilter) {
         const roles = roleFilter.split(',').map(r => r.trim());
+        // Expand 'Teacher' to also match 'Teacher/Tutor'
+        if (roles.includes('Teacher') && !roles.includes('Teacher/Tutor')) {
+          roles.push('Teacher/Tutor');
+        }
         users = users.filter(u => roles.includes(u.role as string));
       }
-      res.json({ users, total: users.length });
+      res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
     }

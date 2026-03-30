@@ -32,7 +32,7 @@ export function GameAccessControl() {
     queryKey: ['/api/users'],
     queryFn: async () => {
       const res = await apiRequest('/api/users');
-      const users: any[] = res?.users ?? res ?? [];
+      const users: any[] = Array.isArray(res) ? res : (res?.users ?? []);
       return users.filter((u: any) => u.role === 'Student');
     }
   });

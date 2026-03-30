@@ -79,7 +79,7 @@ export default function CallCenterAccessControl() {
     queryKey: ['/api/admin/callcenter-users'],
     queryFn: async () => {
       const res = await apiRequest('/api/users');
-      const users: CallCenterUser[] = res?.users ?? res ?? [];
+      const users: CallCenterUser[] = Array.isArray(res) ? res : (res?.users ?? []);
       return users.filter((user: CallCenterUser) => 
         ['Admin', 'Supervisor', 'Call Center Agent', 'Mentor'].includes(user.role)
       ).map((user: CallCenterUser) => ({

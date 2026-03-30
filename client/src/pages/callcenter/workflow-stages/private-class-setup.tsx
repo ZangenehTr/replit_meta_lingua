@@ -64,11 +64,10 @@ function PrivateClassSetup() {
     queryFn: () => apiRequest(`/api/session-bundles`)
   });
 
-  const { data: teachersRes } = useQuery<{ users: Teacher[] }>({
+  const { data: teachers = [] } = useQuery<Teacher[]>({
     queryKey: ["/api/users?role=Teacher"],
     queryFn: () => apiRequest(`/api/users?role=Teacher`)
   });
-  const teachers: Teacher[] = teachersRes?.users ?? [];
 
   const selectedBundle = bundles.find(b => String(b.id) === selectedBundleId);
 

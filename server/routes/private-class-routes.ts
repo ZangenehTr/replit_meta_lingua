@@ -138,7 +138,8 @@ export function registerPrivateClassRoutes(app: Express) {
       const [teacher] = await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName, role: users.role })
         .from(users).where(eq(users.id, teacherId));
       if (!teacher) return res.status(404).json({ message: "Teacher not found" });
-      if (teacher.role !== 'Teacher') return res.status(400).json({ message: "Selected user is not a Teacher" });
+      const TEACHER_ROLES = ['Teacher', 'Teacher/Tutor'];
+      if (!TEACHER_ROLES.includes(teacher.role as string)) return res.status(400).json({ message: "Selected user is not a Teacher" });
 
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + (bundle.validityDays || 90));
@@ -240,7 +241,7 @@ export function registerPrivateClassRoutes(app: Express) {
   // ===== Session Logging (Teacher) =====
 
   // POST /api/private-sessions/log — teacher logs a completed session
-  app.post("/api/private-sessions/log", authenticate, authorize(['Teacher', 'Admin', 'Supervisor']), async (req: any, res) => {
+  app.post("/api/private-sessions/log", authenticate, authorize(['Teacher', 'Teacher/Tutor', 'Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const schema = z.object({
         studentSessionPackageId: z.number().int(),
@@ -262,7 +263,7 @@ export function registerPrivateClassRoutes(app: Express) {
       if (!pkg) return res.status(404).json({ message: "Active session package not found" });
 
       // Verify teacher owns this package
-      if (req.user.role === 'Teacher' && pkg.teacherId !== req.user.id) {
+      if ((['Teacher', 'Teacher/Tutor'].includes(req.user.role)) && pkg.teacherId !== req.user.id) {
         return res.status(403).json({ message: "Not authorized for this student's package" });
       }
 
@@ -327,9 +328,9 @@ export function registerPrivateClassRoutes(app: Express) {
   // ===== Teacher Private Students =====
 
   // GET /api/teacher/private-students — list teacher's active private students
-  app.get("/api/teacher/private-students", authenticate, authorize(['Teacher', 'Admin', 'Supervisor']), async (req: any, res) => {
+  app.get("/api/teacher/private-students", authenticate, authorize(['Teacher', 'Teacher/Tutor', 'Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const teacherId = req.user.role === 'Teacher' ? req.user.id : (req.query.teacherId ? parseInt(req.query.teacherId as string) : null);
+      const teacherId = (['Teacher', 'Teacher/Tutor'].includes(req.user.role)) ? req.user.id : (req.query.teacherId ? parseInt(req.query.teacherId as string) : null);
       if (!teacherId) return res.status(400).json({ message: "teacherId required" });
 
       const packages = await db.select({
@@ -399,7 +400,7 @@ export function registerPrivateClassRoutes(app: Express) {
   });
 
   // GET /api/teacher/private-students/:packageId/sessions — session history for a student
-  app.get("/api/teacher/private-students/:packageId/sessions", authenticate, authorize(['Teacher', 'Admin', 'Supervisor']), async (req: any, res) => {
+  app.get("/api/teacher/private-students/:packageId/sessions", authenticate, authorize(['Teacher', 'Teacher/Tutor', 'Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const packageId = parseInt(req.params.packageId);
       if (isNaN(packageId)) return res.status(400).json({ message: "Invalid package ID" });
@@ -407,7 +408,7 @@ export function registerPrivateClassRoutes(app: Express) {
       const [pkg] = await db.select().from(studentSessionPackages).where(eq(studentSessionPackages.id, packageId));
       if (!pkg) return res.status(404).json({ message: "Package not found" });
 
-      if (req.user.role === 'Teacher' && pkg.teacherId !== req.user.id) {
+      if ((['Teacher', 'Teacher/Tutor'].includes(req.user.role)) && pkg.teacherId !== req.user.id) {
         return res.status(403).json({ message: "Not authorized" });
       }
 
@@ -569,7 +570,7 @@ export function registerPrivateClassRoutes(app: Express) {
     }
   });
   // PATCH /api/private-sessions/:packageId/next-scheduled — teacher sets next session time
-  app.patch("/api/private-sessions/:packageId/next-scheduled", authenticate, authorize(['Teacher', 'Admin', 'Supervisor']), async (req: any, res) => {
+  app.patch("/api/private-sessions/:packageId/next-scheduled", authenticate, authorize(['Teacher', 'Teacher/Tutor', 'Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const packageId = parseInt(req.params.packageId);
       if (isNaN(packageId)) return res.status(400).json({ message: "Invalid package ID" });
@@ -579,7 +580,7 @@ export function registerPrivateClassRoutes(app: Express) {
 
       const [pkg] = await db.select().from(studentSessionPackages).where(eq(studentSessionPackages.id, packageId));
       if (!pkg) return res.status(404).json({ message: "Package not found" });
-      if (req.user.role === 'Teacher' && pkg.teacherId !== req.user.id) return res.status(403).json({ message: "Not authorized" });
+      if ((['Teacher', 'Teacher/Tutor'].includes(req.user.role)) && pkg.teacherId !== req.user.id) return res.status(403).json({ message: "Not authorized" });
 
       await db.update(studentSessionPackages).set({
         nextScheduledAt: nextScheduledAt ? new Date(nextScheduledAt) : null,

@@ -46,7 +46,7 @@ export default function CRMDashboard() {
     queryKey: ["/api/users"],
     enabled: user?.role === "admin"
   });
-  const users: any[] = (usersRes as any)?.users ?? usersRes ?? [];
+  const users: any[] = Array.isArray(usersRes) ? usersRes : ((usersRes as any)?.users ?? []);
 
   const { data: courses = [] } = useQuery({
     queryKey: ["/api/courses"]

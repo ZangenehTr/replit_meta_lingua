@@ -166,7 +166,7 @@ export default function ComprehensiveCRMLeads() {
     queryKey: ['/api/users/agents'],
     queryFn: async () => {
       const res = await apiRequest('/api/users?role=Call Center Agent,Admin');
-      return res?.users ?? res ?? [];
+      return Array.isArray(res) ? res : (res?.users ?? []);
     }
   });
 
