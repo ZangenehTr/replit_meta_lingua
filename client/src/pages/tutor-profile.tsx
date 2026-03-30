@@ -103,7 +103,7 @@ export default function TutorProfilePage() {
 
   const { data: followStatus } = useQuery<{ following: boolean }>({
     queryKey: [`/api/teachers/${teacherId}/follow-status`],
-    enabled: !isNaN(teacherId) && teacherId > 0 && user?.role === "student",
+    enabled: !isNaN(teacherId) && teacherId > 0 && user?.role?.toLowerCase() === "student",
   });
 
   // Use presence status embedded in the public profile API — works for unauthenticated visitors too
@@ -175,8 +175,9 @@ export default function TutorProfilePage() {
     );
   }
 
+  const isStudentRole = user?.role?.toLowerCase() === "student";
   const canCall =
-    user?.role === "student" && teacherPresence === "available" && profile.isCallernAuthorized;
+    isStudentRole && teacherPresence === "available" && profile.isCallernAuthorized;
   const isPending = followMutation.isPending || unfollowMutation.isPending;
 
   return (
@@ -247,8 +248,8 @@ export default function TutorProfilePage() {
               </div>
             </div>
 
-            {/* Action buttons */}
-            {user?.role === "student" && (
+            {/* Action buttons — only shown to students for CallerN-authorized teachers */}
+            {isStudentRole && profile.isCallernAuthorized && (
               <div className="flex gap-2">
                 {canCall && (
                   <Link href="/callern" className="flex-1">
