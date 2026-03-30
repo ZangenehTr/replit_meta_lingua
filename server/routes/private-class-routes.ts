@@ -6,6 +6,7 @@ import {
   studentSessionPackages,
   teacherStudentAssignments,
   privateSessions,
+  liveClassSessions,
   leads,
   users,
   walletTransactions,
@@ -278,6 +279,17 @@ export function registerPrivateClassRoutes(app: Express) {
           remainingAfter: newRemaining,
         }).returning();
 
+        // 1b. Also write a compatibility record to live_class_sessions (classId nullable for private sessions)
+        await tx.insert(liveClassSessions).values({
+          classId: null,
+          teacherId: pkg.teacherId,
+          sessionDate: new Date(data.sessionDate),
+          actualDuration: data.actualDuration || null,
+          plannedTopic: data.topicsCovered || null,
+          teacherNotes: data.teacherNotes || null,
+          sessionType: 'private',
+        });
+
         // 2. Decrement remaining sessions and optionally set next scheduled session
         const pkgUpdate: Partial<typeof studentSessionPackages.$inferInsert> = { updatedAt: new Date() };
         if (deducted > 0) pkgUpdate.remainingSessions = newRemaining;
@@ -516,11 +528,21 @@ export function registerPrivateClassRoutes(app: Express) {
         }
       }
 
+      // Fetch CRM stages from leads table using leadId
+      const leadIds = rows.map(r => r.pkg.leadId).filter(Boolean) as number[];
+      let leadStageMap = new Map<number, string>();
+      if (leadIds.length > 0) {
+        const leadRows = await db.select({ id: leads.id, workflowStage: leads.workflowStage })
+          .from(leads).where(inArray(leads.id, leadIds));
+        for (const l of leadRows) leadStageMap.set(l.id, l.workflowStage || '');
+      }
+
       const result = rows.map(({ pkg, student, bundle }) => ({
         id: pkg.id,
         student,
         teacher: teacherMap.get(pkg.teacherId) || { id: pkg.teacherId, firstName: 'Unknown', lastName: '' },
         bundle,
+        crmStage: pkg.leadId ? (leadStageMap.get(pkg.leadId) || 'active_private_class') : 'active_private_class',
         totalSessions: pkg.totalSessions,
         remainingSessions: pkg.remainingSessions,
         sessionDuration: pkg.sessionDuration,

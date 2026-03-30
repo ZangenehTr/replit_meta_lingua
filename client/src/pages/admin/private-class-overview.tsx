@@ -35,6 +35,7 @@ interface PrivateClassRecord {
   student: { id: number; firstName: string; lastName: string } | null;
   teacher: { id: number; firstName: string; lastName: string } | null;
   bundle: { id: number; name: string } | null;
+  crmStage: string;
   totalSessions: number;
   remainingSessions: number;
   sessionDuration: number;
@@ -82,12 +83,25 @@ function PrivateClassOverviewPage() {
   const attendanceLabel = (s: string) =>
     s === 'attended' ? 'حضور' : s === 'absent' ? 'غایب' : 'لغو';
 
+  const crmStageLabel = (stage: string) => {
+    const labels: Record<string, string> = {
+      active_private_class: 'کلاس خصوصی فعال',
+      private_class_setup: 'راه‌اندازی کلاس',
+      charge_renewal: 'تمدید شارژ',
+      completed_private_class: 'تکمیل شده',
+      private_class_withdrawal: 'انصراف',
+      hold: 'تعلیق',
+    };
+    return labels[stage] ?? stage;
+  };
+
   const exportCSV = () => {
-    const headers = ["دانش‌آموز", "استاد", "بسته", "کل جلسات", "باقیمانده", "وضعیت", "شروع", "انقضا", "جلسه بعدی"];
+    const headers = ["دانش‌آموز", "استاد", "بسته", "مرحله CRM", "کل جلسات", "باقیمانده", "وضعیت", "شروع", "انقضا", "جلسه بعدی"];
     const rows = filtered.map(r => [
       `${r.student?.firstName ?? ""} ${r.student?.lastName ?? ""}`,
       `${r.teacher?.firstName ?? ""} ${r.teacher?.lastName ?? ""}`,
       r.bundle?.name ?? "",
+      crmStageLabel(r.crmStage),
       String(r.totalSessions),
       String(r.remainingSessions),
       r.status === 'active' ? "فعال" : r.status === 'completed' ? "تکمیل" : "منقضی",
@@ -212,6 +226,9 @@ function PrivateClassOverviewPage() {
                       {rec.bundle && (
                         <p className="text-sm text-gray-500">{rec.bundle.name}</p>
                       )}
+                      <Badge variant="outline" className="text-xs w-fit">
+                        {crmStageLabel(rec.crmStage)}
+                      </Badge>
 
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
                         <div className="flex items-center gap-1 text-gray-600">

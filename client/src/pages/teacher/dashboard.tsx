@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
@@ -58,6 +59,87 @@ interface TeacherStats {
   classDistribution: { name: string; value: number; color: string }[];
   recentFeedback: { id: number; student: string; rating: number; comment: string; date: string }[];
   weeklySchedule: { day: string; classes: number; hours: number }[];
+}
+
+// Private Students mini-section for teacher dashboard
+interface PrivateStudentSummary {
+  id: number;
+  student: { id: number; firstName: string; lastName: string } | null;
+  remainingSessions: number;
+  totalSessions: number;
+  nextScheduledAt: string | null;
+  isLowSession: boolean;
+  status: string;
+}
+
+function PrivateStudentsDashboardSection() {
+  const { data: students = [] } = useQuery<PrivateStudentSummary[]>({
+    queryKey: ["/api/teacher/private-students"],
+    queryFn: () => apiRequest(`/api/teacher/private-students`),
+  });
+  const active = students.filter(s => s.status === 'active');
+  const alerts = active.filter(s => s.isLowSession).length;
+
+  if (active.length === 0) return null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+      <Card className="shadow-xl border-purple-200">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-purple-500" />
+              دانش‌آموزان خصوصی من
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {alerts > 0 && (
+                <Badge variant="destructive" className="text-xs gap-1">
+                  <Bell className="h-3 w-3" />
+                  {alerts} نیاز به تمدید
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs">{active.length} فعال</Badge>
+              <Link href="/teacher/private-students">
+                <Button variant="outline" size="sm" className="text-xs h-7">مشاهده همه</Button>
+              </Link>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {active.slice(0, 3).map(s => (
+              <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg border ${s.isLowSession ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-100'}`}>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="text-xs bg-purple-100 text-purple-700">
+                      {s.student?.firstName?.[0]}{s.student?.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{s.student?.firstName} {s.student?.lastName}</p>
+                    {s.nextScheduledAt && (
+                      <p className="text-xs text-blue-600">جلسه بعدی: {new Date(s.nextScheduledAt).toLocaleDateString('fa-IR')}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`text-sm font-bold ${s.isLowSession ? 'text-orange-600' : 'text-gray-700'}`}>{s.remainingSessions} جلسه</p>
+                  <p className="text-xs text-gray-400">از {s.totalSessions}</p>
+                </div>
+              </div>
+            ))}
+            {active.length > 3 && (
+              <Link href="/teacher/private-students">
+                <Button variant="ghost" size="sm" className="w-full text-xs text-purple-600">
+                  +{active.length - 3} دانش‌آموز دیگر
+                </Button>
+              </Link>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 }
 
 export default function TeacherDashboard() {
@@ -253,6 +335,9 @@ export default function TeacherDashboard() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Private Students Section */}
+        <PrivateStudentsDashboardSection />
 
         {/* Today's Schedule */}
         <motion.div

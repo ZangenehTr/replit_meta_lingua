@@ -4069,7 +4069,7 @@ export const levelAssessmentResults = pgTable("level_assessment_results", {
 // Live Class Sessions table
 export const liveClassSessions = pgTable("live_class_sessions", {
   id: serial("id").primaryKey(),
-  classId: integer("class_id").references(() => classes.id).notNull(),
+  classId: integer("class_id").references(() => classes.id),
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
   sessionDate: timestamp("session_date").notNull(),
   startTime: timestamp("start_time"),

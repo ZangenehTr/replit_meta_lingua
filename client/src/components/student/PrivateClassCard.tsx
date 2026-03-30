@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
+import { Link } from "wouter";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 interface SessionRecord {
   id: number;
@@ -95,10 +98,18 @@ export function PrivateClassCard() {
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600 font-medium">{data.bundle.name}</p>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <GraduationCap className="h-4 w-4 text-purple-500" />
-          <span>استاد: <strong>{teacherName}</strong></span>
-        </div>
+        <Link href={`/tutors/${data.teacher.id}`} className="flex items-center gap-3 group hover:opacity-80 transition-opacity">
+          <Avatar className="h-10 w-10 border-2 border-purple-200">
+            <AvatarImage src={data.teacher.profileImage ?? undefined} alt={teacherName} />
+            <AvatarFallback className="bg-purple-100 text-purple-700 text-sm font-bold">
+              {data.teacher.firstName?.[0]}{data.teacher.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-xs text-gray-500">استاد</p>
+            <TeacherNameLink teacherId={data.teacher.id} firstName={data.teacher.firstName} lastName={data.teacher.lastName} />
+          </div>
+        </Link>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2 text-gray-600">
