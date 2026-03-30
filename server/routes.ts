@@ -2661,12 +2661,18 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   });
 
   // User Management (Admin/Manager/Call Center only)
-  app.get("/api/users", authenticateToken, requireRole(['Admin', 'Supervisor', 'Call Center Agent']), async (req: any, res) => {
+  app.get("/api/users", authenticateToken, requireRole(['Admin', 'Supervisor', 'Call Center Agent', 'FrontDesk']), async (req: any, res) => {
     try {
       const allUsers = await storage.getAllUsers();
       // Exclude test users with lowercase roles
-      const users = excludeTestUsers(allUsers);
-      res.json(users);
+      let users = excludeTestUsers(allUsers);
+      // Support optional role filter e.g. ?role=Teacher or ?role=Admin,Supervisor
+      const roleFilter = req.query.role as string | undefined;
+      if (roleFilter) {
+        const roles = roleFilter.split(',').map(r => r.trim());
+        users = users.filter(u => roles.includes(u.role as string));
+      }
+      res.json({ users, total: users.length });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
     }

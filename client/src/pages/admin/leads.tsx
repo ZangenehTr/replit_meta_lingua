@@ -207,7 +207,10 @@ export default function AdminLeadsPage() {
   // Fetch call center agents for assignment
   const { data: agents = [] } = useQuery({
     queryKey: ['/api/users/agents'],
-    queryFn: () => apiRequest('/api/users?role=Call Center Agent,Admin')
+    queryFn: async () => {
+      const res = await apiRequest('/api/users?role=Call Center Agent,Admin');
+      return res?.users ?? res ?? [];
+    }
   });
 
   // Create lead mutation
