@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings, callernTeacherFollowers } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings, callernTeacherFollowers, liveClassSessions } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -11588,12 +11588,28 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       console.log(`Connected teacher IDs:`, connectedTeacherIds);
 
       // Determine which teachers are actively in a call_session (status='active')
-      // These are 'teaching' rather than 'available'
+      // OR in a live class session right now — both count as 'teaching'
+      const now = new Date();
       const activeSessionRows = await db
         .select({ teacherId: callSessions.teacherId })
         .from(callSessions)
         .where(eq(callSessions.status, 'active'));
-      const teachingTeacherIds = new Set(activeSessionRows.map(r => r.teacherId));
+
+      const activeLiveClassRows = await db
+        .select({ teacherId: liveClassSessions.teacherId })
+        .from(liveClassSessions)
+        .where(
+          and(
+            lte(liveClassSessions.startTime, now),
+            gte(liveClassSessions.endTime, now),
+            eq(liveClassSessions.isCompleted, false)
+          )
+        );
+
+      const teachingTeacherIds = new Set([
+        ...activeSessionRows.map(r => r.teacherId),
+        ...activeLiveClassRows.map(r => r.teacherId),
+      ]);
       
       // Get live rating aggregates from session_ratings table keyed by teacher id
       const ratingRows = await db

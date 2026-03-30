@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiRequest } from '@/lib/queryClient';
+import { TeacherNameLink } from '@/components/ui/teacher-name-link';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -395,7 +396,11 @@ export default function AdminClassesPage() {
                             <p className="flex items-center gap-2">
                               <User className="h-4 w-4 text-gray-500" />
                               <span className="text-gray-600">Teacher:</span>
-                              <span className="font-medium">{classSession.teacherName || `Teacher ${classSession.teacherId}`}</span>
+                              {classSession.teacherId ? (
+                                <TeacherNameLink teacherId={classSession.teacherId} fullName={classSession.teacherName} variant="subtle" className="font-medium" />
+                              ) : (
+                                <span className="font-medium">{classSession.teacherName || "—"}</span>
+                              )}
                             </p>
                             <p className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 text-gray-500" />
@@ -487,7 +492,11 @@ export default function AdminClassesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Teacher</Label>
-                    <p className="font-medium">{selectedSession.teacherName || `Teacher ${selectedSession.teacherId}`}</p>
+                    {selectedSession.teacherId ? (
+                      <TeacherNameLink teacherId={selectedSession.teacherId} fullName={selectedSession.teacherName} variant="subtle" className="font-medium" />
+                    ) : (
+                      <p className="font-medium">{selectedSession.teacherName || "—"}</p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Room</Label>
@@ -743,7 +752,11 @@ function ClassSessionCard({
       <div className="space-y-1">
         <div className="flex items-center gap-1 text-xs">
           <User className="h-3 w-3" />
-          <span className="truncate">{session.teacherName || `Teacher ${session.teacherId}`}</span>
+          {session.teacherId ? (
+            <TeacherNameLink teacherId={session.teacherId} fullName={session.teacherName} variant="subtle" className="truncate text-xs" />
+          ) : (
+            <span className="truncate">{session.teacherName || "—"}</span>
+          )}
         </div>
         <div className="flex items-center gap-1 text-xs">
           <Clock className="h-3 w-3" />

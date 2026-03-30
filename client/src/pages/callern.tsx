@@ -233,14 +233,27 @@ export default function CallernSystem() {
     }).length;
   }, [callHistory]);
 
-  // Track which teachers the student is following (set of teacher ids)
+  // Load follow state from backend so it persists across page reloads
+  const { data: myFollowsData } = useQuery<{ followedTeacherIds: number[] }>({
+    queryKey: ["/api/teachers/my-follows"],
+    enabled: user?.role === "Student" || user?.role === "student",
+    staleTime: 60 * 1000,
+  });
+
+  // Track which teachers the student is following (set of teacher ids) — seeded from backend
   const [followingIds, setFollowingIds] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    if (myFollowsData?.followedTeacherIds) {
+      setFollowingIds(new Set(myFollowsData.followedTeacherIds));
+    }
+  }, [myFollowsData]);
 
   // Follow a teacher (Notify Me)
   const followTeacher = async (teacherId: number) => {
     try {
       await apiRequest(`/api/teachers/${teacherId}/follow`, { method: "POST" });
       setFollowingIds(prev => new Set([...prev, teacherId]));
+      queryClient.invalidateQueries({ queryKey: ["/api/teachers/my-follows"] });
       toast({ title: "اطلاع‌رسانی فعال شد", description: "وقتی این مدرس آنلاین شود به شما اطلاع می‌دهیم" });
     } catch (err: any) {
       toast({ title: "خطا", description: err.message, variant: "destructive" });
@@ -251,6 +264,7 @@ export default function CallernSystem() {
     try {
       await apiRequest(`/api/teachers/${teacherId}/follow`, { method: "DELETE" });
       setFollowingIds(prev => { const s = new Set(prev); s.delete(teacherId); return s; });
+      queryClient.invalidateQueries({ queryKey: ["/api/teachers/my-follows"] });
       toast({ title: "اطلاع‌رسانی غیرفعال شد" });
     } catch (err: any) {
       toast({ title: "خطا", description: err.message, variant: "destructive" });
@@ -883,8 +897,8 @@ export default function CallernSystem() {
                         <div className="flex flex-wrap gap-2 pt-2 items-center">
                           <span className="font-semibold">{formatPrice(Number(teacher.hourlyRate))}{t('callern:perHour')}</span>
                           <div className="flex gap-2 ms-auto">
-                            {/* Notify Me / Unfollow toggle (only when teaching) */}
-                            {isTeaching && (
+                            {/* Notify Me / Unfollow toggle (when teaching or offline) */}
+                            {!isAvailable && (
                               <Button
                                 size="sm"
                                 variant={isFollowing ? "outline" : "secondary"}
@@ -923,6 +937,68 @@ export default function CallernSystem() {
             )}
           </CardContent>
         </Card>
+
+        {/* Offline teachers — Notify Me section */}
+        {offlineTeachers.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Bell className="h-4 w-4 text-muted-foreground" />
+                مدرسین آفلاین — اطلاع‌رسانی زمان آنلاین شدن
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {offlineTeachers.map((teacher: AvailableTeacher) => {
+                  const isFollowing = followingIds.has(teacher.id);
+                  return (
+                    <div key={teacher.id} className="border rounded-lg p-4 flex items-center gap-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="relative shrink-0">
+                        {teacher.profileImageUrl ? (
+                          <img
+                            src={teacher.profileImageUrl}
+                            alt={`${teacher.firstName} ${teacher.lastName}`}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow grayscale"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold shadow">
+                            {teacher.firstName[0]}{teacher.lastName[0]}
+                          </div>
+                        )}
+                        <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-gray-400 border-2 border-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <TeacherNameLink
+                          teacherId={teacher.id}
+                          firstName={teacher.firstName}
+                          lastName={teacher.lastName}
+                          className="text-sm font-medium"
+                          variant="subtle"
+                        />
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                          <span className="text-xs text-muted-foreground">{teacher.rating > 0 ? teacher.rating.toFixed(1) : '–'}</span>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={isFollowing ? "outline" : "default"}
+                        onClick={() => isFollowing ? unfollowTeacher(teacher.id) : followTeacher(teacher.id)}
+                        className="gap-1 text-xs shrink-0"
+                      >
+                        {isFollowing ? (
+                          <><BellOff className="h-3 w-3" /> لغو</>
+                        ) : (
+                          <><Bell className="h-3 w-3" /> اطلاع‌رسانی</>
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="packages-section">
           {/* Available Packages */}

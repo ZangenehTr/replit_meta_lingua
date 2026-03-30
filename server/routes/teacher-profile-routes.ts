@@ -3,6 +3,7 @@ import { db } from "../db";
 import { eq, sql, desc, and } from "drizzle-orm";
 import {
   users,
+  courses,
   sessionRatings,
   callernTeacherFollowers,
   teacherCallernAuthorization,
@@ -13,7 +14,8 @@ const router = Router();
 
 // ---------------------------------------------------------------------------
 // GET /api/teachers/admin/followers-dashboard  (admin/supervisor)
-// MUST be registered BEFORE /:id/profile to avoid "admin" being treated as id
+// Returns ALL CallerN-authorized teachers with follower counts (including 0)
+// MUST be registered BEFORE /:id routes to avoid param collision
 // ---------------------------------------------------------------------------
 router.get(
   "/admin/followers-dashboard",
@@ -21,18 +23,35 @@ router.get(
   authorize(["Admin", "Supervisor"]),
   async (_req, res) => {
     try {
-      const rows = await db
+      // All authorized CallerN teachers
+      const authorizedRows = await db
+        .select({
+          teacherId: teacherCallernAuthorization.teacherId,
+        })
+        .from(teacherCallernAuthorization)
+        .where(
+          and(
+            eq(teacherCallernAuthorization.isAuthorized, true),
+            eq(teacherCallernAuthorization.isActive, true)
+          )
+        );
+
+      // Follower counts per teacher
+      const followerRows = await db
         .select({
           teacherId: callernTeacherFollowers.teacherId,
           followerCount: sql<number>`count(*)`,
         })
         .from(callernTeacherFollowers)
         .where(eq(callernTeacherFollowers.isActive, true))
-        .groupBy(callernTeacherFollowers.teacherId)
-        .orderBy(desc(sql`count(*)`));
+        .groupBy(callernTeacherFollowers.teacherId);
+
+      const followerMap = new Map(
+        followerRows.map((r) => [r.teacherId, Number(r.followerCount)])
+      );
 
       const enriched = await Promise.all(
-        rows.map(async (row) => {
+        authorizedRows.map(async (row) => {
           const [teacher] = await db
             .select({
               id: users.id,
@@ -50,10 +69,13 @@ router.get(
               ? `${teacher.firstName} ${teacher.lastName}`
               : `Teacher #${row.teacherId}`,
             profileImageUrl: teacher?.profileImageUrl ?? null,
-            followerCount: Number(row.followerCount),
+            followerCount: followerMap.get(row.teacherId) ?? 0,
           };
         })
       );
+
+      // Sort descending by follower count
+      enriched.sort((a, b) => b.followerCount - a.followerCount);
 
       res.json(enriched);
     } catch (err) {
@@ -64,7 +86,36 @@ router.get(
 );
 
 // ---------------------------------------------------------------------------
+// GET /api/teachers/my-follows  (student – authenticated)
+// Returns IDs of teachers the current student is actively following
+// ---------------------------------------------------------------------------
+router.get(
+  "/my-follows",
+  authenticate,
+  authorize(["Student"]),
+  async (req: any, res) => {
+    try {
+      const studentId: number = req.user.id;
+      const rows = await db
+        .select({ teacherId: callernTeacherFollowers.teacherId })
+        .from(callernTeacherFollowers)
+        .where(
+          and(
+            eq(callernTeacherFollowers.studentId, studentId),
+            eq(callernTeacherFollowers.isActive, true)
+          )
+        );
+      res.json({ followedTeacherIds: rows.map((r) => r.teacherId) });
+    } catch (err) {
+      console.error("Error fetching student follows:", err);
+      res.status(500).json({ message: "Failed to fetch follows" });
+    }
+  }
+);
+
+// ---------------------------------------------------------------------------
 // GET /api/teachers/:id/profile  (public – no auth required)
+// Safe: never exposes email or phone
 // ---------------------------------------------------------------------------
 router.get("/:id/profile", async (req, res) => {
   try {
@@ -113,28 +164,51 @@ router.get("/:id/profile", async (req, res) => {
       .where(eq(teacherCallernAuthorization.teacherId, teacherId))
       .limit(1);
 
+    // Open enrollment courses taught by this teacher
+    const openCourses = await db
+      .select({
+        id: courses.id,
+        title: courses.title,
+        price: courses.price,
+        level: courses.level,
+        language: courses.language,
+        thumbnail: courses.thumbnail,
+        classFormat: courses.classFormat,
+        proficiencyLevel: courses.proficiencyLevel,
+      })
+      .from(courses)
+      .where(
+        and(
+          eq(courses.instructorId, teacherId),
+          eq(courses.isActive, true)
+        )
+      )
+      .limit(6);
+
     const avgRating = parseFloat(String(ratingAgg?.avg ?? 0));
     const reviewCount = Number(ratingAgg?.count ?? 0);
     const followerCount = Number(followerAgg?.count ?? 0);
 
+    const t = teacher as any;
     const profile = {
       id: teacher.id,
       firstName: teacher.firstName,
       lastName: teacher.lastName,
       fullName: `${teacher.firstName} ${teacher.lastName}`,
-      email: teacher.email,
-      phone: teacher.phone,
       profileImageUrl: teacher.profileImageUrl ?? null,
-      bio: (teacher as any).teacherBio ?? null,
-      introVideoUrl: (teacher as any).introVideoUrl ?? null,
-      specializations: (teacher as any).teacherSpecializations ?? [],
+      bio: t.teacherBio ?? null,
+      introVideoUrl: t.introVideoUrl ?? null,
+      specializations: t.teacherSpecializations ?? [],
+      teachingExperience: t.teachingExperience ?? null,
       languages: ["Persian", "English"],
       rating: avgRating,
       reviewCount,
       followerCount,
       isCallernAuthorized: auth?.isAuthorized === true,
-      hourlyRate: auth ? parseInt(String((auth as any).hourlyRate ?? 500000)) : 500000,
+      authorizationLevel: auth?.authorizationLevel ?? null,
+      hourlyRate: t.hourlyRate ? parseInt(String(t.hourlyRate)) : 500000,
       successRate: reviewCount > 0 ? Math.min(98, 80 + Math.round(avgRating * 3)) : null,
+      openCourses,
     };
 
     res.json(profile);

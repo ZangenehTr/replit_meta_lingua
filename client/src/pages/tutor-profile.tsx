@@ -24,25 +24,40 @@ import {
   Award,
   Phone,
   Globe,
+  BookOpen,
+  Briefcase,
 } from "lucide-react";
+
+interface OpenCourse {
+  id: number;
+  title: string;
+  price?: number | null;
+  level?: string | null;
+  language?: string | null;
+  thumbnail?: string | null;
+  classFormat?: string | null;
+  proficiencyLevel?: string | null;
+}
 
 interface TeacherProfile {
   id: number;
   firstName: string;
   lastName: string;
   fullName: string;
-  email?: string;
   profileImageUrl?: string;
   bio?: string;
   introVideoUrl?: string;
   specializations: string[];
+  teachingExperience?: string | null;
   languages: string[];
   rating: number;
   reviewCount: number;
   followerCount: number;
   isCallernAuthorized: boolean;
+  authorizationLevel?: string | null;
   hourlyRate?: number;
   successRate?: number | null;
+  openCourses: OpenCourse[];
 }
 
 type PresenceStatus = "available" | "teaching" | "offline";
@@ -336,6 +351,21 @@ export default function TutorProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Teaching experience */}
+        {profile.teachingExperience && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                سابقه تدریس
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm font-semibold text-gray-800">{profile.teachingExperience}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Hourly rate */}
         {profile.hourlyRate && (
           <Card>
@@ -349,6 +379,53 @@ export default function TutorProfilePage() {
               <p className="text-lg font-bold text-blue-700">
                 {profile.hourlyRate.toLocaleString("fa-IR")} تومان / ساعت
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Open enrollment courses */}
+        {profile.openCourses && profile.openCourses.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                دوره‌های باز ثبت‌نام
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {profile.openCourses.map((course) => (
+                <div
+                  key={course.id}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-gray-50 hover:bg-blue-50 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{course.title}</p>
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      {course.proficiencyLevel && (
+                        <Badge variant="outline" className="text-xs">{course.proficiencyLevel}</Badge>
+                      )}
+                      {course.classFormat && (
+                        <Badge variant="secondary" className="text-xs">{course.classFormat}</Badge>
+                      )}
+                      {course.language && (
+                        <Badge variant="outline" className="text-xs">{course.language}</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ms-3">
+                    {course.price != null && (
+                      <span className="text-sm font-bold text-blue-700 whitespace-nowrap">
+                        {course.price.toLocaleString("fa-IR")} ت
+                      </span>
+                    )}
+                    <a href={`/courses/${course.id}`}>
+                      <Badge className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer whitespace-nowrap">
+                        ثبت‌نام
+                      </Badge>
+                    </a>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         )}
