@@ -231,10 +231,23 @@ router.patch("/api/admin/course-reviews/:id", authenticate, authorize(["Admin", 
   }
 });
 
+// In-memory deduplication: prevents double-voting within a server process session
+// Key format: "userId:reviewId"
+const helpfulVoteSeen = new Set<string>();
+
 // ── POST /api/courses/:courseId/reviews/:reviewId/helpful — mark a review as helpful ──
-router.post("/api/courses/:courseId/reviews/:reviewId/helpful", async (req, res) => {
+// Requires authentication; deduplicates votes per user per review
+router.post("/api/courses/:courseId/reviews/:reviewId/helpful", authenticate, async (req: any, res) => {
   try {
     const reviewId = parseInt(req.params.reviewId);
+    const userId = req.user.id;
+
+    const voteKey = `${userId}:${reviewId}`;
+    if (helpfulVoteSeen.has(voteKey)) {
+      return res.status(409).json({ message: "قبلاً این نظر را مفید علامت زده‌اید" });
+    }
+
+    helpfulVoteSeen.add(voteKey);
     await db
       .update(courseReviews)
       .set({ helpfulCount: sql`${courseReviews.helpfulCount} + 1` })

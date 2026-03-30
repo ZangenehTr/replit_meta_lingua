@@ -106,8 +106,12 @@ router.get("/api/referrals/settings", authenticate, async (req: any, res) => {
     res.json({
       code: refCode.code,
       isActive: refCode.isActive,
-      referrerCreditAmount: 50000,   // Toman awarded to referrer on first payment
-      referredCreditAmount: 30000    // Toman awarded to new student on first payment
+      // Percentage model used by admin settings UI and POST /api/referrals/settings
+      referrerPercentage: 15,
+      referredPercentage: 5,
+      // Fixed Toman amounts used by processReferralFirstPayment (for display reference)
+      referrerCreditAmount: 50000,
+      referredCreditAmount: 30000
     });
   } catch (error) {
     res.status(500).json({ message: "خطا در دریافت تنظیمات معرفی" });
@@ -366,80 +370,83 @@ export async function recordReferralRegistration(referralCode: string, newUserId
 // Called from enrollment/payment completion when the paying user was referred.
 export async function processReferralFirstPayment(paidUserId: number, coursePaymentId: number): Promise<void> {
   try {
-    // Find if this user was referred (has a registration event with no first_payment event yet)
-    const [event] = await db
-      .select()
-      .from(referralEvents)
-      .where(
-        sql`${referralEvents.referredUserId} = ${paidUserId}
-          AND ${referralEvents.eventType} = 'registration'`
-      )
-      .limit(1);
+    // Run inside a transaction so concurrent retried callbacks cannot double-credit
+    await db.transaction(async (tx) => {
+      // Find if this user was referred (has a registration event)
+      const [event] = await tx
+        .select()
+        .from(referralEvents)
+        .where(
+          sql`${referralEvents.referredUserId} = ${paidUserId}
+            AND ${referralEvents.eventType} = 'registration'`
+        )
+        .limit(1);
 
-    if (!event) return; // not a referred user
+      if (!event) return; // not a referred user
 
-    // Check no first_payment event already recorded
-    const [alreadyConverted] = await db
-      .select({ id: referralEvents.id })
-      .from(referralEvents)
-      .where(
-        sql`${referralEvents.referredUserId} = ${paidUserId}
-          AND ${referralEvents.eventType} = 'first_payment'`
-      )
-      .limit(1);
+      // Guard: if a first_payment event already exists, do nothing (idempotent)
+      const [alreadyConverted] = await tx
+        .select({ id: referralEvents.id })
+        .from(referralEvents)
+        .where(
+          sql`${referralEvents.referredUserId} = ${paidUserId}
+            AND ${referralEvents.eventType} = 'first_payment'`
+        )
+        .limit(1);
 
-    if (alreadyConverted) return; // already processed
+      if (alreadyConverted) return; // already processed, skip
 
-    const REFERRER_CREDIT = 50000;  // Toman
-    const REFERRED_CREDIT = 30000;  // Toman
+      const REFERRER_CREDIT = 50000;  // Toman
+      const REFERRED_CREDIT = 30000;  // Toman
 
-    // Credit referrer
-    await db.update(users)
-      .set({ walletBalance: sql`${users.walletBalance} + ${REFERRER_CREDIT}` })
-      .where(eq(users.id, event.referrerId));
+      // Record the first_payment event FIRST (unique guard at DB level via insert order)
+      await tx.insert(referralEvents).values({
+        referralCodeId: event.referralCodeId,
+        referrerId: event.referrerId,
+        referredUserId: paidUserId,
+        eventType: "first_payment",
+        coursePaymentId,
+        referrerCreditAwarded: REFERRER_CREDIT,
+        referredCreditAwarded: REFERRED_CREDIT
+      });
 
-    await db.insert(walletTransactions).values({
-      userId: event.referrerId,
-      amount: String(REFERRER_CREDIT),
-      type: "credit",
-      description: "پاداش معرفی دانشجوی جدید",
-      status: "completed"
+      // Credit referrer wallet
+      await tx.update(users)
+        .set({ walletBalance: sql`${users.walletBalance} + ${REFERRER_CREDIT}` })
+        .where(eq(users.id, event.referrerId));
+
+      await tx.insert(walletTransactions).values({
+        userId: event.referrerId,
+        amount: String(REFERRER_CREDIT),
+        type: "credit",
+        description: "پاداش معرفی دانشجوی جدید",
+        status: "completed"
+      });
+
+      // Credit referred user wallet
+      await tx.update(users)
+        .set({ walletBalance: sql`${users.walletBalance} + ${REFERRED_CREDIT}` })
+        .where(eq(users.id, paidUserId));
+
+      await tx.insert(walletTransactions).values({
+        userId: paidUserId,
+        amount: String(REFERRED_CREDIT),
+        type: "credit",
+        description: "پاداش ثبت‌نام با کد معرفی",
+        status: "completed"
+      });
+
+      // Update referral_codes aggregate
+      await tx.update(referralCodes)
+        .set({
+          totalConverted: sql`${referralCodes.totalConverted} + 1`,
+          totalCreditsEarned: sql`${referralCodes.totalCreditsEarned} + ${REFERRER_CREDIT}`,
+          updatedAt: new Date()
+        })
+        .where(eq(referralCodes.id, event.referralCodeId));
+
+      console.log(`Referral credited: referrer ${event.referrerId} +${REFERRER_CREDIT}, referred ${paidUserId} +${REFERRED_CREDIT}`);
     });
-
-    // Credit referred user
-    await db.update(users)
-      .set({ walletBalance: sql`${users.walletBalance} + ${REFERRED_CREDIT}` })
-      .where(eq(users.id, paidUserId));
-
-    await db.insert(walletTransactions).values({
-      userId: paidUserId,
-      amount: String(REFERRED_CREDIT),
-      type: "credit",
-      description: "پاداش ثبت‌نام با کد معرفی",
-      status: "completed"
-    });
-
-    // Record the first_payment event
-    await db.insert(referralEvents).values({
-      referralCodeId: event.referralCodeId,
-      referrerId: event.referrerId,
-      referredUserId: paidUserId,
-      eventType: "first_payment",
-      coursePaymentId,
-      referrerCreditAwarded: REFERRER_CREDIT,
-      referredCreditAwarded: REFERRED_CREDIT
-    });
-
-    // Update referral_codes aggregate
-    await db.update(referralCodes)
-      .set({
-        totalConverted: sql`${referralCodes.totalConverted} + 1`,
-        totalCreditsEarned: sql`${referralCodes.totalCreditsEarned} + ${REFERRER_CREDIT}`,
-        updatedAt: new Date()
-      })
-      .where(eq(referralCodes.id, event.referralCodeId));
-
-    console.log(`Referral credited: referrer ${event.referrerId} +${REFERRER_CREDIT}, referred ${paidUserId} +${REFERRED_CREDIT}`);
   } catch (error) {
     console.error("Error processing referral first payment:", error);
   }
