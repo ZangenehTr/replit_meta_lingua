@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Star } from "lucide-react";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 interface Tutor {
   id: number;
@@ -106,7 +107,7 @@ export function TutorMarketplace() {
                       {tutor.firstName[0]}{tutor.lastName[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <h3 className="font-medium">{tutor.firstName} {tutor.lastName}</h3>
+                  <h3 className="font-medium"><TeacherNameLink teacherId={tutor.id} fullName={`${tutor.firstName} ${tutor.lastName}`} variant="subtle" /></h3>
                   <p className="text-sm text-muted-foreground">Language Specialist</p>
                   <div className="flex items-center justify-center mt-2">
                     <div className="flex text-yellow-400">

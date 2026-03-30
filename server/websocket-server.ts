@@ -22,6 +22,7 @@ interface TeacherSocket {
   teacherId: number;
   isAvailable: boolean;
   currentCall?: string;
+  lastKnownPresence?: 'available' | 'teaching' | 'offline';
 }
 
 interface UserSocket {
@@ -78,6 +79,7 @@ export class CallernWebSocketServer {
     this.startAbandonedRoomMonitor();
     this.startMemoryMonitor();
     this.startHeartbeatMonitor();
+    this.startLiveClassPresenceWatcher();
     
     console.log('Callern WebSocket server with AI Supervisor and memory leak protection initialized');
   }
@@ -1742,6 +1744,62 @@ export class CallernWebSocketServer {
         }
       }
     }, this.HEARTBEAT_INTERVAL);
+  }
+
+  /**
+   * Periodic watcher for live-class-session end → available transitions.
+   * Runs every 5 minutes. For each connected teacher whose last known presence
+   * was 'teaching' (due to a live class), checks if they are now available,
+   * and fires follower notifications if so.
+   */
+  private startLiveClassPresenceWatcher() {
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    setInterval(async () => {
+      const teacherIds = Array.from(this.teacherSockets.keys());
+      if (teacherIds.length === 0) return;
+
+      const now = new Date();
+      for (const teacherId of teacherIds) {
+        try {
+          const ts = this.teacherSockets.get(teacherId);
+          if (!ts || !ts.isAvailable) continue;
+
+          const [activeLive] = await db
+            .select({ id: liveClassSessions.id })
+            .from(liveClassSessions)
+            .where(
+              and(
+                eq(liveClassSessions.teacherId, teacherId),
+                eq(liveClassSessions.isCompleted, false),
+                lte(liveClassSessions.startTime, now),
+                or(isNull(liveClassSessions.endTime), gte(liveClassSessions.endTime, now))
+              )
+            )
+            .limit(1);
+
+          const [activeCall] = await db
+            .select({ id: callSessions.id })
+            .from(callSessions)
+            .where(and(eq(callSessions.teacherId, teacherId), eq(callSessions.status, 'active')))
+            .limit(1);
+
+          const currentPresence: 'available' | 'teaching' =
+            activeLive || activeCall ? 'teaching' : 'available';
+
+          const wasTeaching = ts.lastKnownPresence === 'teaching';
+
+          if (wasTeaching && currentPresence === 'available') {
+            console.log(`LiveClassWatcher: Teacher ${teacherId} transitioned teaching→available, notifying followers`);
+            await this.notifyFollowersIfNowAvailable(teacherId);
+          }
+
+          ts.lastKnownPresence = currentPresence;
+          this.teacherSockets.set(teacherId, ts);
+        } catch (err) {
+          console.error(`LiveClassWatcher error for teacher ${teacherId}:`, err);
+        }
+      }
+    }, FIVE_MINUTES);
   }
 
   /**

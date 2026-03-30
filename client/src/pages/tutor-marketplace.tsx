@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/ui/back-button";
 import { useLanguage } from "@/hooks/use-language";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 interface Review {
   id: number;
@@ -321,7 +322,7 @@ export default function TutorMarketplace() {
                     <AvatarFallback>{tutor.name[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg truncate">{tutor.name}</h3>
+                    <h3 className="font-bold text-lg truncate"><TeacherNameLink teacherId={tutor.id} fullName={tutor.name} variant="subtle" /></h3>
                     <div className="flex items-center space-x-1 mb-2">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="text-sm font-medium">{tutor.rating}</span>
@@ -521,7 +522,7 @@ export default function TutorMarketplace() {
                                 <div className="space-y-2 text-sm">
                                   <div className="flex justify-between">
                                     <span>{getLocalizedText('Tutor', 'مربی', 'المدرس')}</span>
-                                    <span className="font-medium">{tutor.name}</span>
+                                    <span className="font-medium"><TeacherNameLink teacherId={tutor.id} fullName={tutor.name} variant="subtle" /></span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span>{getLocalizedText('Package', 'بسته', 'الباقة')}</span>
