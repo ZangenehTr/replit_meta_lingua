@@ -144,6 +144,20 @@ export function registerPrivateClassRoutes(app: Express) {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + (bundle.validityDays || 90));
 
+      // Validate wallet balance sufficiency before starting transaction
+      if (paymentMethod === 'wallet') {
+        const [student] = await db.select({ walletBalance: users.walletBalance })
+          .from(users).where(eq(users.id, lead.studentId!));
+        const balance = parseFloat(student?.walletBalance?.toString() || '0');
+        if (balance < amount) {
+          return res.status(400).json({
+            message: "Insufficient wallet balance",
+            required: amount,
+            available: balance,
+          });
+        }
+      }
+
       const result = await db.transaction(async (tx) => {
         // 1. Create student session package record
         const [pkg] = await tx.insert(studentSessionPackages).values({
