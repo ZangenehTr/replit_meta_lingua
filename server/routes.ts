@@ -14526,14 +14526,20 @@ Return JSON format:
   // 1. LEAD MANAGEMENT SYSTEM (Call Center Dashboard)
   app.get("/api/leads", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
-      const { source, status, priority, stage } = req.query as Record<string, string | undefined>;
-      // If any filter is provided, apply server-side filtering
-      if (source || status || priority || stage) {
-        const conditions: any[] = [];
+      const { source, status, priority, stage, assignedAgent, dateFrom, dateTo } = req.query as Record<string, string | undefined>;
+      const hasFilter = source || status || priority || stage || assignedAgent || dateFrom || dateTo;
+      if (hasFilter) {
+        const conditions: ReturnType<typeof eq>[] = [];
         if (source) conditions.push(eq(leads.source, source));
         if (status) conditions.push(eq(leads.status, status));
         if (priority) conditions.push(eq(leads.priority, priority));
         if (stage) conditions.push(eq(leads.workflowStage, stage));
+        if (assignedAgent) {
+          const agentId = parseInt(assignedAgent);
+          if (!isNaN(agentId)) conditions.push(eq(leads.assignedTo, agentId));
+        }
+        if (dateFrom) conditions.push(gte(leads.createdAt, new Date(dateFrom)));
+        if (dateTo) conditions.push(lte(leads.createdAt, new Date(dateTo)));
         const filtered = await db.select().from(leads)
           .where(conditions.length === 1 ? conditions[0] : and(...conditions))
           .orderBy(desc(leads.updatedAt));

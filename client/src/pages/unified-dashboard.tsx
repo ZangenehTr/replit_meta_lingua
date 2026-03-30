@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/use-language";
@@ -34,6 +36,23 @@ export default function UnifiedDashboard() {
   const { t } = useTranslation(['common', 'admin', 'student']);
   const { language, isRTL } = useLanguage();
   const isMobile = useIsMobile();
+  const [, navigate] = useLocation();
+
+  const isStudent = user?.role?.toLowerCase() === 'student';
+
+  // For students: check enrollment count to decide whether to show welcome page
+  const { data: studentCourses, isLoading: coursesLoading } = useQuery<unknown[]>({
+    queryKey: ["/api/student/courses"],
+    enabled: isStudent,
+    retry: false,
+    staleTime: 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (isStudent && !coursesLoading && studentCourses !== undefined && studentCourses.length === 0) {
+      navigate("/welcome");
+    }
+  }, [isStudent, coursesLoading, studentCourses, navigate]);
 
   // Add debug logging
   console.log('UnifiedDashboard rendering:', { user: user?.role, isRTL });
