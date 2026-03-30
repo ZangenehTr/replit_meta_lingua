@@ -147,6 +147,11 @@ import TeacherAvailability from "@/pages/teacher/teacher-availability";
 import ClassCommunication from "@/pages/teacher/class-communication";
 import TeacherObservationsPage from "@/pages/teacher/observations";
 import TeacherCallernSystem from "@/pages/teacher/callern";
+import TeacherPrivateStudentsPage from "@/pages/teacher/private-students";
+
+// Admin private class pages
+import SessionBundlesPage from "@/pages/admin/session-bundles";
+import PrivateClassOverviewPage from "@/pages/admin/private-class-overview";
 
 // Mentor pages
 import MentorStudentsPage from "@/pages/mentor/students";
@@ -488,6 +493,16 @@ function Router() {
       <Route path="/admin/shopping-cart">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <ShoppingCartSettings />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/session-bundles">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <SessionBundlesPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/private-class-overview">
+        <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
+          <PrivateClassOverviewPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/calendar-settings">
@@ -1044,6 +1059,11 @@ function Router() {
       <Route path="/teacher/callern">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher']}>
           <TeacherCallernSystem />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/teacher/private-students">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'teacher']}>
+          <TeacherPrivateStudentsPage />
         </RoleProtectedRoute>
       </Route>
 

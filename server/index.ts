@@ -572,6 +572,15 @@ server.listen({
     console.error('⚠️  Failed to register feature routes:', error);
   }
 
+  // Register private class operational stack routes
+  try {
+    const { registerPrivateClassRoutes } = await import('./routes/private-class-routes.js');
+    registerPrivateClassRoutes(app);
+    console.log('✅ Private Class routes registered (Session Bundles, Student Packages, Session Logging)');
+  } catch (error) {
+    console.error('⚠️  Failed to register private class routes:', error);
+  }
+
   // Register all main routes SYNCHRONOUSLY before 404 handler
   try {
     const { registerRoutes } = await import('./routes.js');

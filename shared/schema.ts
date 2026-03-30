@@ -3183,6 +3183,7 @@ export const sessionPackages = pgTable("session_packages", {
   skillLevel: varchar("skill_level", { length: 50 }),
   features: text("features").array().default([]),
   terms: text("terms"),
+  lowSessionAlertThreshold: integer("low_session_alert_threshold").default(2), // alert when remaining <= this
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -9750,3 +9751,48 @@ export const callernTeacherFollowers = pgTable("callern_teacher_followers", {
 
 export type CallernTeacherFollower = typeof callernTeacherFollowers.$inferSelect;
 export type InsertCallernTeacherFollower = typeof callernTeacherFollowers.$inferInsert;
+
+// ===== PRIVATE CLASS OPERATIONAL STACK =====
+
+// Student Session Packages table — tracks a student's purchased bundle
+export const studentSessionPackages = pgTable("student_session_packages", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  packageId: integer("package_id").references(() => sessionPackages.id).notNull(),
+  leadId: integer("lead_id").references(() => leads.id),
+  totalSessions: integer("total_sessions").notNull(),
+  remainingSessions: integer("remaining_sessions").notNull(),
+  sessionDuration: integer("session_duration").notNull(), // minutes per session
+  lowSessionAlertThreshold: integer("low_session_alert_threshold").notNull().default(2),
+  alertFiredAt: timestamp("alert_fired_at"), // null until threshold breach
+  status: varchar("status", { length: 20 }).default("active"), // active, completed, cancelled
+  startDate: timestamp("start_date").defaultNow(),
+  expiryDate: timestamp("expiry_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export type StudentSessionPackage = typeof studentSessionPackages.$inferSelect;
+export type InsertStudentSessionPackage = typeof studentSessionPackages.$inferInsert;
+
+// Private Sessions table — logs individual completed private sessions
+export const privateSessions = pgTable("private_sessions", {
+  id: serial("id").primaryKey(),
+  studentSessionPackageId: integer("student_session_package_id").references(() => studentSessionPackages.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  sessionDate: timestamp("session_date").notNull(),
+  actualDuration: integer("actual_duration"), // in minutes
+  topicsCovered: text("topics_covered"),
+  teacherNotes: text("teacher_notes"),
+  attendanceStatus: varchar("attendance_status", { length: 20 }).default("attended"), // attended, absent, cancelled
+  sessionsDeducted: integer("sessions_deducted").default(1),
+  remainingAfter: integer("remaining_after"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export type PrivateSession = typeof privateSessions.$inferSelect;
+export type InsertPrivateSession = typeof privateSessions.$inferInsert;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PrivateClassCard } from "./PrivateClassCard";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -950,6 +951,11 @@ function renderHubContent(
   }
 }
 
+// Private class widget wrapper (pulls data independently)
+function PrivateClassCardWidget() {
+  return <PrivateClassCard />;
+}
+
 // Hub Component Implementations
 
 function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats, upcomingSessions, assignments, isLoading }: any) {
@@ -1046,6 +1052,7 @@ function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats
           <LearningProgressWidget theme="learner" data-testid="learning-progress-widget" />
         </div>
         <div className="space-y-6">
+          <PrivateClassCardWidget />
           <UpcomingSessionsWidget theme="learner" data-testid="upcoming-sessions-widget" />
           <AssignmentsWidget theme="learner" data-testid="assignments-widget" />
         </div>

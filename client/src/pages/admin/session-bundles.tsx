@@ -1,0 +1,275 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/hooks/useLanguage";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import {
+  Plus,
+  Package,
+  Pencil,
+  Trash2,
+  Clock,
+  BookOpen,
+  AlertTriangle,
+  DollarSign,
+} from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+interface SessionBundle {
+  id: number;
+  name: string;
+  description: string | null;
+  totalSessions: number;
+  pricePerSession: number;
+  totalPrice: number;
+  validityDays: number;
+  lowSessionAlertThreshold: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+const emptyForm = {
+  name: "",
+  description: "",
+  totalSessions: "",
+  pricePerSession: "",
+  totalPrice: "",
+  validityDays: "",
+  lowSessionAlertThreshold: "3",
+  isActive: true,
+};
+
+function SessionBundlesPage() {
+  const { isRTL } = useLanguage();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const { data: bundles = [], isLoading } = useQuery<SessionBundle[]>({
+    queryKey: ["/api/session-bundles"],
+    queryFn: () => apiRequest(`/api/session-bundles`)
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: typeof form) => {
+      const payload = {
+        name: data.name,
+        description: data.description || null,
+        totalSessions: Number(data.totalSessions),
+        pricePerSession: Number(data.pricePerSession),
+        totalPrice: Number(data.totalPrice) || Number(data.pricePerSession) * Number(data.totalSessions),
+        validityDays: Number(data.validityDays),
+        lowSessionAlertThreshold: Number(data.lowSessionAlertThreshold),
+        isActive: data.isActive,
+      };
+      if (editingId) {
+        return await apiRequest(`/api/session-bundles/${editingId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload)
+        });
+      }
+      return await apiRequest(`/api/session-bundles`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+    },
+    onSuccess: () => {
+      toast({ title: editingId ? "بسته ویرایش شد" : "بسته جدید ایجاد شد" });
+      queryClient.invalidateQueries({ queryKey: ["/api/session-bundles"] });
+      setDialogOpen(false);
+      setForm(emptyForm);
+      setEditingId(null);
+    },
+    onError: (e: any) => {
+      toast({ title: "خطا", description: e.message, variant: "destructive" });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/session-bundles/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast({ title: "بسته حذف شد" });
+      queryClient.invalidateQueries({ queryKey: ["/api/session-bundles"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "خطا", description: e.message, variant: "destructive" });
+    }
+  });
+
+  const openEdit = (bundle: SessionBundle) => {
+    setForm({
+      name: bundle.name,
+      description: bundle.description ?? "",
+      totalSessions: String(bundle.totalSessions),
+      pricePerSession: String(bundle.pricePerSession),
+      totalPrice: String(bundle.totalPrice),
+      validityDays: String(bundle.validityDays),
+      lowSessionAlertThreshold: String(bundle.lowSessionAlertThreshold),
+      isActive: bundle.isActive,
+    });
+    setEditingId(bundle.id);
+    setDialogOpen(true);
+  };
+
+  const field = (key: keyof typeof form, value: string | boolean) =>
+    setForm(f => ({ ...f, [key]: value }));
+
+  return (
+    <div className="p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">بسته‌های جلسات خصوصی</h1>
+          <p className="text-gray-500 text-sm mt-1">مدیریت قالب‌های بسته جلسات برای کلاس‌های خصوصی</p>
+        </div>
+        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) { setForm(emptyForm); setEditingId(null); } }}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              بسته جدید
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md" dir={isRTL ? "rtl" : "ltr"}>
+            <DialogHeader>
+              <DialogTitle>{editingId ? "ویرایش بسته" : "ایجاد بسته جدید"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div>
+                <Label>نام بسته *</Label>
+                <Input placeholder="مثال: بسته ۱۰ جلسه‌ای پایه" value={form.name} onChange={e => field("name", e.target.value)} />
+              </div>
+              <div>
+                <Label>توضیحات</Label>
+                <Input placeholder="توضیح مختصر..." value={form.description} onChange={e => field("description", e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>تعداد جلسات *</Label>
+                  <Input type="number" placeholder="10" value={form.totalSessions} onChange={e => {
+                    field("totalSessions", e.target.value);
+                    if (form.pricePerSession) field("totalPrice", String(Number(e.target.value) * Number(form.pricePerSession)));
+                  }} />
+                </div>
+                <div>
+                  <Label>قیمت هر جلسه (تومان) *</Label>
+                  <Input type="number" placeholder="500000" value={form.pricePerSession} onChange={e => {
+                    field("pricePerSession", e.target.value);
+                    if (form.totalSessions) field("totalPrice", String(Number(form.totalSessions) * Number(e.target.value)));
+                  }} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>قیمت کل (تومان) *</Label>
+                  <Input type="number" placeholder="محاسبه خودکار" value={form.totalPrice} onChange={e => field("totalPrice", e.target.value)} />
+                </div>
+                <div>
+                  <Label>اعتبار (روز) *</Label>
+                  <Input type="number" placeholder="90" value={form.validityDays} onChange={e => field("validityDays", e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label>آستانه هشدار کم‌بودن جلسه *</Label>
+                <Input type="number" placeholder="3" value={form.lowSessionAlertThreshold} onChange={e => field("lowSessionAlertThreshold", e.target.value)} />
+                <p className="text-xs text-gray-400 mt-1">وقتی تعداد جلسات باقیمانده به این عدد برسد، هشدار ارسال می‌شود</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={form.isActive} onCheckedChange={v => field("isActive", v)} />
+                <Label>بسته فعال است</Label>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => { setDialogOpen(false); setForm(emptyForm); setEditingId(null); }}>
+                  انصراف
+                </Button>
+                <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.name || !form.totalSessions || !form.pricePerSession}>
+                  {saveMutation.isPending ? "در حال ذخیره..." : "ذخیره"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">در حال بارگذاری...</p>
+        </div>
+      ) : bundles.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="font-semibold text-lg mb-2">هیچ بسته‌ای وجود ندارد</h3>
+            <p className="text-gray-500 mb-4">اولین بسته جلسات خصوصی را ایجاد کنید</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {bundles.map(bundle => (
+            <Card key={bundle.id} className={`hover:shadow-md transition-shadow ${!bundle.isActive ? "opacity-60" : ""}`}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-base">{bundle.name}</CardTitle>
+                  <Badge variant={bundle.isActive ? "default" : "secondary"}>
+                    {bundle.isActive ? "فعال" : "غیرفعال"}
+                  </Badge>
+                </div>
+                {bundle.description && <p className="text-sm text-gray-500">{bundle.description}</p>}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <BookOpen className="h-4 w-4 text-blue-500" />
+                    <span><strong>{bundle.totalSessions}</strong> جلسه</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Clock className="h-4 w-4 text-green-500" />
+                    <span><strong>{bundle.validityDays}</strong> روز اعتبار</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <DollarSign className="h-4 w-4 text-purple-500" />
+                    <span>{bundle.pricePerSession.toLocaleString()} تومان/جلسه</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                    <span>هشدار: {bundle.lowSessionAlertThreshold} جلسه</span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t">
+                  <p className="text-lg font-bold text-blue-700">{bundle.totalPrice.toLocaleString()} تومان</p>
+                  <p className="text-xs text-gray-400">قیمت کل بسته</p>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(bundle)}>
+                    <Pencil className="h-3 w-3 mr-1" />
+                    ویرایش
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => {
+                      if (confirm("آیا از حذف این بسته مطمئن هستید؟")) deleteMutation.mutate(bundle.id);
+                    }}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default SessionBundlesPage;

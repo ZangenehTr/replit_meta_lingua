@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,19 +13,33 @@ import {
   Search,
   User,
   Phone,
-  Calendar,
-  CheckCircle,
-  Clock,
   BookOpen,
-  MapPin,
-  UserCheck,
-  DoorOpen
+  Package,
+  CreditCard,
+  CheckCircle,
+  GraduationCap,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
-import { LEAD_WORKFLOW_STAGE } from "@shared/schema";
 import { motion } from "framer-motion";
+
+interface SessionBundle {
+  id: number;
+  name: string;
+  totalSessions: number;
+  pricePerSession: number;
+  totalPrice: number;
+  validityDays: number;
+  lowSessionAlertThreshold: number;
+}
+
+interface Teacher {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}
 
 function PrivateClassSetup() {
   const { t } = useTranslation(['callcenter', 'common']);
@@ -35,30 +48,48 @@ function PrivateClassSetup() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [teacherName, setTeacherName] = useState("");
-  const [schedule, setSchedule] = useState("");
-  const [sessionDuration, setSessionDuration] = useState("");
-  const [totalSessions, setTotalSessions] = useState("");
-  const [locationPreference, setLocationPreference] = useState("");
+  const [selectedBundleId, setSelectedBundleId] = useState("");
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [amount, setAmount] = useState("");
+  const [notes, setNotes] = useState("");
 
   const { data: leads = [], isLoading, refetch } = useQuery<Lead[]>({
     queryKey: ["/api/leads/by-stage/private_class_setup"],
-    queryFn: async () => {
-      return await apiRequest(`/api/leads/by-stage/private_class_setup`);
-    }
+    queryFn: () => apiRequest(`/api/leads/by-stage/private_class_setup`)
   });
 
-  const transitionMutation = useMutation({
-    mutationFn: async ({ leadId, toStage, reason }: { leadId: number; toStage: string; reason?: string }) => {
-      return await apiRequest(`/api/leads/${leadId}/transition`, {
+  const { data: bundles = [] } = useQuery<SessionBundle[]>({
+    queryKey: ["/api/session-bundles"],
+    queryFn: () => apiRequest(`/api/session-bundles`)
+  });
+
+  const { data: teachersRes } = useQuery<{ users: Teacher[] }>({
+    queryKey: ["/api/users?role=Teacher"],
+    queryFn: () => apiRequest(`/api/users?role=Teacher`)
+  });
+  const teachers: Teacher[] = teachersRes?.users ?? [];
+
+  const selectedBundle = bundles.find(b => String(b.id) === selectedBundleId);
+
+  const createMutation = useMutation({
+    mutationFn: async (data: {
+      leadId: number;
+      packageId: number;
+      teacherId: number;
+      paymentMethod: string;
+      amount: number;
+      notes?: string;
+    }) => {
+      return await apiRequest(`/api/private-class/create`, {
         method: "POST",
-        body: JSON.stringify({ toStage, reason })
+        body: JSON.stringify(data)
       });
     },
     onSuccess: () => {
       toast({
-        title: t('callcenter:stages.private_class_setup.success', 'تنظیمات ذخیره شد'),
-        description: t('callcenter:stages.private_class_setup.success_desc', 'لید به مرحله تعیین شماره کلاس منتقل شد'),
+        title: "کلاس خصوصی ایجاد شد",
+        description: "بسته جلسات ثبت شد و لید به مرحله فعال منتقل شد",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
       refetch();
@@ -66,8 +97,8 @@ function PrivateClassSetup() {
     },
     onError: (error: any) => {
       toast({
-        title: t('callcenter:stages.private_class_setup.error', 'خطا در انتقال'),
-        description: error.message || t('callcenter:stages.private_class_setup.error_desc', 'انتقال با مشکل مواجه شد'),
+        title: "خطا در ایجاد کلاس خصوصی",
+        description: error.message || "لطفاً دوباره تلاش کنید",
         variant: "destructive"
       });
     }
@@ -75,11 +106,26 @@ function PrivateClassSetup() {
 
   const resetForm = () => {
     setSelectedLead(null);
-    setTeacherName("");
-    setSchedule("");
-    setSessionDuration("");
-    setTotalSessions("");
-    setLocationPreference("");
+    setSelectedBundleId("");
+    setSelectedTeacherId("");
+    setPaymentMethod("cash");
+    setAmount("");
+    setNotes("");
+  };
+
+  const handleSubmit = () => {
+    if (!selectedLead || !selectedBundleId || !selectedTeacherId || !amount) {
+      toast({ title: "لطفاً تمام فیلدها را پر کنید", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate({
+      leadId: selectedLead.id,
+      packageId: Number(selectedBundleId),
+      teacherId: Number(selectedTeacherId),
+      paymentMethod,
+      amount: Number(amount),
+      notes: notes || undefined,
+    });
   };
 
   const filteredLeads = leads.filter(lead =>
@@ -95,19 +141,17 @@ function PrivateClassSetup() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder={t('callcenter:stages.private_class_setup.search_placeholder', 'جستجو در متقاضیان تنظیم کلاس خصوصی...')}
+              placeholder="جستجو در متقاضیان تنظیم کلاس خصوصی..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
         </div>
-        <div className="flex gap-2">
-          <Badge variant="outline" className="px-3 py-1">
-            <BookOpen className="h-4 w-4 mr-2" />
-            {filteredLeads.length} {t('callcenter:stages.private_class_setup.count', 'مورد')}
-          </Badge>
-        </div>
+        <Badge variant="outline" className="px-3 py-1">
+          <BookOpen className="h-4 w-4 mr-2" />
+          {filteredLeads.length} مورد
+        </Badge>
       </div>
 
       <div className="grid gap-4">
@@ -115,15 +159,15 @@ function PrivateClassSetup() {
           <Card>
             <CardContent className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>{t('callcenter:stages.private_class_setup.loading', 'در حال بارگذاری...')}</p>
+              <p>در حال بارگذاری...</p>
             </CardContent>
           </Card>
         ) : filteredLeads.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{t('callcenter:stages.private_class_setup.empty_title', 'عالی!')}</h3>
-              <p className="text-gray-600">{t('callcenter:stages.private_class_setup.empty_desc', 'در حال حاضر موردی برای تنظیم کلاس خصوصی وجود ندارد')}</p>
+              <h3 className="text-lg font-semibold mb-2">عالی!</h3>
+              <p className="text-gray-600">در حال حاضر موردی برای تنظیم کلاس خصوصی وجود ندارد</p>
             </CardContent>
           </Card>
         ) : (
@@ -140,34 +184,16 @@ function PrivateClassSetup() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <User className="h-4 w-4 text-gray-500" />
-                        <h3 className="font-semibold text-lg">
-                          {lead.firstName} {lead.lastName}
-                        </h3>
+                        <h3 className="font-semibold text-lg">{lead.firstName} {lead.lastName}</h3>
                         <Badge className="bg-purple-100 text-purple-800">
                           <BookOpen className="h-3 w-3 mr-1" />
-                          {t('callcenter:stages.private_class_setup.badge', 'تنظیم کلاس')}
+                          تنظیم کلاس خصوصی
                         </Badge>
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          <span dir="ltr">{lead.phoneNumber}</span>
-                        </div>
-                        {lead.courseTarget && (
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>{lead.courseTarget}</span>
-                          </div>
-                        )}
-                        {lead.level && (
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4" />
-                            <span>{lead.level}</span>
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="h-4 w-4" />
+                        <span dir="ltr">{lead.phoneNumber}</span>
                       </div>
-
                       {lead.notes && (
                         <p className="text-sm text-gray-700 mt-2 bg-gray-50 dark:bg-gray-800 p-2 rounded">
                           {lead.notes}
@@ -176,94 +202,115 @@ function PrivateClassSetup() {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <Dialog>
+                      <Dialog onOpenChange={(open) => !open && resetForm()}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setSelectedLead(lead)}
                           >
-                            <DoorOpen className="h-4 w-4 mr-2" />
-                            {t('callcenter:stages.private_class_setup.assign_room', 'تعیین اتاق')}
+                            <Package className="h-4 w-4 mr-2" />
+                            ایجاد کلاس خصوصی
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
+                        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
                           <DialogHeader>
-                            <DialogTitle>{t('callcenter:stages.private_class_setup.dialog_title', 'تنظیم کلاس خصوصی')}</DialogTitle>
+                            <DialogTitle>ایجاد کلاس خصوصی</DialogTitle>
                             <DialogDescription>
-                              {t('callcenter:stages.private_class_setup.dialog_desc', 'تنظیمات کلاس برای')} {selectedLead?.firstName} {selectedLead?.lastName}
+                              ثبت بسته جلسات برای {lead.firstName} {lead.lastName}
                             </DialogDescription>
                           </DialogHeader>
-                          <div className="space-y-4">
+                          <div className="space-y-4 pt-2">
                             <div>
-                              <Label>{t('callcenter:stages.private_class_setup.teacher', 'انتخاب استاد')}</Label>
-                              <Input
-                                placeholder={t('callcenter:stages.private_class_setup.teacher_placeholder', 'نام استاد را وارد کنید...')}
-                                value={teacherName}
-                                onChange={(e) => setTeacherName(e.target.value)}
-                              />
-                            </div>
-                            <div>
-                              <Label>{t('callcenter:stages.private_class_setup.schedule', 'برنامه زمانی (روزها/ساعت)')}</Label>
-                              <Input
-                                placeholder={t('callcenter:stages.private_class_setup.schedule_placeholder', 'مثال: شنبه و دوشنبه ساعت ۱۰')}
-                                value={schedule}
-                                onChange={(e) => setSchedule(e.target.value)}
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label>{t('callcenter:stages.private_class_setup.session_duration', 'مدت هر جلسه (دقیقه)')}</Label>
-                                <Input
-                                  type="number"
-                                  placeholder="60"
-                                  value={sessionDuration}
-                                  onChange={(e) => setSessionDuration(e.target.value)}
-                                />
-                              </div>
-                              <div>
-                                <Label>{t('callcenter:stages.private_class_setup.total_sessions', 'تعداد کل جلسات')}</Label>
-                                <Input
-                                  type="number"
-                                  placeholder="20"
-                                  value={totalSessions}
-                                  onChange={(e) => setTotalSessions(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <Label>{t('callcenter:stages.private_class_setup.location', 'ترجیح مکان')}</Label>
-                              <Select value={locationPreference} onValueChange={setLocationPreference}>
+                              <Label>بسته جلسات</Label>
+                              <Select value={selectedBundleId} onValueChange={(v) => {
+                                setSelectedBundleId(v);
+                                const b = bundles.find(b => String(b.id) === v);
+                                if (b) setAmount(String(b.totalPrice));
+                              }}>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t('callcenter:stages.private_class_setup.location_placeholder', 'انتخاب مکان')} />
+                                  <SelectValue placeholder="انتخاب بسته جلسات..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="online">{t('callcenter:stages.private_class_setup.online', 'آنلاین')}</SelectItem>
-                                  <SelectItem value="in_person">{t('callcenter:stages.private_class_setup.in_person', 'حضوری')}</SelectItem>
-                                  <SelectItem value="hybrid">{t('callcenter:stages.private_class_setup.hybrid', 'ترکیبی')}</SelectItem>
+                                  {bundles.map(b => (
+                                    <SelectItem key={b.id} value={String(b.id)}>
+                                      {b.name} — {b.totalSessions} جلسه — {b.totalPrice.toLocaleString()} تومان
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {selectedBundle && (
+                                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm text-blue-700 dark:text-blue-300 grid grid-cols-2 gap-1">
+                                  <span>تعداد جلسات: <strong>{selectedBundle.totalSessions}</strong></span>
+                                  <span>هر جلسه: <strong>{selectedBundle.pricePerSession.toLocaleString()} تومان</strong></span>
+                                  <span>اعتبار: <strong>{selectedBundle.validityDays} روز</strong></span>
+                                  <span>هشدار کم‌بودن: <strong>{selectedBundle.lowSessionAlertThreshold} جلسه</strong></span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div>
+                              <Label>استاد</Label>
+                              <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="انتخاب استاد..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {teachers.map(t => (
+                                    <SelectItem key={t.id} value={String(t.id)}>
+                                      <GraduationCap className="h-3 w-3 inline mr-1" />
+                                      {t.firstName} {t.lastName}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={resetForm}
-                              >
-                                {t('callcenter:stages.private_class_setup.cancel', 'انصراف')}
+
+                            <div>
+                              <Label>روش پرداخت</Label>
+                              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="cash">نقدی</SelectItem>
+                                  <SelectItem value="pos">کارتخوان (POS)</SelectItem>
+                                  <SelectItem value="cheque">چک</SelectItem>
+                                  <SelectItem value="transfer">انتقال بانکی</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label>مبلغ پرداختی (تومان)</Label>
+                              <Input
+                                type="number"
+                                placeholder="مثال: 5000000"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                              />
+                            </div>
+
+                            <div>
+                              <Label>یادداشت (اختیاری)</Label>
+                              <Input
+                                placeholder="توضیحات اضافی..."
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                              />
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                              <Button variant="outline" size="sm" onClick={resetForm}>
+                                انصراف
                               </Button>
                               <Button
                                 size="sm"
-                                onClick={() => selectedLead && transitionMutation.mutate({
-                                  leadId: selectedLead.id,
-                                  toStage: LEAD_WORKFLOW_STAGE.SET_CLASS_NUMBER,
-                                  reason: `استاد: ${teacherName} | برنامه: ${schedule} | مدت جلسه: ${sessionDuration} دقیقه | تعداد: ${totalSessions} | مکان: ${locationPreference}`
-                                })}
-                                disabled={transitionMutation.isPending}
+                                onClick={handleSubmit}
+                                disabled={createMutation.isPending || !selectedBundleId || !selectedTeacherId || !amount}
                               >
-                                {transitionMutation.isPending
-                                  ? t('callcenter:stages.private_class_setup.processing', 'در حال ثبت...')
-                                  : t('callcenter:stages.private_class_setup.confirm', 'تعیین اتاق')}
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                {createMutation.isPending ? "در حال ثبت..." : "ثبت و فعال‌سازی کلاس"}
                               </Button>
                             </div>
                           </div>

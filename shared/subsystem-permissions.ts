@@ -58,6 +58,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "teacher_resources", name: "منابع و مطالب", nameEn: "Resources & Materials", icon: "FileText" },
       { id: "teacher_reports", name: "گزارش‌ها", nameEn: "Reports", icon: "BarChart" },
       { id: "teacher_payments", name: "مدیریت پرداخت‌ها", nameEn: "Payment Management", icon: "DollarSign" },
+      { id: "teacher_private_students", name: "دانش‌آموزان خصوصی", nameEn: "Private Students", icon: "UserCheck" },
     ]
   },
   {
@@ -110,6 +111,8 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "calendar_settings", name: "تنظیمات تقویم", nameEn: "Calendar Settings", icon: "CalendarDays" },
       { id: "currency_settings", name: "تنظیمات ارز", nameEn: "Currency Settings", icon: "Coins" },
       { id: "form_management", name: "مدیریت فرم‌ها", nameEn: "Form Management", icon: "FileText" },
+      { id: "session_bundles", name: "بسته‌های جلسات خصوصی", nameEn: "Session Bundles", icon: "Package" },
+      { id: "private_class_overview", name: "نمای کلی کلاس‌های خصوصی", nameEn: "Private Class Overview", icon: "UserCheck" },
       { id: "font_management", name: "مدیریت فونت‌ها", nameEn: "Font Management", icon: "FileText" },
       { id: "subsystem_permissions", name: "مجوزهای زیرسیستم", nameEn: "Subsystem Permissions", icon: "Shield" },
       { id: "api_smoke_test", name: "تست API", nameEn: "API Smoke Test", icon: "Server" },
@@ -210,7 +213,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
     subsystems: [
       "teacher_dashboard", "callern_teacher", "teacher_classes", "teacher_video_courses",
       "teacher_schedule", "teacher_assignments", "teacher_students", "teacher_resources",
-      "teacher_reports", "teacher_payments"
+      "teacher_reports", "teacher_payments", "teacher_private_students"
     ],
     actions: {
       "teacher_dashboard": ["read", "view"],
@@ -222,7 +225,8 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "teacher_students": ["read", "view", "list", "update"],
       "teacher_resources": ["read", "create", "update", "view", "list", "delete"],
       "teacher_reports": ["read", "view", "list", "generate"],
-      "teacher_payments": ["read", "view", "list"]
+      "teacher_payments": ["read", "view", "list"],
+      "teacher_private_students": ["read", "view", "list", "create", "update"]
     }
   },
   "Mentor": {
@@ -274,13 +278,16 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       // Call Center
       "unified_workflow", "call_logs", "prospects", "call_campaigns",
       // HR Module (read-only for supervisor, including payroll view)
-      "hr_employees", "hr_leave", "hr_payroll", "hr_performance"
+      "hr_employees", "hr_leave", "hr_payroll", "hr_performance",
+      // Private Class Management (read-only for supervisor)
+      "private_class_overview"
     ],
     actions: {
       "hr_employees": ["read", "view", "list"],
       "hr_leave": ["read", "view", "list", "update"],
       "hr_payroll": ["read", "view", "list"],
-      "hr_performance": ["read", "view", "list"]
+      "hr_performance": ["read", "view", "list"],
+      "private_class_overview": ["read", "view", "list"]
     }
   },
   "Accountant": {
@@ -326,7 +333,9 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "curriculum_categories", "sms_test", "3d_lesson_builder",
       "promo_codes", "admin_certificates",
       // HR Module
-      "hr_employees", "hr_leave", "hr_payroll", "hr_performance"
+      "hr_employees", "hr_leave", "hr_payroll", "hr_performance",
+      // Private Class Management
+      "session_bundles", "private_class_overview", "teacher_private_students"
     ],
     actions: {
       // Admin has ALL actions on ALL resources - full system access
@@ -410,6 +419,7 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "teacher_resources": "/teacher/resources",
   "teacher_reports": "/teacher/reports",
   "teacher_payments": "/teacher/payments",
+  "teacher_private_students": "/teacher/private-students",
 
   // Institute Management
   "sis": "/admin/students",
@@ -456,6 +466,8 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "calendar_settings": "/admin/calendar-settings",
   "currency_settings": "/admin/currency-settings",
   "form_management": "/admin/form-management",
+  "session_bundles": "/admin/session-bundles",
+  "private_class_overview": "/admin/private-class-overview",
   "font_management": "/admin/font-management",
   "subsystem_permissions": "/admin/subsystem-permissions",
   "api_smoke_test": "/admin/api-smoke-test",
@@ -538,6 +550,7 @@ const SUBSYSTEM_PRIMARY_ROLE: Record<string, string> = {
   "teacher_resources": "Teacher/Tutor",
   "teacher_reports": "Teacher/Tutor",
   "teacher_payments": "Teacher/Tutor",
+  "teacher_private_students": "Teacher/Tutor",
   
   // Admin Platform - default to Admin if not specified
 };
@@ -632,6 +645,9 @@ export const INSTITUTE_SECTION_MAP: Record<string, { fa: string; en: string }> =
   teacher_resources: { fa: "محتوا و گزارش", en: "Content & Reports" },
   teacher_reports: { fa: "محتوا و گزارش", en: "Content & Reports" },
   teacher_payments: { fa: "مالی", en: "Financial" },
+  teacher_private_students: { fa: "تدریس", en: "Teaching" },
+  session_bundles: { fa: "کلاس خصوصی", en: "Private Classes" },
+  private_class_overview: { fa: "کلاس خصوصی", en: "Private Classes" },
 
   unified_workflow: { fa: "مرکز تماس", en: "Call Center" },
   call_logs: { fa: "مرکز تماس", en: "Call Center" },
