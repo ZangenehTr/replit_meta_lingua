@@ -14943,7 +14943,7 @@ Return JSON format:
       const bodySchema = z.object({
         courseId: z.number({ required_error: "courseId required" }),
         paymentMethod: z.enum(['cash', 'pos', 'cheque'], { required_error: "paymentMethod required (cash|pos|cheque)" }),
-        amount: z.number({ required_error: "amount required" }),
+        amount: z.number({ required_error: "amount required" }).positive("amount must be greater than 0"),
         notes: z.string().optional()
       });
 
@@ -14970,19 +14970,21 @@ Return JSON format:
       }
 
       // Create course payment record (completed, physical method)
+      // Drizzle decimal columns expect string values; amount is validated positive above
       const txId = `PHYSICAL_${Date.now()}_${lead.studentId}_${courseId}`;
+      const amountStr = String(amount);
       const [coursePaymentRecord] = await db.insert(coursePayments).values({
         userId: lead.studentId,
         courseId,
-        originalPrice: amount,
-        discountPercentage: 0,
-        finalPrice: amount,
+        amount: amountStr,
+        originalPrice: amountStr,
+        discountPercentage: '0',
+        finalPrice: amountStr,
         creditsAwarded: 0,
         paymentMethod,
         status: 'completed',
         merchantTransactionId: txId,
-        notes: notes || null
-      } as any).returning();
+      }).returning();
 
       // Create enrollment record
       await db.insert(enrollments).values({
