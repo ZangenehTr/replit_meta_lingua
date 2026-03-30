@@ -155,6 +155,14 @@ export class CallernWebSocketServer {
             this.teacherSockets.set(teacherId, teacherSocket);
           }
           
+          // Query prior availability state BEFORE updating (for transition detection)
+          const [priorStatus] = await db
+            .select({ isAvailable: teacherOnlineStatus.isAvailable })
+            .from(teacherOnlineStatus)
+            .where(eq(teacherOnlineStatus.teacherId, teacherId))
+            .limit(1);
+          const wasAlreadyAvailable = priorStatus?.isAvailable === true;
+
           await this.updateTeacherAvailability(teacherId, true);
           
           // Update database
@@ -168,9 +176,15 @@ export class CallernWebSocketServer {
             status: 'online'
           });
 
-          // Notify followers only if teacher is transitioning to 'available' (not teaching)
-          // A teacher already in an active call or live class should NOT trigger notifications
+          // Notify followers ONLY on not-available → available transition
+          // Skip if teacher was already available (e.g., reconnect/re-emit) to prevent spam
           try {
+            if (wasAlreadyAvailable) {
+              console.log(`Teacher ${teacherId} was already available — skipping follower notifications (no state transition)`);
+              socket.emit('teacher-online-success', { teacherId, status: 'online' });
+              return;
+            }
+
             const activeCallRows = await db
               .select({ id: callSessions.id })
               .from(callSessions)

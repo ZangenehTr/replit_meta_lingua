@@ -96,8 +96,12 @@ export function authorize(allowedRoles: string[]) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
+    // Normalize roles for case-insensitive comparison (consistent with requireRole in routes.ts)
+    const userRoleLower = req.user.role?.toLowerCase();
+    const allowedLower = allowedRoles.map(r => r.toLowerCase());
+
     // Admin has superset access to everything
-    if (req.user.role === 'Admin' || allowedRoles.includes(req.user.role)) {
+    if (userRoleLower === 'admin' || allowedLower.includes(userRoleLower)) {
       next();
       return;
     }
