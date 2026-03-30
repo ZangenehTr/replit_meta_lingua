@@ -502,7 +502,7 @@ export const paymentIdempotency = pgTable("payment_idempotency", {
 export const coursePayments = pgTable("course_payments", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  courseId: integer("course_id").references(() => courses.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   currency: varchar("currency", { length: 3 }).default("IRR"),
   paymentMethod: varchar("payment_method", { length: 50 }),
@@ -9766,6 +9766,7 @@ export const studentSessionPackages = pgTable("student_session_packages", {
   sessionDuration: integer("session_duration").notNull(), // minutes per session
   lowSessionAlertThreshold: integer("low_session_alert_threshold").notNull().default(2),
   alertFiredAt: timestamp("alert_fired_at"), // null until threshold breach
+  nextScheduledAt: timestamp("next_scheduled_at"), // next planned session date/time
   status: varchar("status", { length: 20 }).default("active"), // active, completed, cancelled
   startDate: timestamp("start_date").defaultNow(),
   expiryDate: timestamp("expiry_date"),
@@ -9774,8 +9775,24 @@ export const studentSessionPackages = pgTable("student_session_packages", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Teacher-Student assignment record — created when a private class bundle is activated
+export const teacherStudentAssignments = pgTable("teacher_student_assignments", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  studentSessionPackageId: integer("student_session_package_id").references(() => studentSessionPackages.id).notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, completed, cancelled
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 export type StudentSessionPackage = typeof studentSessionPackages.$inferSelect;
 export type InsertStudentSessionPackage = typeof studentSessionPackages.$inferInsert;
+
+export type TeacherStudentAssignment = typeof teacherStudentAssignments.$inferSelect;
+export type InsertTeacherStudentAssignment = typeof teacherStudentAssignments.$inferInsert;
 
 // Private Sessions table — logs individual completed private sessions
 export const privateSessions = pgTable("private_sessions", {

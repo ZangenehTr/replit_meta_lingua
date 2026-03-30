@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,19 @@ import {
   Clock,
   ClipboardList,
   Download,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+
+interface SessionRecord {
+  id: number;
+  sessionDate: string;
+  actualDuration: number;
+  topicsCovered: string | null;
+  teacherNotes: string | null;
+  attendanceStatus: string;
+}
 
 interface PrivateClassRecord {
   id: number;
@@ -32,6 +42,7 @@ interface PrivateClassRecord {
   status: 'active' | 'completed' | 'expired';
   startDate: string;
   expiryDate: string | null;
+  nextScheduledAt: string | null;
   lastSessionDate: string | null;
   alertFiredAt: string | null;
   isLowSession: boolean;
@@ -40,35 +51,18 @@ interface PrivateClassRecord {
 
 function PrivateClassOverviewPage() {
   const { isRTL } = useLanguage();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const { data: records = [], isLoading } = useQuery<PrivateClassRecord[]>({
     queryKey: ["/api/admin/private-classes"],
     queryFn: () => apiRequest(`/api/admin/private-classes`)
   });
 
-  const logSessionMutation = useMutation({
-    mutationFn: async ({ packageId }: { packageId: number }) => {
-      return await apiRequest(`/api/private-sessions/log`, {
-        method: "POST",
-        body: JSON.stringify({
-          studentSessionPackageId: packageId,
-          sessionDate: new Date().toISOString(),
-          actualDuration: 60,
-          teacherNotes: "ثبت توسط ادمین",
-          attendanceStatus: "attended",
-        })
-      });
-    },
-    onSuccess: () => {
-      toast({ title: "جلسه ثبت شد و یک جلسه کسر شد" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/private-classes"] });
-    },
-    onError: (e: any) => {
-      toast({ title: "خطا", description: e.message, variant: "destructive" });
-    }
+  const { data: sessionHistory } = useQuery<SessionRecord[]>({
+    queryKey: [`/api/admin/private-classes/${expandedId}/sessions`],
+    queryFn: () => apiRequest(`/api/admin/private-classes/${expandedId}/sessions`),
+    enabled: !!expandedId,
   });
 
   const filtered = records.filter(r => {
@@ -85,8 +79,11 @@ function PrivateClassOverviewPage() {
   const sessionPct = (rec: PrivateClassRecord) =>
     rec.totalSessions > 0 ? Math.round((rec.remainingSessions / rec.totalSessions) * 100) : 0;
 
+  const attendanceLabel = (s: string) =>
+    s === 'attended' ? 'حضور' : s === 'absent' ? 'غایب' : 'لغو';
+
   const exportCSV = () => {
-    const headers = ["دانش‌آموز", "استاد", "بسته", "کل جلسات", "باقیمانده", "وضعیت", "شروع", "انقضا"];
+    const headers = ["دانش‌آموز", "استاد", "بسته", "کل جلسات", "باقیمانده", "وضعیت", "شروع", "انقضا", "جلسه بعدی"];
     const rows = filtered.map(r => [
       `${r.student?.firstName ?? ""} ${r.student?.lastName ?? ""}`,
       `${r.teacher?.firstName ?? ""} ${r.teacher?.lastName ?? ""}`,
@@ -96,6 +93,7 @@ function PrivateClassOverviewPage() {
       r.status === 'active' ? "فعال" : r.status === 'completed' ? "تکمیل" : "منقضی",
       r.startDate ? new Date(r.startDate).toLocaleDateString('fa-IR') : "",
       r.expiryDate ? new Date(r.expiryDate).toLocaleDateString('fa-IR') : "",
+      r.nextScheduledAt ? new Date(r.nextScheduledAt).toLocaleDateString('fa-IR') : "تعیین نشده",
     ]);
     const csv = [headers, ...rows].map(row => row.join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -112,7 +110,7 @@ function PrivateClassOverviewPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">نمای کلی کلاس‌های خصوصی</h1>
-          <p className="text-gray-500 text-sm mt-1">مدیریت و پیگیری همه کلاس‌های خصوصی</p>
+          <p className="text-gray-500 text-sm mt-1">مشاهده و پیگیری همه کلاس‌های خصوصی (فقط خواندنی)</p>
         </div>
         <Button variant="outline" size="sm" onClick={exportCSV}>
           <Download className="h-4 w-4 mr-2" />
@@ -183,80 +181,131 @@ function PrivateClassOverviewPage() {
           {filtered.map(rec => (
             <Card key={rec.id} className={`hover:shadow-md transition-shadow ${rec.isLowSession ? "border-orange-300" : ""}`}>
               <CardContent className="p-5">
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        <span className="font-semibold">{rec.student?.firstName} {rec.student?.lastName}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <GraduationCap className="h-4 w-4" />
-                        <span>{rec.teacher?.firstName} {rec.teacher?.lastName}</span>
-                      </div>
-                      <Badge variant={rec.status === 'active' ? "default" : "secondary"}>
-                        {rec.status === 'active' ? "فعال" : rec.status === 'completed' ? "تکمیل" : "منقضی"}
-                      </Badge>
-                      {rec.isLowSession && (
-                        <Badge variant="destructive" className="gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          نیاز به تمدید
-                        </Badge>
-                      )}
-                      {rec.alertFiredAt && (
-                        <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">
-                          هشدار ارسال شد
-                        </Badge>
-                      )}
-                    </div>
-
-                    {rec.bundle && (
-                      <p className="text-sm text-gray-500">{rec.bundle.name}</p>
-                    )}
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <BookOpen className="h-3 w-3" />
-                        <span>{rec.remainingSessions} از {rec.totalSessions} جلسه</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <Calendar className="h-3 w-3" />
-                        <span>{new Date(rec.startDate).toLocaleDateString('fa-IR')}</span>
-                      </div>
-                      {rec.expiryDate && (
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <Clock className="h-3 w-3" />
-                          <span>انقضا: {new Date(rec.expiryDate).toLocaleDateString('fa-IR')}</span>
+                <div className="space-y-3">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-500" />
+                          <span className="font-semibold">{rec.student?.firstName} {rec.student?.lastName}</span>
                         </div>
-                      )}
-                      {rec.lastSessionDate && (
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <Clock className="h-3 w-3 text-green-500" />
-                          <span>آخرین جلسه: {new Date(rec.lastSessionDate).toLocaleDateString('fa-IR')}</span>
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <GraduationCap className="h-4 w-4" />
+                          <span>{rec.teacher?.firstName} {rec.teacher?.lastName}</span>
                         </div>
+                        <Badge variant={rec.status === 'active' ? "default" : "secondary"}>
+                          {rec.status === 'active' ? "فعال" : rec.status === 'completed' ? "تکمیل" : "منقضی"}
+                        </Badge>
+                        {rec.isLowSession && (
+                          <Badge variant="destructive" className="gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            نیاز به تمدید
+                          </Badge>
+                        )}
+                        {rec.alertFiredAt && (
+                          <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">
+                            هشدار ارسال شد
+                          </Badge>
+                        )}
+                      </div>
+
+                      {rec.bundle && (
+                        <p className="text-sm text-gray-500">{rec.bundle.name}</p>
                       )}
+
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <BookOpen className="h-3 w-3" />
+                          <span>{rec.remainingSessions} از {rec.totalSessions} جلسه</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(rec.startDate).toLocaleDateString('fa-IR')}</span>
+                        </div>
+                        {rec.expiryDate && (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Clock className="h-3 w-3" />
+                            <span>انقضا: {new Date(rec.expiryDate).toLocaleDateString('fa-IR')}</span>
+                          </div>
+                        )}
+                        {rec.lastSessionDate && (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Clock className="h-3 w-3 text-green-500" />
+                            <span>آخرین جلسه: {new Date(rec.lastSessionDate).toLocaleDateString('fa-IR')}</span>
+                          </div>
+                        )}
+                        {rec.nextScheduledAt ? (
+                          <div className="flex items-center gap-1 text-blue-600 col-span-2">
+                            <Calendar className="h-3 w-3" />
+                            <span className="font-medium">جلسه بعدی: {new Date(rec.nextScheduledAt).toLocaleDateString('fa-IR')} {new Date(rec.nextScheduledAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 text-gray-400 text-xs">
+                            <Calendar className="h-3 w-3" />
+                            <span>جلسه بعدی تعیین نشده</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${rec.isLowSession ? "bg-orange-500" : "bg-blue-500"}`}
+                          style={{ width: `${sessionPct(rec)}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400">{sessionPct(rec)}% جلسات باقیمانده</p>
                     </div>
 
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div
-                        className={`h-2 rounded-full transition-all ${rec.isLowSession ? "bg-orange-500" : "bg-blue-500"}`}
-                        style={{ width: `${sessionPct(rec)}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-400">{sessionPct(rec)}% جلسات باقیمانده</p>
-                  </div>
-
-                  <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => logSessionMutation.mutate({ packageId: rec.id })}
-                      disabled={logSessionMutation.isPending || rec.status !== 'active' || rec.remainingSessions <= 0}
+                      onClick={() => setExpandedId(expandedId === rec.id ? null : rec.id)}
                     >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      ثبت جلسه
+                      <ClipboardList className="h-4 w-4 mr-1" />
+                      تاریخچه
+                      {expandedId === rec.id ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
                     </Button>
                   </div>
+
+                  {expandedId === rec.id && (
+                    <div className="border-t pt-3">
+                      <h4 className="text-sm font-semibold mb-2">تاریخچه جلسات</h4>
+                      {!sessionHistory ? (
+                        <p className="text-sm text-gray-400">در حال بارگذاری...</p>
+                      ) : sessionHistory.length === 0 ? (
+                        <p className="text-sm text-gray-400">هیچ جلسه‌ای ثبت نشده است</p>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-gray-500 border-b text-xs">
+                                <th className="text-right pb-2 pr-2">تاریخ</th>
+                                <th className="text-right pb-2 pr-2">مدت (دقیقه)</th>
+                                <th className="text-right pb-2 pr-2">حضور</th>
+                                <th className="text-right pb-2 pr-2">موضوع</th>
+                                <th className="text-right pb-2">یادداشت استاد</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {sessionHistory.map(s => (
+                                <tr key={s.id} className="text-xs">
+                                  <td className="py-2 pr-2">{s.sessionDate ? new Date(s.sessionDate).toLocaleDateString('fa-IR') : '—'}</td>
+                                  <td className="py-2 pr-2">{s.actualDuration}</td>
+                                  <td className="py-2 pr-2">
+                                    <Badge variant={s.attendanceStatus === 'attended' ? 'default' : 'secondary'} className="text-xs py-0">
+                                      {attendanceLabel(s.attendanceStatus)}
+                                    </Badge>
+                                  </td>
+                                  <td className="py-2 pr-2 max-w-xs truncate">{s.topicsCovered ?? '—'}</td>
+                                  <td className="py-2 max-w-xs truncate text-gray-500 italic">{s.teacherNotes ?? '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

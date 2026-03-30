@@ -35,6 +35,7 @@ interface PrivateStudent {
   status: 'active' | 'completed' | 'expired';
   startDate: string;
   expiryDate: string | null;
+  nextScheduledAt: string | null;
   alertFiredAt: string | null;
   lastSessionDate: string | null;
   isLowSession: boolean;
@@ -44,6 +45,7 @@ interface SessionRecord {
   id: number;
   sessionDate: string;
   actualDuration: number;
+  topicsCovered: string | null;
   teacherNotes: string | null;
   attendanceStatus: string;
 }
@@ -57,7 +59,9 @@ function PrivateStudentsPage() {
   const [logDialog, setLogDialog] = useState<{ open: boolean; packageId: number | null }>({ open: false, packageId: null });
   const [duration, setDuration] = useState("60");
   const [sessionNotes, setSessionNotes] = useState("");
+  const [topicsCovered, setTopicsCovered] = useState("");
   const [attendanceStatus, setAttendanceStatus] = useState<"attended" | "absent" | "cancelled">("attended");
+  const [nextScheduled, setNextScheduled] = useState("");
 
   const { data: students = [], isLoading } = useQuery<PrivateStudent[]>({
     queryKey: ["/api/teacher/private-students"],
@@ -69,12 +73,16 @@ function PrivateStudentsPage() {
       packageId,
       durationMinutes,
       notes,
+      topics,
       status,
+      nextScheduledAt,
     }: {
       packageId: number;
       durationMinutes: number;
       notes?: string;
+      topics?: string;
       status: string;
+      nextScheduledAt?: string;
     }) => {
       return await apiRequest(`/api/private-sessions/log`, {
         method: "POST",
@@ -83,7 +91,9 @@ function PrivateStudentsPage() {
           sessionDate: new Date().toISOString(),
           actualDuration: durationMinutes,
           teacherNotes: notes || null,
+          topicsCovered: topics || null,
           attendanceStatus: status,
+          nextScheduledAt: nextScheduledAt || null,
         })
       });
     },
@@ -93,9 +103,11 @@ function PrivateStudentsPage() {
       setLogDialog({ open: false, packageId: null });
       setDuration("60");
       setSessionNotes("");
+      setTopicsCovered("");
       setAttendanceStatus("attended");
+      setNextScheduled("");
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({ title: "خطا در ثبت جلسه", description: e.message, variant: "destructive" });
     }
   });
@@ -112,6 +124,9 @@ function PrivateStudentsPage() {
   });
 
   const active = students.filter(s => s.status === 'active').length;
+
+  const attendanceLabel = (s: string) =>
+    s === 'attended' ? 'حضور' : s === 'absent' ? 'غایب' : 'لغو';
 
   return (
     <div className="p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
@@ -155,7 +170,7 @@ function PrivateStudentsPage() {
               <CardContent className="p-5">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-3 flex-wrap">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-gray-500" />
@@ -187,6 +202,17 @@ function PrivateStudentsPage() {
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             <span>انقضا: {new Date(student.expiryDate).toLocaleDateString('fa-IR')}</span>
+                          </div>
+                        )}
+                        {student.nextScheduledAt ? (
+                          <div className="flex items-center gap-1 col-span-2 text-blue-600">
+                            <Calendar className="h-3 w-3" />
+                            <span className="font-medium">جلسه بعدی: {new Date(student.nextScheduledAt).toLocaleDateString('fa-IR')} ساعت {new Date(student.nextScheduledAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 col-span-2 text-gray-400 text-xs">
+                            <Calendar className="h-3 w-3" />
+                            <span>جلسه بعدی هنوز تعیین نشده</span>
                           </div>
                         )}
                       </div>
@@ -222,7 +248,7 @@ function PrivateStudentsPage() {
                             </div>
                             <div>
                               <Label>وضعیت حضور</Label>
-                              <Select value={attendanceStatus} onValueChange={(v: any) => setAttendanceStatus(v)}>
+                              <Select value={attendanceStatus} onValueChange={(v: "attended" | "absent" | "cancelled") => setAttendanceStatus(v)}>
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
@@ -234,8 +260,16 @@ function PrivateStudentsPage() {
                               </Select>
                             </div>
                             <div>
+                              <Label>موضوع درس (اختیاری)</Label>
+                              <Input value={topicsCovered} onChange={e => setTopicsCovered(e.target.value)} placeholder="مثال: گرامر زمان گذشته..." />
+                            </div>
+                            <div>
                               <Label>یادداشت استاد (اختیاری)</Label>
                               <Input value={sessionNotes} onChange={e => setSessionNotes(e.target.value)} placeholder="مطالب پوشش داده شده..." />
+                            </div>
+                            <div>
+                              <Label>زمان جلسه بعدی (اختیاری)</Label>
+                              <Input type="datetime-local" value={nextScheduled} onChange={e => setNextScheduled(e.target.value)} />
                             </div>
                             <div className="flex justify-end gap-2">
                               <Button variant="outline" size="sm" onClick={() => setLogDialog({ open: false, packageId: null })}>
@@ -247,7 +281,9 @@ function PrivateStudentsPage() {
                                   packageId: student.id,
                                   durationMinutes: Number(duration),
                                   notes: sessionNotes || undefined,
+                                  topics: topicsCovered || undefined,
                                   status: attendanceStatus,
+                                  nextScheduledAt: nextScheduled || undefined,
                                 })}
                                 disabled={logMutation.isPending || !duration}
                               >
@@ -281,15 +317,18 @@ function PrivateStudentsPage() {
                       ) : (
                         <div className="space-y-2">
                           {sessionHistory.slice(0, 10).map(s => (
-                            <div key={s.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                              <div className="flex items-center gap-3">
-                                <span>{s.sessionDate ? new Date(s.sessionDate).toLocaleDateString('fa-IR') : '—'}</span>
-                                <span className="text-gray-500">{s.actualDuration} دقیقه</span>
-                                <Badge variant={s.attendanceStatus === 'attended' ? 'default' : 'secondary'} className="text-xs">
-                                  {s.attendanceStatus === 'attended' ? 'حضور' : s.attendanceStatus === 'absent' ? 'غایب' : 'لغو'}
-                                </Badge>
+                            <div key={s.id} className="bg-gray-50 dark:bg-gray-800 p-3 rounded text-sm space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">{s.sessionDate ? new Date(s.sessionDate).toLocaleDateString('fa-IR') : '—'}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-500">{s.actualDuration} دقیقه</span>
+                                  <Badge variant={s.attendanceStatus === 'attended' ? 'default' : 'secondary'} className="text-xs py-0">
+                                    {attendanceLabel(s.attendanceStatus)}
+                                  </Badge>
+                                </div>
                               </div>
-                              {s.teacherNotes && <span className="text-gray-500 truncate max-w-xs">{s.teacherNotes}</span>}
+                              {s.topicsCovered && <p className="text-gray-600 text-xs">موضوع: {s.topicsCovered}</p>}
+                              {s.teacherNotes && <p className="text-gray-500 text-xs italic">یادداشت: {s.teacherNotes}</p>}
                             </div>
                           ))}
                         </div>

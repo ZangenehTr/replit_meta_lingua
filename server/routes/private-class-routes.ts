@@ -4,10 +4,12 @@ import { eq, desc, and, inArray } from "drizzle-orm";
 import {
   sessionPackages,
   studentSessionPackages,
+  teacherStudentAssignments,
   privateSessions,
   leads,
   users,
   walletTransactions,
+  coursePayments,
   leadActivityLog,
   frontDeskTasks,
   adminSettings,
@@ -127,8 +129,10 @@ export function registerPrivateClassRoutes(app: Express) {
       const [bundle] = await db.select().from(sessionPackages).where(eq(sessionPackages.id, packageId));
       if (!bundle) return res.status(404).json({ message: "Session bundle not found" });
 
-      const [teacher] = await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName }).from(users).where(eq(users.id, teacherId));
+      const [teacher] = await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName, role: users.role })
+        .from(users).where(eq(users.id, teacherId));
       if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+      if (teacher.role !== 'Teacher') return res.status(400).json({ message: "Selected user is not a Teacher" });
 
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + (bundle.validityDays || 90));
@@ -149,33 +153,66 @@ export function registerPrivateClassRoutes(app: Express) {
           notes: notes || null,
         }).returning();
 
-        // 2. Record payment as a wallet transaction (type=payment, completed)
-        const [payment] = await tx.insert(walletTransactions).values({
+        // 2. Create teacher-student assignment record
+        await tx.insert(teacherStudentAssignments).values({
+          teacherId,
+          studentId: lead.studentId!,
+          studentSessionPackageId: pkg.id,
+          status: "active",
+          notes: notes || null,
+        });
+
+        // 3. Record payment in course_payments (primary financial ledger)
+        const txRef = `PRIV-${pkg.id}-${Date.now()}`;
+        const [payment] = await tx.insert(coursePayments).values({
           userId: lead.studentId!,
-          type: "payment",
+          courseId: null,
           amount: String(amount),
-          description: `بسته کلاس خصوصی: ${bundle.name} — روش: ${paymentMethod}`,
+          paymentMethod,
           status: "completed",
-          merchantTransactionId: `PRIV-${pkg.id}-${Date.now()}`,
-          completedAt: new Date(),
+          merchantTransactionId: txRef,
+          paidAt: new Date(),
         }).returning();
 
-        // 3. Advance lead to active_private_class stage
+        // 4. If payment method is wallet, also debit the student's wallet
+        if (paymentMethod === 'wallet') {
+          await tx.insert(walletTransactions).values({
+            userId: lead.studentId!,
+            type: "payment",
+            amount: String(amount),
+            description: `بسته کلاس خصوصی: ${bundle.name}`,
+            status: "completed",
+            merchantTransactionId: txRef,
+            completedAt: new Date(),
+          });
+        }
+
+        // 5. Advance lead to active_private_class stage
         await tx.update(leads).set({
           workflowStage: "active_private_class",
           status: "converted",
           updatedAt: new Date(),
         }).where(eq(leads.id, leadId));
 
-        // 4. Log activity
-        const snapshot = { stage: "active_private_class", packageId, teacherId, amount, paymentMethod, studentSessionPackageId: pkg.id };
+        // 6. Log activity (no as-any — snapshot is Record<string, unknown>)
+        const snapshot: Record<string, unknown> = {
+          stage: "active_private_class",
+          packageId,
+          bundleName: bundle.name,
+          teacherId,
+          teacherName: `${teacher.firstName} ${teacher.lastName}`,
+          amount,
+          paymentMethod,
+          studentSessionPackageId: pkg.id,
+          coursePaymentId: payment.id,
+        };
         await tx.insert(leadActivityLog).values({
           leadId,
           operatorId: req.user.id,
           fromStage: lead.workflowStage || "private_class_setup",
           toStage: "active_private_class",
           reason: `Private class bundle purchased: ${bundle.name}`,
-          snapshot: snapshot as any,
+          snapshot,
         });
 
         return { pkg, payment };
@@ -185,7 +222,7 @@ export function registerPrivateClassRoutes(app: Express) {
         success: true,
         message: "Private class created successfully",
         studentSessionPackageId: result.pkg.id,
-        paymentId: result.payment.id,
+        coursePaymentId: result.payment.id,
       });
     } catch (e: any) {
       console.error("[Private Class] Create error:", e);
@@ -206,6 +243,7 @@ export function registerPrivateClassRoutes(app: Express) {
         topicsCovered: z.string().optional(),
         teacherNotes: z.string().optional(),
         attendanceStatus: z.enum(['attended', 'absent', 'cancelled']).default('attended'),
+        nextScheduledAt: z.string().optional(), // teacher can optionally set next session time
       });
       const data = schema.parse(req.body);
 
@@ -240,13 +278,12 @@ export function registerPrivateClassRoutes(app: Express) {
           remainingAfter: newRemaining,
         }).returning();
 
-        // 2. Decrement remaining sessions
-        if (deducted > 0) {
-          await tx.update(studentSessionPackages).set({
-            remainingSessions: newRemaining,
-            updatedAt: new Date(),
-          }).where(eq(studentSessionPackages.id, data.studentSessionPackageId));
-        }
+        // 2. Decrement remaining sessions and optionally set next scheduled session
+        const pkgUpdate: Partial<typeof studentSessionPackages.$inferInsert> = { updatedAt: new Date() };
+        if (deducted > 0) pkgUpdate.remainingSessions = newRemaining;
+        if (data.nextScheduledAt) pkgUpdate.nextScheduledAt = new Date(data.nextScheduledAt);
+        await tx.update(studentSessionPackages).set(pkgUpdate)
+          .where(eq(studentSessionPackages.id, data.studentSessionPackageId));
 
         return { session, newRemaining };
       });
@@ -331,6 +368,7 @@ export function registerPrivateClassRoutes(app: Express) {
         status: pkg.status,
         startDate: pkg.startDate,
         expiryDate: pkg.expiryDate,
+        nextScheduledAt: pkg.nextScheduledAt,
         alertFiredAt: pkg.alertFiredAt,
         lastSessionDate: lastSessionMap.get(pkg.id) || null,
         isLowSession: pkg.remainingSessions <= pkg.lowSessionAlertThreshold,
@@ -419,6 +457,7 @@ export function registerPrivateClassRoutes(app: Express) {
         status: pkg.status,
         startDate: pkg.startDate,
         expiryDate: pkg.expiryDate,
+        nextScheduledAt: pkg.nextScheduledAt,
         isLowSession: pkg.remainingSessions <= pkg.lowSessionAlertThreshold,
         sessions,
       });
@@ -490,6 +529,7 @@ export function registerPrivateClassRoutes(app: Express) {
         startDate: pkg.startDate,
         expiryDate: pkg.expiryDate,
         lastSessionDate: lastSessionMap.get(pkg.id) || null,
+        nextScheduledAt: pkg.nextScheduledAt,
         alertFiredAt: pkg.alertFiredAt,
         isLowSession: pkg.remainingSessions <= pkg.lowSessionAlertThreshold,
         isAtRisk: pkg.remainingSessions === 0,
@@ -499,6 +539,45 @@ export function registerPrivateClassRoutes(app: Express) {
     } catch (e: any) {
       console.error("[Private Class] Admin overview error:", e);
       res.status(500).json({ message: "Failed to fetch overview" });
+    }
+  });
+  // PATCH /api/private-sessions/:packageId/next-scheduled — teacher sets next session time
+  app.patch("/api/private-sessions/:packageId/next-scheduled", authenticate, authorize(['Teacher', 'Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const packageId = parseInt(req.params.packageId);
+      if (isNaN(packageId)) return res.status(400).json({ message: "Invalid package ID" });
+
+      const schema = z.object({ nextScheduledAt: z.string().nullable() });
+      const { nextScheduledAt } = schema.parse(req.body);
+
+      const [pkg] = await db.select().from(studentSessionPackages).where(eq(studentSessionPackages.id, packageId));
+      if (!pkg) return res.status(404).json({ message: "Package not found" });
+      if (req.user.role === 'Teacher' && pkg.teacherId !== req.user.id) return res.status(403).json({ message: "Not authorized" });
+
+      await db.update(studentSessionPackages).set({
+        nextScheduledAt: nextScheduledAt ? new Date(nextScheduledAt) : null,
+        updatedAt: new Date(),
+      }).where(eq(studentSessionPackages.id, packageId));
+
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ message: "Failed to update schedule" });
+    }
+  });
+
+  // GET /api/admin/private-classes/:packageId/sessions — admin session history with full detail
+  app.get("/api/admin/private-classes/:packageId/sessions", authenticate, authorize(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const packageId = parseInt(req.params.packageId);
+      if (isNaN(packageId)) return res.status(400).json({ message: "Invalid package ID" });
+
+      const sessions = await db.select().from(privateSessions)
+        .where(eq(privateSessions.studentSessionPackageId, packageId))
+        .orderBy(desc(privateSessions.sessionDate));
+
+      res.json(sessions);
+    } catch (e: any) {
+      res.status(500).json({ message: "Failed to fetch session history" });
     }
   });
 }
@@ -549,14 +628,22 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
       updatedAt: new Date(),
     }).where(eq(leads.id, lead.id));
 
+    const alertSnapshot: Record<string, unknown> = {
+      remainingSessions: remaining,
+      studentSessionPackageId: pkg.id,
+      alertThreshold: pkg.lowSessionAlertThreshold,
+    };
     await db.insert(leadActivityLog).values({
       leadId: lead.id,
       operatorId: pkg.teacherId,
       fromStage: "active_private_class",
       toStage: "charge_renewal",
       reason: `Low session alert: ${remaining} sessions remaining`,
-      snapshot: { remainingSessions: remaining, studentSessionPackageId: pkg.id } as any,
+      snapshot: alertSnapshot,
     });
+
+    // 4. Get the current bundle info for recommended next bundle prefill
+    const [currentBundle] = await db.select().from(sessionPackages).where(eq(sessionPackages.id, pkg.packageId));
 
     // 4. Notify assigned agent
     if (lead.assignedTo) {
@@ -567,11 +654,12 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
         message: `دانش‌آموز ${lead.firstName} ${lead.lastName} تنها ${remaining} جلسه باقی دارد. نیاز به پیگیری دارد.`,
       });
 
-      // 5. Create front desk task for agent
+      // 5. Create front desk task with recommended next bundle prefill
+      const recommendedBundle = currentBundle ? `بسته پیشنهادی: "${currentBundle.name}" (همان بسته قبلی)` : "لطفاً بسته مناسب را انتخاب کنید";
       await db.insert(frontDeskTasks).values({
         assigneeId: lead.assignedTo,
         title: `تمدید بسته کلاس خصوصی — ${lead.firstName} ${lead.lastName}`,
-        description: `دانش‌آموز ${lead.firstName} ${lead.lastName} تنها ${remaining} جلسه خصوصی باقی دارد. بسته جدید پیشنهاد دهید.`,
+        description: `دانش‌آموز ${lead.firstName} ${lead.lastName} تنها ${remaining} جلسه خصوصی باقی دارد.\n${recommendedBundle}\nلطفاً برای تمدید پیگیری کنید.`,
         taskType: "payment_reminder",
         priority: "high",
         status: "pending",
