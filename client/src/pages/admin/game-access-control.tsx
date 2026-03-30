@@ -27,13 +27,14 @@ export function GameAccessControl() {
     queryKey: ['/api/admin/games']
   });
 
+  interface UserRecord { id: number; role: string; firstName?: string; lastName?: string; }
+
   // Fetch all students
-  const { data: students = [] } = useQuery({
+  const { data: students = [] } = useQuery<UserRecord[]>({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      const res = await apiRequest('/api/users');
-      const users: any[] = Array.isArray(res) ? res : (res?.users ?? []);
-      return users.filter((u: any) => u.role === 'Student');
+      const res: UserRecord[] = await apiRequest('/api/users');
+      return (Array.isArray(res) ? res : []).filter(u => u.role === 'Student');
     }
   });
 

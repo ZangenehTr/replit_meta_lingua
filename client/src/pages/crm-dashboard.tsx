@@ -41,12 +41,13 @@ export default function CRMDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  interface UserSummary { id: number; role: string; isActive?: boolean; firstName?: string; lastName?: string; }
+
   // Use real data from the existing API endpoints
-  const { data: usersRes } = useQuery({
+  const { data: users = [] } = useQuery<UserSummary[]>({
     queryKey: ["/api/users"],
     enabled: user?.role === "admin"
   });
-  const users: any[] = Array.isArray(usersRes) ? usersRes : ((usersRes as any)?.users ?? []);
 
   const { data: courses = [] } = useQuery({
     queryKey: ["/api/courses"]
@@ -57,8 +58,8 @@ export default function CRMDashboard() {
   });
 
   // Calculate real statistics from actual data - no fallback values
-  const students = users.filter((u: any) => u.role === "student" || u.role === "Student");
-  const teachers = users.filter((u: any) => u.role === "teacher" || u.role === "Teacher/Tutor");
+  const students = users.filter(u => u.role === "student" || u.role === "Student");
+  const teachers = users.filter(u => u.role === "teacher" || u.role === "Teacher/Tutor");
   const activeStudents = students.filter(u => u.isActive);
   
   const stats = {

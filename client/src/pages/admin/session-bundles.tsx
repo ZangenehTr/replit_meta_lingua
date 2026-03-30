@@ -88,7 +88,7 @@ function SessionBundlesPage() {
       setForm(emptyForm);
       setEditingId(null);
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({ title: "خطا", description: e.message, variant: "destructive" });
     }
   });
@@ -99,7 +99,7 @@ function SessionBundlesPage() {
       toast({ title: "بسته حذف شد" });
       queryClient.invalidateQueries({ queryKey: ["/api/session-bundles"] });
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({ title: "خطا", description: e.message, variant: "destructive" });
     }
   });

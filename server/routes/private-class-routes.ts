@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { db } from "../db";
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import {
   sessionPackages,
   studentSessionPackages,
@@ -89,8 +89,11 @@ export function registerPrivateClassRoutes(app: Express) {
         features: z.array(z.string()).optional(),
       });
       const data = schema.parse(req.body);
-      const updateData: any = { ...data, updatedAt: new Date() };
-      if (data.price !== undefined) updateData.price = String(data.price);
+      const updateData: Partial<typeof sessionPackages.$inferInsert> & { updatedAt: Date } = {
+        ...data,
+        updatedAt: new Date(),
+        ...(data.price !== undefined ? { price: String(data.price) } : {}),
+      };
       const [updated] = await db.update(sessionPackages).set(updateData).where(eq(sessionPackages.id, id)).returning();
       if (!updated) return res.status(404).json({ message: "Bundle not found" });
       res.json(updated);
@@ -195,8 +198,11 @@ export function registerPrivateClassRoutes(app: Express) {
           paidAt: new Date(),
         }).returning();
 
-        // 4. If payment method is wallet, also debit the student's wallet
+        // 4. If payment method is wallet, debit the student's wallet balance and log transaction
         if (paymentMethod === 'wallet') {
+          await tx.update(users)
+            .set({ walletBalance: sql`wallet_balance - ${Math.round(amount)}` })
+            .where(eq(users.id, lead.studentId!));
           await tx.insert(walletTransactions).values({
             userId: lead.studentId!,
             type: "payment",

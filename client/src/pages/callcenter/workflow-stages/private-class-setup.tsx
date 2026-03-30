@@ -94,7 +94,7 @@ function PrivateClassSetup() {
       refetch();
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "خطا در ایجاد کلاس خصوصی",
         description: error.message || "لطفاً دوباره تلاش کنید",
