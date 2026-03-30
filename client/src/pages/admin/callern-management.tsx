@@ -33,7 +33,9 @@ import {
   BookOpen,
   Languages,
   Mic,
-  Video
+  Video,
+  Bell,
+  TrendingUp,
 } from "lucide-react";
 
 export function CallernManagement() {
@@ -125,6 +127,11 @@ export function CallernManagement() {
   });
 
   // Fetch existing roadmaps
+  const { data: followersDashboard = [], isLoading: loadingFollowers } = useQuery<Array<{ teacherId: number; teacherName: string; profileImageUrl?: string; followerCount: number }>>({
+    queryKey: ['/api/teachers/admin/followers-dashboard'],
+    staleTime: 60 * 1000,
+  });
+
   const { data: roadmaps, isLoading: loadingRoadmaps } = useQuery({
     queryKey: ['/api/roadmaps'],
     queryFn: async () => {
@@ -537,7 +544,7 @@ export function CallernManagement() {
       </Card>
 
       <Tabs defaultValue="availability" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto sm:h-10">
           <TabsTrigger value="availability" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">{t('admin:callernManagement.teacherAvailability')}</span>
             <span className="sm:hidden">{t('admin:callernManagement.availableTeachers')}</span>
@@ -549,6 +556,10 @@ export function CallernManagement() {
           <TabsTrigger value="assignments" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">{t('admin:callernManagement.teacherManagement')}</span>
             <span className="sm:hidden">{t('admin:callernManagement.teacherManagement')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="followers" className="text-xs sm:text-sm gap-1">
+            <Bell className="h-3 w-3" />
+            <span>دنبال‌کننده‌ها</span>
           </TabsTrigger>
         </TabsList>
 
@@ -843,6 +854,67 @@ export function CallernManagement() {
               )
             )}
           </div>
+        </TabsContent>
+
+        {/* ---- Followers Dashboard Tab ---- */}
+        <TabsContent value="followers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                دنبال‌کنندگان CallerN
+              </CardTitle>
+              <CardDescription>
+                آمار دانش‌آموزانی که مدرسان CallerN را دنبال می‌کنند — مرتب‌شده بر اساس تعداد دنبال‌کننده
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingFollowers ? (
+                <div className="text-center py-8">در حال بارگذاری...</div>
+              ) : followersDashboard.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Bell className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                  <p>هنوز هیچ مدرسی دنبال‌کننده ندارد</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {followersDashboard.map((row, index) => (
+                    <div key={row.teacherId} className="flex items-center gap-4 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                      <span className="text-lg font-bold text-muted-foreground w-8 text-center">
+                        {index + 1}
+                      </span>
+                      {row.profileImageUrl ? (
+                        <img
+                          src={row.profileImageUrl}
+                          alt={row.teacherName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                          {row.teacherName[0]}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium">{row.teacherName}</p>
+                        <p className="text-xs text-muted-foreground">مدرس CallerN</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-blue-700 font-bold">
+                        <Users className="h-4 w-4" />
+                        <span>{row.followerCount}</span>
+                        <span className="text-xs font-normal text-muted-foreground">دنبال‌کننده</span>
+                      </div>
+                      {index === 0 && (
+                        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          پرطرفدار
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="assignments" className="space-y-4">

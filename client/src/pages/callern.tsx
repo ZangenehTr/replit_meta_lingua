@@ -10,6 +10,7 @@ import { useSocket } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { MobileCard } from "@/components/mobile/MobileCard";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 import {
   Card,
   CardContent,
@@ -54,7 +55,10 @@ import {
   LifeBuoy,
   TrendingUp,
   MessageSquare,
-  Target
+  Target,
+  Bell,
+  BellOff,
+  BookOpen,
 } from "lucide-react";
 import {
   Dialog,
@@ -109,6 +113,8 @@ interface AvailableTeacher {
   totalRatings: number;
   hourlyRate: number;
   isOnline: boolean;
+  status: 'available' | 'teaching' | 'offline';
+  followerCount: number;
   profileImageUrl?: string;
   totalCalls?: number;
   connectionQuality?: 'excellent' | 'good' | 'fair' | 'poor';
@@ -227,16 +233,62 @@ export default function CallernSystem() {
     }).length;
   }, [callHistory]);
 
+  // Track which teachers the student is following (set of teacher ids)
+  const [followingIds, setFollowingIds] = useState<Set<number>>(new Set());
+
+  // Follow a teacher (Notify Me)
+  const followTeacher = async (teacherId: number) => {
+    try {
+      await apiRequest(`/api/teachers/${teacherId}/follow`, { method: "POST" });
+      setFollowingIds(prev => new Set([...prev, teacherId]));
+      toast({ title: "اطلاع‌رسانی فعال شد", description: "وقتی این مدرس آنلاین شود به شما اطلاع می‌دهیم" });
+    } catch (err: any) {
+      toast({ title: "خطا", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const unfollowTeacher = async (teacherId: number) => {
+    try {
+      await apiRequest(`/api/teachers/${teacherId}/follow`, { method: "DELETE" });
+      setFollowingIds(prev => { const s = new Set(prev); s.delete(teacherId); return s; });
+      toast({ title: "اطلاع‌رسانی غیرفعال شد" });
+    } catch (err: any) {
+      toast({ title: "خطا", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const availableOnlineTeachers = useMemo(() => 
+    availableTeachers
+      .filter((teacher: AvailableTeacher) => teacher.status === 'available')
+      .sort((a, b) => b.rating - a.rating),
+    [availableTeachers]
+  );
+
+  const teachingTeachers = useMemo(() => 
+    availableTeachers
+      .filter((teacher: AvailableTeacher) => teacher.status === 'teaching')
+      .sort((a, b) => b.rating - a.rating),
+    [availableTeachers]
+  );
+
+  // Keep old alias for compatibility with existing UI that shows "online" teachers
   const onlineTeachers = useMemo(() => 
     availableTeachers
-      .filter((teacher: AvailableTeacher) => teacher.isOnline)
-      .sort((a, b) => b.rating - a.rating),
+      .filter((teacher: AvailableTeacher) => teacher.status !== 'offline')
+      .sort((a, b) => {
+        // available first, then teaching, then sort by rating
+        if (a.status !== b.status) {
+          if (a.status === 'available') return -1;
+          if (b.status === 'available') return 1;
+        }
+        return b.rating - a.rating;
+      }),
     [availableTeachers]
   );
 
   const offlineTeachers = useMemo(() => 
     availableTeachers
-      .filter((teacher: AvailableTeacher) => !teacher.isOnline)
+      .filter((teacher: AvailableTeacher) => teacher.status === 'offline')
       .sort((a, b) => b.rating - a.rating),
     [availableTeachers]
   );
@@ -384,8 +436,17 @@ export default function CallernSystem() {
     // Handle real-time teacher status updates
     const handleTeacherStatusUpdate = (data: any) => {
       console.log('Teacher status update:', data);
-      // Invalidate the teachers query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["/api/callern/online-teachers"] });
+    };
+
+    // Handle Notify-Me: a followed teacher just came online
+    const handleTeacherAvailableNotify = (data: any) => {
+      console.log('Followed teacher now available:', data);
+      queryClient.invalidateQueries({ queryKey: ["/api/callern/online-teachers"] });
+      toast({
+        title: "🔔 مدرس آنلاین شد",
+        description: data.message || `${data.teacherName} اکنون آماده مکالمه است`,
+      });
     };
 
     // Register event listeners
@@ -393,6 +454,7 @@ export default function CallernSystem() {
     socket.on('call-rejected', handleCallRejected);
     socket.on('error', handleCallError);
     socket.on('teacher-status-update', handleTeacherStatusUpdate);
+    socket.on('teacher-available-notify', handleTeacherAvailableNotify);
 
     // Cleanup function
     return () => {
@@ -400,6 +462,7 @@ export default function CallernSystem() {
       socket.off('call-rejected', handleCallRejected);
       socket.off('error', handleCallError);
       socket.off('teacher-status-update', handleTeacherStatusUpdate);
+      socket.off('teacher-available-notify', handleTeacherAvailableNotify);
     };
   }, [socket, t, toast]);
 
@@ -712,118 +775,150 @@ export default function CallernSystem() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {onlineTeachers.map((teacher: AvailableTeacher) => (
-                  <div key={teacher.id} className="border rounded-xl p-6 space-y-4 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white via-gray-50 to-blue-50 hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 border-gray-200 hover:border-blue-300">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          {teacher.profileImageUrl ? (
-                            <img 
-                              src={teacher.profileImageUrl} 
-                              alt={`${teacher.firstName} ${teacher.lastName}`}
-                              className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                              }}
-                            />
-                          ) : null}
-                          <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white ${teacher.profileImageUrl ? 'hidden' : ''}`}>
-                            {teacher.firstName[0]}{teacher.lastName[0]}
-                          </div>
-                          {/* Online status indicator */}
-                          <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-3 border-white animate-pulse">
-                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                          </div>
-                          {teacher.connectionQuality && (
-                            <div className="absolute -top-1 -left-1 bg-white rounded-full p-1 shadow-sm">
-                              {teacher.connectionQuality === 'excellent' && <SignalHigh className="h-3 w-3 text-green-500" />}
-                              {teacher.connectionQuality === 'good' && <Signal className="h-3 w-3 text-green-500" />}
-                              {teacher.connectionQuality === 'fair' && <SignalLow className="h-3 w-3 text-yellow-500" />}
-                              {teacher.connectionQuality === 'poor' && <SignalZero className="h-3 w-3 text-red-500" />}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2 mb-1">
-                            {teacher.firstName} {teacher.lastName}
-                            {teacher.rating >= 4.5 && <Award className="h-5 w-5 text-yellow-500" />}
-                          </h4>
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-4 w-4 ${i < Math.floor(teacher.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                                />
-                              ))}
-                            </div>
-                            <span className="font-bold text-gray-800">{teacher.rating.toFixed(1)}</span>
-                            <span className="text-gray-500 text-sm">({teacher.totalRatings || 0} reviews)</span>
-                          </div>
-                          {teacher.totalCalls && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 rounded-full px-3 py-1 w-fit">
-                              <Phone className="h-4 w-4" />
-                              <span className="font-medium">{teacher.totalCalls} {t('callern:calls')} completed</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <Badge 
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 text-white animate-pulse px-3 py-1"
-                      >
-                        <Wifi className="mr-1 h-4 w-4" />
-                        {t('callern:online')}
-                      </Badge>
-                    </div>
+                {onlineTeachers.map((teacher: AvailableTeacher) => {
+                  const isFollowing = followingIds.has(teacher.id);
+                  const isTeaching = teacher.status === 'teaching';
+                  const isAvailable = teacher.status === 'available';
+                  const canCall = isAvailable && hasActivePackageWithMinutes;
 
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">{t('callern:languages')}: </span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {teacher.languages.map(lang => (
-                            <Badge key={lang} variant="outline" className="text-xs">
-                              <Globe className="h-3 w-3 mr-1" />
-                              {lang}
-                            </Badge>
-                          ))}
+                  return (
+                    <div key={teacher.id} className="border rounded-xl p-6 space-y-4 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white via-gray-50 to-blue-50 hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 border-gray-200 hover:border-blue-300">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            {teacher.profileImageUrl ? (
+                              <img 
+                                src={teacher.profileImageUrl} 
+                                alt={`${teacher.firstName} ${teacher.lastName}`}
+                                className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white ${teacher.profileImageUrl ? 'hidden' : ''}`}>
+                              {teacher.firstName[0]}{teacher.lastName[0]}
+                            </div>
+                            {/* 3-state presence dot */}
+                            <div className={`absolute -bottom-1 -right-1 rounded-full p-1 border-2 border-white ${isAvailable ? 'bg-green-500' : 'bg-amber-500'} animate-pulse`}>
+                              <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-400' : 'bg-amber-400'}`} />
+                            </div>
+                            {teacher.connectionQuality && (
+                              <div className="absolute -top-1 -left-1 bg-white rounded-full p-1 shadow-sm">
+                                {teacher.connectionQuality === 'excellent' && <SignalHigh className="h-3 w-3 text-green-500" />}
+                                {teacher.connectionQuality === 'good' && <Signal className="h-3 w-3 text-green-500" />}
+                                {teacher.connectionQuality === 'fair' && <SignalLow className="h-3 w-3 text-yellow-500" />}
+                                {teacher.connectionQuality === 'poor' && <SignalZero className="h-3 w-3 text-red-500" />}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2 mb-1">
+                              <TeacherNameLink
+                                teacherId={teacher.id}
+                                firstName={teacher.firstName}
+                                lastName={teacher.lastName}
+                                className="text-lg font-bold"
+                              />
+                              {teacher.rating >= 4.5 && <Award className="h-5 w-5 text-yellow-500 flex-shrink-0" />}
+                            </h4>
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`h-4 w-4 ${i < Math.floor(teacher.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                  />
+                                ))}
+                              </div>
+                              <span className="font-bold text-gray-800">{teacher.rating.toFixed(1)}</span>
+                              <span className="text-gray-500 text-sm">({teacher.totalRatings || 0})</span>
+                            </div>
+                            {/* Follower count */}
+                            {teacher.followerCount > 0 && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Users className="h-3 w-3" />
+                                <span>{teacher.followerCount} دنبال‌کننده</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                        {/* 3-state presence badge */}
+                        {isAvailable ? (
+                          <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white shrink-0 gap-1">
+                            <Wifi className="h-3 w-3" />
+                            آماده
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-gradient-to-r from-amber-400 to-orange-400 text-white shrink-0 gap-1 animate-pulse">
+                            <BookOpen className="h-3 w-3" />
+                            در حال تدریس
+                          </Badge>
+                        )}
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">{t('callern:specializations')}: </span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {teacher.specializations.map(spec => (
-                            <Badge key={spec} variant="secondary" className="text-xs">
-                              {spec}
-                            </Badge>
-                          ))}
+
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">{t('callern:languages')}: </span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {teacher.languages.map(lang => (
+                              <Badge key={lang} variant="outline" className="text-xs">
+                                <Globe className="h-3 w-3 mr-1" />
+                                {lang}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex justify-between items-center pt-2">
-                        <span className="font-semibold">{formatPrice(Number(teacher.hourlyRate))}{t('callern:perHour')}</span>
-                        <Button
-                          size="sm"
-                          variant={!teacher.isOnline || !hasActivePackageWithMinutes ? "secondary" : "default"}
-                          disabled={!teacher.isOnline || !hasActivePackageWithMinutes}
-                          onClick={() => handleStartCall(teacher)}
-                          title={!hasActivePackageWithMinutes ? t('callern:purchasePackageFirst') : ''}
-                        >
-                          {!hasActivePackageWithMinutes ? (
-                            <>
-                              <ShoppingCart className="mr-1 h-4 w-4" />
-                              {t('callern:purchasePackageFirst')}
-                            </>
-                          ) : (
-                            <>
-                              <Video className="mr-1 h-4 w-4" />
-                              {t('callern:startVideoCall')}
-                            </>
-                          )}
-                        </Button>
+                        <div>
+                          <span className="text-muted-foreground">{t('callern:specializations')}: </span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {teacher.specializations.map(spec => (
+                              <Badge key={spec} variant="secondary" className="text-xs">
+                                {spec}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 pt-2 items-center">
+                          <span className="font-semibold">{formatPrice(Number(teacher.hourlyRate))}{t('callern:perHour')}</span>
+                          <div className="flex gap-2 ms-auto">
+                            {/* Notify Me / Unfollow toggle (only when teaching) */}
+                            {isTeaching && (
+                              <Button
+                                size="sm"
+                                variant={isFollowing ? "outline" : "secondary"}
+                                onClick={() => isFollowing ? unfollowTeacher(teacher.id) : followTeacher(teacher.id)}
+                                className="gap-1 text-xs"
+                              >
+                                {isFollowing ? (
+                                  <><BellOff className="h-3 w-3" /> لغو</>
+                                ) : (
+                                  <><Bell className="h-3 w-3" /> اطلاع‌رسانی</>
+                                )}
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant={canCall ? "default" : "secondary"}
+                              disabled={!canCall}
+                              onClick={() => canCall && handleStartCall(teacher)}
+                              title={!hasActivePackageWithMinutes ? t('callern:purchasePackageFirst') : isTeaching ? 'در حال تدریس با دانش‌آموز دیگری است' : ''}
+                            >
+                              {!hasActivePackageWithMinutes ? (
+                                <><ShoppingCart className="mr-1 h-4 w-4" />{t('callern:purchasePackageFirst')}</>
+                              ) : isTeaching ? (
+                                <><BookOpen className="mr-1 h-4 w-4" />مشغول</>
+                              ) : (
+                                <><Video className="mr-1 h-4 w-4" />{t('callern:startVideoCall')}</>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

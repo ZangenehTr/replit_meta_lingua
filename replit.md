@@ -30,6 +30,7 @@ CRITICAL DIRECTIVE: Before any implementation, check existing codebase to avoid 
 - **API Design**: RESTful.
 - **Phone Number Normalization**: Centralized normalization to +98XXXXXXXXXX format.
 - **Key Features**: User & Course Management, payment & wallet system, AI Integration (adaptive micro-sessions, content generation via Ollama, AI Lesson Generator, AI Supervisor for video calls, AI 24/7 Sales Agent), Video & Communication (24/7 on-demand video tutoring via WebRTC, screen sharing, call recording, AI features), Gamification (XP/level system, achievements), Testing System (8 question types, MST Placement Test), Unified Class Scheduling, CMS Platform (Blog, Video, Media library), CallerN Storage Layer for session management, and OTP Service (SMS).
+- **Teacher Profiles & CallerN Presence v2**: Three-state presence (available/teaching/offline) in CallerN; `callern_teacher_followers` table with follow/unfollow REST API; WebSocket Notify-Me push when teacher comes online; public `GET /api/teachers/:id/profile` endpoint; `/tutors/:id` public profile page; `TeacherNameLink` shared component; admin followers leaderboard dashboard tab in CallerN Management.
 
 ### Payment & Enrollment Pipeline
 - **Multi-Gateway Support**: Active gateway dynamically read from `adminSettings.activePaymentGateway` (default: `shetab`), with a gateway factory for supported providers like Shetab, Zarinpal, IDPay, Zibal, and Mellat.

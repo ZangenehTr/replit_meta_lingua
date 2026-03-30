@@ -1,7 +1,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server } from 'http';
 import { db } from './db';
-import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus } from '../shared/schema';
+import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus, callernTeacherFollowers } from '../shared/schema';
 import { eq, and, like, sql, inArray } from 'drizzle-orm';
 import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
 
@@ -166,7 +166,54 @@ export class CallernWebSocketServer {
             teacherId,
             status: 'online'
           });
-          
+
+          // Notify followers: emit 'teacher-available-notify' to each following student's socket
+          try {
+            const [teacherRow] = await db
+              .select({ firstName: users.firstName, lastName: users.lastName })
+              .from(users)
+              .where(eq(users.id, teacherId))
+              .limit(1);
+
+            const followers = await db
+              .select({ studentId: callernTeacherFollowers.studentId })
+              .from(callernTeacherFollowers)
+              .where(
+                and(
+                  eq(callernTeacherFollowers.teacherId, teacherId),
+                  eq(callernTeacherFollowers.isActive, true)
+                )
+              );
+
+            const teacherName = teacherRow
+              ? `${teacherRow.firstName} ${teacherRow.lastName}`
+              : `Teacher #${teacherId}`;
+
+            for (const follower of followers) {
+              this.io.to(`user-${follower.studentId}`).emit('teacher-available-notify', {
+                teacherId,
+                teacherName,
+                message: `${teacherName} اکنون در CallerN آنلاین است و آماده مکالمه`,
+              });
+            }
+
+            if (followers.length > 0) {
+              // Update notifiedAt for all followers
+              await db
+                .update(callernTeacherFollowers)
+                .set({ notifiedAt: new Date() })
+                .where(
+                  and(
+                    eq(callernTeacherFollowers.teacherId, teacherId),
+                    eq(callernTeacherFollowers.isActive, true)
+                  )
+                );
+              console.log(`Notified ${followers.length} followers that teacher ${teacherId} came online`);
+            }
+          } catch (notifyError) {
+            console.error('Error notifying teacher followers:', notifyError);
+          }
+
           socket.emit('teacher-online-success', { teacherId, status: 'online' });
           console.log(`Teacher ${teacherId} is now online for Callern`);
         } catch (error) {

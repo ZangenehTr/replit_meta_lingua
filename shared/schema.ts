@@ -9735,3 +9735,18 @@ export const sessionRatings = pgTable("session_ratings", {
 
 export type SessionRating = typeof sessionRatings.$inferSelect;
 export type InsertSessionRating = typeof sessionRatings.$inferInsert;
+
+// ---- 4. CallerN Teacher Followers (Notify-Me) ----
+// Students can follow a specific CallerN teacher; when that teacher transitions
+// to 'available', each active follower receives an in-app (and optionally SMS) notification.
+export const callernTeacherFollowers = pgTable("callern_teacher_followers", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  notifiedAt: timestamp("notified_at"), // last time a notification was sent for this follow
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export type CallernTeacherFollower = typeof callernTeacherFollowers.$inferSelect;
+export type InsertCallernTeacherFollower = typeof callernTeacherFollowers.$inferInsert;

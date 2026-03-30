@@ -6,7 +6,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings, callernTeacherFollowers } from "@shared/schema";
 import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
@@ -15,6 +15,7 @@ import { setupCallernPackageRoutes } from "./callern-package-routes";
 import { setupCallernRecordingRoutes } from "./callern-recording-routes";
 import { registerCallernTeacherRoutes } from "./callern-teacher-routes";
 import callernRoadmapRoutes from "./routes/callern-roadmap-routes";
+import teacherProfileRoutes from "./routes/teacher-profile-routes";
 import courseRoadmapRoutes from "./routes/course-roadmap-routes";
 import examRoadmapRoutes from "./routes/exam-roadmap-routes";
 import { createAiStudyPartnerRoutes } from "./routes/ai-study-partner-routes";
@@ -11581,13 +11582,20 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
       
       // Get currently connected teachers from WebSocket server
-      const connectedTeacherIds = app.locals.websocketServer?.getConnectedTeachers?.() || [];
+      const connectedTeacherIds: number[] = app.locals.websocketServer?.getConnectedTeachers?.() || [];
       
       console.log(`Found ${authorizedTeachers.length} authorized Callern teachers`);
       console.log(`Connected teacher IDs:`, connectedTeacherIds);
+
+      // Determine which teachers are actively in a call_session (status='active')
+      // These are 'teaching' rather than 'available'
+      const activeSessionRows = await db
+        .select({ teacherId: callSessions.teacherId })
+        .from(callSessions)
+        .where(eq(callSessions.status, 'active'));
+      const teachingTeacherIds = new Set(activeSessionRows.map(r => r.teacherId));
       
       // Get live rating aggregates from session_ratings table keyed by teacher id
-      // teacherRating is set when a student rates the teacher (role='student')
       const ratingRows = await db
         .select({
           teacherId: sessionRatings.teacherId,
@@ -11600,43 +11608,72 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
 
       const ratingMap = new Map(ratingRows.map(r => [r.teacherId, r]));
 
-      // Format teachers for Callern display
+      // Get follower counts per teacher
+      const followerRows = await db
+        .select({
+          teacherId: callernTeacherFollowers.teacherId,
+          count: sql<number>`count(*)`
+        })
+        .from(callernTeacherFollowers)
+        .where(eq(callernTeacherFollowers.isActive, true))
+        .groupBy(callernTeacherFollowers.teacherId);
+      const followerMap = new Map(followerRows.map(r => [r.teacherId, Number(r.count)]));
+
+      // Format teachers with 3-state presence
       const teachers = authorizedTeachers.map((teacher) => {
-        // Teacher is online only if they're connected via WebSocket AND have enabled Callern availability
         const isConnected = connectedTeacherIds.includes(teacher.id);
         const hasCallernAvailability = teacher.isOnline === true;
-        const isOnline = isConnected && hasCallernAvailability;
-        
-        const teacherName = `${teacher.firstName || teacher.first_name} ${teacher.lastName || teacher.last_name}`;
+        const isOnlineConnected = isConnected && hasCallernAvailability;
+        const isTeaching = isOnlineConnected && teachingTeacherIds.has(teacher.id);
+
+        // 3-state: 'available' | 'teaching' | 'offline'
+        let presenceStatus: 'available' | 'teaching' | 'offline';
+        if (!isOnlineConnected) {
+          presenceStatus = 'offline';
+        } else if (isTeaching) {
+          presenceStatus = 'teaching';
+        } else {
+          presenceStatus = 'available';
+        }
+
+        const firstName = teacher.firstName || teacher.first_name;
+        const lastName = teacher.lastName || teacher.last_name;
+        const teacherName = `${firstName} ${lastName}`;
         const liveRatings = ratingMap.get(teacher.id);
         const rating = liveRatings ? parseFloat(String(liveRatings.avgRating)) : 0;
         const sessionCount = liveRatings ? Number(liveRatings.sessionCount) : 0;
+        const followerCount = followerMap.get(teacher.id) ?? 0;
         
         return {
           id: teacher.id,
-          firstName: teacher.firstName || teacher.first_name,
-          lastName: teacher.lastName || teacher.last_name,
+          firstName,
+          lastName,
           name: teacherName,
           email: teacher.email,
-          avatar: teacher.avatar || `https://ui-avatars.com/api/?name=${teacher.firstName || teacher.first_name}+${teacher.lastName || teacher.last_name}&background=random`,
+          avatar: teacher.avatar || `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`,
           specializations: teacher.teacherSpecializations?.length
             ? teacher.teacherSpecializations
             : ["General Language", "Conversation", "Grammar"],
           languages: ["Persian", "English"],
           rating: rating > 0 ? rating : null,
           reviewCount: sessionCount,
-          totalMinutes: sessionCount * 30, // estimate 30 min avg per session
-          isOnline: isOnline,
-          status: isOnline ? 'online' : 'offline',
-          responseTime: isOnline ? "معمولاً در ۲ دقیقه پاسخ می‌دهد" : "آفلاین",
+          totalMinutes: sessionCount * 30,
+          isOnline: presenceStatus !== 'offline',
+          status: presenceStatus,
+          responseTime: presenceStatus === 'available'
+            ? "معمولاً در ۲ دقیقه پاسخ می‌دهد"
+            : presenceStatus === 'teaching'
+            ? "در حال تدریس"
+            : "آفلاین",
           hourlyRate: teacher.hourlyRate ? parseInt(String(teacher.hourlyRate)) : 500000,
           successRate: sessionCount > 0 ? Math.min(98, 80 + Math.round(rating * 3)) : null,
           description: teacher.teacherBio || "مدرس زبان با تجربه در مکالمه و گرامر",
-          isCallernAuthorized: teacher.isAuthorized === true
+          isCallernAuthorized: teacher.isAuthorized === true,
+          followerCount,
         };
       });
 
-      console.log(`Returning ${teachers.length} teachers, ${teachers.filter(t => t.isOnline).length} online`);
+      console.log(`Returning ${teachers.length} teachers: ${teachers.filter(t => t.status === 'available').length} available, ${teachers.filter(t => t.status === 'teaching').length} teaching, ${teachers.filter(t => t.status === 'offline').length} offline`);
       res.json(teachers);
     } catch (error) {
       console.error('Error fetching online teachers:', error);
@@ -24514,6 +24551,10 @@ Meta Lingua Academy`;
   app.use('/api', roadmapTemplateRoutes);
   app.use('/api', roadmapInstanceRoutes);
   app.use('/api', callernFlowRoutes);
+
+  // Teacher public profiles + Notify-Me follow/unfollow + admin followers dashboard
+  app.use('/api/teachers', teacherProfileRoutes);
+  console.log('✅ Teacher Profile routes registered (public profile, follow/unfollow, followers dashboard)');
   
   // Register exam-focused roadmap routes
   app.use('/api/public-features', publicFeaturesRoutes);

@@ -188,6 +188,7 @@ import { AdminPlacementTest } from "@/pages/admin/admin-placement-test";
 import RoadmapPage from "@/pages/roadmap";
 import CallernSystem from "@/pages/callern";
 import CallernEnhancements from "@/pages/callern-enhancements";
+import TutorProfilePage from "@/pages/tutor-profile";
 import CallernVideoSession from "@/pages/callern-video-session";
 import { VideoCall as CallernVideoCall } from "@/components/callern/VideoCallFinal";
 import GamificationSystem from "@/pages/games";
@@ -744,6 +745,9 @@ function Router() {
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher', 'student']}>
           <CallernSystem />
         </RoleProtectedRoute>
+      </Route>
+      <Route path="/tutors/:id">
+        <TutorProfilePage />
       </Route>
       <Route path="/callern-enhancements">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher', 'student']}>
