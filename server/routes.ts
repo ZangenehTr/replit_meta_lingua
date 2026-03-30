@@ -1731,7 +1731,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
                   status: 'new',
                   priority: 'medium',
                   studentId: user.id,
-                } as any);
+                });
                 console.log(`[CRM] Auto-lead created for email-registered student userId=${user.id}`);
               }
             }

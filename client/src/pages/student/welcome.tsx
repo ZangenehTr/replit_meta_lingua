@@ -82,7 +82,19 @@ export default function StudentWelcomePage() {
     retry: false,
   });
 
-  const displayedCourses = (availableCourses as Course[]).slice(0, 6);
+  // Filter by placement level/language when available, fall back to all courses
+  const displayedCourses = (() => {
+    const all = availableCourses as Course[];
+    if (!placementResult?.cefrLevel) return all.slice(0, 6);
+    const level = placementResult.cefrLevel.toLowerCase();
+    const lang = placementResult.language?.toLowerCase();
+    const filtered = all.filter((c) => {
+      const levelMatch = c.level ? c.level.toLowerCase() === level : true;
+      const langMatch = lang && c.language ? c.language.toLowerCase() === lang : true;
+      return levelMatch && langMatch;
+    });
+    return (filtered.length >= 3 ? filtered : all).slice(0, 6);
+  })();
   const availableTeachers = (onlineTeachers as OnlineTeacher[]).filter((t) => t.status === "available");
   const teachingTeachers = (onlineTeachers as OnlineTeacher[]).filter((t) => t.status === "teaching");
 

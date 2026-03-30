@@ -280,7 +280,8 @@ export default function Auth() {
         if (refreshToken) {
           localStorage.setItem("refresh_token", refreshToken);
         }
-        window.location.href = "/dashboard";
+        // New students go to the onboarding welcome page
+        window.location.href = "/welcome";
       } else {
         setAuthError(result.message || "خطا در ثبت‌نام");
       }

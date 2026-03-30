@@ -346,7 +346,7 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
               status: 'new',
               priority: 'medium',
               studentId: newUser.id,
-            } as any);
+            });
             console.log(`[CRM] Auto-lead created for self-registered student userId=${newUser.id}`);
           }
         } catch (e) {
