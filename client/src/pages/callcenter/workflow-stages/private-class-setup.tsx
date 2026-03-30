@@ -27,9 +27,9 @@ import { motion } from "framer-motion";
 interface SessionBundle {
   id: number;
   name: string;
-  totalSessions: number;
-  pricePerSession: number;
-  totalPrice: number;
+  sessionCount: number;
+  sessionDuration: number;
+  price: string;
   validityDays: number;
   lowSessionAlertThreshold: number;
 }
@@ -226,7 +226,7 @@ function PrivateClassSetup() {
                               <Select value={selectedBundleId} onValueChange={(v) => {
                                 setSelectedBundleId(v);
                                 const b = bundles.find(b => String(b.id) === v);
-                                if (b) setAmount(String(b.totalPrice));
+                                if (b) setAmount(String(b.price));
                               }}>
                                 <SelectTrigger>
                                   <SelectValue placeholder="انتخاب بسته جلسات..." />
@@ -234,15 +234,15 @@ function PrivateClassSetup() {
                                 <SelectContent>
                                   {bundles.map(b => (
                                     <SelectItem key={b.id} value={String(b.id)}>
-                                      {b.name} — {b.totalSessions} جلسه — {b.totalPrice.toLocaleString()} تومان
+                                      {b.name} — {b.sessionCount} جلسه — {Number(b.price).toLocaleString()} تومان
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                               {selectedBundle && (
                                 <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm text-blue-700 dark:text-blue-300 grid grid-cols-2 gap-1">
-                                  <span>تعداد جلسات: <strong>{selectedBundle.totalSessions}</strong></span>
-                                  <span>هر جلسه: <strong>{selectedBundle.pricePerSession.toLocaleString()} تومان</strong></span>
+                                  <span>تعداد جلسات: <strong>{selectedBundle.sessionCount}</strong></span>
+                                  <span>هر جلسه: <strong>{selectedBundle.sessionCount > 0 ? Math.round(Number(selectedBundle.price) / selectedBundle.sessionCount).toLocaleString() : 0} تومان</strong></span>
                                   <span>اعتبار: <strong>{selectedBundle.validityDays} روز</strong></span>
                                   <span>هشدار کم‌بودن: <strong>{selectedBundle.lowSessionAlertThreshold} جلسه</strong></span>
                                 </div>
@@ -276,7 +276,7 @@ function PrivateClassSetup() {
                                   <SelectItem value="cash">نقدی</SelectItem>
                                   <SelectItem value="pos">کارتخوان (POS)</SelectItem>
                                   <SelectItem value="cheque">چک</SelectItem>
-                                  <SelectItem value="transfer">انتقال بانکی</SelectItem>
+                                  <SelectItem value="bank_transfer">انتقال بانکی</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>

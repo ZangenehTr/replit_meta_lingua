@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   Search,
@@ -26,21 +26,26 @@ import { Link } from "wouter";
 
 interface PrivateStudent {
   id: number;
-  studentId: number;
+  student: { id: number; firstName: string; lastName: string; profileImage: string | null } | null;
+  bundle: { id: number; name: string } | null;
   totalSessions: number;
   remainingSessions: number;
+  sessionDuration: number;
+  lowSessionAlertThreshold: number;
+  status: 'active' | 'completed' | 'expired';
   startDate: string;
   expiryDate: string | null;
-  isActive: boolean;
   alertFiredAt: string | null;
-  student: { firstName: string; lastName: string; phone: string } | null;
-  package: { name: string; lowSessionAlertThreshold: number } | null;
-  recentSessions: {
-    id: number;
-    sessionDate: string;
-    durationMinutes: number;
-    notes: string | null;
-  }[];
+  lastSessionDate: string | null;
+  isLowSession: boolean;
+}
+
+interface SessionRecord {
+  id: number;
+  sessionDate: string;
+  actualDuration: number;
+  teacherNotes: string | null;
+  attendanceStatus: string;
 }
 
 function PrivateStudentsPage() {
@@ -52,6 +57,7 @@ function PrivateStudentsPage() {
   const [logDialog, setLogDialog] = useState<{ open: boolean; packageId: number | null }>({ open: false, packageId: null });
   const [duration, setDuration] = useState("60");
   const [sessionNotes, setSessionNotes] = useState("");
+  const [attendanceStatus, setAttendanceStatus] = useState<"attended" | "absent" | "cancelled">("attended");
 
   const { data: students = [], isLoading } = useQuery<PrivateStudent[]>({
     queryKey: ["/api/teacher/private-students"],
@@ -59,10 +65,26 @@ function PrivateStudentsPage() {
   });
 
   const logMutation = useMutation({
-    mutationFn: async ({ packageId, durationMinutes, notes }: { packageId: number; durationMinutes: number; notes?: string }) => {
+    mutationFn: async ({
+      packageId,
+      durationMinutes,
+      notes,
+      status,
+    }: {
+      packageId: number;
+      durationMinutes: number;
+      notes?: string;
+      status: string;
+    }) => {
       return await apiRequest(`/api/private-sessions/log`, {
         method: "POST",
-        body: JSON.stringify({ studentSessionPackageId: packageId, durationMinutes, notes })
+        body: JSON.stringify({
+          studentSessionPackageId: packageId,
+          sessionDate: new Date().toISOString(),
+          actualDuration: durationMinutes,
+          teacherNotes: notes || null,
+          attendanceStatus: status,
+        })
       });
     },
     onSuccess: () => {
@@ -71,27 +93,25 @@ function PrivateStudentsPage() {
       setLogDialog({ open: false, packageId: null });
       setDuration("60");
       setSessionNotes("");
+      setAttendanceStatus("attended");
     },
     onError: (e: any) => {
       toast({ title: "خطا در ثبت جلسه", description: e.message, variant: "destructive" });
     }
   });
 
-  const { data: sessionHistory } = useQuery<{ id: number; sessionDate: string; durationMinutes: number; notes: string | null }[]>({
+  const { data: sessionHistory } = useQuery<SessionRecord[]>({
     queryKey: [`/api/teacher/private-students/${expandedId}/sessions`],
     queryFn: () => apiRequest(`/api/teacher/private-students/${expandedId}/sessions`),
     enabled: !!expandedId,
   });
-
-  const isLow = (s: PrivateStudent) =>
-    s.package ? s.remainingSessions <= s.package.lowSessionAlertThreshold : false;
 
   const filtered = students.filter(s => {
     const name = `${s.student?.firstName ?? ""} ${s.student?.lastName ?? ""}`.toLowerCase();
     return name.includes(search.toLowerCase());
   });
 
-  const active = students.filter(s => s.isActive).length;
+  const active = students.filter(s => s.status === 'active').length;
 
   return (
     <div className="p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
@@ -131,7 +151,7 @@ function PrivateStudentsPage() {
       ) : (
         <div className="space-y-4">
           {filtered.map(student => (
-            <Card key={student.id} className={`hover:shadow-md transition-shadow ${isLow(student) ? "border-orange-300" : ""}`}>
+            <Card key={student.id} className={`hover:shadow-md transition-shadow ${student.isLowSession ? "border-orange-300" : ""}`}>
               <CardContent className="p-5">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-start justify-between">
@@ -141,18 +161,18 @@ function PrivateStudentsPage() {
                           <User className="h-4 w-4 text-gray-500" />
                           <span className="font-semibold">{student.student?.firstName} {student.student?.lastName}</span>
                         </div>
-                        <Badge variant={student.isActive ? "default" : "secondary"}>
-                          {student.isActive ? "فعال" : "تمام شده"}
+                        <Badge variant={student.status === 'active' ? "default" : "secondary"}>
+                          {student.status === 'active' ? "فعال" : student.status === 'completed' ? "تکمیل" : "منقضی"}
                         </Badge>
-                        {isLow(student) && (
+                        {student.isLowSession && (
                           <Badge variant="destructive" className="gap-1">
                             <AlertTriangle className="h-3 w-3" />
                             جلسات رو به اتمام
                           </Badge>
                         )}
                       </div>
-                      {student.package && (
-                        <p className="text-sm text-gray-500">{student.package.name}</p>
+                      {student.bundle && (
+                        <p className="text-sm text-gray-500">{student.bundle.name}</p>
                       )}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-gray-600 mt-2">
                         <div className="flex items-center gap-1">
@@ -172,7 +192,7 @@ function PrivateStudentsPage() {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                         <div
-                          className={`h-2 rounded-full transition-all ${isLow(student) ? "bg-orange-500" : "bg-blue-500"}`}
+                          className={`h-2 rounded-full transition-all ${student.isLowSession ? "bg-orange-500" : "bg-blue-500"}`}
                           style={{ width: `${student.totalSessions > 0 ? Math.round((student.remainingSessions / student.totalSessions) * 100) : 0}%` }}
                         />
                       </div>
@@ -185,7 +205,7 @@ function PrivateStudentsPage() {
                         <DialogTrigger asChild>
                           <Button
                             size="sm"
-                            disabled={!student.isActive || student.remainingSessions <= 0}
+                            disabled={student.status !== 'active' || student.remainingSessions <= 0}
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
                             ثبت جلسه
@@ -201,7 +221,20 @@ function PrivateStudentsPage() {
                               <Input type="number" value={duration} onChange={e => setDuration(e.target.value)} placeholder="60" />
                             </div>
                             <div>
-                              <Label>یادداشت (اختیاری)</Label>
+                              <Label>وضعیت حضور</Label>
+                              <Select value={attendanceStatus} onValueChange={(v: any) => setAttendanceStatus(v)}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="attended">حضور داشت</SelectItem>
+                                  <SelectItem value="absent">غایب</SelectItem>
+                                  <SelectItem value="cancelled">لغو شد</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>یادداشت استاد (اختیاری)</Label>
                               <Input value={sessionNotes} onChange={e => setSessionNotes(e.target.value)} placeholder="مطالب پوشش داده شده..." />
                             </div>
                             <div className="flex justify-end gap-2">
@@ -210,7 +243,12 @@ function PrivateStudentsPage() {
                               </Button>
                               <Button
                                 size="sm"
-                                onClick={() => logMutation.mutate({ packageId: student.id, durationMinutes: Number(duration), notes: sessionNotes || undefined })}
+                                onClick={() => logMutation.mutate({
+                                  packageId: student.id,
+                                  durationMinutes: Number(duration),
+                                  notes: sessionNotes || undefined,
+                                  status: attendanceStatus,
+                                })}
                                 disabled={logMutation.isPending || !duration}
                               >
                                 {logMutation.isPending ? "در حال ثبت..." : "ثبت جلسه"}
@@ -245,10 +283,13 @@ function PrivateStudentsPage() {
                           {sessionHistory.slice(0, 10).map(s => (
                             <div key={s.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 p-2 rounded">
                               <div className="flex items-center gap-3">
-                                <span>{new Date(s.sessionDate).toLocaleDateString('fa-IR')}</span>
-                                <span className="text-gray-500">{s.durationMinutes} دقیقه</span>
+                                <span>{s.sessionDate ? new Date(s.sessionDate).toLocaleDateString('fa-IR') : '—'}</span>
+                                <span className="text-gray-500">{s.actualDuration} دقیقه</span>
+                                <Badge variant={s.attendanceStatus === 'attended' ? 'default' : 'secondary'} className="text-xs">
+                                  {s.attendanceStatus === 'attended' ? 'حضور' : s.attendanceStatus === 'absent' ? 'غایب' : 'لغو'}
+                                </Badge>
                               </div>
-                              {s.notes && <span className="text-gray-500 truncate max-w-xs">{s.notes}</span>}
+                              {s.teacherNotes && <span className="text-gray-500 truncate max-w-xs">{s.teacherNotes}</span>}
                             </div>
                           ))}
                         </div>

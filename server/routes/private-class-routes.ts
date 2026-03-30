@@ -10,6 +10,7 @@ import {
   walletTransactions,
   leadActivityLog,
   frontDeskTasks,
+  adminSettings,
 } from "../../shared/schema";
 import { authenticate, authorize } from "../auth";
 import { z } from "zod";
@@ -113,7 +114,7 @@ export function registerPrivateClassRoutes(app: Express) {
         leadId: z.number().int(),
         packageId: z.number().int(),
         teacherId: z.number().int(),
-        paymentMethod: z.enum(['cash', 'pos', 'cheque', 'wallet']),
+        paymentMethod: z.enum(['cash', 'pos', 'cheque', 'wallet', 'bank_transfer']),
         amount: z.number().positive(),
         notes: z.string().optional(),
       });
@@ -285,13 +286,15 @@ export function registerPrivateClassRoutes(app: Express) {
           lastName: users.lastName,
           profileImage: users.profileImage,
         },
+        bundle: {
+          id: sessionPackages.id,
+          name: sessionPackages.name,
+        },
       })
         .from(studentSessionPackages)
         .innerJoin(users, eq(studentSessionPackages.studentId, users.id))
-        .where(and(
-          eq(studentSessionPackages.teacherId, teacherId),
-          eq(studentSessionPackages.status, "active")
-        ))
+        .innerJoin(sessionPackages, eq(studentSessionPackages.packageId, sessionPackages.id))
+        .where(eq(studentSessionPackages.teacherId, teacherId))
         .orderBy(desc(studentSessionPackages.updatedAt));
 
       // Fetch last session for each package
@@ -317,9 +320,10 @@ export function registerPrivateClassRoutes(app: Express) {
         }
       }
 
-      const result = packages.map(({ pkg, student }) => ({
+      const result = packages.map(({ pkg, student, bundle }) => ({
         id: pkg.id,
         student,
+        bundle,
         totalSessions: pkg.totalSessions,
         remainingSessions: pkg.remainingSessions,
         sessionDuration: pkg.sessionDuration,
@@ -327,6 +331,7 @@ export function registerPrivateClassRoutes(app: Express) {
         status: pkg.status,
         startDate: pkg.startDate,
         expiryDate: pkg.expiryDate,
+        alertFiredAt: pkg.alertFiredAt,
         lastSessionDate: lastSessionMap.get(pkg.id) || null,
         isLowSession: pkg.remainingSessions <= pkg.lowSessionAlertThreshold,
       }));
@@ -485,6 +490,7 @@ export function registerPrivateClassRoutes(app: Express) {
         startDate: pkg.startDate,
         expiryDate: pkg.expiryDate,
         lastSessionDate: lastSessionMap.get(pkg.id) || null,
+        alertFiredAt: pkg.alertFiredAt,
         isLowSession: pkg.remainingSessions <= pkg.lowSessionAlertThreshold,
         isAtRisk: pkg.remainingSessions === 0,
       }));
@@ -505,13 +511,32 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
   await db.update(studentSessionPackages).set({ alertFiredAt: new Date(), updatedAt: new Date() })
     .where(eq(studentSessionPackages.id, pkg.id));
 
-  // 2. Notify student
+  // 2. Notify student in-app
   await storage.createNotification({
     userId: pkg.studentId,
     notificationType: "low_sessions_alert",
     title: "جلسات شما رو به اتمام است",
     message: `تنها ${remaining} جلسه خصوصی باقی مانده است. لطفاً برای تمدید با موسسه تماس بگیرید.`,
   });
+
+  // 3. SMS the student via Kavenegar if enabled
+  try {
+    const [settings] = await db.select().from(adminSettings).limit(1);
+    if (settings?.kavenegarEnabled && settings?.kavenegarApiKey) {
+      const [student] = await db.select({ phoneNumber: users.phoneNumber })
+        .from(users).where(eq(users.id, pkg.studentId));
+      if (student?.phoneNumber) {
+        const { kavenegarService } = await import('../kavenegar-service');
+        await kavenegarService.sendSimpleSMS(
+          student.phoneNumber,
+          `جلسات خصوصی شما رو به اتمام است. تنها ${remaining} جلسه باقی مانده. برای تمدید با موسسه تماس بگیرید.`
+        );
+        console.log(`[Private Class] SMS sent to student ${pkg.studentId}`);
+      }
+    }
+  } catch (smsErr) {
+    console.error('[Private Class] SMS send error (non-blocking):', smsErr);
+  }
 
   // 3. Find the lead and transition to charge_renewal
   const [lead] = await db.select().from(leads).where(
