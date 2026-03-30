@@ -1,12 +1,15 @@
 import { Router } from "express";
 import { db } from "../db";
-import { eq, sql, desc, and } from "drizzle-orm";
+import { eq, sql, desc, and, or, isNull } from "drizzle-orm";
 import {
   users,
   courses,
   sessionRatings,
   callernTeacherFollowers,
   teacherCallernAuthorization,
+  teacherOnlineStatus,
+  callSessions,
+  liveClassSessions,
   type User,
 } from "@shared/schema";
 import { authenticate, authorize } from "../auth";
@@ -168,7 +171,9 @@ router.get("/:id/profile", async (req, res) => {
       .where(eq(teacherCallernAuthorization.teacherId, teacherId))
       .limit(1);
 
-    // Open enrollment courses taught by this teacher
+    // Open enrollment group courses taught by this teacher
+    // Group format (classFormat = 'group') means open enrollment.
+    // Individual/private sessions are excluded from the public profile listing.
     const openCourses = await db
       .select({
         id: courses.id,
@@ -184,10 +189,43 @@ router.get("/:id/profile", async (req, res) => {
       .where(
         and(
           eq(courses.instructorId, teacherId),
-          eq(courses.isActive, true)
+          eq(courses.isActive, true),
+          or(
+            eq(courses.classFormat, "group"),
+            isNull(courses.classFormat)  // include courses without a format set (default enrollment)
+          )
         )
       )
       .limit(6);
+
+    // CallerN live presence (available | teaching | offline)
+    // Queryable publicly so unauthenticated visitors see real status
+    const [onlineRow] = await db
+      .select({ isAvailable: teacherOnlineStatus.isAvailable, lastHeartbeat: teacherOnlineStatus.lastHeartbeat })
+      .from(teacherOnlineStatus)
+      .where(eq(teacherOnlineStatus.teacherId, teacherId))
+      .limit(1);
+
+    const activeCallRow = await db
+      .select({ id: callSessions.id })
+      .from(callSessions)
+      .where(and(eq(callSessions.teacherId, teacherId), eq(callSessions.status, "active")))
+      .limit(1);
+
+    const activeLiveRow = await db
+      .select({ id: liveClassSessions.id })
+      .from(liveClassSessions)
+      .where(and(eq(liveClassSessions.teacherId, teacherId), eq(liveClassSessions.isCompleted, false)))
+      .limit(1);
+
+    let callernPresence: "available" | "teaching" | "offline";
+    if (activeCallRow.length > 0 || activeLiveRow.length > 0) {
+      callernPresence = "teaching";
+    } else if (onlineRow?.isAvailable === true) {
+      callernPresence = "available";
+    } else {
+      callernPresence = "offline";
+    }
 
     const avgRating = parseFloat(String(ratingAgg?.avg ?? 0));
     const reviewCount = Number(ratingAgg?.count ?? 0);
@@ -210,6 +248,7 @@ router.get("/:id/profile", async (req, res) => {
       followerCount,
       isCallernAuthorized: auth?.isAuthorized === true,
       authorizationLevel: auth?.authorizationLevel ?? null,
+      callernPresence,
       hourlyRate: teacher.hourlyRate ?? 500000,
       successRate: reviewCount > 0 ? Math.min(98, 80 + Math.round(avgRating * 3)) : null,
       openCourses,
@@ -267,6 +306,23 @@ router.post(
       const teacherId = parseInt(req.params.id, 10);
       if (isNaN(teacherId)) return res.status(400).json({ message: "Invalid teacher id" });
       const studentId: number = req.user.id;
+
+      // Business rule: can only follow CallerN-authorized teachers
+      const [authCheck] = await db
+        .select({ isAuthorized: teacherCallernAuthorization.isAuthorized })
+        .from(teacherCallernAuthorization)
+        .where(
+          and(
+            eq(teacherCallernAuthorization.teacherId, teacherId),
+            eq(teacherCallernAuthorization.isAuthorized, true),
+            eq(teacherCallernAuthorization.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (!authCheck) {
+        return res.status(403).json({ message: "This teacher is not available for CallerN tutoring" });
+      }
 
       const existing = await db
         .select()

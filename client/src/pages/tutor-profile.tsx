@@ -56,6 +56,7 @@ interface TeacherProfile {
   followerCount: number;
   isCallernAuthorized: boolean;
   authorizationLevel?: string | null;
+  callernPresence: "available" | "teaching" | "offline";
   hourlyRate?: number;
   successRate?: number | null;
   openCourses: OpenCourse[];
@@ -105,13 +106,8 @@ export default function TutorProfilePage() {
     enabled: !isNaN(teacherId) && teacherId > 0 && user?.role === "student",
   });
 
-  // Get the teacher's current presence status from the online-teachers list
-  const { data: onlineTeachers = [] } = useQuery<Array<{ id: number; status: PresenceStatus }>>({
-    queryKey: ["/api/callern/online-teachers"],
-    enabled: user?.role === "student",
-    staleTime: 30 * 1000,
-  });
-  const teacherPresence = (onlineTeachers.find((t) => t.id === teacherId)?.status ?? "offline") as PresenceStatus;
+  // Use presence status embedded in the public profile API — works for unauthenticated visitors too
+  const teacherPresence: PresenceStatus = (profile?.callernPresence ?? "offline") as PresenceStatus;
 
   const followMutation = useMutation({
     mutationFn: () =>

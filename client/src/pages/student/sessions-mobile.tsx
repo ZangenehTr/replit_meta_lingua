@@ -342,7 +342,7 @@ export default function StudentSessionsMobile() {
                       {session.teacherId ? (
                         <TeacherNameLink
                           teacherId={session.teacherId}
-                          teacherName={session.teacherName}
+                          fullName={session.teacherName}
                           className="text-white/80 hover:text-white"
                         />
                       ) : session.teacherName}

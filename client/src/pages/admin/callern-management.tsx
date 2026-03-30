@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 import { formatCurrency } from "@/lib/utils";
 import { 
   Phone, 
@@ -895,7 +896,9 @@ export function CallernManagement() {
                         </div>
                       )}
                       <div className="flex-1">
-                        <p className="font-medium">{row.teacherName}</p>
+                        <p className="font-medium">
+                          <TeacherNameLink teacherId={row.teacherId} fullName={row.teacherName} variant="subtle" />
+                        </p>
                         <p className="text-xs text-muted-foreground">مدرس CallerN</p>
                       </div>
                       <div className="flex items-center gap-2 text-blue-700 font-bold">

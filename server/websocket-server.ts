@@ -1,7 +1,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server } from 'http';
 import { db } from './db';
-import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus, callernTeacherFollowers } from '../shared/schema';
+import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus, callernTeacherFollowers, callSessions, liveClassSessions } from '../shared/schema';
 import { eq, and, like, sql, inArray } from 'drizzle-orm';
 import { kavenegarService } from './kavenegar-service';
 import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
@@ -168,8 +168,29 @@ export class CallernWebSocketServer {
             status: 'online'
           });
 
-          // Notify followers: emit 'teacher-available-notify' to each following student's socket
+          // Notify followers only if teacher is transitioning to 'available' (not teaching)
+          // A teacher already in an active call or live class should NOT trigger notifications
           try {
+            const activeCallRows = await db
+              .select({ id: callSessions.id })
+              .from(callSessions)
+              .where(and(eq(callSessions.teacherId, teacherId), eq(callSessions.status, 'active')))
+              .limit(1);
+
+            const activeLiveRows = await db
+              .select({ id: liveClassSessions.id })
+              .from(liveClassSessions)
+              .where(and(eq(liveClassSessions.teacherId, teacherId), eq(liveClassSessions.status, 'active')))
+              .limit(1);
+
+            const isCurrentlyTeaching = activeCallRows.length > 0 || activeLiveRows.length > 0;
+
+            if (isCurrentlyTeaching) {
+              console.log(`Teacher ${teacherId} is currently teaching — skipping follower notifications`);
+              socket.emit('teacher-online-success', { teacherId, status: 'teaching' });
+              return;
+            }
+
             const [teacherRow] = await db
               .select({ firstName: users.firstName, lastName: users.lastName })
               .from(users)

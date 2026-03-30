@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 // Schema definitions
 const observationSchema = z.object({
@@ -257,7 +258,11 @@ export default function Supervision() {
                     {liveSessions.map((session: any) => (
                       <TableRow key={session.id}>
                         <TableCell className="font-medium">{session.classTitle}</TableCell>
-                        <TableCell>{session.teacherName}</TableCell>
+                        <TableCell>
+                          {session.teacherId ? (
+                            <TeacherNameLink teacherId={session.teacherId} fullName={session.teacherName} variant="subtle" />
+                          ) : session.teacherName}
+                        </TableCell>
                         <TableCell>
                           <Badge variant={session.classType === 'online' ? 'default' : 'secondary'}>
                             {session.classType}
@@ -326,7 +331,11 @@ export default function Supervision() {
                     {recordedSessions.map((session: any) => (
                       <TableRow key={session.id}>
                         <TableCell className="font-medium">{session.classTitle}</TableCell>
-                        <TableCell>{session.teacherName}</TableCell>
+                        <TableCell>
+                          {session.teacherId ? (
+                            <TeacherNameLink teacherId={session.teacherId} fullName={session.teacherName} variant="subtle" />
+                          ) : session.teacherName}
+                        </TableCell>
                         <TableCell>{new Date(session.startTime).toLocaleDateString()}</TableCell>
                         <TableCell>
                           {session.endTime 
@@ -594,7 +603,11 @@ export default function Supervision() {
                   <TableBody>
                     {observations.map((observation: any) => (
                       <TableRow key={observation.id}>
-                        <TableCell className="font-medium">{observation.teacherName || 'Unknown'}</TableCell>
+                        <TableCell className="font-medium">
+                          {observation.teacherId ? (
+                            <TeacherNameLink teacherId={observation.teacherId} fullName={observation.teacherName || 'Unknown'} variant="subtle" />
+                          ) : (observation.teacherName || 'Unknown')}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline">
                             {observation.observationType.replace('_', ' ')}
