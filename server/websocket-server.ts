@@ -185,94 +185,34 @@ export class CallernWebSocketServer {
               return;
             }
 
-            const activeCallRows = await db
+            // Determine socket status for the teacher (teaching vs online)
+            const now2 = new Date();
+            const [activeCall2] = await db
               .select({ id: callSessions.id })
               .from(callSessions)
               .where(and(eq(callSessions.teacherId, teacherId), eq(callSessions.status, 'active')))
               .limit(1);
-
-            const now = new Date();
-            const activeLiveRows = await db
+            const [activeLive2] = await db
               .select({ id: liveClassSessions.id })
               .from(liveClassSessions)
               .where(
                 and(
                   eq(liveClassSessions.teacherId, teacherId),
                   eq(liveClassSessions.isCompleted, false),
-                  lte(liveClassSessions.startTime, now),
-                  or(isNull(liveClassSessions.endTime), gte(liveClassSessions.endTime, now))
+                  lte(liveClassSessions.startTime, now2),
+                  or(isNull(liveClassSessions.endTime), gte(liveClassSessions.endTime, now2))
                 )
               )
               .limit(1);
 
-            const isCurrentlyTeaching = activeCallRows.length > 0 || activeLiveRows.length > 0;
-
-            if (isCurrentlyTeaching) {
+            if (activeCall2 || activeLive2) {
               console.log(`Teacher ${teacherId} is currently teaching — skipping follower notifications`);
               socket.emit('teacher-online-success', { teacherId, status: 'teaching' });
               return;
             }
 
-            const [teacherRow] = await db
-              .select({ firstName: users.firstName, lastName: users.lastName })
-              .from(users)
-              .where(eq(users.id, teacherId))
-              .limit(1);
-
-            const followers = await db
-              .select({ studentId: callernTeacherFollowers.studentId })
-              .from(callernTeacherFollowers)
-              .where(
-                and(
-                  eq(callernTeacherFollowers.teacherId, teacherId),
-                  eq(callernTeacherFollowers.isActive, true)
-                )
-              );
-
-            const teacherName = teacherRow
-              ? `${teacherRow.firstName} ${teacherRow.lastName}`
-              : `Teacher #${teacherId}`;
-
-            for (const follower of followers) {
-              this.io.to(`user-${follower.studentId}`).emit('teacher-available-notify', {
-                teacherId,
-                teacherName,
-                message: `${teacherName} اکنون در CallerN آنلاین است و آماده مکالمه`,
-              });
-
-              // Optional SMS notification (only when Kavenegar is configured)
-              if (process.env.KAVENEGAR_API_KEY) {
-                try {
-                  const [studentRow] = await db
-                    .select({ phone: users.phone })
-                    .from(users)
-                    .where(eq(users.id, follower.studentId))
-                    .limit(1);
-                  if (studentRow?.phone) {
-                    await kavenegarService.sendSimpleSMS(
-                      studentRow.phone,
-                      `${teacherName} اکنون در CallerN آنلاین است. همین الان برای مکالمه وارد شوید!`
-                    );
-                  }
-                } catch (smsError) {
-                  console.error(`SMS notification failed for follower ${follower.studentId}:`, smsError);
-                }
-              }
-            }
-
-            if (followers.length > 0) {
-              // Update notifiedAt for all followers
-              await db
-                .update(callernTeacherFollowers)
-                .set({ notifiedAt: new Date() })
-                .where(
-                  and(
-                    eq(callernTeacherFollowers.teacherId, teacherId),
-                    eq(callernTeacherFollowers.isActive, true)
-                  )
-                );
-              console.log(`Notified ${followers.length} followers that teacher ${teacherId} came online`);
-            }
+            // Delegate follower notification to centralized helper (also handles teaching check)
+            await this.notifyFollowersIfNowAvailable(teacherId);
           } catch (notifyError) {
             console.error('Error notifying teacher followers:', notifyError);
           }
@@ -1259,12 +1199,111 @@ export class CallernWebSocketServer {
         await this.updateTeacherAvailability(room.teacherId, true);
       }
 
+      // Notify followers on teaching → available transition
+      await this.notifyFollowersIfNowAvailable(room.teacherId);
+
       // Clean up room with all timers
       this.cleanupRoom(roomId, reason || 'call_ended');
       
       console.log(`Call ended - Room: ${roomId}, Duration: ${minutes} minutes, Reason: ${reason}`);
     } catch (error) {
       console.error('Error ending call:', error);
+    }
+  }
+
+  /**
+   * Notify all active followers that a teacher transitioned to 'available'.
+   * Called from teacher-online (offline→available) and endCall (teaching→available).
+   * Skips if teacher is still teaching (active call or live class in progress).
+   */
+  private async notifyFollowersIfNowAvailable(teacherId: number) {
+    try {
+      const activeCallRows = await db
+        .select({ id: callSessions.id })
+        .from(callSessions)
+        .where(and(eq(callSessions.teacherId, teacherId), eq(callSessions.status, 'active')))
+        .limit(1);
+
+      const now = new Date();
+      const activeLiveRows = await db
+        .select({ id: liveClassSessions.id })
+        .from(liveClassSessions)
+        .where(
+          and(
+            eq(liveClassSessions.teacherId, teacherId),
+            eq(liveClassSessions.isCompleted, false),
+            lte(liveClassSessions.startTime, now),
+            or(isNull(liveClassSessions.endTime), gte(liveClassSessions.endTime, now))
+          )
+        )
+        .limit(1);
+
+      if (activeCallRows.length > 0 || activeLiveRows.length > 0) {
+        console.log(`Teacher ${teacherId} still has active sessions — skipping follower notifications`);
+        return;
+      }
+
+      const [teacherRow] = await db
+        .select({ firstName: users.firstName, lastName: users.lastName })
+        .from(users)
+        .where(eq(users.id, teacherId))
+        .limit(1);
+
+      const followers = await db
+        .select({ studentId: callernTeacherFollowers.studentId })
+        .from(callernTeacherFollowers)
+        .where(
+          and(
+            eq(callernTeacherFollowers.teacherId, teacherId),
+            eq(callernTeacherFollowers.isActive, true)
+          )
+        );
+
+      if (followers.length === 0) return;
+
+      const teacherName = teacherRow
+        ? `${teacherRow.firstName} ${teacherRow.lastName}`
+        : `Teacher #${teacherId}`;
+
+      for (const follower of followers) {
+        this.io.to(`user-${follower.studentId}`).emit('teacher-available-notify', {
+          teacherId,
+          teacherName,
+          message: `${teacherName} اکنون در CallerN آنلاین است و آماده مکالمه`,
+        });
+
+        if (process.env.KAVENEGAR_API_KEY) {
+          try {
+            const [studentRow] = await db
+              .select({ phone: users.phone })
+              .from(users)
+              .where(eq(users.id, follower.studentId))
+              .limit(1);
+            if (studentRow?.phone) {
+              await kavenegarService.sendSimpleSMS(
+                studentRow.phone,
+                `${teacherName} اکنون در CallerN آنلاین است. همین الان برای مکالمه وارد شوید!`
+              );
+            }
+          } catch (smsError) {
+            console.error(`SMS notification failed for follower ${follower.studentId}:`, smsError);
+          }
+        }
+      }
+
+      await db
+        .update(callernTeacherFollowers)
+        .set({ notifiedAt: new Date() })
+        .where(
+          and(
+            eq(callernTeacherFollowers.teacherId, teacherId),
+            eq(callernTeacherFollowers.isActive, true)
+          )
+        );
+
+      console.log(`Notified ${followers.length} followers that teacher ${teacherId} is now available`);
+    } catch (err) {
+      console.error(`Error notifying followers for teacher ${teacherId}:`, err);
     }
   }
 

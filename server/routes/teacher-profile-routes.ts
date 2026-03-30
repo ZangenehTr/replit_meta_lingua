@@ -135,7 +135,7 @@ router.get("/:id/profile", async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ message: "Teacher not found" });
     const teacher = rows[0] as User;
 
-    if (teacher.role !== "teacher" && teacher.role !== "mentor") {
+    if (!["teacher", "mentor"].includes(teacher.role?.toLowerCase() ?? "")) {
       return res.status(404).json({ message: "Teacher not found" });
     }
 
