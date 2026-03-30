@@ -2661,7 +2661,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   });
 
   // User Management (Admin/Manager/Call Center only)
-  app.get("/api/users", authenticateToken, requireRole(['Admin', 'Supervisor', 'Call Center Agent', 'FrontDesk']), async (req: any, res) => {
+  app.get("/api/users", authenticateToken, requireRole(['Admin', 'Supervisor', 'Call Center Agent', 'Front Desk', 'Front Desk Clerk']), async (req: any, res) => {
     try {
       const allUsers = await storage.getAllUsers();
       // Exclude test users with lowercase roles

@@ -24,7 +24,7 @@ import { storage } from "../storage";
 export function registerPrivateClassRoutes(app: Express) {
 
   // GET /api/session-bundles — list session bundles; admin sees all, others only active
-  app.get("/api/session-bundles", authenticate, authorize(['Admin', 'Supervisor', 'Call Center Agent', 'Front Desk']), async (req: any, res) => {
+  app.get("/api/session-bundles", authenticate, authorize(['Admin', 'Supervisor', 'Call Center Agent', 'Front Desk', 'Front Desk Clerk']), async (req: any, res) => {
     try {
       const isAdmin = req.user?.role === 'Admin';
       const condition = isAdmin
@@ -115,7 +115,7 @@ export function registerPrivateClassRoutes(app: Express) {
   // ===== Private Class Creation (CRM agent action) =====
 
   // POST /api/private-class/create — create student session package + payment record
-  app.post("/api/private-class/create", authenticate, authorize(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk']), async (req: any, res) => {
+  app.post("/api/private-class/create", authenticate, authorize(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk', 'Front Desk Clerk']), async (req: any, res) => {
     try {
       const schema = z.object({
         leadId: z.number().int(),
