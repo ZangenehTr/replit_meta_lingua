@@ -14,6 +14,8 @@ import {
   leadActivityLog,
   frontDeskTasks,
   adminSettings,
+  LEAD_STAGE_TRANSITIONS,
+  LEAD_WORKFLOW_STAGE,
 } from "../../shared/schema";
 import { authenticate, authorize } from "../auth";
 import { z } from "zod";
@@ -117,14 +119,24 @@ export function registerPrivateClassRoutes(app: Express) {
 
   // ===== Private Class Creation (CRM agent action) =====
   //
-  // Stage path decision: private class activation transitions the lead directly from
-  // `private_class_setup` → `active_private_class`, bypassing the `final_registration`
-  // stage. `final_registration` is reserved for group/course enrollment only.
-  // Private class leads follow a dedicated branch: private_class_setup → active_private_class
-  // → charge_renewal (on low-session threshold) → completed_private_class / private_class_withdrawal.
+  // CRM stage flow for private classes:
+  //   contact_desk → ... → final_registration → private_class_setup
+  //                                                      ↓
+  //                                         (optionally) set_class_number
+  //                                                      ↓
+  //                                           active_private_class  ← this endpoint activates here
+  //                                                      ↓
+  //                                            charge_renewal (on low-session threshold)
+  //                                                      ↓
+  //                                   completed_private_class | private_class_withdrawal
   //
-  // Lead linkage: the created `student_session_packages` row stores `leadId` to enable
-  // reliable lead resolution in threshold alerts without relying on stage-based lookup.
+  // `final_registration` is the CRM stage where payment terms are agreed; it transitions the lead
+  // to `private_class_setup` via the standard stage-transition API (/api/leads/:id/stage).
+  // This endpoint then enforces a stage guard — rejecting activation unless the lead is in
+  // `private_class_setup` or `set_class_number` (per LEAD_STAGE_TRANSITIONS).
+  //
+  // Lead linkage: `student_session_packages.leadId` is stored at creation to enable
+  // direct lead resolution in threshold alerts (primary) with stage-based fallback.
 
   // POST /api/private-class/create — create student session package + payment record
   app.post("/api/private-class/create", authenticate, authorize(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk', 'Front Desk Clerk']), async (req: any, res) => {
@@ -142,6 +154,18 @@ export function registerPrivateClassRoutes(app: Express) {
       const [lead] = await db.select().from(leads).where(eq(leads.id, leadId));
       if (!lead) return res.status(404).json({ message: "Lead not found" });
       if (!lead.studentId) return res.status(400).json({ message: "Lead has no linked student account" });
+
+      // Stage guard: enforce that the lead is in a valid source stage before activating private class.
+      // Valid source stages per LEAD_STAGE_TRANSITIONS: private_class_setup and set_class_number.
+      const currentStage = (lead.workflowStage || 'contact_desk') as keyof typeof LEAD_STAGE_TRANSITIONS;
+      const allowedTargets = LEAD_STAGE_TRANSITIONS[currentStage] || [];
+      if (!allowedTargets.includes(LEAD_WORKFLOW_STAGE.ACTIVE_PRIVATE_CLASS)) {
+        return res.status(400).json({
+          message: `Lead cannot be activated for private class from stage '${currentStage}'. ` +
+            `Lead must be in 'private_class_setup' or 'set_class_number' first.`,
+          currentStage,
+        });
+      }
 
       const [bundle] = await db.select().from(sessionPackages).where(eq(sessionPackages.id, packageId));
       if (!bundle) return res.status(404).json({ message: "Session bundle not found" });
