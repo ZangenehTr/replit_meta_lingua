@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { motion } from 'framer-motion';
@@ -535,16 +536,28 @@ export default function StudentCoursesMobile() {
                   )}
 
                   {course.status === 'completed' && (
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
-                      <div className="flex items-center gap-2">
-                        <Award className="w-5 h-5 text-green-600" />
-                        <span className="text-green-700 text-sm font-medium">
-                          {t('student:courseCompleted')}
-                        </span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <Award className="w-5 h-5 text-green-600" />
+                          <span className="text-green-700 text-sm font-medium">
+                            {t('student:courseCompleted')}
+                          </span>
+                        </div>
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-100">
+                          {t('student:viewCertificate')}
+                        </Button>
                       </div>
-                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-100">
-                        {t('student:viewCertificate')}
-                      </Button>
+                      <Link href={`/course/${course.courseId}?tab=reviews`}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-yellow-600 border-yellow-200 hover:bg-yellow-50 flex items-center justify-center gap-2"
+                        >
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          {t('student:writeReview', 'ثبت نظر درباره دوره')}
+                        </Button>
+                      </Link>
                     </div>
                   )}
 

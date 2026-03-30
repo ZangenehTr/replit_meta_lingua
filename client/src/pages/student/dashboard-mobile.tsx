@@ -513,6 +513,27 @@ export default function StudentDashboardMobile() {
                 </GlossyButton>
               </Link>
             </div>
+
+            {/* Invite a Friend Card */}
+            <GlossyCard>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold text-sm">{t('student:inviteAFriend', 'دوستت رو دعوت کن')}</h4>
+                    <p className="text-white/60 text-xs mt-0.5">{t('student:inviteDescription', 'کمیسیون نقدی از هر ثبت‌نام دریافت کن')}</p>
+                  </div>
+                </div>
+                <Link href="/student/referral">
+                  <GlossyButton variant="primary" size="sm" className="flex items-center gap-1 text-xs">
+                    <ChevronRight className="w-3 h-3" />
+                    {t('student:myReferralCode', 'کد معرفی')}
+                  </GlossyButton>
+                </Link>
+              </div>
+            </GlossyCard>
           </motion.div>
         )}
 

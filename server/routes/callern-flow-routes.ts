@@ -5,7 +5,7 @@ import * as callernStorage from '../storage/callern-storage';
 import { authenticate, type AuthenticatedRequest } from '../auth';
 import { db } from '../db.js';
 import { sessionRatings } from '../../shared/schema.js';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 
 // Use centralized authentication middleware
 const requireAuth = authenticate;
@@ -482,31 +482,60 @@ router.post('/callern/session-rating', requireAuth, async (req, res) => {
       return res.status(403).json({ message: "Unauthorized to submit this rating" });
     }
 
-    // Check for duplicate rating by this user for this session
-    const [existing] = await db
+    // Check if the specific side has already rated (role-specific duplicate detection)
+    // student rates teacher → stored in teacherRating column
+    // teacher rates student → stored in studentRating column
+    const [alreadyRated] = await db
       .select({ id: sessionRatings.id })
       .from(sessionRatings)
       .where(and(
         eq(sessionRatings.sessionId, sessionId),
         role === "student"
-          ? eq(sessionRatings.studentId, studentId)
-          : eq(sessionRatings.teacherId, teacherId)
+          ? and(eq(sessionRatings.studentId, studentId), isNotNull(sessionRatings.teacherRating))
+          : and(eq(sessionRatings.teacherId, teacherId), isNotNull(sessionRatings.studentRating))
       ))
       .limit(1);
 
-    if (existing) {
+    if (alreadyRated) {
       return res.status(409).json({ message: "Rating already submitted for this session" });
     }
 
-    await db.insert(sessionRatings).values({
-      sessionId,
-      teacherId,
-      studentId,
-      teacherRating: role === "student" ? rating : null,
-      studentRating: role === "teacher" ? rating : null,
-      teacherComment: role === "student" ? (comment ?? null) : null,
-      studentComment: role === "teacher" ? (comment ?? null) : null
-    });
+    // Check if a row exists for this session (from the other party)
+    const [existingRow] = await db
+      .select({ id: sessionRatings.id })
+      .from(sessionRatings)
+      .where(and(
+        eq(sessionRatings.sessionId, sessionId),
+        eq(sessionRatings.teacherId, teacherId),
+        eq(sessionRatings.studentId, studentId)
+      ))
+      .limit(1);
+
+    if (existingRow) {
+      // Update only the columns for this role
+      if (role === "student") {
+        await db
+          .update(sessionRatings)
+          .set({ teacherRating: rating, teacherComment: comment ?? null })
+          .where(eq(sessionRatings.id, existingRow.id));
+      } else {
+        await db
+          .update(sessionRatings)
+          .set({ studentRating: rating, studentComment: comment ?? null })
+          .where(eq(sessionRatings.id, existingRow.id));
+      }
+    } else {
+      // No row yet — insert a new one
+      await db.insert(sessionRatings).values({
+        sessionId,
+        teacherId,
+        studentId,
+        teacherRating: role === "student" ? rating : null,
+        studentRating: role === "teacher" ? rating : null,
+        teacherComment: role === "student" ? (comment ?? null) : null,
+        studentComment: role === "teacher" ? (comment ?? null) : null
+      });
+    }
 
     res.status(201).json({ message: "Rating submitted successfully" });
   } catch (error) {

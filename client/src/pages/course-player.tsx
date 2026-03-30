@@ -80,7 +80,8 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   const [showSubtitles, setShowSubtitles] = useState(false);
   const [notes, setNotes] = useState("");
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-  const [activeTab, setActiveTab] = useState("overview");
+  const initialTab = new URLSearchParams(window.location.search).get("tab") || "overview";
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
