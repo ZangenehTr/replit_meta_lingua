@@ -42,10 +42,11 @@ export default function CRMDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   // Use real data from the existing API endpoints
-  const { data: users = [] } = useQuery({
+  const { data: usersRes } = useQuery({
     queryKey: ["/api/users"],
     enabled: user?.role === "admin"
   });
+  const users: any[] = (usersRes as any)?.users ?? usersRes ?? [];
 
   const { data: courses = [] } = useQuery({
     queryKey: ["/api/courses"]
@@ -56,8 +57,8 @@ export default function CRMDashboard() {
   });
 
   // Calculate real statistics from actual data - no fallback values
-  const students = users.filter(u => u.role === "student" || u.role === "Student");
-  const teachers = users.filter(u => u.role === "teacher" || u.role === "Teacher/Tutor");
+  const students = users.filter((u: any) => u.role === "student" || u.role === "Student");
+  const teachers = users.filter((u: any) => u.role === "teacher" || u.role === "Teacher/Tutor");
   const activeStudents = students.filter(u => u.isActive);
   
   const stats = {

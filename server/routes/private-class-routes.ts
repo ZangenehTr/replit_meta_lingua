@@ -23,11 +23,15 @@ import { storage } from "../storage";
 
 export function registerPrivateClassRoutes(app: Express) {
 
-  // GET /api/session-bundles — list all session bundles (admin/supervisor/agent)
-  app.get("/api/session-bundles", authenticate, authorize(['Admin', 'Supervisor', 'Call Center Agent', 'Front Desk']), async (_req, res) => {
+  // GET /api/session-bundles — list session bundles; admin sees all, others only active
+  app.get("/api/session-bundles", authenticate, authorize(['Admin', 'Supervisor', 'Call Center Agent', 'Front Desk']), async (req: any, res) => {
     try {
+      const isAdmin = req.user?.role === 'Admin';
+      const condition = isAdmin
+        ? eq(sessionPackages.packageType, "private")
+        : and(eq(sessionPackages.packageType, "private"), eq(sessionPackages.isActive, true));
       const bundles = await db.select().from(sessionPackages)
-        .where(eq(sessionPackages.packageType, "private"))
+        .where(condition)
         .orderBy(desc(sessionPackages.createdAt));
       res.json(bundles);
     } catch (e: any) {
@@ -129,6 +133,7 @@ export function registerPrivateClassRoutes(app: Express) {
 
       const [bundle] = await db.select().from(sessionPackages).where(eq(sessionPackages.id, packageId));
       if (!bundle) return res.status(404).json({ message: "Session bundle not found" });
+      if (!bundle.isActive) return res.status(400).json({ message: "Selected session bundle is no longer active" });
 
       const [teacher] = await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName, role: users.role })
         .from(users).where(eq(users.id, teacherId));
