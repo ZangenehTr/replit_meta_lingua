@@ -49,6 +49,7 @@ interface TeacherProfile {
   introVideoUrl?: string;
   specializations: string[];
   teachingExperience?: string | null;
+  education: string[];
   languages: string[];
   rating: number;
   reviewCount: number;
@@ -350,6 +351,26 @@ export default function TutorProfilePage() {
             ))}
           </CardContent>
         </Card>
+
+        {/* Education / Certifications */}
+        {profile.education && profile.education.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Award className="h-4 w-4" />
+                مدارک و گواهینامه‌ها
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              {profile.education.map((cert, i) => (
+                <Badge key={i} variant="outline" className="gap-1">
+                  <Award className="h-3 w-3" />
+                  {cert}
+                </Badge>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Teaching experience */}
         {profile.teachingExperience && (

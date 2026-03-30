@@ -7,6 +7,7 @@ import {
   sessionRatings,
   callernTeacherFollowers,
   teacherCallernAuthorization,
+  type User,
 } from "@shared/schema";
 import { authenticate, authorize } from "../auth";
 
@@ -122,13 +123,16 @@ router.get("/:id/profile", async (req, res) => {
     const teacherId = parseInt(req.params.id, 10);
     if (isNaN(teacherId)) return res.status(400).json({ message: "Invalid teacher id" });
 
-    const [teacher] = await db
+    const rows = await db
       .select()
       .from(users)
       .where(eq(users.id, teacherId))
       .limit(1);
 
-    if (!teacher || (teacher.role !== "teacher" && teacher.role !== "mentor")) {
+    if (rows.length === 0) return res.status(404).json({ message: "Teacher not found" });
+    const teacher = rows[0] as User;
+
+    if (teacher.role !== "teacher" && teacher.role !== "mentor") {
       return res.status(404).json({ message: "Teacher not found" });
     }
 
@@ -189,24 +193,24 @@ router.get("/:id/profile", async (req, res) => {
     const reviewCount = Number(ratingAgg?.count ?? 0);
     const followerCount = Number(followerAgg?.count ?? 0);
 
-    const t = teacher as any;
     const profile = {
       id: teacher.id,
       firstName: teacher.firstName,
       lastName: teacher.lastName,
       fullName: `${teacher.firstName} ${teacher.lastName}`,
       profileImageUrl: teacher.profileImageUrl ?? null,
-      bio: t.teacherBio ?? null,
-      introVideoUrl: t.introVideoUrl ?? null,
-      specializations: t.teacherSpecializations ?? [],
-      teachingExperience: t.teachingExperience ?? null,
+      bio: teacher.teacherBio ?? null,
+      introVideoUrl: teacher.introVideoUrl ?? null,
+      specializations: teacher.teacherSpecializations ?? [],
+      teachingExperience: teacher.teachingExperience ?? null,
+      education: auth?.certifications ?? [],
       languages: ["Persian", "English"],
       rating: avgRating,
       reviewCount,
       followerCount,
       isCallernAuthorized: auth?.isAuthorized === true,
       authorizationLevel: auth?.authorizationLevel ?? null,
-      hourlyRate: t.hourlyRate ? parseInt(String(t.hourlyRate)) : 500000,
+      hourlyRate: teacher.hourlyRate ?? 500000,
       successRate: reviewCount > 0 ? Math.min(98, 80 + Math.round(avgRating * 3)) : null,
       openCourses,
     };

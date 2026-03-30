@@ -3,6 +3,7 @@ import { Server } from 'http';
 import { db } from './db';
 import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus, callernTeacherFollowers } from '../shared/schema';
 import { eq, and, like, sql, inArray } from 'drizzle-orm';
+import { kavenegarService } from './kavenegar-service';
 import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
 
 interface CallRoom {
@@ -195,6 +196,25 @@ export class CallernWebSocketServer {
                 teacherName,
                 message: `${teacherName} اکنون در CallerN آنلاین است و آماده مکالمه`,
               });
+
+              // Optional SMS notification (only when Kavenegar is configured)
+              if (process.env.KAVENEGAR_API_KEY) {
+                try {
+                  const [studentRow] = await db
+                    .select({ phone: users.phone })
+                    .from(users)
+                    .where(eq(users.id, follower.studentId))
+                    .limit(1);
+                  if (studentRow?.phone) {
+                    await kavenegarService.sendSimpleSMS(
+                      studentRow.phone,
+                      `${teacherName} اکنون در CallerN آنلاین است. همین الان برای مکالمه وارد شوید!`
+                    );
+                  }
+                } catch (smsError) {
+                  console.error(`SMS notification failed for follower ${follower.studentId}:`, smsError);
+                }
+              }
             }
 
             if (followers.length > 0) {

@@ -13,6 +13,7 @@ import { HolidayIndicator } from '@/components/ui/holiday-indicator';
 import { ExamTypeIndicator } from '@/components/ui/exam-type-indicator';
 import { EnhancedDateDisplay } from '@/components/ui/enhanced-date-display';
 import { SessionCalendarSidebar } from '@/components/ui/session-calendar-sidebar';
+import { TeacherNameLink } from '@/components/ui/teacher-name-link';
 import '@/styles/mobile-app.css';
 
 interface Holiday {
@@ -40,6 +41,7 @@ interface Session {
   title: string;
   courseTitle: string;
   teacherName: string;
+  teacherId?: number;
   date: string;
   time: string;
   duration: number;
@@ -337,7 +339,13 @@ export default function StudentSessionsMobile() {
                       {session.teacherName[0]}
                     </div>
                     <span className="text-white/80 text-sm">
-                      {session.teacherName}
+                      {session.teacherId ? (
+                        <TeacherNameLink
+                          teacherId={session.teacherId}
+                          teacherName={session.teacherName}
+                          className="text-white/80 hover:text-white"
+                        />
+                      ) : session.teacherName}
                     </span>
                   </div>
 

@@ -11640,14 +11640,18 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         const isConnected = connectedTeacherIds.includes(teacher.id);
         const hasCallernAvailability = teacher.isOnline === true;
         const isOnlineConnected = isConnected && hasCallernAvailability;
-        const isTeaching = isOnlineConnected && teachingTeacherIds.has(teacher.id);
+
+        // Teaching is independent of WebSocket connection:
+        // A teacher in an active call_session OR an ongoing live_class_session is 'teaching'
+        // even if they're not currently connected to CallerN.
+        const isCurrentlyTeaching = teachingTeacherIds.has(teacher.id);
 
         // 3-state: 'available' | 'teaching' | 'offline'
         let presenceStatus: 'available' | 'teaching' | 'offline';
-        if (!isOnlineConnected) {
-          presenceStatus = 'offline';
-        } else if (isTeaching) {
+        if (isCurrentlyTeaching) {
           presenceStatus = 'teaching';
+        } else if (!isOnlineConnected) {
+          presenceStatus = 'offline';
         } else {
           presenceStatus = 'available';
         }
