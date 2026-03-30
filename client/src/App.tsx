@@ -96,6 +96,7 @@ import TrialLessonScheduling from "@/pages/frontdesk/trial-scheduling";
 import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
 import StudentReferralPage from "@/pages/student/referral";
+import StudentWelcomePage from "@/pages/student/welcome";
 
 // Student pages
 import TutorsPage from "@/pages/student/tutors";
@@ -954,6 +955,13 @@ function Router() {
       <Route path="/ai-practice">
         <ProtectedRoute>
           <AIPracticePage />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Student Welcome / Onboarding */}
+      <Route path="/welcome">
+        <ProtectedRoute>
+          <StudentWelcomePage />
         </ProtectedRoute>
       </Route>
 

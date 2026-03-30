@@ -327,6 +327,34 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
       recordReferralRegistration(referralCode, newUser.id).catch(() => {});
     }
 
+    // Create CRM lead for self-registered students (non-blocking)
+    if ((signupData.role || 'Student') === 'Student') {
+      (async () => {
+        try {
+          const { db: dbInst } = await import('../db.js');
+          const { leads: leadsTable } = await import('../../shared/schema.js');
+          const { eq: drizzleEq } = await import('drizzle-orm');
+          const existingLeads = await dbInst.select({ id: leadsTable.id }).from(leadsTable)
+            .where(drizzleEq(leadsTable.phoneNumber, formattedPhone)).limit(1);
+          if (existingLeads.length === 0) {
+            await storage.createLead({
+              firstName: signupData.firstName,
+              lastName: signupData.lastName,
+              phoneNumber: formattedPhone,
+              source: 'self_registration',
+              workflowStage: 'new_intake',
+              status: 'new',
+              priority: 'medium',
+              studentId: newUser.id,
+            } as any);
+            console.log(`[CRM] Auto-lead created for self-registered student userId=${newUser.id}`);
+          }
+        } catch (e) {
+          console.error('[CRM] Self-registration lead creation failed (non-fatal):', e);
+        }
+      })();
+    }
+
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(newUser);
 

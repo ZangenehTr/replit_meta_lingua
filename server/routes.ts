@@ -1713,6 +1713,34 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         }
       }
 
+      // CRM Bridge: create a self_registration lead for new students (non-blocking)
+      if (user.role === 'student' || user.role === 'Student') {
+        (async () => {
+          try {
+            const normalizedPhone = phoneNumber || '';
+            if (normalizedPhone) {
+              const [existing] = await db.select({ id: leads.id }).from(leads)
+                .where(eq(leads.phoneNumber, normalizedPhone)).limit(1);
+              if (!existing) {
+                await storage.createLead({
+                  firstName: firstName || '',
+                  lastName: lastName || '',
+                  phoneNumber: normalizedPhone,
+                  source: 'self_registration',
+                  workflowStage: 'new_intake',
+                  status: 'new',
+                  priority: 'medium',
+                  studentId: user.id,
+                } as any);
+                console.log(`[CRM] Auto-lead created for email-registered student userId=${user.id}`);
+              }
+            }
+          } catch (e) {
+            console.error('[CRM] Email registration lead creation failed (non-fatal):', e);
+          }
+        })();
+      }
+
       // Generate JWT token
       const token = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
@@ -6447,6 +6475,67 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
+  // ─── CRM BRIDGE HELPER ────────────────────────────────────────────────────
+  // Called after any confirmed course payment to auto-advance a matching CRM lead
+  async function advanceLeadAfterPayment(opts: {
+    userId: number;
+    courseId: number;
+    finalPrice: number;
+    paymentMethod: string;
+    transactionId?: string | null;
+  }) {
+    try {
+      const [userRecord] = await db.select({ phoneNumber: users.phoneNumber }).from(users).where(eq(users.id, opts.userId)).limit(1);
+      if (!userRecord?.phoneNumber) return;
+
+      // Find an active lead for this phone that is NOT yet enrolled
+      const [matchedLead] = await db.select().from(leads)
+        .where(
+          and(
+            eq(leads.phoneNumber, userRecord.phoneNumber),
+            sql`${leads.workflowStage} != 'enrolled'`,
+            sql`${leads.workflowStage} != 'withdrawal'`
+          )
+        )
+        .orderBy(desc(leads.updatedAt))
+        .limit(1);
+
+      if (!matchedLead) return;
+
+      const fromStage = (matchedLead.workflowStage || 'contact_desk') as string;
+      await db.update(leads).set({
+        workflowStage: 'enrolled',
+        status: 'converted',
+        conversionDate: new Date(),
+        studentId: opts.userId,
+        enrolledCourseId: opts.courseId,
+        paymentMethod: opts.paymentMethod,
+        updatedAt: new Date(),
+        stageChangedAt: new Date()
+      }).where(eq(leads.id, matchedLead.id));
+
+      await db.insert(leadActivityLog).values({
+        leadId: matchedLead.id,
+        fromStage,
+        toStage: 'enrolled',
+        operatorId: null,
+        reason: 'Online payment confirmed',
+        snapshot: {
+          paymentMethod: opts.paymentMethod,
+          finalPrice: opts.finalPrice,
+          courseId: opts.courseId,
+          transactionId: opts.transactionId || null,
+          source: 'auto_payment_bridge'
+        }
+      });
+
+      console.log(`[CRM] Lead #${matchedLead.id} auto-advanced to 'enrolled' after payment userId=${opts.userId}`);
+    } catch (e) {
+      console.error('[CRM] advanceLeadAfterPayment failed (non-fatal):', e);
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   app.post("/api/courses/enroll", authenticateToken, async (req: any, res) => {
     try {
       const { courseId, paymentMethod, promoCode } = req.body;
@@ -6576,6 +6665,15 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
           const { processReferralFirstPayment } = await import('./routes/referral-routes.js');
           processReferralFirstPayment(req.user.id, coursePayment.id).catch(() => {});
         } catch (_) {}
+
+        // CRM Bridge: advance matching lead to 'enrolled' (non-blocking)
+        advanceLeadAfterPayment({
+          userId: req.user.id,
+          courseId: Number(courseId),
+          finalPrice,
+          paymentMethod: 'wallet',
+          transactionId: coursePayment.merchantTransactionId
+        }).catch(() => {});
 
         res.json({
           success: true,
@@ -6805,6 +6903,15 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
               const { processReferralFirstPayment } = await import('./routes/referral-routes.js');
               processReferralFirstPayment(coursePayment.userId, coursePayment.id).catch(() => {});
             } catch (_) {}
+
+            // CRM Bridge: advance matching lead to 'enrolled' (non-blocking)
+            advanceLeadAfterPayment({
+              userId: coursePayment.userId,
+              courseId: coursePayment.courseId,
+              finalPrice: coursePayment.finalPrice,
+              paymentMethod: 'gateway',
+              transactionId: coursePayment.merchantTransactionId
+            }).catch(() => {});
           }
           redirectPath = 'courses';
         }
@@ -14418,9 +14525,21 @@ Return JSON format:
   // 1. LEAD MANAGEMENT SYSTEM (Call Center Dashboard)
   app.get("/api/leads", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
-      // Try database first
-      const leads = await storage.getLeads();
-      res.json(leads);
+      const { source, status, priority, stage } = req.query as Record<string, string | undefined>;
+      // If any filter is provided, apply server-side filtering
+      if (source || status || priority || stage) {
+        const conditions: any[] = [];
+        if (source) conditions.push(eq(leads.source, source));
+        if (status) conditions.push(eq(leads.status, status));
+        if (priority) conditions.push(eq(leads.priority, priority));
+        if (stage) conditions.push(eq(leads.workflowStage, stage));
+        const filtered = await db.select().from(leads)
+          .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+          .orderBy(desc(leads.updatedAt));
+        return res.json(filtered);
+      }
+      const allLeads = await storage.getLeads();
+      res.json(allLeads);
     } catch (dbError: any) {
       console.error('Error fetching leads:', dbError);
       res.json([]);
@@ -14812,6 +14931,112 @@ Return JSON format:
   // ============================================================================
   // LEAD WORKFLOW PIPELINE ROUTES
   // ============================================================================
+
+  // Finalize physical payment (cash/POS/cheque) and create enrollment record
+  app.post("/api/leads/:id/finalize-payment", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      const bodySchema = z.object({
+        courseId: z.number({ required_error: "courseId required" }),
+        paymentMethod: z.enum(['cash', 'pos', 'cheque'], { required_error: "paymentMethod required (cash|pos|cheque)" }),
+        amount: z.number({ required_error: "amount required" }),
+        notes: z.string().optional()
+      });
+
+      const { courseId, paymentMethod, amount, notes } = bodySchema.parse(req.body);
+
+      const [lead] = await db.select().from(leads).where(eq(leads.id, leadId));
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      if (!lead.studentId) {
+        return res.status(400).json({ message: "Lead has no linked student account. Link a student account first." });
+      }
+
+      const [course] = await db.select({ id: courses.id, title: courses.title }).from(courses).where(eq(courses.id, courseId)).limit(1);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check if already enrolled
+      const [existingEnrollment] = await db.select({ id: enrollments.id }).from(enrollments)
+        .where(and(eq(enrollments.userId, lead.studentId), eq(enrollments.courseId, courseId))).limit(1);
+      if (existingEnrollment) {
+        return res.status(409).json({ message: "Student is already enrolled in this course" });
+      }
+
+      // Create course payment record (completed, physical method)
+      const txId = `PHYSICAL_${Date.now()}_${lead.studentId}_${courseId}`;
+      const [coursePaymentRecord] = await db.insert(coursePayments).values({
+        userId: lead.studentId,
+        courseId,
+        originalPrice: amount,
+        discountPercentage: 0,
+        finalPrice: amount,
+        creditsAwarded: 0,
+        paymentMethod,
+        status: 'completed',
+        merchantTransactionId: txId,
+        notes: notes || null
+      } as any).returning();
+
+      // Create enrollment record
+      await db.insert(enrollments).values({
+        userId: lead.studentId,
+        courseId,
+        status: 'active',
+        enrolledAt: new Date()
+      });
+
+      // Transition lead to enrolled
+      const fromStage = (lead.workflowStage || 'contact_desk') as string;
+      await db.update(leads).set({
+        workflowStage: 'enrolled',
+        status: 'converted',
+        conversionDate: new Date(),
+        enrolledCourseId: courseId,
+        paymentMethod,
+        updatedAt: new Date(),
+        stageChangedAt: new Date()
+      }).where(eq(leads.id, leadId));
+
+      // Write activity log
+      await db.insert(leadActivityLog).values({
+        leadId,
+        fromStage,
+        toStage: 'enrolled',
+        operatorId: req.user.id,
+        reason: `Physical payment: ${paymentMethod}`,
+        snapshot: {
+          paymentMethod,
+          amount,
+          courseId,
+          transactionId: txId,
+          notes: notes || null,
+          source: 'physical_payment_finalization'
+        }
+      });
+
+      console.log(`[CRM] Lead #${leadId} finalized with physical payment, enrollment created for userId=${lead.studentId} courseId=${courseId}`);
+
+      res.json({
+        success: true,
+        message: "Payment finalized and enrollment created",
+        coursePaymentId: coursePaymentRecord?.id,
+        enrolledCourseId: courseId
+      });
+    } catch (error: any) {
+      console.error('Error finalizing physical payment:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to finalize payment", error: error.message });
+    }
+  });
 
   // All valid workflow stages from shared schema
   const ALL_WORKFLOW_STAGES = Object.values(LEAD_WORKFLOW_STAGE);

@@ -772,6 +772,28 @@ export default function AdminLeadsPage() {
         </Card>
       </div>
 
+      {/* Self-Registrations Quick Filter */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="py-3 px-5 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p className="font-semibold text-blue-800 flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              ثبت‌نام‌های خودکار — لیدهای گرم که منتظر تماس هستند
+            </p>
+            <p className="text-sm text-blue-600">
+              دانشجویانی که از سایت ثبت‌نام کرده‌اند ولی هنوز دوره‌ای ندارند
+            </p>
+          </div>
+          <Button
+            variant={sourceFilter === 'self_registration' ? 'default' : 'outline'}
+            className={sourceFilter === 'self_registration' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-300 text-blue-700'}
+            onClick={() => setSourceFilter(sourceFilter === 'self_registration' ? 'all' : 'self_registration')}
+          >
+            {sourceFilter === 'self_registration' ? 'نمایش همه' : 'نمایش ثبت‌نام‌های خودکار'}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -844,6 +866,7 @@ export default function AdminLeadsPage() {
                   <SelectItem value="advertisement">{t('admin:leads.sourceAdvertisement')}</SelectItem>
                   <SelectItem value="walk_in">{t('admin:leads.sourceWalkIn')}</SelectItem>
                   <SelectItem value="call_center">{t('admin:leads.sourceCallCenter')}</SelectItem>
+                  <SelectItem value="self_registration">ثبت‌نام خودکار</SelectItem>
                 </SelectContent>
               </Select>
             </div>
