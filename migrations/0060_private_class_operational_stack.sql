@@ -1,23 +1,32 @@
 -- Migration: Private Class Operational Stack (Task #9)
 -- Creates tables for session bundle packages, teacher-student assignments,
 -- private session logging, and adjusts nullable constraints for compatibility.
+-- All statements are idempotent and safe to run against existing databases.
 
 -- 1. Session bundle templates (admin-managed pricing/session configs)
 CREATE TABLE IF NOT EXISTS session_packages (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  package_type VARCHAR(50) NOT NULL DEFAULT 'private',
+  package_type VARCHAR(50) DEFAULT 'private',
   session_count INTEGER NOT NULL,
-  session_duration INTEGER NOT NULL DEFAULT 60,
-  validity_days INTEGER NOT NULL DEFAULT 90,
+  session_duration INTEGER DEFAULT 60,
+  validity_days INTEGER NOT NULL,
   price NUMERIC(10,2) NOT NULL,
-  low_session_alert_threshold INTEGER NOT NULL DEFAULT 2,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  features JSONB DEFAULT '[]',
+  currency VARCHAR(3) DEFAULT 'IRR',
+  discount_percentage NUMERIC(5,2),
+  is_active BOOLEAN DEFAULT true,
+  target_audience VARCHAR(100),
+  skill_level VARCHAR(50),
+  features TEXT[] DEFAULT '{}',
+  terms TEXT,
+  low_session_alert_threshold INTEGER DEFAULT 2,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Ensure low_session_alert_threshold column exists (for older table instances)
+ALTER TABLE session_packages ADD COLUMN IF NOT EXISTS low_session_alert_threshold INTEGER DEFAULT 2;
 
 -- 2. Student session packages (purchased instances per student)
 CREATE TABLE IF NOT EXISTS student_session_packages (
@@ -46,11 +55,15 @@ CREATE TABLE IF NOT EXISTS teacher_student_assignments (
   teacher_id INTEGER NOT NULL REFERENCES users(id),
   student_id INTEGER NOT NULL REFERENCES users(id),
   student_session_package_id INTEGER REFERENCES student_session_packages(id),
-  status VARCHAR(20) DEFAULT 'active',
+  notes TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
   assigned_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Ensure notes column exists on teacher_student_assignments (for older table instances)
+ALTER TABLE teacher_student_assignments ADD COLUMN IF NOT EXISTS notes TEXT;
 
 -- 4. Private session log (individual session records)
 CREATE TABLE IF NOT EXISTS private_sessions (
@@ -69,11 +82,31 @@ CREATE TABLE IF NOT EXISTS private_sessions (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- 5. Make live_class_sessions.class_id nullable for private session compatibility bridge
-ALTER TABLE live_class_sessions ALTER COLUMN class_id DROP NOT NULL;
+-- 5. Make live_class_sessions.class_id nullable (safe idempotent guard)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'live_class_sessions'
+      AND column_name = 'class_id'
+      AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE live_class_sessions ALTER COLUMN class_id DROP NOT NULL;
+  END IF;
+END $$;
 
--- 6. Make course_payments.course_id nullable for private-class payment records
-ALTER TABLE course_payments ALTER COLUMN course_id DROP NOT NULL;
+-- 6. Make course_payments.course_id nullable (safe idempotent guard)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'course_payments'
+      AND column_name = 'course_id'
+      AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE course_payments ALTER COLUMN course_id DROP NOT NULL;
+  END IF;
+END $$;
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_ssp_student_id ON student_session_packages(student_id);
