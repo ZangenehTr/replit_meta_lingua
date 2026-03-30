@@ -510,6 +510,12 @@ export function registerPrivateClassRoutes(app: Express) {
   // GET /api/admin/private-classes — overview of all active private classes
   app.get("/api/admin/private-classes", authenticate, authorize(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
+      // Default to active-only; pass ?status=all to see all statuses
+      const statusFilter = req.query.status as string | undefined;
+      const statusCondition = statusFilter === 'all'
+        ? undefined
+        : eq(studentSessionPackages.status, "active");
+
       const rows = await db.select({
         pkg: studentSessionPackages,
         student: {
@@ -525,6 +531,7 @@ export function registerPrivateClassRoutes(app: Express) {
         .from(studentSessionPackages)
         .innerJoin(users, eq(studentSessionPackages.studentId, users.id))
         .innerJoin(sessionPackages, eq(studentSessionPackages.packageId, sessionPackages.id))
+        .where(statusCondition)
         .orderBy(desc(studentSessionPackages.updatedAt));
 
       // Fetch teachers separately to avoid multiple joins confusion
@@ -666,9 +673,18 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
   }
 
   // 3. Find the lead and transition to charge_renewal
-  const [lead] = await db.select().from(leads).where(
-    and(eq(leads.studentId, pkg.studentId), eq(leads.workflowStage, "active_private_class"))
-  );
+  // Primary: use pkg.leadId for direct lookup; fallback: find by studentId + active stage
+  let lead: typeof leads.$inferSelect | undefined;
+  if (pkg.leadId) {
+    const [byId] = await db.select().from(leads).where(eq(leads.id, pkg.leadId));
+    lead = byId;
+  }
+  if (!lead) {
+    const [byStage] = await db.select().from(leads).where(
+      and(eq(leads.studentId, pkg.studentId), eq(leads.workflowStage, "active_private_class"))
+    );
+    lead = byStage;
+  }
 
   if (lead) {
     await db.update(leads).set({

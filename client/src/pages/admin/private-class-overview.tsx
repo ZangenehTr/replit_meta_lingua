@@ -95,6 +95,13 @@ function PrivateClassOverviewPage() {
     return labels[stage] ?? stage;
   };
 
+  const escapeCSVCell = (value: string): string => {
+    if (value.includes(",") || value.includes("\n") || value.includes('"')) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  };
+
   const exportCSV = () => {
     const headers = ["دانش‌آموز", "استاد", "بسته", "مرحله CRM", "کل جلسات", "باقیمانده", "وضعیت", "شروع", "انقضا", "جلسه بعدی"];
     const rows = filtered.map(r => [
@@ -109,7 +116,7 @@ function PrivateClassOverviewPage() {
       r.expiryDate ? new Date(r.expiryDate).toLocaleDateString('fa-IR') : "",
       r.nextScheduledAt ? new Date(r.nextScheduledAt).toLocaleDateString('fa-IR') : "تعیین نشده",
     ]);
-    const csv = [headers, ...rows].map(row => row.join(",")).join("\n");
+    const csv = [headers, ...rows].map(row => row.map(escapeCSVCell).join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
