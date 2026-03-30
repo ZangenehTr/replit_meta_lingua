@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { eq, sql, desc, and, or, isNull } from "drizzle-orm";
+import { eq, sql, desc, and, or, isNull, lte, gte } from "drizzle-orm";
 import {
   users,
   courses,
@@ -212,10 +212,18 @@ router.get("/:id/profile", async (req, res) => {
       .where(and(eq(callSessions.teacherId, teacherId), eq(callSessions.status, "active")))
       .limit(1);
 
+    const presenceNow = new Date();
     const activeLiveRow = await db
       .select({ id: liveClassSessions.id })
       .from(liveClassSessions)
-      .where(and(eq(liveClassSessions.teacherId, teacherId), eq(liveClassSessions.isCompleted, false)))
+      .where(
+        and(
+          eq(liveClassSessions.teacherId, teacherId),
+          eq(liveClassSessions.isCompleted, false),
+          lte(liveClassSessions.startTime, presenceNow),
+          or(isNull(liveClassSessions.endTime), gte(liveClassSessions.endTime, presenceNow))
+        )
+      )
       .limit(1);
 
     let callernPresence: "available" | "teaching" | "offline";

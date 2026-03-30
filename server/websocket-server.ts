@@ -2,7 +2,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { Server } from 'http';
 import { db } from './db';
 import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus, callernTeacherFollowers, callSessions, liveClassSessions } from '../shared/schema';
-import { eq, and, like, sql, inArray } from 'drizzle-orm';
+import { eq, and, like, sql, inArray, lte, gte, isNull } from 'drizzle-orm';
 import { kavenegarService } from './kavenegar-service';
 import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
 
@@ -177,10 +177,18 @@ export class CallernWebSocketServer {
               .where(and(eq(callSessions.teacherId, teacherId), eq(callSessions.status, 'active')))
               .limit(1);
 
+            const now = new Date();
             const activeLiveRows = await db
               .select({ id: liveClassSessions.id })
               .from(liveClassSessions)
-              .where(and(eq(liveClassSessions.teacherId, teacherId), eq(liveClassSessions.status, 'active')))
+              .where(
+                and(
+                  eq(liveClassSessions.teacherId, teacherId),
+                  eq(liveClassSessions.isCompleted, false),
+                  lte(liveClassSessions.startTime, now),
+                  or(isNull(liveClassSessions.endTime), gte(liveClassSessions.endTime, now))
+                )
+              )
               .limit(1);
 
             const isCurrentlyTeaching = activeCallRows.length > 0 || activeLiveRows.length > 0;

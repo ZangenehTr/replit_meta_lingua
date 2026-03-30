@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Users, MapPin, Calendar, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 interface AvailableCourse {
   id: number;
@@ -22,6 +23,7 @@ interface AvailableCourse {
   startTime: string;
   endTime: string;
   instructorName: string;
+  instructorId?: number;
   duration: string;
   isActive: boolean;
 }
@@ -167,7 +169,12 @@ export function AvailableCourses() {
                   
                   <div className="flex items-center justify-between mt-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Instructor: {course.instructorName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Instructor:{" "}
+                        {course.instructorId ? (
+                          <TeacherNameLink teacherId={course.instructorId} fullName={course.instructorName} variant="subtle" />
+                        ) : course.instructorName}
+                      </p>
                       <p className="font-semibold text-lg">{formatPrice(course.price)}</p>
                     </div>
                     

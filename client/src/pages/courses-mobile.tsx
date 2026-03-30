@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { TeacherNameLink } from '@/components/ui/teacher-name-link';
 import '@/styles/mobile-app.css';
 
 interface Course {
@@ -29,6 +30,7 @@ interface Course {
   title: string;
   description: string;
   instructorName: string;
+  instructorId?: number;
   language: string;
   level: 'beginner' | 'intermediate' | 'advanced';
   duration: string;
@@ -69,6 +71,7 @@ export default function CoursesCatalogMobile() {
     title: course.title || '',
     description: course.description || '',
     instructorName: course.instructorName || 'Instructor',
+    instructorId: course.instructorId ?? undefined,
     language: course.language || course.targetLanguage || 'English',
     level: (course.level || course.difficulty || 'intermediate').toLowerCase() as any,
     duration: course.sessionDuration ? `${course.sessionDuration} min` : '90 min',
@@ -263,7 +266,9 @@ export default function CoursesCatalogMobile() {
                         </Badge>
                       </div>
                       <p className="text-white/55 text-xs mb-2 line-clamp-1">
-                        {course.instructorName}
+                        {course.instructorId ? (
+                          <TeacherNameLink teacherId={course.instructorId} fullName={course.instructorName} className="text-white/55 hover:text-white/80" variant="plain" />
+                        ) : course.instructorName}
                       </p>
                       <div className="flex flex-wrap gap-x-3 gap-y-1">
                         <span className="flex items-center gap-1 text-white/55 text-xs">

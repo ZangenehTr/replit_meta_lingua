@@ -7,7 +7,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { CallernWebSocketServer } from "./websocket-server";
 import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings, callernTeacherFollowers, liveClassSessions } from "@shared/schema";
-import { eq, sql, and, desc, inArray, gte, lte } from "drizzle-orm";
+import { eq, sql, and, desc, inArray, gte, lte, isNull, or } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { registerCallernAIRoutes } from "./callern-ai-routes";
@@ -11601,7 +11601,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         .where(
           and(
             lte(liveClassSessions.startTime, now),
-            gte(liveClassSessions.endTime, now),
+            or(isNull(liveClassSessions.endTime), gte(liveClassSessions.endTime, now)),
             eq(liveClassSessions.isCompleted, false)
           )
         );

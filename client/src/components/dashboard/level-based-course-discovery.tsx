@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { TeacherNameLink } from "@/components/ui/teacher-name-link";
 
 interface CurriculumLevel {
   id: number;
@@ -70,6 +71,7 @@ interface LevelCourse {
   startTime: string;
   endTime: string;
   instructorName: string;
+  instructorId?: number;
   duration: string;
   isActive: boolean;
   levelId: number;
@@ -354,7 +356,12 @@ function CourseCard({ course, onEnroll, isEnrolling, formatPrice, formatDayName,
           
           <div className="flex items-center justify-between mt-4">
             <div>
-              <p className="text-sm text-muted-foreground">مدرس: {course.instructorName}</p>
+              <p className="text-sm text-muted-foreground">
+                مدرس:{" "}
+                {course.instructorId ? (
+                  <TeacherNameLink teacherId={course.instructorId} fullName={course.instructorName} variant="subtle" />
+                ) : course.instructorName}
+              </p>
               <p className="font-semibold text-lg">{formatPrice(course.price)}</p>
             </div>
             
