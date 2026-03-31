@@ -1942,36 +1942,107 @@ export default function MSTPage() {
                   {currentItem.content.questions?.map((q: any, idx: number) => (
                     <div key={idx} className="space-y-3">
                       <h3 className="font-medium">{q.stem}</h3>
-                      <RadioGroup
-                        value={currentResponse[idx]?.toString() || ""}
-                        onValueChange={(value) => {
-                          const arr = Array.isArray(currentResponse)
-                            ? [...currentResponse]
-                            : new Array(
-                                currentItem.content.questions.length,
-                              ).fill("");
-                          arr[idx] = value;
-                          setCurrentResponse(arr);
-                        }}
-                      >
-                        {q.options?.map((opt: string, j: number) => {
-                          const id = `l${idx}-opt${j}`;
-                          return (
-                            <div
-                              key={j}
-                              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[48px]"
-                            >
-                              <RadioGroupItem value={j.toString()} id={id} />
-                              <Label
-                                htmlFor={id}
-                                className="cursor-pointer flex-1 leading-relaxed text-sm sm:text-base"
-                              >
-                                {opt}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </RadioGroup>
+
+                      {/* mcq_single and unknown types — radio buttons */}
+                      {(!q.type || q.type === "mcq_single") && (
+                        <RadioGroup
+                          value={currentResponse[idx]?.toString() || ""}
+                          onValueChange={(value) => {
+                            const arr = Array.isArray(currentResponse)
+                              ? [...currentResponse]
+                              : new Array(currentItem.content.questions.length).fill("");
+                            arr[idx] = value;
+                            setCurrentResponse(arr);
+                          }}
+                        >
+                          {q.options?.map((opt: string, j: number) => {
+                            const id = `l${idx}-opt${j}`;
+                            return (
+                              <div key={j} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[48px]">
+                                <RadioGroupItem value={j.toString()} id={id} />
+                                <Label htmlFor={id} className="cursor-pointer flex-1 leading-relaxed text-sm sm:text-base">{opt}</Label>
+                              </div>
+                            );
+                          })}
+                        </RadioGroup>
+                      )}
+
+                      {/* mcq_multi — checkboxes */}
+                      {q.type === "mcq_multi" && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-500">Select all that apply:</p>
+                          {q.options?.map((opt: string, j: number) => {
+                            const id = `lm${idx}-opt${j}`;
+                            const checked = Array.isArray(currentResponse[idx]) && currentResponse[idx].includes(j);
+                            return (
+                              <div key={j} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[48px]">
+                                <Checkbox id={id} checked={checked} onCheckedChange={(c) => {
+                                  const arr = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill([]);
+                                  let curr = Array.isArray(arr[idx]) ? [...arr[idx]] : [];
+                                  curr = c ? [...curr, j] : curr.filter((x: number) => x !== j);
+                                  arr[idx] = curr;
+                                  setCurrentResponse(arr);
+                                }} />
+                                <Label htmlFor={id} className="cursor-pointer flex-1 leading-relaxed text-sm sm:text-base">{opt}</Label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* short_answer — text input */}
+                      {q.type === "short_answer" && (
+                        <input
+                          type="text"
+                          className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          placeholder="Type your answer..."
+                          value={Array.isArray(currentResponse) ? (currentResponse[idx] ?? "") : ""}
+                          onChange={(e) => {
+                            const arr = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill("");
+                            arr[idx] = e.target.value;
+                            setCurrentResponse(arr);
+                          }}
+                        />
+                      )}
+
+                      {/* ordering — numbered buttons to click in order */}
+                      {q.type === "ordering" && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-500">Click the items in the correct order:</p>
+                          {(() => {
+                            const items: string[] = q.items ?? q.options ?? [];
+                            const chosen: number[] = Array.isArray(currentResponse[idx]) ? currentResponse[idx] : [];
+                            return (
+                              <div className="space-y-2">
+                                {items.map((item: string, j: number) => {
+                                  const pos = chosen.indexOf(j);
+                                  return (
+                                    <button
+                                      key={j}
+                                      type="button"
+                                      className={`w-full text-left p-3 rounded-lg border text-sm transition-colors ${pos >= 0 ? 'bg-blue-100 border-blue-400 dark:bg-blue-900/40' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                      onClick={() => {
+                                        const arr = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill([]);
+                                        let curr: number[] = Array.isArray(arr[idx]) ? [...arr[idx]] : [];
+                                        if (curr.includes(j)) {
+                                          curr = curr.filter((x) => x !== j);
+                                        } else {
+                                          curr = [...curr, j];
+                                        }
+                                        arr[idx] = curr;
+                                        setCurrentResponse(arr);
+                                      }}
+                                    >
+                                      {pos >= 0 && <span className="font-bold mr-2 text-blue-600">{pos + 1}.</span>}
+                                      {item}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -2066,6 +2137,74 @@ export default function MSTPage() {
                               </div>
                             );
                           })}
+                        </div>
+                      )}
+
+                      {/* fill_in — text input for blank */}
+                      {(q.type === "fill_in" || q.type === "fill_in_blank") && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-500">Fill in the blank:</p>
+                          <input
+                            type="text"
+                            className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            placeholder="Your answer..."
+                            value={Array.isArray(currentResponse) ? (currentResponse[idx] ?? "") : ""}
+                            onChange={(e) => {
+                              const arr = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill("");
+                              arr[idx] = e.target.value;
+                              setCurrentResponse(arr);
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* short_answer — text input */}
+                      {q.type === "short_answer" && (
+                        <input
+                          type="text"
+                          className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          placeholder="Type your answer..."
+                          value={Array.isArray(currentResponse) ? (currentResponse[idx] ?? "") : ""}
+                          onChange={(e) => {
+                            const arr = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill("");
+                            arr[idx] = e.target.value;
+                            setCurrentResponse(arr);
+                          }}
+                        />
+                      )}
+
+                      {/* ordering — click items in order */}
+                      {q.type === "ordering" && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-500">Click the steps in the correct order:</p>
+                          {(() => {
+                            const items: string[] = q.items ?? q.options ?? [];
+                            const chosen: number[] = Array.isArray(currentResponse[idx]) ? currentResponse[idx] : [];
+                            return (
+                              <div className="space-y-2">
+                                {items.map((item: string, j: number) => {
+                                  const pos = chosen.indexOf(j);
+                                  return (
+                                    <button
+                                      key={j}
+                                      type="button"
+                                      className={`w-full text-left p-3 rounded-lg border text-sm transition-colors ${pos >= 0 ? 'bg-blue-100 border-blue-400 dark:bg-blue-900/40' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                      onClick={() => {
+                                        const arr = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill([]);
+                                        let curr: number[] = Array.isArray(arr[idx]) ? [...arr[idx]] : [];
+                                        curr = curr.includes(j) ? curr.filter((x) => x !== j) : [...curr, j];
+                                        arr[idx] = curr;
+                                        setCurrentResponse(arr);
+                                      }}
+                                    >
+                                      {pos >= 0 && <span className="font-bold mr-2 text-blue-600">{pos + 1}.</span>}
+                                      {item}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>

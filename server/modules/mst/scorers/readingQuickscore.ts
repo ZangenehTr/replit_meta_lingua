@@ -58,14 +58,26 @@ export function scoreReading(
         (incorrectSelected / question.options.length) * 0.5
       );
       partialPoints += partialScore;
-    } else if (question.type === 'short_answer' && typeof userAnswer === 'string') {
+    } else if ((question.type === 'short_answer' || question.type === 'fill_in' || question.type === 'fill_in_blank') && typeof userAnswer === 'string') {
       const normalizedAnswer = userAnswer.toLowerCase().trim();
-      const isCorrect = question.correctAnswers.some(correct =>
+      const isCorrect = (question.correctAnswers ?? []).some((correct: string) =>
         correct.toLowerCase().trim() === normalizedAnswer ||
         normalizedAnswer.includes(correct.toLowerCase().trim())
       );
       if (isCorrect) {
         correctCount++;
+      }
+    } else if (question.type === 'ordering' && Array.isArray(userAnswer)) {
+      // Score by proportion of adjacent pairs in correct relative order
+      const correctOrder: number[] = question.correctOrder ?? [];
+      if (correctOrder.length > 1 && userAnswer.length === correctOrder.length) {
+        let correctPairs = 0;
+        for (let k = 0; k < correctOrder.length - 1; k++) {
+          if (userAnswer[k] === correctOrder[k] && userAnswer[k + 1] === correctOrder[k + 1]) {
+            correctPairs++;
+          }
+        }
+        partialPoints += correctPairs / (correctOrder.length - 1);
       }
     }
   }

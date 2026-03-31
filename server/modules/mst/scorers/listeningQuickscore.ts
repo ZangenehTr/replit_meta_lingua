@@ -46,11 +46,37 @@ export function scoreListening(
     } else if (question.type === 'short_answer' && typeof userAnswer === 'string') {
       // Check if answer matches any correct answer (case-insensitive)
       const normalizedAnswer = userAnswer.toLowerCase().trim();
-      const isCorrect = question.correctAnswers.some(correct =>
+      const isCorrect = (question.correctAnswers ?? []).some((correct: string) =>
         correct.toLowerCase().trim() === normalizedAnswer
       );
       if (isCorrect) {
         correctCount++;
+      }
+    } else if (question.type === 'mcq_multi' && Array.isArray(userAnswer)) {
+      // Partial credit for multi-select
+      const correctIndices: number[] = question.answerIndices ?? [];
+      const userIndices = userAnswer as number[];
+      const correctSelected = userIndices.filter((idx: number) => correctIndices.includes(idx)).length;
+      const incorrectSelected = userIndices.filter((idx: number) => !correctIndices.includes(idx)).length;
+      const opts = question.options?.length ?? 4;
+      const partialScore = Math.max(0,
+        (correctSelected / Math.max(correctIndices.length, 1)) -
+        (incorrectSelected / opts) * 0.5
+      );
+      correctCount += partialScore;
+    } else if (question.type === 'ordering' && Array.isArray(userAnswer)) {
+      // Score by proportion of adjacent pairs in correct order
+      const correctOrder: number[] = question.correctOrder ?? [];
+      if (correctOrder.length > 1 && userAnswer.length === correctOrder.length) {
+        let correctPairs = 0;
+        for (let k = 0; k < correctOrder.length - 1; k++) {
+          const expectedA = correctOrder[k];
+          const expectedB = correctOrder[k + 1];
+          const userA = userAnswer[k];
+          const userB = userAnswer[k + 1];
+          if (userA === expectedA && userB === expectedB) correctPairs++;
+        }
+        correctCount += correctPairs / (correctOrder.length - 1);
       }
     }
   }
