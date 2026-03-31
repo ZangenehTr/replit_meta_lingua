@@ -589,7 +589,12 @@ async function main() {
     return;
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: false });
+  // Use SSL-aware config: Neon/cloud requires rejectUnauthorized:false;
+  // local PostgreSQL (Docker/on-prem) works without SSL — handled automatically by pg.
+  const sslConfig = process.env.DATABASE_URL?.includes('neon.tech')
+    ? { rejectUnauthorized: false }
+    : (process.env.DATABASE_SSL === 'false' ? false : undefined);
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: sslConfig });
   let inserted = 0, updated = 0, skipped = 0;
 
   for (const skill of skills) {
@@ -630,7 +635,7 @@ async function main() {
   console.log(`\n🎉 Seeding complete!  inserted=${inserted}  updated=${updated}  skipped=${skipped}`);
 
   // Cell coverage report
-  const coverPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: false });
+  const coverPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: sslConfig });
   const covRes = await coverPool.query(
     `SELECT skill, cefr_level, stage, COUNT(*) as cnt
        FROM placement_test_questions

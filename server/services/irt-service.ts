@@ -26,12 +26,19 @@ interface QueryRunner {
   query(sql: string, params?: unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
 }
 
+/** Accept anything — if it implements `query()` it satisfies QueryRunner at runtime */
+type AnyStorageArg = QueryRunner | Record<string, unknown> | null | undefined;
+
+function isQueryRunner(s: AnyStorageArg): s is QueryRunner {
+  return typeof (s as Record<string, unknown>)?.query === 'function';
+}
+
 export class IRTService {
   private storage?: QueryRunner;
   private adaptiveCache: Map<string, IRTItem[]>;
   
-  constructor(storage?: QueryRunner) {
-    this.storage = storage;
+  constructor(storage?: AnyStorageArg) {
+    this.storage = isQueryRunner(storage) ? storage : undefined;
     this.adaptiveCache = new Map();
   }
   /**
@@ -210,10 +217,9 @@ export class IRTService {
     if (!itemIds.length) return result;
 
     try {
-      // Use storage if it implements query(), otherwise fall back to shared pool
-      const runner: QueryRunner = (this.storage && typeof this.storage.query === 'function')
-        ? this.storage
-        : await import('../db.js').then(m => m.pool as QueryRunner);
+      // Use storage (already validated as QueryRunner in constructor), or fall back to shared pool
+      const runner: QueryRunner = this.storage
+        ?? await import('../db.js').then(m => m.pool as QueryRunner);
 
       const rows = await runner.query(
         `SELECT mst_item_id, difficulty, discrimination
@@ -280,9 +286,8 @@ export class IRTService {
   private async getAvailableItems(excludeItems: string[]): Promise<IRTItem[]> {
     // Fetch from placement_test_questions (the authoritative MST item table)
     try {
-      const runner: QueryRunner = (this.storage && typeof this.storage.query === 'function')
-        ? this.storage
-        : await import('../db.js').then(m => m.pool as QueryRunner);
+      const runner: QueryRunner = this.storage
+        ?? await import('../db.js').then(m => m.pool as QueryRunner);
 
       // Build parameterized exclusion list ($1, $2, ...) for pg driver
       const excludePlaceholders = excludeItems.length > 0
