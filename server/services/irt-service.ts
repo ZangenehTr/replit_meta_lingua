@@ -278,24 +278,41 @@ export class IRTService {
    * Get available items from database or generate adaptive items
    */
   private async getAvailableItems(excludeItems: string[]): Promise<IRTItem[]> {
-    // Try to fetch from database first
+    // Fetch from placement_test_questions (the authoritative MST item table)
     try {
-      const dbItems = await this.storage?.query(
-        `SELECT id, difficulty, discrimination FROM assessment_items 
-         WHERE id NOT IN (${excludeItems.map(() => '?').join(',')})
-         AND active = true
-         LIMIT 50`,
-        excludeItems
+      const runner: QueryRunner = (this.storage && typeof this.storage.query === 'function')
+        ? this.storage
+        : await import('../db.js').then(m => m.pool as QueryRunner);
+
+      // Build parameterized exclusion list ($1, $2, ...) for pg driver
+      const excludePlaceholders = excludeItems.length > 0
+        ? `AND mst_item_id != ALL($1::text[])`
+        : '';
+
+      const rows = await runner.query(
+        `SELECT mst_item_id AS id, difficulty, discrimination
+           FROM placement_test_questions
+          WHERE mst_item_id IS NOT NULL
+            AND is_active = true
+            AND difficulty IS NOT NULL
+            ${excludePlaceholders}
+          ORDER BY mst_item_id
+          LIMIT 50`,
+        excludeItems.length > 0 ? [excludeItems] : []
       );
-      
-      if (dbItems && dbItems.length > 0) {
-        return dbItems as IRTItem[];
+
+      if (rows.rows && rows.rows.length > 0) {
+        return rows.rows.map(row => ({
+          id:             String(row.id),
+          difficulty:     parseFloat(String(row.difficulty)),
+          discrimination: parseFloat(String(row.discrimination)),
+        }));
       }
-    } catch (error) {
-      console.log('Using generated items:', error);
+    } catch {
+      // Fall through to generated items
     }
-    
-    // Generate adaptive items based on content types
+
+    // Fallback: generate adaptive items from calibrated content types
     const allItems = await this.generateAdaptiveItems(excludeItems);
     return allItems.filter(item => !excludeItems.includes(item.id));
   }
