@@ -19,7 +19,8 @@
     "seed:mst-qb": "tsx server/scripts/seed-mst-question-bank.ts",
     "seed:mst-qb:dry": "tsx server/scripts/seed-mst-question-bank.ts --dry-run",
     "generate:mst-audio": "tsx server/scripts/generate-mst-audio.ts",
-    "generate:mst-audio:db": "tsx server/scripts/generate-mst-audio.ts --source db"
+    "generate:mst-audio:db": "tsx server/scripts/generate-mst-audio.ts --source db",
+    "migrate:mst-indexes": "psql \"$DATABASE_URL\" -f migrations/0070_mst_question_bank_indexes.sql"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",

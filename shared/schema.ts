@@ -4612,7 +4612,8 @@ export const placementTestSessions = pgTable("placement_test_sessions", {
 });
 
 // Placement Test Questions table
-// Indexes (applied directly via SQL for dev-env compatibility):
+// Indexes defined in migrations/0070_mst_question_bank_indexes.sql
+// (applied via `npm run migrate:mst-indexes`):
 //   UNIQUE (mst_item_id) WHERE mst_item_id IS NOT NULL  → uidx_ptq_mst_item_id
 //   (skill, cefr_level, stage, is_active)               → idx_ptq_skill_cefr_stage
 export const placementTestQuestions = pgTable("placement_test_questions", {

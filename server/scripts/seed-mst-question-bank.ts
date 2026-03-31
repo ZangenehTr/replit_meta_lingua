@@ -122,7 +122,11 @@ async function callOllama(prompt: string): Promise<string | null> {
   } catch { return null; }
 }
 
+// OpenAI fallback is opt-in: set MST_ALLOW_OPENAI=true (or it defaults to Ollama-only)
+const ALLOW_OPENAI = process.env.MST_ALLOW_OPENAI === 'true';
+
 async function callOpenAI(prompt: string): Promise<string | null> {
+  if (!ALLOW_OPENAI) return null;
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
   try {
