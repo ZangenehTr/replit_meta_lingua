@@ -11,7 +11,11 @@
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "seed:mst": "tsx server/scripts/seed-mst-items.ts",
+    "seed:mst:dry": "tsx server/scripts/seed-mst-items.ts --dry-run",
+    "generate:mst-audio": "tsx server/scripts/generate-mst-audio.ts",
+    "generate:mst-audio:db": "tsx server/scripts/generate-mst-audio.ts --source db"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",

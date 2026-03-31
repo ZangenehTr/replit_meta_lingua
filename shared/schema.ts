@@ -4629,6 +4629,10 @@ export const placementTestQuestions = pgTable("placement_test_questions", {
   tags: text("tags").array(),
   estimatedCompletionMinutes: integer("estimated_completion_minutes").default(1),
   isActive: boolean("is_active").default(true),
+  stage: varchar("stage", { length: 20 }),
+  difficulty: decimal("difficulty", { precision: 5, scale: 3 }),
+  discrimination: decimal("discrimination", { precision: 5, scale: 3 }),
+  mstItemId: varchar("mst_item_id", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });

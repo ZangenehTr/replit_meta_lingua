@@ -160,35 +160,81 @@ export class IRTService {
   }
 
   /**
-   * Real function to get item parameters from database or generate deterministically
+   * Get item parameters — queries placement_test_questions for MST items first,
+   * then falls back to deterministic hash-based values.
    */
   private async getItemParameters(itemIds: string[]): Promise<IRTItem[]> {
-    // Default parameters for different item types
+    // Attempt to load from DB for any MST items (ids like L-B1-001, R-A2-001, etc.)
+    const dbParams = await this.fetchIRTFromDB(itemIds);
+
+    // Default parameters for different item types (used as fallback)
     const defaults: Record<string, IRTItem> = {
-      vocabulary: { id: 'vocab', difficulty: 0, discrimination: 1.2 },
-      grammar: { id: 'grammar', difficulty: 0.5, discrimination: 1.0 },
-      listening: { id: 'listening', difficulty: -0.3, discrimination: 0.8 },
-      speaking: { id: 'speaking', difficulty: 0.3, discrimination: 1.5 },
-      reading: { id: 'reading', difficulty: 0.2, discrimination: 1.1 },
-      writing: { id: 'writing', difficulty: 0.7, discrimination: 1.3 },
+      vocabulary: { id: 'vocab', difficulty: 0,    discrimination: 1.2 },
+      grammar:    { id: 'grammar', difficulty: 0.5, discrimination: 1.0 },
+      listening:  { id: 'listening', difficulty: -0.3, discrimination: 0.8 },
+      speaking:   { id: 'speaking', difficulty: 0.3, discrimination: 1.5 },
+      reading:    { id: 'reading', difficulty: 0.2, discrimination: 1.1 },
+      writing:    { id: 'writing', difficulty: 0.7, discrimination: 1.3 },
     };
-    
+
     return itemIds.map(id => {
+      // Use DB value if available
+      if (dbParams.has(id)) return dbParams.get(id)!;
+
+      // Deterministic hash-based fallback
       const type = id.split('_')[0];
       const base = defaults[type] || defaults.vocabulary;
-      
-      // Real difficulty calculation based on ID hash (deterministic, not random)
       const idHash = this.hashString(id);
-      const difficultyVariation = (idHash % 20 - 10) / 20; // -0.5 to 0.5
-      const discriminationVariation = (idHash % 10 - 5) / 20; // -0.25 to 0.25
-      
+      const difficultyVariation = (idHash % 20 - 10) / 20;
+      const discriminationVariation = (idHash % 10 - 5) / 20;
+
       return {
         ...base,
         id,
-        difficulty: Math.max(-3, Math.min(3, base.difficulty + difficultyVariation)),
+        difficulty:     Math.max(-3, Math.min(3, base.difficulty + difficultyVariation)),
         discrimination: Math.max(0.5, Math.min(2.5, base.discrimination + discriminationVariation)),
       };
     });
+  }
+
+  /**
+   * Fetch IRT parameters for MST items from placement_test_questions.
+   */
+  private async fetchIRTFromDB(itemIds: string[]): Promise<Map<string, IRTItem>> {
+    const result = new Map<string, IRTItem>();
+    if (!itemIds.length) return result;
+
+    try {
+      let pool = this.storage;
+      // If storage is the DatabaseStorage wrapper, get the underlying pool
+      if (pool && typeof pool.query !== 'function') {
+        pool = null;
+      }
+      if (!pool) {
+        const { pool: dbPool } = await import('../db.js');
+        pool = dbPool;
+      }
+
+      const rows = await pool.query(
+        `SELECT mst_item_id, difficulty, discrimination
+           FROM placement_test_questions
+          WHERE mst_item_id = ANY($1)
+            AND difficulty IS NOT NULL`,
+        [itemIds]
+      );
+
+      for (const row of (rows.rows || [])) {
+        result.set(row.mst_item_id, {
+          id:             row.mst_item_id,
+          difficulty:     parseFloat(row.difficulty),
+          discrimination: parseFloat(row.discrimination),
+        });
+      }
+    } catch {
+      // Silently fall back to hash-based values
+    }
+
+    return result;
   }
 
   /**
