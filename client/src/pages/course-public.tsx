@@ -1,10 +1,34 @@
+import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import CourseReviews from "@/components/courses/CourseReviews";
+import { useToast } from "@/hooks/use-toast";
 import {
   BookOpen,
   Clock,
@@ -13,8 +37,13 @@ import {
   Calendar,
   MapPin,
   ChevronRight,
+  ChevronDown,
   Star,
   ArrowLeft,
+  Tag,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 interface Course {
@@ -39,9 +68,26 @@ interface Course {
   reviewCount?: number;
 }
 
+interface PromoValidation {
+  valid: boolean;
+  discountType?: string;
+  discountValue?: number;
+  discountAmount?: number;
+  finalAmount?: number;
+  message: string;
+}
+
+interface EnrollRequestBody {
+  courseId: number;
+  paymentMethod: string;
+  promoCode?: string;
+}
+
 export default function CoursePublicDetail() {
   const [match, params] = useRoute("/courses/:courseId");
   const { t } = useTranslation(["courses", "common"]);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const courseId = params?.courseId;
 
@@ -49,6 +95,103 @@ export default function CoursePublicDetail() {
     queryKey: [`/api/courses/${courseId}`],
     enabled: !!courseId,
   });
+
+  // Enrollment dialog state
+  const [enrollOpen, setEnrollOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("wallet");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoValidation, setPromoValidation] = useState<PromoValidation | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [enrollLoading, setEnrollLoading] = useState(false);
+
+  const handleOpenEnroll = () => {
+    setPromoCode("");
+    setPromoValidation(null);
+    setPromoOpen(false);
+    setPaymentMethod("wallet");
+    setEnrollOpen(true);
+  };
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim() || !course) return;
+    setPromoLoading(true);
+    setPromoValidation(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch("/api/promo-codes/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          courseId: course.id,
+          amount: course.price,
+        }),
+      });
+      const data: PromoValidation = await res.json();
+      setPromoValidation(data);
+    } catch {
+      setPromoValidation({ valid: false, message: t("courses:promoError", "خطا در بررسی کد تخفیف") });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!course) return;
+    setEnrollLoading(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const body: EnrollRequestBody = {
+        courseId: course.id,
+        paymentMethod,
+      };
+      if (promoValidation?.valid && promoCode.trim()) {
+        body.promoCode = promoCode.trim().toUpperCase();
+      }
+      const res = await fetch("/api/courses/enroll", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.paymentUrl) {
+          window.location.href = data.paymentUrl;
+          return;
+        }
+        setEnrollOpen(false);
+        toast({
+          title: t("courses:enrollSuccess", "ثبت‌نام موفق"),
+          description: t("courses:enrollSuccessDesc", "شما با موفقیت در دوره ثبت‌نام کردید"),
+        });
+      } else {
+        toast({
+          title: t("courses:enrollFailed", "ثبت‌نام ناموفق"),
+          description: data.message || t("courses:enrollFailedDesc", "خطا در ثبت‌نام. لطفاً دوباره تلاش کنید."),
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: t("courses:enrollFailed", "ثبت‌نام ناموفق"),
+        description: t("courses:enrollFailedDesc", "خطا در ثبت‌نام. لطفاً دوباره تلاش کنید."),
+        variant: "destructive",
+      });
+    } finally {
+      setEnrollLoading(false);
+    }
+  };
+
+  const displayedFinalPrice = promoValidation?.valid && promoValidation.finalAmount != null
+    ? promoValidation.finalAmount
+    : course?.price ?? 0;
 
   if (!match || !courseId) {
     return (
@@ -77,7 +220,9 @@ export default function CoursePublicDetail() {
   const priceDisplay =
     course.price === 0
       ? t("courses:free", "رایگان")
-      : `${course.price.toLocaleString("fa-IR")} تومان`;
+      : `${course.price.toLocaleString("fa-IR")} ${t("courses:toman", "تومان")}`;
+
+  const isFull = !!(course.maxStudents && course.currentStudents && course.currentStudents >= course.maxStudents);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -195,12 +340,25 @@ export default function CoursePublicDetail() {
                 <p className="text-white/40 text-xs">{t("courses:price", "شهریه")}</p>
                 <p className="text-white font-bold text-lg">{priceDisplay}</p>
               </div>
-              <Link href="/login">
-                <Button className="flex items-center gap-2">
-                  {t("courses:enroll", "ثبت‌نام در دوره")}
-                  <ChevronRight className="w-4 h-4" />
+              {user ? (
+                <Button
+                  onClick={handleOpenEnroll}
+                  disabled={isFull}
+                  className="flex items-center gap-2"
+                >
+                  {isFull
+                    ? t("courses:full", "ظرفیت تکمیل")
+                    : t("courses:enroll", "ثبت‌نام در دوره")}
+                  {!isFull && <ChevronRight className="w-4 h-4" />}
                 </Button>
-              </Link>
+              ) : (
+                <Link href="/login">
+                  <Button className="flex items-center gap-2">
+                    {t("courses:enroll", "ثبت‌نام در دوره")}
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -213,6 +371,148 @@ export default function CoursePublicDetail() {
           <CourseReviews courseId={Number(courseId)} isEnrolled={false} />
         </div>
       </div>
+
+      {/* Enrollment Confirmation Dialog */}
+      <Dialog open={enrollOpen} onOpenChange={setEnrollOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("courses:enrollConfirmTitle", "تأیید ثبت‌نام")}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Course name */}
+            <div>
+              <p className="text-xs text-muted-foreground">{t("courses:enrollCourse", "دوره")}</p>
+              <p className="font-semibold text-sm leading-snug">{course.title}</p>
+            </div>
+
+            {/* Price display */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{t("courses:price", "شهریه")}</span>
+              <div className="text-right">
+                {promoValidation?.valid && promoValidation.discountAmount ? (
+                  <>
+                    <span className="text-sm line-through text-muted-foreground me-2">
+                      {course.price.toLocaleString("fa-IR")} {t("courses:toman", "تومان")}
+                    </span>
+                    <span className="font-bold text-green-600">
+                      {displayedFinalPrice.toLocaleString("fa-IR")} {t("courses:toman", "تومان")}
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-bold">
+                    {course.price === 0
+                      ? t("courses:free", "رایگان")
+                      : `${course.price.toLocaleString("fa-IR")} ${t("courses:toman", "تومان")}`}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Collapsible promo code section */}
+            <Collapsible open={promoOpen} onOpenChange={setPromoOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-full justify-between px-0 h-auto py-1 text-sm font-normal text-muted-foreground hover:text-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5" />
+                    {t("courses:promoCode", "کد تخفیف")}
+                  </span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${promoOpen ? "rotate-180" : ""}`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 pt-2">
+                <div className="flex gap-2">
+                  <Input
+                    id="promo-input"
+                    placeholder={t("courses:promoPlaceholder", "کد تخفیف خود را وارد کنید")}
+                    value={promoCode}
+                    onChange={(e) => {
+                      setPromoCode(e.target.value.toUpperCase());
+                      setPromoValidation(null);
+                    }}
+                    className="font-mono text-sm"
+                    onKeyDown={(e) => { if (e.key === "Enter") handleApplyPromo(); }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleApplyPromo}
+                    disabled={!promoCode.trim() || promoLoading}
+                    className="shrink-0"
+                  >
+                    {promoLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      t("courses:applyPromo", "اعمال")
+                    )}
+                  </Button>
+                </div>
+
+                {/* Promo feedback */}
+                {promoValidation && (
+                  <div className={`flex items-start gap-2 text-xs rounded-md p-2 ${
+                    promoValidation.valid
+                      ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+                      : "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
+                  }`}>
+                    {promoValidation.valid ? (
+                      <CheckCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    )}
+                    <span>{promoValidation.message}</span>
+                  </div>
+                )}
+
+                {/* Discount breakdown */}
+                {promoValidation?.valid && promoValidation.discountAmount != null && (
+                  <div className="text-xs text-muted-foreground space-y-0.5 border-t pt-2">
+                    <div className="flex justify-between">
+                      <span>{t("courses:discount", "تخفیف")}</span>
+                      <span className="text-green-600">
+                        -{promoValidation.discountAmount.toLocaleString("fa-IR")} {t("courses:toman", "تومان")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-foreground">
+                      <span>{t("courses:finalPrice", "مبلغ نهایی")}</span>
+                      <span>
+                        {displayedFinalPrice.toLocaleString("fa-IR")} {t("courses:toman", "تومان")}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Payment method */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">{t("courses:paymentMethod", "روش پرداخت")}</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="wallet">{t("courses:wallet", "کیف پول")}</SelectItem>
+                  <SelectItem value="zarinpal">{t("courses:zarinpal", "زرین‌پال")}</SelectItem>
+                  <SelectItem value="idpay">{t("courses:idpay", "آیدی پی")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEnrollOpen(false)} disabled={enrollLoading}>
+              {t("courses:cancel", "انصراف")}
+            </Button>
+            <Button onClick={handleEnroll} disabled={enrollLoading}>
+              {enrollLoading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+              {t("courses:confirmEnroll", "تأیید ثبت‌نام")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
