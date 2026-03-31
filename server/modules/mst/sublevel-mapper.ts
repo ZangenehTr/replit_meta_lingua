@@ -2,70 +2,52 @@
  * Sub-level Mapper
  * Maps MST CEFR band + per-skill score → deterministic 17-point sub-level
  * and persists to user profile.
+ *
+ * Threshold table (score p is 0-100 percentile within the band):
+ *   A1: p < 50 → A1.1 | p >= 50 → A1.2
+ *   A2: p < 50 → A2.1 | p >= 50 → A2.2
+ *   B1: p < 30 → B1.1 | 30-50 → B1.2 | 50-65 → B1.3 | 65-80 → B1.4 | >=80 → B1.5
+ *   B2: p < 30 → B2.1 | 30-50 → B2.2 | 50-70 → B2.3 | 70-85 → B2.4 | >=85 → B2.5
+ *   C1: p < 50 → C1.1 | p >= 50 → C1.2
+ *   C2: always → C2
  */
 
 import { db } from '../../db';
 import { sql } from 'drizzle-orm';
 
-// ────────────────────────────────────────────────────────────────────────────
-// Mapping table: cefrBand + score-bracket → sub-level code
-// Score (p) is in 0-1 range from MST quickscore
-// ────────────────────────────────────────────────────────────────────────────
-const CEFR_SUBLEVEL_MAP: Record<string, { min: number; max: number; code: string }[]> = {
-  A1: [
-    { min: 0.00, max: 0.49, code: 'A1.1' },
-    { min: 0.50, max: 1.00, code: 'A1.2' },
-  ],
-  A2: [
-    { min: 0.00, max: 0.49, code: 'A2.1' },
-    { min: 0.50, max: 1.00, code: 'A2.2' },
-  ],
-  B1: [
-    { min: 0.00, max: 0.19, code: 'B1.1' },
-    { min: 0.20, max: 0.39, code: 'B1.2' },
-    { min: 0.40, max: 0.59, code: 'B1.3' },
-    { min: 0.60, max: 0.79, code: 'B1.4' },
-    { min: 0.80, max: 1.00, code: 'B1.5' },
-  ],
-  B2: [
-    { min: 0.00, max: 0.19, code: 'B2.1' },
-    { min: 0.20, max: 0.39, code: 'B2.2' },
-    { min: 0.40, max: 0.59, code: 'B2.3' },
-    { min: 0.60, max: 0.79, code: 'B2.4' },
-    { min: 0.80, max: 1.00, code: 'B2.5' },
-  ],
-  C1: [
-    { min: 0.00, max: 0.49, code: 'C1.1' },
-    { min: 0.50, max: 1.00, code: 'C1.2' },
-  ],
-  C2: [
-    { min: 0.00, max: 1.00, code: 'C2' },
-  ],
-};
-
 /**
  * Determine sub-level code from CEFR band and normalised score (0-1)
+ * scoreP is treated as 0-100% internally (multiply by 100).
  */
 export function computeSubLevelCode(cefrBand: string, scoreP: number): string {
-  // Strip +/- modifier
   const baseBand = cefrBand.replace(/[+-]$/, '');
-  const brackets = CEFR_SUBLEVEL_MAP[baseBand];
+  const p = Math.max(0, Math.min(1, scoreP)) * 100;
 
-  if (!brackets) {
-    // Unknown band — fall back to first A1 sub-level
-    console.warn(`⚠️ Unknown CEFR band "${cefrBand}", defaulting to A1.1`);
-    return 'A1.1';
+  switch (baseBand) {
+    case 'A1':
+      return p < 50 ? 'A1.1' : 'A1.2';
+    case 'A2':
+      return p < 50 ? 'A2.1' : 'A2.2';
+    case 'B1':
+      if (p < 30) return 'B1.1';
+      if (p < 50) return 'B1.2';
+      if (p < 65) return 'B1.3';
+      if (p < 80) return 'B1.4';
+      return 'B1.5';
+    case 'B2':
+      if (p < 30) return 'B2.1';
+      if (p < 50) return 'B2.2';
+      if (p < 70) return 'B2.3';
+      if (p < 85) return 'B2.4';
+      return 'B2.5';
+    case 'C1':
+      return p < 50 ? 'C1.1' : 'C1.2';
+    case 'C2':
+      return 'C2';
+    default:
+      console.warn(`⚠️ Unknown CEFR band "${cefrBand}", defaulting to A1.1`);
+      return 'A1.1';
   }
-
-  const p = Math.max(0, Math.min(1, scoreP));
-  for (const bracket of brackets) {
-    if (p >= bracket.min && p <= bracket.max) {
-      return bracket.code;
-    }
-  }
-
-  // Fallback to last bracket in the band
-  return brackets[brackets.length - 1].code;
 }
 
 /**

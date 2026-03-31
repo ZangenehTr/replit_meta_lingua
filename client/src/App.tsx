@@ -189,6 +189,7 @@ import { AdminCallernRoadmaps } from "@/pages/admin/callern-roadmaps";
 import { AdminThreeDContentTools } from "@/pages/admin/3d-content-tools";
 import { AdminBookEcommerce } from "@/pages/admin/book-ecommerce";
 import { AdminExamRoadmaps } from "@/pages/admin/exam-roadmaps";
+import AdminExamTagsPage from "@/pages/admin/exam-tags";
 import { AdminLinguaQuest } from "@/pages/admin/admin-linguaquest";
 import { AdminPlacementTest } from "@/pages/admin/admin-placement-test";
 import RoadmapPage from "@/pages/roadmap";
@@ -565,6 +566,11 @@ function Router() {
       <Route path="/admin/exam-roadmaps">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <AdminExamRoadmaps />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/exam-tags">
+        <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
+          <AdminExamTagsPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/linguaquest">

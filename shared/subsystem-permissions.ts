@@ -103,6 +103,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "roadmap_instances", name: "نمونه‌های نقشه راه", nameEn: "Roadmap Instances", icon: "MapPin" },
       { id: "callern_roadmaps", name: "نقشه راه Callern", nameEn: "Callern Roadmaps", icon: "Video" },
       { id: "exam_roadmaps", name: "نقشه راه آزمون", nameEn: "Exam Roadmaps", icon: "GraduationCap" },
+      { id: "exam_tags", name: "برچسب‌های آزمون", nameEn: "Exam Tags", icon: "Tag" },
       { id: "ai_study_partner", name: "مدیریت همکار مطالعه AI", nameEn: "AI Study Partner Management", icon: "Bot" },
       { id: "enhanced_analytics", name: "تحلیل‌های پیشرفته", nameEn: "Enhanced Analytics", icon: "TrendingUp" },
       { id: "tts_system", name: "سیستم TTS", nameEn: "Text-to-Speech System", icon: "Volume2" },
@@ -324,7 +325,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       // New subsystems found in backend routes
       "mst_test_builder", "placement_test", "linguaquest",
       "course_roadmaps", "roadmap_templates", "roadmap_instances", 
-      "callern_roadmaps", "exam_roadmaps", "ai_study_partner", "enhanced_analytics",
+      "callern_roadmaps", "exam_roadmaps", "exam_tags", "ai_study_partner", "enhanced_analytics",
       "tts_system", "3d_content_tools", "third_party_integrations",
       "calendar_settings", "currency_settings",
       "form_management", "font_management", "subsystem_permissions", "api_smoke_test",
@@ -458,6 +459,7 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "roadmap_instances": "/admin/roadmap-instances",
   "callern_roadmaps": "/admin/callern-roadmaps",
   "exam_roadmaps": "/admin/exam-roadmaps",
+  "exam_tags": "/admin/exam-tags",
   "ai_study_partner": "/admin/ai-study-partner",
   "enhanced_analytics": "/admin/enhanced-analytics",
   "tts_system": "/admin/tts-system",
@@ -587,6 +589,7 @@ export const INSTITUTE_SECTION_MAP: Record<string, { fa: string; en: string }> =
   roadmap_instances: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
   roadmap_designer: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
   exam_roadmaps: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
+  exam_tags: { fa: "دوره‌ها و آموزش", en: "Courses & Academics" },
 
   games_management: { fa: "بازی و تعاملی", en: "Games & Interactive" },
   game_access_control: { fa: "بازی و تعاملی", en: "Games & Interactive" },

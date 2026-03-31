@@ -292,16 +292,17 @@ export function AdminStudents() {
   });
   const subLevels: any[] = Array.isArray(subLevelsData) ? subLevelsData : [];
 
-  // Sub-level override mutation
+  // Sub-level override mutation (supports null to clear override)
   const overrideSubLevelMutation = useMutation({
-    mutationFn: async ({ studentId, subLevelCode }: { studentId: number; subLevelCode: string }) =>
+    mutationFn: async ({ studentId, subLevelCode }: { studentId: number; subLevelCode: string | null }) =>
       apiRequest(`/api/admin/students/${studentId}/sublevel`, {
         method: 'PATCH',
         body: JSON.stringify({ subLevelCode }),
       }),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });
-      toast({ title: t('common:toast.success'), description: 'Student sub-level updated.' });
+      const msg = variables.subLevelCode ? `Sub-level set to ${variables.subLevelCode}.` : 'Sub-level cleared (will be re-derived from next MST).';
+      toast({ title: t('common:toast.success'), description: msg });
     },
     onError: () => {
       toast({ title: t('common:toast.error'), description: 'Failed to update sub-level.', variant: 'destructive' });
@@ -1093,7 +1094,6 @@ export function AdminStudents() {
                       <SelectValue placeholder="Select sub-level…" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">— Auto (from MST) —</SelectItem>
                       {subLevels.map((sl: any) => (
                         <SelectItem key={sl.id} value={sl.code}>{sl.code} — {sl.name}</SelectItem>
                       ))}
@@ -1113,9 +1113,29 @@ export function AdminStudents() {
                   >
                     {overrideSubLevelMutation.isPending ? 'Saving…' : 'Set Level'}
                   </Button>
+                  {editingStudent?.subLevelCode && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={overrideSubLevelMutation.isPending}
+                      onClick={() => {
+                        if (editingStudent?.id) {
+                          overrideSubLevelMutation.mutate({ studentId: editingStudent.id, subLevelCode: null });
+                          setEditingStudent({ ...editingStudent, subLevelCode: '' });
+                        }
+                      }}
+                      className="whitespace-nowrap text-muted-foreground"
+                      title="Clear override — level will be re-assigned from next MST result"
+                    >
+                      Auto (MST)
+                    </Button>
+                  )}
                 </div>
-                {editingStudent?.subLevelCode && (
+                {editingStudent?.subLevelCode ? (
                   <p className="text-xs text-amber-600">This overrides the MST-assigned level for this student.</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Level will be automatically derived from MST result.</p>
                 )}
               </div>
               <div className="space-y-2">

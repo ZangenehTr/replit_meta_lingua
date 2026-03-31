@@ -2136,15 +2136,79 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   app.get("/api/courses/exam-tags", async (_req, res) => {
     try {
       const tags = await db.execute(sql`
-        SELECT id, name, code, description, order_index
+        SELECT id, name, code, description, order_index, is_active
         FROM course_exam_tags
-        WHERE is_active = true
         ORDER BY order_index
       `);
       res.json(tags.rows);
     } catch (err) {
       console.error("Error fetching exam tags:", err);
       res.status(500).json({ error: "Failed to fetch exam tags" });
+    }
+  });
+
+  // POST /api/admin/exam-tags — create new exam tag
+  app.post("/api/admin/exam-tags", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { name, code, description, orderIndex } = req.body;
+      if (!name || !code) {
+        return res.status(400).json({ error: "name and code are required" });
+      }
+      const existing = await db.execute(sql`SELECT id FROM course_exam_tags WHERE code = ${code.toUpperCase()} LIMIT 1`);
+      if (existing.rows.length > 0) {
+        return res.status(409).json({ error: `Exam tag with code "${code}" already exists` });
+      }
+      const result = await db.execute(sql`
+        INSERT INTO course_exam_tags (name, code, description, order_index, is_active)
+        VALUES (${name}, ${code.toUpperCase()}, ${description ?? null}, ${orderIndex ?? 0}, true)
+        RETURNING *
+      `);
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      console.error("Error creating exam tag:", err);
+      res.status(500).json({ error: "Failed to create exam tag" });
+    }
+  });
+
+  // PATCH /api/admin/exam-tags/:id — update exam tag
+  app.patch("/api/admin/exam-tags/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const tagId = parseInt(req.params.id, 10);
+      const { name, code, description, orderIndex, isActive } = req.body;
+      const updates: string[] = [];
+      if (name !== undefined) updates.push(`name = '${name.replace(/'/g, "''")}'`);
+      if (code !== undefined) updates.push(`code = '${code.toUpperCase().replace(/'/g, "''")}'`);
+      if (description !== undefined) updates.push(`description = ${description === null ? 'NULL' : `'${description.replace(/'/g, "''")}'`}`);
+      if (orderIndex !== undefined) updates.push(`order_index = ${parseInt(orderIndex, 10)}`);
+      if (isActive !== undefined) updates.push(`is_active = ${isActive === true || isActive === 'true'}`);
+      if (updates.length === 0) return res.status(400).json({ error: "No fields to update" });
+
+      const result = await db.execute(sql`
+        UPDATE course_exam_tags
+        SET ${sql.raw(updates.join(', '))}
+        WHERE id = ${tagId}
+        RETURNING *
+      `);
+      if (result.rows.length === 0) return res.status(404).json({ error: "Exam tag not found" });
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error("Error updating exam tag:", err);
+      res.status(500).json({ error: "Failed to update exam tag" });
+    }
+  });
+
+  // DELETE /api/admin/exam-tags/:id — deactivate exam tag (soft delete)
+  app.delete("/api/admin/exam-tags/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const tagId = parseInt(req.params.id, 10);
+      const result = await db.execute(sql`
+        UPDATE course_exam_tags SET is_active = false WHERE id = ${tagId} RETURNING id
+      `);
+      if (result.rows.length === 0) return res.status(404).json({ error: "Exam tag not found" });
+      res.json({ success: true, id: tagId, deactivated: true });
+    } catch (err) {
+      console.error("Error deactivating exam tag:", err);
+      res.status(500).json({ error: "Failed to deactivate exam tag" });
     }
   });
 
@@ -28985,17 +29049,24 @@ Meta Lingua Academy`;
     }
   });
 
-  // GET /api/student/available-courses — smart course discovery based on student's sub-level
+  // GET /api/student/available-courses — smart course discovery with eligibility filtering
+  // Returns only courses whose sub-level range includes the student's level.
+  // Courses without a range configured are always shown (open to all).
+  // Query params: examTagId, skillScope, search, showAll (bypass eligibility filter)
   app.get("/api/student/available-courses", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      // Fetch student's current sub-level
-      const userRow = await db.execute(sql`
-        SELECT sub_level_id, sub_level_code FROM users WHERE id = ${userId}
-      `);
+
+      // Fetch student's current sub-level + existing enrollments
+      const [userRow, enrollmentRow] = await Promise.all([
+        db.execute(sql`SELECT sub_level_id, sub_level_code FROM users WHERE id = ${userId}`),
+        db.execute(sql`SELECT course_id FROM enrollments WHERE user_id = ${userId} AND status = 'active'`),
+      ]);
+
       const user = userRow.rows[0] as any;
       const subLevelId: number | null = user?.sub_level_id ?? null;
       const subLevelCode: string | null = user?.sub_level_code ?? null;
+      const enrolledCourseIds = new Set((enrollmentRow.rows as any[]).map((r: any) => r.course_id));
 
       // Fetch student's current sub-level order_index for range comparison
       let subLevelOrderIndex = 0;
@@ -29004,8 +29075,7 @@ Meta Lingua Academy`;
         subLevelOrderIndex = ((slRow.rows[0] as any)?.order_index ?? 0);
       }
 
-      // Build query params from request
-      const { examTagId, skillScope, search } = req.query;
+      const { examTagId, skillScope, search, showAll } = req.query;
 
       // Fetch all active courses with their sub-level info
       const rows = await db.execute(sql`
@@ -29015,10 +29085,10 @@ Meta Lingua Academy`;
           c.min_sub_level_id, c.max_sub_level_id,
           c.exam_tag_ids, c.skill_scope,
           c.delivery_mode, c.class_format, c.rating,
-          min_cl.code   AS min_sub_level_code,
-          min_cl.order_index AS min_sub_level_order,
-          max_cl.code   AS max_sub_level_code,
-          max_cl.order_index AS max_sub_level_order,
+          min_cl.code         AS min_sub_level_code,
+          min_cl.order_index  AS min_sub_level_order,
+          max_cl.code         AS max_sub_level_code,
+          max_cl.order_index  AS max_sub_level_order,
           u.first_name || ' ' || u.last_name AS instructor_name
         FROM courses c
         LEFT JOIN curriculum_levels min_cl ON min_cl.id = c.min_sub_level_id
@@ -29028,7 +29098,38 @@ Meta Lingua Academy`;
         ORDER BY c.created_at DESC
       `);
 
-      let allCourses = rows.rows as any[];
+      let allCourses = (rows.rows as any[]).map((c: any) => {
+        const minOrder: number = c.min_sub_level_order ?? 0;
+        const maxOrder: number = c.max_sub_level_order ?? 99;
+        const hasRange = c.min_sub_level_id != null || c.max_sub_level_id != null;
+
+        // Eligibility: student's level must fall within [min, max] range
+        // Courses with no range configured are eligible for everyone
+        const eligible = !hasRange || (subLevelId != null && subLevelOrderIndex >= minOrder && subLevelOrderIndex <= maxOrder);
+
+        // Determine match label for UI
+        let match: 'recommended' | 'available' | 'advanced' | 'all' = 'all';
+        if (subLevelId && hasRange) {
+          if (subLevelOrderIndex >= minOrder && subLevelOrderIndex <= maxOrder) {
+            match = 'recommended';
+          } else if (subLevelOrderIndex < minOrder) {
+            match = 'advanced';
+          } else {
+            match = 'available';
+          }
+        }
+
+        // Enrollment status
+        const enrolled = enrolledCourseIds.has(c.id);
+        const status: 'enrolled' | 'available' = enrolled ? 'enrolled' : 'available';
+
+        return { ...c, match, eligible, status, enrollmentStatus: status };
+      });
+
+      // Eligibility filter: unless showAll=true, only return eligible courses
+      if (showAll !== 'true') {
+        allCourses = allCourses.filter((c: any) => c.eligible || c.status === 'enrolled');
+      }
 
       // Filter by exam tag if provided
       if (examTagId) {
@@ -29056,31 +29157,12 @@ Meta Lingua Academy`;
         );
       }
 
-      // Tag each course as 'recommended' / 'available' / 'advanced' based on student sub-level
-      const tagged = allCourses.map((c: any) => {
-        const minOrder: number = c.min_sub_level_order ?? 0;
-        const maxOrder: number = c.max_sub_level_order ?? 99;
-
-        let match: 'recommended' | 'available' | 'advanced' | 'all' = 'all';
-
-        if (subLevelId) {
-          if (subLevelOrderIndex >= minOrder && subLevelOrderIndex <= maxOrder) {
-            match = 'recommended';
-          } else if (subLevelOrderIndex < minOrder) {
-            match = 'advanced';
-          } else {
-            match = 'available';
-          }
-        }
-
-        return { ...c, match };
-      });
-
       res.json({
-        courses: tagged,
+        courses: allCourses,
         studentSubLevel: subLevelCode,
-        total: tagged.length,
-        recommended: tagged.filter((c: any) => c.match === 'recommended').length
+        total: allCourses.length,
+        recommended: allCourses.filter((c: any) => c.match === 'recommended').length,
+        enrolled: allCourses.filter((c: any) => c.status === 'enrolled').length,
       });
     } catch (err) {
       console.error("Error fetching available courses:", err);
@@ -29089,16 +29171,22 @@ Meta Lingua Academy`;
   });
 
   // PATCH /api/admin/students/:id/sublevel — admin override student's sub-level
+  // Send { subLevelCode: null } to clear the override and reset to MST-derived value.
   app.patch("/api/admin/students/:id/sublevel", authenticateToken, requireRole(['Admin', 'Supervisor', 'Front Desk']), async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id, 10);
       const { subLevelCode } = req.body;
 
-      if (!subLevelCode) {
-        return res.status(400).json({ error: "subLevelCode is required" });
+      // Allow null to clear the override
+      if (subLevelCode === null || subLevelCode === undefined || subLevelCode === '') {
+        await db.execute(sql`
+          UPDATE users SET sub_level_id = NULL, sub_level_code = NULL, updated_at = now()
+          WHERE id = ${studentId}
+        `);
+        return res.json({ success: true, studentId, subLevelCode: null, subLevelId: null, cleared: true });
       }
 
-      // Resolve sub-level ID
+      // Resolve sub-level ID from code
       const slRow = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${subLevelCode} LIMIT 1`);
       if (slRow.rows.length === 0) {
         return res.status(404).json({ error: `Sub-level "${subLevelCode}" not found` });
