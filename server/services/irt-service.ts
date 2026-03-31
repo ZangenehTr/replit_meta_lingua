@@ -194,7 +194,12 @@ export class IRTService {
       if (dbParams.has(id)) return dbParams.get(id)!;
 
       // Deterministic hash-based fallback
-      const type = id.split('_')[0];
+      // MST IDs use hyphen format (e.g., L-B1-C-MS-001); legacy IDs use underscore prefix.
+      const firstChar = id[0]?.toLowerCase();
+      const skillFromMstId: Record<string, string> = { l: 'listening', r: 'reading', s: 'speaking', w: 'writing' };
+      const type = (id.includes('-') && skillFromMstId[firstChar])
+        ? skillFromMstId[firstChar]
+        : id.split('_')[0];
       const base = defaults[type] || defaults.vocabulary;
       const idHash = this.hashString(id);
       const difficultyVariation = (idHash % 20 - 10) / 20;
