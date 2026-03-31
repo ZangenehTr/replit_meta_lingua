@@ -108,7 +108,7 @@ function PrivateStudentsDashboardSection() {
         <CardContent>
           <div className="space-y-2">
             {active.slice(0, 3).map(s => (
-              <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg border ${s.isLowSession ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-100'}`}>
+              <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg border ${s.isLowSession ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
                 <div className="flex items-center gap-2">
                   <Avatar className="h-7 w-7">
                     <AvatarFallback className="text-xs bg-purple-100 text-purple-700">
@@ -122,9 +122,16 @@ function PrivateStudentsDashboardSection() {
                     )}
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`text-sm font-bold ${s.isLowSession ? 'text-orange-600' : 'text-gray-700'}`}>{s.remainingSessions} جلسه</p>
-                  <p className="text-xs text-gray-400">از {s.totalSessions}</p>
+                <div className="flex items-center gap-2">
+                  <Link href={`/teacher/private-students?log=${s.id}`}>
+                    <Button size="sm" variant="outline" className="text-xs h-7 px-2 border-purple-300 text-purple-700 hover:bg-purple-50">
+                      ثبت جلسه
+                    </Button>
+                  </Link>
+                  <div className="text-right">
+                    <p className={`text-sm font-bold ${s.isLowSession ? 'text-red-600' : 'text-gray-700'}`}>{s.remainingSessions} جلسه</p>
+                    <p className="text-xs text-gray-400">از {s.totalSessions}</p>
+                  </div>
                 </div>
               </div>
             ))}

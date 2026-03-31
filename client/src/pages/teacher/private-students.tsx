@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +62,18 @@ function PrivateStudentsPage() {
   const [topicsCovered, setTopicsCovered] = useState("");
   const [attendanceStatus, setAttendanceStatus] = useState<"attended" | "absent" | "cancelled">("attended");
   const [nextScheduled, setNextScheduled] = useState("");
+
+  // Auto-open log dialog when navigated from dashboard with ?log=<packageId>
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const logParam = params.get("log");
+    if (logParam) {
+      const packageId = parseInt(logParam, 10);
+      if (!isNaN(packageId)) {
+        setLogDialog({ open: true, packageId });
+      }
+    }
+  }, []);
 
   const { data: students = [], isLoading } = useQuery<PrivateStudent[]>({
     queryKey: ["/api/teacher/private-students"],
