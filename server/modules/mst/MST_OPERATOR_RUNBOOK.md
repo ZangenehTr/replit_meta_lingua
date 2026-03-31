@@ -81,6 +81,20 @@ docker compose restart app
 
 ---
 
+## Seeding Scripts Reference
+
+| Script | Source | Purpose |
+|--------|--------|---------|
+| `npm run seed:mst` | AI (Ollama / OpenAI) | **Primary seeder** — generates new items from AI, writes IRT-calibrated params, idempotent top-up |
+| `npm run seed:mst:dry` | AI (dry run) | Preview what would be seeded without writing to DB |
+| `npm run seed:mst-json` | JSON import | One-time static import from a pre-prepared JSON file; useful for bootstrapping or bulk imports |
+
+**Use `seed:mst`** for ongoing seeding — it checks what's already in the DB and only generates what's missing (per-cell idempotent).
+
+**Use `seed:mst-json`** only when you have a prepared JSON item-bank file and want to do a bulk import without AI generation (e.g., curriculum specialist-authored content).
+
+---
+
 ## Ongoing Operations
 
 ### Re-seed a single skill

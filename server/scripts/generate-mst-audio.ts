@@ -77,6 +77,13 @@ async function generateAudioFile(
 }
 
 async function loadItemsFromDB(): Promise<MSTItem[]> {
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL is not set. Cannot load items from DB.');
+    console.error('   Use --source json to generate audio from the static item bank instead:');
+    console.error('   npm run generate:mst-audio -- --source json');
+    process.exit(1);
+  }
+
   const { neonConfig, Pool } = await import('@neondatabase/serverless');
   const ws = (await import('ws')).default;
   neonConfig.webSocketConstructor = ws;
