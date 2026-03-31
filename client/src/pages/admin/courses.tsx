@@ -41,10 +41,118 @@ interface FormDefinition {
 }
 
 // Create Course Dialog Component
-function CreateCourseDialog({ queryClient }: { queryClient: any }) {
+type SubLevelItem = { id: number; code: string; name: string };
+type ExamTagItem = { id: number; name: string; code: string; is_active: boolean };
+
+const SKILL_SCOPE_OPTIONS = [
+  { value: '', label: 'All skills' },
+  { value: 'listening', label: 'Listening' },
+  { value: 'reading', label: 'Reading' },
+  { value: 'speaking', label: 'Speaking' },
+  { value: 'writing', label: 'Writing' },
+  { value: 'grammar', label: 'Grammar' },
+  { value: 'vocabulary', label: 'Vocabulary' },
+  { value: 'quantitative_only', label: 'Quantitative only (GRE/GMAT)' },
+];
+
+function SubLevelConfigSection({
+  minSubLevelCode, setMinSubLevelCode,
+  maxSubLevelCode, setMaxSubLevelCode,
+  selectedExamTagIds, setSelectedExamTagIds,
+  skillScope, setSkillScope,
+  subLevels,
+  examTags,
+}: {
+  minSubLevelCode: string; setMinSubLevelCode: (v: string) => void;
+  maxSubLevelCode: string; setMaxSubLevelCode: (v: string) => void;
+  selectedExamTagIds: number[]; setSelectedExamTagIds: (v: number[]) => void;
+  skillScope: string; setSkillScope: (v: string) => void;
+  subLevels: SubLevelItem[];
+  examTags: ExamTagItem[];
+}) {
+  return (
+    <div className="mt-4 pt-4 border-t space-y-3">
+      <p className="text-sm font-semibold text-gray-700">Smart Discovery Settings</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">Min Sub-Level</label>
+          <Select value={minSubLevelCode} onValueChange={setMinSubLevelCode}>
+            <SelectTrigger className="text-xs h-8">
+              <SelectValue placeholder="No minimum" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">No minimum</SelectItem>
+              {subLevels.map((sl) => (
+                <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">Max Sub-Level</label>
+          <Select value={maxSubLevelCode} onValueChange={setMaxSubLevelCode}>
+            <SelectTrigger className="text-xs h-8">
+              <SelectValue placeholder="No maximum" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">No maximum</SelectItem>
+              {subLevels.map((sl) => (
+                <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-gray-600">Skill Scope</label>
+        <Select value={skillScope} onValueChange={setSkillScope}>
+          <SelectTrigger className="text-xs h-8">
+            <SelectValue placeholder="All skills" />
+          </SelectTrigger>
+          <SelectContent>
+            {SKILL_SCOPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-gray-600">Exam Tags</label>
+        <div className="flex flex-wrap gap-1.5">
+          {examTags.map((tag) => (
+            <button
+              key={tag.id}
+              type="button"
+              onClick={() => {
+                setSelectedExamTagIds(
+                  selectedExamTagIds.includes(tag.id)
+                    ? selectedExamTagIds.filter((id) => id !== tag.id)
+                    : [...selectedExamTagIds, tag.id]
+                );
+              }}
+              className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                selectedExamTagIds.includes(tag.id)
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+              }`}
+            >
+              {tag.name}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateCourseDialog({ queryClient }: { queryClient: ReturnType<typeof useQueryClient> }) {
   const { t } = useTranslation(['admin', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [minSubLevelCode, setMinSubLevelCode] = useState('');
+  const [maxSubLevelCode, setMaxSubLevelCode] = useState('');
+  const [selectedExamTagIds, setSelectedExamTagIds] = useState<number[]>([]);
+  const [skillScope, setSkillScope] = useState('');
 
   // Fetch Course Creation form definition (Form ID 10)
   const { data: formDefinition, isLoading: formLoading } = useQuery<FormDefinition>({
@@ -58,11 +166,34 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
     enabled: isOpen
   });
 
+  // Fetch sub-levels
+  const { data: subLevelsRaw = [] } = useQuery<SubLevelItem[]>({
+    queryKey: ['/api/curriculum-sublevels'],
+    staleTime: 10 * 60 * 1000,
+    enabled: isOpen,
+  });
+  const subLevels: SubLevelItem[] = Array.isArray(subLevelsRaw) ? subLevelsRaw : [];
+
+  // Fetch exam tags
+  const { data: examTagsRaw = [] } = useQuery<ExamTagItem[]>({
+    queryKey: ['/api/courses/exam-tags'],
+    staleTime: 10 * 60 * 1000,
+    enabled: isOpen,
+  });
+  const examTags: ExamTagItem[] = (Array.isArray(examTagsRaw) ? examTagsRaw : []).filter((tg) => tg.is_active !== false);
+
   const createCourseMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: Record<string, unknown>) => {
       return await apiRequest(API_ENDPOINTS.admin.courses, {
         method: 'POST',
-        body: JSON.stringify({ ...data, categoryId: selectedCategoryId ? parseInt(selectedCategoryId) : null })
+        body: JSON.stringify({
+          ...data,
+          categoryId: selectedCategoryId ? parseInt(selectedCategoryId) : null,
+          minSubLevelCode: minSubLevelCode || null,
+          maxSubLevelCode: maxSubLevelCode || null,
+          examTagIds: selectedExamTagIds,
+          skillScope: skillScope || null,
+        })
       });
     },
     onSuccess: () => {
@@ -70,8 +201,12 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.courses] });
       setIsOpen(false);
       setSelectedCategoryId(null);
+      setMinSubLevelCode('');
+      setMaxSubLevelCode('');
+      setSelectedExamTagIds([]);
+      setSkillScope('');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Error creating course:', error);
       toast({ 
         title: t('admin:courses.failedToCreate'), 
@@ -81,7 +216,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
     }
   });
 
-  const handleSubmit = async (data: Record<string, any>) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     return createCourseMutation.mutateAsync(data);
   };
 
@@ -133,6 +268,18 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
               disabled={createCourseMutation.isPending}
               showTitle={false}
             />
+            <SubLevelConfigSection
+              minSubLevelCode={minSubLevelCode}
+              setMinSubLevelCode={setMinSubLevelCode}
+              maxSubLevelCode={maxSubLevelCode}
+              setMaxSubLevelCode={setMaxSubLevelCode}
+              selectedExamTagIds={selectedExamTagIds}
+              setSelectedExamTagIds={setSelectedExamTagIds}
+              skillScope={skillScope}
+              setSkillScope={setSkillScope}
+              subLevels={subLevels}
+              examTags={examTags}
+            />
             <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 {t('admin:courses.cancel')}
@@ -149,8 +296,21 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   );
 }
 
+type CourseRecord = {
+  id: number;
+  title: string;
+  categoryId?: number;
+  min_sub_level_code?: string;
+  max_sub_level_code?: string;
+  exam_tag_ids?: number[];
+  skill_scope?: string;
+  [key: string]: unknown;
+};
+
+type CategoryItem = { id: number; name: string };
+
 // Edit Course Dialog Component
-function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClose: () => void, queryClient: any }) {
+function EditCourseDialog({ course, onClose, queryClient }: { course: CourseRecord, onClose: () => void, queryClient: ReturnType<typeof useQueryClient> }) {
   const { t } = useTranslation(['admin', 'common']);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     course.categoryId ? course.categoryId.toString() : null
@@ -168,23 +328,24 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
   });
 
   // Fetch curriculum categories for the selector
-  const { data: categories } = useQuery<any[]>({
+  const { data: categoriesRaw } = useQuery<CategoryItem[]>({
     queryKey: ['/api/cms/curriculum-categories']
   });
+  const categories: CategoryItem[] = Array.isArray(categoriesRaw) ? categoriesRaw : [];
 
   // Fetch sub-levels for range selectors
-  const { data: subLevelsData = [] } = useQuery<any[]>({
+  const { data: subLevelsRaw = [] } = useQuery<SubLevelItem[]>({
     queryKey: ['/api/curriculum-sublevels'],
     staleTime: 10 * 60 * 1000,
   });
-  const subLevels: any[] = Array.isArray(subLevelsData) ? subLevelsData : [];
+  const subLevels: SubLevelItem[] = Array.isArray(subLevelsRaw) ? subLevelsRaw : [];
 
   // Fetch exam tags
-  const { data: examTagsData = [] } = useQuery<any[]>({
+  const { data: examTagsRaw = [] } = useQuery<ExamTagItem[]>({
     queryKey: ['/api/courses/exam-tags'],
     staleTime: 10 * 60 * 1000,
   });
-  const examTags: any[] = (Array.isArray(examTagsData) ? examTagsData : []).filter((t: any) => t.is_active !== false);
+  const examTags: ExamTagItem[] = (Array.isArray(examTagsRaw) ? examTagsRaw : []).filter((tg) => tg.is_active !== false);
 
   // Sub-level config save mutation
   const subLevelConfigMutation = useMutation({
@@ -198,13 +359,13 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
       toast({ title: 'Sub-level config saved', description: 'Course prerequisite settings updated.' });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast({ title: 'Error', description: err?.message ?? 'Failed to save sub-level config', variant: 'destructive' });
     },
   });
 
   const updateCourseMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: Record<string, unknown>) => {
       return await apiRequest(`${API_ENDPOINTS.admin.courses}/${course.id}`, {
         method: 'PUT',
         body: JSON.stringify({ ...data, categoryId: selectedCategoryId ? parseInt(selectedCategoryId) : null })
@@ -215,7 +376,7 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.admin.courses] });
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({ 
         title: t('admin:courses.updateFailed'), 
         description: error?.message || t('admin:courses.updateError'),
@@ -264,7 +425,7 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
                   <SelectItem value="">
                     {t('admin:courses.noCategory', 'No Category')}
                   </SelectItem>
-                  {categories?.map((category: any) => (
+                  {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
                     </SelectItem>
@@ -280,90 +441,28 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
               showTitle={false}
             />
 
-            {/* Sub-level Prerequisite Config */}
-            <div className="mt-4 pt-4 border-t space-y-3">
-              <p className="text-sm font-semibold text-gray-700">Smart Discovery Settings</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-600">Min Sub-Level</label>
-                  <Select value={minSubLevelCode} onValueChange={setMinSubLevelCode}>
-                    <SelectTrigger className="text-xs h-8">
-                      <SelectValue placeholder="No minimum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No minimum</SelectItem>
-                      {subLevels.map((sl: any) => (
-                        <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-600">Max Sub-Level</label>
-                  <Select value={maxSubLevelCode} onValueChange={setMaxSubLevelCode}>
-                    <SelectTrigger className="text-xs h-8">
-                      <SelectValue placeholder="No maximum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No maximum</SelectItem>
-                      {subLevels.map((sl: any) => (
-                        <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-600">Skill Scope</label>
-                <Select value={skillScope} onValueChange={setSkillScope}>
-                  <SelectTrigger className="text-xs h-8">
-                    <SelectValue placeholder="All skills" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All skills</SelectItem>
-                    <SelectItem value="listening">Listening</SelectItem>
-                    <SelectItem value="reading">Reading</SelectItem>
-                    <SelectItem value="speaking">Speaking</SelectItem>
-                    <SelectItem value="writing">Writing</SelectItem>
-                    <SelectItem value="grammar">Grammar</SelectItem>
-                    <SelectItem value="vocabulary">Vocabulary</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-600">Exam Tags</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {examTags.map((tag: any) => (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedExamTagIds(prev =>
-                          prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
-                        );
-                      }}
-                      className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
-                        selectedExamTagIds.includes(tag.id)
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
-                      }`}
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={subLevelConfigMutation.isPending}
-                onClick={() => subLevelConfigMutation.mutate()}
-                className="w-full text-xs"
-              >
-                {subLevelConfigMutation.isPending ? 'Saving…' : 'Save Discovery Settings'}
-              </Button>
-            </div>
+            <SubLevelConfigSection
+              minSubLevelCode={minSubLevelCode}
+              setMinSubLevelCode={setMinSubLevelCode}
+              maxSubLevelCode={maxSubLevelCode}
+              setMaxSubLevelCode={setMaxSubLevelCode}
+              selectedExamTagIds={selectedExamTagIds}
+              setSelectedExamTagIds={setSelectedExamTagIds}
+              skillScope={skillScope}
+              setSkillScope={setSkillScope}
+              subLevels={subLevels}
+              examTags={examTags}
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={subLevelConfigMutation.isPending}
+              onClick={() => subLevelConfigMutation.mutate()}
+              className="w-full text-xs mt-2"
+            >
+              {subLevelConfigMutation.isPending ? 'Saving…' : 'Save Discovery Settings'}
+            </Button>
 
             <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={onClose}>

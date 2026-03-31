@@ -117,6 +117,53 @@ export function registerPrivateClassRoutes(app: Express) {
     }
   });
 
+  // PATCH /api/session-bundles/:id/sublevel-config — update sub-level prerequisites for a session package
+  app.patch("/api/session-bundles/:id/sublevel-config", authenticate, authorize(['Admin']), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+      const { minSubLevelCode, maxSubLevelCode, examTagIds, skillScope } = req.body as {
+        minSubLevelCode?: string | null;
+        maxSubLevelCode?: string | null;
+        examTagIds?: number[];
+        skillScope?: string | null;
+      };
+
+      // Resolve sub-level codes to IDs
+      let minId: number | null = null;
+      let maxId: number | null = null;
+
+      if (minSubLevelCode) {
+        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${minSubLevelCode} LIMIT 1`);
+        minId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+      }
+      if (maxSubLevelCode) {
+        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${maxSubLevelCode} LIMIT 1`);
+        maxId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+      }
+
+      const tagIds: number[] = Array.isArray(examTagIds) ? examTagIds.map(Number) : [];
+
+      const [updated] = await db.update(sessionPackages)
+        .set({
+          minSubLevelId: minId,
+          maxSubLevelId: maxId,
+          examTagIds: tagIds,
+          skillScope: skillScope ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(sessionPackages.id, id))
+        .returning();
+
+      if (!updated) return res.status(404).json({ message: "Bundle not found" });
+      res.json(updated);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to update sub-level config";
+      res.status(500).json({ message: msg });
+    }
+  });
+
   // ===== Private Class Creation (CRM agent action) =====
   // Stage path: final_registration → private_class_setup → [set_class_number →] active_private_class
   // Stage guard enforced via LEAD_STAGE_TRANSITIONS (rejects if lead not in valid source stage).

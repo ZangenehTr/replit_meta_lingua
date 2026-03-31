@@ -7913,6 +7913,18 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         return res.status(400).json({ message: "Title is required" });
       }
 
+      // Resolve min/max sub-level IDs from codes if provided
+      let minSubLevelId: number | null = null;
+      let maxSubLevelId: number | null = null;
+      if (courseData.minSubLevelCode) {
+        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${courseData.minSubLevelCode} LIMIT 1`);
+        minSubLevelId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+      }
+      if (courseData.maxSubLevelCode) {
+        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${courseData.maxSubLevelCode} LIMIT 1`);
+        maxSubLevelId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+      }
+
       // Map frontend fields to database schema fields only
       const dbCourseData = {
         title: courseData.title,
@@ -7927,6 +7939,19 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
 
       // Create course with only existing schema fields
       const newCourse = await storage.createCourse(dbCourseData);
+
+      // Apply sub-level prerequisite config if provided
+      if (minSubLevelId !== null || maxSubLevelId !== null || courseData.examTagIds || courseData.skillScope) {
+        const examTagIds: number[] = Array.isArray(courseData.examTagIds) ? courseData.examTagIds.map(Number) : [];
+        await db.execute(sql`
+          UPDATE courses SET
+            min_sub_level_id = ${minSubLevelId},
+            max_sub_level_id = ${maxSubLevelId},
+            exam_tag_ids = ${examTagIds}::integer[],
+            skill_scope = ${courseData.skillScope ?? null}
+          WHERE id = ${newCourse.id}
+        `);
+      }
 
       res.status(201).json({ message: "Course created successfully", course: newCourse });
     } catch (error) {

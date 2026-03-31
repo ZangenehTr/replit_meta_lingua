@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Plus,
   Package,
@@ -45,6 +46,20 @@ const emptyForm = {
   isActive: true,
 };
 
+type CurriculumSubLevel = { id: number; code: string; name: string };
+type BundleExamTag = { id: number; name: string; code: string; is_active: boolean };
+
+const BUNDLE_SKILL_SCOPE_OPTIONS = [
+  { value: '', label: 'All skills' },
+  { value: 'listening', label: 'Listening' },
+  { value: 'reading', label: 'Reading' },
+  { value: 'speaking', label: 'Speaking' },
+  { value: 'writing', label: 'Writing' },
+  { value: 'grammar', label: 'Grammar' },
+  { value: 'vocabulary', label: 'Vocabulary' },
+  { value: 'quantitative_only', label: 'Quantitative only (GRE/GMAT)' },
+];
+
 function SessionBundlesPage() {
   const { isRTL } = useLanguage();
   const { toast } = useToast();
@@ -52,6 +67,12 @@ function SessionBundlesPage() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Sub-level config state for the dialog
+  const [minSubLevelCode, setMinSubLevelCode] = useState('');
+  const [maxSubLevelCode, setMaxSubLevelCode] = useState('');
+  const [selectedExamTagIds, setSelectedExamTagIds] = useState<number[]>([]);
+  const [bundleSkillScope, setBundleSkillScope] = useState('');
 
   const { data: bundles = [], isLoading } = useQuery<SessionBundle[]>({
     queryKey: ["/api/session-bundles"],
@@ -104,7 +125,43 @@ function SessionBundlesPage() {
     }
   });
 
-  const openEdit = (bundle: SessionBundle) => {
+  // Sub-level data queries
+  const { data: subLevelsRaw = [] } = useQuery<CurriculumSubLevel[]>({
+    queryKey: ['/api/curriculum-sublevels'],
+    staleTime: 10 * 60 * 1000,
+    enabled: dialogOpen,
+  });
+  const subLevels: CurriculumSubLevel[] = Array.isArray(subLevelsRaw) ? subLevelsRaw : [];
+
+  const { data: examTagsRaw = [] } = useQuery<BundleExamTag[]>({
+    queryKey: ['/api/courses/exam-tags'],
+    staleTime: 10 * 60 * 1000,
+    enabled: dialogOpen,
+  });
+  const examTags: BundleExamTag[] = (Array.isArray(examTagsRaw) ? examTagsRaw : []).filter((t) => t.is_active !== false);
+
+  const subLevelConfigMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/session-bundles/${id}/sublevel-config`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          minSubLevelCode: minSubLevelCode || null,
+          maxSubLevelCode: maxSubLevelCode || null,
+          examTagIds: selectedExamTagIds,
+          skillScope: bundleSkillScope || null,
+        }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'تنظیمات سطح ذخیره شد' });
+      queryClient.invalidateQueries({ queryKey: ["/api/session-bundles"] });
+    },
+    onError: (e: Error) => {
+      toast({ title: "خطا", description: e.message, variant: "destructive" });
+    },
+  });
+
+  const openEdit = (bundle: SessionBundle & { minSubLevelCode?: string; maxSubLevelCode?: string; examTagIds?: number[]; skillScope?: string }) => {
     setForm({
       name: bundle.name,
       description: bundle.description ?? "",
@@ -115,8 +172,19 @@ function SessionBundlesPage() {
       lowSessionAlertThreshold: String(bundle.lowSessionAlertThreshold),
       isActive: bundle.isActive,
     });
+    setMinSubLevelCode(bundle.minSubLevelCode ?? '');
+    setMaxSubLevelCode(bundle.maxSubLevelCode ?? '');
+    setSelectedExamTagIds(Array.isArray(bundle.examTagIds) ? bundle.examTagIds : []);
+    setBundleSkillScope(bundle.skillScope ?? '');
     setEditingId(bundle.id);
     setDialogOpen(true);
+  };
+
+  const resetSubLevelState = () => {
+    setMinSubLevelCode('');
+    setMaxSubLevelCode('');
+    setSelectedExamTagIds([]);
+    setBundleSkillScope('');
   };
 
   const field = (key: keyof typeof form, value: string | boolean) =>
@@ -134,7 +202,7 @@ function SessionBundlesPage() {
           <h1 className="text-2xl font-bold">بسته‌های جلسات خصوصی</h1>
           <p className="text-gray-500 text-sm mt-1">مدیریت قالب‌های بسته جلسات برای کلاس‌های خصوصی</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) { setForm(emptyForm); setEditingId(null); } }}>
+        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) { setForm(emptyForm); setEditingId(null); resetSubLevelState(); } }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -183,8 +251,92 @@ function SessionBundlesPage() {
                 <Switch checked={form.isActive} onCheckedChange={v => field("isActive", v)} />
                 <Label>بسته فعال است</Label>
               </div>
+
+              {/* Smart Discovery Settings */}
+              <div className="pt-3 border-t space-y-2">
+                <p className="text-xs font-semibold text-gray-700">Smart Discovery (Sub-level Prerequisites)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Min Sub-Level</Label>
+                    <Select value={minSubLevelCode} onValueChange={setMinSubLevelCode}>
+                      <SelectTrigger className="text-xs h-8 mt-1">
+                        <SelectValue placeholder="No minimum" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No minimum</SelectItem>
+                        {subLevels.map((sl) => (
+                          <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Max Sub-Level</Label>
+                    <Select value={maxSubLevelCode} onValueChange={setMaxSubLevelCode}>
+                      <SelectTrigger className="text-xs h-8 mt-1">
+                        <SelectValue placeholder="No maximum" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No maximum</SelectItem>
+                        {subLevels.map((sl) => (
+                          <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Skill Scope</Label>
+                  <Select value={bundleSkillScope} onValueChange={setBundleSkillScope}>
+                    <SelectTrigger className="text-xs h-8 mt-1">
+                      <SelectValue placeholder="All skills" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUNDLE_SKILL_SCOPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1 block">Exam Tags</Label>
+                  <div className="flex flex-wrap gap-1">
+                    {examTags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => setSelectedExamTagIds(
+                          selectedExamTagIds.includes(tag.id)
+                            ? selectedExamTagIds.filter((id) => id !== tag.id)
+                            : [...selectedExamTagIds, tag.id]
+                        )}
+                        className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                          selectedExamTagIds.includes(tag.id)
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {editingId && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-xs"
+                    disabled={subLevelConfigMutation.isPending}
+                    onClick={() => subLevelConfigMutation.mutate(editingId)}
+                  >
+                    {subLevelConfigMutation.isPending ? 'Saving…' : 'Save Discovery Settings'}
+                  </Button>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => { setDialogOpen(false); setForm(emptyForm); setEditingId(null); }}>
+                <Button variant="outline" onClick={() => { setDialogOpen(false); setForm(emptyForm); setEditingId(null); resetSubLevelState(); }}>
                   انصراف
                 </Button>
                 <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.name || !form.sessionCount || !form.price}>
