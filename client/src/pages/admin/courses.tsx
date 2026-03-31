@@ -156,6 +156,12 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
     course.categoryId ? course.categoryId.toString() : null
   );
 
+  // Sub-level config state
+  const [minSubLevelCode, setMinSubLevelCode] = useState<string>(course.min_sub_level_code ?? '');
+  const [maxSubLevelCode, setMaxSubLevelCode] = useState<string>(course.max_sub_level_code ?? '');
+  const [selectedExamTagIds, setSelectedExamTagIds] = useState<number[]>(Array.isArray(course.exam_tag_ids) ? course.exam_tag_ids : []);
+  const [skillScope, setSkillScope] = useState<string>(course.skill_scope ?? '');
+
   // Fetch Course Creation form definition (Form ID 10) - same form used for editing
   const { data: formDefinition, isLoading: formLoading } = useQuery<FormDefinition>({
     queryKey: ['/api/forms', 10]
@@ -164,6 +170,37 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
   // Fetch curriculum categories for the selector
   const { data: categories } = useQuery<any[]>({
     queryKey: ['/api/cms/curriculum-categories']
+  });
+
+  // Fetch sub-levels for range selectors
+  const { data: subLevelsData = [] } = useQuery<any[]>({
+    queryKey: ['/api/curriculum-sublevels'],
+    staleTime: 10 * 60 * 1000,
+  });
+  const subLevels: any[] = Array.isArray(subLevelsData) ? subLevelsData : [];
+
+  // Fetch exam tags
+  const { data: examTagsData = [] } = useQuery<any[]>({
+    queryKey: ['/api/courses/exam-tags'],
+    staleTime: 10 * 60 * 1000,
+  });
+  const examTags: any[] = (Array.isArray(examTagsData) ? examTagsData : []).filter((t: any) => t.is_active !== false);
+
+  // Sub-level config save mutation
+  const subLevelConfigMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/admin/courses/${course.id}/sublevel-config`, {
+        method: 'PATCH',
+        body: JSON.stringify({ minSubLevelCode: minSubLevelCode || null, maxSubLevelCode: maxSubLevelCode || null, examTagIds: selectedExamTagIds, skillScope: skillScope || null }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Sub-level config saved', description: 'Course prerequisite settings updated.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err?.message ?? 'Failed to save sub-level config', variant: 'destructive' });
+    },
   });
 
   const updateCourseMutation = useMutation({
@@ -242,6 +279,92 @@ function EditCourseDialog({ course, onClose, queryClient }: { course: any, onClo
               disabled={updateCourseMutation.isPending}
               showTitle={false}
             />
+
+            {/* Sub-level Prerequisite Config */}
+            <div className="mt-4 pt-4 border-t space-y-3">
+              <p className="text-sm font-semibold text-gray-700">Smart Discovery Settings</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600">Min Sub-Level</label>
+                  <Select value={minSubLevelCode} onValueChange={setMinSubLevelCode}>
+                    <SelectTrigger className="text-xs h-8">
+                      <SelectValue placeholder="No minimum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No minimum</SelectItem>
+                      {subLevels.map((sl: any) => (
+                        <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600">Max Sub-Level</label>
+                  <Select value={maxSubLevelCode} onValueChange={setMaxSubLevelCode}>
+                    <SelectTrigger className="text-xs h-8">
+                      <SelectValue placeholder="No maximum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No maximum</SelectItem>
+                      {subLevels.map((sl: any) => (
+                        <SelectItem key={sl.id} value={sl.code}>{sl.code}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-gray-600">Skill Scope</label>
+                <Select value={skillScope} onValueChange={setSkillScope}>
+                  <SelectTrigger className="text-xs h-8">
+                    <SelectValue placeholder="All skills" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All skills</SelectItem>
+                    <SelectItem value="listening">Listening</SelectItem>
+                    <SelectItem value="reading">Reading</SelectItem>
+                    <SelectItem value="speaking">Speaking</SelectItem>
+                    <SelectItem value="writing">Writing</SelectItem>
+                    <SelectItem value="grammar">Grammar</SelectItem>
+                    <SelectItem value="vocabulary">Vocabulary</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-gray-600">Exam Tags</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {examTags.map((tag: any) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedExamTagIds(prev =>
+                          prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                        );
+                      }}
+                      className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                        selectedExamTagIds.includes(tag.id)
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                      }`}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={subLevelConfigMutation.isPending}
+                onClick={() => subLevelConfigMutation.mutate()}
+                className="w-full text-xs"
+              >
+                {subLevelConfigMutation.isPending ? 'Saving…' : 'Save Discovery Settings'}
+              </Button>
+            </div>
+
             <div className="flex justify-end gap-2 mt-4">
               <Button type="button" variant="outline" onClick={onClose}>
                 {t('admin:courses.cancel')}

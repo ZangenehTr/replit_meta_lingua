@@ -1101,16 +1101,19 @@ function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats
 
 function CoursesForMe() {
   const { t } = useTranslation(['student', 'common']);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedExamTag, setSelectedExamTag] = useState<number | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<string>('');
   const [searchText, setSearchText] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'recommended' | 'advanced'>('recommended');
+  const [enrollingId, setEnrollingId] = useState<number | null>(null);
 
-  const { data: examTagsData = [], isLoading: tagsLoading } = useQuery({
+  const { data: examTagsData = [] } = useQuery({
     queryKey: ['/api/courses/exam-tags'],
     staleTime: 10 * 60 * 1000,
   });
-  const examTags: any[] = Array.isArray(examTagsData) ? examTagsData : [];
+  const examTags: any[] = (Array.isArray(examTagsData) ? examTagsData : []).filter((t: any) => t.is_active !== false);
 
   const params = new URLSearchParams();
   if (selectedExamTag) params.set('examTagId', String(selectedExamTag));
@@ -1123,8 +1126,47 @@ function CoursesForMe() {
     staleTime: 2 * 60 * 1000,
   });
 
+  const enrollMutation = useMutation({
+    mutationFn: async (courseId: number) => {
+      return apiRequest('/api/courses/enroll', {
+        method: 'POST',
+        body: JSON.stringify({ courseId, paymentMethod: 'wallet' }),
+      });
+    },
+    onSuccess: (_data, courseId) => {
+      toast({ title: 'Enrolled!', description: 'You have been enrolled in the course.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/available-courses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/enrollments'] });
+      setEnrollingId(null);
+    },
+    onError: (err: any) => {
+      const msg = err?.message ?? 'Failed to enroll';
+      toast({ title: 'Enrollment failed', description: msg, variant: 'destructive' });
+      setEnrollingId(null);
+    },
+  });
+
+  const waitlistMutation = useMutation({
+    mutationFn: async (courseId: number) => {
+      return apiRequest('/api/courses/waitlist', {
+        method: 'POST',
+        body: JSON.stringify({ courseId }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Added to waitlist', description: "We'll notify you when a spot opens up." });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/available-courses'] });
+      setEnrollingId(null);
+    },
+    onError: (err: any) => {
+      toast({ title: 'Error', description: err?.message ?? 'Failed to join waitlist', variant: 'destructive' });
+      setEnrollingId(null);
+    },
+  });
+
   const allCourses: any[] = Array.isArray(coursesData?.courses) ? coursesData.courses : [];
   const studentSubLevel: string = coursesData?.studentSubLevel || '';
+  const byExamTag: Record<string, number> = coursesData?.byExamTag ?? {};
 
   const displayed = activeFilter === 'all'
     ? allCourses
@@ -1151,6 +1193,112 @@ function CoursesForMe() {
     return 'Available';
   };
 
+  // Group displayed courses by exam tag if a tag is not selected
+  const examTagMap = new Map(examTags.map((t: any) => [t.id, t]));
+  const grouped = selectedExamTag
+    ? null
+    : (() => {
+        const groups: { tag: any | null; courses: any[] }[] = [];
+        const ungrouped: any[] = [];
+        const seen = new Set<number>();
+        for (const tag of examTags) {
+          const tagCourses = displayed.filter((c: any) =>
+            Array.isArray(c.exam_tag_ids) && c.exam_tag_ids.includes(tag.id)
+          );
+          if (tagCourses.length > 0) {
+            groups.push({ tag, courses: tagCourses });
+            tagCourses.forEach((c: any) => seen.add(c.id));
+          }
+        }
+        displayed.forEach((c: any) => { if (!seen.has(c.id)) ungrouped.push(c); });
+        if (ungrouped.length > 0) groups.push({ tag: null, courses: ungrouped });
+        return groups;
+      })();
+
+  function ProductCard({ product }: { product: any }) {
+    const status: string = product.status ?? 'available';
+    const isEnrolled = status === 'enrolled';
+    const isWaitlist = status === 'waitlist';
+    const isPkg = product.productType === 'session_package';
+    const isEnrollingThis = enrollingId === product.id;
+
+    return (
+      <Card className={`border transition-shadow hover:shadow-md ${product.match === 'recommended' ? 'border-green-200' : 'border-gray-200'}`}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-900 text-sm leading-tight">{product.title}</h4>
+              {isPkg && <p className="text-xs text-indigo-500 mt-0.5">Session Package</p>}
+            </div>
+            <span className={`text-xs px-2 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 ${matchColor(product.match)}`}>
+              {matchLabel(product.match)}
+            </span>
+          </div>
+          {product.description && (
+            <p className="text-xs text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+          )}
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {product.min_sub_level_code && (
+              <Badge variant="outline" className="text-xs">
+                {product.min_sub_level_code}
+                {product.max_sub_level_code && product.max_sub_level_code !== product.min_sub_level_code ? ` – ${product.max_sub_level_code}` : ''}
+              </Badge>
+            )}
+            {product.skill_scope && <Badge variant="outline" className="text-xs capitalize">{product.skill_scope}</Badge>}
+            {product.difficulty && <Badge variant="secondary" className="text-xs capitalize">{product.difficulty}</Badge>}
+            {isPkg && product.session_count && (
+              <Badge variant="outline" className="text-xs">{product.session_count} sessions</Badge>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-semibold text-indigo-700">
+              {product.price ? `${Number(product.price).toLocaleString()} T` : 'Free'}
+            </span>
+            <div className="flex gap-1.5">
+              {isEnrolled ? (
+                <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
+                  Enrolled
+                </Badge>
+              ) : isWaitlist ? (
+                <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
+                  On Waitlist
+                </Badge>
+              ) : isPkg ? (
+                <Button size="sm" variant="outline" className="text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                  onClick={() => window.location.href = `/courses/${product.id}`}>
+                  View Package
+                </Button>
+              ) : (
+                <>
+                  <Button size="sm" variant="outline" className="text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    onClick={() => window.location.href = `/courses/${product.id}`}>
+                    Details
+                  </Button>
+                  <Button size="sm" className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
+                    disabled={isEnrollingThis || enrollMutation.isPending}
+                    onClick={() => {
+                      setEnrollingId(product.id);
+                      enrollMutation.mutate(product.id);
+                    }}>
+                    {isEnrollingThis ? 'Enrolling…' : 'Enroll'}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-xs text-gray-500 hover:text-gray-700"
+                    disabled={isEnrollingThis || waitlistMutation.isPending}
+                    onClick={() => {
+                      setEnrollingId(product.id);
+                      waitlistMutation.mutate(product.id);
+                    }}>
+                    Waitlist
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4" data-testid="courses-for-me">
       {/* Sub-level banner */}
@@ -1175,6 +1323,34 @@ function CoursesForMe() {
         </div>
       )}
 
+      {/* Exam tag quick-filter chips */}
+      {examTags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedExamTag(null)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+              !selectedExamTag ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+            }`}
+          >
+            All
+          </button>
+          {examTags.map((tag: any) => (
+            <button
+              key={tag.id}
+              onClick={() => setSelectedExamTag(selectedExamTag === tag.id ? null : tag.id)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                selectedExamTag === tag.id
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+              }`}
+            >
+              {tag.name}
+              {byExamTag[tag.id] ? <span className="ml-1 opacity-70">({byExamTag[tag.id]})</span> : null}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
         {/* Search */}
@@ -1188,17 +1364,6 @@ function CoursesForMe() {
             className="pl-9 pr-3 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
         </div>
-        {/* Exam tags */}
-        <select
-          className="border border-gray-200 rounded-lg text-sm px-3 py-2 bg-white focus:outline-none"
-          value={selectedExamTag ?? ''}
-          onChange={e => setSelectedExamTag(e.target.value ? Number(e.target.value) : null)}
-        >
-          <option value="">All Exams</option>
-          {examTags.map((tag: any) => (
-            <option key={tag.id} value={tag.id}>{tag.name}</option>
-          ))}
-        </select>
         {/* Skill scope */}
         <select
           className="border border-gray-200 rounded-lg text-sm px-3 py-2 bg-white focus:outline-none"
@@ -1226,7 +1391,7 @@ function CoursesForMe() {
         ))}
       </div>
 
-      {/* Course grid */}
+      {/* Course grid — grouped by exam tag when no tag filter is active */}
       {coursesLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -1240,38 +1405,30 @@ function CoursesForMe() {
           <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
           <p>No courses match your current filters.</p>
         </div>
+      ) : grouped ? (
+        <div className="space-y-6">
+          {grouped.map(({ tag, courses }) => (
+            <div key={tag?.id ?? 'other'}>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                {tag ? (
+                  <><Badge variant="outline" className="text-xs">{tag.code}</Badge> {tag.name}</>
+                ) : (
+                  'Other Courses'
+                )}
+                <span className="text-xs text-gray-400">({courses.length})</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {courses.map((product: any) => (
+                  <ProductCard key={`${product.productType}-${product.id}`} product={product} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {displayed.map((course: any) => (
-            <Card key={course.id} className={`border transition-shadow hover:shadow-md ${course.match === 'recommended' ? 'border-green-200' : 'border-gray-200'}`}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h4 className="font-semibold text-gray-900 text-sm leading-tight">{course.title}</h4>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border whitespace-nowrap ${matchColor(course.match)}`}>
-                    {matchLabel(course.match)}
-                  </span>
-                </div>
-                {course.description && (
-                  <p className="text-xs text-gray-500 mb-3 line-clamp-2">{course.description}</p>
-                )}
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {course.min_sub_level_code && (
-                    <Badge variant="outline" className="text-xs">{course.min_sub_level_code}{course.max_sub_level_code && course.max_sub_level_code !== course.min_sub_level_code ? ` – ${course.max_sub_level_code}` : ''}</Badge>
-                  )}
-                  {course.skill_scope && <Badge variant="outline" className="text-xs capitalize">{course.skill_scope}</Badge>}
-                  {course.difficulty && <Badge variant="secondary" className="text-xs capitalize">{course.difficulty}</Badge>}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-indigo-700">
-                    {course.price ? `${Number(course.price).toLocaleString()} T` : 'Free'}
-                  </span>
-                  <Button size="sm" variant="outline" className="text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                    onClick={() => window.location.href = `/courses/${course.id}`}>
-                    View Course
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {displayed.map((product: any) => (
+            <ProductCard key={`${product.productType}-${product.id}`} product={product} />
           ))}
         </div>
       )}

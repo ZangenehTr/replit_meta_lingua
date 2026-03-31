@@ -2132,6 +2132,36 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
+  // POST /api/courses/waitlist — join course waitlist (creates enrollment with status='waitlist')
+  app.post("/api/courses/waitlist", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { courseId } = req.body;
+      if (!courseId) return res.status(400).json({ message: "courseId is required" });
+
+      // Check if already enrolled or on waitlist
+      const existing = await db.execute(sql`
+        SELECT id, status FROM enrollments WHERE user_id = ${userId} AND course_id = ${courseId} LIMIT 1
+      `);
+      if (existing.rows.length > 0) {
+        const st = (existing.rows[0] as any).status;
+        if (st === 'active') return res.status(409).json({ message: "Already enrolled in this course" });
+        if (st === 'waitlist') return res.status(409).json({ message: "Already on the waitlist for this course" });
+      }
+
+      // Insert waitlist enrollment
+      const result = await db.execute(sql`
+        INSERT INTO enrollments (user_id, course_id, status, enrolled_at)
+        VALUES (${userId}, ${courseId}, 'waitlist', now())
+        RETURNING id, status
+      `);
+      res.json({ success: true, enrollment: result.rows[0] });
+    } catch (err) {
+      console.error("Error joining waitlist:", err);
+      res.status(500).json({ message: "Failed to join waitlist" });
+    }
+  });
+
   // GET /api/courses/exam-tags — list all exam focus tags (public, must be before /:id wildcard)
   app.get("/api/courses/exam-tags", async (_req, res) => {
     try {
