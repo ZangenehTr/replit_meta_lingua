@@ -15456,20 +15456,32 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getPlacementTestQuestions(filters?: any): Promise<any[]> {
+  async getPlacementTestQuestions(filters?: {
+    skill?: string;
+    cefrLevel?: string;
+    level?: string;
+    stage?: string;
+    isActive?: boolean;
+  }): Promise<Record<string, unknown>[]> {
     try {
-      let query = db.select().from(placementTestQuestions).where(eq(placementTestQuestions.isActive, true));
-      
-      if (filters) {
-        if (filters.skill) {
-          query = query.where(eq(placementTestQuestions.skill, filters.skill));
-        }
-        if (filters.level) {
-          query = query.where(eq(placementTestQuestions.cefrLevel, filters.level));
-        }
+      const conditions = [eq(placementTestQuestions.isActive, filters?.isActive ?? true)];
+
+      if (filters?.skill) {
+        conditions.push(eq(placementTestQuestions.skill, filters.skill));
       }
-      
-      return await query;
+      // Support both cefrLevel and level for backwards compatibility
+      const cefrFilter = filters?.cefrLevel ?? filters?.level;
+      if (cefrFilter) {
+        conditions.push(eq(placementTestQuestions.cefrLevel, cefrFilter));
+      }
+      if (filters?.stage) {
+        conditions.push(eq(placementTestQuestions.stage, filters.stage));
+      }
+
+      return await db
+        .select()
+        .from(placementTestQuestions)
+        .where(and(...conditions)) as unknown as Record<string, unknown>[];
     } catch (error) {
       console.error('Error getting placement test questions:', error);
       return [];

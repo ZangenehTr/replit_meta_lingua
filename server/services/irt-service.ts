@@ -21,11 +21,16 @@ export interface StudentAbility {
   totalResponses: number;
 }
 
+/** Minimal structural interface for DB-query access */
+interface QueryRunner {
+  query(sql: string, params?: unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
+}
+
 export class IRTService {
-  private storage?: any;
+  private storage?: QueryRunner;
   private adaptiveCache: Map<string, IRTItem[]>;
   
-  constructor(storage?: any) {
+  constructor(storage?: QueryRunner) {
     this.storage = storage;
     this.adaptiveCache = new Map();
   }
@@ -205,17 +210,12 @@ export class IRTService {
     if (!itemIds.length) return result;
 
     try {
-      let pool = this.storage;
-      // If storage is the DatabaseStorage wrapper, get the underlying pool
-      if (pool && typeof pool.query !== 'function') {
-        pool = null;
-      }
-      if (!pool) {
-        const { pool: dbPool } = await import('../db.js');
-        pool = dbPool;
-      }
+      // Use storage if it implements query(), otherwise fall back to shared pool
+      const runner: QueryRunner = (this.storage && typeof this.storage.query === 'function')
+        ? this.storage
+        : await import('../db.js').then(m => m.pool as QueryRunner);
 
-      const rows = await pool.query(
+      const rows = await runner.query(
         `SELECT mst_item_id, difficulty, discrimination
            FROM placement_test_questions
           WHERE mst_item_id = ANY($1)
@@ -223,11 +223,12 @@ export class IRTService {
         [itemIds]
       );
 
-      for (const row of (rows.rows || [])) {
-        result.set(row.mst_item_id, {
-          id:             row.mst_item_id,
-          difficulty:     parseFloat(row.difficulty),
-          discrimination: parseFloat(row.discrimination),
+      for (const row of (rows.rows ?? [])) {
+        const id = String(row.mst_item_id);
+        result.set(id, {
+          id,
+          difficulty:     parseFloat(String(row.difficulty)),
+          discrimination: parseFloat(String(row.discrimination)),
         });
       }
     } catch {
@@ -462,7 +463,14 @@ export class IRTService {
     strengths: string[];
     weaknesses: string[];
     recommendations: string[];
-    detailedAnalysis: any;
+    detailedAnalysis: {
+      theta: number;
+      standardError: number;
+      confidence: string;
+      totalItems: number;
+      averageResponseTime: number;
+      skillBreakdown: Record<string, { correct: number; total: number }>;
+    };
   }> {
     const { finalAbility, responses } = assessmentData;
     const level = this.getDifficultyLevel(finalAbility.theta);

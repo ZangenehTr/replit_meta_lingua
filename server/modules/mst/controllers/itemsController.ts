@@ -2,20 +2,26 @@
  * MST Items Controller
  * Manages item bank loading and selection.
  * Primary source: placement_test_questions table (where mst_item_id IS NOT NULL)
- * Fallback:       data/mst_item_bank.json static file
+ * Fallback per cell (skill+cefr+stage <3 items): data/mst_item_bank.json static file
  */
 
-import { Item, Skill, Stage, CEFRLevel } from '../schemas/itemSchema';
+import {
+  Item, Skill, Stage, CEFRLevel,
+  ListeningItem, ReadingItem, SpeakingItem, WritingItem,
+} from '../schemas/itemSchema';
 import { getListeningResponseTime, getWritingCompositionTime, getSpeakingRecordTime } from '../utils/timers';
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { Pool } from 'pg';
+
+// Minimum items required per (skill, cefr, stage) cell before supplementing from JSON
+const MIN_ITEMS_PER_CELL = 3;
 
 // Lazy-import the shared pool to avoid circular deps at module load time
-let _pool: any = null;
-async function getPool() {
+let _pool: Pool | null = null;
+async function getPool(): Promise<Pool> {
   if (!_pool) {
     const { pool } = await import('../../../db.js');
-    _pool = pool;
+    _pool = pool as Pool;
   }
   return _pool;
 }
@@ -27,7 +33,7 @@ export class MstItemsController {
   constructor(private itemBankPath: string = 'data/mst_item_bank.json') {}
 
   /**
-   * Initialize item bank — tries DB first, falls back to JSON file.
+   * Initialize item bank — tries DB first with cell-level JSON fallback supplement.
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -36,13 +42,7 @@ export class MstItemsController {
       const skills: Skill[] = ['listening', 'reading', 'speaking', 'writing'];
 
       for (const skill of skills) {
-        let items = await this.loadSkillItemsFromDB(skill);
-
-        if (items.length === 0) {
-          console.log(`📂 MST DB empty for ${skill}, loading from JSON file…`);
-          items = await this.loadSkillItemsFromJSON(skill);
-        }
-
+        const items = await this.loadSkillItemsWithCellFallback(skill);
         this.itemBank.set(skill, items);
       }
 
@@ -56,13 +56,59 @@ export class MstItemsController {
   }
 
   /**
+   * Load items for a skill from DB, then supplement any sparse cells from JSON.
+   * A "cell" is a unique (skill, cefr_level, stage) triple.
+   */
+  private async loadSkillItemsWithCellFallback(skill: Skill): Promise<Item[]> {
+    const dbItems = await this.loadSkillItemsFromDB(skill);
+    const jsonItems = this.loadSkillItemsFromJSONFile(skill);
+
+    // Index DB items by cell key
+    const cellCounts: Record<string, number> = {};
+    for (const item of dbItems) {
+      const key = `${item.cefr}:${item.stage}`;
+      cellCounts[key] = (cellCounts[key] ?? 0) + 1;
+    }
+
+    const cefrLevels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    const stages: Stage[] = ['core', 'upper', 'lower'];
+    const supplemented: Item[] = [];
+
+    for (const cefr of cefrLevels) {
+      for (const stage of stages) {
+        const key = `${cefr}:${stage}`;
+        const dbCount = cellCounts[key] ?? 0;
+        if (dbCount < MIN_ITEMS_PER_CELL) {
+          // Supplement from JSON: items matching this cefr+stage that aren't in DB already
+          const dbIds = new Set(dbItems.filter(i => i.cefr === cefr && i.stage === stage).map(i => i.id));
+          const candidates = jsonItems.filter(i => i.cefr === cefr && i.stage === stage && !dbIds.has(i.id));
+          supplemented.push(...candidates.slice(0, MIN_ITEMS_PER_CELL - dbCount));
+        }
+      }
+    }
+
+    const combined = [...dbItems, ...supplemented];
+    if (supplemented.length > 0) {
+      console.log(`📂 MST: supplemented ${supplemented.length} ${skill} items from JSON (cell-level top-up)`);
+    }
+
+    // Final fallback: if still zero items for the skill, use minimal hardcoded items
+    if (combined.length === 0) {
+      console.warn(`⚠️  MST: no items for ${skill} in DB or JSON, using hardcoded fallback`);
+      return this.createFallbackItemsForSkill(skill);
+    }
+
+    return combined;
+  }
+
+  /**
    * Load items for a skill from the DB (placement_test_questions).
    */
   private async loadSkillItemsFromDB(skill: Skill): Promise<Item[]> {
     try {
       const pool = await getPool();
       const result = await pool.query(
-        `SELECT content, stage, difficulty, discrimination, mst_item_id
+        `SELECT content, stage, cefr_level, difficulty, discrimination, mst_item_id
            FROM placement_test_questions
           WHERE skill = $1
             AND mst_item_id IS NOT NULL
@@ -76,10 +122,15 @@ export class MstItemsController {
       const items: Item[] = [];
       for (const row of result.rows) {
         try {
-          const raw = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+          const raw: unknown = typeof row.content === 'string'
+            ? JSON.parse(row.content)
+            : row.content;
+
+          if (!raw || typeof raw !== 'object') continue;
+
           // Merge DB-stored IRT values back onto the item
           const item = {
-            ...raw,
+            ...(raw as Record<string, unknown>),
             irtDifficulty:     parseFloat(row.difficulty)     || undefined,
             irtDiscrimination: parseFloat(row.discrimination) || undefined,
           } as Item;
@@ -91,86 +142,84 @@ export class MstItemsController {
 
       console.log(`🗄️  MST DB: loaded ${items.length} ${skill} items`);
       return items;
-    } catch (err: any) {
-      console.warn(`⚠️  MST DB query failed for ${skill}:`, err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`⚠️  MST DB query failed for ${skill}:`, msg);
       return [];
     }
   }
 
   /**
-   * Load items for a skill from the static JSON file.
+   * Load items for a skill from the static JSON file (used as cell-level supplement).
    */
-  private async loadSkillItemsFromJSON(skill: Skill): Promise<Item[]> {
+  private loadSkillItemsFromJSONFile(skill: Skill): Item[] {
     const items: Item[] = [];
-
     try {
-      if (existsSync(this.itemBankPath)) {
-        const fileContent = readFileSync(this.itemBankPath, 'utf-8');
-        const itemBank = JSON.parse(fileContent);
+      if (!existsSync(this.itemBankPath)) return items;
+      const fileContent = readFileSync(this.itemBankPath, 'utf-8');
+      const itemBank: unknown = JSON.parse(fileContent);
 
-        if (itemBank.skills && itemBank.skills[skill]) {
-          const skillData = itemBank.skills[skill];
+      if (!itemBank || typeof itemBank !== 'object') return items;
+      const skills = (itemBank as Record<string, unknown>).skills;
+      if (!skills || typeof skills !== 'object') return items;
 
-          if (skillData.S1)      items.push(...skillData.S1);
-          if (skillData.S2_up)   items.push(...skillData.S2_up);
-          if (skillData.S2_stay) items.push(...skillData.S2_stay);
-          if (skillData.S2_down) items.push(...skillData.S2_down);
-          if (skillData.S3_down) items.push(...skillData.S3_down);
+      const skillData = (skills as Record<string, unknown>)[skill];
+      if (!skillData || typeof skillData !== 'object') return items;
+
+      const sd = skillData as Record<string, unknown>;
+      const groups = ['S1', 'S2_up', 'S2_stay', 'S2_down', 'S3_down'];
+      for (const g of groups) {
+        const group = sd[g];
+        if (Array.isArray(group)) {
+          items.push(...(group as Item[]));
         }
       }
-    } catch (error) {
-      console.warn(`⚠️ Failed to load JSON items for ${skill}:`, error);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`⚠️  MST JSON load failed for ${skill}:`, msg);
     }
-
-    if (items.length === 0) {
-      items.push(...this.createFallbackItemsForSkill(skill));
-    }
-
     return items;
   }
 
   /**
-   * Get item by skill and stage.
+   * Get item by skill, stage, optional CEFR level, and excluded suffixes.
+   * CEFR filtering is applied when provided; stage filtering is always applied.
    */
   getItem(skill: Skill, stage: Stage, cefr?: CEFRLevel, excludedSuffixes?: Set<string>): Item | null {
-    const items = this.itemBank.get(skill) || [];
+    const items = this.itemBank.get(skill) ?? [];
 
-    let filteredItems = items.filter(item => item.stage === stage);
+    let pool = items.filter(item => item.stage === stage);
 
     if (cefr) {
-      filteredItems = filteredItems.filter(item => item.cefr === cefr);
+      const withCefr = pool.filter(item => item.cefr === cefr);
+      // Keep CEFR filter only if it doesn't empty the result
+      if (withCefr.length > 0) pool = withCefr;
     }
 
     if (excludedSuffixes && excludedSuffixes.size > 0) {
-      filteredItems = filteredItems.filter(item => {
-        const suffix = item.id.split('-').pop();
-        return !excludedSuffixes.has(suffix || '');
+      const withExclusion = pool.filter(item => {
+        const suffix = item.id.split('-').pop() ?? '';
+        return !excludedSuffixes.has(suffix);
       });
+      // Only apply suffix exclusion if it doesn't empty the pool
+      if (withExclusion.length > 0) pool = withExclusion;
     }
 
-    if (filteredItems.length === 0) {
-      console.warn(`⚠️ No items found for ${skill} ${stage} ${cefr || ''} after filtering`);
-      // Relax suffix filter if it caused empty result
-      if (excludedSuffixes && excludedSuffixes.size > 0) {
-        filteredItems = items.filter(item => item.stage === stage);
-        if (cefr) {
-          filteredItems = filteredItems.filter(item => item.cefr === cefr);
-        }
-      }
-      if (filteredItems.length === 0) {
-        return items[0] || null;
-      }
+    if (pool.length === 0) {
+      console.warn(`⚠️  No items for ${skill}/${stage}/${cefr ?? '*'} after filtering`);
+      // Final fallback: any item in this skill
+      const fallback = items[0] ?? null;
+      return fallback;
     }
 
-    const randomIndex = Math.floor(Math.random() * filteredItems.length);
-    return filteredItems[randomIndex];
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   /**
    * Get all items for a skill.
    */
   getSkillItems(skill: Skill): Item[] {
-    return this.itemBank.get(skill) || [];
+    return this.itemBank.get(skill) ?? [];
   }
 
   /**
@@ -192,7 +241,7 @@ export class MstItemsController {
   }
 
   /**
-   * Create minimal fallback items for all skills.
+   * Create minimal hardcoded fallback items for all skills (last resort).
    */
   private createFallbackItems(): void {
     const skills: Skill[] = ['listening', 'reading', 'speaking', 'writing'];
@@ -202,100 +251,93 @@ export class MstItemsController {
   }
 
   /**
-   * Create fallback items for a specific skill.
+   * Create minimal hardcoded fallback items for a specific skill.
    */
   private createFallbackItemsForSkill(skill: Skill): Item[] {
-    const items: Item[] = [];
-    const stages: Stage[] = ['core', 'upper', 'lower'];
-    const levels: CEFRLevel[] = ['A2', 'B1', 'B2'];
+    const stageMap: Array<{ stage: Stage; cefr: CEFRLevel }> = [
+      { stage: 'core',  cefr: 'B1' },
+      { stage: 'upper', cefr: 'B2' },
+      { stage: 'lower', cefr: 'A2' },
+    ];
 
-    for (let i = 0; i < stages.length; i++) {
-      const stage = stages[i];
-      const level = levels[i];
+    switch (skill) {
+      case 'listening':
+        return stageMap.map(({ stage, cefr }): ListeningItem => ({
+          id: `L-${cefr}-fallback-${stage}`,
+          skill: 'listening',
+          stage,
+          cefr,
+          timing: {
+            audioSec: 30,
+            maxAnswerSec: getListeningResponseTime(cefr),
+          },
+          metadata: { domain: 'general' },
+          assets: {
+            audio: '/assets/fallback/listening_sample.mp3',
+            transcript: 'This is a sample listening passage for placement testing.',
+          },
+          questions: [{
+            type: 'mcq_single',
+            stem: 'What is the main topic of the audio?',
+            options: ['Education', 'Travel', 'Food', 'Weather'],
+            answerIndex: 0,
+          }],
+        }));
 
-      switch (skill) {
-        case 'listening':
-          items.push({
-            id: `L-${level}-fallback-${stage}`,
-            skill: 'listening',
-            stage,
-            cefr: level,
-            timing: {
-              audioSec: 30,
-              maxAnswerSec: getListeningResponseTime(level),
-            },
-            metadata: { domain: 'general' },
-            assets: {
-              audio: '/assets/fallback/listening_sample.mp3',
-              transcript: 'This is a sample listening passage for placement testing.',
-            },
-            questions: [{
-              type: 'mcq_single',
-              stem: 'What is the main topic of the audio?',
-              options: ['Education', 'Travel', 'Food', 'Weather'],
-              answerIndex: 0,
-            }],
-          } as any);
-          break;
+      case 'reading':
+        return stageMap.map(({ stage, cefr }): ReadingItem => ({
+          id: `R-${cefr}-fallback-${stage}`,
+          skill: 'reading',
+          stage,
+          cefr,
+          timing: { maxAnswerSec: 90 },
+          metadata: { domain: 'general' },
+          assets: {
+            passage: 'Learning languages is an important skill in today\'s globalized world. ' +
+              'It opens up new opportunities for communication, travel, and career advancement. ' +
+              'Many people find that learning a second language improves their cognitive abilities.',
+          },
+          questions: [{
+            type: 'mcq_single',
+            stem: 'According to the passage, learning languages is:',
+            options: ['Difficult', 'Important', 'Expensive', 'Boring'],
+            answerIndex: 1,
+          }],
+        }));
 
-        case 'reading':
-          items.push({
-            id: `R-${level}-fallback-${stage}`,
-            skill: 'reading',
-            stage,
-            cefr: level,
-            timing: { maxAnswerSec: 90 },
-            metadata: { domain: 'general' },
-            assets: {
-              passage: 'Learning languages is an important skill in today\'s globalized world. It opens up new opportunities for communication, travel, and career advancement. Many people find that learning a second language improves their cognitive abilities and cultural understanding.',
-            },
-            questions: [{
-              type: 'mcq_single',
-              stem: 'According to the passage, learning languages is:',
-              options: ['Difficult', 'Important', 'Expensive', 'Boring'],
-              answerIndex: 1,
-            }],
-          } as any);
-          break;
+      case 'speaking':
+        return stageMap.map(({ stage, cefr }): SpeakingItem => ({
+          id: `S-${cefr}-fallback-${stage}`,
+          skill: 'speaking',
+          stage,
+          cefr,
+          timing: {
+            prepSec: 10,
+            recordSec: getSpeakingRecordTime(cefr),
+            maxAnswerSec: 10 + getSpeakingRecordTime(cefr),
+          },
+          metadata: { domain: 'general' },
+          assets: {
+            prompt: 'Describe your favorite hobby and explain why you enjoy it.',
+            keywords: ['hobby', 'enjoy', 'because', 'interesting'],
+          },
+        }));
 
-        case 'speaking':
-          items.push({
-            id: `S-${level}-fallback-${stage}`,
-            skill: 'speaking',
-            stage,
-            cefr: level,
-            timing: {
-              prepSec: 10,
-              recordSec: getSpeakingRecordTime(level),
-              maxAnswerSec: 10 + getSpeakingRecordTime(level),
-            },
-            metadata: { domain: 'general' },
-            assets: {
-              prompt: 'Describe your favorite hobby and explain why you enjoy it.',
-              keywords: ['hobby', 'enjoy', 'because', 'interesting'],
-            },
-          } as any);
-          break;
-
-        case 'writing':
-          items.push({
-            id: `W-${level}-fallback-${stage}`,
-            skill: 'writing',
-            stage,
-            cefr: level,
-            timing: { maxAnswerSec: getWritingCompositionTime(level) },
-            metadata: { domain: 'general' },
-            assets: {
-              prompt: 'Do you think social media has a positive or negative impact on society? Give your opinion with reasons.',
-              minWords: 100,
-              maxWords: 200,
-              taskType: 'opinion',
-            },
-          } as any);
-          break;
-      }
+      case 'writing':
+        return stageMap.map(({ stage, cefr }): WritingItem => ({
+          id: `W-${cefr}-fallback-${stage}`,
+          skill: 'writing',
+          stage,
+          cefr,
+          timing: { maxAnswerSec: getWritingCompositionTime(cefr) },
+          metadata: { domain: 'general' },
+          assets: {
+            prompt: 'Do you think social media has a positive or negative impact on society? Give your opinion with reasons.',
+            minWords: 100,
+            maxWords: 200,
+            taskType: 'opinion',
+          },
+        }));
     }
-
-    return items;
   }
 }

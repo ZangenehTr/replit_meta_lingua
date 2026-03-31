@@ -204,8 +204,17 @@ router.get('/item', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
-    // Get item with exclusions for speaking
-    const item = itemsController.getItem(skill, stage, undefined, excludedSuffixes);
+    // Derive CEFR level from the current session stage (stage→CEFR mapping mirrors item bank)
+    // core → B1 (default entry), upper → B2, lower → A2
+    const stageCefrMap: Record<string, import('../schemas/itemSchema').CEFRLevel> = {
+      core:  'B1',
+      upper: 'B2',
+      lower: 'A2',
+    };
+    const derivedCefr = stageCefrMap[stage] as import('../schemas/itemSchema').CEFRLevel | undefined;
+
+    // Get item with CEFR targeting and exclusions for speaking
+    const item = itemsController.getItem(skill, stage, derivedCefr, excludedSuffixes);
     
     if (!item) {
       return res.status(404).json({

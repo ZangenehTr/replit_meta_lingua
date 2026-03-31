@@ -779,20 +779,27 @@ export class AdaptivePlacementService {
     };
   }
 
-  /**
-   * Get question for specific skill and level
-   * Uses existing questions from database, falls back to generation if none exist
-   */
+  /** Derive the MST stage bucket from a CEFR level */
+  private cefrToStage(level: CEFRLevel): string {
+    if (level === 'B2' || level === 'C1' || level === 'C2') return 'upper';
+    if (level === 'A1' || level === 'A2') return 'lower';
+    return 'core'; // B1
+  }
+
   private async getQuestionForLevel(skill: Skill, level: CEFRLevel): Promise<PlacementTestQuestion | null> {
-    // First, try to fetch existing questions from database
+    const stage = this.cefrToStage(level);
+
+    // Query DB by skill + cefr_level + stage (cell-level targeting)
     const existingQuestions = await this.storage.getPlacementTestQuestions({
       skill,
       cefrLevel: level,
+      stage,
       isActive: true
     });
-    
-    // If we have existing questions, randomly select one
-    if (existingQuestions && existingQuestions.length > 0) {
+
+    // Use DB questions when ≥3 available in this cell (sufficient coverage)
+    const MIN_CELL_QUESTIONS = 3;
+    if (existingQuestions && existingQuestions.length >= MIN_CELL_QUESTIONS) {
       const randomIndex = Math.floor(Math.random() * existingQuestions.length);
       const selectedQuestion = existingQuestions[randomIndex];
       
