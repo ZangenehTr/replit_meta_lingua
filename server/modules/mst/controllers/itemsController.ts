@@ -128,11 +128,14 @@ export class MstItemsController {
 
           if (!raw || typeof raw !== 'object') continue;
 
-          // Merge DB-stored IRT values back onto the item
+          // Merge DB-stored IRT values back onto the item.
+          // Use Number.isFinite() so calibrated 0.0 (B1 core) is preserved.
+          const diffVal = parseFloat(row.difficulty as string);
+          const discVal = parseFloat(row.discrimination as string);
           const item = {
             ...(raw as Record<string, unknown>),
-            irtDifficulty:     parseFloat(row.difficulty)     || undefined,
-            irtDiscrimination: parseFloat(row.discrimination) || undefined,
+            irtDifficulty:     Number.isFinite(diffVal) ? diffVal : undefined,
+            irtDiscrimination: Number.isFinite(discVal) ? discVal : undefined,
           } as Item;
           items.push(item);
         } catch {
