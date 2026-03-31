@@ -252,7 +252,7 @@ async function genListening(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, 
     );
     const d = raw ? extractJSON(raw) : null;
     questionBlock = {
-      type: 'short_answer',
+      type: 'short_answer',  // listening short-answer: free text response
       stem: String(d?.question ?? 'What does the speaker mention?'),
       correctAnswers: (d?.correctAnswers as string[]) ?? ['answer'],
       maxWords: 10,
@@ -344,7 +344,7 @@ async function genReading(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, su
     const d = raw ? extractJSON(raw) : null;
     passage = String(d?.passage ?? `Complete this ${cefr} passage: The result was __BLANK__.`);
     questionBlock = {
-      type: 'short_answer',
+      type: 'fill_in',  // reading fill-in-blank: matches UI/scorer 'fill_in'|'fill_in_blank'
       stem: String(d?.stem ?? 'Fill in the blank'),
       correctAnswers: (d?.correctAnswers as string[]) ?? ['answer'],
       maxWords: 5,
