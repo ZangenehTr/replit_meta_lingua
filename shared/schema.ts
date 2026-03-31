@@ -1423,7 +1423,9 @@ export const leads = pgTable("leads", {
   idCardUploaded: boolean("id_card_uploaded").default(false),
   classNumber: varchar("class_number", { length: 50 }),
   teacherId: integer("teacher_id").references(() => users.id),
-  enrolledCourseId: integer("enrolled_course_id")
+  enrolledCourseId: integer("enrolled_course_id"),
+  subLevelCode: varchar("sub_level_code", { length: 20 }),
+  subLevelId: integer("sub_level_id")
 });
 
 export const leadActivityLog = pgTable("lead_activity_log", {
@@ -3194,6 +3196,10 @@ export const sessionPackages = pgTable("session_packages", {
   features: text("features").array().default([]),
   terms: text("terms"),
   lowSessionAlertThreshold: integer("low_session_alert_threshold").default(2), // alert when remaining <= this
+  minSubLevelId: integer("min_sub_level_id"),
+  maxSubLevelId: integer("max_sub_level_id"),
+  examTagIds: integer("exam_tag_ids").array().default([]),
+  skillScope: varchar("skill_scope", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

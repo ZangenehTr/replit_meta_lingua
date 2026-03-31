@@ -2170,26 +2170,37 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
-  // PATCH /api/admin/exam-tags/:id — update exam tag
+  // PATCH /api/admin/exam-tags/:id — update exam tag (fully parameterized SQL, no sql.raw)
+  // Accepts both camelCase (orderIndex, isActive) and snake_case (order_index, is_active) field names
   app.patch("/api/admin/exam-tags/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const tagId = parseInt(req.params.id, 10);
-      const { name, code, description, orderIndex, isActive } = req.body;
-      const updates: string[] = [];
-      if (name !== undefined) updates.push(`name = '${name.replace(/'/g, "''")}'`);
-      if (code !== undefined) updates.push(`code = '${code.toUpperCase().replace(/'/g, "''")}'`);
-      if (description !== undefined) updates.push(`description = ${description === null ? 'NULL' : `'${description.replace(/'/g, "''")}'`}`);
-      if (orderIndex !== undefined) updates.push(`order_index = ${parseInt(orderIndex, 10)}`);
-      if (isActive !== undefined) updates.push(`is_active = ${isActive === true || isActive === 'true'}`);
-      if (updates.length === 0) return res.status(400).json({ error: "No fields to update" });
+      const body = req.body;
+      // Accept both camelCase and snake_case field names from frontend
+      const name: string | undefined = body.name;
+      const code: string | undefined = body.code;
+      const description: string | null | undefined = body.description;
+      const orderIndex: number | undefined = body.orderIndex ?? body.order_index;
+      const isActive: boolean | undefined = body.isActive ?? body.is_active;
+
+      // Build update using individual parameterized queries to avoid sql.raw injection risk
+      const existing = await db.execute(sql`SELECT * FROM course_exam_tags WHERE id = ${tagId} LIMIT 1`);
+      if (existing.rows.length === 0) return res.status(404).json({ error: "Exam tag not found" });
+
+      const current = existing.rows[0] as any;
+      const newName = name ?? current.name;
+      const newCode = (code ?? current.code).toUpperCase();
+      const newDescription = description !== undefined ? description : current.description;
+      const newOrderIndex = orderIndex !== undefined ? parseInt(String(orderIndex), 10) : current.order_index;
+      const newIsActive = isActive !== undefined ? Boolean(isActive) : current.is_active;
 
       const result = await db.execute(sql`
         UPDATE course_exam_tags
-        SET ${sql.raw(updates.join(', '))}
+        SET name = ${newName}, code = ${newCode}, description = ${newDescription},
+            order_index = ${newOrderIndex}, is_active = ${newIsActive}
         WHERE id = ${tagId}
         RETURNING *
       `);
-      if (result.rows.length === 0) return res.status(404).json({ error: "Exam tag not found" });
       res.json(result.rows[0]);
     } catch (err) {
       console.error("Error updating exam tag:", err);
@@ -29050,23 +29061,30 @@ Meta Lingua Academy`;
   });
 
   // GET /api/student/available-courses — smart course discovery with eligibility filtering
-  // Returns only courses whose sub-level range includes the student's level.
-  // Courses without a range configured are always shown (open to all).
-  // Query params: examTagId, skillScope, search, showAll (bypass eligibility filter)
+  // Returns courses AND session packages whose sub-level range includes the student's level.
+  // Products without a range configured are always shown (open to all).
+  // Query params: examTagId, skillScope, search, showAll (bypass eligibility filter), type (courses|packages|all)
   app.get("/api/student/available-courses", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.id;
 
-      // Fetch student's current sub-level + existing enrollments
-      const [userRow, enrollmentRow] = await Promise.all([
+      // Fetch student profile, enrollments, session package purchases, and waitlists in parallel
+      const [userRow, enrollmentRow, packageRow] = await Promise.all([
         db.execute(sql`SELECT sub_level_id, sub_level_code FROM users WHERE id = ${userId}`),
-        db.execute(sql`SELECT course_id FROM enrollments WHERE user_id = ${userId} AND status = 'active'`),
+        db.execute(sql`SELECT course_id, status FROM enrollments WHERE user_id = ${userId}`),
+        db.execute(sql`SELECT package_id FROM student_session_packages WHERE student_id = ${userId} AND status IN ('active','purchased')`),
       ]);
 
       const user = userRow.rows[0] as any;
       const subLevelId: number | null = user?.sub_level_id ?? null;
       const subLevelCode: string | null = user?.sub_level_code ?? null;
-      const enrolledCourseIds = new Set((enrollmentRow.rows as any[]).map((r: any) => r.course_id));
+
+      // Build enrollment/waitlist map: courseId → status
+      const enrollmentMap = new Map<number, string>();
+      for (const r of enrollmentRow.rows as any[]) {
+        enrollmentMap.set(r.course_id, r.status ?? 'active');
+      }
+      const purchasedPackageIds = new Set((packageRow.rows as any[]).map((r: any) => r.package_id));
 
       // Fetch student's current sub-level order_index for range comparison
       let subLevelOrderIndex = 0;
@@ -29075,68 +29093,101 @@ Meta Lingua Academy`;
         subLevelOrderIndex = ((slRow.rows[0] as any)?.order_index ?? 0);
       }
 
-      const { examTagId, skillScope, search, showAll } = req.query;
+      const { examTagId, skillScope, search, showAll, type } = req.query;
+      const productType = (type as string) || 'all';
 
-      // Fetch all active courses with their sub-level info
-      const rows = await db.execute(sql`
-        SELECT
-          c.id, c.title, c.description, c.level, c.thumbnail, c.price,
-          c.total_lessons, c.category, c.difficulty, c.is_active,
-          c.min_sub_level_id, c.max_sub_level_id,
-          c.exam_tag_ids, c.skill_scope,
-          c.delivery_mode, c.class_format, c.rating,
-          min_cl.code         AS min_sub_level_code,
-          min_cl.order_index  AS min_sub_level_order,
-          max_cl.code         AS max_sub_level_code,
-          max_cl.order_index  AS max_sub_level_order,
-          u.first_name || ' ' || u.last_name AS instructor_name
-        FROM courses c
-        LEFT JOIN curriculum_levels min_cl ON min_cl.id = c.min_sub_level_id
-        LEFT JOIN curriculum_levels max_cl ON max_cl.id = c.max_sub_level_id
-        LEFT JOIN users u ON u.id = c.instructor_id
-        WHERE c.is_active = true
-        ORDER BY c.created_at DESC
-      `);
-
-      let allCourses = (rows.rows as any[]).map((c: any) => {
-        const minOrder: number = c.min_sub_level_order ?? 0;
-        const maxOrder: number = c.max_sub_level_order ?? 99;
-        const hasRange = c.min_sub_level_id != null || c.max_sub_level_id != null;
-
-        // Eligibility: student's level must fall within [min, max] range
-        // Courses with no range configured are eligible for everyone
+      // Helper: compute eligibility, match label, and status for any product
+      function classifyProduct(p: any, enrolledStatus: string | undefined, isPurchased?: boolean) {
+        const minOrder: number = p.min_sub_level_order ?? 0;
+        const maxOrder: number = p.max_sub_level_order ?? 99;
+        const hasRange = p.min_sub_level_id != null || p.max_sub_level_id != null;
         const eligible = !hasRange || (subLevelId != null && subLevelOrderIndex >= minOrder && subLevelOrderIndex <= maxOrder);
 
-        // Determine match label for UI
         let match: 'recommended' | 'available' | 'advanced' | 'all' = 'all';
         if (subLevelId && hasRange) {
-          if (subLevelOrderIndex >= minOrder && subLevelOrderIndex <= maxOrder) {
-            match = 'recommended';
-          } else if (subLevelOrderIndex < minOrder) {
-            match = 'advanced';
-          } else {
-            match = 'available';
-          }
+          if (subLevelOrderIndex >= minOrder && subLevelOrderIndex <= maxOrder) match = 'recommended';
+          else if (subLevelOrderIndex < minOrder) match = 'advanced';
+          else match = 'available';
         }
 
-        // Enrollment status
-        const enrolled = enrolledCourseIds.has(c.id);
-        const status: 'enrolled' | 'available' = enrolled ? 'enrolled' : 'available';
+        let status: 'enrolled' | 'waitlist' | 'available' = 'available';
+        if (enrolledStatus === 'active') status = 'enrolled';
+        else if (enrolledStatus === 'waitlist') status = 'waitlist';
+        else if (isPurchased) status = 'enrolled';
 
-        return { ...c, match, eligible, status, enrollmentStatus: status };
-      });
+        return { eligible, match, status, enrollmentStatus: status };
+      }
 
-      // Eligibility filter: unless showAll=true, only return eligible courses
+      // --- Courses ---
+      let courseResults: any[] = [];
+      if (productType === 'all' || productType === 'courses') {
+        const rows = await db.execute(sql`
+          SELECT
+            c.id, c.title, c.description, c.level, c.thumbnail, c.price,
+            c.total_lessons, c.category, c.difficulty, c.is_active,
+            c.min_sub_level_id, c.max_sub_level_id,
+            c.exam_tag_ids, c.skill_scope,
+            c.delivery_mode, c.class_format, c.rating,
+            min_cl.code         AS min_sub_level_code,
+            min_cl.order_index  AS min_sub_level_order,
+            max_cl.code         AS max_sub_level_code,
+            max_cl.order_index  AS max_sub_level_order,
+            u.first_name || ' ' || u.last_name AS instructor_name
+          FROM courses c
+          LEFT JOIN curriculum_levels min_cl ON min_cl.id = c.min_sub_level_id
+          LEFT JOIN curriculum_levels max_cl ON max_cl.id = c.max_sub_level_id
+          LEFT JOIN users u ON u.id = c.instructor_id
+          WHERE c.is_active = true
+          ORDER BY c.created_at DESC
+        `);
+        courseResults = (rows.rows as any[]).map((c: any) => ({
+          ...c,
+          productType: 'course',
+          ...classifyProduct(c, enrollmentMap.get(c.id)),
+        }));
+      }
+
+      // --- Session Packages ---
+      let packageResults: any[] = [];
+      if (productType === 'all' || productType === 'packages') {
+        const pkgRows = await db.execute(sql`
+          SELECT
+            sp.id, sp.name AS title, sp.description, sp.price, sp.is_active,
+            sp.min_sub_level_id, sp.max_sub_level_id,
+            sp.exam_tag_ids, sp.skill_scope,
+            sp.session_count, sp.session_duration, sp.validity_days, sp.package_type,
+            sp.target_audience, sp.skill_level,
+            min_cl.code         AS min_sub_level_code,
+            min_cl.order_index  AS min_sub_level_order,
+            max_cl.code         AS max_sub_level_code,
+            max_cl.order_index  AS max_sub_level_order
+          FROM session_packages sp
+          LEFT JOIN curriculum_levels min_cl ON min_cl.id = sp.min_sub_level_id
+          LEFT JOIN curriculum_levels max_cl ON max_cl.id = sp.max_sub_level_id
+          WHERE sp.is_active = true
+          ORDER BY sp.created_at DESC
+        `);
+        packageResults = (pkgRows.rows as any[]).map((p: any) => ({
+          ...p,
+          productType: 'session_package',
+          ...classifyProduct(p, undefined, purchasedPackageIds.has(p.id)),
+        }));
+      }
+
+      // Combine all products
+      let allProducts = [...courseResults, ...packageResults];
+
+      // Eligibility filter: unless showAll=true, only return eligible products
       if (showAll !== 'true') {
-        allCourses = allCourses.filter((c: any) => c.eligible || c.status === 'enrolled');
+        allProducts = allProducts.filter((p: any) => p.eligible || p.status !== 'available');
       }
 
       // Filter by exam tag if provided
       if (examTagId) {
         const tagIdNum = parseInt(examTagId as string, 10);
         if (!isNaN(tagIdNum)) {
-          allCourses = allCourses.filter((c: any) => {
-            const ids = Array.isArray(c.exam_tag_ids) ? c.exam_tag_ids : [];
+          allProducts = allProducts.filter((p: any) => {
+            const ids = Array.isArray(p.exam_tag_ids) ? p.exam_tag_ids : [];
             return ids.includes(tagIdNum);
           });
         }
@@ -29144,25 +29195,35 @@ Meta Lingua Academy`;
 
       // Filter by skill scope if provided
       if (skillScope) {
-        allCourses = allCourses.filter((c: any) =>
-          !c.skill_scope || c.skill_scope === skillScope || c.skill_scope === 'all'
+        allProducts = allProducts.filter((p: any) =>
+          !p.skill_scope || p.skill_scope === skillScope || p.skill_scope === 'all'
         );
       }
 
       // Filter by search text if provided
       if (search) {
         const q = (search as string).toLowerCase();
-        allCourses = allCourses.filter((c: any) =>
-          c.title?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q)
+        allProducts = allProducts.filter((p: any) =>
+          p.title?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)
         );
       }
 
+      // Group by exam tag for UI convenience
+      const byExamTag: Record<string, number> = {};
+      for (const p of allProducts) {
+        for (const tagId of (Array.isArray(p.exam_tag_ids) ? p.exam_tag_ids : [])) {
+          byExamTag[tagId] = (byExamTag[tagId] ?? 0) + 1;
+        }
+      }
+
       res.json({
-        courses: allCourses,
+        courses: allProducts,
         studentSubLevel: subLevelCode,
-        total: allCourses.length,
-        recommended: allCourses.filter((c: any) => c.match === 'recommended').length,
-        enrolled: allCourses.filter((c: any) => c.status === 'enrolled').length,
+        total: allProducts.length,
+        recommended: allProducts.filter((p: any) => p.match === 'recommended').length,
+        enrolled: allProducts.filter((p: any) => p.status === 'enrolled').length,
+        waitlisted: allProducts.filter((p: any) => p.status === 'waitlist').length,
+        byExamTag,
       });
     } catch (err) {
       console.error("Error fetching available courses:", err);

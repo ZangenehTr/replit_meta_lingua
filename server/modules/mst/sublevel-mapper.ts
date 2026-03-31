@@ -79,9 +79,19 @@ export async function persistUserSubLevel(
   const subLevelCode = computeSubLevelCode(overallBand, overallScore);
   const subLevelId = await getSubLevelId(subLevelCode);
 
+  // Update user profile
   await db.execute(
     sql`UPDATE users SET sub_level_code = ${subLevelCode}, sub_level_id = ${subLevelId}, updated_at = now() WHERE id = ${userId}`
   );
+
+  // Also update linked lead record (if the student has an associated lead — non-blocking)
+  try {
+    await db.execute(
+      sql`UPDATE leads SET sub_level_code = ${subLevelCode}, sub_level_id = ${subLevelId}, updated_at = now() WHERE student_id = ${userId}`
+    );
+  } catch (leadErr) {
+    console.warn(`⚠️ Could not update lead sub-level for user ${userId}:`, leadErr);
+  }
 
   console.log(`✅ User ${userId} sub-level set to ${subLevelCode} (id=${subLevelId})`);
   return { subLevelCode, subLevelId };
