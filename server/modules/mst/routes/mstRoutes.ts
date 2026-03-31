@@ -12,6 +12,7 @@ import { MstResponsesController } from '../controllers/responsesController';
 import { determineFinalBand } from '../routing/router';
 import { SkillResult } from '../schemas/resultSchema';
 import type { CEFRLevel } from '../schemas/itemSchema';
+import { MST_STAGE_CEFR_MAP } from '../schemas/itemSchema';
 import { whisperService } from '../../../whisper-service';
 import { authenticateToken, requireRole } from '../../../auth-middleware';
 import { AuthRequest } from '../../../auth-middleware';
@@ -213,12 +214,7 @@ router.get('/item', authenticateToken, async (req: AuthRequest, res) => {
     // A1, C1, C2 items are seeded for completeness and future full-CEFR expansion
     // (e.g., multi-start MST or curriculum gap analysis), but are not currently targeted
     // by this adaptive routing path.
-    const stageCefrMap: Record<string, CEFRLevel> = {
-      core:  'B1',
-      upper: 'B2',
-      lower: 'A2',
-    };
-    const derivedCefr: CEFRLevel | undefined = stageCefrMap[stage];
+    const derivedCefr: CEFRLevel | undefined = MST_STAGE_CEFR_MAP[stage as keyof typeof MST_STAGE_CEFR_MAP];
 
     // Get item with CEFR targeting and exclusions for speaking
     const item = itemsController.getItem(skill, stage, derivedCefr, excludedSuffixes);
@@ -480,11 +476,12 @@ router.post('/quickscore', authenticateToken, async (req: AuthRequest, res) => {
     // Get the item — prefer session-stored item (same as /mst/response path);
     // fall back to itemsController with CEFR targeting if session item isn't available.
     const sessionItem = sessionController.getSessionItem(sessionId, parsedSkill, parsedStage);
-    const derivedCefrForQS: Record<string, CEFRLevel> = {
-      core: 'B1', upper: 'B2', lower: 'A2',
-    };
     const item = sessionItem
-      ?? itemsController.getItem(parsedSkill, parsedStage, derivedCefrForQS[parsedStage]);
+      ?? itemsController.getItem(
+           parsedSkill,
+           parsedStage,
+           MST_STAGE_CEFR_MAP[parsedStage as keyof typeof MST_STAGE_CEFR_MAP],
+         );
     if (!item) {
       return res.status(404).json({
         success: false,

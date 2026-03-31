@@ -21,7 +21,8 @@ export const baseItemSchema = z.object({
   }),
 });
 
-// Question types
+// ─── Question type schemas ────────────────────────────────────────────────────
+
 export const mcqQuestionSchema = z.object({
   type: z.literal('mcq_single'),
   stem: z.string(),
@@ -43,52 +44,146 @@ export const shortAnswerQuestionSchema = z.object({
   maxWords: z.number().optional(),
 });
 
-// Listening items
+// Ordering: present N phrases/sentences, learner drags them into correct order.
+export const orderingQuestionSchema = z.object({
+  type: z.literal('ordering'),
+  stem: z.string(),
+  items: z.array(z.string()),       // Shuffled items shown to learner
+  correctOrder: z.array(z.number()), // Indices into `items` that form the correct sequence
+});
+
+// Fill-in-the-blank: sentence with one or more blanks (___), learner types answer(s).
+export const fillInQuestionSchema = z.object({
+  type: z.literal('fill_in'),
+  stem: z.string(),                          // Passage/sentence with ___ blanks
+  blanks: z.array(z.object({
+    index: z.number(),                        // Positional blank index (0-based)
+    correctAnswers: z.array(z.string()),      // Accepted answers (case-insensitive)
+  })),
+});
+
+// ─── Per-skill item schemas ───────────────────────────────────────────────────
+
+// Listening: MC single / MC multi / short answer / ordering / fill-in
 export const listeningItemSchema = baseItemSchema.extend({
   skill: z.literal('listening'),
   assets: z.object({
     audio: z.string(), // Path to audio file
     transcript: z.string(),
   }),
-  questions: z.array(z.union([mcqQuestionSchema, shortAnswerQuestionSchema])),
+  questions: z.array(
+    z.discriminatedUnion('type', [
+      mcqQuestionSchema,
+      mcqMultiQuestionSchema,
+      shortAnswerQuestionSchema,
+      orderingQuestionSchema,
+      fillInQuestionSchema,
+    ]),
+  ),
 });
 
-// Reading items
+// Reading: MC single / MC multi / short answer / ordering / fill-in
 export const readingItemSchema = baseItemSchema.extend({
   skill: z.literal('reading'),
   assets: z.object({
     passage: z.string(), // Reading text
   }),
-  questions: z.array(z.union([mcqQuestionSchema, mcqMultiQuestionSchema, shortAnswerQuestionSchema])),
+  questions: z.array(
+    z.discriminatedUnion('type', [
+      mcqQuestionSchema,
+      mcqMultiQuestionSchema,
+      shortAnswerQuestionSchema,
+      orderingQuestionSchema,
+      fillInQuestionSchema,
+    ]),
+  ),
 });
 
-// Speaking items
+// Speaking subtypes
+export const speakingFreeSchema = z.object({
+  type: z.literal('speaking_free'),
+  prompt: z.string(),
+  evaluationCriteria: z.array(z.string()).optional(),
+});
+export const speakingRoleplaySchema = z.object({
+  type: z.literal('speaking_roleplay'),
+  scenario: z.string(),
+  role: z.string(),
+  targetPhrases: z.array(z.string()).optional(),
+});
+export const speakingPictureSchema = z.object({
+  type: z.literal('speaking_picture'),
+  imageUrl: z.string(),
+  promptText: z.string(),
+  keyVocabulary: z.array(z.string()).optional(),
+});
+
+// Speaking item
 export const speakingItemSchema = baseItemSchema.extend({
   skill: z.literal('speaking'),
   assets: z.object({
-    prompt: z.string(), // Speaking task prompt
-    keywords: z.array(z.string()).optional(), // Helpful keywords
-    structure: z.string().optional(), // Expected response structure
+    prompt: z.string(),
+    keywords: z.array(z.string()).optional(),
+    structure: z.string().optional(),
   }),
   timing: z.object({
-    prepSec: z.number(), // Preparation time
-    recordSec: z.number(), // Recording time
+    prepSec: z.number(),
+    recordSec: z.number(),
     maxAnswerSec: z.number(),
   }),
+  speakingTask: z.discriminatedUnion('type', [
+    speakingFreeSchema,
+    speakingRoleplaySchema,
+    speakingPictureSchema,
+  ]).optional(),
 });
 
-// Writing items
+// Writing subtypes
+export const writingOpinionSchema = z.object({
+  type: z.literal('writing_opinion'),
+  prompt: z.string(),
+  minWords: z.number(),
+  maxWords: z.number(),
+});
+export const writingDescribeSchema = z.object({
+  type: z.literal('writing_describe'),
+  prompt: z.string(),
+  minWords: z.number(),
+  maxWords: z.number(),
+  imageUrl: z.string().optional(),
+});
+export const writingCorrectSchema = z.object({
+  type: z.literal('writing_correct'),
+  errorText: z.string(),  // Text with embedded errors to correct
+  correctText: z.string(),
+});
+export const writingArgumentSchema = z.object({
+  type: z.literal('writing_argument'),
+  prompt: z.string(),
+  stance: z.enum(['for', 'against', 'balanced']).optional(),
+  minWords: z.number(),
+  maxWords: z.number(),
+});
+
+// Writing item
 export const writingItemSchema = baseItemSchema.extend({
   skill: z.literal('writing'),
   assets: z.object({
-    prompt: z.string(), // Writing task prompt
+    prompt: z.string(),
     minWords: z.number(),
     maxWords: z.number(),
     taskType: z.enum(['opinion', 'description', 'comparison', 'argument']),
   }),
+  writingTask: z.discriminatedUnion('type', [
+    writingOpinionSchema,
+    writingDescribeSchema,
+    writingCorrectSchema,
+    writingArgumentSchema,
+  ]).optional(),
 });
 
-// Union type for all items
+// ─── Union and type exports ───────────────────────────────────────────────────
+
 export const itemSchema = z.union([
   listeningItemSchema,
   readingItemSchema,
@@ -96,11 +191,26 @@ export const itemSchema = z.union([
   writingItemSchema,
 ]);
 
-// Type exports
 export type BaseItem = z.infer<typeof baseItemSchema>;
 export type McqQuestion = z.infer<typeof mcqQuestionSchema>;
 export type McqMultiQuestion = z.infer<typeof mcqMultiQuestionSchema>;
 export type ShortAnswerQuestion = z.infer<typeof shortAnswerQuestionSchema>;
+export type OrderingQuestion = z.infer<typeof orderingQuestionSchema>;
+export type FillInQuestion = z.infer<typeof fillInQuestionSchema>;
+export type ListeningQuestion =
+  | McqQuestion
+  | McqMultiQuestion
+  | ShortAnswerQuestion
+  | OrderingQuestion
+  | FillInQuestion;
+export type ReadingQuestion = ListeningQuestion; // same union
+export type SpeakingFree = z.infer<typeof speakingFreeSchema>;
+export type SpeakingRoleplay = z.infer<typeof speakingRoleplaySchema>;
+export type SpeakingPicture = z.infer<typeof speakingPictureSchema>;
+export type WritingOpinion = z.infer<typeof writingOpinionSchema>;
+export type WritingDescribe = z.infer<typeof writingDescribeSchema>;
+export type WritingCorrect = z.infer<typeof writingCorrectSchema>;
+export type WritingArgument = z.infer<typeof writingArgumentSchema>;
 export type ListeningItem = z.infer<typeof listeningItemSchema>;
 export type ReadingItem = z.infer<typeof readingItemSchema>;
 export type SpeakingItem = z.infer<typeof speakingItemSchema>;
@@ -111,3 +221,18 @@ export type Item = z.infer<typeof itemSchema>;
 export type Skill = 'listening' | 'reading' | 'speaking' | 'writing';
 export type Stage = 'core' | 'upper' | 'lower';
 export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
+/**
+ * MST Active Routing Map:
+ *  core  → B1  (entry stage for all test-takers)
+ *  upper → B2  (adaptive upper branch)
+ *  lower → A2  (adaptive lower branch)
+ *
+ * A1, C1, C2 items are seeded for completeness (curriculum gap analysis / future
+ * multi-start MST expansion) but are NOT currently served by the adaptive router.
+ */
+export const MST_STAGE_CEFR_MAP: Record<Stage, CEFRLevel> = {
+  core:  'B1',
+  upper: 'B2',
+  lower: 'A2',
+};
