@@ -17,6 +17,7 @@ import { whisperService } from '../../../whisper-service';
 import { authenticateToken, requireRole } from '../../../auth-middleware';
 import { AuthRequest } from '../../../auth-middleware';
 import { storage } from '../../../storage';
+import { persistUserSubLevel } from '../sublevel-mapper';
 
 const router = express.Router();
 
@@ -605,6 +606,28 @@ router.post('/finalize', authenticateToken, async (req: AuthRequest, res) => {
     // Finalize and get results
     const result = await sessionController.finalizeSession(sessionId);
 
+    // Compute overall score (average of skill p values) for sub-level mapping
+    const skillResults = sessionController.getSkillResults(sessionId);
+    const overallScore = skillResults.length > 0
+      ? skillResults.reduce((sum, s) => {
+          const p = ((s.stage1Score ?? 0) + (s.stage2Score ?? s.stage1Score ?? 0)) / (s.stage2Score != null ? 2 : 1);
+          return sum + p;
+        }, 0) / skillResults.length
+      : 0.5;
+
+    // Persist sub-level to user profile (non-blocking)
+    let subLevelInfo: { subLevelCode: string; subLevelId: number | null } = { subLevelCode: '', subLevelId: null };
+    try {
+      subLevelInfo = await persistUserSubLevel(
+        req.user!.id,
+        result.overallBand,
+        overallScore
+      );
+      console.log(`🏷️ MST sub-level persisted for user ${req.user!.id}: ${subLevelInfo.subLevelCode}`);
+    } catch (subErr) {
+      console.error('⚠️ Failed to persist sub-level (non-blocking):', subErr);
+    }
+
     res.json({
       success: true,
       result: {
@@ -616,7 +639,8 @@ router.post('/finalize', authenticateToken, async (req: AuthRequest, res) => {
           confidence: skill.confidence
         })),
         totalTimeMin: result.totalTimeMin,
-        recommendations: result.recommendations
+        recommendations: result.recommendations,
+        subLevel: subLevelInfo.subLevelCode || null
       }
     });
   } catch (error) {

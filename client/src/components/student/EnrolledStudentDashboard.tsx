@@ -1099,9 +1099,190 @@ function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats
   );
 }
 
+function CoursesForMe() {
+  const { t } = useTranslation(['student', 'common']);
+  const [selectedExamTag, setSelectedExamTag] = useState<number | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<string>('');
+  const [searchText, setSearchText] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'recommended' | 'advanced'>('recommended');
+
+  const { data: examTagsData = [], isLoading: tagsLoading } = useQuery({
+    queryKey: ['/api/courses/exam-tags'],
+    staleTime: 10 * 60 * 1000,
+  });
+  const examTags: any[] = Array.isArray(examTagsData) ? examTagsData : [];
+
+  const params = new URLSearchParams();
+  if (selectedExamTag) params.set('examTagId', String(selectedExamTag));
+  if (selectedSkill) params.set('skillScope', selectedSkill);
+  if (searchText) params.set('search', searchText);
+
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['/api/student/available-courses', selectedExamTag, selectedSkill, searchText],
+    queryFn: () => apiRequest(`/api/student/available-courses?${params.toString()}`),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const allCourses: any[] = Array.isArray(coursesData?.courses) ? coursesData.courses : [];
+  const studentSubLevel: string = coursesData?.studentSubLevel || '';
+
+  const displayed = activeFilter === 'all'
+    ? allCourses
+    : allCourses.filter((c: any) => c.match === activeFilter);
+
+  const recommendedCount = allCourses.filter((c: any) => c.match === 'recommended').length;
+
+  const skillOptions = [
+    { value: '', label: 'All Skills' },
+    { value: 'listening', label: 'Listening' },
+    { value: 'reading', label: 'Reading' },
+    { value: 'speaking', label: 'Speaking' },
+    { value: 'writing', label: 'Writing' },
+  ];
+
+  const matchColor = (match: string) => {
+    if (match === 'recommended') return 'bg-green-100 text-green-700 border-green-200';
+    if (match === 'advanced') return 'bg-amber-100 text-amber-700 border-amber-200';
+    return 'bg-blue-50 text-blue-600 border-blue-100';
+  };
+  const matchLabel = (match: string) => {
+    if (match === 'recommended') return '✓ Matches your level';
+    if (match === 'advanced') return '↑ Advanced';
+    return 'Available';
+  };
+
+  return (
+    <div className="space-y-4" data-testid="courses-for-me">
+      {/* Sub-level banner */}
+      {studentSubLevel ? (
+        <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+          <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+            {studentSubLevel}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-indigo-900">Your current level: {studentSubLevel}</p>
+            <p className="text-xs text-indigo-600">
+              {recommendedCount > 0
+                ? `${recommendedCount} course${recommendedCount === 1 ? '' : 's'} matched to your level`
+                : 'Browse all available courses below'}
+            </p>
+          </div>
+          <Badge className="ml-auto bg-indigo-600 text-white">{studentSubLevel}</Badge>
+        </div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-800">
+          <span className="font-semibold">Take the placement test</span> to unlock personalised course recommendations.
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 items-center">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search courses…"
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+            className="pl-9 pr-3 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          />
+        </div>
+        {/* Exam tags */}
+        <select
+          className="border border-gray-200 rounded-lg text-sm px-3 py-2 bg-white focus:outline-none"
+          value={selectedExamTag ?? ''}
+          onChange={e => setSelectedExamTag(e.target.value ? Number(e.target.value) : null)}
+        >
+          <option value="">All Exams</option>
+          {examTags.map((tag: any) => (
+            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          ))}
+        </select>
+        {/* Skill scope */}
+        <select
+          className="border border-gray-200 rounded-lg text-sm px-3 py-2 bg-white focus:outline-none"
+          value={selectedSkill}
+          onChange={e => setSelectedSkill(e.target.value)}
+        >
+          {skillOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </div>
+
+      {/* Match filter tabs */}
+      <div className="flex gap-2">
+        {(['recommended', 'all', 'advanced'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setActiveFilter(f)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              activeFilter === f
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {f === 'recommended' ? `Recommended (${recommendedCount})` : f === 'all' ? `All (${allCourses.length})` : 'Advanced'}
+          </button>
+        ))}
+      </div>
+
+      {/* Course grid */}
+      {coursesLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}><CardContent className="p-4 space-y-2">
+              <Skeleton className="h-5 w-3/4" /><Skeleton className="h-4 w-full" /><Skeleton className="h-8 w-24" />
+            </CardContent></Card>
+          ))}
+        </div>
+      ) : displayed.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+          <p>No courses match your current filters.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {displayed.map((course: any) => (
+            <Card key={course.id} className={`border transition-shadow hover:shadow-md ${course.match === 'recommended' ? 'border-green-200' : 'border-gray-200'}`}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h4 className="font-semibold text-gray-900 text-sm leading-tight">{course.title}</h4>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border whitespace-nowrap ${matchColor(course.match)}`}>
+                    {matchLabel(course.match)}
+                  </span>
+                </div>
+                {course.description && (
+                  <p className="text-xs text-gray-500 mb-3 line-clamp-2">{course.description}</p>
+                )}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {course.min_sub_level_code && (
+                    <Badge variant="outline" className="text-xs">{course.min_sub_level_code}{course.max_sub_level_code && course.max_sub_level_code !== course.min_sub_level_code ? ` – ${course.max_sub_level_code}` : ''}</Badge>
+                  )}
+                  {course.skill_scope && <Badge variant="outline" className="text-xs capitalize">{course.skill_scope}</Badge>}
+                  {course.difficulty && <Badge variant="secondary" className="text-xs capitalize">{course.difficulty}</Badge>}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-indigo-700">
+                    {course.price ? `${Number(course.price).toLocaleString()} T` : 'Free'}
+                  </span>
+                  <Button size="sm" variant="outline" className="text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    onClick={() => window.location.href = `/courses/${course.id}`}>
+                    View Course
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LearnHub({ courses, assignments, learningProgress }: any) {
   const queryClient = useQueryClient();
-  
+  const [learnTab, setLearnTab] = useState<'my-courses' | 'discover'>('my-courses');
+
   // Fetch LinguaQuest progress data
   const { data: linguaQuestProgress, isLoading: linguaQuestLoading } = useQuery({
     queryKey: [API_ENDPOINTS.student.linguaquestProgress],
@@ -1140,11 +1321,27 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
               </div>
             </div>
           </div>
+          {/* Tab switcher */}
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => setLearnTab('my-courses')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${learnTab === 'my-courses' ? 'bg-white text-blue-700' : 'bg-white/20 text-white hover:bg-white/30'}`}
+              data-testid="tab-my-courses"
+            >My Courses</button>
+            <button
+              onClick={() => setLearnTab('discover')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${learnTab === 'discover' ? 'bg-white text-blue-700' : 'bg-white/20 text-white hover:bg-white/30'}`}
+              data-testid="tab-discover-courses"
+            >Courses for Me</button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Learning Progress Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Courses for Me tab */}
+      {learnTab === 'discover' && <CoursesForMe />}
+
+      {/* Learning Progress Overview — only shown in My Courses tab */}
+      {learnTab === 'my-courses' && <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2" data-testid="paid-courses-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -1274,7 +1471,7 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
           <LearningProgressWidget theme="learner" data-testid="learning-progress-widget" />
           <AssignmentsWidget theme="learner" data-testid="assignments-widget" />
         </div>
-      </div>
+      </div>}
 
       {/* Learning Recommendations & Resources */}
       <Card data-testid="learning-recommendations-card">

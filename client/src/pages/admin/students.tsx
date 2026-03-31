@@ -285,6 +285,29 @@ export function AdminStudents() {
     queryKey: ['/api/courses'],
   });
 
+  // Fetch curriculum sub-levels for override selector
+  const { data: subLevelsData = [] } = useQuery({
+    queryKey: ['/api/curriculum-sublevels'],
+    staleTime: 10 * 60 * 1000,
+  });
+  const subLevels: any[] = Array.isArray(subLevelsData) ? subLevelsData : [];
+
+  // Sub-level override mutation
+  const overrideSubLevelMutation = useMutation({
+    mutationFn: async ({ studentId, subLevelCode }: { studentId: number; subLevelCode: string }) =>
+      apiRequest(`/api/admin/students/${studentId}/sublevel`, {
+        method: 'PATCH',
+        body: JSON.stringify({ subLevelCode }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });
+      toast({ title: t('common:toast.success'), description: 'Student sub-level updated.' });
+    },
+    onError: () => {
+      toast({ title: t('common:toast.error'), description: 'Failed to update sub-level.', variant: 'destructive' });
+    },
+  });
+
   // Ensure courses is an array to prevent errors
   const coursesList = Array.isArray(courses) ? courses : [];
   const availableCourses = coursesList;
@@ -1058,6 +1081,43 @@ export function AdminStudents() {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Sub-level override */}
+              <div className="space-y-2">
+                <Label htmlFor="editSubLevel">CEFR Sub-Level Override</Label>
+                <div className="flex gap-2">
+                  <Select
+                    value={editingStudent.subLevelCode || ''}
+                    onValueChange={(val) => setEditingStudent({ ...editingStudent, subLevelCode: val })}
+                  >
+                    <SelectTrigger id="editSubLevel" className="flex-1">
+                      <SelectValue placeholder="Select sub-level…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">— Auto (from MST) —</SelectItem>
+                      {subLevels.map((sl: any) => (
+                        <SelectItem key={sl.id} value={sl.code}>{sl.code} — {sl.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!editingStudent?.subLevelCode || overrideSubLevelMutation.isPending}
+                    onClick={() => {
+                      if (editingStudent?.id && editingStudent?.subLevelCode) {
+                        overrideSubLevelMutation.mutate({ studentId: editingStudent.id, subLevelCode: editingStudent.subLevelCode });
+                      }
+                    }}
+                    className="whitespace-nowrap"
+                  >
+                    {overrideSubLevelMutation.isPending ? 'Saving…' : 'Set Level'}
+                  </Button>
+                </div>
+                {editingStudent?.subLevelCode && (
+                  <p className="text-xs text-amber-600">This overrides the MST-assigned level for this student.</p>
+                )}
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="editGuardianName">{t('admin:students.guardianName')}</Label>
                 <Input 
@@ -1213,6 +1273,11 @@ export function AdminStudents() {
                     <span className="hidden sm:inline">{student.level}</span>
                     <span className="sm:hidden text-xs">{student.level[0]}</span>
                   </Badge>
+                  {student.sub_level_code && (
+                    <Badge variant="outline" className="text-xs px-1.5 py-0.5 border-indigo-300 text-indigo-700 bg-indigo-50">
+                      {student.sub_level_code}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>

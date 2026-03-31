@@ -2132,6 +2132,22 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     }
   });
 
+  // GET /api/courses/exam-tags — list all exam focus tags (public, must be before /:id wildcard)
+  app.get("/api/courses/exam-tags", async (_req, res) => {
+    try {
+      const tags = await db.execute(sql`
+        SELECT id, name, code, description, order_index
+        FROM course_exam_tags
+        WHERE is_active = true
+        ORDER BY order_index
+      `);
+      res.json(tags.rows);
+    } catch (err) {
+      console.error("Error fetching exam tags:", err);
+      res.status(500).json({ error: "Failed to fetch exam tags" });
+    }
+  });
+
   // Get individual course by ID (for search results and course detail pages)
   app.get("/api/courses/:id", async (req: any, res) => {
     try {
@@ -28942,9 +28958,201 @@ Meta Lingua Academy`;
   app.use('/api/hr/employees', hrRoutes);
   console.log('✅ HR Module routes registered (Employees, Contracts, Leave, Payroll, Performance)');
 
-  // HR Scheduler — monthly performance review auto-generation (BullMQ with setInterval fallback)
-  const { startHrScheduler } = await import('./services/hr-scheduler');
-  await startHrScheduler();
+  // HR Scheduler — monthly performance review auto-generation (non-blocking, BullMQ with setInterval fallback)
+  import('./services/hr-scheduler').then(({ startHrScheduler }) => startHrScheduler()).catch((err) => {
+    console.warn('[HR Scheduler] Failed to start:', err.message);
+  });
+
+
+  // ========================
+  // SUB-LEVEL SYSTEM API
+  // ========================
+
+  // GET /api/curriculum-sublevels — list all 17 sub-levels (public)
+  app.get("/api/curriculum-sublevels", async (_req, res) => {
+    try {
+      const levels = await db.execute(sql`
+        SELECT cl.id, cl.code, cl.name, cl.cefr_band, cl.order_index, cl.description
+        FROM curriculum_levels cl
+        JOIN curriculums c ON c.id = cl.curriculum_id
+        WHERE c.key = 'general_english' AND cl.is_active = true
+        ORDER BY cl.order_index
+      `);
+      res.json(levels.rows);
+    } catch (err) {
+      console.error("Error fetching sub-levels:", err);
+      res.status(500).json({ error: "Failed to fetch sub-levels" });
+    }
+  });
+
+  // GET /api/student/available-courses — smart course discovery based on student's sub-level
+  app.get("/api/student/available-courses", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      // Fetch student's current sub-level
+      const userRow = await db.execute(sql`
+        SELECT sub_level_id, sub_level_code FROM users WHERE id = ${userId}
+      `);
+      const user = userRow.rows[0] as any;
+      const subLevelId: number | null = user?.sub_level_id ?? null;
+      const subLevelCode: string | null = user?.sub_level_code ?? null;
+
+      // Fetch student's current sub-level order_index for range comparison
+      let subLevelOrderIndex = 0;
+      if (subLevelId) {
+        const slRow = await db.execute(sql`SELECT order_index FROM curriculum_levels WHERE id = ${subLevelId}`);
+        subLevelOrderIndex = ((slRow.rows[0] as any)?.order_index ?? 0);
+      }
+
+      // Build query params from request
+      const { examTagId, skillScope, search } = req.query;
+
+      // Fetch all active courses with their sub-level info
+      const rows = await db.execute(sql`
+        SELECT
+          c.id, c.title, c.description, c.level, c.thumbnail, c.price,
+          c.total_lessons, c.category, c.difficulty, c.is_active,
+          c.min_sub_level_id, c.max_sub_level_id,
+          c.exam_tag_ids, c.skill_scope,
+          c.delivery_mode, c.class_format, c.rating,
+          min_cl.code   AS min_sub_level_code,
+          min_cl.order_index AS min_sub_level_order,
+          max_cl.code   AS max_sub_level_code,
+          max_cl.order_index AS max_sub_level_order,
+          u.first_name || ' ' || u.last_name AS instructor_name
+        FROM courses c
+        LEFT JOIN curriculum_levels min_cl ON min_cl.id = c.min_sub_level_id
+        LEFT JOIN curriculum_levels max_cl ON max_cl.id = c.max_sub_level_id
+        LEFT JOIN users u ON u.id = c.instructor_id
+        WHERE c.is_active = true
+        ORDER BY c.created_at DESC
+      `);
+
+      let allCourses = rows.rows as any[];
+
+      // Filter by exam tag if provided
+      if (examTagId) {
+        const tagIdNum = parseInt(examTagId as string, 10);
+        if (!isNaN(tagIdNum)) {
+          allCourses = allCourses.filter((c: any) => {
+            const ids = Array.isArray(c.exam_tag_ids) ? c.exam_tag_ids : [];
+            return ids.includes(tagIdNum);
+          });
+        }
+      }
+
+      // Filter by skill scope if provided
+      if (skillScope) {
+        allCourses = allCourses.filter((c: any) =>
+          !c.skill_scope || c.skill_scope === skillScope || c.skill_scope === 'all'
+        );
+      }
+
+      // Filter by search text if provided
+      if (search) {
+        const q = (search as string).toLowerCase();
+        allCourses = allCourses.filter((c: any) =>
+          c.title?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q)
+        );
+      }
+
+      // Tag each course as 'recommended' / 'available' / 'advanced' based on student sub-level
+      const tagged = allCourses.map((c: any) => {
+        const minOrder: number = c.min_sub_level_order ?? 0;
+        const maxOrder: number = c.max_sub_level_order ?? 99;
+
+        let match: 'recommended' | 'available' | 'advanced' | 'all' = 'all';
+
+        if (subLevelId) {
+          if (subLevelOrderIndex >= minOrder && subLevelOrderIndex <= maxOrder) {
+            match = 'recommended';
+          } else if (subLevelOrderIndex < minOrder) {
+            match = 'advanced';
+          } else {
+            match = 'available';
+          }
+        }
+
+        return { ...c, match };
+      });
+
+      res.json({
+        courses: tagged,
+        studentSubLevel: subLevelCode,
+        total: tagged.length,
+        recommended: tagged.filter((c: any) => c.match === 'recommended').length
+      });
+    } catch (err) {
+      console.error("Error fetching available courses:", err);
+      res.status(500).json({ error: "Failed to fetch available courses" });
+    }
+  });
+
+  // PATCH /api/admin/students/:id/sublevel — admin override student's sub-level
+  app.patch("/api/admin/students/:id/sublevel", authenticateToken, requireRole(['Admin', 'Supervisor', 'Front Desk']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id, 10);
+      const { subLevelCode } = req.body;
+
+      if (!subLevelCode) {
+        return res.status(400).json({ error: "subLevelCode is required" });
+      }
+
+      // Resolve sub-level ID
+      const slRow = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${subLevelCode} LIMIT 1`);
+      if (slRow.rows.length === 0) {
+        return res.status(404).json({ error: `Sub-level "${subLevelCode}" not found` });
+      }
+      const subLevelId = (slRow.rows[0] as any).id;
+
+      await db.execute(sql`
+        UPDATE users SET sub_level_id = ${subLevelId}, sub_level_code = ${subLevelCode}, updated_at = now()
+        WHERE id = ${studentId}
+      `);
+
+      res.json({ success: true, studentId, subLevelCode, subLevelId });
+    } catch (err) {
+      console.error("Error updating student sub-level:", err);
+      res.status(500).json({ error: "Failed to update student sub-level" });
+    }
+  });
+
+  // PATCH /api/admin/courses/:id/sublevel-config — update course sub-level range + exam tags
+  app.patch("/api/admin/courses/:id/sublevel-config", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id, 10);
+      const { minSubLevelCode, maxSubLevelCode, examTagIds, skillScope } = req.body;
+
+      // Resolve sub-level IDs
+      let minId: number | null = null;
+      let maxId: number | null = null;
+
+      if (minSubLevelCode) {
+        const r = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${minSubLevelCode} LIMIT 1`);
+        if (r.rows.length > 0) minId = (r.rows[0] as any).id;
+      }
+      if (maxSubLevelCode) {
+        const r = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${maxSubLevelCode} LIMIT 1`);
+        if (r.rows.length > 0) maxId = (r.rows[0] as any).id;
+      }
+
+      await db.execute(sql`
+        UPDATE courses
+        SET min_sub_level_id = ${minId},
+            max_sub_level_id = ${maxId},
+            exam_tag_ids = ${JSON.stringify(examTagIds ?? [])},
+            skill_scope = ${skillScope ?? null},
+            updated_at = now()
+        WHERE id = ${courseId}
+      `);
+
+      res.json({ success: true, courseId, minId, maxId });
+    } catch (err) {
+      console.error("Error updating course sublevel config:", err);
+      res.status(500).json({ error: "Failed to update course sub-level config" });
+    }
+  });
+
 
   return app;
 }

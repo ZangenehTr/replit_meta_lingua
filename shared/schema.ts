@@ -179,7 +179,10 @@ export const users = pgTable("users", {
   // Personal referral code for the referral program
   referralCode: varchar("referral_code", { length: 20 }).unique(),
   // Code that was used to invite this user (tracked for referral attribution)
-  referredByCode: varchar("referred_by_code", { length: 20 })
+  referredByCode: varchar("referred_by_code", { length: 20 }),
+  // MST-assigned CEFR sub-level
+  subLevelId: integer("sub_level_id"),
+  subLevelCode: varchar("sub_level_code", { length: 10 })
 });
 
 // Curriculum Categories table - Dynamic CMS for course categorization
@@ -243,7 +246,14 @@ export const courses = pgTable("courses", {
   rating: decimal("rating"),
   accessPeriodMonths: integer("access_period_months"),
   callernAvailable24h: boolean("callern_available_24h"),
-  callernRoadmapId: integer("callern_roadmap_id")
+  callernRoadmapId: integer("callern_roadmap_id"),
+  // Sub-level prerequisite range (FK to curriculum_levels)
+  minSubLevelId: integer("min_sub_level_id"),
+  maxSubLevelId: integer("max_sub_level_id"),
+  // Exam tag IDs (references course_exam_tags)
+  examTagIds: integer("exam_tag_ids").array().default([]),
+  // Skill focus: listening, reading, speaking, writing, all
+  skillScope: varchar("skill_scope", { length: 50 })
 });
 
 // Achievements table
@@ -5977,6 +5987,21 @@ export const curriculumLevels = pgTable("curriculum_levels", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
+
+// Exam tags for course discovery (IELTS, TOEFL, GRE, etc.)
+export const courseExamTags = pgTable("course_exam_tags", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  orderIndex: integer("order_index").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export type CourseExamTag = typeof courseExamTags.$inferSelect;
+export type InsertCourseExamTag = typeof courseExamTags.$inferInsert;
 
 // Links courses to curriculum levels (many-to-many relationship)
 export const curriculumLevelCourses = pgTable("curriculum_level_courses", {
