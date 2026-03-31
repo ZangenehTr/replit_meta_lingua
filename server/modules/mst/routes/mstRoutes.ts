@@ -204,8 +204,14 @@ router.get('/item', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
-    // Derive CEFR level from the current session stage (stage→CEFR mapping mirrors item bank)
-    // core → B1 (default entry), upper → B2, lower → A2
+    // MST stage→CEFR mapping: The placement test begins at B1/core and branches adaptively.
+    // Only three CEFR bands are used during an active MST session:
+    //   core → B1  (default entry point)
+    //   upper → B2 (higher-ability branch)
+    //   lower → A2 (lower-ability branch)
+    // A1, C1, C2 items are seeded for completeness and future full-CEFR expansion
+    // (e.g., multi-start MST or curriculum gap analysis), but are not currently targeted
+    // by this adaptive routing path.
     const stageCefrMap: Record<string, import('../schemas/itemSchema').CEFRLevel> = {
       core:  'B1',
       upper: 'B2',

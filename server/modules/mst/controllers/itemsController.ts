@@ -120,13 +120,17 @@ export class MstItemsController {
       if (!result.rows || result.rows.length === 0) return [];
 
       const items: Item[] = [];
+      let malformed = 0;
       for (const row of result.rows) {
         try {
           const raw: unknown = typeof row.content === 'string'
             ? JSON.parse(row.content)
             : row.content;
 
-          if (!raw || typeof raw !== 'object') continue;
+          if (!raw || typeof raw !== 'object') {
+            malformed++;
+            continue;
+          }
 
           // Merge DB-stored IRT values back onto the item.
           // Use Number.isFinite() so calibrated 0.0 (B1 core) is preserved.
@@ -139,10 +143,13 @@ export class MstItemsController {
           } as Item;
           items.push(item);
         } catch {
-          // Skip malformed rows silently
+          malformed++;
         }
       }
 
+      if (malformed > 0) {
+        console.warn(`⚠️  MST DB: ${malformed} malformed content row(s) skipped for skill=${skill}`);
+      }
       console.log(`🗄️  MST DB: loaded ${items.length} ${skill} items`);
       return items;
     } catch (err: unknown) {
