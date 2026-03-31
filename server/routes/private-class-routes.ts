@@ -320,6 +320,9 @@ export function registerPrivateClassRoutes(app: Express) {
         return res.status(403).json({ message: "Not authorized for this student's package" });
       }
 
+      // Business rule: only deduct a session when the student actually attended.
+      // Absent or cancelled sessions do NOT consume the session quota —
+      // the student gets the session back or rescheduled at no extra cost.
       const deducted = data.attendanceStatus === 'attended' ? 1 : 0;
       const newRemaining = Math.max(0, pkg.remainingSessions - deducted);
 
@@ -742,8 +745,8 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
     // 4. Get the current bundle info for recommended next bundle prefill
     const [currentBundle] = await db.select().from(sessionPackages).where(eq(sessionPackages.id, pkg.packageId));
 
-    // 4. Notify assigned agent — fall back to any Admin if lead has no assignee
-    let agentId = lead.assignedTo;
+    // 4. Notify assigned agent — check assignedTo then assignedAgentId then fallback to Admin
+    let agentId = lead.assignedTo ?? lead.assignedAgentId ?? null;
     if (!agentId) {
       const [fallbackAdmin] = await db.select({ id: users.id }).from(users)
         .where(eq(users.role, "Admin")).limit(1);
