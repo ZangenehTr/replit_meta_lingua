@@ -53,8 +53,27 @@ export function registerPrivateClassRoutes(app: Express) {
         price: z.number().positive(),
         lowSessionAlertThreshold: z.number().int().min(1).default(2),
         features: z.array(z.string()).optional(),
+        minSubLevelCode: z.string().nullable().optional(),
+        maxSubLevelCode: z.string().nullable().optional(),
+        examTagIds: z.array(z.number()).optional(),
+        skillScope: z.string().nullable().optional(),
       });
       const data = schema.parse(req.body);
+
+      // Resolve sub-level codes to IDs
+      let minSubLevelId: number | null = null;
+      let maxSubLevelId: number | null = null;
+      if (data.minSubLevelCode) {
+        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.minSubLevelCode} LIMIT 1`);
+        if (row.rows.length > 0) minSubLevelId = (row.rows[0] as { id: number }).id;
+      }
+      if (data.maxSubLevelCode) {
+        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.maxSubLevelCode} LIMIT 1`);
+        if (row.rows.length > 0) maxSubLevelId = (row.rows[0] as { id: number }).id;
+      }
+
+      const tagIds: number[] = Array.isArray(data.examTagIds) ? data.examTagIds.map(Number).filter((n) => !isNaN(n)) : [];
+
       const [bundle] = await db.insert(sessionPackages).values({
         name: data.name,
         description: data.description,
@@ -66,11 +85,16 @@ export function registerPrivateClassRoutes(app: Express) {
         lowSessionAlertThreshold: data.lowSessionAlertThreshold,
         features: data.features || [],
         isActive: true,
+        minSubLevelId,
+        maxSubLevelId,
+        examTagIds: tagIds,
+        skillScope: data.skillScope ?? null,
       }).returning();
       res.status(201).json(bundle);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof z.ZodError) return res.status(400).json({ message: "Validation error", errors: e.errors });
-      res.status(500).json({ message: "Failed to create bundle" });
+      const msg = e instanceof Error ? e.message : "Failed to create bundle";
+      res.status(500).json({ message: msg });
     }
   });
 
@@ -89,19 +113,56 @@ export function registerPrivateClassRoutes(app: Express) {
         lowSessionAlertThreshold: z.number().int().min(1).optional(),
         isActive: z.boolean().optional(),
         features: z.array(z.string()).optional(),
+        minSubLevelCode: z.string().nullable().optional(),
+        maxSubLevelCode: z.string().nullable().optional(),
+        examTagIds: z.array(z.number()).optional(),
+        skillScope: z.string().nullable().optional(),
       });
       const data = schema.parse(req.body);
+
+      // Resolve sub-level codes to IDs if provided
+      let minSubLevelId: number | null | undefined;
+      let maxSubLevelId: number | null | undefined;
+      if (data.minSubLevelCode !== undefined) {
+        if (data.minSubLevelCode) {
+          const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.minSubLevelCode} LIMIT 1`);
+          minSubLevelId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+        } else {
+          minSubLevelId = null;
+        }
+      }
+      if (data.maxSubLevelCode !== undefined) {
+        if (data.maxSubLevelCode) {
+          const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.maxSubLevelCode} LIMIT 1`);
+          maxSubLevelId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+        } else {
+          maxSubLevelId = null;
+        }
+      }
+
       const updateData: Partial<typeof sessionPackages.$inferInsert> & { updatedAt: Date } = {
-        ...data,
         updatedAt: new Date(),
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.sessionCount !== undefined ? { sessionCount: data.sessionCount } : {}),
+        ...(data.sessionDuration !== undefined ? { sessionDuration: data.sessionDuration } : {}),
+        ...(data.validityDays !== undefined ? { validityDays: data.validityDays } : {}),
         ...(data.price !== undefined ? { price: String(data.price) } : {}),
+        ...(data.lowSessionAlertThreshold !== undefined ? { lowSessionAlertThreshold: data.lowSessionAlertThreshold } : {}),
+        ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+        ...(data.features !== undefined ? { features: data.features } : {}),
+        ...(minSubLevelId !== undefined ? { minSubLevelId } : {}),
+        ...(maxSubLevelId !== undefined ? { maxSubLevelId } : {}),
+        ...(data.examTagIds !== undefined ? { examTagIds: data.examTagIds.map(Number).filter((n) => !isNaN(n)) } : {}),
+        ...(data.skillScope !== undefined ? { skillScope: data.skillScope } : {}),
       };
       const [updated] = await db.update(sessionPackages).set(updateData).where(eq(sessionPackages.id, id)).returning();
       if (!updated) return res.status(404).json({ message: "Bundle not found" });
       res.json(updated);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof z.ZodError) return res.status(400).json({ message: "Validation error", errors: e.errors });
-      res.status(500).json({ message: "Failed to update bundle" });
+      const msg = e instanceof Error ? e.message : "Failed to update bundle";
+      res.status(500).json({ message: msg });
     }
   });
 

@@ -29118,7 +29118,8 @@ Meta Lingua Academy`;
   // GET /api/student/available-courses — smart course discovery with eligibility filtering
   // Returns courses AND session packages whose sub-level range includes the student's level.
   // Products without a range configured are always shown (open to all).
-  // Query params: examTagId, skillScope, search, showAll (bypass eligibility filter), type (courses|packages|all)
+  // Also returns self_paced (video) courses as they are stored in the same `courses` table with delivery_mode='self_paced'.
+  // Query params: examTagId, skillScope, search, showAll (Admin-only eligibility bypass), type (courses|packages|all)
   app.get("/api/student/available-courses", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -29232,8 +29233,9 @@ Meta Lingua Academy`;
       // Combine all products
       let allProducts = [...courseResults, ...packageResults];
 
-      // Eligibility filter: unless showAll=true, only return eligible products
-      if (showAll !== 'true') {
+      // Eligibility filter: unless showAll=true AND user is Admin, only return eligible products
+      const isAdmin = req.user?.role === 'Admin';
+      if (!(showAll === 'true' && isAdmin)) {
         allProducts = allProducts.filter((p: any) => p.eligible || p.status !== 'available');
       }
 
@@ -29333,22 +29335,23 @@ Meta Lingua Academy`;
 
       if (minSubLevelCode) {
         const r = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${minSubLevelCode} LIMIT 1`);
-        if (r.rows.length > 0) minId = (r.rows[0] as any).id;
+        if (r.rows.length > 0) minId = (r.rows[0] as { id: number }).id;
       }
       if (maxSubLevelCode) {
         const r = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${maxSubLevelCode} LIMIT 1`);
-        if (r.rows.length > 0) maxId = (r.rows[0] as any).id;
+        if (r.rows.length > 0) maxId = (r.rows[0] as { id: number }).id;
       }
 
-      await db.execute(sql`
-        UPDATE courses
-        SET min_sub_level_id = ${minId},
-            max_sub_level_id = ${maxId},
-            exam_tag_ids = ${JSON.stringify(examTagIds ?? [])},
-            skill_scope = ${skillScope ?? null},
-            updated_at = now()
-        WHERE id = ${courseId}
-      `);
+      const tagIds: number[] = Array.isArray(examTagIds) ? examTagIds.map(Number).filter((n) => !isNaN(n)) : [];
+
+      await db.update(courses)
+        .set({
+          minSubLevelId: minId,
+          maxSubLevelId: maxId,
+          examTagIds: tagIds,
+          skillScope: skillScope ?? null,
+        })
+        .where(eq(courses.id, courseId));
 
       res.json({ success: true, courseId, minId, maxId });
     } catch (err) {

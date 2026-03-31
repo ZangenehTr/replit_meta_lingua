@@ -90,6 +90,10 @@ function SessionBundlesPage() {
         validityDays: Number(data.validityDays),
         lowSessionAlertThreshold: Number(data.lowSessionAlertThreshold),
         isActive: data.isActive,
+        minSubLevelCode: minSubLevelCode || null,
+        maxSubLevelCode: maxSubLevelCode || null,
+        examTagIds: selectedExamTagIds,
+        skillScope: bundleSkillScope || null,
       };
       if (editingId) {
         return await apiRequest(`/api/session-bundles/${editingId}`, {
@@ -108,6 +112,7 @@ function SessionBundlesPage() {
       setDialogOpen(false);
       setForm(emptyForm);
       setEditingId(null);
+      resetSubLevelState();
     },
     onError: (e: Error) => {
       toast({ title: "خطا", description: e.message, variant: "destructive" });
