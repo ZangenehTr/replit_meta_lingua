@@ -96,7 +96,7 @@ function SessionBundlesPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiRequest(`/api/session-bundles/${id}`, { method: "DELETE" }),
     onSuccess: () => {
-      toast({ title: "بسته حذف شد" });
+      toast({ title: "بسته غیرفعال شد" });
       queryClient.invalidateQueries({ queryKey: ["/api/session-bundles"] });
     },
     onError: (e: Error) => {
@@ -255,7 +255,7 @@ function SessionBundlesPage() {
                     size="sm"
                     className="text-red-600 hover:text-red-700"
                     onClick={() => {
-                      if (confirm("آیا از حذف این بسته مطمئن هستید؟")) deleteMutation.mutate(bundle.id);
+                      if (confirm("آیا از غیرفعال کردن این بسته مطمئن هستید؟ بسته حذف نخواهد شد و تنها دیگر قابل انتخاب نخواهد بود.")) deleteMutation.mutate(bundle.id);
                     }}
                     disabled={deleteMutation.isPending}
                   >
