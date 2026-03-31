@@ -62,12 +62,29 @@ function getResponseType(skill: string): string {
   }
 }
 
-function buildTitle(item: any): string {
+/** Minimal typed shape for items read from the JSON item bank */
+interface RawMSTItem {
+  id: string;
+  skill: string;
+  cefr: string;
+  stage: string;
+  timing?: { maxAnswerSec?: number; prepSec?: number; recordSec?: number };
+  assets?: { prompt?: string; passage?: string; transcript?: string; audio?: string };
+  questions?: unknown[];
+  metadata?: Record<string, unknown>;
+}
+
+/** Shape of the JSON item bank file */
+interface RawItemBank {
+  skills: Record<string, Record<string, RawMSTItem[]>>;
+}
+
+function buildTitle(item: RawMSTItem): string {
   const { skill, cefr, stage, id } = item;
   return `${skill.charAt(0).toUpperCase() + skill.slice(1)} ${cefr} (${stage}) — ${id}`;
 }
 
-function buildPrompt(item: any): string {
+function buildPrompt(item: RawMSTItem): string {
   if (item.skill === 'speaking' && item.assets?.prompt) {
     return item.assets.prompt;
   }
@@ -83,10 +100,10 @@ function buildPrompt(item: any): string {
   return `Assessment item for ${item.skill} at ${item.cefr} level`;
 }
 
-function getExpectedDuration(item: any): number {
-  const timing = item.timing || {};
+function getExpectedDuration(item: RawMSTItem): number {
+  const timing = item.timing ?? {};
   if (timing.maxAnswerSec) return timing.maxAnswerSec;
-  if (timing.recordSec)   return (timing.prepSec || 0) + timing.recordSec;
+  if (timing.recordSec)    return (timing.prepSec ?? 0) + timing.recordSec;
   return 60;
 }
 
@@ -99,14 +116,14 @@ async function main() {
     process.exit(1);
   }
 
-  const itemBank = JSON.parse(readFileSync(itemBankPath, 'utf-8'));
+  const itemBank = JSON.parse(readFileSync(itemBankPath, 'utf-8')) as RawItemBank;
 
   // Collect all items from all skills/stages
-  const allItems: any[] = [];
-  for (const [skill, stages] of Object.entries<any>(itemBank.skills || {})) {
-    for (const [_stageBucket, items] of Object.entries<any>(stages)) {
+  const allItems: RawMSTItem[] = [];
+  for (const [skill, stages] of Object.entries(itemBank.skills ?? {})) {
+    for (const [_stageBucket, items] of Object.entries(stages)) {
       for (const item of items) {
-        allItems.push({ ...item, skill });
+        allItems.push({ ...item, skill } as RawMSTItem);
       }
     }
   }
@@ -204,8 +221,9 @@ async function main() {
         inserted++;
         console.log(`  ✅ Inserted: ${item.id}`);
       }
-    } catch (err: any) {
-      console.error(`  ❌ Error seeding ${item.id}:`, err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`  ❌ Error seeding ${item.id}:`, msg);
       skipped++;
     }
   }

@@ -5,8 +5,9 @@
  * Creates audio files for all MST listening items.
  *
  * Usage:
- *   npx tsx server/scripts/generate-mst-audio.ts                  (reads JSON file)
- *   npx tsx server/scripts/generate-mst-audio.ts --source db       (reads from DB)
+ *   npx tsx server/scripts/generate-mst-audio.ts                  (reads from DB — default)
+ *   npx tsx server/scripts/generate-mst-audio.ts --source json     (reads JSON file only)
+ *   npx tsx server/scripts/generate-mst-audio.ts --source db       (explicit DB mode)
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
@@ -15,7 +16,11 @@ import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const useDB = process.argv.includes('--source') && process.argv[process.argv.indexOf('--source') + 1] === 'db';
+// Default to DB-first (auto-detects seeded DB items); use --source json to force JSON-only
+const sourceArg = process.argv.includes('--source')
+  ? process.argv[process.argv.indexOf('--source') + 1]
+  : 'db';
+const useDB = sourceArg !== 'json';
 
 interface MSTItem {
   id: string;
@@ -89,8 +94,9 @@ async function loadItemsFromDB(): Promise<MSTItem[]> {
 
   await pool.end();
 
-  return result.rows.map((row: any) => {
-    const content = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+  interface DBRow { mst_item_id: string; content: string | MSTItem }
+  return result.rows.map((row: DBRow) => {
+    const content: unknown = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
     return content as MSTItem;
   });
 }

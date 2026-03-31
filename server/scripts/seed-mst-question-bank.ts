@@ -38,12 +38,12 @@ const SKILLS:  Skill[]     = ['listening', 'reading', 'speaking', 'writing'];
 const CEFRS:   CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const STAGES:  Stage[]     = ['core', 'upper', 'lower'];
 
-// Question types supported per skill
+// Question types supported per skill (all required types per spec)
 const QTYPES_BY_SKILL: Record<Skill, QuestionType[]> = {
-  listening: ['mcq_single', 'mcq_multi', 'short_answer'],
-  reading:   ['mcq_single', 'mcq_multi', 'fill_in'],
-  speaking:  ['mcq_single'],           // only one structural type — free-speech prompt
-  writing:   ['mcq_single'],           // only one structural type — essay prompt
+  listening: ['mcq_single', 'mcq_multi', 'short_answer', 'ordering'],
+  reading:   ['mcq_single', 'mcq_multi', 'fill_in',      'ordering'],
+  speaking:  ['mcq_single'],   // single structural type — free-speech prompt
+  writing:   ['mcq_single'],   // single structural type — essay task
 };
 
 // IRT mapping
@@ -172,7 +172,34 @@ async function genListening(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, 
   let questionBlock: Record<string, unknown>;
   let raw: string | null = null;
 
-  if (qtype === 'mcq_single') {
+  if (qtype === 'ordering') {
+    raw = await generateWithAI(
+      `Generate a CEFR ${cefr} English listening ordering task for an MST placement test. Stage: ${stage}.\n` +
+      `Return JSON only: {"transcript":"3-4 sentences describing a sequence of events","question":"Order these events as they happened","items":["Event A","Event B","Event C","Event D"],"correctOrder":[2,0,3,1],"domain":"social"}`
+    );
+    const d = raw ? extractJSON(raw) : null;
+    questionBlock = {
+      type: 'ordering',
+      stem: String(d?.question ?? 'Order the events as you heard them.'),
+      items: (d?.items as string[]) ?? ['First event', 'Second event', 'Third event', 'Fourth event'],
+      correctOrder: (d?.correctOrder as number[]) ?? [0, 1, 2, 3],
+    };
+    const parsed2 = raw ? extractJSON(raw) : null;
+    const transcript2 = String(parsed2?.transcript ?? `A ${cefr} level listening passage for ${stage} ordering task.`);
+    return {
+      mstItemId: id,
+      title: `Listening ${cefr} ${stage} ordering ${suffix}`,
+      prompt: `[Listen and order] ${transcript2.substring(0, 200)}`,
+      content: {
+        id, skill: 'listening', stage, cefr,
+        assets: { transcript: transcript2, audio: '' },
+        timing: { audioSec: 30, maxAnswerSec: expectedDuration('listening', cefr) },
+        questions: [questionBlock],
+        metadata: { domain: String(parsed2?.domain ?? 'general') },
+      },
+      tags: ['listening', cefr, stage, 'mst', 'ordering'],
+    };
+  } else if (qtype === 'mcq_single') {
     raw = await generateWithAI(
       `Generate a CEFR ${cefr} English listening MCQ for an MST placement test. Stage: ${stage}.\n` +
       `Return JSON only: {"transcript":"2-4 sentences","question":"stem","options":["A)...","B)...","C)...","D)..."],"answerIndex":0,"accent":"genAm","domain":"social"}`
@@ -234,7 +261,33 @@ async function genReading(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, su
   let questionBlock: Record<string, unknown>;
   let passage: string;
 
-  if (qtype === 'mcq_single') {
+  if (qtype === 'ordering') {
+    const raw = await generateWithAI(
+      `Generate a CEFR ${cefr} English reading ordering task for an MST placement test. Stage: ${stage}.\n` +
+      `Return JSON only: {"passage":"3-5 sentences describing a process or sequence","question":"Order these steps as described in the passage","items":["Step A","Step B","Step C","Step D"],"correctOrder":[1,3,0,2],"domain":"academic"}`
+    );
+    const d = raw ? extractJSON(raw) : null;
+    passage = String(d?.passage ?? `A ${cefr} level passage describing a sequence for ${stage} ordering task.`);
+    questionBlock = {
+      type: 'ordering',
+      stem: String(d?.question ?? 'Order these steps as they appear in the passage.'),
+      items: (d?.items as string[]) ?? ['Step A', 'Step B', 'Step C', 'Step D'],
+      correctOrder: (d?.correctOrder as number[]) ?? [0, 1, 2, 3],
+    };
+    return {
+      mstItemId: id,
+      title: `Reading ${cefr} ${stage} ordering ${suffix}`,
+      prompt: passage,
+      content: {
+        id, skill: 'reading', stage, cefr,
+        assets: { passage },
+        timing: { maxAnswerSec: expectedDuration('reading', cefr) },
+        questions: [questionBlock],
+        metadata: { domain: String(d?.domain ?? 'academic') },
+      },
+      tags: ['reading', cefr, stage, 'mst', 'ordering'],
+    };
+  } else if (qtype === 'mcq_single') {
     const raw = await generateWithAI(
       `Generate a CEFR ${cefr} English reading MCQ for an MST placement test. Stage: ${stage}.\n` +
       `Return JSON only: {"passage":"3-5 sentences","question":"stem","options":["A)...","B)...","C)...","D)..."],"answerIndex":1,"domain":"academic"}`
