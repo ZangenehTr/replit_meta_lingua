@@ -4612,6 +4612,9 @@ export const placementTestSessions = pgTable("placement_test_sessions", {
 });
 
 // Placement Test Questions table
+// Indexes (applied directly via SQL for dev-env compatibility):
+//   UNIQUE (mst_item_id) WHERE mst_item_id IS NOT NULL  → uidx_ptq_mst_item_id
+//   (skill, cefr_level, stage, is_active)               → idx_ptq_skill_cefr_stage
 export const placementTestQuestions = pgTable("placement_test_questions", {
   id: serial("id").primaryKey(),
   skill: varchar("skill", { length: 50 }).notNull(),
