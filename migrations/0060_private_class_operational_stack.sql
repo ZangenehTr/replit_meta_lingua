@@ -62,8 +62,9 @@ CREATE TABLE IF NOT EXISTS teacher_student_assignments (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Ensure notes column exists on teacher_student_assignments (for older table instances)
+-- Ensure columns exist on teacher_student_assignments for older table instances
 ALTER TABLE teacher_student_assignments ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE teacher_student_assignments ADD COLUMN IF NOT EXISTS student_session_package_id INTEGER REFERENCES student_session_packages(id);
 
 -- 4. Private session log (individual session records)
 CREATE TABLE IF NOT EXISTS private_sessions (
