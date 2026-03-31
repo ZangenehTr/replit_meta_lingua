@@ -32,18 +32,25 @@ const CEFR_FILTER  = getArg('--cefr') as CEFRLevel | null;
 type Skill      = 'listening' | 'reading' | 'speaking' | 'writing';
 type CEFRLevel  = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 type Stage      = 'core' | 'upper' | 'lower';
-type QuestionType = 'mcq_single' | 'mcq_multi' | 'short_answer' | 'fill_in' | 'ordering';
+// Productive multi-type coverage across all 4 skills:
+//   Listening/Reading: receptive types (MCQ, multi-select, short-answer, ordering, fill-in)
+//   Speaking: 3 productive task variants (free speech, role-play, picture description)
+//   Writing:  4 productive task variants (opinion, description, comparison, argument)
+type QuestionType =
+  | 'mcq_single' | 'mcq_multi' | 'short_answer' | 'fill_in' | 'ordering'
+  | 'spoken_free' | 'spoken_roleplay' | 'spoken_picture'
+  | 'written_opinion' | 'written_description' | 'written_comparison' | 'written_argument';
 
 const SKILLS:  Skill[]     = ['listening', 'reading', 'speaking', 'writing'];
 const CEFRS:   CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const STAGES:  Stage[]     = ['core', 'upper', 'lower'];
 
-// Question types supported per skill (all required types per spec)
+// Question types per skill — all skills have 3+ distinct types
 const QTYPES_BY_SKILL: Record<Skill, QuestionType[]> = {
   listening: ['mcq_single', 'mcq_multi', 'short_answer', 'ordering'],
   reading:   ['mcq_single', 'mcq_multi', 'fill_in',      'ordering'],
-  speaking:  ['mcq_single'],   // single structural type — free-speech prompt
-  writing:   ['mcq_single'],   // single structural type — essay task
+  speaking:  ['spoken_free', 'spoken_roleplay', 'spoken_picture'],
+  writing:   ['written_opinion', 'written_description', 'written_comparison', 'written_argument'],
 };
 
 // IRT mapping
@@ -65,18 +72,26 @@ function deriveIRT(cefr: CEFRLevel, stage: Stage) {
   };
 }
 
-function dbQuestionType(skill: Skill): string {
-  switch (skill) {
-    case 'listening': return 'listening_comprehension';
-    case 'reading':   return 'reading_comprehension';
-    case 'speaking':  return 'spoken_response';
-    case 'writing':   return 'written_response';
+function dbQuestionType(qtype: QuestionType): string {
+  switch (qtype) {
+    case 'mcq_single':         return 'multiple_choice';
+    case 'mcq_multi':          return 'multiple_select';
+    case 'short_answer':       return 'short_answer';
+    case 'fill_in':            return 'fill_in_blank';
+    case 'ordering':           return 'ordering';
+    case 'spoken_free':        return 'spoken_free_response';
+    case 'spoken_roleplay':    return 'spoken_role_play';
+    case 'spoken_picture':     return 'spoken_picture_desc';
+    case 'written_opinion':    return 'written_opinion';
+    case 'written_description': return 'written_description';
+    case 'written_comparison': return 'written_comparison';
+    case 'written_argument':   return 'written_argument';
   }
 }
 
-function dbResponseType(skill: Skill): string {
-  if (skill === 'speaking') return 'audio';
-  if (skill === 'writing')  return 'text';
+function dbResponseType(qtype: QuestionType): string {
+  if (qtype.startsWith('spoken_'))  return 'audio';
+  if (qtype.startsWith('written_')) return 'text';
   return 'mcq';
 }
 
@@ -157,11 +172,18 @@ interface GeneratedItem {
 /** Unique 2-char abbreviation per question type for use in item IDs */
 function qtypeAbbr(qtype: QuestionType): string {
   const map: Record<QuestionType, string> = {
-    mcq_single:   'MS',
-    mcq_multi:    'MM',
-    short_answer: 'SA',
-    fill_in:      'FI',
-    ordering:     'OR',
+    mcq_single:           'MS',
+    mcq_multi:            'MM',
+    short_answer:         'SA',
+    fill_in:              'FI',
+    ordering:             'OR',
+    spoken_free:          'SF',
+    spoken_roleplay:      'SR',
+    spoken_picture:       'SP',
+    written_opinion:      'WO',
+    written_description:  'WD',
+    written_comparison:   'WC',
+    written_argument:     'WA',
   };
   return map[qtype] ?? qtype.substring(0, 2).toUpperCase();
 }
@@ -344,36 +366,69 @@ async function genReading(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, su
   };
 }
 
-async function genSpeaking(cefr: CEFRLevel, stage: Stage, _qtype: QuestionType, suffix: string): Promise<GeneratedItem> {
-  const id = `S-${cefr}-${stage[0].toUpperCase()}-SP-${suffix}`;
-  const raw = await generateWithAI(
-    `Generate a CEFR ${cefr} English speaking task for MST placement. Stage: ${stage}.\n` +
-    `Return JSON only: {"prompt":"1-2 sentence task prompt","keywords":["word1","word2"],"structure":"brief outline"}`
-  );
-  const d = raw ? extractJSON(raw) : null;
-  const spPrompt  = String(d?.prompt    ?? `Talk about your experience with English at ${cefr} level.`);
-  const keywords  = (d?.keywords as string[])  ?? ['describe', 'explain'];
-  const structure = String(d?.structure ?? 'Introduction, main point, conclusion');
+async function genSpeaking(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, suffix: string): Promise<GeneratedItem> {
+  const id = `S-${cefr}-${stage[0].toUpperCase()}-${qtypeAbbr(qtype)}-${suffix}`;
   const dur = expectedDuration('speaking', cefr);
+
+  let spPrompt: string;
+  let keywords: string[];
+  let structure: string;
+  let imageUrl: string | undefined;
+
+  if (qtype === 'spoken_roleplay') {
+    const raw = await generateWithAI(
+      `Generate a CEFR ${cefr} English speaking role-play scenario for MST. Stage: ${stage}.\n` +
+      `Return JSON only: {"prompt":"Describe the role-play scenario in 2 sentences","role":"student role (e.g. customer)","partnerRole":"partner role (e.g. shopkeeper)","keywords":["word1","word2"]}`
+    );
+    const d = raw ? extractJSON(raw) : null;
+    spPrompt = String(d?.prompt ?? `Role-play: You are a ${cefr} level English speaker in a common daily situation.`);
+    keywords = (d?.keywords as string[]) ?? ['greeting', 'request', 'polite'];
+    structure = `Role: ${String(d?.role ?? 'student')} / Partner: ${String(d?.partnerRole ?? 'interlocutor')}`;
+  } else if (qtype === 'spoken_picture') {
+    const raw = await generateWithAI(
+      `Generate a CEFR ${cefr} English picture description speaking task for MST. Stage: ${stage}.\n` +
+      `Return JSON only: {"prompt":"Describe what you see in this picture in 1 sentence","sceneDescription":"a vivid 1-sentence scene description for the image","keywords":["word1","word2"]}`
+    );
+    const d = raw ? extractJSON(raw) : null;
+    spPrompt = String(d?.prompt ?? `Describe the picture you see. Speak for at least ${Math.round(dur / 2)} seconds.`);
+    keywords = (d?.keywords as string[]) ?? ['describe', 'picture', 'scene'];
+    structure = `Scene: ${String(d?.sceneDescription ?? 'A busy street market with various vendors.')}`;
+    imageUrl = undefined; // Real image generated separately via TTS/image pipeline
+  } else {
+    // spoken_free — default free speech prompt
+    const raw = await generateWithAI(
+      `Generate a CEFR ${cefr} English speaking task for MST placement. Stage: ${stage}.\n` +
+      `Return JSON only: {"prompt":"1-2 sentence task prompt","keywords":["word1","word2"],"structure":"brief outline"}`
+    );
+    const d = raw ? extractJSON(raw) : null;
+    spPrompt = String(d?.prompt ?? `Talk about your experience with English at ${cefr} level.`);
+    keywords = (d?.keywords as string[]) ?? ['describe', 'explain'];
+    structure = String(d?.structure ?? 'Introduction, main point, conclusion');
+  }
 
   return {
     mstItemId: id,
-    title: `Speaking ${cefr} ${stage} ${suffix}`,
+    title: `Speaking ${cefr} ${stage} ${qtype} ${suffix}`,
     prompt: spPrompt,
     content: {
       id, skill: 'speaking', stage, cefr,
-      assets: { prompt: spPrompt, keywords, structure },
+      assets: { prompt: spPrompt, keywords, structure, ...(imageUrl ? { imageUrl } : {}) },
       timing: { prepSec: 15, recordSec: dur, maxAnswerSec: 15 + dur },
-      metadata: { domain: 'general' },
+      metadata: { domain: 'general', variant: qtype },
     },
-    tags: ['speaking', cefr, stage, 'mst'],
+    tags: ['speaking', cefr, stage, 'mst', qtype],
   };
 }
 
-async function genWriting(cefr: CEFRLevel, stage: Stage, _qtype: QuestionType, suffix: string): Promise<GeneratedItem> {
-  const id = `W-${cefr}-${stage[0].toUpperCase()}-WR-${suffix}`;
-  const taskTypes = ['opinion', 'description', 'comparison', 'argument'] as const;
-  const taskType = taskTypes[parseInt(suffix, 10) % taskTypes.length];
+async function genWriting(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, suffix: string): Promise<GeneratedItem> {
+  const id = `W-${cefr}-${stage[0].toUpperCase()}-${qtypeAbbr(qtype)}-${suffix}`;
+
+  // Map qtype to the writing task variant label
+  const taskTypeMap: Partial<Record<QuestionType, string>> = {
+    written_opinion: 'opinion', written_description: 'description',
+    written_comparison: 'comparison', written_argument: 'argument',
+  };
+  const taskType = taskTypeMap[qtype] ?? 'opinion';
 
   const raw = await generateWithAI(
     `Generate a CEFR ${cefr} English ${taskType} writing prompt for MST. Stage: ${stage}.\n` +
@@ -393,7 +448,7 @@ async function genWriting(cefr: CEFRLevel, stage: Stage, _qtype: QuestionType, s
       id, skill: 'writing', stage, cefr,
       assets: { prompt: wPrompt, minWords, maxWords, taskType },
       timing: { maxAnswerSec: dur },
-      metadata: { domain: 'general' },
+      metadata: { domain: 'general', variant: qtype },
     },
     tags: ['writing', cefr, stage, 'mst', taskType],
   };
@@ -438,11 +493,11 @@ async function cellStatus(
 }
 
 async function upsertItem(
-  pool: Pool, skill: Skill, cefr: CEFRLevel, stage: Stage, item: GeneratedItem
+  pool: Pool, skill: Skill, cefr: CEFRLevel, stage: Stage, qtype: QuestionType, item: GeneratedItem
 ): Promise<'inserted' | 'updated' | 'skipped'> {
   const irt = deriveIRT(cefr, stage);
-  const qtype    = dbQuestionType(skill);
-  const respType = dbResponseType(skill);
+  const qtypeStr = dbQuestionType(qtype);
+  const respType = dbResponseType(qtype);
   const dur      = expectedDuration(skill, cefr);
 
   try {
@@ -460,7 +515,7 @@ async function upsertItem(
            tags=$13, estimated_completion_minutes=$14, is_active=true, updated_at=NOW()
          WHERE mst_item_id=$15`,
         [
-          skill, cefr, qtype, item.title, item.prompt,
+          skill, cefr, qtypeStr, item.title, item.prompt,
           JSON.stringify(item.content), respType, dur,
           JSON.stringify({ type: respType, cefr, stage }),
           stage, irt.difficulty, irt.discrimination,
@@ -477,7 +532,7 @@ async function upsertItem(
           discrimination, mst_item_id, tags, estimated_completion_minutes, is_active)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,true)`,
       [
-        skill, cefr, qtype, item.title, item.prompt,
+        skill, cefr, qtypeStr, item.title, item.prompt,
         JSON.stringify(item.content), respType, dur,
         JSON.stringify({ type: respType, cefr, stage }), 100,
         stage, irt.difficulty, irt.discrimination, item.mstItemId,
@@ -558,7 +613,7 @@ async function main() {
             const suffix = String(suffixBase + i).padStart(3, '0');
             process.stdout.write(`     [${i + 1}/${needed}] … `);
             const item = await generateItem(skill, cefr, stage, qtype, suffix);
-            const outcome = await upsertItem(pool, skill, cefr, stage, item);
+            const outcome = await upsertItem(pool, skill, cefr, stage, qtype, item);
             console.log(`${outcome} (${item.mstItemId})`);
             if (outcome === 'inserted')      inserted++;
             else if (outcome === 'updated')  updated++;
