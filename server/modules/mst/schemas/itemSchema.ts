@@ -222,15 +222,7 @@ export type Skill = 'listening' | 'reading' | 'speaking' | 'writing';
 export type Stage = 'core' | 'upper' | 'lower';
 export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
-/**
- * MST Active Routing Map:
- *  core  → B1  (entry stage for all test-takers)
- *  upper → B2  (adaptive upper branch)
- *  lower → A2  (adaptive lower branch)
- *
- * A1, C1, C2 items are seeded for completeness (curriculum gap analysis / future
- * multi-start MST expansion) but are NOT currently served by the adaptive router.
- */
+// Active MST routing: core→B1, upper→B2, lower→A2
 export const MST_STAGE_CEFR_MAP: Record<Stage, CEFRLevel> = {
   core:  'B1',
   upper: 'B2',

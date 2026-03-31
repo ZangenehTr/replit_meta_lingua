@@ -206,14 +206,6 @@ router.get('/item', authenticateToken, async (req: AuthRequest, res) => {
       }
     }
 
-    // MST stage→CEFR mapping: The placement test begins at B1/core and branches adaptively.
-    // Only three CEFR bands are used during an active MST session:
-    //   core → B1  (default entry point)
-    //   upper → B2 (higher-ability branch)
-    //   lower → A2 (lower-ability branch)
-    // A1, C1, C2 items are seeded for completeness and future full-CEFR expansion
-    // (e.g., multi-start MST or curriculum gap analysis), but are not currently targeted
-    // by this adaptive routing path.
     const derivedCefr: CEFRLevel | undefined = MST_STAGE_CEFR_MAP[stage as keyof typeof MST_STAGE_CEFR_MAP];
 
     // Get item with CEFR targeting and exclusions for speaking
@@ -473,8 +465,7 @@ router.post('/quickscore', authenticateToken, async (req: AuthRequest, res) => {
       });
     }
 
-    // Get the item — prefer session-stored item (same as /mst/response path);
-    // fall back to itemsController with CEFR targeting if session item isn't available.
+    // Prefer session-stored item; fall back to DB lookup with CEFR targeting.
     const sessionItem = sessionController.getSessionItem(sessionId, parsedSkill, parsedStage);
     const item = sessionItem
       ?? itemsController.getItem(
