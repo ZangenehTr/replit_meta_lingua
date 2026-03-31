@@ -11,6 +11,7 @@ import { MstItemsController } from '../controllers/itemsController';
 import { MstResponsesController } from '../controllers/responsesController';
 import { determineFinalBand } from '../routing/router';
 import { SkillResult } from '../schemas/resultSchema';
+import type { CEFRLevel } from '../schemas/itemSchema';
 import { whisperService } from '../../../whisper-service';
 import { authenticateToken, requireRole } from '../../../auth-middleware';
 import { AuthRequest } from '../../../auth-middleware';
@@ -212,12 +213,12 @@ router.get('/item', authenticateToken, async (req: AuthRequest, res) => {
     // A1, C1, C2 items are seeded for completeness and future full-CEFR expansion
     // (e.g., multi-start MST or curriculum gap analysis), but are not currently targeted
     // by this adaptive routing path.
-    const stageCefrMap: Record<string, import('../schemas/itemSchema').CEFRLevel> = {
+    const stageCefrMap: Record<string, CEFRLevel> = {
       core:  'B1',
       upper: 'B2',
       lower: 'A2',
     };
-    const derivedCefr = stageCefrMap[stage] as import('../schemas/itemSchema').CEFRLevel | undefined;
+    const derivedCefr: CEFRLevel | undefined = stageCefrMap[stage];
 
     // Get item with CEFR targeting and exclusions for speaking
     const item = itemsController.getItem(skill, stage, derivedCefr, excludedSuffixes);
@@ -476,8 +477,14 @@ router.post('/quickscore', authenticateToken, async (req: AuthRequest, res) => {
       });
     }
 
-    // Get the item
-    const item = itemsController.getItem(parsedSkill, parsedStage);
+    // Get the item — prefer session-stored item (same as /mst/response path);
+    // fall back to itemsController with CEFR targeting if session item isn't available.
+    const sessionItem = sessionController.getSessionItem(sessionId, parsedSkill, parsedStage);
+    const derivedCefrForQS: Record<string, CEFRLevel> = {
+      core: 'B1', upper: 'B2', lower: 'A2',
+    };
+    const item = sessionItem
+      ?? itemsController.getItem(parsedSkill, parsedStage, derivedCefrForQS[parsedStage]);
     if (!item) {
       return res.status(404).json({
         success: false,

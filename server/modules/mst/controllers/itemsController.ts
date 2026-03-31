@@ -160,6 +160,20 @@ export class MstItemsController {
   }
 
   /**
+   * Canonical fallback strategy (cell-level JSON top-up):
+   *
+   * When `placement_test_questions` has fewer than MIN_ITEMS_PER_CELL (3) items for a
+   * given skill × CEFR × stage cell, `getItem()` supplements with items loaded from the
+   * static mst_item_bank.json file. This ensures graceful degradation on fresh installs
+   * before the AI seeder (`npm run seed:mst`) has been run.
+   *
+   * The JSON file acts purely as a read-only reserve; it is NEVER written to.
+   * JSON items are differentiated by the absence of `mst_item_id` field.
+   *
+   * Priority: DB items (IRT-calibrated, with mst_item_id) > JSON items (fallback).
+   */
+
+  /**
    * Load items for a skill from the static JSON file (used as cell-level supplement).
    */
   private loadSkillItemsFromJSONFile(skill: Skill): Item[] {
