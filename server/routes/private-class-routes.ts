@@ -63,13 +63,25 @@ export function registerPrivateClassRoutes(app: Express) {
       // Resolve sub-level codes to IDs
       let minSubLevelId: number | null = null;
       let maxSubLevelId: number | null = null;
+      let minOrder: number | null = null;
+      let maxOrder: number | null = null;
       if (data.minSubLevelCode) {
-        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.minSubLevelCode} LIMIT 1`);
-        if (row.rows.length > 0) minSubLevelId = (row.rows[0] as { id: number }).id;
+        const row = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${data.minSubLevelCode} LIMIT 1`);
+        if (row.rows.length > 0) {
+          minSubLevelId = (row.rows[0] as { id: number; order_index: number }).id;
+          minOrder = (row.rows[0] as { id: number; order_index: number }).order_index;
+        }
       }
       if (data.maxSubLevelCode) {
-        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.maxSubLevelCode} LIMIT 1`);
-        if (row.rows.length > 0) maxSubLevelId = (row.rows[0] as { id: number }).id;
+        const row = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${data.maxSubLevelCode} LIMIT 1`);
+        if (row.rows.length > 0) {
+          maxSubLevelId = (row.rows[0] as { id: number; order_index: number }).id;
+          maxOrder = (row.rows[0] as { id: number; order_index: number }).order_index;
+        }
+      }
+
+      if (minOrder !== null && maxOrder !== null && minOrder > maxOrder) {
+        return res.status(400).json({ message: "minSubLevelCode must be at or before maxSubLevelCode in the curriculum sequence" });
       }
 
       const tagIds: number[] = Array.isArray(data.examTagIds) ? data.examTagIds.map(Number).filter((n) => !isNaN(n)) : [];
@@ -123,21 +135,37 @@ export function registerPrivateClassRoutes(app: Express) {
       // Resolve sub-level codes to IDs if provided
       let minSubLevelId: number | null | undefined;
       let maxSubLevelId: number | null | undefined;
+      let minOrder2: number | null = null;
+      let maxOrder2: number | null = null;
       if (data.minSubLevelCode !== undefined) {
         if (data.minSubLevelCode) {
-          const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.minSubLevelCode} LIMIT 1`);
-          minSubLevelId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+          const row = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${data.minSubLevelCode} LIMIT 1`);
+          if (row.rows.length > 0) {
+            minSubLevelId = (row.rows[0] as { id: number; order_index: number }).id;
+            minOrder2 = (row.rows[0] as { id: number; order_index: number }).order_index;
+          } else {
+            minSubLevelId = null;
+          }
         } else {
           minSubLevelId = null;
         }
       }
       if (data.maxSubLevelCode !== undefined) {
         if (data.maxSubLevelCode) {
-          const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${data.maxSubLevelCode} LIMIT 1`);
-          maxSubLevelId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+          const row = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${data.maxSubLevelCode} LIMIT 1`);
+          if (row.rows.length > 0) {
+            maxSubLevelId = (row.rows[0] as { id: number; order_index: number }).id;
+            maxOrder2 = (row.rows[0] as { id: number; order_index: number }).order_index;
+          } else {
+            maxSubLevelId = null;
+          }
         } else {
           maxSubLevelId = null;
         }
+      }
+
+      if (minOrder2 !== null && maxOrder2 !== null && minOrder2 > maxOrder2) {
+        return res.status(400).json({ message: "minSubLevelCode must be at or before maxSubLevelCode in the curriculum sequence" });
       }
 
       const updateData: Partial<typeof sessionPackages.$inferInsert> & { updatedAt: Date } = {
@@ -191,20 +219,33 @@ export function registerPrivateClassRoutes(app: Express) {
         skillScope?: string | null;
       };
 
-      // Resolve sub-level codes to IDs
+      // Resolve sub-level codes to IDs with order_index for range validation
       let minId: number | null = null;
       let maxId: number | null = null;
+      let minOrder: number | null = null;
+      let maxOrder: number | null = null;
 
       if (minSubLevelCode) {
-        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${minSubLevelCode} LIMIT 1`);
-        minId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+        const row = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${minSubLevelCode} LIMIT 1`);
+        if (row.rows.length > 0) {
+          minId = (row.rows[0] as { id: number; order_index: number }).id;
+          minOrder = (row.rows[0] as { id: number; order_index: number }).order_index;
+        }
       }
       if (maxSubLevelCode) {
-        const row = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${maxSubLevelCode} LIMIT 1`);
-        maxId = row.rows.length > 0 ? (row.rows[0] as { id: number }).id : null;
+        const row = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${maxSubLevelCode} LIMIT 1`);
+        if (row.rows.length > 0) {
+          maxId = (row.rows[0] as { id: number; order_index: number }).id;
+          maxOrder = (row.rows[0] as { id: number; order_index: number }).order_index;
+        }
       }
 
-      const tagIds: number[] = Array.isArray(examTagIds) ? examTagIds.map(Number) : [];
+      // Validate that min <= max
+      if (minOrder !== null && maxOrder !== null && minOrder > maxOrder) {
+        return res.status(400).json({ message: "minSubLevelCode must be at or before maxSubLevelCode in the curriculum sequence" });
+      }
+
+      const tagIds: number[] = Array.isArray(examTagIds) ? examTagIds.map(Number).filter((n) => !isNaN(n)) : [];
 
       const [updated] = await db.update(sessionPackages)
         .set({

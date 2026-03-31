@@ -2239,7 +2239,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
   });
 
   // DELETE /api/admin/exam-tags/:id — deactivate exam tag (soft delete)
-  app.delete("/api/admin/exam-tags/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.delete("/api/admin/exam-tags/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const tagId = parseInt(req.params.id, 10);
       const result = await db.execute(sql`
@@ -29329,17 +29329,30 @@ Meta Lingua Academy`;
       const courseId = parseInt(req.params.id, 10);
       const { minSubLevelCode, maxSubLevelCode, examTagIds, skillScope } = req.body;
 
-      // Resolve sub-level IDs
+      // Resolve sub-level IDs with order_index for range validation
       let minId: number | null = null;
       let maxId: number | null = null;
+      let minOrder: number | null = null;
+      let maxOrder: number | null = null;
 
       if (minSubLevelCode) {
-        const r = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${minSubLevelCode} LIMIT 1`);
-        if (r.rows.length > 0) minId = (r.rows[0] as { id: number }).id;
+        const r = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${minSubLevelCode} LIMIT 1`);
+        if (r.rows.length > 0) {
+          minId = (r.rows[0] as { id: number; order_index: number }).id;
+          minOrder = (r.rows[0] as { id: number; order_index: number }).order_index;
+        }
       }
       if (maxSubLevelCode) {
-        const r = await db.execute(sql`SELECT id FROM curriculum_levels WHERE code = ${maxSubLevelCode} LIMIT 1`);
-        if (r.rows.length > 0) maxId = (r.rows[0] as { id: number }).id;
+        const r = await db.execute(sql`SELECT id, order_index FROM curriculum_levels WHERE code = ${maxSubLevelCode} LIMIT 1`);
+        if (r.rows.length > 0) {
+          maxId = (r.rows[0] as { id: number; order_index: number }).id;
+          maxOrder = (r.rows[0] as { id: number; order_index: number }).order_index;
+        }
+      }
+
+      // Validate that min <= max
+      if (minOrder !== null && maxOrder !== null && minOrder > maxOrder) {
+        return res.status(400).json({ error: "minSubLevelCode must be at or before maxSubLevelCode in the curriculum sequence" });
       }
 
       const tagIds: number[] = Array.isArray(examTagIds) ? examTagIds.map(Number).filter((n) => !isNaN(n)) : [];
