@@ -47,8 +47,8 @@ const STAGES:  Stage[]     = ['core', 'upper', 'lower'];
 
 // Question types per skill — all skills have 3+ distinct types
 const QTYPES_BY_SKILL: Record<Skill, QuestionType[]> = {
-  listening: ['mcq_single', 'mcq_multi', 'short_answer', 'ordering'],
-  reading:   ['mcq_single', 'mcq_multi', 'fill_in',      'ordering'],
+  listening: ['mcq_single', 'mcq_multi', 'short_answer', 'fill_in', 'ordering'],
+  reading:   ['mcq_single', 'mcq_multi', 'short_answer', 'fill_in', 'ordering'],
   speaking:  ['spoken_free', 'spoken_roleplay', 'spoken_picture'],
   writing:   ['written_opinion', 'written_description', 'written_comparison', 'written_argument'],
 };
@@ -77,7 +77,7 @@ function dbQuestionType(qtype: QuestionType): string {
     case 'mcq_single':         return 'multiple_choice';
     case 'mcq_multi':          return 'multiple_select';
     case 'short_answer':       return 'short_answer';
-    case 'fill_in':            return 'fill_in_blank';
+    case 'fill_in':            return 'fill_in'; // canonical type — matches scorer + schema
     case 'ordering':           return 'ordering';
     case 'spoken_free':        return 'spoken_free_response';
     case 'spoken_roleplay':    return 'spoken_role_play';
@@ -249,6 +249,18 @@ async function genListening(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, 
       options: (d?.options as string[]) ?? ['Option A', 'Option B', 'Option C', 'Option D'],
       answerIndices: (d?.answerIndices as number[]) ?? [0],
     };
+  } else if (qtype === 'fill_in') {
+    raw = await generateWithAI(
+      `Generate a CEFR ${cefr} English listening fill-in-the-blank for an MST placement test. Stage: ${stage}.\n` +
+      `Return JSON only: {"transcript":"2-4 sentences where one key word is __BLANK__","question":"What word fills in the blank?","correctAnswers":["word1","word2"],"domain":"academic"}`
+    );
+    const d = raw ? extractJSON(raw) : null;
+    questionBlock = {
+      type: 'fill_in',  // canonical fill_in type — flat correctAnswers[] (matches scorer/schema)
+      stem: String(d?.question ?? 'Listen and fill in the blank.'),
+      correctAnswers: (d?.correctAnswers as string[]) ?? ['answer'],
+      maxWords: 5,
+    };
   } else {
     raw = await generateWithAI(
       `Generate a CEFR ${cefr} English listening short-answer for an MST placement test. Stage: ${stage}.\n` +
@@ -339,8 +351,21 @@ async function genReading(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, su
       options: (d?.options as string[]) ?? ['Option A', 'Option B', 'Option C', 'Option D'],
       answerIndices: (d?.answerIndices as number[]) ?? [0],
     };
+  } else if (qtype === 'short_answer') {
+    const raw = await generateWithAI(
+      `Generate a CEFR ${cefr} English reading short-answer item for an MST placement test. Stage: ${stage}.\n` +
+      `Return JSON only: {"passage":"3-5 sentences","question":"a comprehension question requiring a brief written answer","correctAnswers":["answer1","answer2"],"domain":"academic"}`
+    );
+    const d = raw ? extractJSON(raw) : null;
+    passage = String(d?.passage ?? `A ${cefr} reading passage for ${stage} stage.`);
+    questionBlock = {
+      type: 'short_answer',
+      stem: String(d?.question ?? 'Answer briefly based on the passage.'),
+      correctAnswers: (d?.correctAnswers as string[]) ?? ['answer'],
+      maxWords: 15,
+    };
   } else {
-    // fill_in
+    // fill_in — canonical type with flat correctAnswers[]
     const raw = await generateWithAI(
       `Generate a CEFR ${cefr} English fill-in-the-blank reading item. Stage: ${stage}.\n` +
       `Return JSON only: {"passage":"3 sentences with __BLANK__ placeholder","stem":"Fill in the blank","correctAnswers":["word1","word2"],"domain":"academic"}`
@@ -348,7 +373,7 @@ async function genReading(cefr: CEFRLevel, stage: Stage, qtype: QuestionType, su
     const d = raw ? extractJSON(raw) : null;
     passage = String(d?.passage ?? `Complete this ${cefr} passage: The result was __BLANK__.`);
     questionBlock = {
-      type: 'fill_in',  // reading fill-in-blank: matches UI/scorer 'fill_in'|'fill_in_blank'
+      type: 'fill_in',
       stem: String(d?.stem ?? 'Fill in the blank'),
       correctAnswers: (d?.correctAnswers as string[]) ?? ['answer'],
       maxWords: 5,

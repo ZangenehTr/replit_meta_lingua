@@ -43,8 +43,12 @@ export function scoreListening(
       if (typeof answerIndex === 'number' && !isNaN(answerIndex) && answerIndex === question.answerIndex) {
         correctCount++;
       }
-    } else if (question.type === 'short_answer' && typeof userAnswer === 'string') {
+    } else if (
+      (question.type === 'short_answer' || question.type === 'fill_in') &&
+      typeof userAnswer === 'string'
+    ) {
       // Check if answer matches any correct answer (case-insensitive)
+      // fill_in shares identical flat shape with short_answer (correctAnswers[])
       const normalizedAnswer = userAnswer.toLowerCase().trim();
       const isCorrect = (question.correctAnswers ?? []).some((correct: string) =>
         correct.toLowerCase().trim() === normalizedAnswer

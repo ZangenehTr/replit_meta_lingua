@@ -58,7 +58,11 @@ export function scoreReading(
         (incorrectSelected / question.options.length) * 0.5
       );
       partialPoints += partialScore;
-    } else if ((question.type === 'short_answer' || question.type === 'fill_in' || question.type === 'fill_in_blank') && typeof userAnswer === 'string') {
+    } else if (
+      (question.type === 'short_answer' || question.type === 'fill_in') &&
+      typeof userAnswer === 'string'
+    ) {
+      // fill_in and short_answer share the flat `correctAnswers[]` shape (canonical contract)
       const normalizedAnswer = userAnswer.toLowerCase().trim();
       const isCorrect = (question.correctAnswers ?? []).some((correct: string) =>
         correct.toLowerCase().trim() === normalizedAnswer ||

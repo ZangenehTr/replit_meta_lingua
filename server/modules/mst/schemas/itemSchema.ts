@@ -52,14 +52,14 @@ export const orderingQuestionSchema = z.object({
   correctOrder: z.array(z.number()), // Indices into `items` that form the correct sequence
 });
 
-// Fill-in-the-blank: sentence with one or more blanks (___), learner types answer(s).
+// Fill-in-the-blank: passage with __BLANK__ placeholder, learner types the missing word.
+// IMPORTANT: This flat shape is canonical — matches scorer (listeningQuickscore /
+// readingQuickscore: `question.correctAnswers`) and UI (mst.tsx type:'fill_in'|'fill_in_blank').
 export const fillInQuestionSchema = z.object({
   type: z.literal('fill_in'),
-  stem: z.string(),                          // Passage/sentence with ___ blanks
-  blanks: z.array(z.object({
-    index: z.number(),                        // Positional blank index (0-based)
-    correctAnswers: z.array(z.string()),      // Accepted answers (case-insensitive)
-  })),
+  stem: z.string(),                          // Passage/sentence with __BLANK__ placeholder
+  correctAnswers: z.array(z.string()),       // Accepted answers (case-insensitive, any match wins)
+  maxWords: z.number().optional(),           // Optional hint for UI character limits
 });
 
 // ─── Per-skill item schemas ───────────────────────────────────────────────────
