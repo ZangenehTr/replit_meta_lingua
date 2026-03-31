@@ -742,10 +742,20 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
     // 4. Get the current bundle info for recommended next bundle prefill
     const [currentBundle] = await db.select().from(sessionPackages).where(eq(sessionPackages.id, pkg.packageId));
 
-    // 4. Notify assigned agent
-    if (lead.assignedTo) {
+    // 4. Notify assigned agent — fall back to any Admin if lead has no assignee
+    let agentId = lead.assignedTo;
+    if (!agentId) {
+      const [fallbackAdmin] = await db.select({ id: users.id }).from(users)
+        .where(eq(users.role, "Admin")).limit(1);
+      agentId = fallbackAdmin?.id ?? null;
+      if (agentId) {
+        console.log(`[Private Class] No agent assigned to lead ${lead.id}; falling back to admin ${agentId} for task/notification.`);
+      }
+    }
+
+    if (agentId) {
       await storage.createNotification({
-        userId: lead.assignedTo,
+        userId: agentId,
         notificationType: "low_sessions_agent_alert",
         title: "هشدار تمدید کلاس خصوصی",
         message: `دانش‌آموز ${lead.firstName} ${lead.lastName} تنها ${remaining} جلسه باقی دارد. نیاز به پیگیری دارد.`,
@@ -754,7 +764,7 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
       // 5. Create front desk task with recommended next bundle prefill
       const recommendedBundle = currentBundle ? `بسته پیشنهادی: "${currentBundle.name}" (همان بسته قبلی)` : "لطفاً بسته مناسب را انتخاب کنید";
       await db.insert(frontDeskTasks).values({
-        assigneeId: lead.assignedTo,
+        assigneeId: agentId,
         title: `تمدید بسته کلاس خصوصی — ${lead.firstName} ${lead.lastName}`,
         description: `دانش‌آموز ${lead.firstName} ${lead.lastName} تنها ${remaining} جلسه خصوصی باقی دارد.\n${recommendedBundle}\nلطفاً برای تمدید پیگیری کنید.`,
         taskType: "payment_reminder",
@@ -764,6 +774,8 @@ async function fireThresholdAlerts(pkg: typeof studentSessionPackages.$inferSele
         relatedEntityId: String(pkg.studentId),
         dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days
       });
+    } else {
+      console.warn(`[Private Class] No agent or admin found for lead ${lead.id}; threshold task not created.`);
     }
 
     // 6. Notify all supervisors

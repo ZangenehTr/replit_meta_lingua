@@ -54,10 +54,11 @@ function PrivateClassOverviewPage() {
   const { isRTL } = useLanguage();
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"active" | "all">("active");
 
   const { data: records = [], isLoading } = useQuery<PrivateClassRecord[]>({
-    queryKey: ["/api/admin/private-classes"],
-    queryFn: () => apiRequest(`/api/admin/private-classes`)
+    queryKey: ["/api/admin/private-classes", statusFilter],
+    queryFn: () => apiRequest(`/api/admin/private-classes${statusFilter === "all" ? "?status=all" : ""}`)
   });
 
   const { data: sessionHistory } = useQuery<SessionRecord[]>({
@@ -164,8 +165,8 @@ function PrivateClassOverviewPage() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-orange-600" />
+            <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
             </div>
             <div>
               <p className="text-2xl font-bold">{alerts}</p>
@@ -175,14 +176,30 @@ function PrivateClassOverviewPage() {
         </Card>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          placeholder="جستجو بر اساس نام دانش‌آموز یا استاد..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex gap-2 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="جستجو بر اساس نام دانش‌آموز یا استاد..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex rounded-md border overflow-hidden text-sm">
+          <button
+            className={`px-3 py-2 ${statusFilter === "active" ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+            onClick={() => setStatusFilter("active")}
+          >
+            فعال
+          </button>
+          <button
+            className={`px-3 py-2 border-l ${statusFilter === "all" ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+            onClick={() => setStatusFilter("all")}
+          >
+            همه
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -200,7 +217,7 @@ function PrivateClassOverviewPage() {
       ) : (
         <div className="grid gap-4">
           {filtered.map(rec => (
-            <Card key={rec.id} className={`hover:shadow-md transition-shadow ${rec.isLowSession ? "border-orange-300" : ""}`}>
+            <Card key={rec.id} className={`hover:shadow-md transition-shadow ${rec.isLowSession ? "border-red-300" : ""}`}>
               <CardContent className="p-5">
                 <div className="space-y-3">
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
@@ -224,7 +241,7 @@ function PrivateClassOverviewPage() {
                           </Badge>
                         )}
                         {rec.alertFiredAt && (
-                          <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">
+                          <Badge variant="outline" className="text-red-600 border-red-300 text-xs">
                             هشدار ارسال شد
                           </Badge>
                         )}
@@ -273,7 +290,7 @@ function PrivateClassOverviewPage() {
 
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full transition-all ${rec.isLowSession ? "bg-orange-500" : "bg-blue-500"}`}
+                          className={`h-2 rounded-full transition-all ${rec.isLowSession ? "bg-red-500" : "bg-blue-500"}`}
                           style={{ width: `${sessionPct(rec)}%` }}
                         />
                       </div>
