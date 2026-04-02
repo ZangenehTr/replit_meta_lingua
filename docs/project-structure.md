@@ -1,5 +1,9 @@
 # Meta Lingua — Project Structure & Architecture Guide
 
+**Version:** 1.3.0  
+**Last Updated:** April 2, 2026  
+**Audience:** Developers, Technical Leads, DevOps Engineers
+
 > **Who this is for:** Junior developers joining the project, or anyone who needs to understand how the system is built — including explaining it to a technical lead or CTO.
 
 ---
@@ -55,7 +59,7 @@ Meta Lingua is a **complete institute management platform** built for Iranian la
 │                                                                      │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
 │  │  Auth Layer  │  │  API Routes  │  │    WebSocket Server       │  │
-│  │  JWT + RBAC  │  │  (40+ files) │  │  (CallerN live sessions)  │  │
+│  │  JWT + RBAC  │  │  (64 files)  │  │  (CallerN live sessions)  │  │
 │  └──────────────┘  └──────┬───────┘  └──────────────────────────┘  │
 │                            │                                         │
 │  ┌─────────────────────────▼──────────────────────────────────────┐ │
@@ -303,7 +307,7 @@ docker/
 ```
 docs/
 ├── README.md               ← Feature overview and quick-start
-├── buyer-manual.md         ← Institute admin user guide (24 sections)
+├── buyer-manual.md         ← Institute admin user guide (25 sections)
 ├── deployment-guide.md     ← Self-hosting setup for Iran production
 └── project-structure.md    ← This file
 ```
@@ -338,11 +342,19 @@ docs/
 
 ```
 migrations/
-├── 0090_sublevel_session_packages.sql
-├── 0100_curriculum_levels_unique_constraint.sql
-├── 0110_session_packages_sublevel_fk.sql
-├── 0120_irt_mst_reliability_tables.sql
-└── manual_social_media_tables.sql
+├── 0000_nostalgic_blue_blade.sql          ← Initial schema (core tables)
+├── 0020_payment_gateway_configs.sql       ← Payment gateway configuration tables
+├── 0030_promo_codes_certificates.sql      ← Promo codes, digital certificates
+├── 0040_marketing_attribution.sql         ← UTM tracking, referral program, session ratings
+├── 0050_callern_teacher_followers.sql     ← CallerN teacher follower tracking
+├── 0060_private_class_operational_stack.sql ← Private class bookings and packages
+├── 0070_mst_question_bank_indexes.sql     ← Performance indexes for MST question bank
+├── 0080_sublevel_system.sql               ← Sub-level columns on users and curriculum
+├── 0090_sublevel_session_packages_leads.sql ← Sub-level eligibility on session packages
+├── 0100_curriculum_levels_unique_constraint.sql ← Unique constraint on level codes
+├── 0110_session_packages_sublevel_fk.sql  ← Foreign key constraints for sub-level ranges
+├── 0120_irt_mst_reliability_tables.sql    ← IRT telemetry and per-session scoring history
+└── manual_social_media_tables.sql         ← Social media content tables (AI pipeline)
 ```
 
 ---
@@ -389,14 +401,104 @@ server/
 │
 ├── routes.ts             ← Main route registration (~400 lines — thin wiring only)
 ├── routes/               ← 64 domain-specific route files (one file per feature)
-│   ├── cms-routes.ts              ← Blog, pages, media
-│   ├── hr-routes.ts               ← Employee, leave, payroll
-│   ├── callern-flow-routes.ts     ← Live tutoring sessions
-│   ├── placement-test-routes.ts   ← MST placement test
-│   ├── shetab-payment-routes.ts   ← Shetab gateway callbacks
-│   ├── gamification-routes.ts     ← XP, levels, badges
-│   ├── ai-sales-agent-routes.ts   ← Telegram bot integration
-│   └── ... (58 more)
+│   │
+│   │   — Auth & Core —
+│   ├── phone-auth-routes.ts           ← OTP login, JWT refresh
+│   ├── core-routes.ts                 ← Health check, shared endpoints
+│   ├── admin-and-misc-routes.ts       ← Admin dashboard, settings
+│   ├── admin-users.ts                 ← User management (CRUD, roles)
+│   ├── smoke-test-routes.ts           ← Internal connectivity tests
+│   │
+│   │   — Courses & Curriculum —
+│   ├── curriculum-and-classes-routes.ts   ← Courses, lessons, classes
+│   ├── curriculum-sis-crm-routes.ts       ← SIS/CRM course integration
+│   ├── course-reviews-routes.ts           ← Student reviews, moderation
+│   ├── course-roadmap-routes.ts           ← Curriculum roadmap views
+│   ├── sample-courses-routes.ts           ← Sample/demo course seeding
+│   ├── content-bank-routes.ts             ← Shared content bank
+│   │
+│   │   — Students & Enrollment —
+│   ├── student-and-callern-routes.ts      ← Student profile, enrollment
+│   ├── student-games-routes.ts            ← Student game progress
+│   ├── public-features-routes.ts          ← Public catalog, registration
+│   ├── referral-routes.ts                 ← Referral codes, rewards
+│   ├── promo-code-routes.ts               ← Promo codes, discounts
+│   ├── certificate-routes.ts              ← Certificate issuance, verification
+│   │
+│   │   — Payments —
+│   ├── shetab-payment-routes.ts           ← Shetab gateway callbacks
+│   ├── third-party-integration-routes.ts  ← Zarinpal, IDPay, Zibal, Mellat
+│   │
+│   │   — CallerN Video Tutoring —
+│   ├── callern-core-routes.ts             ← Session creation, WebRTC signaling
+│   ├── callern-flow-routes.ts             ← Session lifecycle management
+│   ├── callern-roadmap-routes.ts          ← Teacher roadmap and booking flow
+│   ├── callern-student-routes.ts          ← Student-side CallerN views
+│   ├── callern-testing-management-routes.ts ← In-session quiz management
+│   │
+│   │   — Private Classes —
+│   ├── private-class-routes.ts            ← Session packages, bookings
+│   │
+│   │   — CRM & Lead Pipeline —
+│   ├── lead-and-roadmap-routes.ts         ← CRM leads, pipeline transitions
+│   ├── prospect-lifecycle-routes.ts       ← Prospect qualification, promotion
+│   │
+│   │   — LinguaQuest Gamification —
+│   ├── gamification-routes.ts             ← XP, levels, achievements
+│   ├── linguaquest-routes.ts              ← Game types, daily challenges
+│   ├── linguaquest-audio-routes.ts        ← Audio assets for games
+│   ├── social-duels-routes.ts             ← PvP language duels
+│   │
+│   │   — Testing & Placement —
+│   ├── placement-test-routes.ts           ← MST placement test, CEFR scoring
+│   ├── telemetry-routes.ts                ← Per-session IRT response telemetry
+│   │
+│   │   — AI Features —
+│   ├── ai-sales-agent-routes.ts           ← Telegram bot, AI sales agent
+│   ├── ai-sales-context-routes.ts         ← Sales context data for AI
+│   ├── ai-study-partner-routes.ts         ← Lexi AI teaching assistant
+│   ├── ai-training-dashboard-routes.ts    ← AI-generated training dashboards
+│   ├── ai-health-routes.ts                ← Ollama/OpenAI connectivity checks
+│   ├── global-lexi-routes.ts              ← Global Lexi chat endpoint
+│   ├── 3d-content-tools-routes.ts         ← 3D/interactive content generation
+│   ├── interactive-scenes-routes.ts       ← Interactive lesson scenes
+│   │
+│   │   — CMS & Content —
+│   ├── cms-routes.ts                      ← Blog posts, landing pages, media
+│   ├── search-routes.ts                   ← Full-text search across content
+│   ├── book-ecommerce-routes.ts           ← Book/resource e-commerce
+│   ├── diaspora-bridge-routes.ts          ← Diaspora community content bridge
+│   │
+│   │   — HR —
+│   ├── hr-routes.ts                       ← Employees, contracts, leave, payroll
+│   │
+│   │   — Teacher —
+│   ├── teacher-admin-routes.ts            ← Teacher admin controls
+│   ├── teacher-profile-routes.ts          ← Teacher public profile, ratings
+│   ├── teacher-qa-routes.ts               ← Teacher Q&A and feedback
+│   │
+│   │   — Infrastructure & Tooling —
+│   ├── infrastructure-health-routes.ts    ← Server health, Redis, VoIP checks
+│   ├── disk-routes.ts                     ← Disk usage monitoring
+│   ├── visitor-chat-routes.ts             ← Live chat widget
+│   ├── form-file-routes.ts                ← Form submissions, file uploads
+│   ├── tts-routes.ts                      ← Text-to-speech playback
+│   ├── tts-pipeline-routes.ts             ← TTS pre-generation pipeline
+│   ├── whisper-health-routes.ts           ← Whisper ASR connectivity check
+│   ├── transcript-routes.ts               ← Session transcript retrieval
+│   ├── session-crashers-routes.ts         ← Session error recovery
+│   │
+│   │   — Roadmaps —
+│   ├── roadmap-template-routes.ts         ← Roadmap template management
+│   ├── roadmap-instance-routes.ts         ← Assigned student roadmap instances
+│   ├── exam-roadmap-routes.ts             ← Exam-linked roadmap views
+│   │
+│   │   — Analytics —
+│   ├── enhanced-analytics-routes.ts       ← Advanced analytics and reporting
+│   │
+│   │   — Internal —
+│   ├── advanced-features.ts               ← Feature flags, experimental routes
+│   └── route-context.ts                   ← Shared route context utilities
 │
 ├── storage.ts            ← Storage composition layer (~40 lines — wires modules)
 ├── storage/              ← 8 domain storage modules (database query logic)
@@ -447,19 +549,19 @@ shared/
 │
 ├── schema/               ← 15 domain schema files (Drizzle ORM table definitions)
 │   ├── users.ts          ← Users, profiles, roles, OTP
-│   ├── courses.ts        ← Courses, enrollments, schedules
 │   ├── cms.ts            ← Blog posts, landing pages, media
-│   ├── hr.ts             ← Employees, contracts, leave, payroll
-│   ├── mst.ts            ← MST placement test, IRT parameters
-│   ├── gamification.ts   ← XP, levels, achievements, daily challenges
 │   ├── leads.ts          ← CRM leads, pipeline, activity log
 │   ├── callern.ts        ← CallerN sessions, presence, followers, packages
-│   ├── payments.ts       ← Wallet, transactions, gateways, promo codes
-│   ├── marketing.ts      ← Roadmaps, 3D content, social posts
-│   ├── teaching.ts       ← Books, lesson content
+│   ├── marketing.ts      ← Referrals, UTM attribution, promo codes
+│   ├── teaching.ts       ← Courses, enrollments, lessons, schedules
 │   ├── features.ts       ← Dynamic forms, public features, fonts
-│   ├── curriculum-ext.ts ← Sub-levels, orders, shipping
+│   ├── curriculum-ext.ts ← Sub-levels, session packages, private class bookings
 │   ├── social.ts         ← SMS logs, social media integration
+│   ├── linguaquest.ts    ← XP, levels, achievements, daily challenges, games
+│   ├── ai.ts             ← AI content generation, prompt templates, job queue
+│   ├── ai-training.ts    ← AI training datasets, HR performance data
+│   ├── constants.ts      ← Shared enums and constant definitions
+│   ├── index.ts          ← Barrel re-export for shared/schema/*
 │   └── schema-helpers.ts ← buildInsertSchema() typed helper (avoids as-any)
 │
 ├── constants/            ← Values used everywhere (user roles, limits, enums)

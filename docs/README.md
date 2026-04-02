@@ -144,6 +144,7 @@ It combines institute administration, student management, course delivery, live 
 |---|---|
 | [Buyer Manual](./buyer-manual.md) | Complete guide for institute owners and administrators |
 | [Deployment Guide](./deployment-guide.md) | Step-by-step server setup and production deployment |
+| [Project Structure](./project-structure.md) | Architecture guide — folders, route files, schema, and feature flows |
 
 ---
 

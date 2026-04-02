@@ -1,6 +1,6 @@
 # Meta Lingua Academy — Buyer Manual
 
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Last Updated:** April 2, 2026  
 **Audience:** Institute Owners, Administrators, Department Heads
 
@@ -33,11 +33,12 @@ Congratulations on choosing Meta Lingua Academy. This manual covers everything y
 17. [HR Module](#17-hr-module)
 18. [VoIP Integration](#18-voip-integration)
 19. [AI Features](#19-ai-features)
-20. [CMS — Blog & Video Library](#20-cms--blog--video-library)
-21. [SMS Campaigns](#21-sms-campaigns)
-22. [Settings & Configuration](#22-settings--configuration)
-23. [User Roles Reference](#23-user-roles-reference)
-24. [Troubleshooting Common Issues](#24-troubleshooting-common-issues)
+20. [AI Content & SEO Pipeline](#20-ai-content--seo-pipeline)
+21. [CMS — Blog & Video Library](#21-cms--blog--video-library)
+22. [SMS Campaigns](#22-sms-campaigns)
+23. [Settings & Configuration](#23-settings--configuration)
+24. [User Roles Reference](#24-user-roles-reference)
+25. [Troubleshooting Common Issues](#25-troubleshooting-common-issues)
 
 ---
 
@@ -654,7 +655,72 @@ The placement test uses AI-adaptive questioning (IRT model) to determine student
 
 ---
 
-## 20. CMS — Blog & Video Library
+## 20. AI Content & SEO Pipeline
+
+The AI Content & SEO Pipeline (added in v1.3.0) enables admins to generate, review, and publish blog posts, landing pages, and social media content using the local Ollama AI model — all without manual writing.
+
+### Prompt Template Library
+
+Admins manage a library of reusable prompt templates from **Admin → CMS → Prompt Templates**. Each template defines:
+
+- **Name** — a descriptive label (e.g., "Course Announcement Blog Post")
+- **Template text** — the prompt sent to Ollama, with placeholders such as `{topic}`, `{keywords}`, `{tone}`, and `{length}`
+- **Content type** — Blog Post, Landing Page, or Social Media
+
+Templates can be created, edited, duplicated, and deleted. They are reusable across many content generation jobs.
+
+### Generating Content
+
+From **Admin → CMS → Blog** or **Admin → CMS → Landing Pages**, click **AI Generate**:
+
+1. Select a prompt template from the library
+2. Fill in the template variables (topic, keywords, desired tone, target length)
+3. Click **Generate** — the system enqueues an async job and returns a job ID immediately (no waiting for slow AI)
+4. When the job completes, the draft appears in the content list with status **Draft** and the `AI Generated` badge
+
+The generation runs via a background BullMQ worker, so the admin UI stays responsive during generation.
+
+### Approval Workflow (Draft → Review → Publish)
+
+All AI-generated content starts as a **Draft** and must pass through the approval workflow before going live:
+
+| Status | Who Acts | What Happens |
+|---|---|---|
+| **Draft** | Supervisor reviews | Supervisor reads, edits if needed, then approves or rejects |
+| **Pending Admin Review** | Admin gives final sign-off | Required when the content policy mandates a second approval |
+| **Approved** | Admin or Supervisor | Content is ready to publish |
+| **Published** | Admin schedules or publishes immediately | Content goes live on the site |
+| **Rejected** | Supervisor or Admin | Content is hidden; reason noted for the writer |
+
+Supervisors review from **Supervisor → Content Review Queue**. Admins see all pending approvals from **Admin → CMS → Review Queue**.
+
+### Scheduled Publisher
+
+Instead of publishing immediately, admins can schedule a future publish date and time for any approved post. A background scheduler (runs every 5 minutes) automatically promotes scheduled posts to **Published** when their scheduled time arrives — no manual action required.
+
+To schedule: open the approved post → click **Schedule** → pick date and time → confirm.
+
+### Auto-Filled SEO Fields
+
+When AI generates content, the following SEO fields are automatically populated based on the generated text:
+
+| Field | What It Contains |
+|---|---|
+| **Meta Title** | An SEO-optimized title (≤60 characters) |
+| **Meta Description** | A concise summary for search engine snippets (≤160 characters) |
+| **Keywords** | A comma-separated list of relevant keywords extracted from the content |
+
+Admins can review and edit these fields before publishing. They are stored on the post and rendered in the page's `<head>` tags for search engine indexing.
+
+### sitemap.xml Auto-Updates
+
+Every time a post is published (immediately or via the scheduler), the platform regenerates `sitemap.xml` automatically. Search engine crawlers (Google, Bing, etc.) can discover and index new content without any manual sitemap submission.
+
+The sitemap is served at `https://yourdomain.com/sitemap.xml`.
+
+---
+
+## 21. CMS — Blog & Video Library
 
 ### Blog
 **Admin → CMS → Blog**:
@@ -674,7 +740,7 @@ The placement test uses AI-adaptive questioning (IRT model) to determine student
 
 ---
 
-## 21. SMS Campaigns
+## 22. SMS Campaigns
 
 ### Creating a Campaign
 **Admin → SMS Campaigns → New Campaign**:
@@ -696,7 +762,7 @@ After sending, the campaign shows:
 
 ---
 
-## 22. Settings & Configuration
+## 23. Settings & Configuration
 
 Go to **Admin → Settings** for all global configuration.
 
@@ -747,7 +813,7 @@ Go to **Admin → Settings** for all global configuration.
 
 ---
 
-## 23. User Roles Reference
+## 24. User Roles Reference
 
 ### Admin
 Full access to everything. Only admins can:
@@ -808,7 +874,7 @@ Full access to everything. Only admins can:
 
 ---
 
-## 24. Troubleshooting Common Issues
+## 25. Troubleshooting Common Issues
 
 ### Student Cannot Receive OTP
 1. Check that the Kavenegar API key is set in Settings

@@ -1,6 +1,6 @@
 # Meta Lingua Academy — Deployment Guide
 
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Last Updated:** April 2, 2026  
 **Audience:** System Administrators, DevOps Engineers
 
@@ -814,6 +814,29 @@ Run this block against the production database:
 docker compose exec postgres psql -U metalingua metalingua < /opt/metalingua/migrations/0040_marketing_attribution.sql
 ```
 
+### v1.1.1 Migration — CallerN Teacher Followers & Private Class Stack
+
+If upgrading from v1.1.0, apply these additional migration files before moving to v1.2.0:
+
+```bash
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0050_callern_teacher_followers.sql
+
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0060_private_class_operational_stack.sql
+
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0070_mst_question_bank_indexes.sql
+
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0080_sublevel_system.sql
+```
+
+- `0050` — adds CallerN teacher follower tracking tables
+- `0060` — full private class operational tables (bookings, teacher assignments, package purchases)
+- `0070` — performance indexes on the MST question bank
+- `0080` — sub-level system columns on users, courses, and curriculum levels
+
 ### v1.2.0 Migration — Private Classes, Sub-levels & Accessibility
 
 If upgrading from v1.1.0 to v1.2.0, apply the following. All changes are additive (no data loss).
@@ -853,6 +876,27 @@ docker compose exec postgres psql -U metalingua metalingua \
 All migrations use `IF NOT EXISTS` / `EXCEPTION WHEN duplicate_object` guards and are safe to re-run.
 
 **No changes required for the RTL & Accessibility update** — all changes are frontend-only (CSS logical properties, ARIA attributes, focus management). No database migrations needed.
+
+### v1.3.0 Migration — IRT/MST Reliability & AI Content Pipeline
+
+If upgrading from v1.2.0 to v1.3.0, apply the following. All changes are additive (no data loss).
+
+**IRT/MST reliability tables** — stores per-session response telemetry and IRT scoring history:
+
+```bash
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0120_irt_mst_reliability_tables.sql
+```
+
+**Social media content tables** — required for the AI Content & SEO Pipeline social media post type:
+
+```bash
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/manual_social_media_tables.sql
+```
+
+- `0120` — adds IRT response telemetry tables and IRT scoring history per test session; fixes CEFR theta thresholds
+- `manual_social_media_tables` — adds social media post tables used by the AI content generation pipeline
 
 ---
 
@@ -930,6 +974,8 @@ docker compose up -d app
 docker compose logs app --tail=30
 curl https://yourdomain.com/api/health
 ```
+
+> **Automated post-merge handling (v1.2.0+):** If you are using the provided `scripts/post-merge.sh` script (configured as a git post-merge hook), dependency installation and all new SQL migrations are applied automatically after every code merge — no manual migration step required. The script runs `npm install` and then applies any unapplied migration files in order.
 
 ---
 
