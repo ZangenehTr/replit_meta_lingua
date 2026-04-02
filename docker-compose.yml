@@ -76,8 +76,10 @@ services:
       BASE_URL: ${APP_URL}
       FRONTEND_URL: ${APP_URL}
 
-      # AI
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
+      # AI — Ollama runs on the host machine, not inside Docker.
+      # On Linux servers: host.docker.internal resolves to the Docker bridge gateway.
+      # Override with OLLAMA_HOST in your .env if Ollama is on a different machine.
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
 
       # Iranian SMS
@@ -100,6 +102,11 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
+      - ./recordings:/app/recordings
+      - ./transcripts:/app/transcripts
+      - ./api:/app/api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "5000:5000"
     networks:

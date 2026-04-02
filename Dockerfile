@@ -50,9 +50,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/attached_assets ./attached_assets
 COPY --from=builder --chown=nodejs:nodejs /app/client/public ./client/public
 
-# Create necessary directories
-RUN mkdir -p uploads logs && \
-    chown -R nodejs:nodejs uploads logs
+# Create necessary directories (volumes will be mounted over these at runtime)
+RUN mkdir -p uploads logs recordings transcripts api/audio && \
+    chown -R nodejs:nodejs uploads logs recordings transcripts api
 
 # Switch to nodejs user
 USER nodejs
