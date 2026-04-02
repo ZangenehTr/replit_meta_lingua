@@ -1,1709 +1,270 @@
 import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useLocation } from "wouter";
-import { 
-  HeadphonesIcon,
-  MessageSquare, 
-  Bell,
-  Send,
-  Search,
-  Plus,
-  Filter,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Users,
-  Smartphone,
-  Globe,
-  Zap,
-  Eye,
-  Paperclip,
-  Star,
-  MoreVertical,
-  ArrowLeft
-} from "lucide-react";
+import { HeadphonesIcon, MessageSquare, Bell, Plus, Globe, Zap } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
+import { useCommunicationsData, useCommunicationsMutations, type ConversationData, type TicketRecord, type ConversationRecord, type NotificationRecord, type MessageRecord } from "@/hooks/useCommunications";
 
-interface SupportTicket {
-  id: number;
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  category: string;
-  studentId: number;
-  studentName: string;
-  assignedTo?: string;
-  createdAt: string;
-  updatedAt: string;
-  attachments?: string[];
-  messages: TicketMessage[];
-}
-
-interface TicketMessage {
-  id: number;
-  ticketId: number;
-  message: string;
-  senderType: 'student' | 'staff';
-  senderName: string;
-  sentAt: string;
-  isInternal?: boolean;
-}
-
-interface ChatConversation {
-  id: number;
-  participants: string[];
-  lastMessage: string;
-  lastMessageAt: string;
-  unreadCount: number;
-  type: 'direct' | 'group';
-  title?: string;
-  isOnline?: boolean;
-}
-
-interface PushNotification {
-  id: number;
-  title: string;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'error';
-  targetAudience: string;
-  channels: string[];
-  status: 'draft' | 'scheduled' | 'sent';
-  scheduledAt?: string;
-  sentAt?: string;
-  deliveryStats?: {
-    sent: number;
-    delivered: number;
-    clicked: number;
-  };
-}
+import { TicketsTab } from "@/components/admin/TicketsTab";
+import { ChatTab, type SearchedUser } from "@/components/admin/ChatTab";
+import { NotificationsTab } from "@/components/admin/NotificationsTab";
+import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 
 export default function AdminCommunicationsPage() {
-  const { t } = useTranslation(['admin', 'common']);
+  const { t } = useTranslation(["admin", "common"]);
   const { isRTL } = useLanguage();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [location] = useLocation();
+  const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState("tickets");
   const [newTicketDialog, setNewTicketDialog] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
-  const [chatInput, setChatInput] = useState("");
   const [notificationDialog, setNotificationDialog] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketRecord | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationRecord | null>(null);
   const [ticketReply, setTicketReply] = useState("");
+  const [chatInput, setChatInput] = useState("");
   const [sendNotification, setSendNotification] = useState(false);
   const [customNotificationText, setCustomNotificationText] = useState("New message from admin");
   const [userSearchQuery, setUserSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [testPhoneNumber, setTestPhoneNumber] = useState("");
-  
-  // New ticket form state
-  const [ticketForm, setTicketForm] = useState({
-    title: "",
-    description: "",
-    priority: "medium",
-    category: "general_inquiry",
-    studentId: 33, // Default to current user
-    studentName: "Admin User"
-  });
-  
-  // Notification form state
+  const [ticketForm, setTicketForm] = useState({ title: "", description: "", priority: "medium", category: "general_inquiry", studentId: 33, studentName: "Admin User" });
   const [notificationForm, setNotificationForm] = useState({
-    title: "",
-    message: "",
-    type: "info" as 'info' | 'warning' | 'success' | 'error',
-    targetAudience: "all_users",
-    channels: ["push", "email"] as string[],
-    status: "sent" as 'draft' | 'scheduled' | 'sent',
-    testPhoneNumber: ""
+    title: "", message: "", type: "info" as "info" | "warning" | "success" | "error",
+    targetAudience: "all_users", channels: ["push", "email"] as string[],
+    status: "sent" as "draft" | "scheduled" | "sent", testPhoneNumber: "",
   });
-
-  // Real API calls for support tickets
-  const { data: tickets, isLoading: ticketsLoading } = useQuery({
-    queryKey: ['/api/support-tickets'],
-  });
-
-  // Real API calls for chat conversations
-  const { data: conversations, isLoading: conversationsLoading } = useQuery({
-    queryKey: ['/api/chat/conversations'],
-  });
-
-  // Real API calls for notifications
-  const { data: notifications, isLoading: notificationsLoading } = useQuery({
-    queryKey: ['/api/push-notifications'],
-  });
-
-  // Real API calls for conversation messages - CORRECTED query key format
-  const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
-    queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'],
-    enabled: !!selectedConversation?.id,
-    refetchInterval: 3000, // Refresh every 3 seconds (more reasonable)
-    staleTime: 5000, // 5 seconds stale time for better performance
-    refetchOnWindowFocus: true,
-    refetchOnMount: 'always' as const,
-  });
-
-  // Search users API call
-  const { data: searchedUsers } = useQuery({
-    queryKey: ['/api/users/search', { query: userSearchQuery }],
-    enabled: userSearchQuery.length > 0,
-  });
-
-  const ticketsData = (tickets as SupportTicket[]) || [];
-  const conversationsData = (conversations as ChatConversation[]) || [];
-  const notificationsData = (notifications as PushNotification[]) || [];
-  const searchedUsersData = (searchedUsers as any[]) || [];
-  // Get current user for message ownership detection with debug logging
   const { user } = useAuth();
-  
-  // Debug current user state and query execution
-  console.log('Communications: Current user from useAuth:', { 
-    id: user?.id, 
-    email: user?.email,
-    role: user?.role 
-  });
-  
-  console.log('Debug Query State [CACHE CLEARED]:', {
-    selectedConversationId: selectedConversation?.id,
-    messagesQueryEnabled: !!selectedConversation?.id,
-    messagesLoading: messagesLoading,
-    rawMessages: messages,
-    timestamp: new Date().toISOString()
-  });
-  
-  // Force refresh on conversation change
-  useEffect(() => {
-    if (selectedConversation?.id) {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation.id, 'messages'] });
-      refetchMessages();
-    }
-  }, [selectedConversation?.id, queryClient, refetchMessages]);
-  
-  const messagesData = ((messages as Array<{
-    id: number;
-    conversationId: number; 
-    message: string;
-    senderName: string;
-    senderId: number;
-    sentAt: string;
-    isOwnMessage?: boolean;
-  }>) || []).map(msg => {
-    const isOwn = user && msg.senderId && msg.senderId === user.id;
-    if (selectedConversation) {
-      console.log(`Message ${msg.id}: senderId=${msg.senderId}, currentUserId=${user?.id}, isOwn=${isOwn}`);
-    }
-    return {
-      ...msg,
-      isOwnMessage: isOwn
-    };
-  });
 
-  // Parse URL parameters and auto-select conversation
+  const { tickets, conversations, notifications, messages, searchedUsers, ticketsLoading, conversationsLoading, notificationsLoading, messagesLoading, refetchMessages } = useCommunicationsData(selectedConversation?.id, userSearchQuery);
+
+  const ticketsData: TicketRecord[] = tickets || [];
+  const conversationsData: ConversationRecord[] = conversations || [];
+  const notificationsData: NotificationRecord[] = notifications || [];
+  const searchedUsersData: SearchedUser[] = (searchedUsers as SearchedUser[]) || [];
+
+  const messagesData: MessageRecord[] = ((messages as MessageRecord[]) || []).map((msg: MessageRecord) => ({
+    ...msg,
+    isOwnMessage: user && msg.senderId && msg.senderId === user.id,
+  }));
+
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const conversationId = searchParams.get('conversation');
-    
-    if (conversationId && conversationsData.length > 0) {
-      const conversation = conversationsData.find(c => c.id === parseInt(conversationId));
-      if (conversation) {
-        setSelectedConversation(conversation);
-        setActiveTab("chat"); // Auto-switch to chat tab
-        console.log('Auto-selected conversation:', conversation.id);
-        
-        // Clear URL parameters after auto-selection for clean URL
-        if (window.history.replaceState) {
-          window.history.replaceState({}, '', window.location.pathname);
-        }
+    const params = new URLSearchParams(window.location.search);
+    const convId = params.get("conversation");
+    if (convId && conversationsData.length > 0) {
+      const conv = conversationsData.find((c: ConversationRecord) => c.id === parseInt(convId));
+      if (conv) {
+        setSelectedConversation(conv);
+        setActiveTab("chat");
+        window.history.replaceState({}, "", window.location.pathname);
       }
     }
   }, [conversationsData]);
 
-  // Ticket operations
-  const createTicketMutation = useMutation({
-    mutationFn: async (ticketData: any) => {
-      return apiRequest('/api/support-tickets', { 
-        method: 'POST', 
-        body: JSON.stringify(ticketData) 
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/support-tickets'] });
-      toast({ title: t('common:toast.supportTicketCreated') });
-      setNewTicketDialog(false);
-    },
-    onError: (error: any) => {
-      toast({ title: t('common:toast.failedToCreateTicket'), description: error.message, variant: "destructive" });
+  useEffect(() => {
+    if (selectedConversation?.id) {
+      qc.invalidateQueries({ queryKey: ["/api/chat/conversations", selectedConversation.id, "messages"] });
+      refetchMessages();
     }
-  });
+  }, [selectedConversation?.id]);
 
-  // Send chat message with optional notification
-  const sendMessageMutation = useMutation({
-    mutationFn: async ({ conversationId, message, withNotification, notificationText }: { 
-      conversationId: number; 
-      message: string;
-      withNotification?: boolean;
-      notificationText?: string;
-    }) => {
-      const response = await apiRequest(`/api/chat/conversations/${conversationId}/messages`, { 
-        method: 'POST', 
-        body: JSON.stringify({ message }) 
-      });
-
-      // Send notification if requested
-      if (withNotification && notificationText) {
-        await apiRequest('/api/push-notifications', {
-          method: 'POST',
-          body: JSON.stringify({
-            title: t('common:toast.newMessage'),
-            message: notificationText,
-            type: "info",
-            targetAudience: "student",
-            channels: ["push", "sms"],
-            status: "sent"
-          })
-        });
-      }
-
-      return response;
-    },
-    onSuccess: async (response) => {
-      console.log('Message sent successfully:', response);
-      console.log('Current user ID:', user?.id);
-      console.log('User email:', user?.email);
-      
-      // Clear form first
-      setChatInput("");
-      setSendNotification(false);
-      setCustomNotificationText("New message from admin");
-      
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
-      
-      // Force multiple refetches with delays
-      setTimeout(() => {
-        console.log('Refetching messages after 100ms');
-        refetchMessages();
-      }, 100);
-      setTimeout(() => {
-        console.log('Refetching messages after 500ms');
-        refetchMessages();
-      }, 500);
-      setTimeout(() => {
-        console.log('Refetching messages after 1000ms');
-        refetchMessages();
-      }, 1000);
-      
-      // Success feedback
-      toast({ title: "Message sent successfully" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to send message", description: error.message, variant: "destructive" });
-    }
-  });
-
-  // Send push notification
-  const sendNotificationMutation = useMutation({
-    mutationFn: async (notificationData: any) => {
-      return apiRequest('/api/push-notifications', { 
-        method: 'POST', 
-        body: JSON.stringify(notificationData) 
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/push-notifications'] });
-      toast({ title: "Notification sent successfully" });
-      setNotificationDialog(false);
-      // Clear custom notification text after successful send
-      setCustomNotificationText("New message from admin");
-      setSendNotification(false);
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to send notification", description: error.message, variant: "destructive" });
-    }
-  });
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'open': return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'resolved': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'closed': return <XCircle className="h-4 w-4 text-gray-500" />;
-      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
-    }
-  };
-  
-  // Send ticket reply mutation
-  const sendTicketReplyMutation = useMutation({
-    mutationFn: async ({ ticketId, message }: { ticketId: number; message: string }) => {
-      return apiRequest(`/api/support-tickets/${ticketId}/messages`, { 
-        method: 'POST', 
-        body: JSON.stringify({ message }) 
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/support-tickets'] });
-      toast({ title: "Reply sent successfully" });
-      setTicketReply("");
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to send reply", description: error.message, variant: "destructive" });
-    }
-  });
-
-  // Create conversation with user mutation
-  const createConversationMutation = useMutation({
-    mutationFn: async (userId: number) => {
-      return apiRequest('/api/chat/conversations', { 
-        method: 'POST', 
-        body: JSON.stringify({ 
-          participantIds: [userId],
-          type: 'direct'
-        }) 
-      });
-    },
-    onSuccess: (newConversation) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
-      setSelectedConversation(newConversation);
-      setUserSearchQuery("");
-      toast({ title: "Conversation started" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to start conversation", description: error.message, variant: "destructive" });
-    }
-  });
+  const { createTicketMutation, sendMessageMutation, sendNotificationMutation, sendTicketReplyMutation, createConversationMutation } = useCommunicationsMutations(
+    selectedConversation?.id,
+    refetchMessages,
+    () => setNewTicketDialog(false),
+    () => setNotificationDialog(false),
+    (conv) => { setSelectedConversation(conv); setUserSearchQuery(""); },
+    () => { setChatInput(""); setSendNotification(false); setCustomNotificationText("New message from admin"); },
+    () => setTicketReply(""),
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? "rtl" : "ltr"}>
       <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 md:mb-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
-              {t('admin:communications.title')}
-              <span className="text-green-600 text-sm ms-2">[CACHE CLEARED ✓]</span>
-            </h1>
-            <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
-              {t('admin:communications.subtitle')}
-            </p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">{t("admin:communications.title")}</h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">{t("admin:communications.subtitle")}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button onClick={() => setNewTicketDialog(true)} size="sm" className="w-full sm:w-auto">
-              <Plus className="h-3 w-3 md:h-4 md:w-4 me-1 md:me-2" />
-              <span className="text-xs md:text-sm">{t('admin:communications.newTicket')}</span>
+            <Button onClick={() => setNewTicketDialog(true)} size="sm">
+              <Plus className="h-4 w-4 me-2" />{t("admin:communications.newTicket")}
             </Button>
-            <Button variant="outline" onClick={() => setNotificationDialog(true)} size="sm" className="w-full sm:w-auto">
-              <Bell className="h-3 w-3 md:h-4 md:w-4 me-1 md:me-2" />
-              <span className="text-xs md:text-sm">{t('admin:communications.sendNotification')}</span>
+            <Button variant="outline" onClick={() => setNotificationDialog(true)} size="sm">
+              <Bell className="h-4 w-4 me-2" />{t("admin:communications.sendNotification")}
             </Button>
           </div>
         </div>
 
-        {/* Mobile-First Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-4 md:mb-6 lg:mb-8">
-          <Card>
-            <CardContent className="p-3 md:p-4 lg:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.openTickets')}</p>
-                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
-                    {ticketsData.filter(t => t.status === 'open').length}
-                  </p>
-                </div>
-                <HeadphonesIcon className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-3 md:p-4 lg:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.activeChats')}</p>
-                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
-                    {conversationsData.filter(c => c.unreadCount > 0).length}
-                  </p>
-                </div>
-                <MessageSquare className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.todaysNotifications')}</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {notificationsData.filter(n => n.sentAt && new Date(n.sentAt).toDateString() === new Date().toDateString()).length}
-                  </p>
-                </div>
-                <Bell className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.responseRate')}</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">94.2%</p>
-                </div>
-                <Zap className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Mobile-First Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 md:gap-0 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
-            <TabsTrigger value="tickets" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
-              <HeadphonesIcon className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">{t('admin:communications.supportTickets')}</span>
-              <span className="sm:hidden">Support</span>
-            </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
-              <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">{t('admin:communications.liveChat')}</span>
-              <span className="sm:hidden">Chat</span>
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
-              <Bell className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">{t('admin:communications.pushNotifications')}</span>
-              <span className="sm:hidden">Notify</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
-              <Globe className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">{t('admin:communications.analytics')}</span>
-              <span className="sm:hidden">Data</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Support Tickets Tab */}
-          <TabsContent value="tickets" className="space-y-6">
-            <div className="flex gap-4 items-center">
-              <div className="relative flex-1">
-                <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input placeholder="Search tickets..." className="ps-10" aria-label="Search tickets" />
-              </div>
-              <Select defaultValue="all">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('admin:communications.allTickets')}</SelectItem>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="resolved">Resolved</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-              {/* Tickets List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('admin:communications.supportTickets')}</CardTitle>
-                  <CardDescription>{t('admin:communications.manageStudentRequests')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-4">
-                      {ticketsLoading ? (
-                        <div className="text-center py-8">{t('admin:communications.loadingTickets')}</div>
-                      ) : ticketsData.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          {t('admin:communications.noTickets')}
-                        </div>
-                      ) : (
-                        ticketsData.map((ticket) => (
-                          <div
-                            key={ticket.id}
-                            className={`p-4 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                              selectedTicket?.id === ticket.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200' : ''
-                            }`}
-                            onClick={() => setSelectedTicket(ticket)}
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                {getStatusIcon(ticket.status)}
-                                <h4 className="font-medium">{ticket.title}</h4>
-                              </div>
-                              <Badge className={`${getPriorityColor(ticket.priority)}`}>
-                                {ticket.priority}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                              {ticket.description.substring(0, 80)}...
-                            </p>
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              <span>by {ticket.studentName}</span>
-                              <span>
-                                {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : 'Unknown'}
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-
-              {/* Ticket Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('admin:communications.ticketDetails')}</CardTitle>
-                  <CardDescription>
-                    {selectedTicket ? `${t('admin:communications.ticketNumber')} #${selectedTicket.id}` : t('admin:communications.selectTicket')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {selectedTicket ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(selectedTicket.status)}
-                          <span className="font-medium">{selectedTicket.status.replace('_', ' ')}</span>
-                        </div>
-                        <Badge className={`${getPriorityColor(selectedTicket.priority)}`}>
-                          {selectedTicket.priority} priority
-                        </Badge>
-                      </div>
-                      
-                      <div>
-                        <h3 className="font-medium mb-2">{selectedTicket.title}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {selectedTicket.description}
-                        </p>
-                      </div>
-
-                      <div className="border-t pt-4">
-                        <h4 className="font-medium mb-3">{t('admin:communications.messages')}</h4>
-                        <ScrollArea className="h-[200px]">
-                          <div className="space-y-3">
-                            {selectedTicket.messages.map((message) => (
-                              <div key={message.id} className={`p-3 rounded-lg ${
-                                message.senderType === 'staff' 
-                                  ? 'bg-blue-50 dark:bg-blue-900/20 ms-4' 
-                                  : 'bg-gray-50 dark:bg-gray-800 me-4'
-                              }`}>
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-sm font-medium">{message.senderName}</span>
-                                  <span className="text-xs text-gray-500">
-                                    {message.sentAt ? new Date(message.sentAt).toLocaleString() : 'Just now'}
-                                  </span>
-                                </div>
-                                <p className="text-sm">{message.message}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      </div>
-
-                      <div className="border-t pt-4">
-                        <Textarea 
-                          placeholder={t('admin:communications.typeMessage')} 
-                          className="mb-2"
-                          value={ticketReply}
-                          onChange={(e) => setTicketReply(e.target.value)}
-                        />
-                        <div className="flex flex-col sm:flex-row justify-between gap-3">
-                          <Button variant="outline" size="sm" className="w-full sm:w-auto h-10">
-                            <Paperclip className="h-4 w-4 me-2" />
-                            {t('admin:communications.attachFile')}
-                          </Button>
-                          <Button 
-                            size="sm"
-                            className="w-full sm:w-auto h-10"
-                            onClick={() => {
-                              if (ticketReply.trim()) {
-                                sendTicketReplyMutation.mutate({
-                                  ticketId: selectedTicket.id,
-                                  message: ticketReply
-                                });
-                              }
-                            }}
-                            disabled={!ticketReply.trim() || sendTicketReplyMutation.isPending}
-                          >
-                            <Send className="h-4 w-4 me-2" />
-                            {sendTicketReplyMutation.isPending ? t('admin:communications.sending') : t('admin:communications.sendReply')}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-gray-500">
-                      {t('admin:communications.selectTicketToRespond')}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Internal Chat Tab */}
-          <TabsContent value="chat" className="space-y-4">
-            {/* Mobile Layout - Use existing grid system */}
-            <div className="flex flex-col gap-4 lg:hidden">
-              {/* Conversations List - Made wider */}
-              <Card className="lg:col-span-2 order-1 lg:order-1">
-                <CardHeader>
-                  <CardTitle>Conversations</CardTitle>
-                  <CardDescription>Staff internal messaging</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Search Box */}
-                  <div className="mb-4 space-y-2">
-                    <div className="relative">
-                      <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input 
-                        placeholder="Search users by name or role..." 
-                        className="ps-10"
-                        value={userSearchQuery}
-                        onChange={(e) => setUserSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    {userSearchQuery && (
-                      <div className="text-xs text-gray-500">
-                        Search across: Students, Teachers, Call Center Agents, Accountants, Admin, and all other roles
-                      </div>
-                    )}
-                  </div>
-                  <ScrollArea className="h-[400px] lg:h-[500px]">
-                    <div className="space-y-2 pe-4">
-                      {/* Show search results if searching */}
-                      {userSearchQuery && searchedUsersData.length > 0 && (
-                        <div className="mb-4">
-                          <p className="text-sm font-medium text-gray-600 mb-2">Search Results</p>
-                          {searchedUsersData.map((user) => (
-                            <div
-                              key={user.id}
-                              className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors border border-gray-200 mb-2"
-                              onClick={() => createConversationMutation.mutate(user.id)}
-                            >
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarFallback>
-                                    {user.firstName?.[0] || user.email?.[0] || 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium">
-                                    {user.firstName} {user.lastName}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {user.role} • {user.email}
-                                  </p>
-                                </div>
-                                <Plus className="h-4 w-4 text-gray-400" />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Existing conversations */}
-                      {conversationsLoading ? (
-                        <div className="text-center py-8">Loading conversations...</div>
-                      ) : conversationsData.length === 0 && !userSearchQuery ? (
-                        <div className="text-center py-8 text-gray-500">
-                          No conversations yet. Search for users to start chatting.
-                        </div>
-                      ) : (
-                        conversationsData.map((conversation) => (
-                          <div
-                            key={conversation.id}
-                            className={`p-2 sm:p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
-                              selectedConversation?.id === conversation.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                            }`}
-                            onClick={() => setSelectedConversation(conversation)}
-                          >
-                            <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="relative flex-shrink-0">
-                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                                  <AvatarFallback>
-                                    {conversation.type === 'group' ? (
-                                      <Users className="h-5 w-5" />
-                                    ) : (
-                                      conversation.participants[0]?.charAt(0) || 'U'
-                                    )}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {conversation.isOnline && (
-                                  <div className="absolute bottom-0 end-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1">
-                                  <p className="text-xs sm:text-sm font-medium truncate">
-                                    {conversation.title || conversation.participants.join(', ')}
-                                  </p>
-                                  {conversation.unreadCount > 0 && (
-                                    <Badge variant="destructive" className="text-xs px-1 py-0">
-                                      {conversation.unreadCount}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs sm:text-sm text-gray-500 truncate">
-                                  {conversation.lastMessage}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  {conversation.lastMessageAt ? new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'No messages'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-
-              {/* Chat Interface - Mobile Modal */}
-              {selectedConversation && (
-                <Card className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-gray-900 m-0 rounded-none">
-                  <CardHeader className="border-b flex flex-row items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedConversation(null)}
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                      </Button>
-                      <CardTitle className="text-base">
-                        {selectedConversation.title || selectedConversation.participants.join(', ')}
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="flex flex-col h-[calc(100vh-120px)]">
-                      <ScrollArea className="flex-1">
-                        <div className="space-y-3 p-4">
-                          {messagesLoading ? (
-                            <div className="text-center py-8">Loading messages...</div>
-                          ) : !messagesData || messagesData.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                              No messages yet. Start the conversation!
-                            </div>
-                          ) : (
-                            messagesData.map((message) => {
-                              const isOwn = message.senderId === user?.id;
-                              return (
-                                <div
-                                  key={message.id}
-                                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                                >
-                                  <div
-                                    className={`max-w-[70%] rounded-lg p-3 ${
-                                      isOwn
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-800'
-                                    }`}
-                                  >
-                                    {!isOwn && (
-                                      <p className="text-xs font-medium mb-1">
-                                        {message.senderName}
-                                      </p>
-                                    )}
-                                    <p className="text-sm">{message.message}</p>
-                                    <p className={`text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-gray-500'}`}>
-                                      {new Date(message.sentAt).toLocaleTimeString([], {
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </ScrollArea>
-                      
-                      {/* Mobile Message Input - ENHANCED VISIBILITY */}
-                      <div className="border-t p-4 space-y-4 bg-white dark:bg-gray-900">
-                        {/* Enhanced Notification Options for Mobile */}
-                        <div className="flex flex-col gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <Bell className="h-4 w-4 text-blue-500" />
-                              <Label htmlFor="sendNotifMobile" className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                Send Notification
-                              </Label>
-                            </div>
-                            <Checkbox 
-                              id="sendNotifMobile"
-                              checked={sendNotification}
-                              onCheckedChange={(checked) => setSendNotification(checked as boolean)}
-                              className="data-[state=checked]:bg-blue-500 border-blue-400"
-                            />
-                          </div>
-                          {sendNotification && (
-                            <Input
-                              placeholder="Enter notification message..."
-                              value={customNotificationText}
-                              onChange={(e) => setCustomNotificationText(e.target.value)}
-                              className="w-full text-sm bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-600"
-                            />
-                          )}
-                        </div>
-                        
-                        {/* Message Input with Better Mobile Visibility */}
-                        <div className="flex items-center gap-3">
-                          <Input
-                            placeholder="Type your message..."
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            className="flex-1 h-12 text-base" // Larger height and text for mobile
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && chatInput.trim()) {
-                                sendMessageMutation.mutate({
-                                  conversationId: selectedConversation.id,
-                                  message: chatInput,
-                                  withNotification: sendNotification,
-                                  notificationText: customNotificationText
-                                });
-                              }
-                            }}
-                          />
-                          <Button 
-                            onClick={() => {
-                              if (chatInput.trim()) {
-                                sendMessageMutation.mutate({
-                                  conversationId: selectedConversation.id,
-                                  message: chatInput,
-                                  withNotification: sendNotification,
-                                  notificationText: customNotificationText
-                                });
-                              }
-                            }}
-                            disabled={!chatInput.trim() || sendMessageMutation.isPending}
-                            size="lg" // Larger button for mobile
-                            className="h-12 px-4 bg-green-600 hover:bg-green-700" // ENHANCED VISIBILITY - Green color
-                          >
-                            {sendMessageMutation.isPending ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                            ) : (
-                              <Send className="h-5 w-5" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* Desktop Layout with Resizable Panels - 2 Column Only */}
-            <div className="hidden lg:block h-[700px] border-2 border-blue-200 rounded-lg">
-              <PanelGroup direction="horizontal" className="h-full">
-                {/* Conversations Panel */}
-                <Panel defaultSize={40} minSize={25} maxSize={60}>
-                  <Card className="h-full border-l-4 border-l-green-500">
-                    <CardHeader className="bg-green-50 dark:bg-green-900/20">
-                      <CardTitle className="text-green-800 dark:text-green-200">📋 Conversations</CardTitle>
-                      <CardDescription className="text-green-600 dark:text-green-400">Staff internal messaging</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {/* Search Box */}
-                      <div className="mb-4 space-y-2">
-                        <div className="relative">
-                          <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                          <Input 
-                            placeholder="Search users by name or role..." 
-                            className="ps-10"
-                            value={userSearchQuery}
-                            onChange={(e) => setUserSearchQuery(e.target.value)}
-                          />
-                        </div>
-                        {userSearchQuery && (
-                          <div className="text-xs text-gray-500">
-                            Search across: Students, Teachers, Call Center Agents, Accountants, Admin, and all other roles
-                          </div>
-                        )}
-                      </div>
-                      <ScrollArea className="h-[500px]">
-                        <div className="space-y-2 pe-4">
-                          {/* Show search results if searching */}
-                          {userSearchQuery && searchedUsersData.length > 0 && (
-                            <div className="mb-4">
-                              <p className="text-sm font-medium text-gray-600 mb-2">Search Results</p>
-                              {searchedUsersData.map((user) => (
-                                <div
-                                  key={user.id}
-                                  className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors border border-gray-200 mb-2"
-                                  onClick={() => createConversationMutation.mutate(user.id)}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
-                                      <AvatarFallback>
-                                        {user.firstName?.[0] || user.email?.[0] || 'U'}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                      <p className="text-sm font-medium">
-                                        {user.firstName} {user.lastName}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        {user.role} • {user.email}
-                                      </p>
-                                    </div>
-                                    <Plus className="h-4 w-4 text-gray-400" />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {/* Existing conversations */}
-                          {conversationsLoading ? (
-                            <div className="text-center py-8">Loading conversations...</div>
-                          ) : conversationsData.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                              No conversations yet. Search for a user to start chatting!
-                            </div>
-                          ) : (
-                            conversationsData.map((conversation) => (
-                              <div
-                                key={conversation.id}
-                                className={`p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
-                                  selectedConversation?.id === conversation.id ? 'bg-gray-100 dark:bg-gray-800' : ''
-                                }`}
-                                onClick={() => setSelectedConversation(conversation)}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <Avatar className="h-10 w-10">
-                                    <AvatarFallback>
-                                      {conversation.participants?.[0]?.[0] || 'C'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">
-                                      {conversation.title || conversation.participants?.join(', ') || 'Conversation'}
-                                    </p>
-                                    <p className="text-xs text-gray-500 truncate">
-                                      {conversation.lastMessage || 'No messages yet'}
-                                    </p>
-                                  </div>
-                                  {conversation.unreadCount > 0 && (
-                                    <Badge variant="default" className="ms-auto">
-                                      {conversation.unreadCount}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </Panel>
-                
-                {/* Resize Handle */}
-                <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors" />
-                
-                {/* Chat Interface Panel - Expanded */}
-                <Panel defaultSize={60} minSize={40}>
-                  <Card className="h-full border-l-4 border-l-blue-500">
-                    <CardHeader className="border-b bg-blue-50 dark:bg-blue-900/20">
-                      <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                        <MessageSquare className="h-5 w-5" />
-                        💬 {selectedConversation ? (
-                          <span className="truncate">
-                            {selectedConversation.title || selectedConversation.participants.join(', ')}
-                          </span>
-                        ) : (
-                          "Select Conversation"
-                        )}
-                      </CardTitle>
-                      <CardDescription className="text-sm text-blue-600 dark:text-blue-400">
-                        {selectedConversation ? "Real-time messaging & notifications" : "Choose a conversation to start messaging"}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="flex flex-col h-[580px]">
-                        <ScrollArea className="flex-1">
-                          <div className="space-y-3 p-4">
-                            {selectedConversation ? (
-                              messagesLoading ? (
-                                <div className="text-center py-8 text-gray-500">Loading messages...</div>
-                              ) : messagesData.length === 0 ? (
-                                <div className="text-center py-8 text-gray-500">
-                                  No messages yet. Start the conversation!
-                                </div>
-                              ) : (
-                                messagesData
-                                  .filter(message => message.message && message.message.trim().length > 0)
-                                  .map((message) => {
-                                    const isOwn = user && message.senderId === user.id;
-                                    return (
-                                      <div 
-                                        key={message.id}
-                                        className={`flex items-start gap-3 ${isOwn ? 'justify-end' : ''}`}
-                                      >
-                                        {!isOwn && (
-                                          <Avatar className="h-8 w-8">
-                                            <AvatarFallback>
-                                              {message.senderName?.split(' ').map(n => n[0]).join('') || 'U'}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                        )}
-                                        <div className={`rounded-lg p-3 max-w-[70%] ${
-                                          isOwn
-                                            ? 'bg-blue-500 text-white' 
-                                            : 'bg-gray-100 dark:bg-gray-800'
-                                        }`}>
-                                          <p className="text-sm">{message.message}</p>
-                                          <p className={`text-xs mt-1 ${
-                                            isOwn ? 'text-blue-100' : 'text-gray-500'
-                                          }`}>
-                                            {message.sentAt ? new Date(message.sentAt).toLocaleTimeString() : 'Just now'}
-                                          </p>
-                                        </div>
-                                        {isOwn && (
-                                          <Avatar className="h-8 w-8">
-                                            <AvatarFallback>ME</AvatarFallback>
-                                          </Avatar>
-                                        )}
-                                      </div>
-                                    );
-                                  })
-                              )
-                            ) : (
-                              <div className="text-center py-12 text-gray-500">
-                                Select a conversation to view messages
-                              </div>
-                            )}
-                          </div>
-                        </ScrollArea>
-                        
-                        {/* Message Input Area */}
-                        <div className="border-t p-4 space-y-3">
-                          {/* Enhanced Notification Options */}
-                          <div className="flex flex-col gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <Bell className="h-4 w-4 text-blue-500" />
-                                <Label htmlFor="sendNotif" className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                  Send Custom Notification
-                                </Label>
-                              </div>
-                              <Checkbox 
-                                id="sendNotif"
-                                checked={sendNotification}
-                                onCheckedChange={(checked) => setSendNotification(checked as boolean)}
-                                className="data-[state=checked]:bg-blue-500 border-blue-400"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Input
-                                placeholder={sendNotification ? "Enter your custom notification message..." : "Check the box above to send a notification with your message"}
-                                value={customNotificationText}
-                                onChange={(e) => setCustomNotificationText(e.target.value)}
-                                className="w-full text-sm bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-600 focus:border-blue-500"
-                                disabled={!sendNotification}
-                              />
-                              {sendNotification && (
-                                <div className="space-y-3">
-                                  <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                                    <MessageSquare className="h-3 w-3" />
-                                    This notification will be sent via SMS and push notification
-                                  </p>
-                                  <Button 
-                                    onClick={() => {
-                                      if (customNotificationText.trim()) {
-                                        sendNotificationMutation.mutate({
-                                          title: "Custom Notification",
-                                          message: customNotificationText,
-                                          type: "info",
-                                          targetAudience: "student",
-                                          channels: ["push", "sms"],
-                                          status: "sent"
-                                        });
-                                      }
-                                    }}
-                                    disabled={!customNotificationText.trim() || sendNotificationMutation.isPending}
-                                    size="sm"
-                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                                  >
-                                    {sendNotificationMutation.isPending ? (
-                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent me-2" />
-                                    ) : (
-                                      <Bell className="h-4 w-4 me-2" />
-                                    )}
-                                    Send Notification Now
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Message Input & Send Button */}
-                          <div className="flex items-center gap-2">
-                            <Input
-                              placeholder="Type your message here..."
-                              value={chatInput}
-                              onChange={(e) => setChatInput(e.target.value)}
-                              className="flex-1" 
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter' && chatInput.trim() && selectedConversation) {
-                                  sendMessageMutation.mutate({
-                                    conversationId: selectedConversation.id,
-                                    message: chatInput,
-                                    withNotification: sendNotification,
-                                    notificationText: customNotificationText
-                                  });
-                                }
-                              }}
-                            />
-                            <Button 
-                              onClick={() => {
-                                if (chatInput.trim() && selectedConversation) {
-                                  sendMessageMutation.mutate({
-                                    conversationId: selectedConversation.id,
-                                    message: chatInput,
-                                    withNotification: sendNotification,
-                                    notificationText: customNotificationText
-                                  });
-                                }
-                              }}
-                              disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
-                            >
-                              {sendMessageMutation.isPending ? (
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                              ) : (
-                                <Send className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Panel>
-              </PanelGroup>
-            </div>
-          </TabsContent>
-
-          {/* Push Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Notifications List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Notifications</CardTitle>
-                  <CardDescription>Push notifications sent to users</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-4">
-                      {notificationsLoading ? (
-                        <div className="text-center py-8">Loading notifications...</div>
-                      ) : notificationsData.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                          No notifications sent yet
-                        </div>
-                      ) : (
-                        notificationsData.map((notification) => (
-                          <div key={notification.id} className="border rounded-lg p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium">{notification.title}</h4>
-                              <Badge variant={notification.status === 'sent' ? 'default' : 'secondary'}>
-                                {notification.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                              {notification.message}
-                            </p>
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              <span>to {notification.targetAudience}</span>
-                              <span>
-                                {notification.sentAt 
-                                  ? new Date(notification.sentAt).toLocaleString()
-                                  : 'Not sent'
-                                }
-                              </span>
-                            </div>
-                            {notification.deliveryStats && (
-                              <div className="mt-2 pt-2 border-t">
-                                <div className="flex justify-between text-xs">
-                                  {notification.deliveryStats.sent && (
-                                    <span>SMS Sent: {notification.deliveryStats.sent}</span>
-                                  )}
-                                  {notification.deliveryStats.delivered && (
-                                    <span>Recipients: {notification.deliveryStats.delivered}</span>
-                                  )}
-                                  {notification.deliveryStats.sent && (
-                                    <span>Sent: {notification.deliveryStats.sent}</span>
-                                  )}
-                                  {notification.deliveryStats.delivered && (
-                                    <span>Delivered: {notification.deliveryStats.delivered}</span>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-
-              {/* Notification Composer */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Send Notification</CardTitle>
-                  <CardDescription>Create and send push notifications</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+          {[
+            { label: t("admin:communications.openTickets"), value: ticketsData.filter((t: TicketRecord) => t.status === "open").length, icon: HeadphonesIcon, color: "text-orange-500" },
+            { label: t("admin:communications.activeChats"), value: conversationsData.filter((c: ConversationRecord) => (c.unreadCount ?? 0) > 0).length, icon: MessageSquare, color: "text-blue-500" },
+            { label: t("admin:communications.todaysNotifications"), value: notificationsData.filter((n: NotificationRecord) => n.sentAt && new Date(n.sentAt as string).toDateString() === new Date().toDateString()).length, icon: Bell, color: "text-green-500" },
+            { label: t("admin:communications.responseRate"), value: "94.2%", icon: Zap, color: "text-purple-500" },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <Card key={label}>
+              <CardContent className="p-3 md:p-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Title</label>
-                    <Input 
-                      placeholder="Notification title..." 
-                      value={notificationForm.title}
-                      onChange={(e) => setNotificationForm({...notificationForm, title: e.target.value})}
-                    />
+                    <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">{label}</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
                   </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Message</label>
-                    <Textarea 
-                      placeholder="Notification message..." 
-                      value={notificationForm.message}
-                      onChange={(e) => setNotificationForm({...notificationForm, message: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Target Audience</label>
-                      <Select 
-                        defaultValue="all" 
-                        onValueChange={(value) => setNotificationForm({...notificationForm, targetAudience: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Users</SelectItem>
-                          <SelectItem value="students">Students Only</SelectItem>
-                          <SelectItem value="teachers">Teachers Only</SelectItem>
-                          <SelectItem value="staff">Staff Only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Priority</label>
-                      <Select defaultValue="medium">
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Delivery Channels</label>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" id="web-push" defaultChecked />
-                        <label htmlFor="web-push" className="text-sm">Web Push Notification</label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" id="in-app" defaultChecked />
-                        <label htmlFor="in-app" className="text-sm">In-App Notification</label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" id="sms" />
-                        <label htmlFor="sms" className="text-sm">SMS (via Kavenegar)</label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" id="email" />
-                        <label htmlFor="email" className="text-sm">Email</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button 
-                      className="flex-1"
-                      onClick={() => {
-                        if (notificationForm.title && notificationForm.message) {
-                          sendNotificationMutation.mutate(notificationForm);
-                        }
-                      }}
-                      disabled={!notificationForm.title || !notificationForm.message || sendNotificationMutation.isPending}
-                    >
-                      <Send className="h-4 w-4 me-2" />
-                      {sendNotificationMutation.isPending ? 'Sending...' : 'Send Now'}
-                    </Button>
-                    <Button variant="outline">
-                      <Clock className="h-4 w-4 me-2" />
-                      Schedule
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ticket Resolution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Average Response Time</span>
-                      <span className="font-medium">2.4 hours</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Resolution Rate</span>
-                      <span className="font-medium">94.2%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Customer Satisfaction</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">4.7/5</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Communication Volume</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Daily Messages</span>
-                      <span className="font-medium">156</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Active Conversations</span>
-                      <span className="font-medium">23</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Response Rate</span>
-                      <span className="font-medium">98.1%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notification Performance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Delivery Rate</span>
-                      <span className="font-medium">97.8%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Click Rate</span>
-                      <span className="font-medium">23.4%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Engagement Score</span>
-                      <span className="font-medium">8.2/10</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Communication Trends</CardTitle>
-                <CardDescription>Performance metrics over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  Communication analytics chart would go here
+                  <Icon className={`h-6 w-6 md:h-8 md:w-8 ${color}`} />
                 </div>
               </CardContent>
             </Card>
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
+            {[
+              { value: "tickets", icon: HeadphonesIcon, label: t("admin:communications.supportTickets"), short: "Support" },
+              { value: "chat", icon: MessageSquare, label: t("admin:communications.liveChat"), short: "Chat" },
+              { value: "notifications", icon: Bell, label: t("admin:communications.pushNotifications"), short: "Notify" },
+              { value: "analytics", icon: Globe, label: t("admin:communications.analytics"), short: "Data" },
+            ].map(({ value, icon: Icon, label, short }) => (
+              <TabsTrigger key={value} value={value} className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
+                <Icon className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">{label}</span>
+                <span className="sm:hidden">{short}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <TabsContent value="tickets">
+            <TicketsTab
+              tickets={ticketsData}
+              isLoading={ticketsLoading}
+              selectedTicket={selectedTicket}
+              onSelectTicket={setSelectedTicket}
+              ticketReply={ticketReply}
+              onReplyChange={setTicketReply}
+              onSendReply={() => { if (selectedTicket && ticketReply.trim()) sendTicketReplyMutation.mutate({ ticketId: selectedTicket.id, message: ticketReply }); }}
+              isSending={sendTicketReplyMutation.isPending}
+            />
+          </TabsContent>
+
+          <TabsContent value="chat">
+            <ChatTab
+              conversations={conversationsData}
+              conversationsLoading={conversationsLoading}
+              messages={messagesData}
+              messagesLoading={messagesLoading}
+              selectedConversation={selectedConversation}
+              onSelectConversation={setSelectedConversation}
+              chatInput={chatInput}
+              onChatInputChange={setChatInput}
+              sendNotification={sendNotification}
+              onSendNotificationChange={setSendNotification}
+              customNotificationText={customNotificationText}
+              onCustomNotificationTextChange={setCustomNotificationText}
+              userSearchQuery={userSearchQuery}
+              onUserSearchQueryChange={setUserSearchQuery}
+              searchedUsers={searchedUsersData}
+              onCreateConversation={(userId) => createConversationMutation.mutate(userId)}
+              onSendMessage={() => {
+                if (chatInput.trim() && selectedConversation) {
+                  sendMessageMutation.mutate({ conversationId: selectedConversation.id, message: chatInput, withNotification: sendNotification, notificationText: customNotificationText });
+                }
+              }}
+              isSending={sendMessageMutation.isPending}
+              currentUserId={user?.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <NotificationsTab
+              notifications={notificationsData}
+              isLoading={notificationsLoading}
+              form={notificationForm}
+              onFormChange={setNotificationForm}
+              onSend={() => { if (notificationForm.title && notificationForm.message) sendNotificationMutation.mutate(notificationForm); }}
+              isSending={sendNotificationMutation.isPending}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsTab />
           </TabsContent>
         </Tabs>
-        
+
         {/* New Ticket Dialog */}
         <Dialog open={newTicketDialog} onOpenChange={setNewTicketDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Support Ticket</DialogTitle>
-              <DialogDescription>
-                Submit a new support request
-              </DialogDescription>
+              <DialogDescription>Submit a new support request</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="ticket-title">Title</Label>
-                <Input
-                  id="ticket-title"
-                  placeholder="Brief description of the issue"
-                  value={ticketForm.title}
-                  onChange={(e) => setTicketForm({...ticketForm, title: e.target.value})}
-                />
+                <Label>Title</Label>
+                <Input placeholder="Brief description" value={ticketForm.title} onChange={(e) => setTicketForm({ ...ticketForm, title: e.target.value })} />
               </div>
               <div>
-                <Label htmlFor="ticket-description">Description</Label>
-                <Textarea
-                  id="ticket-description"
-                  placeholder="Provide detailed information about your request"
-                  rows={4}
-                  value={ticketForm.description}
-                  onChange={(e) => setTicketForm({...ticketForm, description: e.target.value})}
-                />
+                <Label>Description</Label>
+                <Textarea placeholder="Detailed information" rows={4} value={ticketForm.description} onChange={(e) => setTicketForm({ ...ticketForm, description: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Priority</Label>
-                  <Select
-                    value={ticketForm.priority}
-                    onValueChange={(value) => setTicketForm({...ticketForm, priority: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={ticketForm.priority} onValueChange={(v) => setTicketForm({ ...ticketForm, priority: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
+                      {["low", "medium", "high", "urgent"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label>Category</Label>
-                  <Select
-                    value={ticketForm.category}
-                    onValueChange={(value) => setTicketForm({...ticketForm, category: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={ticketForm.category} onValueChange={(v) => setTicketForm({ ...ticketForm, category: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="general_inquiry">General Inquiry</SelectItem>
-                      <SelectItem value="technical_issue">Technical Issue</SelectItem>
-                      <SelectItem value="billing">Billing</SelectItem>
-                      <SelectItem value="course_help">Course Help</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {[["general_inquiry", "General Inquiry"], ["technical_issue", "Technical Issue"], ["billing", "Billing"], ["course_help", "Course Help"], ["other", "Other"]].map(([val, lbl]) => (
+                        <SelectItem key={val} value={val}>{lbl}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setNewTicketDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (ticketForm.title && ticketForm.description) {
-                      createTicketMutation.mutate(ticketForm);
-                    }
-                  }}
-                  disabled={!ticketForm.title || !ticketForm.description || createTicketMutation.isPending}
-                >
-                  {createTicketMutation.isPending ? 'Creating...' : 'Create Ticket'}
+                <Button variant="outline" onClick={() => setNewTicketDialog(false)}>Cancel</Button>
+                <Button onClick={() => { if (ticketForm.title && ticketForm.description) createTicketMutation.mutate(ticketForm); }} disabled={!ticketForm.title || !ticketForm.description || createTicketMutation.isPending}>
+                  {createTicketMutation.isPending ? "Creating..." : "Create Ticket"}
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
-        
+
         {/* Notification Dialog */}
         <Dialog open={notificationDialog} onOpenChange={setNotificationDialog}>
-          <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Send Push Notification</DialogTitle>
-              <DialogDescription>
-                Create and send notifications to users
-              </DialogDescription>
+              <DialogDescription>Create and send notifications to users</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="notification-title">Title</Label>
-                <Input
-                  id="notification-title"
-                  placeholder="Notification title"
-                  value={notificationForm.title}
-                  onChange={(e) => setNotificationForm({...notificationForm, title: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="notification-message">Message</Label>
-                <Textarea
-                  id="notification-message"
-                  placeholder="Notification message"
-                  rows={3}
-                  value={notificationForm.message}
-                  onChange={(e) => setNotificationForm({...notificationForm, message: e.target.value})}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Target Audience</Label>
-                  <Select
-                    value={notificationForm.targetAudience}
-                    onValueChange={(value) => setNotificationForm({...notificationForm, targetAudience: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all_users">All Users</SelectItem>
-                      <SelectItem value="students">Students Only</SelectItem>
-                      <SelectItem value="teachers">Teachers Only</SelectItem>
-                      <SelectItem value="staff">Staff Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Type</Label>
-                  <Select
-                    value={notificationForm.type}
-                    onValueChange={(value: 'info' | 'warning' | 'success' | 'error') => setNotificationForm({...notificationForm, type: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="info">Info</SelectItem>
-                      <SelectItem value="success">Success</SelectItem>
-                      <SelectItem value="warning">Warning</SelectItem>
-                      <SelectItem value="error">Error</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Delivery Channels</Label>
-                <div className="space-y-2 mt-2">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="channel-push"
-                      checked={notificationForm.channels.includes('push')}
-                      onCheckedChange={(checked) => {
-                        const channels = checked 
-                          ? [...notificationForm.channels, 'push']
-                          : notificationForm.channels.filter(c => c !== 'push');
-                        setNotificationForm({...notificationForm, channels});
-                      }}
-                    />
-                    <label htmlFor="channel-push" className="text-sm">Push Notification</label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="channel-email"
-                      checked={notificationForm.channels.includes('email')}
-                      onCheckedChange={(checked) => {
-                        const channels = checked 
-                          ? [...notificationForm.channels, 'email']
-                          : notificationForm.channels.filter(c => c !== 'email');
-                        setNotificationForm({...notificationForm, channels});
-                      }}
-                    />
-                    <label htmlFor="channel-email" className="text-sm">Email</label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="channel-sms"
-                      checked={notificationForm.channels.includes('sms')}
-                      onCheckedChange={(checked) => {
-                        const channels = checked 
-                          ? [...notificationForm.channels, 'sms']
-                          : notificationForm.channels.filter(c => c !== 'sms');
-                        setNotificationForm({...notificationForm, channels});
-                      }}
-                    />
-                    <label htmlFor="channel-sms" className="text-sm">SMS (via Kavenegar)</label>
-                  </div>
-                </div>
-              </div>
-              {notificationForm.channels.includes('sms') && (
-                <div>
-                  <Label htmlFor="test-phone">Test Phone Number (for SMS)</Label>
-                  <Input
-                    id="test-phone"
-                    placeholder="+98912345678"
-                    value={notificationForm.testPhoneNumber}
-                    onChange={(e) => setNotificationForm({...notificationForm, testPhoneNumber: e.target.value})}
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Enter a phone number to test SMS delivery</p>
-                </div>
-              )}
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setNotificationDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (notificationForm.title && notificationForm.message) {
-                      sendNotificationMutation.mutate(notificationForm);
-                    }
-                  }}
-                  disabled={!notificationForm.title || !notificationForm.message || sendNotificationMutation.isPending}
-                >
-                  {sendNotificationMutation.isPending ? 'Sending...' : 'Send Notification'}
-                </Button>
-              </div>
-            </div>
+            <NotificationsTab
+              notifications={[]}
+              isLoading={false}
+              form={notificationForm}
+              onFormChange={setNotificationForm}
+              onSend={() => { if (notificationForm.title && notificationForm.message) sendNotificationMutation.mutate(notificationForm); }}
+              isSending={sendNotificationMutation.isPending}
+            />
           </DialogContent>
         </Dialog>
       </div>

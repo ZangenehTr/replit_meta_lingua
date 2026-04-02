@@ -53,7 +53,7 @@ import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-interface CustomerInteraction {
+export interface CustomerInteraction {
   id: number;
   type: 'phone_call' | 'walk_in' | 'email' | 'sms' | 'task';
   customerName: string;
