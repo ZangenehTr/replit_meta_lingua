@@ -521,6 +521,20 @@ server.listen({
   const { registerCmsRoutes } = await import('./routes/cms-routes.js');
   registerCmsRoutes(app, authenticateToken, requireRole);
   console.log('✅ CMS routes registered (Pages, Blog, Videos, Media)');
+
+  // Run AI pipeline migration (retry up to 3x to handle Neon cold-start)
+  (async () => {
+    const { runAIPipelineMigration } = await import('./migrations/ai-pipeline-schema.js');
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await runAIPipelineMigration();
+        break;
+      } catch (migErr: unknown) {
+        console.error(`⚠️  AI pipeline migration attempt ${attempt} failed:`, migErr instanceof Error ? migErr.message : String(migErr));
+        if (attempt < 3) await new Promise(r => setTimeout(r, 5000 * attempt));
+      }
+    }
+  })();
   
   // Register Placement Test routes (including guest routes)
   const placementTestRouter = (await import('./routes/placement-test-routes.js')).default;
@@ -700,6 +714,69 @@ server.listen({
     } catch (error) {
       console.error('⚠️  Failed to initialize CMS Adaptive Content Worker:', error);
     }
+  })();
+
+  // Non-blocking: Start CMS Content Generation Worker
+  (async () => {
+    try {
+      await import('./workers/cms-content.worker.js');
+      console.log('✅ CMS Content Generation Worker initialized');
+    } catch (error) {
+      console.error('⚠️  Failed to initialize CMS Content Worker:', error);
+    }
+  })();
+
+  // Non-blocking: Scheduled publishing scheduler (every 5 minutes, approval-gated)
+  (() => {
+    const SCHEDULE_INTERVAL_MS = 5 * 60 * 1000;
+    const runScheduledPublishing = () => {
+      import('./db.js').then(({ db }) =>
+        import('@shared/schema').then(({ cmsBlogPosts, cmsContentVersions, cmsContentGenerationLogs }) =>
+          import('drizzle-orm').then(({ and, eq, lte, sql, inArray }) => {
+            const now = new Date();
+            // Only promote posts that have a version snapshot with an 'Approved by' note,
+            // ensuring the approval workflow was followed before scheduled publish fires
+            db.select({ postId: cmsContentVersions.postId })
+              .from(cmsContentVersions)
+              .where(sql`change_note ILIKE ${'Approved by%'}`)
+              .then(async (approvedVersionRows: Array<{ postId: number }>) => {
+                const approvedPostIds = [...new Set(approvedVersionRows.map((r) => r.postId))];
+                if (approvedPostIds.length === 0) return;
+
+                return db.update(cmsBlogPosts)
+                  .set({ status: 'published', publishedAt: now, scheduledPublishAt: null, updatedAt: now })
+                  .where(
+                    and(
+                      eq(cmsBlogPosts.status, 'draft'),
+                      lte(cmsBlogPosts.scheduledPublishAt, now),
+                      inArray(cmsBlogPosts.id, approvedPostIds)
+                    )
+                  )
+                  .returning()
+                  .then(async (promoted: Array<{ id: number }>) => {
+                    if (promoted.length > 0) {
+                      console.log(`[Scheduled Publisher] Promoted ${promoted.length} approved post(s) to published`);
+                      for (const post of promoted) {
+                        await db.insert(cmsContentGenerationLogs).values({
+                          postId: post.id,
+                          sourceType: 'manual',
+                          status: 'completed',
+                          promptUsed: 'Scheduled publishing promotion (approval-gated)',
+                          completedAt: now,
+                          startedAt: now,
+                        }).catch((e: unknown) => console.error('[Scheduled Publisher] Log error:', e));
+                      }
+                    }
+                  });
+              })
+              .catch((e: unknown) => console.error('[Scheduled Publisher] Error:', e));
+          })
+        )
+      ).catch((e: unknown) => console.error('[Scheduled Publisher] Import error:', e));
+    };
+
+    setInterval(runScheduledPublishing, SCHEDULE_INTERVAL_MS);
+    console.log('✅ Scheduled publishing scheduler started (every 5 minutes)');
   })();
 })().catch((error) => {
   console.error('❌ Background initialization error:', error);

@@ -8775,7 +8775,7 @@ export const cmsBlogPosts = pgTable("cms_blog_posts", {
   featuredImage: text("featured_image"),
   authorId: integer("author_id").references(() => users.id).notNull(),
   categoryId: integer("category_id").references(() => cmsBlogCategories.id),
-  status: varchar("status", { length: 20 }).default("draft").notNull(), // draft, published, archived
+  status: varchar("status", { length: 20 }).default("draft").notNull(), // draft, published, archived, rejected
   locale: varchar("locale", { length: 10 }).default("en"), // en, fa, ar
   metaTitle: varchar("meta_title", { length: 255 }),
   metaDescription: text("meta_description"),
@@ -8783,6 +8783,13 @@ export const cmsBlogPosts = pgTable("cms_blog_posts", {
   ogImage: text("og_image"),
   viewCount: integer("view_count").default(0),
   publishedAt: timestamp("published_at"),
+  // AI generation fields
+  aiGenerated: boolean("ai_generated").default(false),
+  aiPrompt: text("ai_prompt"),
+  aiModel: varchar("ai_model", { length: 100 }),
+  aiSourceRef: text("ai_source_ref"),
+  scheduledPublishAt: timestamp("scheduled_publish_at"),
+  jsonLdBlock: text("json_ld_block"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -8974,6 +8981,85 @@ export type CmsPageAnalytics = typeof cmsPageAnalytics.$inferSelect;
 export type InsertCmsPageAnalytics = z.infer<typeof insertCmsPageAnalyticsSchema>;
 export type CustomFont = typeof customFonts.$inferSelect;
 export type InsertCustomFont = z.infer<typeof insertCustomFontSchema>;
+
+// ============================================================================
+// AI CONTENT PIPELINE TABLES
+
+// Content version history
+export const cmsContentVersions = pgTable("cms_content_versions", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").references(() => cmsBlogPosts.id).notNull(),
+  versionNumber: integer("version_number").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull(),
+  excerpt: text("excerpt"),
+  content: text("content").notNull(),
+  metaTitle: varchar("meta_title", { length: 255 }),
+  metaDescription: text("meta_description"),
+  metaKeywords: text("meta_keywords"),
+  status: varchar("status", { length: 20 }).notNull(),
+  changedBy: integer("changed_by").references(() => users.id).notNull(),
+  changeNote: text("change_note"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Prompt templates for AI content generation
+export const cmsContentPromptTemplates = pgTable("cms_content_prompt_templates", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  contentType: varchar("content_type", { length: 50 }).notNull(), // blog, landing, qa
+  tone: varchar("tone", { length: 50 }).notNull().default("professional"), // professional, casual, educational, etc.
+  length: varchar("length", { length: 20 }).notNull().default("medium"), // short, medium, long
+  format: varchar("format", { length: 50 }).notNull().default("article"), // article, list, qa, etc.
+  promptBody: text("prompt_body").notNull(),
+  systemPrompt: text("system_prompt"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Generation job logs for observability
+export const cmsContentGenerationLogs = pgTable("cms_content_generation_logs", {
+  id: serial("id").primaryKey(),
+  jobId: varchar("job_id", { length: 255 }),
+  postId: integer("post_id").references(() => cmsBlogPosts.id),
+  templateId: integer("template_id").references(() => cmsContentPromptTemplates.id),
+  sourceType: varchar("source_type", { length: 50 }), // market_trend, competitor_price, faq_keyword, manual
+  sourceId: integer("source_id"),
+  status: varchar("status", { length: 20 }).notNull().default("queued"), // queued, processing, completed, failed
+  model: varchar("model", { length: 100 }),
+  generationTimeMs: integer("generation_time_ms"),
+  promptUsed: text("prompt_used"),
+  errorMessage: text("error_message"),
+  triggeredBy: integer("triggered_by").references(() => users.id),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const insertCmsContentVersionSchema = createInsertSchema(cmsContentVersions).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCmsContentPromptTemplateSchema = createInsertSchema(cmsContentPromptTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCmsContentGenerationLogSchema = createInsertSchema(cmsContentGenerationLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+export type CmsContentVersion = typeof cmsContentVersions.$inferSelect;
+export type InsertCmsContentVersion = z.infer<typeof insertCmsContentVersionSchema>;
+export type CmsContentPromptTemplate = typeof cmsContentPromptTemplates.$inferSelect;
+export type InsertCmsContentPromptTemplate = z.infer<typeof insertCmsContentPromptTemplateSchema>;
+export type CmsContentGenerationLog = typeof cmsContentGenerationLogs.$inferSelect;
+export type InsertCmsContentGenerationLog = z.infer<typeof insertCmsContentGenerationLogSchema>;
 
 // ============================================================================
 // VISITOR CHAT SYSTEM

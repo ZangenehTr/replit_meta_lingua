@@ -8,8 +8,11 @@ import { z } from 'zod';
 import { insertCmsPageSchema, insertCmsPageSectionSchema, insertCmsBlogCategorySchema, 
          insertCmsBlogTagSchema, insertCmsBlogPostSchema, insertCmsBlogCommentSchema,
          insertCmsVideoSchema, insertCmsMediaAssetSchema, insertCmsPageAnalyticsSchema,
-         insertCurriculumCategorySchema, insertGuestLeadSchema, insertCustomFontSchema } from '@shared/schema';
+         insertCurriculumCategorySchema, insertGuestLeadSchema, insertCustomFontSchema,
+         cmsBlogPosts, cmsContentVersions, cmsContentPromptTemplates, cmsContentGenerationLogs } from '@shared/schema';
 import { DatabaseStorage } from '../database-storage.js';
+import { db } from '../db.js';
+import { eq, and, lte, desc, sql, or } from 'drizzle-orm';
 import multer from 'multer';
 import { nanoid } from 'nanoid';
 import path from 'path';
@@ -23,6 +26,12 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   // Admin middleware helper - applies both auth and admin role check
   const requireAdmin = authenticateToken && requireRole ? 
     [authenticateToken, requireRole(['Admin'])] : 
+    [];
+
+  // Supervisor or Admin middleware — allows approval/rejection by either role
+  // Supervisors can approve content but scheduling is locked to Admin sign-off
+  const requireSupervisorOrAdmin = authenticateToken && requireRole ?
+    [authenticateToken, requireRole(['Admin', 'Supervisor'])] :
     [];
   
   // ============================================================================
@@ -333,12 +342,19 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
     }
   });
   
-  app.post('/api/cms/blog/posts', async (req: Request, res: Response) => {
+  // Create blog post — requires authenticated editor/admin; status is forced to 'draft'
+  // Publishing must go through the approval endpoint to enforce workflow + duplicate checks
+  app.post('/api/cms/blog/posts', ...requireSupervisorOrAdmin, async (req: Request, res: Response) => {
     try {
-      const postData = insertCmsBlogPostSchema.parse(req.body);
+      const body = { ...req.body };
+      // Prevent direct publish bypass — all new posts start as draft
+      if (body.status === 'published') {
+        body.status = 'draft';
+      }
+      const postData = insertCmsBlogPostSchema.parse(body);
       const post = await storage.createBlogPost(postData);
       res.status(201).json(post);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating blog post:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: 'Invalid post data', errors: error.errors });
@@ -347,28 +363,69 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
     }
   });
   
-  app.put('/api/cms/blog/posts/:id', async (req: Request, res: Response) => {
+  // Update blog post — requires authenticated editor/admin
+  // Direct publish bypass is blocked; use the approve endpoint to publish
+  app.put('/api/cms/blog/posts/:id', ...requireSupervisorOrAdmin, async (req: Request, res: Response) => {
     try {
       const postId = parseInt(req.params.id);
-      const post = await storage.updateBlogPost(postId, req.body);
+      const user = (req as any).user;
+      const isAdmin = user?.role === 'Admin';
+      const body = { ...req.body };
+
+      // Enforce: non-admin users cannot directly set status to published
+      // Only Admin can publish directly through PUT (e.g. unpublish/re-publish toggle)
+      if (!isAdmin && body.status === 'published') {
+        return res.status(403).json({ message: 'Publishing requires Admin role or use the approve endpoint.' });
+      }
+
+      // Save version before updating
+      try {
+        const [existingPost] = await db.select().from(cmsBlogPosts).where(eq(cmsBlogPosts.id, postId));
+        if (existingPost) {
+          const [lastVer] = await db.select({ versionNumber: cmsContentVersions.versionNumber })
+            .from(cmsContentVersions)
+            .where(eq(cmsContentVersions.postId, postId))
+            .orderBy(desc(cmsContentVersions.versionNumber))
+            .limit(1);
+          const nextVersion = (lastVer?.versionNumber ?? 0) + 1;
+          await db.insert(cmsContentVersions).values({
+            postId,
+            versionNumber: nextVersion,
+            title: existingPost.title,
+            slug: existingPost.slug,
+            excerpt: existingPost.excerpt ?? '',
+            content: existingPost.content,
+            metaTitle: existingPost.metaTitle ?? '',
+            metaDescription: existingPost.metaDescription ?? '',
+            metaKeywords: existingPost.metaKeywords ?? '',
+            status: existingPost.status,
+            changedBy: user?.id ?? existingPost.authorId,
+            changeNote: 'Pre-update snapshot',
+          });
+        }
+      } catch (vErr: unknown) {
+        console.warn('[CMS] Version save error (non-fatal):', vErr instanceof Error ? vErr.message : String(vErr));
+      }
+
+      const post = await storage.updateBlogPost(postId, body);
       
       if (!post) {
         return res.status(404).json({ message: 'Post not found' });
       }
       
       res.json(post);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating blog post:', error);
       res.status(500).json({ message: 'Failed to update post' });
     }
   });
   
-  app.delete('/api/cms/blog/posts/:id', async (req: Request, res: Response) => {
+  app.delete('/api/cms/blog/posts/:id', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const postId = parseInt(req.params.id);
       await storage.deleteBlogPost(postId);
       res.json({ message: 'Post deleted successfully' });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error deleting blog post:', error);
       res.status(500).json({ message: 'Failed to delete post' });
     }
@@ -1093,6 +1150,451 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
     } catch (error) {
       console.error('Error deleting font:', error);
       res.status(500).json({ message: 'Failed to delete font' });
+    }
+  });
+
+  // ============================================================================
+  // APPROVAL WORKFLOW & VERSIONING ENDPOINTS
+  // ============================================================================
+
+  async function saveVersion(postId: number, userId: number, note?: string): Promise<void> {
+    const [post] = await db.select().from(cmsBlogPosts).where(eq(cmsBlogPosts.id, postId));
+    if (!post) return;
+    const [lastVersion] = await db.select({ versionNumber: cmsContentVersions.versionNumber })
+      .from(cmsContentVersions)
+      .where(eq(cmsContentVersions.postId, postId))
+      .orderBy(desc(cmsContentVersions.versionNumber))
+      .limit(1);
+    const nextVersion = (lastVersion?.versionNumber || 0) + 1;
+    await db.insert(cmsContentVersions).values({
+      postId,
+      versionNumber: nextVersion,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt || '',
+      content: post.content,
+      metaTitle: post.metaTitle || '',
+      metaDescription: post.metaDescription || '',
+      metaKeywords: post.metaKeywords || '',
+      status: post.status,
+      changedBy: userId,
+      changeNote: note,
+    });
+  }
+
+  // GET supervisor sign-off policy setting (Admin only)
+  app.get('/api/admin/cms/policy/supervisor-signoff', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const settings = await db.execute(sql`SELECT cms_supervisor_requires_admin_signoff FROM admin_settings LIMIT 1`);
+      const row = settings.rows[0] as { cms_supervisor_requires_admin_signoff: boolean | null } | undefined;
+      const requiresSignoff = row?.cms_supervisor_requires_admin_signoff !== false; // default true
+      res.json({ supervisorRequiresAdminSignoff: requiresSignoff });
+    } catch (error: unknown) {
+      console.error('Error fetching supervisor policy:', error);
+      res.json({ supervisorRequiresAdminSignoff: true }); // fail safe: require signoff
+    }
+  });
+
+  // PUT supervisor sign-off policy setting (Admin only)
+  app.put('/api/admin/cms/policy/supervisor-signoff', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { supervisorRequiresAdminSignoff } = req.body;
+      if (typeof supervisorRequiresAdminSignoff !== 'boolean') {
+        return res.status(400).json({ message: 'supervisorRequiresAdminSignoff must be boolean' });
+      }
+      await db.execute(sql`
+        UPDATE admin_settings SET cms_supervisor_requires_admin_signoff = ${supervisorRequiresAdminSignoff}
+        WHERE id = (SELECT id FROM admin_settings LIMIT 1)
+      `);
+      res.json({ supervisorRequiresAdminSignoff });
+    } catch (error: unknown) {
+      console.error('Error updating supervisor policy:', error);
+      res.status(500).json({ message: 'Failed to update policy' });
+    }
+  });
+
+  // Approve post (Admin or Supervisor)
+  // Admin: can publish immediately, schedule, or override duplicate detection
+  // Supervisor: marks as pending_admin_review (configurable) or publishes if policy allows direct publish
+  app.post('/api/cms/blog/posts/:id/approve', ...requireSupervisorOrAdmin, async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const user = (req as any).user;
+      const isAdmin = user?.role === 'Admin';
+
+      const { publishImmediately = true, scheduledAt, forceDuplicate = false, duplicateThreshold } = req.body;
+
+      // Read supervisor sign-off policy (default: require admin sign-off)
+      let supervisorRequiresAdminSignoff = true;
+      try {
+        const policyRows = await db.execute(sql`SELECT cms_supervisor_requires_admin_signoff FROM admin_settings LIMIT 1`);
+        const policyRow = policyRows.rows[0] as { cms_supervisor_requires_admin_signoff: boolean | null } | undefined;
+        supervisorRequiresAdminSignoff = policyRow?.cms_supervisor_requires_admin_signoff !== false;
+      } catch {
+        // Column may not exist yet (pre-migration), default to requiring sign-off
+      }
+
+      // Supervisors cannot schedule for future publish (Admin sign-off required regardless of policy)
+      if (!isAdmin && scheduledAt) {
+        return res.status(403).json({ message: 'Scheduling future publish requires Admin role.' });
+      }
+
+      // Supervisors cannot force-override duplicate detection
+      if (!isAdmin && forceDuplicate) {
+        return res.status(403).json({ message: 'Overriding duplicate detection requires Admin role.' });
+      }
+
+      const [post] = await db.select().from(cmsBlogPosts).where(eq(cmsBlogPosts.id, postId));
+      if (!post) return res.status(404).json({ message: 'Post not found' });
+
+      // Allow approving from: draft (initial), rejected (re-submitted), pending_admin_review (Supervisor pre-approved)
+      const approvableStatuses = ['draft', 'rejected', 'pending_admin_review'];
+      if (!approvableStatuses.includes(post.status)) {
+        return res.status(400).json({ message: `Cannot approve post with status: ${post.status}` });
+      }
+      // Only Admin can do final sign-off on Supervisor-pre-approved posts
+      if (post.status === 'pending_admin_review' && !isAdmin) {
+        return res.status(403).json({ message: 'Final sign-off on Supervisor-approved posts requires Admin role.' });
+      }
+
+      // Duplicate detection using tsvector with configurable threshold
+      // Default threshold 0.1; Admin can supply custom threshold; Supervisors always get full check
+      const similarityThreshold = isAdmin && typeof duplicateThreshold === 'number'
+        ? Math.max(0.01, Math.min(duplicateThreshold, 1.0))
+        : 0.1;
+
+      if (!forceDuplicate) {
+        const titleForSearch = post.title.replace(/'/g, "''");
+        const excerptForSearch = (post.excerpt || '').replace(/'/g, "''");
+        const searchText = `${titleForSearch} ${excerptForSearch}`;
+        
+        if (searchText.trim().length > 5) {
+          const duplicates = await db.execute(sql`
+            SELECT id, title, slug,
+              ts_rank(
+                to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(excerpt, '')),
+                plainto_tsquery('english', ${searchText})
+              ) as rank
+            FROM cms_blog_posts
+            WHERE status = 'published'
+              AND id != ${postId}
+              AND to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(excerpt, ''))
+                  @@ plainto_tsquery('english', ${searchText})
+            ORDER BY rank DESC
+            LIMIT 5
+          `);
+
+          interface DuplicateRow { id: number; title: string; slug: string; rank: string | number; }
+          const rows = duplicates.rows as DuplicateRow[];
+          const highSimilarity = rows.filter((r) => parseFloat(String(r.rank)) >= similarityThreshold);
+          if (highSimilarity.length > 0) {
+            return res.status(409).json({
+              message: 'Potential duplicate content detected',
+              threshold: similarityThreshold,
+              duplicates: highSimilarity.map((r) => ({ id: r.id, title: r.title, slug: r.slug, similarity: parseFloat(String(r.rank)) })),
+              hint: isAdmin ? 'Pass forceDuplicate: true to override, or set duplicateThreshold to a lower value.' : 'Contact an Admin to override duplicate detection.'
+            });
+          }
+        }
+      }
+
+      const approverRole = user?.role ?? 'admin';
+      const approverName = user?.username ?? 'unknown';
+      await saveVersion(postId, user?.id ?? 1, `Approved by ${approverRole}: ${approverName}`);
+
+      // RBAC publish semantics:
+      // - Supervisor: marks post as 'pending_admin_review' (needs Admin final sign-off before publish)
+      // - Admin: can publish immediately, schedule, or hold in draft
+      let newStatus: string;
+      let publishedAt: Date | null | undefined;
+      let scheduledPublishAt: Date | null;
+
+      if (!isAdmin) {
+        // Supervisor approval — behaviour depends on configurable policy
+        if (supervisorRequiresAdminSignoff) {
+          // Policy: Supervisor sets post to pending_admin_review; Admin must do final sign-off
+          newStatus = 'pending_admin_review';
+          publishedAt = post.publishedAt;
+          scheduledPublishAt = null;
+        } else {
+          // Policy disabled: Supervisor can publish directly (immediate only, no scheduling)
+          newStatus = publishImmediately ? 'published' : 'draft';
+          publishedAt = publishImmediately ? new Date() : post.publishedAt;
+          scheduledPublishAt = null;
+        }
+      } else if (scheduledAt) {
+        // Admin with future scheduled publish
+        newStatus = 'draft';
+        publishedAt = post.publishedAt;
+        scheduledPublishAt = new Date(scheduledAt);
+      } else if (publishImmediately) {
+        // Admin immediate publish
+        newStatus = 'published';
+        publishedAt = new Date();
+        scheduledPublishAt = null;
+      } else {
+        // Admin approve but keep as draft (e.g. admin reviewed and approved but wants to publish manually)
+        newStatus = 'draft';
+        publishedAt = post.publishedAt;
+        scheduledPublishAt = null;
+      }
+
+      const [updated] = await db.update(cmsBlogPosts)
+        .set({
+          status: newStatus,
+          publishedAt: publishedAt ?? null,
+          scheduledPublishAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(cmsBlogPosts.id, postId))
+        .returning();
+
+      res.json(updated);
+    } catch (error: unknown) {
+      console.error('Error approving post:', error);
+      res.status(500).json({ message: 'Failed to approve post' });
+    }
+  });
+
+  // Reject post (Admin or Supervisor)
+  app.post('/api/cms/blog/posts/:id/reject', ...requireSupervisorOrAdmin, async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const user = (req as any).user;
+      const { reason } = req.body;
+
+      const [post] = await db.select().from(cmsBlogPosts).where(eq(cmsBlogPosts.id, postId));
+      if (!post) return res.status(404).json({ message: 'Post not found' });
+
+      await saveVersion(postId, user?.id ?? 1, `Rejected: ${reason ?? 'No reason provided'}`);
+
+      const [updated] = await db.update(cmsBlogPosts)
+        .set({ status: 'rejected', updatedAt: new Date() })
+        .where(eq(cmsBlogPosts.id, postId))
+        .returning();
+
+      res.json(updated);
+    } catch (error: unknown) {
+      console.error('Error rejecting post:', error);
+      res.status(500).json({ message: 'Failed to reject post' });
+    }
+  });
+
+  // Get version history for a post
+  app.get('/api/cms/blog/posts/:id/versions', ...requireSupervisorOrAdmin, async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const versions = await db.select()
+        .from(cmsContentVersions)
+        .where(eq(cmsContentVersions.postId, postId))
+        .orderBy(desc(cmsContentVersions.versionNumber));
+      res.json(versions);
+    } catch (error: unknown) {
+      console.error('Error fetching versions:', error);
+      res.status(500).json({ message: 'Failed to fetch versions' });
+    }
+  });
+
+  // Get diff between two versions of a post
+  // Returns field-level changes between versionA and versionB (or versionA and current post)
+  app.get('/api/cms/blog/posts/:id/versions/diff', ...requireSupervisorOrAdmin, async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const versionA = parseInt(String(req.query.a || '0'));
+      const versionB = req.query.b ? parseInt(String(req.query.b)) : null;
+
+      const getVersion = async (vNum: number) => {
+        const [v] = await db.select().from(cmsContentVersions)
+          .where(and(eq(cmsContentVersions.postId, postId), eq(cmsContentVersions.versionNumber, vNum)));
+        return v;
+      };
+
+      const verA = await getVersion(versionA);
+      if (!verA) return res.status(404).json({ message: `Version ${versionA} not found` });
+
+      let verBData: Record<string, unknown>;
+      if (versionB !== null) {
+        const verBObj = await getVersion(versionB);
+        if (!verBObj) return res.status(404).json({ message: `Version ${versionB} not found` });
+        verBData = verBObj as unknown as Record<string, unknown>;
+      } else {
+        const [currentPost] = await db.select().from(cmsBlogPosts).where(eq(cmsBlogPosts.id, postId));
+        if (!currentPost) return res.status(404).json({ message: 'Post not found' });
+        verBData = currentPost as unknown as Record<string, unknown>;
+      }
+
+      const DIFFABLE_FIELDS = ['title', 'slug', 'excerpt', 'content', 'metaTitle', 'metaDescription', 'metaKeywords', 'status'] as const;
+      const changes: Array<{ field: string; from: unknown; to: unknown }> = [];
+
+      for (const field of DIFFABLE_FIELDS) {
+        const fromVal = (verA as unknown as Record<string, unknown>)[field];
+        const toVal = verBData[field];
+        if (fromVal !== toVal) {
+          changes.push({ field, from: fromVal, to: toVal });
+        }
+      }
+
+      res.json({
+        postId,
+        versionA,
+        versionB: versionB ?? 'current',
+        changesCount: changes.length,
+        changes,
+        versionAMeta: { versionNumber: verA.versionNumber, changeNote: verA.changeNote, createdAt: verA.createdAt },
+      });
+    } catch (error: unknown) {
+      console.error('Error generating version diff:', error);
+      res.status(500).json({ message: 'Failed to generate version diff' });
+    }
+  });
+
+  // ============================================================================
+  // PROMPT TEMPLATE CRUD ENDPOINTS
+  // ============================================================================
+
+  app.get('/api/admin/content/templates', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const templates = await db.select().from(cmsContentPromptTemplates).orderBy(desc(cmsContentPromptTemplates.createdAt));
+      res.json(templates);
+    } catch (error: unknown) {
+      console.error('Error fetching templates:', error);
+      res.status(500).json({ message: 'Failed to fetch templates' });
+    }
+  });
+
+  app.get('/api/admin/content/templates/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [tmpl] = await db.select().from(cmsContentPromptTemplates).where(eq(cmsContentPromptTemplates.id, id));
+      if (!tmpl) return res.status(404).json({ message: 'Template not found' });
+      res.json(tmpl);
+    } catch (error: unknown) {
+      console.error('Error fetching template:', error);
+      res.status(500).json({ message: 'Failed to fetch template' });
+    }
+  });
+
+  app.post('/api/admin/content/templates', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const { name, contentType, tone, length: len, format, promptBody, systemPrompt } = req.body;
+      if (!name || !contentType || !promptBody) {
+        return res.status(400).json({ message: 'name, contentType, and promptBody are required' });
+      }
+      const [tmpl] = await db.insert(cmsContentPromptTemplates).values({
+        name,
+        contentType,
+        tone: tone || 'professional',
+        length: len || 'medium',
+        format: format || 'article',
+        promptBody,
+        systemPrompt,
+        createdBy: user?.id || 1,
+      }).returning();
+      res.status(201).json(tmpl);
+    } catch (error: unknown) {
+      console.error('Error creating template:', error);
+      res.status(500).json({ message: 'Failed to create template' });
+    }
+  });
+
+  app.put('/api/admin/content/templates/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, contentType, tone, length: len, format, promptBody, systemPrompt, isActive } = req.body;
+      const [updated] = await db.update(cmsContentPromptTemplates)
+        .set({ name, contentType, tone, length: len, format, promptBody, systemPrompt, isActive, updatedAt: new Date() })
+        .where(eq(cmsContentPromptTemplates.id, id))
+        .returning();
+      if (!updated) return res.status(404).json({ message: 'Template not found' });
+      res.json(updated);
+    } catch (error: unknown) {
+      console.error('Error updating template:', error);
+      res.status(500).json({ message: 'Failed to update template' });
+    }
+  });
+
+  app.delete('/api/admin/content/templates/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await db.delete(cmsContentPromptTemplates).where(eq(cmsContentPromptTemplates.id, id));
+      res.json({ message: 'Template deleted' });
+    } catch (error: unknown) {
+      console.error('Error deleting template:', error);
+      res.status(500).json({ message: 'Failed to delete template' });
+    }
+  });
+
+  // ============================================================================
+  // AI CONTENT PIPELINE TRIGGER & OBSERVABILITY ENDPOINTS
+  // ============================================================================
+
+  app.post('/api/admin/content/generate', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { aiCmsContentService } = await import('../services/ai-cms-content-service.js');
+      const user = (req as any).user;
+      const { sourceType, sourceId, templateId, overrides } = req.body;
+
+      if (!sourceType) {
+        return res.status(400).json({ message: 'sourceType is required' });
+      }
+
+      const result = await aiCmsContentService.enqueueGeneration({
+        sourceType,
+        sourceId,
+        templateId,
+        overrides,
+        triggeredBy: user?.id || 1,
+        authorId: user?.id || 1,
+      });
+
+      res.status(202).json({
+        message: 'Content generation queued',
+        jobId: result.jobId,
+        logId: result.logId,
+      });
+    } catch (error: unknown) {
+      console.error('Error queueing content generation:', error);
+      res.status(500).json({ message: 'Failed to queue generation', error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get('/api/admin/content/generation-jobs', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await db.select()
+        .from(cmsContentGenerationLogs)
+        .orderBy(desc(cmsContentGenerationLogs.createdAt))
+        .limit(limit);
+
+      const total = logs.length;
+      const queued = logs.filter(l => l.status === 'queued').length;
+      const processing = logs.filter(l => l.status === 'processing').length;
+      const completed = logs.filter(l => l.status === 'completed').length;
+      const failed = logs.filter(l => l.status === 'failed').length;
+      const completedLogs = logs.filter(l => l.generationTimeMs != null && l.status === 'completed');
+      const avgTime = completedLogs.length > 0
+        ? Math.round(completedLogs.reduce((sum, l) => sum + (l.generationTimeMs || 0), 0) / completedLogs.length)
+        : 0;
+
+      res.json({
+        summary: { total, queued, processing, completed, failed, avgGenerationTimeMs: avgTime },
+        jobs: logs,
+      });
+    } catch (error: unknown) {
+      console.error('Error fetching generation jobs:', error);
+      res.status(500).json({ message: 'Failed to fetch generation jobs' });
+    }
+  });
+
+  app.get('/api/admin/content/sources', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { aiCmsContentService } = await import('../services/ai-cms-content-service.js');
+      const sources = await aiCmsContentService.getRecentSources();
+      res.json(sources);
+    } catch (error: unknown) {
+      console.error('Error fetching sources:', error);
+      res.status(500).json({ message: 'Failed to fetch sources' });
     }
   });
 }
