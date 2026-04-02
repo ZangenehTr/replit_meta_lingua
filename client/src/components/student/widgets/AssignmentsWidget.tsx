@@ -160,7 +160,7 @@ export function AssignmentsWidget({
                       Due {formatDistanceToNow(parseISO(assignment.dueDate), { addSuffix: true })}
                     </p>
                     {isOverdue && (
-                      <span className="text-xs text-red-600 font-medium ml-1">
+                      <span className="text-xs text-red-600 font-medium ms-1">
                         (Overdue)
                       </span>
                     )}

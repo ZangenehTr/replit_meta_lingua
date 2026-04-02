@@ -188,7 +188,7 @@ export function ExpandableCard({
           
           {/* Gradient overlay for truncated content */}
           {!currentExpanded && needsTruncation && (
-            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 start-0 end-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none" />
           )}
         </motion.div>
 
@@ -228,7 +228,7 @@ export function ExpandableCard({
               <motion.div
                 animate={{ rotate: currentExpanded ? 180 : 0 }}
                 transition={{ duration: animationDuration / 1000 }}
-                className="ml-1"
+                className="ms-1"
               >
                 <ChevronDown className="h-3 w-3" />
               </motion.div>

@@ -484,7 +484,7 @@ export default function GamesManagement() {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="h-8 text-xs sm:text-sm">
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 me-1 sm:me-2" />
                 {t('admin:games.createGame')}
               </Button>
             </DialogTrigger>
@@ -565,7 +565,7 @@ export default function GamesManagement() {
                         onClick={() => handleEdit(game)}
                         className="flex-1"
                       >
-                        <Edit className="w-4 h-4 mr-1" />
+                        <Edit className="w-4 h-4 me-1" />
                         {t('admin:games.edit')}
                       </Button>
                       <Button
@@ -574,7 +574,7 @@ export default function GamesManagement() {
                         onClick={() => handleDelete(game.id)}
                         className="flex-1"
                       >
-                        <Trash2 className="w-4 h-4 mr-1" />
+                        <Trash2 className="w-4 h-4 me-1" />
                         {t('admin:games.delete')}
                       </Button>
                     </div>

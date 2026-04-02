@@ -546,7 +546,7 @@ export default function SupervisorDashboard() {
               className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
               onClick={() => setObservationDialogOpen(true)}
             >
-              <ClipboardCheck className="h-4 w-4 mr-2" />
+              <ClipboardCheck className="h-4 w-4 me-2" />
               {t('common:supervisor.scheduleObservation')}
             </Button>
 
@@ -635,7 +635,7 @@ export default function SupervisorDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+                    <TrendingUp className="h-5 w-5 me-2 text-blue-600" />
                     Business Intelligence
                   </CardTitle>
                   <CardDescription>Key performance indicators from real data</CardDescription>
@@ -713,7 +713,7 @@ export default function SupervisorDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <TrendingUp className="h-5 w-5 mr-2 text-indigo-600" />
+                    <TrendingUp className="h-5 w-5 me-2 text-indigo-600" />
                     {t('supervisor:dashboard.iranianMarketKPIs')}
                   </CardTitle>
                   <CardDescription>{t('supervisor:dashboard.localMarketIndicators')}</CardDescription>
@@ -783,7 +783,7 @@ export default function SupervisorDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <ClipboardCheck className="h-5 w-5 mr-2 text-orange-600" />
+                    <ClipboardCheck className="h-5 w-5 me-2 text-orange-600" />
                     {t('supervisor:observations.title')}
                   </CardTitle>
                   <CardDescription>
@@ -831,7 +831,7 @@ export default function SupervisorDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+                    <DollarSign className="h-5 w-5 me-2 text-green-600" />
                     {t('supervisor:dashboard.dailyIncomeByCategory')}
                   </CardTitle>
                   <CardDescription>
@@ -1245,7 +1245,7 @@ export default function SupervisorDashboard() {
           <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center">
-                <UserMinus className="h-5 w-5 mr-2 text-red-600" />
+                <UserMinus className="h-5 w-5 me-2 text-red-600" />
                 Teachers Needing Attention ({teachersNeedingAttention?.length || 0})
               </DialogTitle>
             </DialogHeader>
@@ -1285,7 +1285,7 @@ export default function SupervisorDashboard() {
                               window.location.href = `/supervisor/schedule-review?teacher=${teacher.id}`;
                             }}
                           >
-                            <Calendar className="h-4 w-4 mr-1" />
+                            <Calendar className="h-4 w-4 me-1" />
                             Schedule Review
                           </Button>
                           <Button
@@ -1298,7 +1298,7 @@ export default function SupervisorDashboard() {
                             })}
                             disabled={sendTeacherAlert.isPending}
                           >
-                            <MessageSquare className="h-4 w-4 mr-1" />
+                            <MessageSquare className="h-4 w-4 me-1" />
                             SMS Alert
                           </Button>
                         </div>
@@ -1316,7 +1316,7 @@ export default function SupervisorDashboard() {
           <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center">
-                <AlertCircle className="h-5 w-5 mr-2 text-amber-600" />
+                <AlertCircle className="h-5 w-5 me-2 text-amber-600" />
                 Students Needing Attention ({studentsNeedingAttention?.length || 0})
               </DialogTitle>
             </DialogHeader>
@@ -1361,7 +1361,7 @@ export default function SupervisorDashboard() {
                               setLocation("/admin/students");
                             }}
                           >
-                            <Eye className="h-4 w-4 mr-1" />
+                            <Eye className="h-4 w-4 me-1" />
                             View Profile
                           </Button>
                           <Button
@@ -1374,7 +1374,7 @@ export default function SupervisorDashboard() {
                             })}
                             disabled={sendStudentAlert.isPending}
                           >
-                            <MessageSquare className="h-4 w-4 mr-1" />
+                            <MessageSquare className="h-4 w-4 me-1" />
                             SMS Alert
                           </Button>
                         </div>

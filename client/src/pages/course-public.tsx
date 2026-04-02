@@ -229,8 +229,8 @@ export default function CoursePublicDetail() {
       {/* Header */}
       <div className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center gap-3">
         <Link href="/courses">
-          <Button variant="ghost" size="icon" className="text-white/70 hover:text-white">
-            <ArrowLeft className="w-5 h-5" />
+          <Button variant="ghost" size="icon" className="text-white/70 hover:text-white" aria-label="Back to courses">
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </Button>
         </Link>
         <h1 className="text-white font-bold text-lg truncate flex-1">{course.title}</h1>

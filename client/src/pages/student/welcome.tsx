@@ -134,7 +134,7 @@ export default function StudentWelcomePage() {
             </div>
             <Button variant="outline" onClick={() => navigate("/callern")}>
               دیدن همه مدرسان
-              <ArrowRight className="w-4 h-4 mr-1" />
+              <ArrowRight className="w-4 h-4 me-1" />
             </Button>
           </div>
 
@@ -163,7 +163,7 @@ export default function StudentWelcomePage() {
                           <span className="font-semibold">{teacher.firstName} {teacher.lastName}</span>
                           {teacher.status === "available" && (
                             <Badge className="bg-green-500 text-white text-xs px-2">
-                              <Wifi className="w-3 h-3 ml-1" />
+                              <Wifi className="w-3 h-3 ms-1" />
                               آنلاین
                             </Badge>
                           )}
@@ -192,7 +192,7 @@ export default function StudentWelcomePage() {
                         size="sm"
                         onClick={(e) => { e.stopPropagation(); navigate("/callern"); }}
                       >
-                        <Zap className="w-4 h-4 ml-1" />
+                        <Zap className="w-4 h-4 ms-1" />
                         شروع مکالمه
                       </Button>
                     )}
@@ -227,7 +227,7 @@ export default function StudentWelcomePage() {
                 onClick={() => navigate("/mst")}
               >
                 شروع آزمون رایگان
-                <ArrowRight className="w-4 h-4 mr-2" />
+                <ArrowRight className="w-4 h-4 me-2" />
               </Button>
             </CardContent>
           </Card>
@@ -249,7 +249,7 @@ export default function StudentWelcomePage() {
             </div>
             <Button variant="outline" onClick={() => navigate("/courses")}>
               همه دوره‌ها
-              <ArrowRight className="w-4 h-4 mr-1" />
+              <ArrowRight className="w-4 h-4 me-1" />
             </Button>
           </div>
 
@@ -322,7 +322,7 @@ export default function StudentWelcomePage() {
                 onClick={() => navigate("/linguaquest")}
               >
                 یک درس رایگان امتحان کنید
-                <Zap className="w-4 h-4 mr-2" />
+                <Zap className="w-4 h-4 me-2" />
               </Button>
             </CardContent>
           </Card>
@@ -341,7 +341,7 @@ export default function StudentWelcomePage() {
           </div>
 
           <div className="border-4 border-yellow-400 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-50 p-8 text-center max-w-2xl mx-auto shadow-lg relative overflow-hidden">
-            <div className="absolute top-2 left-2 right-2 bottom-2 border-2 border-yellow-300 rounded-xl pointer-events-none" />
+            <div className="absolute top-2 start-2 end-2 bottom-2 border-2 border-yellow-300 rounded-xl pointer-events-none" />
             <div className="text-5xl mb-4">🎓</div>
             <p className="text-amber-700 text-sm uppercase tracking-widest mb-2">گواهینامه افتخاری</p>
             <h3 className="text-3xl font-bold text-amber-900 mb-2">
@@ -370,11 +370,11 @@ export default function StudentWelcomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button size="lg" onClick={() => navigate("/courses")}>
-              <GraduationCap className="w-5 h-5 ml-2" />
+              <GraduationCap className="w-5 h-5 ms-2" />
               مشاهده همه دوره‌ها
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate("/callern")}>
-              <Video className="w-5 h-5 ml-2" />
+              <Video className="w-5 h-5 ms-2" />
               مکالمه با مدرس آنلاین
             </Button>
           </div>

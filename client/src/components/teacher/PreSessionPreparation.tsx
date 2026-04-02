@@ -298,9 +298,9 @@ export function PreSessionPreparation({ sessionId, onStartSession }: PreSessionP
                 onClick={startSession}
                 disabled={!isReady}
               >
-                <Video className="w-4 h-4 mr-2" />
+                <Video className="w-4 h-4 me-2" />
                 Start Session
-                {isReady && <ChevronRight className="w-4 h-4 ml-auto" />}
+                {isReady && <ChevronRight className="w-4 h-4 ms-auto" />}
               </Button>
               
               <Button 
@@ -308,7 +308,7 @@ export function PreSessionPreparation({ sessionId, onStartSession }: PreSessionP
                 className="w-full mt-2"
                 onClick={() => window.open(`/teacher/lesson-kit/${sessionDetails.lessonKit?.id}`, '_blank')}
               >
-                <FileText className="w-4 h-4 mr-2" />
+                <FileText className="w-4 h-4 me-2" />
                 View Full Lesson Kit
               </Button>
             </CardContent>
@@ -324,7 +324,7 @@ export function PreSessionPreparation({ sessionId, onStartSession }: PreSessionP
                 <div className="flex items-center gap-2">
                   <Badge>{sessionDetails.topic}</Badge>
                   <Badge variant="outline">
-                    <Timer className="w-3 h-3 mr-1" />
+                    <Timer className="w-3 h-3 me-1" />
                     {sessionDetails.duration} min
                   </Badge>
                 </div>
@@ -469,7 +469,7 @@ export function PreSessionPreparation({ sessionId, onStartSession }: PreSessionP
                           <div className="flex justify-between items-center">
                             <CardTitle className="text-md">{hw.title}</CardTitle>
                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                              <Clock className="w-3 h-3 inline mr-1" />
+                              <Clock className="w-3 h-3 inline me-1" />
                               {hw.estimatedTime} min
                             </span>
                           </div>

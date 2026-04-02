@@ -498,7 +498,7 @@ const StepEditor: React.FC<{
                 onClick={addObjective}
                 className="px-3 py-1 bg-green-500/20 text-green-300 rounded text-sm hover:bg-green-500/30"
               >
-                <Plus className="w-4 h-4 inline mr-1" />
+                <Plus className="w-4 h-4 inline me-1" />
                 Add Objective
               </button>
             </label>

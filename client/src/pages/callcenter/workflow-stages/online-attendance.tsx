@@ -93,11 +93,11 @@ function OnlineAttendance() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'present':
-        return <Badge className="bg-green-100 text-green-800"><UserCheck className="h-3 w-3 mr-1" />{t('callcenter:stages.online_attendance.present', 'حاضر')}</Badge>;
+        return <Badge className="bg-green-100 text-green-800"><UserCheck className="h-3 w-3 me-1" />{t('callcenter:stages.online_attendance.present', 'حاضر')}</Badge>;
       case 'absent':
-        return <Badge className="bg-red-100 text-red-800"><UserX className="h-3 w-3 mr-1" />{t('callcenter:stages.online_attendance.absent', 'غایب')}</Badge>;
+        return <Badge className="bg-red-100 text-red-800"><UserX className="h-3 w-3 me-1" />{t('callcenter:stages.online_attendance.absent', 'غایب')}</Badge>;
       case 'late':
-        return <Badge className="bg-amber-100 text-amber-800"><Timer className="h-3 w-3 mr-1" />{t('callcenter:stages.online_attendance.late', 'تأخیر')}</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800"><Timer className="h-3 w-3 me-1" />{t('callcenter:stages.online_attendance.late', 'تأخیر')}</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">{t('callcenter:stages.online_attendance.unknown', 'نامشخص')}</Badge>;
     }
@@ -114,18 +114,18 @@ function OnlineAttendance() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.online_attendance.search_placeholder', 'جستجو در حضور و غیاب آنلاین...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <Video className="h-4 w-4 mr-2" />
+            <Video className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.online_attendance.count', 'مورد')}
           </Badge>
         </div>
@@ -203,7 +203,7 @@ function OnlineAttendance() {
                               size="sm"
                               onClick={() => setSelectedLead(lead)}
                             >
-                              <Clock className="h-4 w-4 mr-2" />
+                              <Clock className="h-4 w-4 me-2" />
                               {t('callcenter:stages.online_attendance.record', 'ثبت حضور')}
                             </Button>
                           </DialogTrigger>

@@ -959,7 +959,7 @@ export default function VirtualMall() {
                       />
                     </div>
                     {isLexiSpeaking && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -end-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       </div>
                     )}
@@ -1240,7 +1240,7 @@ export default function VirtualMall() {
                   disabled={addToCartMutation.isPending}
                   data-testid="book-modal-add-to-cart"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 me-2" />
                   Add to Cart
                 </Button>
                 <Button 

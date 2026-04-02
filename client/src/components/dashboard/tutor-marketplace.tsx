@@ -115,7 +115,7 @@ export function TutorMarketplace() {
                         <Star key={star} className="w-4 h-4 fill-current" />
                       ))}
                     </div>
-                    <span className="text-sm text-muted-foreground ml-2">5.0 (50+ reviews)</span>
+                    <span className="text-sm text-muted-foreground ms-2">5.0 (50+ reviews)</span>
                   </div>
                 </div>
                 <div className="space-y-2 mb-4">

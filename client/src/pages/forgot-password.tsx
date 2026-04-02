@@ -68,9 +68,9 @@ export default function ForgotPassword() {
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 start-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-40 end-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 start-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       {/* Main Content */}
@@ -116,7 +116,7 @@ export default function ForgotPassword() {
                 onClick={() => setLocation("/auth")}
                 className="mb-6 text-white/80 hover:text-white hover:bg-white/10 p-2"
               >
-                <ChevronLeft className="w-4 h-4 mr-2" />
+                <ChevronLeft className="w-4 h-4 me-2" />
                 {t('auth:backToLogin', 'Back to Login')}
               </Button>
 
@@ -128,7 +128,7 @@ export default function ForgotPassword() {
                   className="mb-6 p-4 bg-green-500/20 backdrop-blur-sm rounded-2xl border border-green-500/30"
                 >
                   <div className="flex items-center text-white">
-                    <CheckCircle className="w-5 h-5 mr-3 text-green-300" />
+                    <CheckCircle className="w-5 h-5 me-3 text-green-300" />
                     <div>
                       <p className="font-medium text-sm">{t('auth:resetLinkSentTitle', 'Reset Link Sent!')}</p>
                       <p className="text-sm text-green-100 mt-1">{message}</p>
@@ -145,7 +145,7 @@ export default function ForgotPassword() {
                   className="mb-6 p-4 bg-red-500/20 backdrop-blur-sm rounded-2xl border border-red-500/30"
                 >
                   <div className="flex items-center text-white">
-                    <AlertCircle className="w-5 h-5 mr-3 text-red-300" />
+                    <AlertCircle className="w-5 h-5 me-3 text-red-300" />
                     <p className="text-sm">{error}</p>
                   </div>
                 </motion.div>

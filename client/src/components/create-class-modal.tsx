@@ -277,7 +277,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
                     variant="outline"
                     className="w-full justify-start text-left font-normal"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="me-2 h-4 w-4" />
                     {startDate ? (
                       format(startDate, "PPP")
                     ) : "انتخاب تاریخ / Pick a date"}
@@ -301,7 +301,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
                     variant="outline"
                     className="w-full justify-start text-left font-normal"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="me-2 h-4 w-4" />
                     {endDate ? (
                       format(endDate, "PPP")
                     ) : "انتخاب تاریخ / Pick a date"}

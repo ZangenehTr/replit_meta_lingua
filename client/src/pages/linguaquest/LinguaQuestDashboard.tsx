@@ -162,14 +162,14 @@ export function LinguaQuestDashboard() {
             {isLoggedIn && (
               <Link href="/admin/dashboard">
                 <Button variant="ghost" size="lg" className="text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
-                  <ArrowLeft className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <ArrowLeft className={`w-5 h-5 ${'me-2'}`} />
                   {t('navigation.backToPlatform', 'Back to Platform')}
                 </Button>
               </Link>
             )}
             <Link href="/linguaquest">
               <Button variant="outline" size="lg" data-testid="button-back-to-lessons">
-                <BookOpen className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                <BookOpen className={`w-5 h-5 ${'me-2'}`} />
                 {t('dashboard.backToLessons', 'Back to Lessons')}
               </Button>
             </Link>

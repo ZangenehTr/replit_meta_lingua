@@ -349,7 +349,7 @@ export default function CallernMobilePage() {
                               {teacher.firstName[0]}{teacher.lastName[0]}
                             </div>
                             {/* Online status indicator */}
-                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1.5 border-3 border-white animate-pulse shadow-lg">
+                            <div className="absolute -bottom-1 -end-1 bg-green-500 rounded-full p-1.5 border-3 border-white animate-pulse shadow-lg">
                               <div className="w-3 h-3 bg-green-400 rounded-full"></div>
                             </div>
                           </div>
@@ -375,7 +375,7 @@ export default function CallernMobilePage() {
                         <Badge 
                           className="bg-gradient-to-r from-green-500 to-emerald-500 text-white animate-pulse px-3 py-1.5 shadow-lg"
                         >
-                          <Wifi className="h-4 w-4 mr-1" /> {t('callern:online')}
+                          <Wifi className="h-4 w-4 me-1" /> {t('callern:online')}
                         </Badge>
                       </div>
 
@@ -405,7 +405,7 @@ export default function CallernMobilePage() {
                           disabled={!teacher.isOnline || studentPackages.length === 0}
                           className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
                         >
-                          <Video className="h-4 w-4 mr-2" />
+                          <Video className="h-4 w-4 me-2" />
                           {t('callern:startCall')}
                         </Button>
                       </div>
@@ -438,9 +438,9 @@ export default function CallernMobilePage() {
                           }
                         >
                           {pkg.status === 'active' ? (
-                            <><CheckCircle className="h-3 w-3 mr-1" /> {t('callern:active')}</>
+                            <><CheckCircle className="h-3 w-3 me-1" /> {t('callern:active')}</>
                           ) : (
-                            <><XCircle className="h-3 w-3 mr-1" /> {t(`callern:${pkg.status}`)}</>
+                            <><XCircle className="h-3 w-3 me-1" /> {t(`callern:${pkg.status}`)}</>
                           )}
                         </Badge>
                       </div>
@@ -522,7 +522,7 @@ export default function CallernMobilePage() {
                         disabled={purchasePackageMutation.isPending}
                         className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        <ShoppingCart className="h-4 w-4 me-2" />
                         {t('callern:purchase')}
                       </Button>
                     </div>
@@ -600,7 +600,7 @@ export default function CallernMobilePage() {
                         className="w-full mt-4"
                         onClick={() => window.open(call.recordingUrl, '_blank')}
                       >
-                        <PlayCircle className="h-4 w-4 mr-2" />
+                        <PlayCircle className="h-4 w-4 me-2" />
                         {t('callern:viewRecording')}
                       </Button>
                     )}

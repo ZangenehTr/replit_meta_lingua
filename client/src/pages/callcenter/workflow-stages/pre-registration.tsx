@@ -110,18 +110,18 @@ function PreRegistration() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.pre_registration.search_placeholder', 'جستجو در متقاضیان پیش‌ثبت‌نام...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.pre_registration.count', 'مورد')}
           </Badge>
         </div>
@@ -161,7 +161,7 @@ function PreRegistration() {
                           {lead.firstName} {lead.lastName}
                         </h3>
                         <Badge className="bg-indigo-100 text-indigo-800">
-                          <FileText className="h-3 w-3 mr-1" />
+                          <FileText className="h-3 w-3 me-1" />
                           {t('callcenter:stages.pre_registration.badge', 'پیش‌ثبت‌نام')}
                         </Badge>
                       </div>
@@ -200,7 +200,7 @@ function PreRegistration() {
                               setDialogOpen(true);
                             }}
                           >
-                            <CreditCard className="h-4 w-4 mr-2" />
+                            <CreditCard className="h-4 w-4 me-2" />
                             {t('callcenter:stages.pre_registration.process', 'پردازش ثبت‌نام')}
                           </Button>
                         </DialogTrigger>
@@ -258,7 +258,7 @@ function PreRegistration() {
                                   onClick={() => selectedLead && handlePaymentAction(selectedLead, 'full')}
                                   disabled={transitionMutation.isPending}
                                 >
-                                  <FileCheck className="h-4 w-4 mr-2" />
+                                  <FileCheck className="h-4 w-4 me-2" />
                                   {t('callcenter:stages.pre_registration.complete_registration', 'تکمیل ثبت‌نام')}
                                 </Button>
                               )}
@@ -268,7 +268,7 @@ function PreRegistration() {
                                   onClick={() => selectedLead && handlePaymentAction(selectedLead, 'installments')}
                                   disabled={transitionMutation.isPending}
                                 >
-                                  <Receipt className="h-4 w-4 mr-2" />
+                                  <Receipt className="h-4 w-4 me-2" />
                                   {t('callcenter:stages.pre_registration.setup_installments', 'تنظیم اقساط')}
                                 </Button>
                               )}
@@ -278,7 +278,7 @@ function PreRegistration() {
                                   onClick={() => selectedLead && handlePaymentAction(selectedLead, 'cheque')}
                                   disabled={transitionMutation.isPending}
                                 >
-                                  <Banknote className="h-4 w-4 mr-2" />
+                                  <Banknote className="h-4 w-4 me-2" />
                                   {t('callcenter:stages.pre_registration.setup_cheque', 'تنظیم چک')}
                                 </Button>
                               )}
@@ -292,7 +292,7 @@ function PreRegistration() {
                                 })}
                                 disabled={transitionMutation.isPending}
                               >
-                                <XCircle className="h-4 w-4 mr-2" />
+                                <XCircle className="h-4 w-4 me-2" />
                                 {t('callcenter:stages.pre_registration.withdraw', 'انصراف')}
                               </Button>
                             </div>

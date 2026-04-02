@@ -125,7 +125,7 @@ export function LinguaQuestHome() {
               {isLoggedIn && (
                 <Link href="/admin/dashboard">
                   <Button variant="ghost" size="sm" className="text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
-                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    <ArrowLeft className="w-4 h-4 me-1" />
                     {t('navigation.backToPlatform', 'Back to Platform')}
                   </Button>
                 </Link>
@@ -154,7 +154,7 @@ export function LinguaQuestHome() {
                       className="hidden lg:flex border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                       data-testid="button-view-dashboard"
                     >
-                      <Trophy className="w-4 h-4 mr-2" />
+                      <Trophy className="w-4 h-4 me-2" />
                       {t('navigation.dashboard')}
                     </Button>
                   </Link>
@@ -168,7 +168,7 @@ export function LinguaQuestHome() {
                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg"
                 data-testid="button-upgrade-hero"
               >
-                <Crown className="w-4 h-4 mr-2" />
+                <Crown className="w-4 h-4 me-2" />
                 {t('upgrade.buttonText')}
               </Button>
             </div>
@@ -195,7 +195,7 @@ export function LinguaQuestHome() {
                 data-testid="button-upgrade-banner"
               >
                 {t('upgrade.learnMore')}
-                <ArrowRight className="w-4 h-4 ml-1" />
+                <ArrowRight className="w-4 h-4 ms-1" />
               </Button>
             </div>
           </div>
@@ -313,7 +313,7 @@ export function LinguaQuestHome() {
                           className="bg-emerald-600 hover:bg-emerald-700"
                           data-testid={`button-start-lesson-${lesson.id}`}
                         >
-                          <Play className="w-4 h-4 mr-1" />
+                          <Play className="w-4 h-4 me-1" />
                           {lesson.isCompleted ? t('lessons.replay') : t('lessons.start')}
                         </Button>
                       </Link>
@@ -354,7 +354,7 @@ export function LinguaQuestHome() {
               </div>
               <Link href="/linguaquest/scenes">
                 <Button size="lg" className="bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-lg px-8">
-                  <Play className="w-5 h-5 mr-2" />
+                  <Play className="w-5 h-5 me-2" />
                   {t('scenes.ctaButton', 'Explore Scenes')}
                 </Button>
               </Link>
@@ -439,14 +439,14 @@ export function LinguaQuestHome() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="ml-8">
+                  <div className="ms-8">
                     <Button 
                       size="lg"
                       onClick={handleUpgradeClick}
                       className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg"
                       data-testid="button-upgrade-cta"
                     >
-                      <Crown className="w-5 h-5 mr-2" />
+                      <Crown className="w-5 h-5 me-2" />
                       {t('upgrade.upgradeNow')}
                     </Button>
                   </div>

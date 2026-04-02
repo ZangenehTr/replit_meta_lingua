@@ -251,7 +251,7 @@ export default function UserManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <UserPlus className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
+              <UserPlus className="h-4 w-4 ltr:me-2 rtl:ms-2" />
               {t('admin:users.createUser')}
             </Button>
           </DialogTrigger>
@@ -409,12 +409,12 @@ export default function UserManagement() {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute ltr:start-3 rtl:end-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder={t('admin:userManagement.searchUsers')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="ltr:pl-10 rtl:pr-10 w-full"
+                className="ltr:ps-10 rtl:pe-10 w-full"
               />
             </div>
             <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -611,7 +611,7 @@ export default function UserManagement() {
                 onChange={(e) => setEditingUser(prev => prev ? {...prev, isActive: e.target.checked} : null)}
                 className="h-4 w-4 rounded border-gray-300"
               />
-              <Label htmlFor="edit-isActive" className="cursor-pointer ml-2 mb-0">
+              <Label htmlFor="edit-isActive" className="cursor-pointer ms-2 mb-0">
                 {t('admin:userManagement.active')}
               </Label>
             </div>

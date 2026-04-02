@@ -149,7 +149,7 @@ export default function MediaLibrary() {
               onClick={() => setViewMode('grid')}
               data-testid="button-view-grid"
             >
-              <ImageIcon className="w-4 h-4 mr-1" />
+              <ImageIcon className="w-4 h-4 me-1" />
               Grid
             </Button>
             <Button
@@ -158,14 +158,14 @@ export default function MediaLibrary() {
               onClick={() => setViewMode('list')}
               data-testid="button-view-list"
             >
-              <FileText className="w-4 h-4 mr-1" />
+              <FileText className="w-4 h-4 me-1" />
               List
             </Button>
             <Button 
               onClick={() => setIsUploadDialogOpen(true)}
               data-testid="button-upload-media"
             >
-              <Upload className="w-4 h-4 mr-2" />
+              <Upload className="w-4 h-4 me-2" />
               Upload Files
             </Button>
           </div>
@@ -249,13 +249,13 @@ export default function MediaLibrary() {
               <div className="space-y-2">
                 <Label htmlFor="search-media">Search</Label>
                 <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search-media"
                     placeholder="Search files..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
+                    className="ps-8"
                     data-testid="input-search-media"
                   />
                 </div>
@@ -404,7 +404,7 @@ export default function MediaLibrary() {
                           onClick={() => handleCopyUrl(asset.filePath)}
                           data-testid={`button-copy-url-list-${asset.id}`}
                         >
-                          <Copy className="w-4 h-4 mr-1" />
+                          <Copy className="w-4 h-4 me-1" />
                           Copy URL
                         </Button>
                         <Button
@@ -413,7 +413,7 @@ export default function MediaLibrary() {
                           onClick={() => setEditingAsset(asset)}
                           data-testid={`button-edit-list-${asset.id}`}
                         >
-                          <Edit className="w-4 h-4 mr-1" />
+                          <Edit className="w-4 h-4 me-1" />
                           Edit
                         </Button>
                       </div>

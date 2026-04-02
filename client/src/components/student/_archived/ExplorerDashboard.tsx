@@ -336,7 +336,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
               <Link href="/auth">
                 <Button className="conversion-cta-button" data-testid="button-get-started">
                   {t('student:getStarted')}
-                  <ChevronRight className="ml-2 h-4 w-4" />
+                  <ChevronRight className="ms-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
@@ -410,7 +410,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                         className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border border-white/30 text-white px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                         data-testid="button-book-trial"
                       >
-                        <Video className="mr-2 h-5 w-5" />
+                        <Video className="me-2 h-5 w-5" />
                         {t('student:bookFreeTrial')}
                       </Button>
                       <Button
@@ -420,7 +420,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                         className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300"
                         data-testid="button-take-assessment"
                       >
-                        <Target className="mr-2 h-5 w-5" />
+                        <Target className="me-2 h-5 w-5" />
                         {t('student:takeAssessment')}
                       </Button>
                     </div>
@@ -428,7 +428,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                 </div>
                 
                 {/* Floating Achievement Badges */}
-                <div className="absolute top-8 right-8 hidden lg:flex flex-col gap-3">
+                <div className="absolute top-8 end-8 hidden lg:flex flex-col gap-3">
                   {branding?.achievements?.slice(0, 3).map((achievement, index) => (
                     <motion.div
                       key={index}
@@ -549,7 +549,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                     data-testid={`button-${offer.title.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     {offer.cta}
-                    <ChevronRight className="ml-2 h-4 w-4" />
+                    <ChevronRight className="ms-2 h-4 w-4" />
                   </Button>
                 </motion.div>
               ))}
@@ -652,7 +652,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                             {testimonial.name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="ml-3">
+                        <div className="ms-3">
                           <p className="font-semibold text-gray-900">{testimonial.name}</p>
                           <p className="text-sm text-gray-600">{testimonial.course}</p>
                         </div>
@@ -676,7 +676,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                     data-testid="button-read-more-reviews"
                   >
                     {t('student:readMoreReviews')}
-                    <ChevronRight className="ml-2 h-4 w-4" />
+                    <ChevronRight className="ms-2 h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -697,12 +697,12 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                       <Input
                         placeholder={t('student:searchCourses')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 py-3 rounded-xl border-purple-200 focus:border-purple-400 focus:ring-purple-200"
+                        className="ps-10 py-3 rounded-xl border-purple-200 focus:border-purple-400 focus:ring-purple-200"
                         data-testid="input-course-search"
                       />
                     </div>
@@ -844,7 +844,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                             data-testid={`course-enroll-${course.id}`}
                           >
                             {course.price === 0 ? t('student:startLearning') : t('student:enrollNow')}
-                            <ChevronRight className="ml-2 h-4 w-4" />
+                            <ChevronRight className="ms-2 h-4 w-4" />
                           </Button>
                           <Button 
                             variant="outline"
@@ -871,9 +871,9 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                   className="conversion-cta-secondary px-8 py-4"
                   data-testid="button-view-all-courses"
                 >
-                  <BookOpen className="mr-2 h-5 w-5" />
+                  <BookOpen className="me-2 h-5 w-5" />
                   {t('student:courses.viewAllCourses')}
-                  <ChevronRight className="ml-2 h-4 w-4" />
+                  <ChevronRight className="ms-2 h-4 w-4" />
                 </Button>
               </div>
             )}
@@ -950,12 +950,12 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                             </AvatarFallback>
                           </Avatar>
                           {teacher.isOnline && (
-                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
+                            <div className="absolute -top-1 -end-1 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             </div>
                           )}
                           {teacher.isPopular && (
-                            <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
+                            <Badge className="absolute -top-2 inset-x-0 mx-auto w-fit bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
                               ⭐ {t('student:popular')}
                             </Badge>
                           )}
@@ -1040,7 +1040,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                               }}
                               data-testid={`teacher-trial-${teacher.id}`}
                             >
-                              <Video className="mr-2 h-4 w-4" />
+                              <Video className="me-2 h-4 w-4" />
                               {t('student:bookTrialLesson')}
                             </Button>
                           )}
@@ -1051,7 +1051,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                             data-testid={`teacher-profile-${teacher.id}`}
                           >
                             {t('student:viewProfile')}
-                            <ChevronRight className="ml-2 h-4 w-4" />
+                            <ChevronRight className="ms-2 h-4 w-4" />
                           </Button>
                         </div>
                       </CardContent>
@@ -1085,7 +1085,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                     data-testid="button-start-linguaquest"
                     onClick={() => setLocation('/linguaquest')}
                   >
-                    <Play className="mr-2 h-5 w-5" />
+                    <Play className="me-2 h-5 w-5" />
                     {t('student:startFreeLearning')}
                   </Button>
                 </div>
@@ -1188,7 +1188,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                           {lesson.duration}
                         </span>
                         <Button size="sm" variant="outline" className="text-purple-600 border-purple-200 hover:bg-purple-50">
-                          <Play className="h-3 w-3 mr-1" />
+                          <Play className="h-3 w-3 me-1" />
                           {t('student:tryNow')}
                         </Button>
                       </div>
@@ -1198,7 +1198,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                 <div className="text-center mt-8">
                   <Button className="conversion-cta-button">
                     {t('student:exploreAllLessons')}
-                    <ChevronRight className="ml-2 h-4 w-4" />
+                    <ChevronRight className="ms-2 h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -1327,12 +1327,12 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                   >
                     {bookTrialMutation.isPending ? (
                       <>
-                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full me-2"></div>
                         {t('student:booking')}...
                       </>
                     ) : (
                       <>
-                        <Calendar className="mr-2 h-5 w-5" />
+                        <Calendar className="me-2 h-5 w-5" />
                         {t('student:confirmBooking')}
                       </>
                     )}
@@ -1474,7 +1474,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                   </div>
 
                   <Button className="conversion-cta-button w-full">
-                    <MessageCircle className="mr-2 h-5 w-5" />
+                    <MessageCircle className="me-2 h-5 w-5" />
                     {t('student:sendMessage')}
                   </Button>
                 </CardContent>
@@ -1549,7 +1549,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                       variant="secondary"
                       className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border border-white/30 text-white"
                     >
-                      <Phone className="mr-2 h-4 w-4" />
+                      <Phone className="me-2 h-4 w-4" />
                       {branding?.contact?.phone || '+98 21 1234 5678'}
                     </Button>
                   </CardContent>
@@ -1565,7 +1565,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1, duration: 0.6 }}
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-6 end-6 z-50"
       >
         <Button
           size="lg"
@@ -1573,7 +1573,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
           className="conversion-cta-button rounded-full shadow-2xl"
           data-testid="floating-cta-trial"
         >
-          <Video className="mr-2 h-5 w-5" />
+          <Video className="me-2 h-5 w-5" />
           {t('student:startLearning')}
         </Button>
       </motion.div>

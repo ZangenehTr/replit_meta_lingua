@@ -143,7 +143,7 @@ export default function TeacherResourcesPage() {
           <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 me-2" />
                 {t('uploadResource')}
               </Button>
             </DialogTrigger>
@@ -273,12 +273,12 @@ export default function TeacherResourcesPage() {
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <Input
                         placeholder={t('searchResources')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
+                        className="ps-10"
                       />
                     </div>
                   </div>
@@ -311,7 +311,7 @@ export default function TeacherResourcesPage() {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
-                          <h3 className="font-semibold truncate pr-2">{resource.title}</h3>
+                          <h3 className="font-semibold truncate pe-2">{resource.title}</h3>
                           {resource.isPublic && (
                             <Globe className="w-4 h-4 text-blue-500 flex-shrink-0" />
                           )}

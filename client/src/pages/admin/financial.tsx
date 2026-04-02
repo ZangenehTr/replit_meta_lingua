@@ -556,7 +556,7 @@ export function AdminFinancial() {
                 
                 <div className="flex items-end">
                   <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 me-2" />
                     {t('admin:financial.exportReport')}
                   </Button>
                 </div>
@@ -633,7 +633,7 @@ export function AdminFinancial() {
                       <div className="space-y-4">
                         <div>
                           <h4 className="font-semibold mb-2">Assets</h4>
-                          <div className="ml-4 space-y-1">
+                          <div className="ms-4 space-y-1">
                             {reportData.assets?.map((asset: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{asset.accountName}</span>
@@ -648,7 +648,7 @@ export function AdminFinancial() {
                         </div>
                         <div>
                           <h4 className="font-semibold mb-2">Liabilities</h4>
-                          <div className="ml-4 space-y-1">
+                          <div className="ms-4 space-y-1">
                             {reportData.liabilities?.map((liability: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{liability.accountName}</span>
@@ -663,7 +663,7 @@ export function AdminFinancial() {
                         </div>
                         <div>
                           <h4 className="font-semibold mb-2">Equity</h4>
-                          <div className="ml-4 space-y-1">
+                          <div className="ms-4 space-y-1">
                             {reportData.equity?.map((eq: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{eq.accountName}</span>
@@ -683,7 +683,7 @@ export function AdminFinancial() {
                       <div className="space-y-4">
                         <div>
                           <h4 className="font-semibold mb-2">Revenue</h4>
-                          <div className="ml-4 space-y-1">
+                          <div className="ms-4 space-y-1">
                             {reportData.revenue?.map((rev: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{rev.accountName}</span>
@@ -698,7 +698,7 @@ export function AdminFinancial() {
                         </div>
                         <div>
                           <h4 className="font-semibold mb-2">Expenses</h4>
-                          <div className="ml-4 space-y-1">
+                          <div className="ms-4 space-y-1">
                             {reportData.expenses?.map((exp: any, idx: number) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{exp.accountName}</span>

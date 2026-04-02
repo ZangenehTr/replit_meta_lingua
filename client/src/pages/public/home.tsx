@@ -290,7 +290,7 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent" />
                 
                 {/* Stat Badge Overlay */}
-                <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
+                <div className="absolute bottom-3 end-3 sm:bottom-4 sm:end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Award className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                     <div>
@@ -313,7 +313,7 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-transparent to-teal-900/40" />
                 
                 {/* Additional Stats */}
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
+                <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-6 w-6 text-green-600" />
                     <div>
@@ -408,7 +408,7 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 via-transparent to-transparent" />
                 
                 {/* Stat Badge Overlay */}
-                <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
+                <div className="absolute bottom-3 end-3 sm:bottom-4 sm:end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Star className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
                     <div>
@@ -419,7 +419,7 @@ export default function PublicHome() {
                 </div>
                 
                 {/* Floating Badge - hidden on small mobile to avoid overflow */}
-                <div className="hidden sm:block absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
+                <div className="hidden sm:block absolute -top-4 -end-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
                   {t('kids.freeDemoBadge', 'Try Free Demo')}
                 </div>
               </div>
@@ -436,7 +436,7 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-900/40 via-transparent to-rose-900/40" />
                 
                 {/* Additional Stats */}
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
+                <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
                   <div className="flex items-center gap-2">
                     <Gamepad2 className="h-6 w-6 text-pink-600" />
                     <div>
@@ -529,7 +529,7 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/60 via-transparent to-transparent" />
                 
                 {/* Stat Badge Overlay */}
-                <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
+                <div className="absolute bottom-3 end-3 sm:bottom-4 sm:end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Star className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
                     <div>
@@ -552,7 +552,7 @@ export default function PublicHome() {
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-transparent to-pink-900/40" />
                 
                 {/* Additional Stats */}
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
+                <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
                   <div className="flex items-center gap-2">
                     <Clock className="h-6 w-6 text-purple-600" />
                     <div>
@@ -564,7 +564,7 @@ export default function PublicHome() {
               </div>
               
               {/* Floating Badge - hidden on small mobile to avoid overflow */}
-              <div className="hidden sm:block absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
+              <div className="hidden sm:block absolute -top-4 -end-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
                 {t('callern.badge2', 'Try Free Session!')}
               </div>
             </div>

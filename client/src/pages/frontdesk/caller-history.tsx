@@ -440,15 +440,15 @@ export default function CallerHistoryDashboard() {
               <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
                 <TabsList>
                   <TabsTrigger value="list" data-testid="view-list">
-                    <BarChart3 className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    <BarChart3 className={cn("h-4 w-4", me-2)} />
                     {t('common:list')}
                   </TabsTrigger>
                   <TabsTrigger value="timeline" data-testid="view-timeline">
-                    <History className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    <History className={cn("h-4 w-4", me-2)} />
                     {t('common:timeline')}
                   </TabsTrigger>
                   <TabsTrigger value="analytics" data-testid="view-analytics">
-                    <PieChart className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    <PieChart className={cn("h-4 w-4", me-2)} />
                     {t('common:analytics')}
                   </TabsTrigger>
                 </TabsList>
@@ -463,7 +463,7 @@ export default function CallerHistoryDashboard() {
                   disabled={exportMutation.isPending}
                   data-testid="export-csv"
                 >
-                  <Download className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                  <Download className={cn("h-4 w-4", me-2)} />
                   CSV
                 </Button>
                 <Button
@@ -473,7 +473,7 @@ export default function CallerHistoryDashboard() {
                   disabled={exportMutation.isPending}
                   data-testid="export-pdf"
                 >
-                  <FileText className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                  <FileText className={cn("h-4 w-4", me-2)} />
                   PDF
                 </Button>
               </div>
@@ -486,18 +486,18 @@ export default function CallerHistoryDashboard() {
           <div className={cn("flex items-center space-x-4", isRTL && "space-x-reverse")}>
             {/* Main Search */}
             <div className="flex-1 relative">
-              <Search className={cn("absolute top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4", isRTL ? "right-3" : "left-3")} />
+              <Search className={cn("absolute top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4", "start-3")} />
               <Input
                 placeholder={t('frontdesk:callerHistory.searchCalls')}
                 value={searchFilters.query}
                 onChange={(e) => updateFilter('query', e.target.value)}
-                className={cn(isRTL ? "pr-10" : "pl-10")}
+                className={cn("ps-10")}
                 data-testid="search-input"
               />
               
               {/* Recent Searches Dropdown */}
               {recentSearches.length > 0 && (
-                <div className={cn("absolute top-full z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md mt-1 shadow-lg", isRTL ? "right-0 left-0" : "left-0 right-0")}>
+                <div className={cn("absolute top-full z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md mt-1 shadow-lg", isRTL ? "end-0 start-0" : "start-0 end-0")}>
                   <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                     {t('common:recentSearches')}
                   </div>
@@ -540,7 +540,7 @@ export default function CallerHistoryDashboard() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" data-testid="date-from">
-                    <CalendarIcon className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    <CalendarIcon className={cn("h-4 w-4", me-2)} />
                     {searchFilters.dateFrom ? format(searchFilters.dateFrom, 'MMM dd') : t('frontdesk:callerHistory.from')}
                   </Button>
                 </PopoverTrigger>
@@ -557,7 +557,7 @@ export default function CallerHistoryDashboard() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" data-testid="date-to">
-                    <CalendarIcon className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                    <CalendarIcon className={cn("h-4 w-4", me-2)} />
                     {searchFilters.dateTo ? format(searchFilters.dateTo, 'MMM dd') : t('frontdesk:callerHistory.to')}
                   </Button>
                 </PopoverTrigger>
@@ -579,7 +579,7 @@ export default function CallerHistoryDashboard() {
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               data-testid="toggle-advanced-filters"
             >
-              <Filter className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+              <Filter className={cn("h-4 w-4", me-2)} />
               {t('frontdesk:callerHistory.filterBy')}
               {(searchFilters.callType.length > 0 || 
                 searchFilters.outcome.length > 0 || 
@@ -588,7 +588,7 @@ export default function CallerHistoryDashboard() {
                 searchFilters.handledBy.length > 0 ||
                 searchFilters.tags.length > 0 ||
                 searchFilters.conversionStatus.length > 0) && (
-                <Badge variant="secondary" className={cn(isRTL ? "mr-2" : "ml-2")}>
+                <Badge variant="secondary" className={cn("ms-2")}>
                   {[
                     ...searchFilters.callType,
                     ...searchFilters.outcome,

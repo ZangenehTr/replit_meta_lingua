@@ -326,7 +326,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                   />
                   
                   {/* Video Controls */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-4">
+                  <div className="absolute bottom-0 start-0 end-0 bg-gradient-to-t from-black/70 to-transparent p-2 sm:p-4">
                     <div className="space-y-2 sm:space-y-3">
                       {/* Progress Bar */}
                       <div className="relative">
@@ -465,14 +465,14 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                     </p>
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
+                        <Clock className="h-4 w-4 me-1" />
                         {Math.floor(currentLesson.duration / 60)} {t('coursePlayer:minutes')}
                       </div>
                       <div className="flex items-center">
                         {currentLesson.isCompleted ? (
-                          <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+                          <CheckCircle className="h-4 w-4 me-1 text-green-600" />
                         ) : (
-                          <Circle className="h-4 w-4 mr-1" />
+                          <Circle className="h-4 w-4 me-1" />
                         )}
                         {currentLesson.isCompleted ? t('coursePlayer:completed') : t('coursePlayer:inProgress')}
                       </div>
@@ -544,11 +544,11 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                         currentLesson.resources.map((resource, index) => (
                           <div key={index} className="flex items-center justify-between p-3 border rounded">
                             <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-2" />
+                              <FileText className="h-4 w-4 me-2" />
                               <span>{resource}</span>
                             </div>
                             <Button variant="outline" size="sm">
-                              <Download className="h-4 w-4 mr-2" />
+                              <Download className="h-4 w-4 me-2" />
                               {t('coursePlayer:download')}
                             </Button>
                           </div>

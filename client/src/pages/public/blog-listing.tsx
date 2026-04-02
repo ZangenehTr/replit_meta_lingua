@@ -83,19 +83,19 @@ export default function BlogListing() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search articles..."
                   value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                  className="pl-10"
+                  className="ps-10"
                   data-testid="input-search-blog"
                 />
               </div>
             </div>
             <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); setCurrentPage(1); }}>
               <SelectTrigger className="w-full md:w-48" data-testid="select-category">
-                <Folder className="h-4 w-4 mr-2" />
+                <Folder className="h-4 w-4 me-2" />
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -170,7 +170,7 @@ export default function BlogListing() {
               {totalPages > 1 && (
                 <div className="mt-12 flex justify-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} data-testid="button-prev-page">
-                    <ChevronLeft className="h-4 w-4 mr-1" />Previous
+                    <ChevronLeft className="h-4 w-4 me-1" />Previous
                   </Button>
                   {[...Array(totalPages)].map((_, i) => {
                     const page = i + 1;
@@ -186,7 +186,7 @@ export default function BlogListing() {
                     return null;
                   })}
                   <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} data-testid="button-next-page">
-                    Next<ChevronRight className="h-4 w-4 ml-1" />
+                    Next<ChevronRight className="h-4 w-4 ms-1" />
                   </Button>
                 </div>
               )}

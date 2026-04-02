@@ -168,7 +168,7 @@ export default function ReviewModerationPage() {
             </p>
           </div>
           <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 me-2" />
             {getLocalizedText('Refresh', 'بازخوانی', 'تحديث')}
           </Button>
         </div>
@@ -192,19 +192,19 @@ export default function ReviewModerationPage() {
               <Clock className="h-4 w-4" />
               {getLocalizedText('Pending', 'در انتظار', 'قيد الانتظار')}
               {pendingCount > 0 && (
-                <Badge variant="secondary" className="ml-1">{pendingCount}</Badge>
+                <Badge variant="secondary" className="ms-1">{pendingCount}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="approved">
-              <Check className="h-4 w-4 mr-2" />
+              <Check className="h-4 w-4 me-2" />
               {getLocalizedText('Approved', 'تأیید شده', 'موافق عليه')}
             </TabsTrigger>
             <TabsTrigger value="rejected">
-              <X className="h-4 w-4 mr-2" />
+              <X className="h-4 w-4 me-2" />
               {getLocalizedText('Rejected', 'رد شده', 'مرفوض')}
             </TabsTrigger>
             <TabsTrigger value="">
-              <Filter className="h-4 w-4 mr-2" />
+              <Filter className="h-4 w-4 me-2" />
               {getLocalizedText('All', 'همه', 'الكل')}
             </TabsTrigger>
           </TabsList>
@@ -256,7 +256,7 @@ export default function ReviewModerationPage() {
                           </div>
                           
                           <div className="text-sm text-gray-500 mb-2">
-                            <User className="h-3 w-3 inline mr-1" />
+                            <User className="h-3 w-3 inline me-1" />
                             {getLocalizedText('For Teacher ID:', 'برای معلم با شناسه:', 'للمعلم رقم:')} {review.teacherId}
                           </div>
                           
@@ -283,7 +283,7 @@ export default function ReviewModerationPage() {
                                 onClick={() => handleApprove(review)}
                                 disabled={updateReviewStatus.isPending}
                               >
-                                <Check className="h-4 w-4 mr-1" />
+                                <Check className="h-4 w-4 me-1" />
                                 {getLocalizedText('Approve', 'تأیید', 'موافقة')}
                               </Button>
                               <Button 
@@ -292,7 +292,7 @@ export default function ReviewModerationPage() {
                                 onClick={() => openRejectionDialog(review)}
                                 disabled={updateReviewStatus.isPending}
                               >
-                                <X className="h-4 w-4 mr-1" />
+                                <X className="h-4 w-4 me-1" />
                                 {getLocalizedText('Reject', 'رد', 'رفض')}
                               </Button>
                             </div>

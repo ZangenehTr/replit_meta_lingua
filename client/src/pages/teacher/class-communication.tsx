@@ -194,7 +194,7 @@ export default function ClassCommunication() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary">
-                <Users className="h-3 w-3 mr-1" />
+                <Users className="h-3 w-3 me-1" />
                 {classInfo?.studentsCount || 0} {t('teacher.students')}
               </Badge>
               <Badge variant="outline">

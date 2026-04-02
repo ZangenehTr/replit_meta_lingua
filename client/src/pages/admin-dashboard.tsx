@@ -275,16 +275,16 @@ export default function AdminDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 flex-1">
                 <div className="relative flex-1 sm:flex-initial">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder={t('admin:dashboard.searchStudents')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 w-full sm:w-64"
+                    className="ps-9 w-full sm:w-64"
                   />
                 </div>
                 <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                  <Filter className="h-4 w-4 mr-2" />
+                  <Filter className="h-4 w-4 me-2" />
                   {t('admin:dashboard.filter')}
                 </Button>
               </div>
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
                 onClick={() => setLocation('/admin/students?action=create')}
                 data-testid="button-add-student"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 {t('admin:dashboard.addStudent')}
               </Button>
             </div>
@@ -327,11 +327,11 @@ export default function AdminDashboard() {
                         <TableCell>
                           <div className="space-y-1">
                             <div className="flex items-center text-sm">
-                              <Mail className="h-3 w-3 mr-1" />
+                              <Mail className="h-3 w-3 me-1" />
                               {student.email}
                             </div>
                             <div className="flex items-center text-sm">
-                              <Phone className="h-3 w-3 mr-1" />
+                              <Phone className="h-3 w-3 me-1" />
                               {student.phone}
                             </div>
                           </div>
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
-                            <BookOpen className="h-4 w-4 mr-1" />
+                            <BookOpen className="h-4 w-4 me-1" />
                             {student.enrolledCourses}
                           </div>
                         </TableCell>
@@ -385,17 +385,17 @@ export default function AdminDashboard() {
                         <Badge className={getStatusColor(student.status)}>{student.status || 'N/A'}</Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center"><Mail className="h-3 w-3 mr-1 shrink-0" /><span className="truncate">{student.email}</span></div>
-                        <div className="flex items-center"><Phone className="h-3 w-3 mr-1 shrink-0" />{student.phone}</div>
-                        <div className="flex items-center"><BookOpen className="h-3 w-3 mr-1 shrink-0" />{student.enrolledCourses} {t('admin:dashboard.courses')}</div>
+                        <div className="flex items-center"><Mail className="h-3 w-3 me-1 shrink-0" /><span className="truncate">{student.email}</span></div>
+                        <div className="flex items-center"><Phone className="h-3 w-3 me-1 shrink-0" />{student.phone}</div>
+                        <div className="flex items-center"><BookOpen className="h-3 w-3 me-1 shrink-0" />{student.enrolledCourses} {t('admin:dashboard.courses')}</div>
                         <div>${student.totalPayments}</div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/students?view=${student.id}`)}>
-                          <Eye className="h-4 w-4 mr-1" /> {t('admin:dashboard.view')}
+                          <Eye className="h-4 w-4 me-1" /> {t('admin:dashboard.view')}
                         </Button>
                         <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/students?edit=${student.id}`)}>
-                          <Edit className="h-4 w-4 mr-1" /> {t('admin:dashboard.edit')}
+                          <Edit className="h-4 w-4 me-1" /> {t('admin:dashboard.edit')}
                         </Button>
                       </div>
                     </div>
@@ -410,16 +410,16 @@ export default function AdminDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 flex-1">
                 <div className="relative flex-1 sm:flex-initial">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder={t('admin:dashboard.searchLeads')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 w-full sm:w-64"
+                    className="ps-9 w-full sm:w-64"
                   />
                 </div>
                 <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                  <Filter className="h-4 w-4 mr-2" />
+                  <Filter className="h-4 w-4 me-2" />
                   Filter
                 </Button>
               </div>
@@ -428,7 +428,7 @@ export default function AdminDashboard() {
                 onClick={() => setLocation('/admin/leads')}
                 data-testid="button-add-lead"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 {t('admin:dashboard.addLead')}
               </Button>
             </div>
@@ -463,11 +463,11 @@ export default function AdminDashboard() {
                         <TableCell>
                           <div className="space-y-1">
                             <div className="flex items-center text-sm">
-                              <Mail className="h-3 w-3 mr-1" />
+                              <Mail className="h-3 w-3 me-1" />
                               {lead.email}
                             </div>
                             <div className="flex items-center text-sm">
-                              <Phone className="h-3 w-3 mr-1" />
+                              <Phone className="h-3 w-3 me-1" />
                               {lead.phone}
                             </div>
                           </div>
@@ -540,8 +540,8 @@ export default function AdminDashboard() {
                         <Badge className={getStatusColor(lead.status)}>{lead.status || 'N/A'}</Badge>
                       </div>
                       <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center"><Mail className="h-3 w-3 mr-1 shrink-0" /><span className="truncate">{lead.email}</span></div>
-                        <div className="flex items-center"><Phone className="h-3 w-3 mr-1 shrink-0" />{lead.phone}</div>
+                        <div className="flex items-center"><Mail className="h-3 w-3 me-1 shrink-0" /><span className="truncate">{lead.email}</span></div>
+                        <div className="flex items-center"><Phone className="h-3 w-3 me-1 shrink-0" />{lead.phone}</div>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         <Badge variant="outline" className="text-xs">{lead.source}</Badge>
@@ -551,10 +551,10 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => window.location.href = `tel:${lead.phone}`}>
-                          <Phone className="h-4 w-4 mr-1" /> {t('admin:dashboard.call')}
+                          <Phone className="h-4 w-4 me-1" /> {t('admin:dashboard.call')}
                         </Button>
                         <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => window.location.href = `mailto:${lead.email}`}>
-                          <Mail className="h-4 w-4 mr-1" /> {t('admin:dashboard.email')}
+                          <Mail className="h-4 w-4 me-1" /> {t('admin:dashboard.email')}
                         </Button>
                         <Button variant="outline" size="sm" className="min-h-[40px]" onClick={() => setLocation(`/admin/leads?edit=${lead.id}`)}>
                           <Edit className="h-4 w-4" />
@@ -572,16 +572,16 @@ export default function AdminDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 flex-1">
                 <div className="relative flex-1 sm:flex-initial">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search invoices..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 w-full sm:w-64"
+                    className="ps-9 w-full sm:w-64"
                   />
                 </div>
                 <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                  <Filter className="h-4 w-4 mr-2" />
+                  <Filter className="h-4 w-4 me-2" />
                   Filter
                 </Button>
               </div>
@@ -590,7 +590,7 @@ export default function AdminDashboard() {
                 onClick={() => setLocation('/admin/financial')}
                 data-testid="button-create-invoice"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 Create Invoice
               </Button>
             </div>
@@ -667,10 +667,10 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/financial?view=${invoice.id}`)}>
-                          <Eye className="h-4 w-4 mr-1" /> {t('admin:dashboard.view')}
+                          <Eye className="h-4 w-4 me-1" /> {t('admin:dashboard.view')}
                         </Button>
                         <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => setLocation(`/admin/financial?edit=${invoice.id}`)}>
-                          <Edit className="h-4 w-4 mr-1" /> {t('admin:dashboard.edit')}
+                          <Edit className="h-4 w-4 me-1" /> {t('admin:dashboard.edit')}
                         </Button>
                       </div>
                     </div>

@@ -161,11 +161,11 @@ export default function CallCenterAccessControl() {
         <Tabs defaultValue="users" className="w-full">
           <TabsList>
             <TabsTrigger value="users" data-testid="tab-users">
-              <Users className="w-4 h-4 mr-2" />
+              <Users className="w-4 h-4 me-2" />
               Users & Permissions
             </TabsTrigger>
             <TabsTrigger value="roles" data-testid="tab-roles">
-              <Shield className="w-4 h-4 mr-2" />
+              <Shield className="w-4 h-4 me-2" />
               Role Templates
             </TabsTrigger>
           </TabsList>
@@ -212,7 +212,7 @@ export default function CallCenterAccessControl() {
                             onClick={() => handleEditPermissions(user)}
                             data-testid={`edit-permissions-${user.id}`}
                           >
-                            <Edit className="w-4 h-4 mr-2" />
+                            <Edit className="w-4 h-4 me-2" />
                             Edit Permissions
                           </Button>
                         </div>
@@ -365,7 +365,7 @@ export default function CallCenterAccessControl() {
                   disabled={updatePermissionsMutation.isPending}
                   data-testid="save-permissions"
                 >
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-4 h-4 me-2" />
                   {updatePermissionsMutation.isPending ? 'Saving...' : 'Save Permissions'}
                 </Button>
               </div>

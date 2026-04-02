@@ -285,7 +285,7 @@ export function ThirdPartyIntegrations() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-api">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               Add API Configuration
             </Button>
           </DialogTrigger>
@@ -376,7 +376,7 @@ export function ThirdPartyIntegrations() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                            className="absolute end-2 top-1/2 -translate-y-1/2"
                             onClick={() => setShowApiKey(!showApiKey)}
                           >
                             {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -514,7 +514,7 @@ export function ThirdPartyIntegrations() {
                           {api.isEnabled ? "Enabled" : "Disabled"}
                         </Badge>
                         <Badge variant={api.isHealthy ? "default" : "destructive"}>
-                          {api.isHealthy ? <CheckCircle className="h-3 w-3 mr-1" /> : <AlertCircle className="h-3 w-3 mr-1" />}
+                          {api.isHealthy ? <CheckCircle className="h-3 w-3 me-1" /> : <AlertCircle className="h-3 w-3 me-1" />}
                           {api.isHealthy ? "Healthy" : "Unhealthy"}
                         </Badge>
                       </CardTitle>
@@ -528,7 +528,7 @@ export function ThirdPartyIntegrations() {
                         disabled={testApiMutation.isPending}
                         data-testid={`button-test-${api.apiName}`}
                       >
-                        <TestTube className="h-4 w-4 mr-1" />
+                        <TestTube className="h-4 w-4 me-1" />
                         Test
                       </Button>
                       <Button
@@ -538,7 +538,7 @@ export function ThirdPartyIntegrations() {
                         disabled={healthCheckMutation.isPending}
                         data-testid={`button-health-check-${api.apiName}`}
                       >
-                        <Activity className="h-4 w-4 mr-1" />
+                        <Activity className="h-4 w-4 me-1" />
                         Health Check
                       </Button>
                       <Button
@@ -550,7 +550,7 @@ export function ThirdPartyIntegrations() {
                         }}
                         data-testid={`button-edit-${api.apiName}`}
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-4 w-4 me-1" />
                         Edit
                       </Button>
                       <Button
@@ -560,7 +560,7 @@ export function ThirdPartyIntegrations() {
                         disabled={deleteApiMutation.isPending}
                         data-testid={`button-delete-${api.apiName}`}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
+                        <Trash2 className="h-4 w-4 me-1" />
                         Delete
                       </Button>
                     </div>

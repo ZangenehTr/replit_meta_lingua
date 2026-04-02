@@ -164,7 +164,7 @@ function IntroductionStep({ step, onComplete }: { step: any; onComplete: (score:
             className="mb-4"
             onClick={() => new Audio(step.audioNarration).play()}
           >
-            <Volume2 className="w-4 h-4 mr-2" />
+            <Volume2 className="w-4 h-4 me-2" />
             {t('gameSteps.playAudio')}
           </Button>
         )}
@@ -181,7 +181,7 @@ function IntroductionStep({ step, onComplete }: { step: any; onComplete: (score:
           )}
           {objectClicked && (
             <div className="flex items-center justify-center text-green-600">
-              <Check className="w-6 h-6 mr-2" />
+              <Check className="w-6 h-6 me-2" />
               <span>{t('gameSteps.movingForward')}</span>
             </div>
           )}
@@ -444,7 +444,7 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
               onClick={() => new Audio(currentDialogue.audio).play()}
               className="mt-2"
             >
-              <Volume2 className="w-4 h-4 mr-2" />
+              <Volume2 className="w-4 h-4 me-2" />
               {t('gameSteps.listen')}
             </Button>
           )}
@@ -472,7 +472,7 @@ function ConversationStep({ step, onComplete }: { step: any; onComplete: (score:
                   )}
                 </div>
                 {selectedResponse === response.text && (
-                  response.correct ? <Check className="w-5 h-5 ml-2" /> : <X className="w-5 h-5 ml-2" />
+                  response.correct ? <Check className="w-5 h-5 ms-2" /> : <X className="w-5 h-5 ms-2" />
                 )}
               </Button>
             ))}
@@ -541,7 +541,7 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
               disabled={isLoading}
               data-testid="play-reference-audio"
             >
-              <Volume2 className="w-4 h-4 mr-2" />
+              <Volume2 className="w-4 h-4 me-2" />
               {isLoading ? t('gameSteps.loading') : t('gameSteps.listenToExample')}
             </Button>
           )}
@@ -557,12 +557,12 @@ function PronunciationStep({ step, onComplete }: { step: any; onComplete: (score
           >
             {isRecording ? (
               <>
-                <div className="animate-pulse w-4 h-4 bg-white rounded-full mr-2" />
+                <div className="animate-pulse w-4 h-4 bg-white rounded-full me-2" />
                 {t('gameSteps.recording')}
               </>
             ) : (
               <>
-                <Mic className="w-5 h-5 mr-2" />
+                <Mic className="w-5 h-5 me-2" />
                 {t('gameSteps.startRecording')}
               </>
             )}
@@ -615,7 +615,7 @@ function ListeningStep({ step, onComplete }: { step: any; onComplete: (score: nu
             size="lg"
             data-testid="play-audio-button"
           >
-            <Play className="w-5 h-5 mr-2" />
+            <Play className="w-5 h-5 me-2" />
             {t('gameSteps.playAudio')}
           </Button>
         </div>
@@ -639,8 +639,8 @@ function ListeningStep({ step, onComplete }: { step: any; onComplete: (score: nu
                   {option.text || option}
                   {selectedAnswer === index && (
                     index === questions[0].correct ? 
-                      <Check className="w-5 h-5 ml-auto" /> : 
-                      <X className="w-5 h-5 ml-auto" />
+                      <Check className="w-5 h-5 ms-auto" /> : 
+                      <X className="w-5 h-5 ms-auto" />
                   )}
                 </Button>
               ))}
@@ -747,7 +747,7 @@ function DragDropStep({ step, onComplete }: { step: any; onComplete: (score: num
           <div className="border-2 border-dashed border-emerald-300 rounded-lg p-4 min-h-[200px]">
             <p className="font-medium mb-3">{t('gameSteps.dropZone')}</p>
             {droppedItems.map((itemId, index) => (
-              <Badge key={index} className="mr-2 mb-2">
+              <Badge key={index} className="me-2 mb-2">
                 {items.find((i: any) => i.id === itemId)?.name}
               </Badge>
             ))}
@@ -1123,7 +1123,7 @@ function SentenceReorderingStep({ step, onComplete }: { step: any; onComplete: (
       <CardContent>
         {sentenceAudio && (
           <Button variant="outline" size="sm" onClick={playAudio} className="mb-4" data-testid="play-sentence-audio">
-            <Volume2 className="w-4 h-4 mr-2" />
+            <Volume2 className="w-4 h-4 me-2" />
             {t('gameSteps.listenToSentence')}
           </Button>
         )}
@@ -1222,7 +1222,7 @@ function ImageSelectionStep({ step, onComplete }: { step: any; onComplete: (scor
           <p className="text-lg font-medium mb-3">{step.prompt || step.question}</p>
           {promptAudio && (
             <Button variant="outline" size="sm" onClick={playPrompt} data-testid="play-prompt-audio">
-              <Volume2 className="w-4 h-4 mr-2" />
+              <Volume2 className="w-4 h-4 me-2" />
               {t('gameSteps.playPrompt')}
             </Button>
           )}
@@ -1354,7 +1354,7 @@ function TrueFalseStep({ step, onComplete }: { step: any; onComplete: (score: nu
           <p className="text-xl font-medium mb-4">{currentQuestion.statement}</p>
           {questionAudio[currentQuestionIndex] && (
             <Button variant="outline" size="sm" onClick={playQuestionAudio} data-testid="play-question-audio">
-              <Volume2 className="w-4 h-4 mr-2" />
+              <Volume2 className="w-4 h-4 me-2" />
               {t('gameSteps.listenToQuestion')}
             </Button>
           )}
@@ -1367,7 +1367,7 @@ function TrueFalseStep({ step, onComplete }: { step: any; onComplete: (score: nu
               className="h-20 text-lg bg-green-600 hover:bg-green-700"
               data-testid="answer-true"
             >
-              <Check className="w-6 h-6 mr-2" />
+              <Check className="w-6 h-6 me-2" />
               {t('gameSteps.true')}
             </Button>
             <Button
@@ -1375,7 +1375,7 @@ function TrueFalseStep({ step, onComplete }: { step: any; onComplete: (score: nu
               className="h-20 text-lg bg-red-600 hover:bg-red-700"
               data-testid="answer-false"
             >
-              <X className="w-6 h-6 mr-2" />
+              <X className="w-6 h-6 me-2" />
               {t('gameSteps.false')}
             </Button>
           </div>
@@ -1476,7 +1476,7 @@ function SpellingStep({ step, onComplete }: { step: any; onComplete: (score: num
           )}
           {wordAudio && (
             <Button variant="outline" size="sm" onClick={playWordAudio} data-testid="play-word-audio">
-              <Volume2 className="w-4 h-4 mr-2" />
+              <Volume2 className="w-4 h-4 me-2" />
               {t('gameSteps.listenToWord')}
             </Button>
           )}
@@ -1524,7 +1524,7 @@ function SpellingStep({ step, onComplete }: { step: any; onComplete: (score: num
             className="flex-1"
             data-testid="reset-spelling"
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
+            <RotateCcw className="w-4 h-4 me-2" />
             {t('gameSteps.reset')}
           </Button>
           {userSpelling.length === correctWord.length && (
@@ -1748,7 +1748,7 @@ function WordFormationStep({ step, onComplete }: { step: any; onComplete: (score
               className="mt-2"
               data-testid="play-audio"
             >
-              <Volume2 className="w-4 h-4 mr-2" />
+              <Volume2 className="w-4 h-4 me-2" />
               {t('gameSteps.listen')}
             </Button>
           )}
@@ -1793,7 +1793,7 @@ function WordFormationStep({ step, onComplete }: { step: any; onComplete: (score
             disabled={selectedTiles.length === 0}
             data-testid="reset-button"
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
+            <RotateCcw className="w-4 h-4 me-2" />
             {t('gameSteps.reset')}
           </Button>
           <Button
@@ -1814,12 +1814,12 @@ function WordFormationStep({ step, onComplete }: { step: any; onComplete: (score
           )}>
             {isCorrect ? (
               <div className="flex items-center justify-center">
-                <Check className="w-5 h-5 mr-2" />
+                <Check className="w-5 h-5 me-2" />
                 {t('feedback.correct')}
               </div>
             ) : (
               <div className="flex items-center justify-center">
-                <X className="w-5 h-5 mr-2" />
+                <X className="w-5 h-5 me-2" />
                 {t('feedback.tryAgain')}
               </div>
             )}
@@ -2103,7 +2103,7 @@ function DefaultStep({ step, onComplete }: { step: any; onComplete: (score: numb
       <CardContent className="pt-6 text-center">
         <p className="mb-4">{step.instruction || 'Complete this step to continue'}</p>
         <Button onClick={() => onComplete(100)} data-testid="default-continue">
-          Continue <ArrowRight className="w-4 h-4 ml-2" />
+          Continue <ArrowRight className="w-4 h-4 ms-2" />
         </Button>
       </CardContent>
     </Card>

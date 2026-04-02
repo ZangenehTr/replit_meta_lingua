@@ -206,7 +206,7 @@ export function ContactForm() {
                 className="w-full justify-start"
                 data-testid="button-placement-test"
               >
-                <Globe2 className="h-4 w-4 mr-2" />
+                <Globe2 className="h-4 w-4 me-2" />
                 {t('student:takePlacementTest')}
               </Button>
               <Button 
@@ -214,7 +214,7 @@ export function ContactForm() {
                 className="w-full justify-start"
                 data-testid="button-schedule-consultation"
               >
-                <Calendar className="h-4 w-4 mr-2" />
+                <Calendar className="h-4 w-4 me-2" />
                 {t('student:scheduleConsultation')}
               </Button>
               <Button 
@@ -222,7 +222,7 @@ export function ContactForm() {
                 className="w-full justify-start"
                 data-testid="button-download-brochure"
               >
-                <User className="h-4 w-4 mr-2" />
+                <User className="h-4 w-4 me-2" />
                 {t('student:downloadBrochure')}
               </Button>
             </CardContent>
@@ -373,7 +373,7 @@ export function ContactForm() {
                     t('common:sending')
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       {t('student:sendMessage')}
                     </>
                   )}

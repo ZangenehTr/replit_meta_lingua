@@ -44,7 +44,7 @@ export default function MSTTestBuilder() {
           </p>
         </div>
         <Button data-testid="button-create-new-test">
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           {t('admin:createNewTest', 'Create New Test')}
         </Button>
       </div>
@@ -52,19 +52,19 @@ export default function MSTTestBuilder() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="tests" data-testid="tab-tests">
-            <ClipboardCheck className="h-4 w-4 mr-2" />
+            <ClipboardCheck className="h-4 w-4 me-2" />
             {t('admin:tests', 'Tests')}
           </TabsTrigger>
           <TabsTrigger value="questions" data-testid="tab-questions">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 me-2" />
             {t('admin:questions', 'Questions')}
           </TabsTrigger>
           <TabsTrigger value="skills" data-testid="tab-skills">
-            <Target className="h-4 w-4 mr-2" />
+            <Target className="h-4 w-4 me-2" />
             {t('admin:skills', 'Skills')}
           </TabsTrigger>
           <TabsTrigger value="ai-generation" data-testid="tab-ai-generation">
-            <Brain className="h-4 w-4 mr-2" />
+            <Brain className="h-4 w-4 me-2" />
             {t('admin:aiGeneration', 'AI Generation')}
           </TabsTrigger>
         </TabsList>

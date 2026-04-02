@@ -260,13 +260,13 @@ export default function WebsiteBuilderPage() {
               size="sm"
               className="h-8 text-xs sm:text-sm"
             >
-              <Languages className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <Languages className="w-3 h-3 sm:w-4 sm:h-4 me-1 sm:me-2" />
               {currentLanguage === 'en' ? 'English' : 'فارسی'}
             </Button>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="h-8 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700">
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 me-1 sm:me-2" />
                     <span className="hidden sm:inline">Create Page</span>
                     <span className="sm:hidden">{t('admin:add')}</span>
                   </Button>
@@ -393,7 +393,7 @@ export default function WebsiteBuilderPage() {
                             onClick={() => setEditingPage(page)}
                             className="flex-1"
                           >
-                            <Edit2 className="w-4 h-4 mr-1" />
+                            <Edit2 className="w-4 h-4 me-1" />
                             Edit
                           </Button>
                           <Button 
@@ -403,7 +403,7 @@ export default function WebsiteBuilderPage() {
                             disabled={deployWebsiteMutation.isPending}
                             className="flex-1"
                           >
-                            <Globe className="w-4 h-4 mr-1" />
+                            <Globe className="w-4 h-4 me-1" />
                             {deployWebsiteMutation.isPending ? 'Deploying...' : 'Deploy'}
                           </Button>
                         </div>
@@ -441,13 +441,13 @@ export default function WebsiteBuilderPage() {
                         <div className="flex gap-1">
                           {template.isResponsive && (
                             <Badge variant="secondary">
-                              <Smartphone className="w-3 h-3 mr-1" />
+                              <Smartphone className="w-3 h-3 me-1" />
                               Responsive
                             </Badge>
                           )}
                           {template.isRtlSupported && (
                             <Badge variant="secondary">
-                              <AlignRight className="w-3 h-3 mr-1" />
+                              <AlignRight className="w-3 h-3 me-1" />
                               RTL
                             </Badge>
                           )}
@@ -558,7 +558,7 @@ export default function WebsiteBuilderPage() {
                             disabled={updatePageMutation.isPending}
                             className="flex-1"
                           >
-                            <Save className="w-4 h-4 mr-2" />
+                            <Save className="w-4 h-4 me-2" />
                             {updatePageMutation.isPending ? 'Saving...' : 'Save'}
                           </Button>
                           <Button 
@@ -566,7 +566,7 @@ export default function WebsiteBuilderPage() {
                             disabled={deployWebsiteMutation.isPending}
                             variant="outline"
                           >
-                            <Globe className="w-4 h-4 mr-2" />
+                            <Globe className="w-4 h-4 me-2" />
                             Deploy
                           </Button>
                         </div>
@@ -647,11 +647,11 @@ export default function WebsiteBuilderPage() {
                         disabled={deployWebsiteMutation.isPending}
                         className="flex-1"
                       >
-                        <Globe className="w-4 h-4 mr-2" />
+                        <Globe className="w-4 h-4 me-2" />
                         {deployWebsiteMutation.isPending ? 'Deploying...' : 'Deploy Website'}
                       </Button>
                       <Button variant="outline">
-                        <Eye className="w-4 h-4 mr-2" />
+                        <Eye className="w-4 h-4 me-2" />
                         Preview
                       </Button>
                     </div>

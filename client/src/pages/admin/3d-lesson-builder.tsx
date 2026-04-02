@@ -191,22 +191,22 @@ function ThreeDLessonCard({ lesson, onEdit, onDelete, onTogglePublish, onPreview
               <DropdownMenuLabel>{t('common:actions')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onPreview(lesson)}>
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="me-2 h-4 w-4" />
                 {t('admin:threeDLessons.preview')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(lesson)}>
-                <Edit3 className="mr-2 h-4 w-4" />
+                <Edit3 className="me-2 h-4 w-4" />
                 {t('common:edit')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onTogglePublish(lesson)}>
                 {lesson.isPublished ? (
                   <>
-                    <Archive className="mr-2 h-4 w-4" />
+                    <Archive className="me-2 h-4 w-4" />
                     {t('admin:threeDLessons.unpublish')}
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
+                    <CheckCircle className="me-2 h-4 w-4" />
                     {t('admin:threeDLessons.publish')}
                   </>
                 )}
@@ -216,7 +216,7 @@ function ThreeDLessonCard({ lesson, onEdit, onDelete, onTogglePublish, onPreview
                 onClick={() => onDelete(lesson)}
                 className="text-destructive"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="me-2 h-4 w-4" />
                 {t('common:delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -839,12 +839,12 @@ export default function ThreeDLessonBuilder() {
             <div className="lg:col-span-2">
               <Label>{t('common:search')}</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t('admin:threeDLessons.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="ps-10"
                   data-testid="input-search-lessons"
                 />
               </div>

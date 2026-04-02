@@ -308,7 +308,7 @@ export function VisitorChatWidget() {
     <>
       <button
         onClick={() => { setIsOpen(!isOpen); if (!isOpen) setUnreadCount(0); }}
-        className={`fixed bottom-4 ${isRTL ? 'left-4' : 'right-4'} z-[60] h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 bg-gradient-to-br from-blue-600 to-cyan-500 text-white ${adminOnline ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
+        className={`fixed bottom-4 ${isRTL ? 'start-4' : 'end-4'} z-[60] h-14 w-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 bg-gradient-to-br from-blue-600 to-cyan-500 text-white ${adminOnline ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
         data-testid="button-visitor-chat-toggle"
         aria-label={isOpen ? t('visitorChat.close', 'Close chat') : t('visitorChat.open', 'Open chat')}
       >
@@ -318,12 +318,12 @@ export function VisitorChatWidget() {
           <div className="relative">
             <MessageCircle className="h-6 w-6" />
             {unreadCount > 0 && (
-              <span className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-white">
+              <span className="absolute -top-2 -end-2 h-5 w-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-white">
                 {unreadCount}
               </span>
             )}
             {adminOnline && (
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-white" />
+              <span className="absolute -bottom-0.5 -end-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-white" />
             )}
           </div>
         )}
@@ -332,7 +332,7 @@ export function VisitorChatWidget() {
       {isOpen && (
         <div
           className={`fixed z-50 flex flex-col overflow-hidden bg-white
-            bottom-0 left-0 right-0 top-0 sm:bottom-20 sm:top-auto sm:${isRTL ? 'left-4 sm:right-auto' : 'right-4 sm:left-auto'} sm:w-[380px] sm:h-[560px] sm:rounded-2xl sm:shadow-2xl sm:border border-gray-200`}
+            bottom-0 start-0 end-0 top-0 sm:bottom-20 sm:top-auto sm:${isRTL ? 'start-4 sm:end-auto' : 'end-4 sm:start-auto'} sm:w-[380px] sm:h-[560px] sm:rounded-2xl sm:shadow-2xl sm:border border-gray-200`}
           dir={isRTL ? 'rtl' : 'ltr'}
         >
           <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-3 flex items-center justify-between shrink-0">
@@ -346,7 +346,7 @@ export function VisitorChatWidget() {
                   )}
                 </div>
                 {adminOnline && (
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-blue-600" />
+                  <span className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-blue-600" />
                 )}
               </div>
               <div className="min-w-0">
@@ -408,27 +408,27 @@ export function VisitorChatWidget() {
               </p>
               <div className="w-full max-w-[280px] space-y-3">
                 <div className="relative">
-                  <Phone className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400`} />
+                  <Phone className={`absolute top-2.5 ${'start-3'} h-4 w-4 text-gray-400`} />
                   <Input
                     type="tel"
                     placeholder={t('visitorChat.phonePlaceholder', '09123456789')}
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className={`${isRTL ? 'pr-10' : 'pl-10'} h-10 text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400`}
+                    className={`${'ps-10'} h-10 text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400`}
                     dir="ltr"
                     data-testid="input-visitor-phone"
                   />
                 </div>
                 <div className="relative">
-                  <User className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400`} />
+                  <User className={`absolute top-2.5 ${'start-3'} h-4 w-4 text-gray-400`} />
                   <Input
                     type="text"
                     placeholder={t('visitorChat.namePlaceholder', 'Your name (optional)')}
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className={`${isRTL ? 'pr-10' : 'pl-10'} h-10 text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400`}
+                    className={`${'ps-10'} h-10 text-sm border-gray-200 focus:border-blue-400 focus:ring-blue-400`}
                     data-testid="input-visitor-name"
                   />
                 </div>
@@ -542,10 +542,11 @@ export function VisitorChatWidget() {
                     size="icon"
                     className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shrink-0 disabled:opacity-50"
                     data-testid="button-send-message"
+                    aria-label="Send message"
                   >
                     {isLoading
-                      ? <div className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      : <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} />
+                      ? <div className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                      : <Send className={`h-4 w-4 ${isRTL ? 'scale-x-[-1]' : ''}`} aria-hidden="true" />
                     }
                   </Button>
                 </div>

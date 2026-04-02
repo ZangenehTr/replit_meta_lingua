@@ -135,11 +135,11 @@ export default function AIStudyPartner() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" data-testid="badge-ai-status">
-            <Bot className="h-4 w-4 mr-1" />
+            <Bot className="h-4 w-4 me-1" />
             {t('admin:aiOnline', 'AI Online')}
           </Badge>
           <Button variant="outline" data-testid="button-test-ai" onClick={() => setTestDialogOpen(true)}>
-            <MessageCircle className="h-4 w-4 mr-2" />
+            <MessageCircle className="h-4 w-4 me-2" />
             {t('admin:testAI', 'Test AI')}
           </Button>
         </div>
@@ -206,15 +206,15 @@ export default function AIStudyPartner() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="configuration" data-testid="tab-ai-configuration">
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="h-4 w-4 me-2" />
             {t('admin:configuration', 'Configuration')}
           </TabsTrigger>
           <TabsTrigger value="personality" data-testid="tab-ai-personality">
-            <Bot className="h-4 w-4 mr-2" />
+            <Bot className="h-4 w-4 me-2" />
             {t('admin:personality', 'Personality')}
           </TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-ai-analytics">
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-4 w-4 me-2" />
             {t('admin:analytics', 'Analytics')}
           </TabsTrigger>
         </TabsList>
@@ -253,12 +253,12 @@ export default function AIStudyPartner() {
                               <SelectItem key={model.id} value={model.id.toString()}>
                                 {model.name}
                                 {model.name.includes('Trained') && (
-                                  <span className="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
+                                  <span className="ms-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
                                     Trained
                                   </span>
                                 )}
                                 {model.parameters && (
-                                  <span className="ml-2 text-xs text-gray-500">
+                                  <span className="ms-2 text-xs text-gray-500">
                                     ({model.parameters}B params)
                                   </span>
                                 )}
@@ -466,12 +466,12 @@ export default function AIStudyPartner() {
               >
                 {testAIMutation.isPending ? (
                   <>
-                    <Pause className="h-4 w-4 mr-2 animate-spin" />
+                    <Pause className="h-4 w-4 me-2 animate-spin" />
                     {t('admin:testing', 'Testing...')}
                   </>
                 ) : (
                   <>
-                    <Play className="h-4 w-4 mr-2" />
+                    <Play className="h-4 w-4 me-2" />
                     {t('admin:sendTest', 'Send Test')}
                   </>
                 )}

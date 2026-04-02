@@ -388,14 +388,14 @@ export default function StudentCoursesMobile() {
                 <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg relative overflow-hidden">
                   {/* Status Indicator */}
                   <div className={cn(
-                    "absolute top-0 left-0 w-1 h-full",
+                    "absolute top-0 start-0 w-1 h-full",
                     course.status === 'active' && "bg-green-500",
                     course.status === 'upcoming' && "bg-blue-500", 
                     course.status === 'completed' && "bg-gray-500",
                     course.status === 'paused' && "bg-yellow-500"
                   )} />
                   
-                  <div className="pl-4">
+                  <div className="ps-4">
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3 flex-1">
@@ -521,9 +521,9 @@ export default function StudentCoursesMobile() {
                       onClick={() => continueCourse.mutate(course.id)}
                       data-testid={`button-continue-course-${course.id}`}
                     >
-                      <Play className="w-4 h-4 mr-2" />
+                      <Play className="w-4 h-4 me-2" />
                       {t('student:continueLearning')}
-                      <ChevronRight className="w-4 h-4 ml-2" />
+                      <ChevronRight className="w-4 h-4 ms-2" />
                     </Button>
                   )}
 
@@ -563,7 +563,7 @@ export default function StudentCoursesMobile() {
 
                   {course.status === 'paused' && (
                     <div className="flex items-center justify-center py-3 bg-yellow-50 rounded-xl">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+                      <AlertCircle className="w-5 h-5 text-yellow-600 me-2" />
                       <span className="text-yellow-700 text-sm font-medium">
                         {t('student:coursePaused')}
                       </span>

@@ -262,7 +262,7 @@ function LevelAssessment() {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 ms-4">
                     {!lead.levelAssessmentStart ? (
                       <Dialog>
                         <DialogTrigger asChild>
@@ -272,7 +272,7 @@ function LevelAssessment() {
                             onClick={() => setSelectedLead(lead)}
                             data-testid={`button-schedule-assessment-${lead.id}`}
                           >
-                            <CalendarIcon className="h-4 w-4 mr-2" />
+                            <CalendarIcon className="h-4 w-4 me-2" />
                             برنامه‌ریزی
                           </Button>
                         </DialogTrigger>
@@ -296,7 +296,7 @@ function LevelAssessment() {
                                       !assessmentDate && "text-muted-foreground"
                                     )}
                                   >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    <CalendarIcon className="me-2 h-4 w-4" />
                                     {assessmentDate ? (
                                       format(assessmentDate, "PPP", { locale: faIR })
                                     ) : (
@@ -374,7 +374,7 @@ function LevelAssessment() {
                           disabled={sendReminderSMSMutation.isPending}
                           data-testid={`button-remind-${lead.id}`}
                         >
-                          <MessageSquare className="h-4 w-4 mr-2" />
+                          <MessageSquare className="h-4 w-4 me-2" />
                           یادآوری
                         </Button>
                         
@@ -385,7 +385,7 @@ function LevelAssessment() {
                               size="sm"
                               data-testid={`button-complete-assessment-${lead.id}`}
                             >
-                              <CheckCircle className="h-4 w-4 mr-2" />
+                              <CheckCircle className="h-4 w-4 me-2" />
                               تکمیل
                             </Button>
                           </DialogTrigger>
@@ -439,12 +439,12 @@ function LevelAssessment() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در متقاضیان تعیین سطح..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
               data-testid="input-search-level-assessment"
             />
           </div>

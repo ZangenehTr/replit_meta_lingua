@@ -266,7 +266,7 @@ export function WalletSystem() {
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   شارژ کیف پول
                 </Button>
               </DialogTrigger>
@@ -293,7 +293,7 @@ export function WalletSystem() {
                     onClick={() => walletTopupMutation.mutate(topupAmount)}
                     disabled={walletTopupMutation.isPending}
                   >
-                    <CreditCard className="h-4 w-4 mr-2" />
+                    <CreditCard className="h-4 w-4 me-2" />
                     {walletTopupMutation.isPending ? "در حال پردازش..." : "پرداخت از طریق شتاب"}
                   </Button>
                 </div>
@@ -387,7 +387,7 @@ export function WalletSystem() {
                       size="sm"
                       onClick={() => openEnrollmentDialog(course, 'wallet')}
                     >
-                      <Wallet className="h-4 w-4 mr-2" />
+                      <Wallet className="h-4 w-4 me-2" />
                       پرداخت از کیف پول
                     </Button>
                     <Button
@@ -395,7 +395,7 @@ export function WalletSystem() {
                       onClick={() => openEnrollmentDialog(course, 'shetab')}
                       disabled={courseEnrollmentMutation.isPending}
                     >
-                      <CreditCard className="h-4 w-4 mr-2" />
+                      <CreditCard className="h-4 w-4 me-2" />
                       پرداخت مستقیم
                     </Button>
                   </div>

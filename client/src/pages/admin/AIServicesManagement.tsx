@@ -301,12 +301,12 @@ export default function AIServicesManagement() {
             >
               {installOllamaMutation.isPending ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                   {t('admin:aiServices.installingOllama')}
                 </>
               ) : (
                 <>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 me-2" />
                   {t('admin:aiServices.testInstallation')}
                 </>
               )}
@@ -332,12 +332,12 @@ export default function AIServicesManagement() {
             >
               {startOllamaMutation.isPending ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                   {t('admin:aiServices.startingService')}
                 </>
               ) : (
                 <>
-                  <Activity className="h-4 w-4 mr-2" />
+                  <Activity className="h-4 w-4 me-2" />
                   {t('admin:aiServices.startService')}
                 </>
               )}
@@ -403,12 +403,12 @@ export default function AIServicesManagement() {
                           >
                             {isDownloading ? (
                               <>
-                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                                 {t('admin:aiServices.downloading')}
                               </>
                             ) : (
                               <>
-                                <Download className="h-4 w-4 mr-2" />
+                                <Download className="h-4 w-4 me-2" />
                                 {t('admin:aiServices.download')} {model.size}
                               </>
                             )}
@@ -460,12 +460,12 @@ export default function AIServicesManagement() {
                   >
                     {testGenerationMutation.isPending ? (
                       <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                         {t('admin:aiServices.generating')}
                       </>
                     ) : (
                       <>
-                        <Bot className="h-4 w-4 mr-2" />
+                        <Bot className="h-4 w-4 me-2" />
                         {t('admin:aiServices.testGeneration')}
                       </>
                     )}

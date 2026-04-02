@@ -103,11 +103,11 @@ function Cheque() {
   const getChequeStatusBadge = (status: string) => {
     switch (status) {
       case 'cleared':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />{t('callcenter:stages.cheque.status_cleared', 'وصول شده')}</Badge>;
+        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 me-1" />{t('callcenter:stages.cheque.status_cleared', 'وصول شده')}</Badge>;
       case 'bounced':
-        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />{t('callcenter:stages.cheque.status_bounced', 'برگشتی')}</Badge>;
+        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 me-1" />{t('callcenter:stages.cheque.status_bounced', 'برگشتی')}</Badge>;
       default:
-        return <Badge className="bg-yellow-100 text-yellow-800"><AlertTriangle className="h-3 w-3 mr-1" />{t('callcenter:stages.cheque.status_pending', 'در انتظار')}</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800"><AlertTriangle className="h-3 w-3 me-1" />{t('callcenter:stages.cheque.status_pending', 'در انتظار')}</Badge>;
     }
   };
 
@@ -122,18 +122,18 @@ function Cheque() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.cheque.search_placeholder', 'جستجو در پرداخت‌های چکی...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.cheque.count', 'مورد')}
           </Badge>
         </div>
@@ -215,7 +215,7 @@ function Cheque() {
                               size="sm"
                               onClick={() => setSelectedLead(lead)}
                             >
-                              <FileText className="h-4 w-4 mr-2" />
+                              <FileText className="h-4 w-4 me-2" />
                               {t('callcenter:stages.cheque.manage', 'مدیریت چک')}
                             </Button>
                           </DialogTrigger>
@@ -291,7 +291,7 @@ function Cheque() {
                                   })}
                                   disabled={transitionMutation.isPending}
                                 >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  <CheckCircle className="h-4 w-4 me-1" />
                                   {t('callcenter:stages.cheque.mark_cleared', 'وصول شد')}
                                 </Button>
                                 <Button
@@ -304,7 +304,7 @@ function Cheque() {
                                   })}
                                   disabled={transitionMutation.isPending}
                                 >
-                                  <XCircle className="h-4 w-4 mr-1" />
+                                  <XCircle className="h-4 w-4 me-1" />
                                   {t('callcenter:stages.cheque.mark_bounced', 'برگشت خورد')}
                                 </Button>
                               </div>

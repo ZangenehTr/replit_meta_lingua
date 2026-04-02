@@ -396,19 +396,19 @@ export default function AdminLeadsPage() {
         
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetch()}>
-            <TrendingUp className="h-4 w-4 mr-2" />
+            <TrendingUp className="h-4 w-4 me-2" />
             {t('admin:leads.refresh')}
           </Button>
           
           <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             {t('admin:leads.exportExcel')}
           </Button>
           
           <Dialog open={showNewLeadForm} onOpenChange={setShowNewLeadForm}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white">
-                <UserPlus className="h-4 w-4 mr-2" />
+                <UserPlus className="h-4 w-4 me-2" />
                 {t('admin:leads.addLead')}
               </Button>
             </DialogTrigger>
@@ -810,12 +810,12 @@ export default function AdminLeadsPage() {
             <div>
               <Label>{t('admin:leads.search')}</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t('admin:leads.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="ps-9"
                   data-testid="input-search"
                 />
               </div>
@@ -1035,27 +1035,27 @@ export default function AdminLeadsPage() {
                                 setSelectedLead(lead as LeadWithAssignee);
                                 setShowLeadDetails(true);
                               }}>
-                                <Eye className="mr-2 h-4 w-4" />
+                                <Eye className="me-2 h-4 w-4" />
                                 {t('admin:leads.viewDetails')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => {
                                 setSelectedLead(lead as LeadWithAssignee);
                                 setShowCommunicationForm(true);
                               }}>
-                                <MessageSquare className="mr-2 h-4 w-4" />
+                                <MessageSquare className="me-2 h-4 w-4" />
                                 {t('admin:leads.addCommunication')}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'contacted')}>
-                                <PhoneCall className="mr-2 h-4 w-4" />
+                                <PhoneCall className="me-2 h-4 w-4" />
                                 {t('admin:leads.markContacted')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'qualified')}>
-                                <CheckCircle className="mr-2 h-4 w-4" />
+                                <CheckCircle className="me-2 h-4 w-4" />
                                 {t('admin:leads.markQualified')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'lost')}>
-                                <XCircle className="mr-2 h-4 w-4" />
+                                <XCircle className="me-2 h-4 w-4" />
                                 {t('admin:leads.markLost')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>

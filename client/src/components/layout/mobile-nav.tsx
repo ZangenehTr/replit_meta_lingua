@@ -79,10 +79,10 @@ export function MobileNav() {
                       className="w-full justify-start"
                       onClick={() => setOpen(false)}
                     >
-                      <Icon className="mr-3 h-4 w-4" />
+                      <Icon className="me-3 h-4 w-4" />
                       <span>{item.label}</span>
                       {item.badge && (
-                        <Badge className="ml-auto" variant="secondary">
+                        <Badge className="ms-auto" variant="secondary">
                           {item.badge}
                         </Badge>
                       )}
@@ -108,7 +108,7 @@ export function MobileNav() {
                       setOpen(false);
                     }}
                   >
-                    <span className="mr-3 text-lg">{lang.flag}</span>
+                    <span className="me-3 text-lg">{lang.flag}</span>
                     <span className={lang.code === 'fa' || lang.code === 'ar' ? 'font-arabic' : ''}>{lang.name}</span>
                   </Button>
                 ))}
@@ -124,7 +124,7 @@ export function MobileNav() {
                   className="w-full justify-start"
                   onClick={() => setOpen(false)}
                 >
-                  <User className="mr-3 h-4 w-4" />
+                  <User className="me-3 h-4 w-4" />
                   <span>Profile</span>
                 </Button>
               </Link>
@@ -134,7 +134,7 @@ export function MobileNav() {
                   className="w-full justify-start"
                   onClick={() => setOpen(false)}
                 >
-                  <Settings className="mr-3 h-4 w-4" />
+                  <Settings className="me-3 h-4 w-4" />
                   <span>Settings</span>
                 </Button>
               </Link>
@@ -147,7 +147,7 @@ export function MobileNav() {
                   setOpen(false);
                 }}
               >
-                <LogOut className="mr-3 h-4 w-4" />
+                <LogOut className="me-3 h-4 w-4" />
                 <span>Sign Out</span>
               </Button>
             </div>

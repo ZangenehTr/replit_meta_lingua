@@ -152,7 +152,7 @@ export function UpgradePrompt({
               variant="ghost"
               size="sm"
               onClick={handleDismiss}
-              className="absolute top-4 right-4 z-10"
+              className="absolute top-4 end-4 z-10"
               data-testid="button-close-upgrade-prompt"
             >
               <X className="w-4 h-4" />
@@ -196,7 +196,7 @@ export function UpgradePrompt({
               
               <div className="mt-4 text-center">
                 <Badge className="bg-green-100 text-green-800 px-3 py-1">
-                  <CheckCircle className="w-4 h-4 mr-1" />
+                  <CheckCircle className="w-4 h-4 me-1" />
                   All progress will transfer to Meta Lingua Pro!
                 </Badge>
               </div>
@@ -257,9 +257,9 @@ export function UpgradePrompt({
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg transform transition-all duration-200 hover:scale-105"
                   data-testid="button-upgrade-to-pro"
                 >
-                  <Crown className="w-5 h-5 mr-2" />
+                  <Crown className="w-5 h-5 me-2" />
                   Upgrade to Meta Lingua Pro
-                  <ArrowRight className={`w-4 h-4 ml-2 transition-transform duration-200 ${isHovered ? 'translate-x-1' : ''}`} />
+                  <ArrowRight className={`w-4 h-4 ms-2 transition-transform duration-200 ${isHovered ? 'translate-x-1' : ''}`} />
                 </Button>
                 
                 <Button
@@ -286,7 +286,7 @@ export function UpgradePrompt({
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                 ))}
-                <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">
+                <span className="ms-2 text-sm text-gray-600 dark:text-gray-300">
                   4.9/5 from 10,000+ learners
                 </span>
               </div>

@@ -75,7 +75,7 @@ export function ResponsiveSidebar({ mobileMenuOpen, setMobileMenuOpen, onSidebar
       {/* Tablet Collapsible Sidebar (640px-1024px) */}
       <aside className="hidden sm:block lg:hidden">
         <div 
-          className={`fixed top-16 left-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 z-40 ${
+          className={`fixed top-16 start-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 z-40 ${
             isCollapsed ? 'w-16' : 'w-64'
           }`}
         >
@@ -83,11 +83,12 @@ export function ResponsiveSidebar({ mobileMenuOpen, setMobileMenuOpen, onSidebar
           <Button
             variant="ghost"
             size="icon"
-            className={`sticky top-0 ${isCollapsed ? 'mx-auto mt-2' : 'absolute top-2 right-2'} z-50 h-8 w-8`}
+            className={`sticky top-0 ${isCollapsed ? 'mx-auto mt-2' : 'absolute top-2 end-2'} z-50 h-8 w-8`}
             onClick={handleToggle}
             data-testid="sidebar-toggle-tablet"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {isCollapsed ? <ChevronRight className="h-4 w-4" aria-hidden="true" /> : <ChevronLeft className="h-4 w-4" aria-hidden="true" />}
           </Button>
 
           {!isCollapsed && <Sidebar />}
@@ -113,8 +114,9 @@ export function ResponsiveSidebar({ mobileMenuOpen, setMobileMenuOpen, onSidebar
                                 : "hover:bg-gray-100 dark:hover:bg-gray-700"
                             }`}
                             data-testid={`sidebar-icon-${index}`}
+                            aria-label={item.label}
                           >
-                            <IconComponent className="h-5 w-5" />
+                            <IconComponent className="h-5 w-5" aria-hidden="true" />
                           </Button>
                         </Link>
                       </TooltipTrigger>
@@ -132,7 +134,7 @@ export function ResponsiveSidebar({ mobileMenuOpen, setMobileMenuOpen, onSidebar
 
       {/* Desktop Full Sidebar (>=1024px) */}
       <aside className="hidden lg:block lg:w-64 flex-shrink-0 order-first">
-        <div className="fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background">
+        <div className="fixed top-16 start-0 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background">
           <Sidebar />
         </div>
       </aside>

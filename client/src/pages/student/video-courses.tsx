@@ -291,7 +291,7 @@ export default function StudentVideoCourses() {
                                   </div>
                                 </div>
                                 
-                                <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 mt-2 sm:mt-0 ml-10 sm:ml-0">
+                                <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 mt-2 sm:mt-0 ms-10 sm:ms-0">
                                   <span className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground">
                                     {formatDuration(lesson.duration)}
                                   </span>
@@ -339,12 +339,12 @@ export default function StudentVideoCourses() {
           {/* Search and Filters - Mobile responsive */}
           <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
             <div className="relative flex-1 max-w-full sm:max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3 sm:h-4 sm:w-4" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3 sm:h-4 sm:w-4" />
               <Input
                 placeholder={t('student:videoCourses.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 sm:pl-10 text-sm sm:text-base"
+                className="ps-8 sm:ps-10 text-sm sm:text-base"
               />
             </div>
             
@@ -393,7 +393,7 @@ export default function StudentVideoCourses() {
                       </div>
                     )}
                     {course.progress > 0 && (
-                      <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                      <div className="absolute top-1 end-1 sm:top-2 sm:end-2">
                         <Badge className="bg-black/50 text-white text-xs sm:text-sm">
                           {course.progress}%
                         </Badge>

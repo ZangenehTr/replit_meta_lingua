@@ -143,7 +143,7 @@ export default function SocialMediaScraperAdmin() {
         <Dialog open={newJobOpen} onOpenChange={setNewJobOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-scrape-job">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               New Scrape Job
             </Button>
           </DialogTrigger>

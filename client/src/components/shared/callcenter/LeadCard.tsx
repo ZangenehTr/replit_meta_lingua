@@ -260,7 +260,7 @@ export function LeadCard({
                   data-testid={primaryAction.testId}
                 >
                   {primaryAction.icon}
-                  <span className="ltr:ml-2 rtl:mr-2">{primaryAction.label}</span>
+                  <span className="ltr:ms-2 rtl:me-2">{primaryAction.label}</span>
                 </Button>
               )}
               {allActions.map((action, index) => (
@@ -273,7 +273,7 @@ export function LeadCard({
                   data-testid={action.testId}
                 >
                   {action.icon}
-                  <span className="ltr:ml-2 rtl:mr-2">{action.label}</span>
+                  <span className="ltr:ms-2 rtl:me-2">{action.label}</span>
                 </Button>
               ))}
             </div>

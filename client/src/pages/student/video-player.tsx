@@ -313,7 +313,7 @@ export default function StudentVideoPlayer() {
       <div className="mb-4">
         <Link href="/courses">
           <Button variant="ghost" size="sm">
-            <ChevronLeft className="mr-2 h-4 w-4" />
+            <ChevronLeft className="me-2 h-4 w-4" />
             Back to Courses
           </Button>
         </Link>
@@ -334,7 +334,7 @@ export default function StudentVideoPlayer() {
               />
               
               {/* Video Controls */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+              <div className="absolute bottom-0 start-0 end-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                 {/* Progress Bar */}
                 <div className="mb-4">
                   <input
@@ -429,7 +429,7 @@ export default function StudentVideoPlayer() {
                 <Badge>{video.level}</Badge>
                 <Badge variant="outline">{video.skillFocus}</Badge>
                 <Badge variant="outline">
-                  <Clock className="mr-1 h-3 w-3" />
+                  <Clock className="me-1 h-3 w-3" />
                   {formatTime(video.duration)}
                 </Badge>
               </div>
@@ -461,7 +461,7 @@ export default function StudentVideoPlayer() {
                       rows={3}
                     />
                     <Button onClick={saveNote} size="sm" className="w-full">
-                      <FileText className="mr-2 h-4 w-4" />
+                      <FileText className="me-2 h-4 w-4" />
                       Save Note at {formatTime(currentTime)}
                     </Button>
                   </div>
@@ -496,7 +496,7 @@ export default function StudentVideoPlayer() {
                       onChange={(e) => setBookmarkTitle(e.target.value)}
                     />
                     <Button onClick={saveBookmark} size="sm" className="w-full">
-                      <Bookmark className="mr-2 h-4 w-4" />
+                      <Bookmark className="me-2 h-4 w-4" />
                       Add Bookmark at {formatTime(currentTime)}
                     </Button>
                   </div>

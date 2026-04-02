@@ -87,7 +87,7 @@ export function SessionPackages() {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button>
-              <ShoppingCart className="h-4 w-4 mr-2" />
+              <ShoppingCart className="h-4 w-4 me-2" />
               Purchase Package
             </Button>
           </DialogTrigger>

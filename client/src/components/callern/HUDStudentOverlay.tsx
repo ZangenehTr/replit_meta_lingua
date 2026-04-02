@@ -198,7 +198,7 @@ export const HUDStudentOverlay: React.FC<HUDStudentOverlayProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="absolute bottom-20 left-4 right-4 pointer-events-auto"
+            className="absolute bottom-20 start-4 end-4 pointer-events-auto"
           >
             <Card className="bg-black/60 backdrop-blur-lg border-white/20">
               <CardContent className="p-4">
@@ -315,7 +315,7 @@ export const HUDStudentOverlay: React.FC<HUDStudentOverlayProps> = ({
                 {activityCard.explain_fa && i18n.language === 'fa' && (
                   <div className="bg-white/10 rounded-lg p-3 mb-4">
                     <p className="text-white/90 text-sm text-right" dir="rtl">
-                      <HelpCircle className="w-4 h-4 inline ml-1" />
+                      <HelpCircle className="w-4 h-4 inline ms-1" />
                       {activityCard.explain_fa}
                     </p>
                   </div>
@@ -338,7 +338,7 @@ export const HUDStudentOverlay: React.FC<HUDStudentOverlayProps> = ({
                     disabled={!activityResponse}
                     onClick={handleActivitySubmit}
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <CheckCircle className="w-4 h-4 me-2" />
                     {t('callern:hud.complete')}
                   </Button>
                 </div>
@@ -353,7 +353,7 @@ export const HUDStudentOverlay: React.FC<HUDStudentOverlayProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="absolute bottom-6 right-6 pointer-events-auto"
+          className="absolute bottom-6 end-6 pointer-events-auto"
         >
           <Button
             variant="default"
@@ -361,7 +361,7 @@ export const HUDStudentOverlay: React.FC<HUDStudentOverlayProps> = ({
             className="rounded-full bg-blue-600/80 backdrop-blur-sm hover:bg-blue-600/90 text-white shadow-lg"
             onClick={() => setShowHints(true)}
           >
-            <HelpCircle className="w-4 h-4 mr-1" />
+            <HelpCircle className="w-4 h-4 me-1" />
             {currentWords.length}
           </Button>
         </motion.div>

@@ -351,7 +351,7 @@ export function RichTextEditor({
           </Button>
 
           {/* Actions */}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-2">
             {/* Collaborators indicator */}
             {collaborativeId && collaborators.length > 0 && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -405,7 +405,7 @@ export function RichTextEditor({
         
         {/* Connection status for collaborative editing */}
         {collaborativeId && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 end-2">
             <div className={cn(
               "w-2 h-2 rounded-full",
               isConnected ? "bg-green-500" : "bg-red-500"

@@ -178,7 +178,7 @@ export function PaymentCredits() {
           <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
             <DialogTrigger asChild>
               <Button className="w-full mb-4">
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="me-2 h-4 w-4" />
                 Buy More Credits
               </Button>
             </DialogTrigger>
@@ -228,7 +228,7 @@ export function PaymentCredits() {
                               <h3 className="font-semibold">{pkg.title}</h3>
                               {pkg.popular && (
                                 <Badge variant="default" className="bg-primary">
-                                  <Star className="h-3 w-3 mr-1" />
+                                  <Star className="h-3 w-3 me-1" />
                                   Popular
                                 </Badge>
                               )}
@@ -256,7 +256,7 @@ export function PaymentCredits() {
                       onClick={handlePackagePayment}
                       disabled={shetabPaymentMutation.isPending}
                     >
-                      <Shield className="mr-2 h-4 w-4" />
+                      <Shield className="me-2 h-4 w-4" />
                       {shetabPaymentMutation.isPending 
                         ? "Processing..." 
                         : `Pay ${formatCurrency(selectedPackage.amount)} for ${selectedPackage.credits} Credits`
@@ -306,7 +306,7 @@ export function PaymentCredits() {
                       onClick={handleCustomPayment}
                       disabled={shetabPaymentMutation.isPending || !customAmount || !customCredits}
                     >
-                      <Shield className="mr-2 h-4 w-4" />
+                      <Shield className="me-2 h-4 w-4" />
                       {shetabPaymentMutation.isPending 
                         ? "Processing..." 
                         : customAmount && customCredits
@@ -365,7 +365,7 @@ export function PaymentCredits() {
                       <div className="text-sm text-muted-foreground">
                         {new Date(payment.createdAt).toLocaleDateString('fa-IR')}
                         {payment.merchantTransactionId && (
-                          <span className="ml-2">• {payment.merchantTransactionId}</span>
+                          <span className="ms-2">• {payment.merchantTransactionId}</span>
                         )}
                       </div>
                     </div>

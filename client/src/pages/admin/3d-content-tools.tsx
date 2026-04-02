@@ -97,7 +97,7 @@ export function AdminThreeDContentTools() {
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" data-testid="button-upload-content">
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-4 w-4 me-2" />
                 {t('admin:3dContent.uploadContent')}
               </Button>
             </DialogTrigger>
@@ -162,7 +162,7 @@ export function AdminThreeDContentTools() {
               setIsEditorOpen(true);
             }}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {t('admin:3dContent.createNew')}
           </Button>
         </div>
@@ -239,12 +239,12 @@ export function AdminThreeDContentTools() {
           {/* Search and Filters */}
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('admin:3dContent.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="ps-10"
                 data-testid="input-search-content"
               />
             </div>
@@ -303,7 +303,7 @@ export function AdminThreeDContentTools() {
                         setIsPreviewOpen(true);
                       }}
                     >
-                      <Eye className="h-4 w-4 mr-1" />
+                      <Eye className="h-4 w-4 me-1" />
                       {t('common:preview')}
                     </Button>
                     <Button 
@@ -315,11 +315,11 @@ export function AdminThreeDContentTools() {
                         setIsEditorOpen(true);
                       }}
                     >
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="h-4 w-4 me-1" />
                       {t('common:edit')}
                     </Button>
                     <Button size="sm" variant="outline" data-testid={`button-download-${item.id}`}>
-                      <Download className="h-4 w-4 mr-1" />
+                      <Download className="h-4 w-4 me-1" />
                       {t('common:download')}
                     </Button>
                   </div>

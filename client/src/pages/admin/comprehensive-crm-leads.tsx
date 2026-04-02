@@ -359,19 +359,19 @@ export default function ComprehensiveCRMLeads() {
         
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetch()}>
-            <TrendingUp className="h-4 w-4 mr-2" />
+            <TrendingUp className="h-4 w-4 me-2" />
             تازه‌سازی
           </Button>
           
           <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             خروجی اکسل
           </Button>
           
           <Dialog open={showNewLeadForm} onOpenChange={setShowNewLeadForm}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white">
-                <UserPlus className="h-4 w-4 mr-2" />
+                <UserPlus className="h-4 w-4 me-2" />
                 سرنخ جدید
               </Button>
             </DialogTrigger>
@@ -623,12 +623,12 @@ export default function ComprehensiveCRMLeads() {
             <div>
               <Label>جستجو</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="نام، ایمیل یا تلفن..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="ps-9"
                   dir="rtl"
                 />
               </div>
@@ -822,18 +822,18 @@ export default function ComprehensiveCRMLeads() {
                               setSelectedLead(lead);
                               setShowLeadDetails(true);
                             }}>
-                              <Eye className="mr-2 h-4 w-4" />
+                              <Eye className="me-2 h-4 w-4" />
                               مشاهده جزئیات
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
                               setSelectedLead(lead);
                               setShowCommunicationForm(true);
                             }}>
-                              <MessageSquare className="mr-2 h-4 w-4" />
+                              <MessageSquare className="me-2 h-4 w-4" />
                               ثبت ارتباط
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <PhoneCall className="mr-2 h-4 w-4" />
+                              <PhoneCall className="me-2 h-4 w-4" />
                               تماس تلفنی
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

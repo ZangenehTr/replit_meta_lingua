@@ -105,18 +105,18 @@ function Evaluation() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.evaluation.search_placeholder', 'جستجو در متقاضیان ارزیابی...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <ClipboardCheck className="h-4 w-4 mr-2" />
+            <ClipboardCheck className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.evaluation.count', 'مورد')}
           </Badge>
         </div>
@@ -156,7 +156,7 @@ function Evaluation() {
                           {lead.firstName} {lead.lastName}
                         </h3>
                         <Badge className="bg-purple-100 text-purple-800">
-                          <ClipboardCheck className="h-3 w-3 mr-1" />
+                          <ClipboardCheck className="h-3 w-3 me-1" />
                           {t('callcenter:stages.evaluation.badge', 'در انتظار ارزیابی')}
                         </Badge>
                       </div>
@@ -195,7 +195,7 @@ function Evaluation() {
                               setDialogOpen(true);
                             }}
                           >
-                            <GraduationCap className="h-4 w-4 mr-2" />
+                            <GraduationCap className="h-4 w-4 me-2" />
                             {t('callcenter:stages.evaluation.evaluate', 'ارزیابی')}
                           </Button>
                         </DialogTrigger>
@@ -303,7 +303,7 @@ function Evaluation() {
                                 })}
                                 disabled={!classType || !selectedLevel || transitionMutation.isPending}
                               >
-                                <ArrowRight className="h-4 w-4 mr-2" />
+                                <ArrowRight className="h-4 w-4 me-2" />
                                 {t('callcenter:stages.evaluation.send_to_cc', 'ارسال به مشاوره کال‌سنتر')}
                               </Button>
                               <Button
@@ -316,7 +316,7 @@ function Evaluation() {
                                 })}
                                 disabled={!classType || !selectedLevel || transitionMutation.isPending}
                               >
-                                <ArrowRight className="h-4 w-4 mr-2" />
+                                <ArrowRight className="h-4 w-4 me-2" />
                                 {t('callcenter:stages.evaluation.send_to_sup', 'ارسال به مشاوره سوپروایزر')}
                               </Button>
                               <Button
@@ -329,7 +329,7 @@ function Evaluation() {
                                 })}
                                 disabled={transitionMutation.isPending}
                               >
-                                <XCircle className="h-4 w-4 mr-2" />
+                                <XCircle className="h-4 w-4 me-2" />
                                 {t('callcenter:stages.evaluation.withdraw', 'انصراف')}
                               </Button>
                             </div>

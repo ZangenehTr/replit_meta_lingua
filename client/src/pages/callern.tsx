@@ -529,7 +529,7 @@ export default function CallernSystem() {
     <MobileLayout>
       {/* Support Button - Fixed Position */}
       <Button
-        className="fixed bottom-20 right-4 rounded-full shadow-lg z-50 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+        className="fixed bottom-20 end-4 rounded-full shadow-lg z-50 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
         size="lg"
         onClick={() => {
           // Open support dialog or redirect to support
@@ -735,7 +735,7 @@ export default function CallernSystem() {
                     packagesSection?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  <ShoppingCart className="me-2 h-4 w-4" />
                   {t('callern:purchasePackageFirst')}
                 </Button>
               </div>
@@ -815,11 +815,11 @@ export default function CallernSystem() {
                               {teacher.firstName[0]}{teacher.lastName[0]}
                             </div>
                             {/* 3-state presence dot */}
-                            <div className={`absolute -bottom-1 -right-1 rounded-full p-1 border-2 border-white ${isAvailable ? 'bg-green-500' : 'bg-amber-500'} animate-pulse`}>
+                            <div className={`absolute -bottom-1 -end-1 rounded-full p-1 border-2 border-white ${isAvailable ? 'bg-green-500' : 'bg-amber-500'} animate-pulse`}>
                               <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-400' : 'bg-amber-400'}`} />
                             </div>
                             {teacher.connectionQuality && (
-                              <div className="absolute -top-1 -left-1 bg-white rounded-full p-1 shadow-sm">
+                              <div className="absolute -top-1 -start-1 bg-white rounded-full p-1 shadow-sm">
                                 {teacher.connectionQuality === 'excellent' && <SignalHigh className="h-3 w-3 text-green-500" />}
                                 {teacher.connectionQuality === 'good' && <Signal className="h-3 w-3 text-green-500" />}
                                 {teacher.connectionQuality === 'fair' && <SignalLow className="h-3 w-3 text-yellow-500" />}
@@ -878,7 +878,7 @@ export default function CallernSystem() {
                           <div className="flex flex-wrap gap-1 mt-1">
                             {teacher.languages.map(lang => (
                               <Badge key={lang} variant="outline" className="text-xs">
-                                <Globe className="h-3 w-3 mr-1" />
+                                <Globe className="h-3 w-3 me-1" />
                                 {lang}
                               </Badge>
                             ))}
@@ -920,11 +920,11 @@ export default function CallernSystem() {
                               title={!hasActivePackageWithMinutes ? t('callern:purchasePackageFirst') : isTeaching ? 'در حال تدریس با دانش‌آموز دیگری است' : ''}
                             >
                               {!hasActivePackageWithMinutes ? (
-                                <><ShoppingCart className="mr-1 h-4 w-4" />{t('callern:purchasePackageFirst')}</>
+                                <><ShoppingCart className="me-1 h-4 w-4" />{t('callern:purchasePackageFirst')}</>
                               ) : isTeaching ? (
-                                <><BookOpen className="mr-1 h-4 w-4" />مشغول</>
+                                <><BookOpen className="me-1 h-4 w-4" />مشغول</>
                               ) : (
-                                <><Video className="mr-1 h-4 w-4" />{t('callern:startVideoCall')}</>
+                                <><Video className="me-1 h-4 w-4" />{t('callern:startVideoCall')}</>
                               )}
                             </Button>
                           </div>
@@ -965,7 +965,7 @@ export default function CallernSystem() {
                             {teacher.firstName[0]}{teacher.lastName[0]}
                           </div>
                         )}
-                        <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-gray-400 border-2 border-white" />
+                        <div className="absolute -bottom-1 -end-1 w-3.5 h-3.5 rounded-full bg-gray-400 border-2 border-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <TeacherNameLink
@@ -1066,12 +1066,12 @@ export default function CallernSystem() {
                         >
                           {pkg.status === 'active' ? (
                             <>
-                              <CheckCircle className="mr-1 h-3 w-3" />
+                              <CheckCircle className="me-1 h-3 w-3" />
                               {t('callern:active')}
                             </>
                           ) : (
                             <>
-                              <XCircle className="mr-1 h-3 w-3" />
+                              <XCircle className="me-1 h-3 w-3" />
                               {t(`callern:${pkg.status}`)}
                             </>
                           )}
@@ -1161,7 +1161,7 @@ export default function CallernSystem() {
                       <TableCell>
                         {call.recordingUrl ? (
                           <Button size="sm" variant="outline">
-                            <PlayCircle className="mr-1 h-4 w-4" />
+                            <PlayCircle className="me-1 h-4 w-4" />
                             {t('callern:viewRecording')}
                           </Button>
                         ) : (

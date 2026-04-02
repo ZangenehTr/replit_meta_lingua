@@ -91,7 +91,7 @@ export default function CalendarSettings() {
           </p>
         </div>
         <Badge variant="secondary" data-testid="badge-calendar-status">
-          <CheckCircle2 className="h-4 w-4 mr-1" />
+          <CheckCircle2 className="h-4 w-4 me-1" />
           {t('admin:systemActive', 'System Active')}
         </Badge>
       </div>
@@ -100,7 +100,7 @@ export default function CalendarSettings() {
         <Card>
           <CardHeader>
             <CardTitle data-testid="card-title-general-settings">
-              <Calendar className="h-5 w-5 mr-2 inline" />
+              <Calendar className="h-5 w-5 me-2 inline" />
               {t('admin:generalCalendarSettings', 'General Calendar Settings')}
             </CardTitle>
             <CardDescription>
@@ -192,7 +192,7 @@ export default function CalendarSettings() {
         <Card>
           <CardHeader>
             <CardTitle data-testid="card-title-availability-settings">
-              <Clock className="h-5 w-5 mr-2 inline" />
+              <Clock className="h-5 w-5 me-2 inline" />
               {t('admin:availabilitySettings', 'Availability Settings')}
             </CardTitle>
             <CardDescription>
@@ -269,7 +269,7 @@ export default function CalendarSettings() {
         <Card>
           <CardHeader>
             <CardTitle data-testid="card-title-notification-settings">
-              <AlertCircle className="h-5 w-5 mr-2 inline" />
+              <AlertCircle className="h-5 w-5 me-2 inline" />
               {t('admin:notificationSettings', 'Notification Settings')}
             </CardTitle>
             <CardDescription>

@@ -323,7 +323,7 @@ export default function TeacherVideoCourses() {
                             setEditingLesson(null);
                             resetForm();
                           }}>
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="me-2 h-4 w-4" />
                             Add Video Lesson
                           </Button>
                         </DialogTrigger>
@@ -540,7 +540,7 @@ export default function TeacherVideoCourses() {
                                   </div>
                                   {lesson.viewCount !== undefined && (
                                     <div className="mt-2 text-sm text-muted-foreground">
-                                      <Users className="h-4 w-4 inline mr-1" />
+                                      <Users className="h-4 w-4 inline me-1" />
                                       {lesson.viewCount} views
                                     </div>
                                   )}

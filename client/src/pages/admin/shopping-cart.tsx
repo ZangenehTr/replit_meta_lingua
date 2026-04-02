@@ -86,7 +86,7 @@ export default function ShoppingCartSettings() {
         <Card>
           <CardHeader>
             <CardTitle data-testid="card-title-cart-behavior">
-              <ShoppingCart className="h-5 w-5 mr-2 inline" />
+              <ShoppingCart className="h-5 w-5 me-2 inline" />
               {t('admin:cartBehavior', 'Cart Behavior')}
             </CardTitle>
             <CardDescription>
@@ -144,7 +144,7 @@ export default function ShoppingCartSettings() {
         <Card>
           <CardHeader>
             <CardTitle data-testid="card-title-discount-rules">
-              <Percent className="h-5 w-5 mr-2 inline" />
+              <Percent className="h-5 w-5 me-2 inline" />
               {t('admin:discountRules', 'Discount Rules')}
             </CardTitle>
             <CardDescription>
@@ -204,7 +204,7 @@ export default function ShoppingCartSettings() {
         <Card>
           <CardHeader>
             <CardTitle data-testid="card-title-checkout-process">
-              <CreditCard className="h-5 w-5 mr-2 inline" />
+              <CreditCard className="h-5 w-5 me-2 inline" />
               {t('admin:checkoutProcess', 'Checkout Process')}
             </CardTitle>
             <CardDescription>

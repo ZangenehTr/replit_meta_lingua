@@ -320,9 +320,9 @@ function CourseCard({ course, onEnroll, isEnrolling, formatPrice, formatDayName,
             <h3 className="font-semibold text-lg">{course.title}</h3>
             <Badge variant={course.deliveryMode === 'online' ? 'default' : 'secondary'}>
               {course.deliveryMode === 'online' ? (
-                <><Globe className="w-3 h-3 mr-1" /> آنلاین</>
+                <><Globe className="w-3 h-3 me-1" /> آنلاین</>
               ) : (
-                <><MapPin className="w-3 h-3 mr-1" /> حضوری</>
+                <><MapPin className="w-3 h-3 me-1" /> حضوری</>
               )}
             </Badge>
             {isRequired && (

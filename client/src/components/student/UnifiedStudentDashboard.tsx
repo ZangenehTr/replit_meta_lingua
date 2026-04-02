@@ -73,9 +73,9 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
                     onClick={() => setLocation('/placement-test')}
                     data-testid="button-take-placement-test"
                   >
-                    <Trophy className="mr-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
+                    <Trophy className="me-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
                     {t('student:unifiedDashboard.takePlacementTest')}
-                    <ArrowRight className="ml-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
+                    <ArrowRight className="ms-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
                   </Button>
                   
                   <Button 
@@ -85,7 +85,7 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
                     onClick={() => setLocation('/courses')}
                     data-testid="button-browse-courses"
                   >
-                    <BookOpen className="mr-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
+                    <BookOpen className="me-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
                     {t('student:unifiedDashboard.browseCourses')}
                   </Button>
                 </div>
@@ -243,9 +243,9 @@ export function UnifiedStudentDashboard({ enrollmentStatus, user }: Props) {
               onClick={() => setLocation('/enroll')}
               data-testid="button-enroll-cta"
             >
-              <Sparkles className="mr-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
+              <Sparkles className="me-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
               {t('student:unifiedDashboard.enrollNow')}
-              <ArrowRight className="ml-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
+              <ArrowRight className="ms-2 h-3 sm:h-5 w-3 sm:w-5 flex-shrink-0" />
             </Button>
           </CardContent>
         </Card>
@@ -303,7 +303,7 @@ function FeatureCard({ icon: Icon, title, description, isUnlocked, onClick, test
               className="w-full sm:w-auto mt-2 text-xs sm:text-sm h-8 sm:h-9"
             >
               {isUnlocked ? t('unifiedDashboard.explore') : t('unifiedDashboard.learnMore')}
-              <ArrowRight className="ml-2 h-3 sm:h-4 w-3 sm:w-4 flex-shrink-0" />
+              <ArrowRight className="ms-2 h-3 sm:h-4 w-3 sm:w-4 flex-shrink-0" />
             </Button>
           </div>
         </div>

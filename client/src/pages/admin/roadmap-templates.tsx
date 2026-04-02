@@ -108,7 +108,7 @@ export default function RoadmapTemplates() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" data-testid="button-import-template">
-            <Upload className="h-4 w-4 mr-2" />
+            <Upload className="h-4 w-4 me-2" />
             {t('admin:importTemplate', 'Import')}
           </Button>
           <Button 
@@ -116,7 +116,7 @@ export default function RoadmapTemplates() {
             disabled={createTemplateMutation.isPending}
             data-testid="button-create-template"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {createTemplateMutation.isPending ? t('admin:creating', 'Creating...') : t('admin:createTemplate', 'Create Template')}
           </Button>
         </div>
@@ -169,19 +169,19 @@ export default function RoadmapTemplates() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="templates" data-testid="tab-templates">
-            <File className="h-4 w-4 mr-2" />
+            <File className="h-4 w-4 me-2" />
             {t('admin:templates', 'Templates')}
           </TabsTrigger>
           <TabsTrigger value="categories" data-testid="tab-categories">
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="h-4 w-4 me-2" />
             {t('admin:categories', 'Categories')}
           </TabsTrigger>
           <TabsTrigger value="builder" data-testid="tab-template-builder">
-            <Edit className="h-4 w-4 mr-2" />
+            <Edit className="h-4 w-4 me-2" />
             {t('admin:templateBuilder', 'Template Builder')}
           </TabsTrigger>
           <TabsTrigger value="import-export" data-testid="tab-import-export">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             {t('admin:importExport', 'Import/Export')}
           </TabsTrigger>
         </TabsList>
@@ -329,7 +329,7 @@ export default function RoadmapTemplates() {
                     disabled={saveTemplateMutation.isPending || !templateFormData.templateName.trim()}
                     data-testid="button-save-template"
                   >
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4 me-2" />
                     {saveTemplateMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveTemplate', 'Save Template')}
                   </Button>
                 </div>
@@ -343,7 +343,7 @@ export default function RoadmapTemplates() {
             <Card>
               <CardHeader>
                 <CardTitle data-testid="card-title-import-templates">
-                  <Upload className="h-5 w-5 mr-2 inline" />
+                  <Upload className="h-5 w-5 me-2 inline" />
                   {t('admin:importTemplates', 'Import Templates')}
                 </CardTitle>
                 <CardDescription>
@@ -366,7 +366,7 @@ export default function RoadmapTemplates() {
             <Card>
               <CardHeader>
                 <CardTitle data-testid="card-title-export-templates">
-                  <Download className="h-5 w-5 mr-2 inline" />
+                  <Download className="h-5 w-5 me-2 inline" />
                   {t('admin:exportTemplates', 'Export Templates')}
                 </CardTitle>
                 <CardDescription>
@@ -387,7 +387,7 @@ export default function RoadmapTemplates() {
                     </div>
                   </div>
                   <Button className="w-full" data-testid="button-export-selected">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 me-2" />
                     {t('admin:exportSelected', 'Export Selected')}
                   </Button>
                 </div>

@@ -196,7 +196,7 @@ export function TTTMonitor({ isCallActive, teacherId, studentId, callId }: TTTMo
             <Users className="w-5 h-5" />
             TTT Monitor
             {isCallActive && (
-              <span className="ml-auto text-sm font-normal text-gray-400">
+              <span className="ms-auto text-sm font-normal text-gray-400">
                 Total: {formatTime(metrics.totalTime)}
               </span>
             )}

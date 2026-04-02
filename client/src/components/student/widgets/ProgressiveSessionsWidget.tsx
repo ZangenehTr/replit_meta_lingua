@@ -175,7 +175,7 @@ export function ProgressiveSessionsWidget({
                   onClick={() => handleJoinSession(session)}
                   className="flex-1 touch-target"
                 >
-                  <Video className="h-4 w-4 mr-2" />
+                  <Video className="h-4 w-4 me-2" />
                   Join Session
                 </Button>
               )}
@@ -184,7 +184,7 @@ export function ProgressiveSessionsWidget({
                 variant="outline"
                 className="flex-1 touch-target"
               >
-                <Phone className="h-4 w-4 mr-2" />
+                <Phone className="h-4 w-4 me-2" />
                 Contact Teacher
               </Button>
             </div>

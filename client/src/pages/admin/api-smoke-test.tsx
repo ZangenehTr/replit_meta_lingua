@@ -367,9 +367,9 @@ export default function ApiSmokeTestPage() {
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   {isRunning ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="h-4 w-4 animate-spin me-2" />
                   ) : (
-                    <Play className="h-4 w-4 mr-2" />
+                    <Play className="h-4 w-4 me-2" />
                   )}
                   {language === "fa" ? "اجرای همه تست‌ها" : "Run All Tests"}
                 </Button>
@@ -378,7 +378,7 @@ export default function ApiSmokeTestPage() {
                   onClick={() => setResults({})}
                   disabled={isRunning}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 me-2" />
                   {language === "fa" ? "پاک کردن" : "Clear"}
                 </Button>
               </div>
@@ -492,7 +492,7 @@ export default function ApiSmokeTestPage() {
                             }}
                             disabled={isRunning}
                           >
-                            <Play className="h-3 w-3 mr-1" />
+                            <Play className="h-3 w-3 me-1" />
                             {language === "fa" ? "تست" : "Test"}
                           </Button>
                         </div>

@@ -202,7 +202,7 @@ export const AdminDashboard = () => {
                     {user?.firstName?.[0]}{user?.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                <div className="absolute -bottom-1 -end-1 bg-indigo-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
                   <Shield className="h-3 w-3" />
                 </div>
               </div>
@@ -545,7 +545,7 @@ export const AdminDashboard = () => {
                           <div key={item.name} className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
                             <span className="text-xs text-gray-600">{item.name}</span>
-                            <span className="text-xs font-bold ml-auto">{item.value}%</span>
+                            <span className="text-xs font-bold ms-auto">{item.value}%</span>
                           </div>
                         ))}
                       </div>

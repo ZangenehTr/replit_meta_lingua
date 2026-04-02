@@ -447,7 +447,7 @@ export default function TakeTestPage() {
                 data-testid="button-start-test"
               >
                 {startTestMutation.isPending ? 'Starting...' : 'Start Free Test'}
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ms-2 h-5 w-5" />
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
@@ -536,7 +536,7 @@ export default function TakeTestPage() {
                           className="w-full sm:w-auto"
                           data-testid="button-start-recording"
                         >
-                          <Mic className="mr-2 h-5 w-5" />
+                          <Mic className="me-2 h-5 w-5" />
                           Start Recording
                         </Button>
                       </>
@@ -563,7 +563,7 @@ export default function TakeTestPage() {
                           className="w-full sm:w-auto"
                           data-testid="button-stop-recording"
                         >
-                          <Square className="mr-2 h-4 w-4" />
+                          <Square className="me-2 h-4 w-4" />
                           Stop Early
                         </Button>
                       </div>
@@ -586,7 +586,7 @@ export default function TakeTestPage() {
                           variant="outline"
                           data-testid="button-delete-recording"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="h-4 w-4 me-2" />
                           Delete & Re-record
                         </Button>
                       </div>
@@ -602,7 +602,7 @@ export default function TakeTestPage() {
                 data-testid="button-submit-answer"
               >
                 {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Answer'}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ms-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
@@ -779,7 +779,7 @@ export default function TakeTestPage() {
                               <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
                               <div className="flex items-center gap-4 mt-2 text-xs">
                                 <Badge variant="outline" className="text-xs">
-                                  <Clock className="h-3 w-3 mr-1" />
+                                  <Clock className="h-3 w-3 me-1" />
                                   {step.estimatedHours}h
                                 </Badge>
                                 <Badge variant="outline" className="text-xs capitalize">
@@ -800,7 +800,7 @@ export default function TakeTestPage() {
           <div className="pt-4 space-y-3">
             <Button className="w-full" size="lg" onClick={() => navigate('/curriculum')} data-testid="button-explore-courses">
               Explore Our Courses
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ms-2 h-5 w-5" />
             </Button>
             <Button variant="outline" className="w-full" onClick={() => navigate('/auth?tab=register')} data-testid="button-register">
               Create Account to Start Learning

@@ -72,9 +72,9 @@ export default function SimpleAuth() {
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 start-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-40 end-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 start-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       {/* Main Content */}
@@ -104,7 +104,7 @@ export default function SimpleAuth() {
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 className="absolute -inset-2"
               >
-                <Sparkles className="w-6 h-6 text-yellow-300 absolute top-0 right-0" />
+                <Sparkles className="w-6 h-6 text-yellow-300 absolute top-0 end-0" />
               </motion.div>
             </motion.div>
           </div>
@@ -145,7 +145,7 @@ export default function SimpleAuth() {
                 <div className={`relative bg-white/10 backdrop-blur-md rounded-2xl border ${
                   focusedField === 'email' ? 'border-white/50' : 'border-white/20'
                 } transition-all duration-300`}>
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                     <Mail className="h-5 w-5 text-white/70" />
                   </div>
                   <input
@@ -154,7 +154,7 @@ export default function SimpleAuth() {
                     onChange={(e) => setCredentials({...credentials, email: e.target.value})}
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField(null)}
-                    className="w-full bg-transparent pl-12 pr-4 py-4 text-white placeholder-white/50 focus:outline-none"
+                    className="w-full bg-transparent ps-12 pe-4 py-4 text-white placeholder-white/50 focus:outline-none"
                     placeholder={t('auth:emailPlaceholder', 'your@email.com')}
                     required
                   />
@@ -163,7 +163,7 @@ export default function SimpleAuth() {
                   <motion.p 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-white/70 mt-1 ml-4"
+                    className="text-xs text-white/70 mt-1 ms-4"
                   >
                     {t('auth:enterEmail', 'Enter your email address')}
                   </motion.p>
@@ -178,7 +178,7 @@ export default function SimpleAuth() {
                 <div className={`relative bg-white/10 backdrop-blur-md rounded-2xl border ${
                   focusedField === 'password' ? 'border-white/50' : 'border-white/20'
                 } transition-all duration-300`}>
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-white/70" />
                   </div>
                   <input
@@ -187,14 +187,14 @@ export default function SimpleAuth() {
                     onChange={(e) => setCredentials({...credentials, password: e.target.value})}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
-                    className="w-full bg-transparent pl-12 pr-12 py-4 text-white placeholder-white/50 focus:outline-none"
+                    className="w-full bg-transparent ps-12 pe-12 py-4 text-white placeholder-white/50 focus:outline-none"
                     placeholder={t('auth:passwordPlaceholder', '••••••••')}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                    className="absolute inset-y-0 end-0 pe-4 flex items-center"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5 text-white/70 hover:text-white transition-colors" />

@@ -48,7 +48,7 @@ export default function EnhancedAnalytics() {
         <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-32" data-testid="select-time-range">
-              <Calendar className="h-4 w-4 mr-2" />
+              <Calendar className="h-4 w-4 me-2" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -59,7 +59,7 @@ export default function EnhancedAnalytics() {
             </SelectContent>
           </Select>
           <Button variant="outline" data-testid="button-export-report">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             {t('admin:exportReport', 'Export Report')}
           </Button>
         </div>
@@ -130,23 +130,23 @@ export default function EnhancedAnalytics() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" data-testid="tab-analytics-overview">
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-4 w-4 me-2" />
             {t('admin:overview', 'Overview')}
           </TabsTrigger>
           <TabsTrigger value="learning" data-testid="tab-learning-analytics">
-            <BookOpen className="h-4 w-4 mr-2" />
+            <BookOpen className="h-4 w-4 me-2" />
             {t('admin:learning', 'Learning')}
           </TabsTrigger>
           <TabsTrigger value="engagement" data-testid="tab-engagement-analytics">
-            <Activity className="h-4 w-4 mr-2" />
+            <Activity className="h-4 w-4 me-2" />
             {t('admin:engagement', 'Engagement')}
           </TabsTrigger>
           <TabsTrigger value="performance" data-testid="tab-performance-analytics">
-            <TrendingUp className="h-4 w-4 mr-2" />
+            <TrendingUp className="h-4 w-4 me-2" />
             {t('admin:performance', 'Performance')}
           </TabsTrigger>
           <TabsTrigger value="predictive" data-testid="tab-predictive-analytics">
-            <Target className="h-4 w-4 mr-2" />
+            <Target className="h-4 w-4 me-2" />
             {t('admin:predictive', 'Predictive')}
           </TabsTrigger>
         </TabsList>
@@ -156,7 +156,7 @@ export default function EnhancedAnalytics() {
             <Card>
               <CardHeader>
                 <CardTitle data-testid="card-title-user-activity-trends">
-                  <LineChartIcon className="h-5 w-5 mr-2 inline" />
+                  <LineChartIcon className="h-5 w-5 me-2 inline" />
                   {t('admin:userActivityTrends', 'User Activity Trends')}
                 </CardTitle>
                 <CardDescription>
@@ -174,7 +174,7 @@ export default function EnhancedAnalytics() {
             <Card>
               <CardHeader>
                 <CardTitle data-testid="card-title-course-popularity">
-                  <PieChartIcon className="h-5 w-5 mr-2 inline" />
+                  <PieChartIcon className="h-5 w-5 me-2 inline" />
                   {t('admin:coursePopularity', 'Course Popularity')}
                 </CardTitle>
                 <CardDescription>
@@ -203,7 +203,7 @@ export default function EnhancedAnalytics() {
                           ></div>
                         </div>
                       </div>
-                      <div className="ml-4 text-right">
+                      <div className="ms-4 text-right">
                         <p className="text-sm font-semibold" data-testid={`course-students-${index}`}>
                           {item.students}
                         </p>

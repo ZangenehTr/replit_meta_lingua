@@ -100,18 +100,18 @@ function HoldStage() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.hold.search_placeholder', 'جستجو در دانش‌آموزان متوقف...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <PauseCircle className="h-4 w-4 mr-2" />
+            <PauseCircle className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.hold.count', 'مورد در توقف')}
           </Badge>
         </div>
@@ -153,11 +153,11 @@ function HoldStage() {
                             {lead.firstName} {lead.lastName}
                           </h3>
                           <Badge className="bg-yellow-100 text-yellow-800">
-                            <PauseCircle className="h-3 w-3 mr-1" />
+                            <PauseCircle className="h-3 w-3 me-1" />
                             {t('callcenter:stages.hold.badge', 'متوقف')}
                           </Badge>
                           <Badge className={getHoldDurationColor(daysOnHold)}>
-                            <Timer className="h-3 w-3 mr-1" />
+                            <Timer className="h-3 w-3 me-1" />
                             {daysOnHold} {t('callcenter:stages.hold.days', 'روز')}
                           </Badge>
                         </div>
@@ -212,7 +212,7 @@ function HoldStage() {
                               className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
                               onClick={() => setSelectedLead(lead)}
                             >
-                              <PlayCircle className="h-4 w-4 mr-2" />
+                              <PlayCircle className="h-4 w-4 me-2" />
                               {t('callcenter:stages.hold.resume', 'ادامه کلاس')}
                             </Button>
                           </DialogTrigger>

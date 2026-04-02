@@ -140,15 +140,15 @@ export function GameAccessControl() {
       <Tabs defaultValue="rules" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="rules">
-            <Settings className="mr-2 h-4 w-4" />
+            <Settings className="me-2 h-4 w-4" />
             {t('admin:gameAccess.accessRules', 'Access Rules')}
           </TabsTrigger>
           <TabsTrigger value="students">
-            <Users className="mr-2 h-4 w-4" />
+            <Users className="me-2 h-4 w-4" />
             {t('admin:gameAccess.studentAssignments', 'Student Assignments')}
           </TabsTrigger>
           <TabsTrigger value="courses">
-            <BookOpen className="mr-2 h-4 w-4" />
+            <BookOpen className="me-2 h-4 w-4" />
             {t('admin:gameAccess.courseGames', 'Course Games')}
           </TabsTrigger>
         </TabsList>
@@ -184,7 +184,7 @@ export function GameAccessControl() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="me-2 h-4 w-4" />
                         {t('admin:gameAccess.addRule', 'Add Access Rule')}
                       </Button>
                     </DialogTrigger>
@@ -258,7 +258,7 @@ export function GameAccessControl() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="me-2 h-4 w-4" />
                         {t('admin:gameAccess.assignGame', 'Assign Game')}
                       </Button>
                     </DialogTrigger>
@@ -332,7 +332,7 @@ export function GameAccessControl() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="me-2 h-4 w-4" />
                         {t('admin:gameAccess.addGameToCourse', 'Add Game to Course')}
                       </Button>
                     </DialogTrigger>

@@ -90,7 +90,7 @@ export function DiasporaBridgePage() {
           <div className="flex items-center space-x-3">
             <Link href="/admin/dashboard">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" />
+                <ArrowLeft className="w-4 h-4 me-1" />
                 {t("diaspora.back", "Back")}
               </Button>
             </Link>
@@ -180,7 +180,7 @@ export function DiasporaBridgePage() {
                   disabled={saveProfile.isPending}
                   className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
                 >
-                  {saveProfile.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  {saveProfile.isPending ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : null}
                   {t("diaspora.saveProfile", "Save Profile")}
                 </Button>
 
@@ -243,7 +243,7 @@ export function DiasporaBridgePage() {
                           <Badge>{match.profile.proficiencyLevel}</Badge>
                           {match.profile.isCulturalAmbassador && (
                             <Badge className="bg-amber-100 text-amber-800">
-                              <Award className="w-3 h-3 mr-1" />
+                              <Award className="w-3 h-3 me-1" />
                               {t("diaspora.ambassadorBadge", "Ambassador")}
                             </Badge>
                           )}
@@ -266,7 +266,7 @@ export function DiasporaBridgePage() {
                           disabled={createSession.isPending}
                           className="bg-amber-600 hover:bg-amber-700"
                         >
-                          <MessageCircle className="w-4 h-4 mr-1" />
+                          <MessageCircle className="w-4 h-4 me-1" />
                           {t("diaspora.connect", "Connect")}
                         </Button>
                       </div>

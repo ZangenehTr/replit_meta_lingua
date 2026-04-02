@@ -469,7 +469,7 @@ export default function VoIPCenter() {
                       </div>
                     </div>
                     <div className="flex items-center text-xs text-gray-600">
-                      <Circle className={`h-2 w-2 mr-2 ${isHeadsetConnected ? 'fill-green-500' : 'fill-yellow-500'}`} />
+                      <Circle className={`h-2 w-2 me-2 ${isHeadsetConnected ? 'fill-green-500' : 'fill-yellow-500'}`} />
                       <span>
                         {isHeadsetConnected ? 
                           'External audio device detected - optimal call quality' : 
@@ -507,7 +507,7 @@ export default function VoIPCenter() {
                           }
                         }}
                       >
-                        <Settings className="h-3 w-3 mr-1" />
+                        <Settings className="h-3 w-3 me-1" />
                         Test Audio
                       </Button>
                     </div>
@@ -537,12 +537,12 @@ export default function VoIPCenter() {
               <CardContent>
                 <div className="flex space-x-2 mb-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                    <Search className="absolute start-2 top-2.5 h-4 w-4 text-gray-400" />
                     <Input
                       placeholder="Search students by name or phone..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8"
+                      className="ps-8"
                     />
                   </div>
                 </div>
@@ -610,7 +610,7 @@ export default function VoIPCenter() {
                         </Badge>
                         {log.recordingUrl && (
                           <Button size="sm" variant="outline">
-                            <Play className="h-3 w-3 mr-1" />
+                            <Play className="h-3 w-3 me-1" />
                             Play
                           </Button>
                         )}

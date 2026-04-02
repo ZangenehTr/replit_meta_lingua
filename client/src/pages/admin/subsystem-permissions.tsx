@@ -140,7 +140,7 @@ export default function SubsystemPermissions() {
       const IconComponent = subsystem.icon ? (Icons as any)[subsystem.icon] : Settings;
 
       return (
-        <div key={subsystem.id} className={`${level > 0 ? 'ml-3 sm:ml-6' : ''} mb-1`}>
+        <div key={subsystem.id} className={`${level > 0 ? 'ms-3 sm:ms-6' : ''} mb-1`}>
           <div className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
             {hasChildren && (
               <Button
@@ -185,7 +185,7 @@ export default function SubsystemPermissions() {
           </div>
           
           {hasChildren && isExpanded && (
-            <div className="border-l-2 border-gray-200 dark:border-gray-600 ml-3 pl-2 mt-1">
+            <div className="border-l-2 border-gray-200 dark:border-gray-600 ms-3 ps-2 mt-1">
               {renderSubsystemTree(subsystem.children, level + 1)}
             </div>
           )}

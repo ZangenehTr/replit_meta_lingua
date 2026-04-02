@@ -173,7 +173,7 @@ export function LessonFeedbackModal({
                 className="flex-1"
                 data-testid="button-helpful-yes"
               >
-                <ThumbsUp className="w-4 h-4 mr-2" />
+                <ThumbsUp className="w-4 h-4 me-2" />
                 {t('feedback.yes', 'Yes')}
               </Button>
               <Button
@@ -183,7 +183,7 @@ export function LessonFeedbackModal({
                 className="flex-1"
                 data-testid="button-helpful-no"
               >
-                <ThumbsDown className="w-4 h-4 mr-2" />
+                <ThumbsDown className="w-4 h-4 me-2" />
                 {t('feedback.no', 'No')}
               </Button>
             </div>

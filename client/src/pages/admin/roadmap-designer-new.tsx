@@ -92,6 +92,19 @@ export default function RoadmapDesigner() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   const [showStepModal, setShowStepModal] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showStepModal) setShowStepModal(false);
+        else if (showMilestoneModal) setShowMilestoneModal(false);
+        else if (showCreateModal) setShowCreateModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showCreateModal, showMilestoneModal, showStepModal]);
+
   const [editingMilestone, setEditingMilestone] = useState<RoadmapMilestone | null>(null);
   const [editingStep, setEditingStep] = useState<RoadmapStep | null>(null);
   const [selectedMilestone, setSelectedMilestone] = useState<RoadmapMilestone | null>(null);
@@ -472,7 +485,7 @@ export default function RoadmapDesigner() {
                             
                             {/* Steps */}
                             {milestone.steps && milestone.steps.length > 0 && (
-                              <div className="mt-4 pl-8 space-y-2">
+                              <div className="mt-4 ps-8 space-y-2">
                                 {milestone.steps.map((step: RoadmapStep) => (
                                   <div key={step.id} className="flex items-center gap-2 text-sm text-white/70">
                                     <CheckCircle className="w-4 h-4 text-green-400" />
@@ -536,6 +549,7 @@ export default function RoadmapDesigner() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setShowCreateModal(false)}
+            aria-hidden="true"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -543,8 +557,11 @@ export default function RoadmapDesigner() {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               className="glassmorphism-card p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="create-roadmap-title"
             >
-              <h2 className="text-2xl font-bold text-white mb-4">
+              <h2 id="create-roadmap-title" className="text-2xl font-bold text-white mb-4">
                 {t('admin:createRoadmap')}
               </h2>
               
@@ -677,6 +694,7 @@ export default function RoadmapDesigner() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setShowMilestoneModal(false)}
+            aria-hidden="true"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -684,8 +702,11 @@ export default function RoadmapDesigner() {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               className="glassmorphism-card p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-milestone-title"
             >
-              <h2 className="text-2xl font-bold text-white mb-4">
+              <h2 id="add-milestone-title" className="text-2xl font-bold text-white mb-4">
                 {t('admin:roadmap.addMilestone')}
               </h2>
               
@@ -831,6 +852,7 @@ export default function RoadmapDesigner() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setShowStepModal(false)}
+            aria-hidden="true"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -838,8 +860,11 @@ export default function RoadmapDesigner() {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               className="glassmorphism-card p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-step-title"
             >
-              <h2 className="text-2xl font-bold text-white mb-4">
+              <h2 id="add-step-title" className="text-2xl font-bold text-white mb-4">
                 {t('admin:addStep')}
               </h2>
               

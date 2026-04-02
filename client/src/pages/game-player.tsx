@@ -235,7 +235,7 @@ export default function GamePlayer() {
             <p className="text-gray-600 mb-4">The game you're looking for doesn't exist.</p>
             <Link href="/games">
               <Button>
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 me-2" />
                 Back to Games
               </Button>
             </Link>
@@ -277,7 +277,7 @@ export default function GamePlayer() {
             <div className="flex gap-4">
               <Link href="/games" className="flex-1">
                 <Button variant="outline" className="w-full">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 me-2" />
                   Back to Games
                 </Button>
               </Link>
@@ -285,7 +285,7 @@ export default function GamePlayer() {
                 onClick={() => window.location.reload()} 
                 className="flex-1"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className="w-4 h-4 me-2" />
                 Play Again
               </Button>
             </div>
@@ -302,7 +302,7 @@ export default function GamePlayer() {
           <div className="mb-6">
             <Link href="/games">
               <Button variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 me-2" />
                 Back to Games
               </Button>
             </Link>
@@ -350,7 +350,7 @@ export default function GamePlayer() {
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                 size="lg"
               >
-                <Play className="w-5 h-5 mr-2" />
+                <Play className="w-5 h-5 me-2" />
                 {startGameMutation.isPending ? 'Starting...' : 'Start Game'}
               </Button>
             </div>

@@ -108,18 +108,18 @@ function ActivePrivateClass() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.active_private_class.search_placeholder', 'جستجو در کلاس‌های خصوصی فعال...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <BookOpen className="h-4 w-4 mr-2" />
+            <BookOpen className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.active_private_class.count', 'کلاس فعال')}
           </Badge>
         </div>
@@ -214,7 +214,7 @@ function ActivePrivateClass() {
                             {lead.firstName} {lead.lastName}
                           </h3>
                           <Badge className="bg-green-100 text-green-800">
-                            <CheckCircle className="h-3 w-3 mr-1" />
+                            <CheckCircle className="h-3 w-3 me-1" />
                             {t('callcenter:stages.active_private_class.badge', 'فعال')}
                           </Badge>
                         </div>
@@ -256,7 +256,7 @@ function ActivePrivateClass() {
                             className={action.color}
                             onClick={() => handleAction(lead, action)}
                           >
-                            <IconComponent className="h-4 w-4 mr-1" />
+                            <IconComponent className="h-4 w-4 me-1" />
                             {action.label}
                           </Button>
                         );

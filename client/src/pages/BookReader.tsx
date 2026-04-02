@@ -226,7 +226,7 @@ export default function BookReader() {
             className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 me-2" />
             Back
           </Button>
           <Alert variant="destructive">
@@ -250,7 +250,7 @@ export default function BookReader() {
             className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 me-2" />
             Back
           </Button>
           <Alert>
@@ -275,7 +275,7 @@ export default function BookReader() {
             className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 me-2" />
             Back
           </Button>
           
@@ -299,7 +299,7 @@ export default function BookReader() {
                   className="w-full text-xs sm:text-sm"
                   data-testid="button-purchase"
                 >
-                  <BookOpen className="w-4 h-4 mr-2" />
+                  <BookOpen className="w-4 h-4 me-2" />
                   View Book Details
                 </Button>
               </div>
@@ -321,7 +321,7 @@ export default function BookReader() {
             className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 me-2" />
             Back
           </Button>
           
@@ -341,12 +341,12 @@ export default function BookReader() {
             >
               {downloadMutation.isPending ? (
                 <>
-                  <Download className="w-4 h-4 mr-2 animate-spin" />
+                  <Download className="w-4 h-4 me-2 animate-spin" />
                   Loading...
                 </>
               ) : (
                 <>
-                  <Download className="w-4 h-4 mr-2" />
+                  <Download className="w-4 h-4 me-2" />
                   Retry
                 </>
               )}
@@ -368,7 +368,7 @@ export default function BookReader() {
             className="mb-3 sm:mb-4 text-sm sm:text-base"
             data-testid="button-back"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 me-2" />
             Back
           </Button>
           
@@ -413,7 +413,7 @@ export default function BookReader() {
                 data-testid="button-back"
                 className="text-xs sm:text-sm flex-shrink-0 h-8 w-8 sm:h-9 sm:w-auto"
               >
-                <ArrowLeft className="w-4 h-4 mr-0 sm:mr-2" />
+                <ArrowLeft className="w-4 h-4 me-0 sm:me-2" />
                 <span className="hidden sm:inline">Back</span>
               </Button>
               <div className="min-w-0 flex-1">

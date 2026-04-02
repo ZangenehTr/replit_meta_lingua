@@ -221,7 +221,7 @@ export default function VideoManagement() {
             onClick={() => setIsCreateDialogOpen(true)}
             data-testid="button-create-video"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4 me-2" />
             Add Video
           </Button>
         </div>
@@ -236,13 +236,13 @@ export default function VideoManagement() {
               <div className="space-y-2">
                 <Label htmlFor="search-videos">Search</Label>
                 <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search-videos"
                     placeholder="Search videos..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
+                    className="ps-8"
                     data-testid="input-search-videos"
                   />
                 </div>
@@ -377,7 +377,7 @@ export default function VideoManagement() {
                         onClick={() => setEditingVideo(video)}
                         data-testid={`button-edit-${video.id}`}
                       >
-                        <Edit className="w-4 h-4 mr-1" />
+                        <Edit className="w-4 h-4 me-1" />
                         Edit
                       </Button>
                       <Button

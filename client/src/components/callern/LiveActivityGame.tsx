@@ -264,7 +264,7 @@ export function LiveActivityGame({ roomId, role, isVisible, onClose }: LiveActiv
                 variant="secondary"
                 size="sm"
               >
-                <Zap className="w-4 h-4 mr-2" />
+                <Zap className="w-4 h-4 me-2" />
                 Start Activity
               </Button>
             )}
@@ -306,7 +306,7 @@ export function LiveActivityGame({ roomId, role, isVisible, onClose }: LiveActiv
               size="lg"
               className="bg-white text-purple-600 hover:bg-white/90"
             >
-              <Trophy className="w-4 h-4 mr-2" />
+              <Trophy className="w-4 h-4 me-2" />
               Submit Answer
             </Button>
           </div>

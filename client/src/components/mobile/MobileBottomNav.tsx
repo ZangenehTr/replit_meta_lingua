@@ -57,7 +57,7 @@ export function MobileBottomNav() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-xl border-t border-white/10"
+      className="fixed bottom-0 start-0 end-0 bg-gray-900/95 backdrop-blur-xl border-t border-white/10"
       style={{ zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       dir={isRTL ? 'rtl' : 'ltr'}
     >

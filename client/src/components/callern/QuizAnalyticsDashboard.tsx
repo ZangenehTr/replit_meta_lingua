@@ -171,7 +171,7 @@ export function QuizAnalyticsDashboard({ sessionId, teacherId }: QuizAnalyticsDa
             </SelectContent>
           </Select>
           <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 me-2" />
             Export Report
           </Button>
         </div>
@@ -187,7 +187,7 @@ export function QuizAnalyticsDashboard({ sessionId, teacherId }: QuizAnalyticsDa
                   <p className="text-sm text-gray-600 dark:text-gray-400">Total Quizzes</p>
                   <p className="text-2xl font-bold">{overallStats.totalQuizzes || 0}</p>
                   <p className="text-sm text-green-500 flex items-center mt-1">
-                    <TrendingUp className="w-3 h-3 mr-1" />
+                    <TrendingUp className="w-3 h-3 me-1" />
                     +{overallStats.quizGrowth || 0}% from last period
                   </p>
                 </div>
@@ -203,7 +203,7 @@ export function QuizAnalyticsDashboard({ sessionId, teacherId }: QuizAnalyticsDa
                   <p className="text-sm text-gray-600 dark:text-gray-400">Avg Score</p>
                   <p className="text-2xl font-bold">{overallStats.averageScore || 0}%</p>
                   <p className="text-sm text-green-500 flex items-center mt-1">
-                    <TrendingUp className="w-3 h-3 mr-1" />
+                    <TrendingUp className="w-3 h-3 me-1" />
                     +{overallStats.scoreImprovement || 0}% improvement
                   </p>
                 </div>
@@ -219,7 +219,7 @@ export function QuizAnalyticsDashboard({ sessionId, teacherId }: QuizAnalyticsDa
                   <p className="text-sm text-gray-600 dark:text-gray-400">Completion Rate</p>
                   <p className="text-2xl font-bold">{overallStats.completionRate || 0}%</p>
                   <p className="text-sm text-yellow-500 flex items-center mt-1">
-                    <TrendingDown className="w-3 h-3 mr-1" />
+                    <TrendingDown className="w-3 h-3 me-1" />
                     -{overallStats.completionDrop || 0}% drop
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export function QuizAnalyticsDashboard({ sessionId, teacherId }: QuizAnalyticsDa
                   <p className="text-sm text-gray-600 dark:text-gray-400">Active Students</p>
                   <p className="text-2xl font-bold">{overallStats.activeStudents || 0}</p>
                   <p className="text-sm text-blue-500 flex items-center mt-1">
-                    <Users className="w-3 h-3 mr-1" />
+                    <Users className="w-3 h-3 me-1" />
                     {overallStats.newStudents || 0} new this week
                   </p>
                 </div>

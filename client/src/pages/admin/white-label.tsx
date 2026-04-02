@@ -119,7 +119,7 @@ export default function WhiteLabelPage() {
           </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
-          <Building2 className="h-4 w-4 mr-2" />
+          <Building2 className="h-4 w-4 me-2" />
           {t('admin:whiteLabel.createInstitute')}
         </Button>
       </div>
@@ -309,7 +309,7 @@ export default function WhiteLabelPage() {
                       <Building2 className="h-8 w-8 text-gray-600" />
                     </div>
                     <Button variant="outline">
-                      <Upload className="h-4 w-4 mr-2" />
+                      <Upload className="h-4 w-4 me-2" />
                       {t('admin:whiteLabel.uploadLogo')}
                     </Button>
                   </div>
@@ -449,7 +449,7 @@ export default function WhiteLabelPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <Button className="w-full">
-                        <Zap className="h-4 w-4 mr-2" />
+                        <Zap className="h-4 w-4 me-2" />
                         {t('admin:whiteLabel.oneClickDeployButton')}
                       </Button>
                       <p className="text-sm text-gray-500">
@@ -467,7 +467,7 @@ export default function WhiteLabelPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <Button variant="outline" className="w-full">
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-4 w-4 me-2" />
                         {t('admin:whiteLabel.downloadPackage')}
                       </Button>
                       <p className="text-sm text-gray-500">

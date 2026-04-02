@@ -118,14 +118,14 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
             transition={{ duration: 0.3 }}
-            className="absolute top-4 right-4 w-80 pointer-events-auto"
+            className="absolute top-4 end-4 w-80 pointer-events-auto"
           >
             <Card className="bg-black/80 backdrop-blur-lg border-white/20 shadow-2xl">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white text-sm flex items-center gap-2">
                   <Lightbulb className="w-4 h-4 text-yellow-400" />
                   {t('callern:hud.aiSuggestion')}
-                  <Badge variant="secondary" className="ml-auto bg-blue-600/80 text-white text-xs">
+                  <Badge variant="secondary" className="ms-auto bg-blue-600/80 text-white text-xs">
                     {currentActivity.duration_min}m
                   </Badge>
                 </CardTitle>
@@ -167,7 +167,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
                     className="flex-1 bg-white/10 border-white/20 text-white hover:bg-red-600/20 hover:border-red-400/50"
                     onClick={handleDecline}
                   >
-                    <X className="w-4 h-4 mr-1" />
+                    <X className="w-4 h-4 me-1" />
                     {t('callern:hud.decline')}
                   </Button>
                   <Button
@@ -175,7 +175,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     onClick={handleApprove}
                   >
-                    <Check className="w-4 h-4 mr-1" />
+                    <Check className="w-4 h-4 me-1" />
                     {t('callern:hud.approve')}
                   </Button>
                 </div>
@@ -199,7 +199,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="absolute top-4 left-4 w-72 pointer-events-auto"
+            className="absolute top-4 start-4 w-72 pointer-events-auto"
           >
             <Card className="bg-black/80 backdrop-blur-lg border-white/20">
               <CardHeader className="pb-3">
@@ -209,7 +209,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="ml-auto text-white/70 hover:text-white p-1"
+                    className="ms-auto text-white/70 hover:text-white p-1"
                     onClick={() => setShowMetrics(false)}
                   >
                     <X className="w-4 h-4" />
@@ -284,7 +284,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="absolute top-6 left-6 pointer-events-auto"
+          className="absolute top-6 start-6 pointer-events-auto"
         >
           <Button
             variant="default"
@@ -292,7 +292,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
             className="rounded-full bg-blue-600/80 backdrop-blur-sm hover:bg-blue-600/90 text-white shadow-lg"
             onClick={() => setShowMetrics(true)}
           >
-            <User className="w-4 h-4 mr-1" />
+            <User className="w-4 h-4 me-1" />
             {studentMetrics.engagement_level}
           </Button>
         </motion.div>
@@ -303,7 +303,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-6 right-6 pointer-events-auto"
+          className="absolute bottom-6 end-6 pointer-events-auto"
         >
           <div className="flex gap-2">
             <Button
@@ -312,7 +312,7 @@ export const HUDTeacherOverlay: React.FC<HUDTeacherOverlayProps> = ({
               className="bg-purple-600/80 backdrop-blur-sm hover:bg-purple-600/90 text-white shadow-lg"
               onClick={onGenerateNewActivity}
             >
-              <Lightbulb className="w-4 h-4 mr-1" />
+              <Lightbulb className="w-4 h-4 me-1" />
               {t('callern:hud.suggestActivity')}
             </Button>
           </div>

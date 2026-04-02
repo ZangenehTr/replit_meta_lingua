@@ -369,12 +369,12 @@ export default function TeacherVideoManagement() {
           <div className="flex justify-between items-center mb-6">
             <div className="flex gap-4 flex-1 max-w-2xl">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder={t('teacher:videoManagement.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="ps-10"
                 />
               </div>
               
@@ -394,7 +394,7 @@ export default function TeacherVideoManagement() {
             </div>
 
             <Button onClick={() => setIsUploadDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4 me-2" />
               {t('teacher:videoManagement.uploadVideo')}
             </Button>
           </div>
@@ -410,7 +410,7 @@ export default function TeacherVideoManagement() {
               <h3 className="text-lg font-semibold mb-2">{t('teacher:videoManagement.noVideos')}</h3>
               <p className="text-muted-foreground mb-4">{t('teacher:videoManagement.noVideosDescription')}</p>
               <Button onClick={() => setIsUploadDialogOpen(true)}>
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-4 w-4 me-2" />
                 {t('teacher:videoManagement.uploadFirstVideo')}
               </Button>
             </Card>
@@ -430,7 +430,7 @@ export default function TeacherVideoManagement() {
                         <Video className="h-12 w-12 text-muted-foreground" />
                       </div>
                     )}
-                    <div className="absolute top-2 right-2 flex gap-2">
+                    <div className="absolute top-2 end-2 flex gap-2">
                       {video.isPublished ? (
                         <Badge className="bg-green-500">{t('teacher:videoManagement.published')}</Badge>
                       ) : (
@@ -440,7 +440,7 @@ export default function TeacherVideoManagement() {
                         <Badge variant="outline">{t('teacher:videoManagement.free')}</Badge>
                       )}
                     </div>
-                    <div className="absolute bottom-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                    <div className="absolute bottom-2 end-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
                       {formatDuration(video.duration)}
                     </div>
                   </div>
@@ -553,7 +553,7 @@ export default function TeacherVideoManagement() {
                         className="w-full"
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        <Upload className="h-4 w-4 mr-2" />
+                        <Upload className="h-4 w-4 me-2" />
                         {t('teacher:videoManagement.selectFile')}
                       </Button>
                     )}
@@ -684,12 +684,12 @@ export default function TeacherVideoManagement() {
                 >
                   {isUploading ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
                       {t('teacher:videoManagement.uploading')}
                     </>
                   ) : (
                     <>
-                      <Upload className="h-4 w-4 mr-2" />
+                      <Upload className="h-4 w-4 me-2" />
                       {t('teacher:videoManagement.upload')}
                     </>
                   )}

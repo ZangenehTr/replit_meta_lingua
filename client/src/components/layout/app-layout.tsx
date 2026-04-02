@@ -177,9 +177,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             {/* User Menu - Enhanced for Mobile */}
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
+              <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full" aria-label={t('common:navigation.userMenu', 'منوی کاربر')}>
                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                  <AvatarImage src={user.avatar} alt={user.firstName} />
+                  <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
                   <AvatarFallback className="text-xs sm:text-sm">
                     {getUserInitials(user.firstName, user.lastName)}
                   </AvatarFallback>
@@ -202,21 +202,21 @@ export function AppLayout({ children }: AppLayoutProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setLocation("/profile")}>
-                <User className="mr-2 h-4 w-4" />
+                <User className="me-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLocation("/settings")}>
-                <Settings className="mr-2 h-4 w-4" />
+                <Settings className="me-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
               <DropdownMenuItem onClick={handleSwitchAccount}>
-                <User className="mr-2 h-4 w-4" />
+                <User className="me-2 h-4 w-4" />
                 <span>Switch Account</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut className="me-2 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -248,7 +248,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <aside className={`hidden md:block flex-shrink-0 order-first transition-all duration-300 ${
               sidebarCollapsed ? 'md:w-16' : 'md:w-64'
             }`}>
-              <div className={`fixed top-16 left-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 ${
+              <div className={`fixed top-16 start-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 ${
                 sidebarCollapsed ? 'w-16' : 'w-64'
               }`}>
                 <Sidebar collapsed={sidebarCollapsed} />
@@ -257,7 +257,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute bottom-4 right-2 h-8 w-8 rounded-full border bg-background shadow-sm hover:shadow-md transition-all"
+                  className="absolute bottom-4 end-2 h-8 w-8 rounded-full border bg-background shadow-sm hover:shadow-md transition-all"
                   onClick={toggleSidebar}
                   aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                   data-testid="button-toggle-sidebar"

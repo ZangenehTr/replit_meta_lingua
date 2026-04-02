@@ -211,7 +211,7 @@ export default function SMSTestPage() {
                       onClick={() => testConnectivity()}
                       disabled={testingConnectivity}
                     >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${testingConnectivity ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`h-4 w-4 me-2 ${testingConnectivity ? 'animate-spin' : ''}`} />
                       {testingConnectivity ? 'Testing...' : 'Test Connection'}
                     </Button>
                     
@@ -242,7 +242,7 @@ export default function SMSTestPage() {
                 disabled={testingConnectivity}
                 size="sm"
               >
-                <Wifi className="h-4 w-4 mr-2" />
+                <Wifi className="h-4 w-4 me-2" />
                 Test
               </Button>
               <Button 
@@ -250,7 +250,7 @@ export default function SMSTestPage() {
                 onClick={() => refetchAccount()}
                 size="sm"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 me-2" />
                 Refresh
               </Button>
             </div>
@@ -315,7 +315,7 @@ export default function SMSTestPage() {
                   disabled={testSMSMutation.isPending}
                   className="w-full"
                 >
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="h-4 w-4 me-2" />
                   {testSMSMutation.isPending ? "Sending..." : "Send Test SMS"}
                 </Button>
               </form>
@@ -398,7 +398,7 @@ export default function SMSTestPage() {
                   disabled={verificationSMSMutation.isPending}
                   className="w-full"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
+                  <Phone className="h-4 w-4 me-2" />
                   {verificationSMSMutation.isPending ? "Sending..." : "Send Verification SMS"}
                 </Button>
               </form>

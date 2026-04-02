@@ -279,7 +279,7 @@ export default function TestQuestions() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
+              <PlusCircle className="me-2 h-4 w-4" />
               Add Question
             </Button>
           </DialogTrigger>
@@ -357,7 +357,7 @@ export default function TestQuestions() {
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full"
                       >
-                        <Upload className="mr-2 h-4 w-4" />
+                        <Upload className="me-2 h-4 w-4" />
                         {audioFile ? `Selected: ${audioFile.name}` : 'Upload Audio File'}
                       </Button>
                       {audioFile && (
@@ -466,7 +466,7 @@ export default function TestQuestions() {
                 variant="outline"
                 onClick={() => setIsCreateDialogOpen(true)}
               >
-                <PlusCircle className="mr-2 h-4 w-4" />
+                <PlusCircle className="me-2 h-4 w-4" />
                 Add Your First Question
               </Button>
             </CardContent>
@@ -483,7 +483,7 @@ export default function TestQuestions() {
                       <Badge variant="secondary">{question.skillCategory}</Badge>
                       {question.questionAudio && (
                         <Badge variant="default" className="bg-green-100 text-green-800">
-                          <Volume2 className="w-3 h-3 mr-1" />
+                          <Volume2 className="w-3 h-3 me-1" />
                           Audio
                         </Badge>
                       )}

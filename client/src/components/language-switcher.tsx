@@ -24,7 +24,7 @@ export function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="h-9 px-3">
-          <Globe className="h-4 w-4 mr-2" />
+          <Globe className="h-4 w-4 me-2" />
           <span className="hidden sm:inline-flex">
             {currentLanguageInfo.flag} {currentLanguageInfo.name}
           </span>
@@ -45,7 +45,7 @@ export function LanguageSwitcher() {
             <span className="text-lg">{lang.flag}</span>
             <span className={isRTL && lang.code !== 'en' ? 'font-medium' : ''}>{lang.name}</span>
             {language === lang.code && (
-              <span className="ml-auto text-primary">✓</span>
+              <span className="ms-auto text-primary">✓</span>
             )}
           </DropdownMenuItem>
         ))}

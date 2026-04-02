@@ -147,12 +147,12 @@ export function MobileStudents() {
       <div className="space-y-3">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search students..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="ps-10"
           />
         </div>
 
@@ -278,7 +278,7 @@ export function MobileStudents() {
       )}
 
       {/* Floating Action Button for Quick Actions */}
-      <div className="fixed bottom-20 right-4 z-30 space-y-2">
+      <div className="fixed bottom-20 end-4 z-30 space-y-2">
         <MobileButton
           variant="outline"
           size="fab"

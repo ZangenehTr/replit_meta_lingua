@@ -477,14 +477,14 @@ export function AdminSystem() {
             onClick={() => exportConfigMutation.mutate()}
             disabled={exportConfigMutation.isPending}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             {exportConfigMutation.isPending ? "Exporting..." : "Export Config"}
           </Button>
           <Button 
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="h-4 w-4 mr-2" />
+            <Upload className="h-4 w-4 me-2" />
             Import Config
           </Button>
           <input
@@ -668,7 +668,7 @@ export function AdminSystem() {
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   Create Custom Role
                 </Button>
               </DialogTrigger>
@@ -1070,12 +1070,12 @@ export function AdminSystem() {
                 >
                   {createBackupMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       Creating Backup...
                     </>
                   ) : (
                     <>
-                      <Download className="mr-2 h-4 w-4" />
+                      <Download className="me-2 h-4 w-4" />
                       Create Backup Now
                     </>
                   )}
@@ -1121,12 +1121,12 @@ export function AdminSystem() {
                 >
                   {isBackupInProgress ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       Exporting...
                     </>
                   ) : (
                     <>
-                      <FileText className="mr-2 h-4 w-4" />
+                      <FileText className="me-2 h-4 w-4" />
                       Export Configuration
                     </>
                   )}

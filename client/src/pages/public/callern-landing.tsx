@@ -196,7 +196,7 @@ export default function CallernLanding() {
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
           <div className="text-center text-white">
             <Badge className="mb-6 bg-white/20 text-white border-white/30 hover:bg-white/30" data-testid="badge-callern">
-              <Video className="h-3 w-3 mr-1" />
+              <Video className="h-3 w-3 me-1" />
               {t('callern:landing.hero.badge', 'Live Video Tutoring')}
             </Badge>
             
@@ -315,7 +315,7 @@ export default function CallernLanding() {
               return (
                 <div key={index} className="relative" data-testid={`step-${index}`}>
                   {index < howItWorks.length - 1 && (
-                    <div className={`hidden lg:block absolute top-16 ${isRTL ? 'right-0' : 'left-full'} w-full h-0.5 bg-gradient-to-r from-primary/50 to-transparent`} />
+                    <div className={`hidden lg:block absolute top-16 ${isRTL ? 'start-0' : 'start-full'} w-full h-0.5 bg-gradient-to-r from-primary/50 to-transparent`} />
                   )}
                   <div className="text-center">
                     <div className="relative inline-flex items-center justify-center w-16 h-16 mb-4">
@@ -339,7 +339,7 @@ export default function CallernLanding() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <Badge className="mb-4" data-testid="badge-online-now">
-              <Wifi className="h-3 w-3 mr-1" />
+              <Wifi className="h-3 w-3 me-1" />
               {onlineTeachers.length} {t('callern:landing.teachers.onlineNow', 'Teachers Online Now')}
             </Badge>
             <h2 className="text-4xl font-bold mb-4">
@@ -359,7 +359,7 @@ export default function CallernLanding() {
                       <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white text-xl font-bold">
                         {teacher.name?.charAt(0) || 'T'}
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white" />
+                      <div className="absolute -bottom-1 -end-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{teacher.name || 'Expert Teacher'}</h3>
@@ -368,7 +368,7 @@ export default function CallernLanding() {
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} className={`h-3 w-3 ${i < (teacher.rating || 5) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                         ))}
-                        <span className="text-xs text-muted-foreground ml-1">({teacher.reviewCount || 120})</span>
+                        <span className="text-xs text-muted-foreground ms-1">({teacher.reviewCount || 120})</span>
                       </div>
                     </div>
                   </div>
@@ -403,7 +403,7 @@ export default function CallernLanding() {
               <Link href="/auth?tab=register">
                 <a>
                   {t('callern:landing.teachers.viewAll', 'View All Teachers')}
-                  <ArrowRight className={`h-4 w-4 ${isRTL ? 'mr-2' : 'ml-2'}`} />
+                  <ArrowRight className={`h-4 w-4 ms-2`} />
                 </a>
               </Link>
             </Button>
@@ -434,7 +434,7 @@ export default function CallernLanding() {
                 data-testid={`package-${index}`}
               >
                 {pkg.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <div className="absolute -top-4 inset-x-0 flex justify-center">
                     <Badge className="bg-gradient-to-r from-primary to-purple-600 text-white px-4 py-1">
                       {t('callern:landing.pricing.mostPopular', 'Most Popular')}
                     </Badge>
@@ -444,7 +444,7 @@ export default function CallernLanding() {
                   <CardTitle className="text-2xl mb-2">{pkg.name}</CardTitle>
                   <div className="mb-4">
                     <span className="text-4xl font-bold">{pkg.price.toLocaleString()}</span>
-                    <span className="text-muted-foreground ml-2">{pkg.currency}</span>
+                    <span className="text-muted-foreground ms-2">{pkg.currency}</span>
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {pkg.minutes} {t('callern:landing.pricing.minutes', 'minutes')} • {pkg.validity} {t('callern:landing.pricing.days', 'days')}

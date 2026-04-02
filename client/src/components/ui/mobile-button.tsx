@@ -119,16 +119,16 @@ const MobileButton = React.forwardRef<HTMLButtonElement, MobileButtonProps>(
         {...props}
       >
         {loading && (
-          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <div className="me-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
         )}
         {!loading && leftIcon && (
-          <span className="mr-2 flex-shrink-0">{leftIcon}</span>
+          <span className="me-2 flex-shrink-0">{leftIcon}</span>
         )}
         <span className="truncate">
           {loading ? loadingText : children}
         </span>
         {!loading && rightIcon && (
-          <span className="ml-2 flex-shrink-0">{rightIcon}</span>
+          <span className="ms-2 flex-shrink-0">{rightIcon}</span>
         )}
       </Comp>
     );

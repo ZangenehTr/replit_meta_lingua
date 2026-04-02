@@ -326,7 +326,7 @@ export function AdminLinguaQuest() {
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-lesson">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               Create Lesson
             </Button>
           </DialogTrigger>
@@ -440,12 +440,12 @@ export function AdminLinguaQuest() {
               >
                 {createLessonMutation.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
                     Creating...
                   </>
                 ) : (
                   <>
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4 me-2" />
                     Create Lesson
                   </>
                 )}
@@ -538,12 +538,12 @@ export function AdminLinguaQuest() {
         <TabsContent value="lessons" className="space-y-4">
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search lessons..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="ps-10"
                 data-testid="input-search-lessons"
               />
             </div>
@@ -595,7 +595,7 @@ export function AdminLinguaQuest() {
                           data-testid={`button-view-${lesson.id}`}
                           onClick={() => window.open(`/linguaquest/lesson/${lesson.id}`, '_blank')}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
+                          <Eye className="h-4 w-4 me-1" />
                           View
                         </Button>
                         <Button 
@@ -604,7 +604,7 @@ export function AdminLinguaQuest() {
                           data-testid={`button-edit-${lesson.id}`}
                           onClick={() => handleEditLesson(lesson)}
                         >
-                          <Edit className="h-4 w-4 mr-1" />
+                          <Edit className="h-4 w-4 me-1" />
                           Edit
                         </Button>
                         <Button 
@@ -616,12 +616,12 @@ export function AdminLinguaQuest() {
                         >
                           {lesson.isPublished ? (
                             <>
-                              <XCircle className="h-4 w-4 mr-1" />
+                              <XCircle className="h-4 w-4 me-1" />
                               Unpublish
                             </>
                           ) : (
                             <>
-                              <CheckCircle className="h-4 w-4 mr-1" />
+                              <CheckCircle className="h-4 w-4 me-1" />
                               Publish
                             </>
                           )}
@@ -633,7 +633,7 @@ export function AdminLinguaQuest() {
                           onClick={() => handleDeleteLesson(lesson.id, lesson.title)}
                           disabled={deleteLessonMutation.isPending}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
+                          <Trash2 className="h-4 w-4 me-1" />
                           Delete
                         </Button>
                       </div>
@@ -946,12 +946,12 @@ export function AdminLinguaQuest() {
                 >
                   {triggerAudioGenerationMutation.isPending ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
                       Starting...
                     </>
                   ) : (
                     <>
-                      <PlayCircle className="h-4 w-4 mr-2" />
+                      <PlayCircle className="h-4 w-4 me-2" />
                       Generate Missing Audio
                     </>
                   )}
@@ -964,12 +964,12 @@ export function AdminLinguaQuest() {
                 >
                   {triggerAudioGenerationMutation.isPending ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
                       Starting...
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <RefreshCw className="h-4 w-4 me-2" />
                       Regenerate All
                     </>
                   )}
@@ -1032,7 +1032,7 @@ export function AdminLinguaQuest() {
                               }
                               data-testid={`badge-status-${job.id}`}
                             >
-                              {job.status === 'running' && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                              {job.status === 'running' && <Loader2 className="h-3 w-3 me-1 animate-spin" />}
                               {job.status}
                             </Badge>
                           </TableCell>
@@ -1189,12 +1189,12 @@ export function AdminLinguaQuest() {
             >
               {updateLessonMutation.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" />
                   Updating...
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4 me-2" />
                   Update Lesson
                 </>
               )}

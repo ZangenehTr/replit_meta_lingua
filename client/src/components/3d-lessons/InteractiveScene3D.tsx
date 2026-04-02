@@ -457,7 +457,7 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
 
   return (
     <div className="relative w-full h-full min-h-[500px]">
-      <div className="absolute top-0 left-0 right-0 z-10 p-3 flex items-center justify-between bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none">
+      <div className="absolute top-0 start-0 end-0 z-10 p-3 flex items-center justify-between bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
           <h3 className="text-white font-bold text-sm drop-shadow-lg">{sceneTitle}</h3>
           <Badge className="bg-indigo-500 text-white text-xs shadow-md">{scene.cefrLevel}</Badge>
@@ -472,7 +472,7 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 bg-gradient-to-t from-black/60 via-black/30 to-transparent pointer-events-none">
+      <div className="absolute bottom-0 start-0 end-0 z-10 p-3 bg-gradient-to-t from-black/60 via-black/30 to-transparent pointer-events-none">
         <Progress value={progressPercent} className="h-2.5 shadow-md" />
         <p className="text-white/90 text-xs mt-1.5 text-center font-medium drop-shadow">
           {isMobile ? t("scene3d.tapToInteract", "Tap objects to learn") : t("scene3d.clickToInteract", "Click objects to learn")}
@@ -501,7 +501,7 @@ export function InteractiveScene3D({ scene, onComplete, onProgress, isMobile }: 
                 </Badge>
               </div>
               <Button onClick={() => onComplete(score, Math.floor((Date.now() - startTime) / 1000))} className="w-full">
-                {t("scene3d.continueToNext", "Continue")} <ArrowRight className="w-4 h-4 ml-2" />
+                {t("scene3d.continueToNext", "Continue")} <ArrowRight className="w-4 h-4 ms-2" />
               </Button>
             </CardContent>
           </Card>

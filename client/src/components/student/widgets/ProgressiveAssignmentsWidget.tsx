@@ -175,7 +175,7 @@ export function ProgressiveAssignmentsWidget({
           <p className={cn("text-sm", dueDateColor)}>
             Due {formatDistanceToNow(parseISO(assignment.dueDate), { addSuffix: true })}
             {isOverdue && (
-              <span className="text-red-600 font-medium ml-1">
+              <span className="text-red-600 font-medium ms-1">
                 (Overdue)
               </span>
             )}

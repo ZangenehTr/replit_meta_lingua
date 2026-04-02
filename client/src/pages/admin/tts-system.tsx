@@ -86,11 +86,11 @@ export default function TTSSystem() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" data-testid="badge-tts-status">
-            <Volume2 className="h-4 w-4 mr-1" />
+            <Volume2 className="h-4 w-4 me-1" />
             {t('admin:ttsActive', 'TTS Active')}
           </Badge>
           <Button variant="outline" data-testid="button-test-tts">
-            <Play className="h-4 w-4 mr-2" />
+            <Play className="h-4 w-4 me-2" />
             {t('admin:testTTS', 'Test TTS')}
           </Button>
         </div>
@@ -157,19 +157,19 @@ export default function TTSSystem() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="configuration" data-testid="tab-tts-configuration">
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="h-4 w-4 me-2" />
             {t('admin:configuration', 'Configuration')}
           </TabsTrigger>
           <TabsTrigger value="voices" data-testid="tab-tts-voices">
-            <Mic className="h-4 w-4 mr-2" />
+            <Mic className="h-4 w-4 me-2" />
             {t('admin:voices', 'Voices')}
           </TabsTrigger>
           <TabsTrigger value="testing" data-testid="tab-tts-testing">
-            <Play className="h-4 w-4 mr-2" />
+            <Play className="h-4 w-4 me-2" />
             {t('admin:testing', 'Testing')}
           </TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-tts-analytics">
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-4 w-4 me-2" />
             {t('admin:analytics', 'Analytics')}
           </TabsTrigger>
         </TabsList>
@@ -409,11 +409,11 @@ export default function TTSSystem() {
 
               <div className="flex gap-2">
                 <Button data-testid="button-generate-speech">
-                  <Volume2 className="h-4 w-4 mr-2" />
+                  <Volume2 className="h-4 w-4 me-2" />
                   {t('admin:generateSpeech', 'Generate Speech')}
                 </Button>
                 <Button variant="outline" data-testid="button-download-audio">
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 me-2" />
                   {t('admin:downloadAudio', 'Download Audio')}
                 </Button>
               </div>

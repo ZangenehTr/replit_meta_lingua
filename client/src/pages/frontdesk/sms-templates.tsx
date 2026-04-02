@@ -499,7 +499,7 @@ export default function SmsTemplatesPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => window.history.back()}
-                className="mr-2"
+                className="me-2"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -517,7 +517,7 @@ export default function SmsTemplatesPage() {
                 onClick={() => setShowCreateDialog(true)}
                 data-testid="button-create-template"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 {isRTL ? 'قالب جدید' : 'New Template'}
               </Button>
             </div>
@@ -545,13 +545,13 @@ export default function SmsTemplatesPage() {
                   <div>
                     <Label htmlFor="search">{isRTL ? 'جستجو' : 'Search'}</Label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Search className="absolute start-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
                         id="search"
                         placeholder={isRTL ? 'جستجو در قالب‌ها...' : 'Search templates...'}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
+                        className="ps-10"
                         data-testid="input-search"
                       />
                     </div>
@@ -593,7 +593,7 @@ export default function SmsTemplatesPage() {
                       disabled={templatesLoading}
                       data-testid="button-refresh"
                     >
-                      <RefreshCw className={cn("h-4 w-4 mr-2", templatesLoading && "animate-spin")} />
+                      <RefreshCw className={cn("h-4 w-4 me-2", templatesLoading && "animate-spin")} />
                       {isRTL ? 'بروزرسانی' : 'Refresh'}
                     </Button>
                   </div>
@@ -626,18 +626,18 @@ export default function SmsTemplatesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handlePreviewTemplate(template)}>
-                              <Eye className="h-4 w-4 mr-2" />
+                              <Eye className="h-4 w-4 me-2" />
                               {isRTL ? 'پیش‌نمایش' : 'Preview'}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEditButtonClick(template)}>
-                              <Edit className="h-4 w-4 mr-2" />
+                              <Edit className="h-4 w-4 me-2" />
                               {isRTL ? 'ویرایش' : 'Edit'}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
                               setSelectedTemplate(template);
                               setShowSendDialog(true);
                             }}>
-                              <Send className="h-4 w-4 mr-2" />
+                              <Send className="h-4 w-4 me-2" />
                               {isRTL ? 'ارسال' : 'Send'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -645,7 +645,7 @@ export default function SmsTemplatesPage() {
                               onClick={() => handleDeleteTemplate(template)}
                               className="text-red-600 dark:text-red-400"
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
+                              <Trash2 className="h-4 w-4 me-2" />
                               {isRTL ? 'حذف' : 'Delete'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -709,7 +709,7 @@ export default function SmsTemplatesPage() {
                     {isRTL ? 'قالب جدیدی ایجاد کنید یا فیلترها را تغییر دهید' : 'Create a new template or adjust your filters'}
                   </p>
                   <Button onClick={() => setShowCreateDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 me-2" />
                     {isRTL ? 'ایجاد اولین قالب' : 'Create First Template'}
                   </Button>
                 </CardContent>
@@ -1248,12 +1248,12 @@ export default function SmsTemplatesPage() {
                 >
                   {sendSmsMutation.isPending ? (
                     <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                       {isRTL ? 'در حال ارسال...' : 'Sending...'}
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       {isRTL ? 'ارسال پیامک' : 'Send SMS'}
                     </>
                   )}
@@ -1331,7 +1331,7 @@ export default function SmsTemplatesPage() {
                 }
               }}
             >
-              <Send className="h-4 w-4 mr-2" />
+              <Send className="h-4 w-4 me-2" />
               {isRTL ? 'ارسال این قالب' : 'Send This Template'}
             </Button>
           </DialogFooter>

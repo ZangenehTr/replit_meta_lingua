@@ -56,7 +56,7 @@ interface TestButtonProps {
 function GatewayBadge({ name, active }: { name: GatewayName; active: boolean }) {
   const { t } = useTranslation();
   return (
-    <Badge variant={active ? "default" : "outline"} className="ml-2">
+    <Badge variant={active ? "default" : "outline"} className="ms-2">
       {active ? t("common.active", "Active") : t("common.inactive", "Inactive")}
     </Badge>
   );
@@ -70,9 +70,9 @@ function TestButton({ gateway, testingGateway, testResults, onTest, t }: TestBut
     <div className="flex items-center gap-3 pt-2">
       <Button variant="outline" size="sm" onClick={() => onTest(gateway)} disabled={isTesting}>
         {isTesting ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="me-2 h-4 w-4 animate-spin" />
         ) : (
-          <Wifi className="mr-2 h-4 w-4" />
+          <Wifi className="me-2 h-4 w-4" />
         )}
         {t("admin:paymentGateway.testConnection", "Test Connection")}
       </Button>
@@ -460,7 +460,7 @@ export default function PaymentGatewayConfigPage() {
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saveMutation.isPending} size="lg">
-          {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {saveMutation.isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
           {t("common.saveChanges", "Save Changes")}
         </Button>
       </div>

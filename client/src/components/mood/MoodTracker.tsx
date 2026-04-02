@@ -233,7 +233,7 @@ export default function MoodTracker({ onMoodSubmitted, quickMode = false }: Mood
                   <span className="text-xl">{mood.emoji}</span>
                   <span className="capitalize">{mood.label}</span>
                   {quickCheckMutation.isPending && quickMood === mood.id && (
-                    <div className="ml-auto">
+                    <div className="ms-auto">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
                     </div>
                   )}

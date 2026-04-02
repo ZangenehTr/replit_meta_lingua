@@ -531,7 +531,7 @@ export default function CampaignManagementPage() {
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowNewCampaignDialog(true)} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:campaigns.newCampaign')}
             </Button>
           </div>
@@ -551,7 +551,7 @@ export default function CampaignManagementPage() {
             <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline">
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Mail className="h-4 w-4 me-2" />
                   {t('admin:campaigns.emailBroadcast')}
                 </Button>
               </DialogTrigger>
@@ -575,7 +575,7 @@ export default function CampaignManagementPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={handleEmailBroadcast} disabled={sendEmailMutation.isPending}>
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       {sendEmailMutation.isPending ? t('admin:campaigns.sending') : t('admin:campaigns.sendEmail')}
                     </Button>
                     <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
@@ -589,7 +589,7 @@ export default function CampaignManagementPage() {
             <Dialog open={showTelegramDialog} onOpenChange={setShowTelegramDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline">
-                  <MessageSquare className="h-4 w-4 mr-2" />
+                  <MessageSquare className="h-4 w-4 me-2" />
                   {t('admin:campaigns.telegramAutomation')}
                 </Button>
               </DialogTrigger>
@@ -617,7 +617,7 @@ export default function CampaignManagementPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={handleTelegramAutomation} disabled={telegramMutation.isPending}>
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       {telegramMutation.isPending ? t('admin:campaigns.sending') : t('admin:campaigns.configure')}
                     </Button>
                     <Button variant="outline" onClick={() => setShowTelegramDialog(false)}>
@@ -631,7 +631,7 @@ export default function CampaignManagementPage() {
             <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline">
-                  <Bot className="h-4 w-4 mr-2" />
+                  <Bot className="h-4 w-4 me-2" />
                   {t('admin:campaigns.aiAssistant')}
                 </Button>
               </DialogTrigger>
@@ -668,7 +668,7 @@ export default function CampaignManagementPage() {
                       }}
                       disabled={aiAssistantMutation.isPending}
                     >
-                      <Bot className="h-4 w-4 mr-2" />
+                      <Bot className="h-4 w-4 me-2" />
                       {aiAssistantMutation.isPending ? t('admin:campaigns.asking') : t('admin:campaigns.askAi')}
                     </Button>
                     <Button variant="outline" onClick={() => setShowAIDialog(false)}>
@@ -680,7 +680,7 @@ export default function CampaignManagementPage() {
             </Dialog>
 
             <Button onClick={handleNewCampaign} disabled={createCampaignMutation.isPending}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {createCampaignMutation.isPending ? t('common:actions.creating') : t('admin:campaigns.newCampaign')}
             </Button>
           </div>
@@ -754,7 +754,7 @@ export default function CampaignManagementPage() {
           <TabsTrigger value="campaigns">{t('admin:campaigns.activeCampaigns')}</TabsTrigger>
           <TabsTrigger value="social">{t('admin:campaigns.social')}</TabsTrigger>
           <TabsTrigger value="sms">
-            <MessageSquare className="h-4 w-4 mr-2" />
+            <MessageSquare className="h-4 w-4 me-2" />
             SMS Campaigns
           </TabsTrigger>
           <TabsTrigger value="tools">{t('admin:campaigns.tools')}</TabsTrigger>
@@ -909,7 +909,7 @@ export default function CampaignManagementPage() {
                             onClick={() => handleSocialMediaAction(platform.platform, 'view')}
                             disabled={socialMediaMutation.isPending}
                           >
-                            <ExternalLink className="h-4 w-4 mr-2" />
+                            <ExternalLink className="h-4 w-4 me-2" />
                             {t('admin:campaigns.view')}
                           </Button>
                           <Button 
@@ -919,7 +919,7 @@ export default function CampaignManagementPage() {
                             onClick={() => handleSocialMediaAction(platform.platform, 'manage')}
                             disabled={socialMediaMutation.isPending}
                           >
-                            <Settings className="h-4 w-4 mr-2" />
+                            <Settings className="h-4 w-4 me-2" />
                             {t('admin:campaigns.manage')}
                           </Button>
                         </div>
@@ -1070,7 +1070,7 @@ export default function CampaignManagementPage() {
                   data-testid="button-preview-audience"
                   className="mt-2"
                 >
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-4 w-4 me-2" />
                   Preview Audience ({audienceCount || 0} recipients)
                 </Button>
               </div>
@@ -1100,7 +1100,7 @@ export default function CampaignManagementPage() {
                         size="sm"
                         data-testid="button-parse-csv"
                       >
-                        <Upload className="h-4 w-4 mr-2" />
+                        <Upload className="h-4 w-4 me-2" />
                         Parse CSV
                       </Button>
                       <Button
@@ -1228,7 +1228,7 @@ export default function CampaignManagementPage() {
                       disabled={!testPhone || !smsMessage.trim() || testSMSLoading}
                       data-testid="button-send-test"
                     >
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       Send Test
                     </Button>
                   </div>
@@ -1252,7 +1252,7 @@ export default function CampaignManagementPage() {
                   disabled={!smsMessage.trim() || audienceCount === 0 || bulkSMSLoading}
                   data-testid="button-send-bulk"
                 >
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="h-4 w-4 me-2" />
                   Send Bulk SMS
                 </Button>
               </div>
@@ -1350,7 +1350,7 @@ export default function CampaignManagementPage() {
                   {t('admin:campaigns.websiteBuilderDesc')}
                 </p>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   {t('admin:campaigns.createLandingPage')}
                 </Button>
               </div>

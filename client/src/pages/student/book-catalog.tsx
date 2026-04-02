@@ -199,7 +199,7 @@ export default function StudentBookCatalog() {
             <div className="flex items-center gap-4">
               <Link href="/student/dashboard">
                 <Button variant="ghost" size="sm" data-testid="button-back-to-dashboard">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 me-2" />
                   {t('student:catalog.backToDashboard')}
                 </Button>
               </Link>
@@ -219,10 +219,10 @@ export default function StudentBookCatalog() {
             </div>
             <Link href="/student/cart">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" data-testid="button-view-cart">
-                <ShoppingCart className="w-4 h-4 mr-2" />
+                <ShoppingCart className="w-4 h-4 me-2" />
                 {t('student:catalog.viewCart')}
                 {cart?.total_items > 0 && (
-                  <Badge variant="secondary" className="ml-2">
+                  <Badge variant="secondary" className="ms-2">
                     {cart.total_items}
                   </Badge>
                 )}
@@ -246,13 +246,13 @@ export default function StudentBookCatalog() {
               <div>
                 <Label htmlFor="search">{t('student:catalog.search')}</Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Search className="absolute start-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="search"
                     placeholder={t('student:catalog.searchPlaceholder')}
                     value={filters.search || ''}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
-                    className="pl-10"
+                    className="ps-10"
                     data-testid="input-search"
                   />
                 </div>
@@ -346,7 +346,7 @@ export default function StudentBookCatalog() {
                         )}
                       </div>
                       {book.isInCart && (
-                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="absolute -top-2 -end-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                           <CheckCircle2 className="w-5 h-5 text-white" />
                         </div>
                       )}
@@ -386,7 +386,7 @@ export default function StudentBookCatalog() {
                           <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400" data-testid={`book-price-${book.id}`}>
                             {formatPrice(book.price as number)}
                           </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">
+                          <span className="text-sm text-gray-500 dark:text-gray-400 ms-1">
                             USD
                           </span>
                         </div>
@@ -414,7 +414,7 @@ export default function StudentBookCatalog() {
                               className="flex-1"
                               data-testid={`button-remove-from-cart-${book.id}`}
                             >
-                              <Minus className="w-4 h-4 mr-2" />
+                              <Minus className="w-4 h-4 me-2" />
                               {t('student:catalog.removeFromCart')}
                             </Button>
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300" data-testid={`cart-quantity-${book.id}`}>
@@ -429,9 +429,9 @@ export default function StudentBookCatalog() {
                             data-testid={`button-add-to-cart-${book.id}`}
                           >
                             {addToCartMutation.isPending ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              <Loader2 className="w-4 h-4 me-2 animate-spin" />
                             ) : (
-                              <Plus className="w-4 h-4 mr-2" />
+                              <Plus className="w-4 h-4 me-2" />
                             )}
                             {book.stock_quantity === 0 ? t('student:catalog.outOfStock') : t('student:catalog.addToCart')}
                           </Button>
@@ -445,7 +445,7 @@ export default function StudentBookCatalog() {
                             className="flex-1"
                             data-testid={`button-view-details-${book.id}`}
                           >
-                            <Eye className="w-4 h-4 mr-2" />
+                            <Eye className="w-4 h-4 me-2" />
                             {t('student:catalog.viewDetails')}
                           </Button>
                           <Button

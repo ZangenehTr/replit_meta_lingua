@@ -175,7 +175,7 @@ export default function AdminVisitorChatPage() {
                         </div>
                         <div className="flex gap-1 mt-1">
                           <Badge variant="outline" className="text-[10px] h-4 px-1">
-                            {session.chatMode === 'ai' ? <Bot className="h-2.5 w-2.5 mr-0.5" /> : <Headphones className="h-2.5 w-2.5 mr-0.5" />}
+                            {session.chatMode === 'ai' ? <Bot className="h-2.5 w-2.5 me-0.5" /> : <Headphones className="h-2.5 w-2.5 me-0.5" />}
                             {session.chatMode}
                           </Badge>
                           {session.matchedUser && (

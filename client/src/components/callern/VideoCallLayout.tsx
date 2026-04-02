@@ -63,10 +63,10 @@ export function VideoCallLayout({
 
   // PiP corner classes
   const positionStyles: Record<PipPosition, string> = {
-    "top-left": "top-4 left-4",
-    "top-right": "top-4 right-4",
-    "bottom-left": "bottom-4 left-4",
-    "bottom-right": "bottom-4 right-4",
+    "top-left": "top-4 start-4",
+    "top-right": "top-4 end-4",
+    "bottom-left": "bottom-4 start-4",
+    "bottom-right": "bottom-4 end-4",
   };
 
   return (
@@ -113,7 +113,7 @@ export function VideoCallLayout({
         {remoteIsMain && isConnected && (
           <button
             onClick={() => setRemoteMuted((m) => !m)}
-            className="absolute bottom-4 left-4 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+            className="absolute bottom-4 start-4 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
             title={remoteMuted ? t('callern:videoCallLayout.unmuteRemote') : t('callern:videoCallLayout.muteRemote')}
           >
             {remoteMuted ? (
@@ -172,7 +172,7 @@ export function VideoCallLayout({
 
           {/* PiP overlay controls */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity">
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+            <div className="absolute bottom-2 start-2 end-2 flex items-center justify-between">
               <span className="text-xs text-white font-medium px-2 py-1 bg-black/50 rounded">
                 {!isMainLocal ? t('callern:you') : t('callern:videoCallLayout.remote')}
               </span>
@@ -218,7 +218,7 @@ export function VideoCallLayout({
           </div>
 
           {/* Position indicator dots */}
-          <div className="absolute top-2 right-2 flex gap-1">
+          <div className="absolute top-2 end-2 flex gap-1">
             {(
               [
                 "top-right",
@@ -241,7 +241,7 @@ export function VideoCallLayout({
 
       {/* Helper text */}
       {!isConnected && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center">
+        <div className="absolute top-4 inset-x-0 mx-auto text-center">
           <p className="text-white/70 text-sm bg-black/30 px-4 py-2 rounded-lg backdrop-blur-sm">
             {t('callern:videoCallLayout.helperText')}
           </p>

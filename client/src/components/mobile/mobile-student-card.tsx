@@ -114,13 +114,13 @@ export function MobileStudentCard({
         {/* Contact Information */}
         <div className="space-y-2 mb-3">
           <div className="flex items-center text-sm text-muted-foreground">
-            <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
+            <Mail className="h-4 w-4 me-2 flex-shrink-0" />
             <span className="truncate">{student.email}</span>
           </div>
           
           {student.phoneNumber && (
             <div className="flex items-center text-sm text-muted-foreground">
-              <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+              <Phone className="h-4 w-4 me-2 flex-shrink-0" />
               <span>{student.phoneNumber}</span>
             </div>
           )}
@@ -130,7 +130,7 @@ export function MobileStudentCard({
         {student.courses && student.courses.length > 0 && (
           <div className="mb-3">
             <div className="flex items-center text-sm text-muted-foreground mb-1">
-              <GraduationCap className="h-4 w-4 mr-2" />
+              <GraduationCap className="h-4 w-4 me-2" />
               <span>Enrolled Courses ({student.courses.length})</span>
             </div>
             <div className="flex flex-wrap gap-1">
@@ -151,7 +151,7 @@ export function MobileStudentCard({
         {/* Last Activity */}
         {student.lastActivity && (
           <div className="flex items-center text-sm text-muted-foreground mb-3">
-            <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
+            <Clock className="h-4 w-4 me-2 flex-shrink-0" />
             <span>Last active: {student.lastActivity}</span>
           </div>
         )}

@@ -97,7 +97,7 @@ export function AdminExamRoadmaps() {
         <Dialog>
           <DialogTrigger asChild>
             <Button data-testid="button-create-exam-roadmap">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:examRoadmaps.createRoadmap')}
             </Button>
           </DialogTrigger>
@@ -184,12 +184,12 @@ export function AdminExamRoadmaps() {
           {/* Search and Filters */}
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('admin:examRoadmaps.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="ps-10"
                 data-testid="input-search-roadmaps"
               />
             </div>
@@ -278,15 +278,15 @@ export function AdminExamRoadmaps() {
 
                   <div className="flex gap-2 mt-4">
                     <Button size="sm" variant="outline" data-testid={`button-view-${roadmap.id}`}>
-                      <Eye className="h-4 w-4 mr-1" />
+                      <Eye className="h-4 w-4 me-1" />
                       {t('common:view')}
                     </Button>
                     <Button size="sm" variant="outline" data-testid={`button-edit-${roadmap.id}`}>
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="h-4 w-4 me-1" />
                       {t('common:edit')}
                     </Button>
                     <Button size="sm" variant="outline" data-testid={`button-analytics-${roadmap.id}`}>
-                      <BarChart3 className="h-4 w-4 mr-1" />
+                      <BarChart3 className="h-4 w-4 me-1" />
                       {t('admin:examRoadmaps.analytics')}
                     </Button>
                   </div>

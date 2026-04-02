@@ -333,7 +333,7 @@ export default function AdminSettings() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      className="absolute end-2 top-1/2 -translate-y-1/2"
                       onClick={() => toggleSecret('shetabApiKey')}
                     >
                       {showSecrets.shetabApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -354,7 +354,7 @@ export default function AdminSettings() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      className="absolute end-2 top-1/2 -translate-y-1/2"
                       onClick={() => toggleSecret('shetabSecretKey')}
                     >
                       {showSecrets.shetabSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -437,7 +437,7 @@ export default function AdminSettings() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2"
+                        className="absolute end-2 top-1/2 -translate-y-1/2"
                         onClick={() => toggleSecret('kavehnegarApiKey')}
                       >
                         {showSecrets.kavehnegarApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -538,7 +538,7 @@ export default function AdminSettings() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2"
+                        className="absolute end-2 top-1/2 -translate-y-1/2"
                         onClick={() => toggleSecret('emailPassword')}
                       >
                         {showSecrets.emailPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -653,7 +653,7 @@ export default function AdminSettings() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                    className="absolute end-2 top-1/2 -translate-y-1/2"
                     onClick={() => toggleSecret('jwtSecretKey')}
                   >
                     {showSecrets.jwtSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -912,7 +912,7 @@ export default function AdminSettings() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      className="absolute end-2 top-1/2 -translate-y-1/2"
                       onClick={() => toggleSecret('ollamaApiKey')}
                     >
                       {showSecrets.ollamaApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -1035,7 +1035,7 @@ export default function AdminSettings() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-2 top-1/2 -translate-y-1/2"
+                        className="absolute end-2 top-1/2 -translate-y-1/2"
                         onClick={() => toggleSecret('turnServerPassword')}
                       >
                         {showSecrets.turnServerPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

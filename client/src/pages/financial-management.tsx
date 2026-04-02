@@ -116,7 +116,7 @@ export default function FinancialManagement() {
                 <p className="text-sm font-medium text-muted-foreground">درآمد کل</p>
                 <p className="text-2xl font-bold">{stats ? formatCurrency(stats.totalRevenue) : '0 تومان'}</p>
                 <p className="text-sm text-green-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
+                  <TrendingUp className="h-3 w-3 me-1" />
                   +{stats?.revenueGrowth || 0}% این ماه
                 </p>
               </div>
@@ -281,12 +281,12 @@ export default function FinancialManagement() {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در تراکنش‌ها..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function FinancialManagement() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">مدیریت فاکتورها</h2>
         <Button>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           فاکتور جدید
         </Button>
       </div>
@@ -445,11 +445,11 @@ export default function FinancialManagement() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 me-2" />
             گزارش مالی
           </Button>
           <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             صدور گزارش
           </Button>
         </div>

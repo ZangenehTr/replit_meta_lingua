@@ -13,7 +13,7 @@ export function PWAUpdatePrompt() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-96">
+    <div className="fixed bottom-4 start-4 end-4 z-50 md:start-auto md:end-4 md:w-96">
       <Card className="border-2 border-green-500/20 bg-gradient-to-br from-white to-green-50 dark:from-gray-900 dark:to-green-950 shadow-xl">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -33,8 +33,9 @@ export function PWAUpdatePrompt() {
               size="icon"
               className="h-8 w-8"
               onClick={close}
+              aria-label="Dismiss"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </CardHeader>
@@ -50,7 +51,7 @@ export function PWAUpdatePrompt() {
               onClick={() => updateServiceWorker(true)}
               className="w-full bg-gradient-to-r from-green-500 to-emerald-600"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 me-2" />
               {t('pwa.updateButton', 'Refresh Now')}
             </Button>
           )}

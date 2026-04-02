@@ -294,7 +294,7 @@ export default function TeacherSupervisionDashboard() {
                 onClick={() => setAutoMonitoring(!autoMonitoring)}
                 className="bg-white/20 hover:bg-white/30"
               >
-                {autoMonitoring ? <Zap className="h-4 w-4 mr-2" /> : <Bell className="h-4 w-4 mr-2" />}
+                {autoMonitoring ? <Zap className="h-4 w-4 me-2" /> : <Bell className="h-4 w-4 me-2" />}
                 {autoMonitoring ? "Auto-Monitoring ON" : "Auto-Monitoring OFF"}
               </Button>
             </div>
@@ -331,7 +331,7 @@ export default function TeacherSupervisionDashboard() {
                   transition={{ duration: 0.2 }}
                 >
                   <Card className="relative overflow-hidden">
-                    <div className={`absolute top-0 left-0 w-full h-1 ${getStatusColor(session.status)}`} />
+                    <div className={`absolute top-0 start-0 w-full h-1 ${getStatusColor(session.status)}`} />
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
@@ -395,7 +395,7 @@ export default function TeacherSupervisionDashboard() {
                           className="flex-1"
                           onClick={() => setSelectedSession(session)}
                         >
-                          <Eye className="h-3 w-3 mr-1" />
+                          <Eye className="h-3 w-3 me-1" />
                           Monitor
                         </Button>
                         <Button 
@@ -407,7 +407,7 @@ export default function TeacherSupervisionDashboard() {
                             setReminderDialogOpen(true);
                           }}
                         >
-                          <MessageSquare className="h-3 w-3 mr-1" />
+                          <MessageSquare className="h-3 w-3 me-1" />
                           Remind
                         </Button>
                       </div>
@@ -474,7 +474,7 @@ export default function TeacherSupervisionDashboard() {
                     className={alert.severity === 'critical' ? 'border-red-500 bg-red-50' : 'border-yellow-500 bg-yellow-50'}
                   >
                     <AlertTriangle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`} />
-                    <div className="ml-2">
+                    <div className="ms-2">
                       <AlertDescription className="font-medium">
                         {alert.message}
                       </AlertDescription>
@@ -554,7 +554,7 @@ export default function TeacherSupervisionDashboard() {
                 }}
                 disabled={!customMessage}
               >
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="h-4 w-4 me-2" />
                 Send Reminder
               </Button>
             </div>

@@ -209,7 +209,7 @@ export default function GamificationProgress() {
                     </div>
                     <Progress value={(goal.currentValue / goal.targetValue) * 100} className="h-2" />
                   </div>
-                  <div className="ml-4 text-sm font-medium">
+                  <div className="ms-4 text-sm font-medium">
                     {goal.currentValue} / {goal.targetValue}
                   </div>
                 </div>
@@ -284,7 +284,7 @@ export default function GamificationProgress() {
                                 <div className="text-xs text-green-600 font-medium">
                                   ✓ {currentLanguage === 'fa' ? 'کسب شده' : 'Unlocked'}
                                   {achievement.unlockedAt && (
-                                    <span className="ml-2 text-muted-foreground">
+                                    <span className="ms-2 text-muted-foreground">
                                       {new Date(achievement.unlockedAt).toLocaleDateString()}
                                     </span>
                                   )}

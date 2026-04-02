@@ -96,7 +96,7 @@ export const PhoneSearchInput = forwardRef<HTMLInputElement, PhoneSearchInputPro
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <Search className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
+                <Search className="h-4 w-4 ltr:me-2 rtl:ms-2" />
                 <span className="hidden sm:inline">{t("callcenter:search", "جستجو")}</span>
               </>
             )}

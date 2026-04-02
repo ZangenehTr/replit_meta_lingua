@@ -383,7 +383,7 @@ export default function CallLogging() {
       {hasUnsavedChanges && (
         <div className={`bg-yellow-50 border-l-4 border-yellow-400 p-4 ${isRTL ? 'border-r-4 border-l-0' : ''}`}>
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Clock className={`h-4 w-4 text-yellow-600 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            <Clock className={`h-4 w-4 text-yellow-600 ${'me-2'}`} />
             <p className="text-sm text-yellow-700">
               {t('frontdesk:callLogging.unsavedChanges')}
               {lastAutoSave && ` • ${t('frontdesk:callLogging.lastAutoSaved')}: ${lastAutoSave.toLocaleTimeString()}`}
@@ -417,17 +417,17 @@ export default function CallLogging() {
               <div className="flex gap-2">
                 {!timer.isActive ? (
                   <Button onClick={startCall} className="flex-1" data-testid="start-call">
-                    <Play className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    <Play className={`h-4 w-4 ${'me-2'}`} />
                     {t('frontdesk:callLogging.startCall')}
                   </Button>
                 ) : (
                   <>
                     <Button onClick={pauseCall} variant="outline" className="flex-1" data-testid="pause-call">
-                      {timer.isPaused ? <Play className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> : <Pause className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                      {timer.isPaused ? <Play className={`h-4 w-4 ${'me-2'}`} /> : <Pause className={`h-4 w-4 ${'me-2'}`} />}
                       {timer.isPaused ? t('frontdesk:callLogging.resumeCall') : t('frontdesk:callLogging.pauseCall')}
                     </Button>
                     <Button onClick={endCall} variant="destructive" className="flex-1" data-testid="end-call">
-                      <Square className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      <Square className={`h-4 w-4 ${'me-2'}`} />
                       {t('frontdesk:callLogging.endCall')}
                     </Button>
                   </>
@@ -441,7 +441,7 @@ export default function CallLogging() {
                   className="w-full border-red-200 text-red-600 hover:bg-red-50"
                   data-testid="emergency-escalation"
                 >
-                  <AlertTriangle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <AlertTriangle className={`h-4 w-4 ${'me-2'}`} />
                   {t('frontdesk:callLogging.emergencyEscalation')}
                 </Button>
               )}
@@ -466,7 +466,7 @@ export default function CallLogging() {
                   onClick={() => applyTemplate(key as keyof typeof CALL_TEMPLATES)}
                   data-testid={`template-${key}`}
                 >
-                  <FileText className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <FileText className={`h-4 w-4 ${'me-2'}`} />
                   {template.name}
                 </Button>
               ))}
@@ -717,7 +717,7 @@ export default function CallLogging() {
                                   <Star className="h-6 w-6 fill-current" />
                                 </button>
                               ))}
-                              <span className={`text-sm text-muted-foreground ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                              <span className={`text-sm text-muted-foreground ms-2`}>
                                 {field.value || 0}/5
                               </span>
                             </div>
@@ -905,7 +905,7 @@ export default function CallLogging() {
                     t('frontdesk:callLogging.saving')
                   ) : (
                     <>
-                      <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      <CheckCircle className={`h-4 w-4 ${'me-2'}`} />
                       {t('frontdesk:callLogging.completeCallLog')}
                     </>
                   )}
@@ -918,7 +918,7 @@ export default function CallLogging() {
                   disabled={!hasUnsavedChanges}
                   data-testid="save-draft"
                 >
-                  <Save className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <Save className={`h-4 w-4 ${'me-2'}`} />
                   {t('frontdesk:callLogging.saveDraft')}
                 </Button>
 
@@ -931,7 +931,7 @@ export default function CallLogging() {
                   }}
                   data-testid="schedule-callback"
                 >
-                  <Calendar className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <Calendar className={`h-4 w-4 ${'me-2'}`} />
                   {t('frontdesk:callLogging.scheduleCallback')}
                 </Button>
               </div>

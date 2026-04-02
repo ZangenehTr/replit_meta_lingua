@@ -312,7 +312,7 @@ export function AdminBookEcommerce() {
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-add-book">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {t('admin:bookEcommerce.addBook')}
             </Button>
           </DialogTrigger>
@@ -635,15 +635,15 @@ export function AdminBookEcommerce() {
       <Tabs defaultValue="catalog" className="space-y-4">
         <TabsList data-testid="tabs-navigation">
           <TabsTrigger value="catalog" data-testid="tab-catalog">
-            <BookOpen className="mr-2 h-4 w-4" />
+            <BookOpen className="me-2 h-4 w-4" />
             {t('admin:bookEcommerce.catalog')}
           </TabsTrigger>
           <TabsTrigger value="orders" data-testid="tab-orders">
-            <ShoppingCart className="mr-2 h-4 w-4" />
+            <ShoppingCart className="me-2 h-4 w-4" />
             {t('admin:bookEcommerce.orders')}
           </TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-analytics">
-            <TrendingUp className="mr-2 h-4 w-4" />
+            <TrendingUp className="me-2 h-4 w-4" />
             {t('admin:bookEcommerce.analytics')}
           </TabsTrigger>
         </TabsList>
@@ -658,13 +658,13 @@ export function AdminBookEcommerce() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder={t('admin:bookEcommerce.searchPlaceholder')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       data-testid="input-search"
-                      className="pl-8 w-[300px]"
+                      className="ps-8 w-[300px]"
                     />
                   </div>
                 </div>
@@ -702,7 +702,7 @@ export function AdminBookEcommerce() {
                             data-testid={`button-view-${book.id}`}
                             onClick={() => handleViewBook(book)}
                           >
-                            <Eye className="mr-1 h-3 w-3" />
+                            <Eye className="me-1 h-3 w-3" />
                             {t('common:view')}
                           </Button>
                           <Button 
@@ -712,7 +712,7 @@ export function AdminBookEcommerce() {
                             data-testid={`button-edit-${book.id}`}
                             onClick={() => handleEditBook(book)}
                           >
-                            <Edit className="mr-1 h-3 w-3" />
+                            <Edit className="me-1 h-3 w-3" />
                             {t('common:edit')}
                           </Button>
                         </div>
@@ -724,7 +724,7 @@ export function AdminBookEcommerce() {
                           onClick={() => handlePurchaseClick(book)}
                           disabled={purchaseBookMutation.isPending}
                         >
-                          <ShoppingCart className="mr-1 h-3 w-3" />
+                          <ShoppingCart className="me-1 h-3 w-3" />
                           Purchase ({book.price} {book.currency || 'IRR'})
                         </Button>
                       </CardContent>

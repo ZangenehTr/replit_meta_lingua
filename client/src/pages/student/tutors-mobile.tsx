@@ -170,7 +170,7 @@ export default function StudentTutorsMobile() {
             tap-scale
           `}
         >
-          <Heart className="w-4 h-4 inline mr-1" />
+          <Heart className="w-4 h-4 inline me-1" />
           {t('student:favorites')}
         </button>
         {['all', 'english', 'spanish', 'french', 'german'].map((lang) => (
@@ -225,7 +225,7 @@ export default function StudentTutorsMobile() {
               >
                 {/* Online Indicator */}
                 {tutor.isOnline && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-500/20 px-2 py-1 rounded-full">
+                  <div className="absolute top-3 end-3 flex items-center gap-1 bg-green-500/20 px-2 py-1 rounded-full">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     <span className="text-green-400 text-xs">{t('common:online')}</span>
                   </div>
@@ -398,14 +398,14 @@ export default function StudentTutorsMobile() {
                   variant="outline"
                   className="flex-1"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
+                  <MessageCircle className="w-4 h-4 me-2" />
                   {t('student:message')}
                 </Button>
                 <Button
                   className="flex-1"
                   onClick={() => bookSession.mutate(selectedTutor.id)}
                 >
-                  <Video className="w-4 h-4 mr-2" />
+                  <Video className="w-4 h-4 me-2" />
                   {t('student:bookSession')}
                 </Button>
               </div>

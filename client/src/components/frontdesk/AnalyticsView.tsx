@@ -220,7 +220,7 @@ export function AnalyticsView({ analytics, interactions, loading, dateRange }: A
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <BarChart3 className="h-5 w-5 mr-2" />
+            <BarChart3 className="h-5 w-5 me-2" />
             Channel Performance
           </CardTitle>
           <CardDescription>
@@ -268,7 +268,7 @@ export function AnalyticsView({ analytics, interactions, loading, dateRange }: A
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <PieChart className="h-5 w-5 mr-2" />
+              <PieChart className="h-5 w-5 me-2" />
               Interaction Outcomes
             </CardTitle>
             <CardDescription>
@@ -311,7 +311,7 @@ export function AnalyticsView({ analytics, interactions, loading, dateRange }: A
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Award className="h-5 w-5 mr-2" />
+              <Award className="h-5 w-5 me-2" />
               Top Performers
             </CardTitle>
             <CardDescription>
@@ -364,7 +364,7 @@ export function AnalyticsView({ analytics, interactions, loading, dateRange }: A
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
+              <TrendingUp className="h-5 w-5 me-2" />
               Conversion Funnel
             </CardTitle>
             <CardDescription>
@@ -404,7 +404,7 @@ export function AnalyticsView({ analytics, interactions, loading, dateRange }: A
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Activity className="h-5 w-5 mr-2" />
+              <Activity className="h-5 w-5 me-2" />
               Interaction Trends
             </CardTitle>
             <CardDescription>

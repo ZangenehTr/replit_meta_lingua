@@ -135,7 +135,7 @@ function PrivateClassOverviewPage() {
           <p className="text-gray-500 text-sm mt-1">مشاهده و پیگیری همه کلاس‌های خصوصی (فقط خواندنی)</p>
         </div>
         <Button variant="outline" size="sm" onClick={exportCSV}>
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-4 w-4 me-2" />
           خروجی CSV
         </Button>
       </div>
@@ -178,12 +178,12 @@ function PrivateClassOverviewPage() {
 
       <div className="flex gap-2 items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="جستجو بر اساس نام دانش‌آموز یا استاد..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-10"
+            className="ps-10"
           />
         </div>
         <div className="flex rounded-md border overflow-hidden text-sm">
@@ -302,9 +302,9 @@ function PrivateClassOverviewPage() {
                       size="sm"
                       onClick={() => setExpandedId(expandedId === rec.id ? null : rec.id)}
                     >
-                      <ClipboardList className="h-4 w-4 mr-1" />
+                      <ClipboardList className="h-4 w-4 me-1" />
                       تاریخچه
-                      {expandedId === rec.id ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                      {expandedId === rec.id ? <ChevronUp className="h-4 w-4 ms-1" /> : <ChevronDown className="h-4 w-4 ms-1" />}
                     </Button>
                   </div>
 
@@ -320,24 +320,24 @@ function PrivateClassOverviewPage() {
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="text-gray-500 border-b text-xs">
-                                <th className="text-right pb-2 pr-2">تاریخ</th>
-                                <th className="text-right pb-2 pr-2">مدت (دقیقه)</th>
-                                <th className="text-right pb-2 pr-2">حضور</th>
-                                <th className="text-right pb-2 pr-2">موضوع</th>
+                                <th className="text-right pb-2 pe-2">تاریخ</th>
+                                <th className="text-right pb-2 pe-2">مدت (دقیقه)</th>
+                                <th className="text-right pb-2 pe-2">حضور</th>
+                                <th className="text-right pb-2 pe-2">موضوع</th>
                                 <th className="text-right pb-2">یادداشت استاد</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y">
                               {sessionHistory.map(s => (
                                 <tr key={s.id} className="text-xs">
-                                  <td className="py-2 pr-2">{s.sessionDate ? new Date(s.sessionDate).toLocaleDateString('fa-IR') : '—'}</td>
-                                  <td className="py-2 pr-2">{s.actualDuration}</td>
-                                  <td className="py-2 pr-2">
+                                  <td className="py-2 pe-2">{s.sessionDate ? new Date(s.sessionDate).toLocaleDateString('fa-IR') : '—'}</td>
+                                  <td className="py-2 pe-2">{s.actualDuration}</td>
+                                  <td className="py-2 pe-2">
                                     <Badge variant={s.attendanceStatus === 'attended' ? 'default' : 'secondary'} className="text-xs py-0">
                                       {attendanceLabel(s.attendanceStatus)}
                                     </Badge>
                                   </td>
-                                  <td className="py-2 pr-2 max-w-xs truncate">{s.topicsCovered ?? '—'}</td>
+                                  <td className="py-2 pe-2 max-w-xs truncate">{s.topicsCovered ?? '—'}</td>
                                   <td className="py-2 max-w-xs truncate text-gray-500 italic">{s.teacherNotes ?? '—'}</td>
                                 </tr>
                               ))}

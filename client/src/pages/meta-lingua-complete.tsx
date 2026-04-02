@@ -422,17 +422,17 @@ export default function MetaLinguaComplete() {
                   disabled={createGuestProgressMutation.isPending}
                   data-testid="button-test-guest-learning"
                 >
-                  <Users className="w-4 h-4 mr-2" />
+                  <Users className="w-4 h-4 me-2" />
                   Test Guest Learning
                 </Button>
                 
                 <Button onClick={testVoiceExercise} data-testid="button-test-voice">
-                  <Mic className="w-4 h-4 mr-2" />
+                  <Mic className="w-4 h-4 me-2" />
                   Test Voice Exercise
                 </Button>
                 
                 <Button variant="outline" data-testid="button-conversion-tracking">
-                  <TrendingUp className="w-4 h-4 mr-2" />
+                  <TrendingUp className="w-4 h-4 me-2" />
                   Conversion Tracking
                 </Button>
               </div>
@@ -566,12 +566,12 @@ export default function MetaLinguaComplete() {
                   disabled={createLessonMutation.isPending}
                   data-testid="button-create-3d-lesson"
                 >
-                  <Boxes className="w-4 h-4 mr-2" />
+                  <Boxes className="w-4 h-4 me-2" />
                   Create Sample 3D Lesson
                 </Button>
                 
                 <Button variant="outline" data-testid="button-view-templates">
-                  <Award className="w-4 h-4 mr-2" />
+                  <Award className="w-4 h-4 me-2" />
                   View Templates
                 </Button>
               </div>

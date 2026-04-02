@@ -81,7 +81,7 @@ export function FirstTimeProfileModal({
                 </DialogDescription>
 
                 <Badge variant="secondary" className="mx-auto">
-                  <Brain className="h-3 w-3 mr-1" />
+                  <Brain className="h-3 w-3 me-1" />
                   {t('student:profile.poweredByAI', 'Powered by AI')}
                 </Badge>
               </DialogHeader>
@@ -137,19 +137,19 @@ export function FirstTimeProfileModal({
                 
                 <div className="flex justify-center gap-2">
                   <Badge variant="outline" className="text-xs">
-                    <User className="h-3 w-3 mr-1" />
+                    <User className="h-3 w-3 me-1" />
                     {t('basicInfo')}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    <BookOpen className="h-3 w-3 mr-1" />
+                    <BookOpen className="h-3 w-3 me-1" />
                     {t('learning')}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    <Settings className="h-3 w-3 mr-1" />
+                    <Settings className="h-3 w-3 me-1" />
                     {t('preferences')}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    <Globe className="h-3 w-3 mr-1" />
+                    <Globe className="h-3 w-3 me-1" />
                     {t('cultural')}
                   </Badge>
                 </div>
@@ -161,9 +161,9 @@ export function FirstTimeProfileModal({
                   className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                   size="lg"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  <Sparkles className="h-4 w-4 me-2" />
                   {t('student:profile.completeProfileNow', 'Complete Profile Now')}
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-4 w-4 ms-2" />
                 </Button>
                 
                 <Button 

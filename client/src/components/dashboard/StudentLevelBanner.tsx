@@ -66,7 +66,7 @@ export function StudentLevelBanner({
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/5" />
-        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-orange-500/20 blur-xl" />
+        <div className="absolute top-0 end-0 w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-orange-500/20 blur-xl" />
         
         <div className="relative z-10 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
@@ -101,7 +101,7 @@ export function StudentLevelBanner({
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/5" />
-      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-500/20 blur-xl" />
+      <div className="absolute top-0 end-0 w-32 h-32 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-500/20 blur-xl" />
       
       <div className="relative z-10">
         {/* Header */}

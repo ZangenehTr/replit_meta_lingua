@@ -179,7 +179,7 @@ export function CourseProgress() {
                     disabled={progressMutation.isPending}
                   >
                     {progressMutation.isPending ? 'Updating...' : 'Continue Learning'}
-                    <ArrowRight className="ml-1 h-3 w-3" />
+                    <ArrowRight className="ms-1 h-3 w-3" />
                   </Button>
                   <Button
                     size="sm"

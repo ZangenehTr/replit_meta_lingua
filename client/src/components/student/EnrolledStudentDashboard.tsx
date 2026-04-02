@@ -162,7 +162,7 @@ function HubErrorState({ hubId, onRetry }: { hubId: HubType; onRetry: () => void
           onClick={onRetry}
           data-testid={`button-retry-${hubId}`}
         >
-          <RotateCcw className="h-4 w-4 mr-2" />
+          <RotateCcw className="h-4 w-4 me-2" />
           Try Again
         </Button>
         <Button 
@@ -174,7 +174,7 @@ function HubErrorState({ hubId, onRetry }: { hubId: HubType; onRetry: () => void
           }}
           data-testid={`button-refresh-${hubId}`}
         >
-          <Loader2 className="h-4 w-4 mr-2" />
+          <Loader2 className="h-4 w-4 me-2" />
           Refresh Data
         </Button>
       </div>
@@ -248,10 +248,11 @@ function NotificationBell() {
         className="text-gray-700 relative hover:bg-blue-50" 
         data-testid="button-notifications"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notifications"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-bold text-[10px]">
+          <span className="absolute -top-1 -end-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-bold text-[10px]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -259,7 +260,7 @@ function NotificationBell() {
 
       {/* Notifications Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-12 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="absolute end-0 top-12 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex justify-between items-centers">
             <h3 className="font-semibold text-gray-900">{t('common.notifications')}</h3>
             {notifications.length > 0 && (
@@ -643,8 +644,9 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                 className="md:hidden text-blue-700 hover:bg-blue-50"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 data-testid="button-mobile-menu"
+                aria-label={sidebarOpen ? "Close menu" : "Open menu"}
               >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {sidebarOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
               </Button>
 
               <div className="flex items-center gap-3">
@@ -694,7 +696,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
               className={cn(
                 "fixed inset-y-0 z-40 w-72 bg-white/95 backdrop-blur-xl border-r border-blue-100 overflow-y-auto shadow-xl",
                 "md:sticky md:top-16 md:h-[calc(100vh-4rem)]",
-                isRTL ? "right-0" : "left-0"
+                "start-0"
               )}
             >
               <div className="p-4">
@@ -741,7 +743,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                         data-testid={`hub-${hub.id}`}
                       >
                         <div className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center mr-3 transition-all",
+                          "w-10 h-10 rounded-lg flex items-center justify-center me-3 transition-all",
                           isActive ? "bg-white/20" : "bg-blue-100 group-hover:bg-blue-200"
                         )}>
                           <Icon className="h-5 w-5" />
@@ -757,7 +759,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                         </div>
                         {hub.badge && (
                           <Badge className={cn(
-                            "ml-auto text-xs font-medium",
+                            "ms-auto text-xs font-medium",
                             isActive ? "bg-white/20 text-white" : "bg-blue-500 text-white"
                           )}>
                             {hub.badge}
@@ -766,7 +768,7 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
                         {isActive && (
                           <div className={cn(
                             "absolute top-2 bottom-2 w-1 bg-white/40 rounded-full",
-                            isRTL ? "left-1" : "right-1"
+                            "end-1"
                           )} />
                         )}
                       </Button>
@@ -994,7 +996,7 @@ function OverviewHub({ enrollmentStatus, user, dashboardStats, gamificationStats
               </div>
             </div>
           </div>
-          <div className="absolute top-0 right-0 opacity-10">
+          <div className="absolute top-0 end-0 opacity-10">
             <Trophy className="h-32 w-32" />
           </div>
         </CardContent>
@@ -1315,7 +1317,7 @@ function CoursesForMe() {
                 : 'Browse all available courses below'}
             </p>
           </div>
-          <Badge className="ml-auto bg-indigo-600 text-white">{studentSubLevel}</Badge>
+          <Badge className="ms-auto bg-indigo-600 text-white">{studentSubLevel}</Badge>
         </div>
       ) : (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-800">
@@ -1345,7 +1347,7 @@ function CoursesForMe() {
               }`}
             >
               {tag.name}
-              {byExamTag[tag.id] ? <span className="ml-1 opacity-70">({byExamTag[tag.id]})</span> : null}
+              {byExamTag[tag.id] ? <span className="ms-1 opacity-70">({byExamTag[tag.id]})</span> : null}
             </button>
           ))}
         </div>
@@ -1355,13 +1357,13 @@ function CoursesForMe() {
       <div className="flex flex-wrap gap-2 items-center">
         {/* Search */}
         <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search courses…"
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
-            className="pl-9 pr-3 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="ps-9 pe-3 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
         </div>
         {/* Skill scope */}
@@ -1605,13 +1607,13 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
                   <div className="space-y-2">
                     <Link href="/linguaquest">
                       <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500" data-testid="button-continue-linguaquest">
-                        <Play className="h-4 w-4 mr-2" />
+                        <Play className="h-4 w-4 me-2" />
                         Continue Free Lessons
                       </Button>
                     </Link>
                     {linguaQuestProgress?.canUpgrade && (
                       <Button variant="outline" className="w-full text-xs" data-testid="button-upgrade-linguaquest">
-                        <Crown className="h-3 w-3 mr-2" />
+                        <Crown className="h-3 w-3 me-2" />
                         Upgrade Progress to Premium
                       </Button>
                     )}
@@ -1714,7 +1716,7 @@ function LearnHub({ courses, assignments, learningProgress }: any) {
                 </div>
                 <Link href="/student/learning-path">
                   <Button data-testid="button-create-path">
-                    <ArrowRight className="h-4 w-4 mr-2" />
+                    <ArrowRight className="h-4 w-4 me-2" />
                     Create Path
                   </Button>
                 </Link>
@@ -1827,7 +1829,7 @@ function LiveHub({ upcomingSessions }: any) {
             <div className="space-y-2">
               <Link href="/callern">
                 <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-callern-dashboard">
-                  <VideoIcon className="h-4 w-4 mr-2" />
+                  <VideoIcon className="h-4 w-4 me-2" />
                   Callern Dashboard
                 </Button>
               </Link>
@@ -1837,7 +1839,7 @@ function LiveHub({ upcomingSessions }: any) {
                   onClick={() => setShowQuickJoinDialog(true)}
                   data-testid="button-quick-session"
                 >
-                  <Zap className="h-4 w-4 mr-2" />
+                  <Zap className="h-4 w-4 me-2" />
                   Quick Session
                 </Button>
               )}
@@ -1877,7 +1879,7 @@ function LiveHub({ upcomingSessions }: any) {
                     onClick={() => setShowQuickJoinDialog(true)}
                     data-testid="button-join-practice-room"
                   >
-                    <VideoIcon className="h-5 w-5 mr-3" />
+                    <VideoIcon className="h-5 w-5 me-3" />
                     Start Instant Session ({availableTeachers} available)
                   </Button>
                 ) : (
@@ -1886,33 +1888,33 @@ function LiveHub({ upcomingSessions }: any) {
                     className="w-full justify-start h-12" 
                     data-testid="button-no-teachers"
                   >
-                    <VideoIcon className="h-5 w-5 mr-3" />
+                    <VideoIcon className="h-5 w-5 me-3" />
                     No Teachers Available
                   </Button>
                 )
               ) : (
                 <Link href="/callern">
                   <Button className="w-full justify-start h-12 bg-gradient-to-r from-green-500 to-teal-500" data-testid="button-buy-package">
-                    <Package className="h-5 w-5 mr-3" />
+                    <Package className="h-5 w-5 me-3" />
                     Buy Callern Package
                   </Button>
                 </Link>
               )}
               <Link href="/student/tutors">
                 <Button variant="outline" className="w-full justify-start h-12" data-testid="button-schedule-session">
-                  <Calendar className="h-5 w-5 mr-3" />
+                  <Calendar className="h-5 w-5 me-3" />
                   Schedule with Specific Tutor
                 </Button>
               </Link>
               <Link href="/student/sessions">
                 <Button variant="outline" className="w-full justify-start h-12" data-testid="button-session-history">
-                  <Clock className="h-5 w-5 mr-3" />
+                  <Clock className="h-5 w-5 me-3" />
                   View Session History
                 </Button>
               </Link>
               <Link href="/callern">
                 <Button variant="outline" className="w-full justify-start h-12" data-testid="button-callern-full">
-                  <Settings className="h-5 w-5 mr-3" />
+                  <Settings className="h-5 w-5 me-3" />
                   Full Callern Dashboard
                 </Button>
               </Link>
@@ -1973,7 +1975,7 @@ function LiveHub({ upcomingSessions }: any) {
                   <div className="flex gap-2">
                     {session.recordingUrl && (
                       <Button size="sm" variant="outline" data-testid={`button-recording-${session.id}`}>
-                        <PlayCircle className="h-4 w-4 mr-1" />
+                        <PlayCircle className="h-4 w-4 me-1" />
                         Recording
                       </Button>
                     )}
@@ -2037,9 +2039,9 @@ function LiveHub({ upcomingSessions }: any) {
               data-testid="button-start-quick-session"
             >
               {startQuickSessionMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 animate-spin me-2" />
               ) : (
-                <Video className="h-4 w-4 mr-2" />
+                <Video className="h-4 w-4 me-2" />
               )}
               Start Session
             </Button>
@@ -2460,7 +2462,7 @@ function SocialHub(props: any) {
               <div className="flex items-center gap-4 mt-4">
                 <Link href="/student/messages">
                   <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-messages">
-                    <MessageSquare className="h-4 w-4 mr-2" />
+                    <MessageSquare className="h-4 w-4 me-2" />
                     Messages
                   </Button>
                 </Link>
@@ -2530,7 +2532,7 @@ function SocialHub(props: any) {
                         data-testid={`button-join-group-${group.id}`}
                       >
                         {joinGroupMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                          <Loader2 className="h-4 w-4 animate-spin me-1" />
                         ) : null}
                         Join
                       </Button>
@@ -2694,7 +2696,7 @@ function SocialHub(props: any) {
                   {partner.connected ? (
                     <Link href="/student/messages">
                       <Button size="sm" variant="outline" className="w-full" data-testid={`button-message-${partner.id}`}>
-                        <MessageSquare className="h-4 w-4 mr-1" />
+                        <MessageSquare className="h-4 w-4 me-1" />
                         Message
                       </Button>
                     </Link>
@@ -2707,7 +2709,7 @@ function SocialHub(props: any) {
                       data-testid={`button-connect-${partner.id}`}
                     >
                       {connectPartnerMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        <Loader2 className="h-4 w-4 animate-spin me-1" />
                       ) : null}
                       Connect
                     </Button>
@@ -2719,7 +2721,7 @@ function SocialHub(props: any) {
           <div className="mt-6 pt-4 border-t border-gray-200">
             <Link href="/student/peer-socializer">
               <Button variant="outline" className="w-full" data-testid="button-browse-partners">
-                <Search className="h-4 w-4 mr-2" />
+                <Search className="h-4 w-4 me-2" />
                 Browse All Study Partners
               </Button>
             </Link>
@@ -2915,7 +2917,7 @@ function CommerceHub({ enrollmentStatus, wallet }: any) {
               <div className="flex items-center gap-4 mt-4">
                 <Link href="/student/virtual-mall">
                   <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-virtual-mall">
-                    <Package className="h-4 w-4 mr-2" />
+                    <Package className="h-4 w-4 me-2" />
                     Visit Virtual Mall
                   </Button>
                 </Link>
@@ -2925,7 +2927,7 @@ function CommerceHub({ enrollmentStatus, wallet }: any) {
               </div>
             </div>
             <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30" data-testid="button-top-up">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               Top Up
             </Button>
           </div>
@@ -2945,25 +2947,25 @@ function CommerceHub({ enrollmentStatus, wallet }: any) {
             <div className="space-y-3">
               <Link href="/student/book-catalog">
                 <Button className="w-full justify-start h-12 bg-gradient-to-r from-blue-500 to-indigo-500" data-testid="button-book-catalog">
-                  <BookOpen className="h-5 w-5 mr-3" />
+                  <BookOpen className="h-5 w-5 me-3" />
                   Browse Book Catalog
                 </Button>
               </Link>
               <Link href="/student/cart">
                 <Button variant="outline" className="w-full justify-start h-12" data-testid="button-shopping-cart">
-                  <ShoppingCart className="h-5 w-5 mr-3" />
+                  <ShoppingCart className="h-5 w-5 me-3" />
                   Shopping Cart ({cartData?.itemCount || 0})
                 </Button>
               </Link>
               <Link href="/student/virtual-mall">
                 <Button variant="outline" className="w-full justify-start h-12" data-testid="button-virtual-mall-explore">
-                  <Package className="h-5 w-5 mr-3" />
+                  <Package className="h-5 w-5 me-3" />
                   Explore Virtual Mall
                 </Button>
               </Link>
               <Link href="/student/order-history">
                 <Button variant="outline" className="w-full justify-start h-12" data-testid="button-order-history">
-                  <FileText className="h-5 w-5 mr-3" />
+                  <FileText className="h-5 w-5 me-3" />
                   Order History
                 </Button>
               </Link>
@@ -3126,7 +3128,7 @@ function CommerceHub({ enrollmentStatus, wallet }: any) {
                   </div>
                   <Link href="/student/checkout">
                     <Button className="bg-gradient-to-r from-blue-500 to-indigo-500" data-testid="button-quick-checkout">
-                      <CreditCard className="h-4 w-4 mr-2" />
+                      <CreditCard className="h-4 w-4 me-2" />
                       Checkout Now
                     </Button>
                   </Link>
@@ -3156,9 +3158,10 @@ function ProfileHub({ user, achievements, enrollmentStatus }: any) {
               </Avatar>
               <Button 
                 size="icon" 
-                className="absolute -bottom-2 -right-2 w-8 h-8 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                className="absolute -bottom-2 -end-2 w-8 h-8 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                aria-label="Change profile photo"
               >
-                <Camera className="h-4 w-4" />
+                <Camera className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
             <div className="flex-1">
@@ -3181,7 +3184,7 @@ function ProfileHub({ user, achievements, enrollmentStatus }: any) {
               </div>
             </div>
             <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-              <Edit3 className="h-4 w-4 mr-2" />
+              <Edit3 className="h-4 w-4 me-2" />
               Edit Profile
             </Button>
           </div>
@@ -3286,19 +3289,19 @@ function ProfileHub({ user, achievements, enrollmentStatus }: any) {
             <CardContent>
               <div className="space-y-3">
                 <Button variant="outline" className="w-full justify-start">
-                  <Bell className="h-4 w-4 mr-2" />
+                  <Bell className="h-4 w-4 me-2" />
                   Notifications
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
-                  <Shield className="h-4 w-4 mr-2" />
+                  <Shield className="h-4 w-4 me-2" />
                   Privacy & Security
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
-                  <Globe className="h-4 w-4 mr-2" />
+                  <Globe className="h-4 w-4 me-2" />
                   Language & Region
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
-                  <CreditCard className="h-4 w-4 mr-2" />
+                  <CreditCard className="h-4 w-4 me-2" />
                   Billing & Payment
                 </Button>
               </div>
@@ -3371,7 +3374,7 @@ function ProfileHub({ user, achievements, enrollmentStatus }: any) {
                     </div>
                   </div>
                   <Button size="sm" variant="outline">
-                    <Download className="h-4 w-4 mr-1" />
+                    <Download className="h-4 w-4 me-1" />
                     Download
                   </Button>
                 </div>

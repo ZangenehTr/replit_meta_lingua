@@ -324,7 +324,7 @@ function FollowUp() {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 ms-4">
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
@@ -333,7 +333,7 @@ function FollowUp() {
                           onClick={() => setSelectedLead(lead)}
                           data-testid={`button-schedule-${lead.id}`}
                         >
-                          <CalendarIcon className="h-4 w-4 mr-2" />
+                          <CalendarIcon className="h-4 w-4 me-2" />
                           برنامه‌ریزی
                         </Button>
                       </DialogTrigger>
@@ -358,7 +358,7 @@ function FollowUp() {
                                       !followUpDate && "text-muted-foreground"
                                     )}
                                   >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    <CalendarIcon className="me-2 h-4 w-4" />
                                     {followUpDate ? (
                                       format(followUpDate, "PPP", { locale: faIR })
                                     ) : (
@@ -458,7 +458,7 @@ function FollowUp() {
                       disabled={sendSMSReminderMutation.isPending}
                       data-testid={`button-sms-${lead.id}`}
                     >
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <MessageSquare className="h-4 w-4 me-2" />
                       پیامک
                     </Button>
                     
@@ -469,7 +469,7 @@ function FollowUp() {
                       disabled={moveToLevelAssessmentMutation.isPending}
                       data-testid={`button-level-assessment-${lead.id}`}
                     >
-                      <ArrowRight className="h-4 w-4 mr-2" />
+                      <ArrowRight className="h-4 w-4 me-2" />
                       تعیین سطح
                     </Button>
                   </div>
@@ -488,12 +488,12 @@ function FollowUp() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در متقاضیان پیگیری..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
               data-testid="input-search-follow-up"
             />
           </div>

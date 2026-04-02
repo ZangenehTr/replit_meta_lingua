@@ -645,17 +645,17 @@ export function AdminCourses() {
       {/* Search and Filters - Mobile First */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute start-3 rtl:end-3 rtl:start-auto top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder={t('admin:courses.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 rtl:pl-3 rtl:pr-10 w-full"
+            className="ps-10 rtl:ps-3 rtl:pe-10 w-full"
           />
         </div>
         <Select value={filterLanguage} onValueChange={setFilterLanguage}>
           <SelectTrigger className="w-full sm:w-48">
-            <Filter className="h-4 w-4 ml-2 rtl:mr-2 rtl:ml-0" />
+            <Filter className="h-4 w-4 ms-2 rtl:me-2 rtl:ms-0" />
             <SelectValue placeholder={t('admin:courses.allLanguages')} />
           </SelectTrigger>
           <SelectContent>

@@ -123,11 +123,11 @@ export function IOSDatePicker({ value, onChange, placeholder = "Pick a date", cl
         }}
       >
         {/* Gradient overlays for iOS effect */}
-        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 start-0 end-0 h-8 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
+        <div className="absolute bottom-0 start-0 end-0 h-8 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
         
         {/* Selection highlight */}
-        <div className="absolute left-0 right-0 bg-gray-100 h-11 top-16 z-5 pointer-events-none rounded" />
+        <div className="absolute start-0 end-0 bg-gray-100 h-11 top-16 z-5 pointer-events-none rounded" />
         
         {/* Padding for proper centering */}
         <div className="h-16" />
@@ -190,9 +190,9 @@ export function IOSDatePicker({ value, onChange, placeholder = "Pick a date", cl
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={`w-full justify-start text-left font-normal ${className || ''}`}
+          className={`w-full justify-start text-start font-normal ${className || ''}`}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="me-2 h-4 w-4" />
           {selectedDate ? format(selectedDate, "PPP") : placeholder}
         </Button>
       </PopoverTrigger>

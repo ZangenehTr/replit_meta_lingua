@@ -156,7 +156,7 @@ export default function CurriculumHub() {
                             data-testid={`button-view-category-${category.slug}`}
                           >
                             {t('curriculum.viewCourses', 'View Courses')}
-                            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="ms-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                           </Button>
                         </CardContent>
                       </Card>

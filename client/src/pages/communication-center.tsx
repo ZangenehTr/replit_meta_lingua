@@ -281,7 +281,7 @@ export default function CommunicationCenter() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">قالب‌های پیام</h2>
         <Button onClick={() => setShowNewTemplate(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           قالب جدید
         </Button>
       </div>
@@ -330,7 +330,7 @@ export default function CommunicationCenter() {
                   
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" className="flex-1">
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="h-4 w-4 me-1" />
                       ویرایش
                     </Button>
                     <Button size="sm" variant="ghost">
@@ -354,7 +354,7 @@ export default function CommunicationCenter() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">کمپین‌های بازاریابی</h2>
         <Button onClick={() => setShowNewCampaign(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           کمپین جدید
         </Button>
       </div>
@@ -440,7 +440,7 @@ export default function CommunicationCenter() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">اتوماسیون ارتباطات</h2>
         <Button>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           قانون جدید
         </Button>
       </div>
@@ -486,7 +486,7 @@ export default function CommunicationCenter() {
                 
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1">
-                    <Edit className="h-4 w-4 mr-1" />
+                    <Edit className="h-4 w-4 me-1" />
                     ویرایش
                   </Button>
                   <Button size="sm" variant="ghost">
@@ -514,11 +514,11 @@ export default function CommunicationCenter() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-4 w-4 me-2" />
             گزارش عملکرد
           </Button>
           <Button variant="outline">
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="h-4 w-4 me-2" />
             تنظیمات
           </Button>
         </div>

@@ -162,11 +162,11 @@ export default function AnalyticsDashboard() {
                 </SelectContent>
               </Select>
               <Button variant="outline" onClick={() => refetch()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 me-2" />
                 {t('admin:analytics.refresh')}
               </Button>
               <Button>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 me-2" />
                 {t('admin:analytics.download')}
               </Button>
             </div>
@@ -184,7 +184,7 @@ export default function AnalyticsDashboard() {
                   </p>
                   <p className="text-2xl font-bold">{formatToman(analytics?.revenue.total || 0)}</p>
                   <p className="text-xs text-green-600 dark:text-green-400 flex items-center">
-                    <TrendingUp className="h-3 w-3 mr-1" />
+                    <TrendingUp className="h-3 w-3 me-1" />
                     +{analytics?.revenue.growth || 0}% this month
                   </p>
                 </div>

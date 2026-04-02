@@ -315,13 +315,13 @@ export default function StudentSessions() {
 
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
             <input
               type="text"
               placeholder={t('student:searchSessions', 'Search sessions...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur rounded-xl text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/40"
+              className="w-full ps-10 pe-4 py-3 bg-white/10 backdrop-blur rounded-xl text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/40"
             />
           </div>
 
@@ -376,7 +376,7 @@ export default function StudentSessions() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
               transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed left-4 top-20 z-40 max-h-[calc(100vh-6rem)] overflow-y-auto"
+              className="fixed start-4 top-20 z-40 max-h-[calc(100vh-6rem)] overflow-y-auto"
             >
               <SessionCalendarSidebar
                 sessions={sessions}
@@ -392,7 +392,7 @@ export default function StudentSessions() {
 
         {/* Main Content */}
         <div className={`mobile-content transition-all duration-300 ${
-          showCalendarSidebar ? 'ml-96' : 'ml-0'
+          showCalendarSidebar ? 'ms-96' : 'ms-0'
         }`}>
           {isLoading ? (
             // Loading Skeleton
@@ -607,7 +607,7 @@ export default function StudentSessions() {
                     disabled={joinSessionMutation.isPending}
                     className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   >
-                    <Video className="w-4 h-4 mr-2" />
+                    <Video className="w-4 h-4 me-2" />
                     {joinSessionMutation.isPending 
                       ? t('student:joining', 'Joining...') 
                       : t('student:joinSession', 'Join Session')}

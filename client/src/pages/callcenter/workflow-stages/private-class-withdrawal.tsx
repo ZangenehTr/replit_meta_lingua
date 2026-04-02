@@ -43,18 +43,18 @@ function PrivateClassWithdrawal() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.private_class_withdrawal.search_placeholder', 'جستجو در دانش‌آموزان انصرافی...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <LogOut className="h-4 w-4 mr-2" />
+            <LogOut className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.private_class_withdrawal.count', 'مورد انصرافی')}
           </Badge>
         </div>
@@ -94,7 +94,7 @@ function PrivateClassWithdrawal() {
                           {lead.firstName} {lead.lastName}
                         </h3>
                         <Badge className="bg-red-100 text-red-800">
-                          <XCircle className="h-3 w-3 mr-1" />
+                          <XCircle className="h-3 w-3 me-1" />
                           {t('callcenter:stages.private_class_withdrawal.badge', 'انصراف از کلاس')}
                         </Badge>
                       </div>

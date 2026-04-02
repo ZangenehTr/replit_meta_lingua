@@ -164,11 +164,11 @@ export default function Supervision() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setObservationDialogOpen(true)} className="border-green-200 hover:bg-green-50">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {t('admin:supervision.createObservation')}
           </Button>
           <Button variant="outline" onClick={() => setQuestionnaireDialogOpen(true)} className="border-teal-200 hover:bg-teal-50">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {t('admin:supervision.questionnaires')}
           </Button>
         </div>
@@ -392,7 +392,7 @@ export default function Supervision() {
               <Dialog open={observationDialogOpen} onOpenChange={setObservationDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 me-2" />
                     {t('admin:supervision.createTeacherEvaluation')}
                   </Button>
                 </DialogTrigger>
@@ -718,7 +718,7 @@ export default function Supervision() {
               <Dialog open={questionnaireDialogOpen} onOpenChange={setQuestionnaireDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 me-2" />
                     Create Questionnaire
                   </Button>
                 </DialogTrigger>

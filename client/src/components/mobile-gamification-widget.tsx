@@ -60,7 +60,7 @@ export function MobileGamificationWidget() {
             </div>
             <Link href="/progress">
               <Button size="sm" variant="outline" className="h-8">
-                <Trophy className="h-4 w-4 mr-1" />
+                <Trophy className="h-4 w-4 me-1" />
                 <span className="hidden sm:inline">
                   {currentLanguage === 'fa' ? 'مشاهده' : 'View'}
                 </span>
@@ -121,8 +121,8 @@ export function MobileGamificationWidget() {
                   {currentLanguage === 'fa' ? 'تمرین مکالمه - ۱۵ دقیقه' : 'Conversation Practice - 15 min'}
                 </div>
               </div>
-              <Badge variant="secondary" className="ml-2">
-                <Zap className="h-3 w-3 mr-1" />
+              <Badge variant="secondary" className="ms-2">
+                <Zap className="h-3 w-3 me-1" />
                 +100 XP
               </Badge>
             </div>

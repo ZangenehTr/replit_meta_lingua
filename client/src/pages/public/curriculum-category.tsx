@@ -117,7 +117,7 @@ export default function CurriculumCategory() {
             <p className="text-muted-foreground mb-6">{t('curriculum.categoryNotFoundDesc', 'The requested category does not exist')}</p>
             <Link href="/curriculum">
               <Button>
-                <ArrowLeft className="mr-2 h-4 w-4" />
+                <ArrowLeft className="me-2 h-4 w-4" />
                 {t('curriculum.backToCurriculum', 'Back to Curriculum')}
               </Button>
             </Link>
@@ -226,7 +226,7 @@ export default function CurriculumCategory() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         {course.isFeatured && (
-                          <Badge className="absolute top-3 right-3 gap-1">
+                          <Badge className="absolute top-3 end-3 gap-1">
                             <Star className="h-3 w-3" />
                             {t('curriculum.featured', 'Featured')}
                           </Badge>

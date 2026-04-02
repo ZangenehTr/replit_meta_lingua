@@ -252,7 +252,7 @@ export default function LevelAssessment() {
                 disabled={currentQuestion === 0}
                 className="w-full sm:w-auto"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 me-2" />
                 Previous
               </Button>
               
@@ -262,7 +262,7 @@ export default function LevelAssessment() {
                 className="w-full sm:w-auto"
               >
                 {currentQuestion === questions.length - 1 ? 'Complete' : 'Next'}
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <ArrowRight className="h-4 w-4 ms-2" />
               </Button>
             </div>
           </CardContent>

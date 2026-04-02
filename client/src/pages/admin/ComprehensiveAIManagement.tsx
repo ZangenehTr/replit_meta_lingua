@@ -808,7 +808,7 @@ export function ComprehensiveAIManagement() {
             onClick={() => refetch()}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 me-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh Status
           </Button>
         </div>
@@ -836,12 +836,12 @@ export function ComprehensiveAIManagement() {
               >
                 {isBootstrapping || bootstrapMutation.isPending ? (
                   <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                     Bootstrapping Ollama...
                   </>
                 ) : (
                   <>
-                    <Rocket className="h-4 w-4 mr-2" />
+                    <Rocket className="h-4 w-4 me-2" />
                     Bootstrap Ollama
                   </>
                 )}
@@ -1026,7 +1026,7 @@ export function ComprehensiveAIManagement() {
                           onClick={() => handleModelDownload(model.name)}
                           disabled={downloadModelMutation.isPending}
                         >
-                          <Download className="h-4 w-4 mr-2" />
+                          <Download className="h-4 w-4 me-2" />
                           Download
                         </Button>
                       )}
@@ -1071,7 +1071,7 @@ export function ComprehensiveAIManagement() {
                             </div>
                             {isActive ? (
                               <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
-                                <Zap className="h-3 w-3 mr-1" />
+                                <Zap className="h-3 w-3 me-1" />
                                 Active
                               </Badge>
                             ) : (
@@ -1095,7 +1095,7 @@ export function ComprehensiveAIManagement() {
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-2 ms-4">
                           {isActive ? (
                             <Button
                               size="sm"
@@ -1103,7 +1103,7 @@ export function ComprehensiveAIManagement() {
                               disabled
                               className="opacity-75 cursor-not-allowed"
                             >
-                              <Zap className="h-4 w-4 mr-1" />
+                              <Zap className="h-4 w-4 me-1" />
                               Active
                             </Button>
                           ) : (
@@ -1114,7 +1114,7 @@ export function ComprehensiveAIManagement() {
                               disabled={setActiveModelMutation.isPending}
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
-                              <Settings className="h-4 w-4 mr-1" />
+                              <Settings className="h-4 w-4 me-1" />
                               Set Active
                             </Button>
                           )}
@@ -1202,7 +1202,7 @@ export function ComprehensiveAIManagement() {
                         variant="outline"
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        <Upload className="h-4 w-4 mr-2" />
+                        <Upload className="h-4 w-4 me-2" />
                         Select Files
                       </Button>
                     </div>
@@ -1225,12 +1225,12 @@ export function ComprehensiveAIManagement() {
                   >
                     {isTraining ? (
                       <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                         Training in Progress...
                       </>
                     ) : (
                       <>
-                        <Zap className="h-4 w-4 mr-2" />
+                        <Zap className="h-4 w-4 me-2" />
                         Start Training
                       </>
                     )}
@@ -1317,12 +1317,12 @@ export function ComprehensiveAIManagement() {
                       >
                         {testingModel ? (
                           <>
-                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                             Testing Model with Training Data...
                           </>
                         ) : (
                           <>
-                            <TestTube className="h-4 w-4 mr-2" />
+                            <TestTube className="h-4 w-4 me-2" />
                             Test Model Knowledge
                           </>
                         )}
@@ -1410,12 +1410,12 @@ export function ComprehensiveAIManagement() {
                         >
                           {testingModel ? (
                             <>
-                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              <RefreshCw className="h-4 w-4 me-2 animate-spin" />
                               Processing...
                             </>
                           ) : (
                             <>
-                              <Send className="h-4 w-4 mr-2" />
+                              <Send className="h-4 w-4 me-2" />
                               Send to AI
                             </>
                           )}
@@ -1451,7 +1451,7 @@ export function ComprehensiveAIManagement() {
                           className="mt-2"
                           onClick={playAIResponse}
                         >
-                          <Volume2 className="h-4 w-4 mr-2" />
+                          <Volume2 className="h-4 w-4 me-2" />
                           Play Response
                         </Button>
                       </div>

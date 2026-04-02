@@ -302,9 +302,9 @@ export default function Auth() {
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" dir="rtl">
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 start-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-40 end-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 start-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       <motion.div 
@@ -332,7 +332,7 @@ export default function Auth() {
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 className="absolute -inset-2"
               >
-                <Sparkles className="w-6 h-6 text-yellow-300 absolute top-0 right-0" />
+                <Sparkles className="w-6 h-6 text-yellow-300 absolute top-0 end-0" />
               </motion.div>
             </motion.div>
           </div>
@@ -379,12 +379,12 @@ export default function Auth() {
                     <div className="space-y-2">
                       <Label htmlFor="login-phone" className="text-white/90 text-sm font-medium">شماره تلفن</Label>
                       <div className="relative">
-                        <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                        <Phone className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                         <Input
                           id="login-phone"
                           type="tel"
                           placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                          className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
+                          className="pe-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
                           dir="ltr"
                           {...loginForm.register("phoneNumber")}
                         />
@@ -423,10 +423,10 @@ export default function Auth() {
                           disabled={otpLoading}
                         >
                           {otpLoading ? (
-                            <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                            <Loader2 className="ms-2 h-5 w-5 animate-spin" />
                           ) : (
                             <>
-                              <Phone className="ml-2 h-5 w-5" />
+                              <Phone className="ms-2 h-5 w-5" />
                               ارسال کد تأیید
                             </>
                           )}
@@ -458,7 +458,7 @@ export default function Auth() {
                             onClick={requestOtpForLogin}
                             disabled={otpLoading || otpResendCooldown > 0}
                           >
-                            <RefreshCw className={`ml-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
+                            <RefreshCw className={`ms-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
                             {otpResendCooldown > 0 
                               ? `ارسال مجدد (${otpCountdownDisplay})`
                               : "ارسال مجدد کد"
@@ -507,12 +507,12 @@ export default function Auth() {
                     <div className="space-y-2">
                       <Label htmlFor="register-phone" className="text-white/90 text-sm font-medium">شماره تلفن</Label>
                       <div className="relative">
-                        <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                        <Phone className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                         <Input
                           id="register-phone"
                           type="tel"
                           placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                          className="pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
+                          className="pe-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
                           dir="ltr"
                           {...registerForm.register("phoneNumber")}
                         />
@@ -551,10 +551,10 @@ export default function Auth() {
                           disabled={otpLoading}
                         >
                           {otpLoading ? (
-                            <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                            <Loader2 className="ms-2 h-5 w-5 animate-spin" />
                           ) : (
                             <>
-                              <Phone className="ml-2 h-5 w-5" />
+                              <Phone className="ms-2 h-5 w-5" />
                               ارسال کد تأیید
                             </>
                           )}
@@ -586,7 +586,7 @@ export default function Auth() {
                             onClick={requestOtpForSignup}
                             disabled={otpLoading || otpResendCooldown > 0}
                           >
-                            <RefreshCw className={`ml-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
+                            <RefreshCw className={`ms-2 h-4 w-4 ${otpLoading ? "animate-spin" : ""}`} />
                             {otpResendCooldown > 0 
                               ? `ارسال مجدد (${otpCountdownDisplay})`
                               : "ارسال مجدد کد"

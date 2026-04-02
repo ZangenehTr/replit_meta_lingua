@@ -357,11 +357,11 @@ export default function StudentDashboardMobile() {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <GlossyButton variant="primary" className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700">
-                  <Users className="w-4 h-4 mr-2" />
+                  <Users className="w-4 h-4 me-2" />
                   {t('student:findPeers', 'پیدا کردن همکلاس')}
                 </GlossyButton>
                 <GlossyButton variant="secondary" className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700">
-                  <MessageCircle className="w-4 h-4 mr-2" />
+                  <MessageCircle className="w-4 h-4 me-2" />
                   {t('student:joinGroup', 'پیوستن به گروه')}
                 </GlossyButton>
               </div>
@@ -412,7 +412,7 @@ export default function StudentDashboardMobile() {
                   </div>
                 </div>
                 <GlossyButton variant="primary" className="w-full">
-                  <Award className="w-4 h-4 mr-2" />
+                  <Award className="w-4 h-4 me-2" />
                   {t('student:viewAllSpecial', 'مشاهده همه کلاس‌های ویژه')}
                 </GlossyButton>
               </div>

@@ -120,7 +120,7 @@ export const TeacherBriefPanel: React.FC<TeacherBriefPanelProps> = ({
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" className={`${className}`}>
-          <User className="w-4 h-4 mr-2" />
+          <User className="w-4 h-4 me-2" />
           {t('callern:brief.studentBrief')}
         </Button>
       </SheetTrigger>
@@ -242,7 +242,7 @@ export const TeacherBriefPanel: React.FC<TeacherBriefPanelProps> = ({
                     
                     <div className="flex gap-2">
                       <Button onClick={handleSaveEdits} size="sm">
-                        <Save className="w-4 h-4 mr-2" />
+                        <Save className="w-4 h-4 me-2" />
                         {t('callern:brief.save')}
                       </Button>
                       <Button variant="outline" onClick={handleCancelEdits} size="sm">

@@ -43,7 +43,7 @@ export default function EcommerceManagement() {
           </p>
         </div>
         <Button data-testid="button-add-product">
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           {t('admin:addProduct', 'Add Product')}
         </Button>
       </div>
@@ -109,19 +109,19 @@ export default function EcommerceManagement() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products" data-testid="tab-products">
-            <Package className="h-4 w-4 mr-2" />
+            <Package className="h-4 w-4 me-2" />
             {t('admin:products', 'Products')}
           </TabsTrigger>
           <TabsTrigger value="orders" data-testid="tab-orders">
-            <ShoppingBag className="h-4 w-4 mr-2" />
+            <ShoppingBag className="h-4 w-4 me-2" />
             {t('admin:orders', 'Orders')}
           </TabsTrigger>
           <TabsTrigger value="payments" data-testid="tab-payments">
-            <CreditCard className="h-4 w-4 mr-2" />
+            <CreditCard className="h-4 w-4 me-2" />
             {t('admin:payments', 'Payments')}
           </TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-analytics">
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-4 w-4 me-2" />
             {t('admin:analytics', 'Analytics')}
           </TabsTrigger>
         </TabsList>

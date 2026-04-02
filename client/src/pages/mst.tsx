@@ -1778,7 +1778,7 @@ export default function MSTPage() {
                 className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                 data-testid="button-create-roadmap"
               >
-                <Map className="w-5 h-5 mr-2" />
+                <Map className="w-5 h-5 me-2" />
                 {t("mst.createLearningRoadmap")}
               </Button>
               <Button
@@ -1788,7 +1788,7 @@ export default function MSTPage() {
                 className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 data-testid="button-retake-test"
               >
-                <Trophy className="w-5 h-5 mr-2" />
+                <Trophy className="w-5 h-5 me-2" />
                 {t("mst.retakeTest")}
               </Button>
               <Button
@@ -2033,7 +2033,7 @@ export default function MSTPage() {
                                         setCurrentResponse(arr);
                                       }}
                                     >
-                                      {pos >= 0 && <span className="font-bold mr-2 text-blue-600">{pos + 1}.</span>}
+                                      {pos >= 0 && <span className="font-bold me-2 text-blue-600">{pos + 1}.</span>}
                                       {item}
                                     </button>
                                   );
@@ -2197,7 +2197,7 @@ export default function MSTPage() {
                                         setCurrentResponse(arr);
                                       }}
                                     >
-                                      {pos >= 0 && <span className="font-bold mr-2 text-blue-600">{pos + 1}.</span>}
+                                      {pos >= 0 && <span className="font-bold me-2 text-blue-600">{pos + 1}.</span>}
                                       {item}
                                     </button>
                                   );
@@ -2249,22 +2249,22 @@ export default function MSTPage() {
                           >
                             {isGeneratingTTS ? (
                               <>
-                                <Volume2 className="w-5 h-5 mr-2 animate-pulse" />
+                                <Volume2 className="w-5 h-5 me-2 animate-pulse" />
                                 Generating Audio...
                               </>
                             ) : isAudioPlaying ? (
                               <>
-                                <Volume2 className="w-5 h-5 mr-2" />
+                                <Volume2 className="w-5 h-5 me-2" />
                                 Playing Question...
                               </>
                             ) : narrationPlayButton ? (
                               <>
-                                <Play className="w-5 h-5 mr-2" />
+                                <Play className="w-5 h-5 me-2" />
                                 Click to Play Question
                               </>
                             ) : (
                               <>
-                                <Play className="w-5 h-5 mr-2" />
+                                <Play className="w-5 h-5 me-2" />
                                 Play Question
                               </>
                             )}
@@ -2308,7 +2308,7 @@ export default function MSTPage() {
                           className="w-full sm:w-auto min-h-[52px] text-base font-medium"
                           data-testid="button-stop-recording"
                         >
-                          <MicOff className="w-5 h-5 mr-2" />
+                          <MicOff className="w-5 h-5 me-2" />
                           Stop Recording Early
                         </Button>
                       </div>

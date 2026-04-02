@@ -313,7 +313,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg z-50"
+        className="fixed bottom-6 end-6 w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg z-50"
         data-testid="button-open-lexi"
       >
         <MessageCircle className="w-6 h-6 text-white" />
@@ -322,7 +322,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-80 h-96 shadow-xl z-50 bg-white dark:bg-gray-800">
+    <Card className="fixed bottom-6 end-6 w-80 h-96 shadow-xl z-50 bg-white dark:bg-gray-800">
       <CardContent className="p-0 h-full flex flex-col">
         {/* Header */}
         <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
@@ -374,7 +374,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
                 
                 {message.culturalTip && (
                   <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs">
-                    <Star className="w-3 h-3 inline mr-1" />
+                    <Star className="w-3 h-3 inline me-1" />
                     {message.culturalTip}
                   </div>
                 )}

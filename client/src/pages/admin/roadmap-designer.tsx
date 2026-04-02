@@ -287,7 +287,7 @@ export default function RoadmapDesigner() {
           <Dialog open={isCreatingRoadmap} onOpenChange={setIsCreatingRoadmap}>
             <DialogTrigger asChild>
               <Button size="sm" className="h-8 text-xs sm:text-sm">
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 me-1 sm:me-2" />
                 {t('admin:roadmap.createNew')}
               </Button>
             </DialogTrigger>
@@ -377,7 +377,7 @@ export default function RoadmapDesigner() {
                 onClick={() => createRoadmap.mutate(roadmapForm)}
                 disabled={createRoadmap.isPending}
               >
-                <Save className="mr-2" />
+                <Save className="me-2" />
                 Create Roadmap
               </Button>
             </div>
@@ -443,11 +443,11 @@ export default function RoadmapDesigner() {
                   <CardTitle>{selectedRoadmap.title}</CardTitle>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4 mr-1" />
+                      <Edit className="w-4 h-4 me-1" />
                       {t('common:edit')}
                     </Button>
                     <Button variant="outline" size="sm">
-                      <Users className="w-4 h-4 mr-1" />
+                      <Users className="w-4 h-4 me-1" />
                       Enrollments
                     </Button>
                   </div>
@@ -469,7 +469,7 @@ export default function RoadmapDesigner() {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button size="sm">
-                            <Plus className="w-4 h-4 mr-1" />
+                            <Plus className="w-4 h-4 me-1" />
                             Add Step
                           </Button>
                         </DialogTrigger>

@@ -383,7 +383,7 @@ export default function EnhancedTeacherCallernSystem() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              className="fixed bottom-6 right-6 rounded-full shadow-lg z-50"
+              className="fixed bottom-6 end-6 rounded-full shadow-lg z-50"
               size="lg"
               onClick={() => {
                 // Open support dialog or redirect to support
@@ -512,7 +512,7 @@ export default function EnhancedTeacherCallernSystem() {
               <AlertCircle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 {stats.missedShifts > 0 && (
-                  <span className="mr-4">
+                  <span className="me-4">
                     {t('teacher:missedShifts')}: <strong>{stats.missedShifts}</strong>
                   </span>
                 )}

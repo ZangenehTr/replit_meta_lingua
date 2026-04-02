@@ -547,12 +547,12 @@ function NewIntake() {
                 >
                   {createLeadMutation.isPending ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
                       در حال ثبت...
                     </>
                   ) : (
                     <>
-                      <UserPlus className="h-4 w-4 mr-2" />
+                      <UserPlus className="h-4 w-4 me-2" />
                       ثبت متقاضی
                     </>
                   )}

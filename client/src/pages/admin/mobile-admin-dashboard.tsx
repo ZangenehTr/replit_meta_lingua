@@ -74,9 +74,9 @@ export function MobileAdminDashboard() {
       className="h-auto p-4 flex flex-col items-start text-left w-full"
     >
       <div className="flex items-center w-full mb-2">
-        <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
+        <Icon className="h-5 w-5 me-3 flex-shrink-0" />
         <span className="font-medium text-sm">{title}</span>
-        {isRTL ? <ArrowLeft className="h-4 w-4 ml-auto" /> : <ArrowRight className="h-4 w-4 ml-auto" />}
+        {isRTL ? <ArrowLeft className="h-4 w-4 ms-auto" /> : <ArrowRight className="h-4 w-4 ms-auto" />}
       </div>
       <p className="text-xs text-muted-foreground">{description}</p>
     </Button>
@@ -143,7 +143,7 @@ export function MobileAdminDashboard() {
       <Card className="mb-6">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center">
-            <Settings className="h-5 w-5 mr-2" />
+            <Settings className="h-5 w-5 me-2" />
             {t('admin:dashboard.quickActions')}
           </CardTitle>
         </CardHeader>
@@ -189,14 +189,14 @@ export function MobileAdminDashboard() {
       <Card className="mb-6">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center">
-            <Server className="h-5 w-5 mr-2" />
+            <Server className="h-5 w-5 me-2" />
             {t('admin:dashboard.systemStatus')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center">
-              <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+              <div className="w-3 h-3 bg-green-500 rounded-full me-3"></div>
               <span className="text-sm">{t('admin:dashboard.allSystemsOperational')}</span>
             </div>
             <Badge variant="outline" className="text-green-600">
@@ -217,14 +217,14 @@ export function MobileAdminDashboard() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center">
-            <Calendar className="h-5 w-5 mr-2" />
+            <Calendar className="h-5 w-5 me-2" />
             {t('admin:dashboard.recentActivity')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-start">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 me-3"></div>
               <div className="flex-1">
                 <p className="text-sm font-medium">{t('admin:dashboard.newStudentRegistered')}</p>
                 <p className="text-xs text-muted-foreground">
@@ -234,7 +234,7 @@ export function MobileAdminDashboard() {
             </div>
             
             <div className="flex items-start">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3"></div>
+              <div className="w-2 h-2 bg-green-500 rounded-full mt-2 me-3"></div>
               <div className="flex-1">
                 <p className="text-sm font-medium">{t('admin:dashboard.paymentReceived')}</p>
                 <p className="text-xs text-muted-foreground">
@@ -244,7 +244,7 @@ export function MobileAdminDashboard() {
             </div>
             
             <div className="flex items-start">
-              <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3"></div>
+              <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 me-3"></div>
               <div className="flex-1">
                 <p className="text-sm font-medium">{t('admin:dashboard.classScheduled')}</p>
                 <p className="text-xs text-muted-foreground">

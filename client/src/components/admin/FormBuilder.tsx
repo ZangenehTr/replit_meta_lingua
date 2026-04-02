@@ -280,7 +280,7 @@ function FieldEditor({ field, open, onOpenChange, onSave }: {
                 <div className="flex justify-between items-center mb-2">
                   <Label>Options</Label>
                   <Button size="sm" onClick={addOption} data-testid="button-add-option">
-                    <Plus className="w-4 h-4 mr-1" /> Add Option
+                    <Plus className="w-4 h-4 me-1" /> Add Option
                   </Button>
                 </div>
                 <ScrollArea className="h-40 border rounded-lg p-2">
@@ -614,7 +614,7 @@ export default function FormBuilder({ initialFields = [], onFieldsChange }: Form
           </p>
         </div>
         <Button onClick={addNewField} data-testid="button-add-field">
-          <Plus className="w-4 h-4 mr-2" /> Add Field
+          <Plus className="w-4 h-4 me-2" /> Add Field
         </Button>
       </div>
 
@@ -624,7 +624,7 @@ export default function FormBuilder({ initialFields = [], onFieldsChange }: Form
             <FileText className="w-12 h-12 text-gray-400 mb-4" />
             <p className="text-gray-500 mb-4">No fields added yet</p>
             <Button onClick={addNewField} data-testid="button-add-first-field">
-              <Plus className="w-4 h-4 mr-2" /> Add Your First Field
+              <Plus className="w-4 h-4 me-2" /> Add Your First Field
             </Button>
           </CardContent>
         </Card>

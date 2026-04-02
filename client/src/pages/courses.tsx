@@ -114,16 +114,16 @@ export default function Courses() {
         <div className="w-full h-full bg-black bg-opacity-40 flex items-end p-4">
           <div className="flex gap-2">
             <Badge variant={course.deliveryMode === 'online' ? 'default' : course.deliveryMode === 'in_person' ? 'secondary' : 'outline'}>
-              {course.deliveryMode === 'online' && <Globe className="w-3 h-3 mr-1" />}
-              {course.deliveryMode === 'in_person' && <MapPin className="w-3 h-3 mr-1" />}
-              {course.deliveryMode === 'self_paced' && <BookOpen className="w-3 h-3 mr-1" />}
+              {course.deliveryMode === 'online' && <Globe className="w-3 h-3 me-1" />}
+              {course.deliveryMode === 'in_person' && <MapPin className="w-3 h-3 me-1" />}
+              {course.deliveryMode === 'self_paced' && <BookOpen className="w-3 h-3 me-1" />}
               {course.deliveryMode === 'online' ? 'Online' : 
                course.deliveryMode === 'in_person' ? 'In-Person' : 'Self-Paced'}
             </Badge>
             <Badge variant="outline" className="text-white border-white">
-              {course.classFormat === 'group' && <Users className="w-3 h-3 mr-1" />}
-              {course.classFormat === 'one_on_one' && <UserCheck className="w-3 h-3 mr-1" />}
-              {course.classFormat === 'self_paced' && <Video className="w-3 h-3 mr-1" />}
+              {course.classFormat === 'group' && <Users className="w-3 h-3 me-1" />}
+              {course.classFormat === 'one_on_one' && <UserCheck className="w-3 h-3 me-1" />}
+              {course.classFormat === 'self_paced' && <Video className="w-3 h-3 me-1" />}
               {course.classFormat === 'group' ? 'Group' :
                course.classFormat === 'one_on_one' ? 'One-on-One' : 'Self-Study'}
             </Badge>
@@ -197,12 +197,12 @@ export default function Courses() {
               
               <div className="flex gap-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder="Search courses..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-64"
+                    className="ps-10 w-64"
                   />
                 </div>
                 

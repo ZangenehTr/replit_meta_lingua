@@ -124,7 +124,7 @@ export function LearningProgressWidget({
             />
             {weeklyProgressPercent >= 100 && (
               <div className="flex items-center mt-2 text-green-600" data-testid="weekly-goal-achieved">
-                <CheckCircle className="h-4 w-4 mr-1" />
+                <CheckCircle className="h-4 w-4 me-1" />
                 <span className="text-xs font-medium">Goal achieved!</span>
               </div>
             )}

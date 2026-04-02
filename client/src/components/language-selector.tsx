@@ -43,7 +43,7 @@ export const LanguageSelector: React.FC = () => {
               language === lang.code ? 'bg-accent' : ''
             }`}
           >
-            <span className="mr-2">{lang.flag}</span>
+            <span className="me-2">{lang.flag}</span>
             {lang.name}
           </DropdownMenuItem>
         ))}

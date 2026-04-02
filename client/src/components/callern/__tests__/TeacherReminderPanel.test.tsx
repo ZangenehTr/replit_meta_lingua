@@ -45,7 +45,7 @@ describe('TeacherReminderPanel', () => {
       );
 
       const panel = container.querySelector('.fixed');
-      expect(panel).toHaveClass('top-4', 'right-4');
+      expect(panel).toHaveClass('top-4', 'end-4');
     });
 
     it('should hide panel when visible is false', () => {

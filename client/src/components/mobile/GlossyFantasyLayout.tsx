@@ -88,7 +88,7 @@ export function GlossyFantasyLayout({
                 className="p-2 rounded-full glass-button relative"
               >
                 <Bell className="w-5 h-5 text-white" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+                <span className="absolute top-0 end-0 w-2 h-2 bg-red-500 rounded-full" />
               </motion.button>
             )}
             
@@ -313,7 +313,7 @@ export function ListItem({
       onClick={onClick}
     >
       {leftIcon && (
-        <div className="mr-3 text-white/80">
+        <div className="me-3 text-white/80">
           {leftIcon}
         </div>
       )}

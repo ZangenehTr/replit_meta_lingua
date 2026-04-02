@@ -78,7 +78,7 @@ export default function BlogDetail() {
         <header className="mb-8">
           <div className="flex flex-wrap gap-2 mb-4">
             <Badge variant="secondary">{post.locale}</Badge>
-            {post.tags && post.tags.map((tag, i) => <Badge key={i} variant="outline"><Tag className="h-3 w-3 mr-1" />{tag}</Badge>)}
+            {post.tags && post.tags.map((tag, i) => <Badge key={i} variant="outline"><Tag className="h-3 w-3 me-1" />{tag}</Badge>)}
           </div>
           
           <h1 className="text-4xl font-bold mb-4" data-testid="text-post-title">{post.title}</h1>
@@ -105,7 +105,7 @@ export default function BlogDetail() {
               </div>
             )}
             <Button variant="ghost" size="sm" onClick={() => navigator.share?.({ title: post.title, url: window.location.href })} data-testid="button-share">
-              <Share2 className="h-4 w-4 mr-2" />Share
+              <Share2 className="h-4 w-4 me-2" />Share
             </Button>
           </div>
         </header>

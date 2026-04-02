@@ -39,7 +39,7 @@ export function StatsCards() {
               <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Learning Streak</p>
               <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.streak || 0} <span className="text-sm sm:text-base">days</span></p>
             </div>
-            <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900/20 rounded-lg ml-2">
+            <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900/20 rounded-lg ms-2">
               <Flame className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-green-600" />
             </div>
           </div>
@@ -53,7 +53,7 @@ export function StatsCards() {
               <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Course Progress</p>
               <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.progress || 0}%</p>
             </div>
-            <div className="p-2 sm:p-3 bg-primary/10 rounded-lg ml-2">
+            <div className="p-2 sm:p-3 bg-primary/10 rounded-lg ms-2">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
             </div>
           </div>
@@ -67,7 +67,7 @@ export function StatsCards() {
               <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Available Credits</p>
               <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.credits || 0}</p>
             </div>
-            <div className="p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg ml-2">
+            <div className="p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg ms-2">
               <Coins className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-yellow-600" />
             </div>
           </div>
@@ -81,7 +81,7 @@ export function StatsCards() {
               <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Next Session</p>
               <p className="text-sm sm:text-lg md:text-2xl font-bold truncate">{formatNextSession(stats?.nextSession || null)}</p>
             </div>
-            <div className="p-2 sm:p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg ml-2">
+            <div className="p-2 sm:p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg ms-2">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-purple-600" />
             </div>
           </div>

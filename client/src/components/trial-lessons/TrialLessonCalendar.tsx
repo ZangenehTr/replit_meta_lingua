@@ -345,7 +345,7 @@ export function TrialLessonCalendar({ className }: TrialLessonCalendarProps) {
                       
                       {!slot.teacherAvailable && slot.conflicts.length === 0 && (
                         <Badge variant="secondary" className="text-yellow-600">
-                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          <AlertTriangle className="h-3 w-3 me-1" />
                           No teacher available
                         </Badge>
                       )}
@@ -359,7 +359,7 @@ export function TrialLessonCalendar({ className }: TrialLessonCalendarProps) {
                           className="bg-blue-600 hover:bg-blue-700"
                           data-testid={`book-slot-${slot.time}`}
                         >
-                          <Plus className="h-4 w-4 mr-1" />
+                          <Plus className="h-4 w-4 me-1" />
                           Book
                         </Button>
                       )}

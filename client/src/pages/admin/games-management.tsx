@@ -496,7 +496,7 @@ export default function EnhancedGamesManagement() {
           <p className="text-muted-foreground mt-1">Manage educational games and track performance</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4" />
           Create Game
         </Button>
       </div>
@@ -554,19 +554,19 @@ export default function EnhancedGamesManagement() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={() => handlePlayGame(game)}>
-                        <Play className="mr-1 h-3 w-3" />
+                        <Play className="me-1 h-3 w-3" />
                         Play
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleViewQuestions(game)}>
-                        <Database className="mr-1 h-3 w-3" />
+                        <Database className="me-1 h-3 w-3" />
                         Questions
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleViewAnalytics(game)}>
-                        <BarChart3 className="mr-1 h-3 w-3" />
+                        <BarChart3 className="me-1 h-3 w-3" />
                         Analytics
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEdit(game)}>
-                        <Edit className="mr-1 h-3 w-3" />
+                        <Edit className="me-1 h-3 w-3" />
                         Edit
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => handleDelete(game.id)}>
@@ -627,7 +627,7 @@ export default function EnhancedGamesManagement() {
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleGenerateQuestions}>
-                  <Settings className="mr-1 h-3 w-3" />
+                  <Settings className="me-1 h-3 w-3" />
                   Generate Questions
                 </Button>
                 <Button size="sm" onClick={() => {
@@ -635,13 +635,13 @@ export default function EnhancedGamesManagement() {
                   questionForm.reset();
                   setIsQuestionFormOpen(true);
                 }}>
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="me-1 h-3 w-3" />
                   Add Question
                 </Button>
               </div>
             </div>
             
-            <ScrollArea className="h-[400px] pr-4">
+            <ScrollArea className="h-[400px] pe-4">
               {questionsLoading ? (
                 <div className="text-center py-8">Loading questions...</div>
               ) : questions.length === 0 ? (

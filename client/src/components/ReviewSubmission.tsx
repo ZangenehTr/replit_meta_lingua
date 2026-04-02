@@ -213,7 +213,7 @@ export function ReviewSubmission({
         disabled={rating === 0 || submitReview.isPending}
         className="w-full"
       >
-        <Send className="h-4 w-4 mr-2" />
+        <Send className="h-4 w-4 me-2" />
         {submitReview.isPending
           ? getLocalizedText('Submitting...', 'در حال ارسال...', 'جاري الإرسال...')
           : getLocalizedText('Submit Review', 'ثبت نظر', 'إرسال المراجعة')}
@@ -257,7 +257,7 @@ export function ReviewSubmission({
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline">
-            <Star className="h-4 w-4 mr-2" />
+            <Star className="h-4 w-4 me-2" />
             {getLocalizedText('Rate Teacher', 'امتیاز به معلم', 'قيم المعلم')}
           </Button>
         )}

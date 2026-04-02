@@ -102,11 +102,11 @@ function ResultCard({ result, isExpanded, onToggle }: {
             <div className="flex items-center gap-3 mb-2">
               <ProficiencyBand band={result.overallBand} />
               <div className="flex items-center text-sm text-gray-600">
-                <Calendar className="h-4 w-4 mr-1" />
+                <Calendar className="h-4 w-4 me-1" />
                 {format(new Date(result.startedAt), 'PPP')}
               </div>
               <div className="flex items-center text-sm text-gray-600">
-                <Clock className="h-4 w-4 mr-1" />
+                <Clock className="h-4 w-4 me-1" />
                 {result.totalTimeMin} min
               </div>
             </div>
@@ -147,7 +147,7 @@ function ResultCard({ result, isExpanded, onToggle }: {
             </div>
             <div>
               <strong>Status:</strong> 
-              <Badge variant={result.status === 'completed' ? 'default' : 'secondary'} className="ml-2">
+              <Badge variant={result.status === 'completed' ? 'default' : 'secondary'} className="ms-2">
                 {result.status}
               </Badge>
             </div>
@@ -565,7 +565,7 @@ export default function TestResultsPage() {
               onClick={exportCSV}
               data-testid="export-csv-button"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 me-2" />
               Export CSV
             </Button>
             <Button 
@@ -573,7 +573,7 @@ export default function TestResultsPage() {
               onClick={exportPDF}
               data-testid="export-pdf-button"
             >
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 me-2" />
               Export PDF
             </Button>
           </div>
@@ -598,7 +598,7 @@ export default function TestResultsPage() {
               </div>
               {retakeEligibility.canRetake && (
                 <Button data-testid="take-new-test-button">
-                  <BookOpen className="h-4 w-4 mr-2" />
+                  <BookOpen className="h-4 w-4 me-2" />
                   Take New Test
                 </Button>
               )}
@@ -616,7 +616,7 @@ export default function TestResultsPage() {
               Take your first MST proficiency test to see your results here.
             </p>
             <Button data-testid="take-first-test-button">
-              <Award className="h-4 w-4 mr-2" />
+              <Award className="h-4 w-4 me-2" />
               Take Your First Test
             </Button>
           </CardContent>
@@ -638,18 +638,18 @@ export default function TestResultsPage() {
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       placeholder="Search by test ID or proficiency level..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="ps-10"
                       data-testid="search-input"
                     />
                   </div>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-full md:w-48" data-testid="filter-select">
-                      <Filter className="h-4 w-4 mr-2" />
+                      <Filter className="h-4 w-4 me-2" />
                       <SelectValue placeholder="Filter by status" />
                     </SelectTrigger>
                     <SelectContent>

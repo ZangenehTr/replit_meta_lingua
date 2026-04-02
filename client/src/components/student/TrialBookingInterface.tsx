@@ -236,7 +236,7 @@ export function TrialBookingInterface({ teachers }: Props) {
                     index + 1
                   )}
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-700">
+                <span className="ms-2 text-sm font-medium text-gray-700">
                   {stepItem.label}
                 </span>
                 {index < 3 && (
@@ -400,7 +400,7 @@ export function TrialBookingInterface({ teachers }: Props) {
                 onClick={() => setStep('teacher')}
                 data-testid="button-back-to-teacher"
               >
-                <ChevronLeft className="h-4 w-4 mr-2" />
+                <ChevronLeft className="h-4 w-4 me-2" />
                 {t('common:back')}
               </Button>
               <Button
@@ -551,7 +551,7 @@ export function TrialBookingInterface({ teachers }: Props) {
                     onClick={() => setStep('datetime')}
                     data-testid="button-back-to-datetime"
                   >
-                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    <ChevronLeft className="h-4 w-4 me-2" />
                     {t('common:back')}
                   </Button>
                   <Button

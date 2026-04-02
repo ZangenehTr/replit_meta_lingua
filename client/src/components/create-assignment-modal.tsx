@@ -143,7 +143,7 @@ export function CreateAssignmentModal({ children }: CreateAssignmentModalProps) 
                     className="w-full justify-start text-left font-normal"
                     type="button"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="me-2 h-4 w-4" />
                     {dueDate ? format(dueDate, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>

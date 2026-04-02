@@ -101,7 +101,7 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
           </div>
           {isLive && (
             <Badge variant="outline" className="animate-pulse">
-              <span className="mr-1 h-2 w-2 rounded-full bg-red-500"></span>
+              <span className="me-1 h-2 w-2 rounded-full bg-red-500"></span>
               {t('callern:liveSuggestions.live')}
             </Badge>
           )}
@@ -180,7 +180,7 @@ export function LiveSuggestions({ callId, isLive = true, onAddToGlossary }: Live
                   }}
                   disabled={addToGlossaryMutation.isPending}
                 >
-                  <Plus className="h-3 w-3 mr-1" />
+                  <Plus className="h-3 w-3 me-1" />
                   {t('callern:liveSuggestions.addToGlossary')}
                 </Button>
               )}

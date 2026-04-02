@@ -69,7 +69,7 @@ const QuickActionCard = ({
           <p className="text-sm text-muted-foreground">{title}</p>
           {change !== undefined && (
             <div className="flex items-center mt-1">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+              <TrendingUp className="h-3 w-3 me-1 text-green-500" />
               <span className="text-xs text-green-600">+{change}%</span>
             </div>
           )}
@@ -335,7 +335,7 @@ export function MobileAdminDashboard() {
       <MobileButton
         variant="default"
         size="fab"
-        className="fixed bottom-20 right-4 z-30 shadow-lg"
+        className="fixed bottom-20 end-4 z-30 shadow-lg"
         onClick={() => setLocation("/admin/create")}
         leftIcon={<Plus className="h-6 w-6" />}
       />

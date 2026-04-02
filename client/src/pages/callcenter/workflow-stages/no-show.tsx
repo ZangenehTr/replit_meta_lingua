@@ -108,18 +108,18 @@ function NoShow() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.no_show.search_placeholder', 'جستجو در متقاضیان عدم حضور...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <AlertTriangle className="h-4 w-4 mr-2" />
+            <AlertTriangle className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.no_show.count', 'مورد')}
           </Badge>
         </div>
@@ -159,7 +159,7 @@ function NoShow() {
                           {lead.firstName} {lead.lastName}
                         </h3>
                         <Badge className="bg-red-100 text-red-800">
-                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          <AlertTriangle className="h-3 w-3 me-1" />
                           {t('callcenter:stages.no_show.badge', 'عدم حضور')}
                         </Badge>
                       </div>
@@ -205,7 +205,7 @@ function NoShow() {
                             size="sm"
                             onClick={() => setSelectedLead(lead)}
                           >
-                            <RotateCcw className="h-4 w-4 mr-2" />
+                            <RotateCcw className="h-4 w-4 me-2" />
                             {t('callcenter:stages.no_show.reschedule', 'بازبرنامه‌ریزی')}
                           </Button>
                         </DialogTrigger>
@@ -259,7 +259,7 @@ function NoShow() {
                             size="sm"
                             onClick={() => setSelectedLead(lead)}
                           >
-                            <XCircle className="h-4 w-4 mr-2" />
+                            <XCircle className="h-4 w-4 me-2" />
                             {t('callcenter:stages.no_show.withdrawal', 'ثبت انصراف')}
                           </Button>
                         </DialogTrigger>

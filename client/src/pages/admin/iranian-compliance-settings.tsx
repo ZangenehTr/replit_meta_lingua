@@ -543,13 +543,13 @@ export function IranianComplianceSettings() {
                       type={showApiKey ? "text" : "password"}
                       placeholder="Enter your Kavenegar API key"
                       defaultValue={settings?.kavenegarApiKey || ""}
-                      className="pr-10"
+                      className="pe-10"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      className="absolute end-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowApiKey(!showApiKey)}
                     >
                       {showApiKey ? (
@@ -883,7 +883,7 @@ export function IranianComplianceSettings() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      className="absolute end-2 top-1/2 -translate-y-1/2"
                       onClick={() => setShowSecrets(prev => ({ ...prev, turnPassword: !prev.turnPassword }))}
                     >
                       {showSecrets.turnPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

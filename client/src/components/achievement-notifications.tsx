@@ -49,7 +49,7 @@ export function AchievementNotifications() {
   if (notifications.length === 0) return null;
 
   return (
-    <div className={`fixed top-20 right-4 z-40 space-y-2 ${isRTL ? 'right-auto left-4' : ''}`}>
+    <div className="fixed top-20 end-4 z-40 space-y-2">
       {notifications.map((achievement) => (
         <Card key={achievement.id} className="w-80 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800 shadow-lg animate-in slide-in-from-right duration-500">
           <CardContent className="p-4">
@@ -68,7 +68,7 @@ export function AchievementNotifications() {
                   </p>
                   <div className="flex items-center gap-2">
                     <Badge className="bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200 text-xs">
-                      <Zap className="h-3 w-3 mr-1" />
+                      <Zap className="h-3 w-3 me-1" />
                       +{achievement.xpReward} XP
                     </Badge>
                   </div>

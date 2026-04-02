@@ -306,7 +306,7 @@ export function AdminTeacherManagement() {
               onClick={() => setViewMode("cards")}
               className="rounded-none border-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
             >
-              <GraduationCap className="h-4 w-4 mr-2" />
+              <GraduationCap className="h-4 w-4 me-2" />
               <span className="hidden sm:inline">{t('admin:teacherManagement.viewCards', { defaultValue: 'کارت‌ها' })}</span>
             </Button>
             <Button
@@ -315,14 +315,14 @@ export function AdminTeacherManagement() {
               onClick={() => setViewMode("list")}
               className="rounded-none border-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
             >
-              <Users className="h-4 w-4 mr-2" />
+              <Users className="h-4 w-4 me-2" />
               <span className="hidden sm:inline">{t('admin:teacherManagement.viewList', { defaultValue: 'فهرست' })}</span>
             </Button>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 <span className="hidden sm:inline">{t('admin:teacherManagement.addTeacher')}</span>
                 <span className="sm:hidden">{t('admin:teacherManagement.add', { defaultValue: 'افزودن' })}</span>
               </Button>
@@ -601,18 +601,18 @@ export function AdminTeacherManagement() {
       <div className="flex gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t('admin:teacherManagement.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
+              className="ps-8"
             />
           </div>
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-[180px]">
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="h-4 w-4 me-2" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -686,7 +686,7 @@ export function AdminTeacherManagement() {
                         </div>
                         <Button
                           size="sm"
-                          className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full p-0"
+                          className="absolute -bottom-1 -end-1 h-6 w-6 rounded-full p-0"
                           onClick={() => {
                             const input = document.createElement('input');
                             input.type = 'file';
@@ -731,7 +731,7 @@ export function AdminTeacherManagement() {
                           </Badge>
                           {callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized && (
                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                              <Video className="h-3 w-3 mr-1" />
+                              <Video className="h-3 w-3 me-1" />
                               Callern
                             </Badge>
                           )}
@@ -869,7 +869,7 @@ export function AdminTeacherManagement() {
                             </Badge>
                             {callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized && (
                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                                <Video className="h-3 w-3 mr-1" />
+                                <Video className="h-3 w-3 me-1" />
                                 Callern
                               </Badge>
                             )}
@@ -1012,7 +1012,7 @@ export function AdminTeacherManagement() {
               setIsViewDialogOpen(false);
               setIsEditDialogOpen(true);
             }}>
-              <Edit3 className="h-4 w-4 mr-2" />
+              <Edit3 className="h-4 w-4 me-2" />
               {t('admin:teacherManagement.actions.editTeacher')}
             </Button>
           </div>

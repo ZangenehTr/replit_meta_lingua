@@ -390,7 +390,7 @@ export default function CurriculumCategoriesPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-category">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:curriculum.createCategory')}
             </Button>
           </DialogTrigger>
@@ -496,7 +496,7 @@ export default function CurriculumCategoriesPage() {
                     {t('common:cancel')}
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending} data-testid="button-save-category">
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4 me-2" />
                     {t('common:save')}
                   </Button>
                 </DialogFooter>
@@ -594,7 +594,7 @@ export default function CurriculumCategoriesPage() {
                     {t('common:cancel')}
                   </Button>
                   <Button type="submit" disabled={updateMutation.isPending}>
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4 me-2" />
                     {t('common:save')}
                   </Button>
                 </DialogFooter>

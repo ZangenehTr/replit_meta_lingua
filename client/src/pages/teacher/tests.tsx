@@ -161,7 +161,7 @@ export default function TeacherTests() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
+              <PlusCircle className="me-2 h-4 w-4" />
               Create Test
             </Button>
           </DialogTrigger>
@@ -354,7 +354,7 @@ export default function TeacherTests() {
                 variant="outline"
                 onClick={() => setIsCreateDialogOpen(true)}
               >
-                <PlusCircle className="mr-2 h-4 w-4" />
+                <PlusCircle className="me-2 h-4 w-4" />
                 Create Your First Test
               </Button>
             </div>

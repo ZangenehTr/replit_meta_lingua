@@ -112,9 +112,10 @@ export function PostSessionQuizModal({
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="absolute right-4 top-4"
+              className="absolute end-4 top-4"
+              aria-label="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </Button>
           </DialogHeader>
           <SessionQuizTaker 
@@ -201,7 +202,7 @@ export function PostSessionQuizModal({
                       className="w-full"
                     >
                       Generate Quiz
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-4 h-4 ms-2" />
                     </Button>
                   </CardContent>
                 </Card>
@@ -226,7 +227,7 @@ export function PostSessionQuizModal({
               <div className="text-center space-y-4">
                 <div className="relative">
                   <Brain className="w-20 h-20 text-purple-500 mx-auto animate-pulse" />
-                  <Loader2 className="w-8 h-8 text-purple-600 animate-spin absolute bottom-0 right-1/3" />
+                  <Loader2 className="w-8 h-8 text-purple-600 animate-spin absolute bottom-0 end-1/3" />
                 </div>
                 <h3 className="text-lg font-semibold">
                   Generating Your Personalized Quiz...
@@ -325,7 +326,7 @@ export function PostSessionQuizModal({
                   className="flex-1"
                 >
                   Start Quiz
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-4 h-4 ms-2" />
                 </Button>
               </div>
             </motion.div>

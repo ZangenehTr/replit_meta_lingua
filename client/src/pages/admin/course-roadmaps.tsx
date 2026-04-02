@@ -75,7 +75,7 @@ export default function CourseRoadmaps() {
           disabled={createRoadmapMutation.isPending}
           data-testid="button-create-roadmap"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           {createRoadmapMutation.isPending ? t('admin:creating', 'Creating...') : t('admin:createRoadmap', 'Create Roadmap')}
         </Button>
       </div>
@@ -99,19 +99,19 @@ export default function CourseRoadmaps() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="levels" data-testid="tab-cefr-levels">
-            <GraduationCap className="h-4 w-4 mr-2" />
+            <GraduationCap className="h-4 w-4 me-2" />
             {t('admin:cefrLevels', 'CEFR Levels')}
           </TabsTrigger>
           <TabsTrigger value="pathways" data-testid="tab-learning-pathways">
-            <Route className="h-4 w-4 mr-2" />
+            <Route className="h-4 w-4 me-2" />
             {t('admin:learningPathways', 'Learning Pathways')}
           </TabsTrigger>
           <TabsTrigger value="prerequisites" data-testid="tab-prerequisites">
-            <Target className="h-4 w-4 mr-2" />
+            <Target className="h-4 w-4 me-2" />
             {t('admin:prerequisites', 'Prerequisites')}
           </TabsTrigger>
           <TabsTrigger value="achievements" data-testid="tab-achievements">
-            <Award className="h-4 w-4 mr-2" />
+            <Award className="h-4 w-4 me-2" />
             {t('admin:achievements', 'Achievements')}
           </TabsTrigger>
         </TabsList>

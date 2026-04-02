@@ -286,11 +286,11 @@ export default function CallernEnhancements() {
                     
                     <div className="flex gap-2 mt-4">
                       <Button size="sm" variant="outline">
-                        <Mail className="h-3 w-3 mr-1" />
+                        <Mail className="h-3 w-3 me-1" />
                         Email Summary
                       </Button>
                       <Button size="sm" variant="outline">
-                        <FileText className="h-3 w-3 mr-1" />
+                        <FileText className="h-3 w-3 me-1" />
                         View Full Report
                       </Button>
                     </div>

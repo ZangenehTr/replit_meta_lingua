@@ -135,7 +135,7 @@ const TLWarning = ({ message }: { message: string }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className={cn(
-        "absolute top-4 left-1/2 -translate-x-1/2 z-50",
+        "absolute top-4 inset-x-0 mx-auto w-fit z-50",
         "flex items-center gap-2 px-4 py-2 rounded-full",
         "backdrop-blur-md bg-orange-500/20 border border-orange-500/40"
       )}
@@ -210,7 +210,7 @@ export function ScoringOverlay({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={cn(
-              "absolute top-2 left-2 right-2 z-40",
+              "absolute top-2 start-2 end-2 z-40",
               "flex items-center justify-between gap-2 p-3",
               "backdrop-blur-md bg-black/30 rounded-lg border border-white/30 shadow-lg",
               "pointer-events-auto"
@@ -239,7 +239,7 @@ export function ScoringOverlay({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="absolute bottom-4 left-4 z-40 pointer-events-auto"
+            className="absolute bottom-4 start-4 z-40 pointer-events-auto"
           >
             <PresenceIndicator cameraOn={presence.cameraOn} micOn={presence.micOn} />
           </motion.div>
@@ -251,7 +251,7 @@ export function ScoringOverlay({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               className={cn(
-                "absolute bottom-4 right-4 z-40",
+                "absolute bottom-4 end-4 z-40",
                 "flex items-center gap-2 px-3 py-2 rounded-full",
                 "backdrop-blur-md bg-red-500/20 border border-red-500/40",
                 "pointer-events-auto"
@@ -272,7 +272,7 @@ export function ScoringOverlay({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className={cn(
-                "absolute top-16 left-4 z-40",
+                "absolute top-16 start-4 z-40",
                 "p-4 rounded-lg backdrop-blur-md bg-black/30 border border-white/20",
                 "pointer-events-auto max-w-xs"
               )}

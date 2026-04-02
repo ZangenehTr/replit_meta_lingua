@@ -58,7 +58,7 @@ export function ChallengeDuelsPage() {
           <div className="flex items-center space-x-3">
             <Link href="/admin/dashboard">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" />
+                <ArrowLeft className="w-4 h-4 me-1" />
                 {t("duels.back", "Back")}
               </Button>
             </Link>
@@ -128,11 +128,11 @@ export function ChallengeDuelsPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => acceptMutation.mutate(duel.id)} className="bg-green-600 hover:bg-green-700">
-                      <CheckCircle className="w-4 h-4 mr-1" />
+                      <CheckCircle className="w-4 h-4 me-1" />
                       {t("duels.accept", "Accept")}
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => declineMutation.mutate(duel.id)}>
-                      <XCircle className="w-4 h-4 mr-1" />
+                      <XCircle className="w-4 h-4 me-1" />
                       {t("duels.decline", "Decline")}
                     </Button>
                   </div>

@@ -263,7 +263,7 @@ export function UniversalSearchBar({
     return (
       <div className={cn("relative flex items-center gap-2", className)}>
         <div className="relative flex-1">
-          <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground", isRTL ? "right-3" : "left-3")} />
+          <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground", "start-3")} />
           <Input
             ref={inputRef}
             type="text"
@@ -272,14 +272,14 @@ export function UniversalSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => setShowSuggestions(true)}
-            className={cn("w-full", isRTL ? "pr-10" : "pl-10")}
+            className={cn("w-full", "ps-10")}
             data-testid="search-input-compact"
           />
           {query && (
             <Button
               variant="ghost"
               size="sm"
-              className={cn("absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0", isRTL ? "left-2" : "right-2")}
+              className={cn("absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0", "end-2")}
               onClick={() => setQuery('')}
               data-testid="search-clear-button"
             >
@@ -300,7 +300,7 @@ export function UniversalSearchBar({
       <div className="relative">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground", isRTL ? "right-4" : "left-4")} />
+            <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground", "start-4")} />
             <Input
               ref={inputRef}
               type="text"
@@ -309,14 +309,14 @@ export function UniversalSearchBar({
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => setShowSuggestions(true)}
-              className={cn("w-full text-base h-12", isRTL ? "pr-12 pl-4" : "pl-12 pr-4", variant === 'expanded' && "h-14 text-lg")}
+              className={cn("w-full text-base h-12", "ps-12 pe-4", variant === 'expanded' && "h-14 text-lg")}
               data-testid="search-input"
             />
             {query && (
               <Button
                 variant="ghost"
                 size="sm"
-                className={cn("absolute top-1/2 transform -translate-y-1/2 h-8 w-8 p-0", isRTL ? "left-2" : "right-2")}
+                className={cn("absolute top-1/2 transform -translate-y-1/2 h-8 w-8 p-0", "end-2")}
                 onClick={() => setQuery('')}
                 data-testid="search-clear-button"
               >
@@ -408,7 +408,7 @@ export function UniversalSearchBar({
 
       {/* Suggestions Dropdown */}
       {showSuggestions && (query.length >= 2 || trending.length > 0 || recentSearches?.history?.length > 0) && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-background border border-border rounded-lg shadow-lg max-h-96 overflow-auto">
+        <div className="absolute top-full start-0 end-0 z-50 mt-2 bg-background border border-border rounded-lg shadow-lg max-h-96 overflow-auto">
           <Command>
             <CommandList>
               {/* Trending Searches */}

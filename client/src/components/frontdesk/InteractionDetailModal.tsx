@@ -285,7 +285,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
               
               {(interaction.convertedToLead || interaction.convertedToStudent) && (
                 <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  <Target className="h-3 w-3 mr-1" />
+                  <Target className="h-3 w-3 me-1" />
                   Converted
                 </Badge>
               )}
@@ -318,7 +318,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                     <div>
                       <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</Label>
                       <p className="mt-1 font-medium flex items-center">
-                        <Phone className="h-4 w-4 mr-2" />
+                        <Phone className="h-4 w-4 me-2" />
                         {interaction.customerPhone}
                       </p>
                     </div>
@@ -328,7 +328,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                     <div>
                       <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</Label>
                       <p className="mt-1 font-medium flex items-center">
-                        <Mail className="h-4 w-4 mr-2" />
+                        <Mail className="h-4 w-4 me-2" />
                         {interaction.customerEmail}
                       </p>
                     </div>
@@ -356,7 +356,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center">
-                      <Phone className="h-4 w-4 mr-2" />
+                      <Phone className="h-4 w-4 me-2" />
                       Call Details
                     </CardTitle>
                   </CardHeader>
@@ -365,7 +365,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                       <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Call Type</Label>
                       <div className="mt-1 flex items-center">
                         {getCallTypeIcon(interaction.callType)}
-                        <span className="ml-2 font-medium capitalize">{interaction.callType}</span>
+                        <span className="ms-2 font-medium capitalize">{interaction.callType}</span>
                       </div>
                     </div>
                     
@@ -396,7 +396,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                               )} 
                             />
                           ))}
-                          <span className="ml-2 text-sm font-medium">
+                          <span className="ms-2 text-sm font-medium">
                             {interaction.customerSatisfaction}/5
                           </span>
                         </div>
@@ -411,7 +411,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center">
-                      <Users className="h-4 w-4 mr-2" />
+                      <Users className="h-4 w-4 me-2" />
                       Visit Details
                     </CardTitle>
                   </CardHeader>
@@ -438,7 +438,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center">
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <MessageSquare className="h-4 w-4 me-2" />
                       Notes
                     </CardTitle>
                   </CardHeader>
@@ -455,7 +455,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <CheckCircle className="h-4 w-4 me-2" />
                       Action Items & Next Steps
                     </CardTitle>
                   </CardHeader>
@@ -482,7 +482,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center">
-                      <Tag className="h-4 w-4 mr-2" />
+                      <Tag className="h-4 w-4 me-2" />
                       Tags
                     </CardTitle>
                   </CardHeader>
@@ -503,7 +503,7 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center">
-                      <Calendar className="h-4 w-4 mr-2" />
+                      <Calendar className="h-4 w-4 me-2" />
                       Follow-up Required
                     </CardTitle>
                   </CardHeader>
@@ -637,12 +637,12 @@ export function InteractionDetailModal({ interaction, onClose, onUpdate }: Inter
                   >
                     {updateNotesMutation.isPending ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
                         Saving...
                       </>
                     ) : (
                       <>
-                        <Save className="h-4 w-4 mr-2" />
+                        <Save className="h-4 w-4 me-2" />
                         Save Changes
                       </>
                     )}

@@ -356,7 +356,7 @@ export default function DictionaryOverlay({
           {isLoading && (
             <div className="flex items-center justify-center h-32" data-testid="dictionary-loading">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="ml-2">Looking up definition...</span>
+              <span className="ms-2">Looking up definition...</span>
             </div>
           )}
 

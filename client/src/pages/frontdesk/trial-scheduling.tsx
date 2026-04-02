@@ -511,7 +511,7 @@ export default function TrialLessonScheduling() {
             className="bg-blue-600 hover:bg-blue-700"
             data-testid="new-trial-booking"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {isRTL ? "درس آزمایشی جدید" : "New Trial Lesson"}
           </Button>
           
@@ -520,7 +520,7 @@ export default function TrialLessonScheduling() {
             onClick={() => setQuickBookingMode(!quickBookingMode)}
             data-testid="quick-booking-toggle"
           >
-            <Clock className="h-4 w-4 mr-2" />
+            <Clock className="h-4 w-4 me-2" />
             {isRTL ? "رزرو سریع" : "Quick Booking"}
           </Button>
           
@@ -529,7 +529,7 @@ export default function TrialLessonScheduling() {
             onClick={() => setShowNotificationPanel(true)}
             data-testid="notification-panel"
           >
-            <Bell className="h-4 w-4 mr-2" />
+            <Bell className="h-4 w-4 me-2" />
             {isRTL ? "اعلان‌ها" : "Notifications"}
           </Button>
 
@@ -691,27 +691,27 @@ export default function TrialLessonScheduling() {
       <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="calendar" data-testid="tab-calendar">
-            <Calendar className="h-4 w-4 mr-2" />
+            <Calendar className="h-4 w-4 me-2" />
             {isRTL ? "تقویم" : "Calendar"}
           </TabsTrigger>
           <TabsTrigger value="bookings" data-testid="tab-bookings">
-            <BookOpen className="h-4 w-4 mr-2" />
+            <BookOpen className="h-4 w-4 me-2" />
             {isRTL ? "رزروها" : "Bookings"}
           </TabsTrigger>
           <TabsTrigger value="teachers" data-testid="tab-teachers">
-            <Users className="h-4 w-4 mr-2" />
+            <Users className="h-4 w-4 me-2" />
             {isRTL ? "معلمان" : "Teachers"}
           </TabsTrigger>
           <TabsTrigger value="notifications" data-testid="tab-notifications">
-            <MessageSquare className="h-4 w-4 mr-2" />
+            <MessageSquare className="h-4 w-4 me-2" />
             {isRTL ? "اعلان‌ها" : "Notifications"}
           </TabsTrigger>
           <TabsTrigger value="attendance" data-testid="tab-attendance">
-            <CheckCircle className="h-4 w-4 mr-2" />
+            <CheckCircle className="h-4 w-4 me-2" />
             {isRTL ? "حضور و غیاب" : "Attendance"}
           </TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-analytics">
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-4 w-4 me-2" />
             {isRTL ? "آمار" : "Analytics"}
           </TabsTrigger>
         </TabsList>
@@ -735,7 +735,7 @@ export default function TrialLessonScheduling() {
                 onClick={() => setViewMode('calendar')}
                 data-testid="view-mode-calendar"
               >
-                <Grid3X3 className="h-4 w-4 mr-1" />
+                <Grid3X3 className="h-4 w-4 me-1" />
                 {isRTL ? "تقویم" : "Calendar"}
               </Button>
               <Button
@@ -744,7 +744,7 @@ export default function TrialLessonScheduling() {
                 onClick={() => setViewMode('list')}
                 data-testid="view-mode-list"
               >
-                <List className="h-4 w-4 mr-1" />
+                <List className="h-4 w-4 me-1" />
                 {isRTL ? "لیست" : "List"}
               </Button>
             </div>
@@ -839,7 +839,7 @@ export default function TrialLessonScheduling() {
                         )}
                       </div>
                       
-                      <div className="flex flex-col space-y-2 ml-4">
+                      <div className="flex flex-col space-y-2 ms-4">
                         {lesson.bookingStatus === 'pending' && (
                           <Button
                             size="sm"
@@ -847,7 +847,7 @@ export default function TrialLessonScheduling() {
                             disabled={confirmTrialLesson.isPending}
                             data-testid={`confirm-lesson-${lesson.id}`}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
+                            <CheckCircle className="h-4 w-4 me-1" />
                             {isRTL ? "تایید" : "Confirm"}
                           </Button>
                         )}
@@ -862,7 +862,7 @@ export default function TrialLessonScheduling() {
                             }}
                             data-testid={`assign-teacher-${lesson.id}`}
                           >
-                            <Users className="h-4 w-4 mr-1" />
+                            <Users className="h-4 w-4 me-1" />
                             {isRTL ? "تعیین معلم" : "Assign Teacher"}
                           </Button>
                         )}
@@ -872,7 +872,7 @@ export default function TrialLessonScheduling() {
                           variant="outline"
                           data-testid={`view-lesson-${lesson.id}`}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
+                          <Eye className="h-4 w-4 me-1" />
                           {isRTL ? "جزئیات" : "Details"}
                         </Button>
                         
@@ -891,7 +891,7 @@ export default function TrialLessonScheduling() {
                             disabled={cancelTrialLesson.isPending}
                             data-testid={`cancel-lesson-${lesson.id}`}
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
+                            <Trash2 className="h-4 w-4 me-1" />
                             {isRTL ? "لغو" : "Cancel"}
                           </Button>
                         )}

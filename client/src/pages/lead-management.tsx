@@ -432,12 +432,12 @@ export default function LeadManagement() {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در لیدها..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
@@ -454,7 +454,7 @@ export default function LeadManagement() {
           </SelectContent>
         </Select>
         <Button onClick={() => setShowNewLeadForm(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <UserPlus className="h-4 w-4 me-2" />
           لید جدید
         </Button>
       </div>
@@ -596,13 +596,13 @@ export default function LeadManagement() {
               onClick={() => window.open('/callcenter/voip', '_blank')}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200"
             >
-              <Headphones className="h-4 w-4 mr-2" />
+              <Headphones className="h-4 w-4 me-2" />
               VoIP Center
             </Button>
             <Dialog open={showNewLeadForm} onOpenChange={setShowNewLeadForm}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-200">
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <UserPlus className="h-4 w-4 me-2" />
                   New Lead
                 </Button>
               </DialogTrigger>
@@ -756,7 +756,7 @@ export default function LeadManagement() {
               </DialogContent>
             </Dialog>
             <Button variant="outline" className="border-slate-300 hover:bg-slate-50">
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 me-2" />
               Lead Report
             </Button>
           </div>

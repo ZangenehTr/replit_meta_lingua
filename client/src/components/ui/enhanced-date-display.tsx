@@ -128,8 +128,8 @@ export function EnhancedDateDisplay({
             
             {relativeDate && (
               <span className={cn(
-                "ml-2 px-2 py-1 text-xs rounded-full bg-primary/10 text-primary",
-                isRTL && "mr-2 ml-0"
+                "ms-2 px-2 py-1 text-xs rounded-full bg-primary/10 text-primary",
+                isRTL && "me-2 ms-0"
               )}>
                 {relativeDate}
               </span>

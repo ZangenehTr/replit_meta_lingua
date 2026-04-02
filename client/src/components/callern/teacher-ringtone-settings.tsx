@@ -250,12 +250,12 @@ export function TeacherRingtoneSettings() {
           >
             {isPlaying && playingRingtone === preferences.selectedRingtone ? (
               <>
-                <Square className="h-4 w-4 mr-2" />
+                <Square className="h-4 w-4 me-2" />
                 Stop Test
               </>
             ) : (
               <>
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="h-4 w-4 me-2" />
                 Test Selected Ringtone
               </>
             )}

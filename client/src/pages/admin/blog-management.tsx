@@ -223,7 +223,7 @@ export default function BlogManagement() {
             onClick={() => setIsCreateDialogOpen(true)}
             data-testid="button-create-post"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4 me-2" />
             Create Post
           </Button>
         </div>
@@ -238,13 +238,13 @@ export default function BlogManagement() {
               <div className="space-y-2">
                 <Label htmlFor="search-posts">Search</Label>
                 <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search-posts"
                     placeholder="Search posts..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
+                    className="ps-8"
                     data-testid="input-search-posts"
                   />
                 </div>
@@ -340,7 +340,7 @@ export default function BlogManagement() {
                             {post.status}
                           </Badge>
                           <Badge variant="outline" data-testid={`badge-locale-${post.id}`}>
-                            <Globe className="w-3 h-3 mr-1" />
+                            <Globe className="w-3 h-3 me-1" />
                             {post.locale?.toUpperCase() || 'EN'}
                           </Badge>
                         </div>
@@ -372,7 +372,7 @@ export default function BlogManagement() {
                           onClick={() => setEditingPost(post)}
                           data-testid={`button-edit-${post.id}`}
                         >
-                          <Edit className="w-4 h-4 mr-1" />
+                          <Edit className="w-4 h-4 me-1" />
                           Edit
                         </Button>
                         <Button
@@ -381,7 +381,7 @@ export default function BlogManagement() {
                           onClick={() => handlePublishToggle(post)}
                           data-testid={`button-publish-${post.id}`}
                         >
-                          <FileText className="w-4 h-4 mr-1" />
+                          <FileText className="w-4 h-4 me-1" />
                           {post.status === 'published' ? 'Unpublish' : 'Publish'}
                         </Button>
                         <Button
@@ -394,7 +394,7 @@ export default function BlogManagement() {
                           }}
                           data-testid={`button-delete-${post.id}`}
                         >
-                          <Trash2 className="w-4 h-4 mr-1" />
+                          <Trash2 className="w-4 h-4 me-1" />
                           Delete
                         </Button>
                       </div>

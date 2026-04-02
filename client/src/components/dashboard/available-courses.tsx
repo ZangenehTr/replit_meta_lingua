@@ -138,9 +138,9 @@ export function AvailableCourses() {
                     <h3 className="font-semibold text-lg">{course.title}</h3>
                     <Badge variant={course.deliveryMode === 'online' ? 'default' : 'secondary'}>
                       {course.deliveryMode === 'online' ? (
-                        <><Globe className="w-3 h-3 mr-1" /> Online</>
+                        <><Globe className="w-3 h-3 me-1" /> Online</>
                       ) : (
-                        <><MapPin className="w-3 h-3 mr-1" /> In-Person</>
+                        <><MapPin className="w-3 h-3 me-1" /> In-Person</>
                       )}
                     </Badge>
                   </div>

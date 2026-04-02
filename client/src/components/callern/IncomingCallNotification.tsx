@@ -111,7 +111,7 @@ export function IncomingCallNotification({
               size="lg"
               className="flex-1"
             >
-              <PhoneOff className="mr-2 h-5 w-5" />
+              <PhoneOff className="me-2 h-5 w-5" />
               Decline
             </Button>
             <Button
@@ -120,7 +120,7 @@ export function IncomingCallNotification({
               size="lg"
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              <Phone className="mr-2 h-5 w-5" />
+              <Phone className="me-2 h-5 w-5" />
               Accept
             </Button>
           </div>

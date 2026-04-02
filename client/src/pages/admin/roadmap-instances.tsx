@@ -46,7 +46,7 @@ export default function RoadmapInstances() {
         <div className="flex gap-2">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-40" data-testid="select-filter-status">
-              <Filter className="h-4 w-4 mr-2" />
+              <Filter className="h-4 w-4 me-2" />
               <SelectValue placeholder={t('admin:filterByStatus', 'Filter by status')} />
             </SelectTrigger>
             <SelectContent>
@@ -57,7 +57,7 @@ export default function RoadmapInstances() {
             </SelectContent>
           </Select>
           <Button data-testid="button-create-instance">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {t('admin:assignRoadmap', 'Assign Roadmap')}
           </Button>
         </div>
@@ -124,19 +124,19 @@ export default function RoadmapInstances() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="active" data-testid="tab-active-instances">
-            <Play className="h-4 w-4 mr-2" />
+            <Play className="h-4 w-4 me-2" />
             {t('admin:active', 'Active')}
           </TabsTrigger>
           <TabsTrigger value="completed" data-testid="tab-completed-instances">
-            <CheckCircle2 className="h-4 w-4 mr-2" />
+            <CheckCircle2 className="h-4 w-4 me-2" />
             {t('admin:completed', 'Completed')}
           </TabsTrigger>
           <TabsTrigger value="analytics" data-testid="tab-instance-analytics">
-            <MapPin className="h-4 w-4 mr-2" />
+            <MapPin className="h-4 w-4 me-2" />
             {t('admin:analytics', 'Analytics')}
           </TabsTrigger>
           <TabsTrigger value="management" data-testid="tab-instance-management">
-            <Users className="h-4 w-4 mr-2" />
+            <Users className="h-4 w-4 me-2" />
             {t('admin:management', 'Management')}
           </TabsTrigger>
         </TabsList>
@@ -294,7 +294,7 @@ export default function RoadmapInstances() {
                   </div>
                 </div>
                 <Button data-testid="button-assign-roadmap">
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   {t('admin:assignRoadmap', 'Assign Roadmap')}
                 </Button>
               </div>

@@ -138,17 +138,17 @@ function PrivateClassSetup() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در متقاضیان تنظیم کلاس خصوصی..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <Badge variant="outline" className="px-3 py-1">
-          <BookOpen className="h-4 w-4 mr-2" />
+          <BookOpen className="h-4 w-4 me-2" />
           {filteredLeads.length} مورد
         </Badge>
       </div>
@@ -185,7 +185,7 @@ function PrivateClassSetup() {
                         <User className="h-4 w-4 text-gray-500" />
                         <h3 className="font-semibold text-lg">{lead.firstName} {lead.lastName}</h3>
                         <Badge className="bg-purple-100 text-purple-800">
-                          <BookOpen className="h-3 w-3 mr-1" />
+                          <BookOpen className="h-3 w-3 me-1" />
                           تنظیم کلاس خصوصی
                         </Badge>
                       </div>
@@ -208,7 +208,7 @@ function PrivateClassSetup() {
                             size="sm"
                             onClick={() => setSelectedLead(lead)}
                           >
-                            <Package className="h-4 w-4 mr-2" />
+                            <Package className="h-4 w-4 me-2" />
                             ایجاد کلاس خصوصی
                           </Button>
                         </DialogTrigger>
@@ -257,7 +257,7 @@ function PrivateClassSetup() {
                                 <SelectContent>
                                   {teachers.map(t => (
                                     <SelectItem key={t.id} value={String(t.id)}>
-                                      <GraduationCap className="h-3 w-3 inline mr-1" />
+                                      <GraduationCap className="h-3 w-3 inline me-1" />
                                       {t.firstName} {t.lastName}
                                     </SelectItem>
                                   ))}
@@ -310,7 +310,7 @@ function PrivateClassSetup() {
                                 onClick={handleSubmit}
                                 disabled={createMutation.isPending || !selectedBundleId || !selectedTeacherId || !amount}
                               >
-                                <CreditCard className="h-4 w-4 mr-2" />
+                                <CreditCard className="h-4 w-4 me-2" />
                                 {createMutation.isPending ? "در حال ثبت..." : "ثبت و فعال‌سازی کلاس"}
                               </Button>
                             </div>

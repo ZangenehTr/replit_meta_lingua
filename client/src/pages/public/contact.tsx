@@ -167,7 +167,7 @@ export default function Contact() {
                       className="w-full md:w-auto" 
                       data-testid="button-submit-contact"
                     >
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       {contactMutation.isPending ? t('contact.sending', 'Sending...') : t('contact.sendButton', 'Send Message')}
                     </Button>
                   </form>

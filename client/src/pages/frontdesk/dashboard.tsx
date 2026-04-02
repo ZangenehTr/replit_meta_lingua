@@ -829,14 +829,14 @@ export default function FrontDeskDashboard() {
             {/* Center - Search */}
             <div className="hidden md:block flex-1 max-w-lg mx-8">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="search-input"
                   type="text"
                   placeholder={
                     t('frontdesk:common.search')
                   }
-                  className="pl-10 bg-gray-100 dark:bg-gray-700 border-0"
+                  className="ps-10 bg-gray-100 dark:bg-gray-700 border-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -853,7 +853,7 @@ export default function FrontDeskDashboard() {
                 className="hidden sm:flex"
               >
                 <Languages className="h-4 w-4" />
-                <span className="ml-2">{i18n.language === 'fa' ? "EN" : "فا"}</span>
+                <span className="ms-2">{i18n.language === 'fa' ? "EN" : "فا"}</span>
               </Button>
 
               {/* Quick actions */}
@@ -861,7 +861,7 @@ export default function FrontDeskDashboard() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <Zap className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-2">
+                    <span className="hidden sm:inline ms-2">
                       {t('frontdesk:quickActions.title')}
                     </span>
                   </Button>
@@ -906,7 +906,7 @@ export default function FrontDeskDashboard() {
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="h-4 w-4" />
                     {dashboardStats.unreadNotifications > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-red-500">
+                      <Badge className="absolute -top-1 -end-1 h-5 w-5 p-0 text-xs bg-red-500">
                         {dashboardStats.unreadNotifications > 99
                           ? "99+"
                           : dashboardStats.unreadNotifications}
@@ -1060,7 +1060,7 @@ export default function FrontDeskDashboard() {
                           : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700",
                       )}
                     >
-                      <Icon className="mr-3 h-5 w-5" />
+                      <Icon className="me-3 h-5 w-5" />
                       {item.label}
                     </button>
                   );
@@ -1159,9 +1159,9 @@ export default function FrontDeskDashboard() {
               </p>
               <div className="flex items-center mt-2">
                 {dashboardStats.callsToday > 20 ? (
-                  <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                  <TrendingUp className="h-3 w-3 text-green-500 me-1" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+                  <TrendingDown className="h-3 w-3 text-red-500 me-1" />
                 )}
                 <span className="text-xs text-gray-500">
                   {t('frontdesk:stats.vsYesterday')}
@@ -1247,7 +1247,7 @@ export default function FrontDeskDashboard() {
                   size="sm"
                   onClick={() => setLocation("/frontdesk/walk-in-intake")}
                 >
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <UserPlus className="h-4 w-4 me-2" />
                   {t('frontdesk:quickActions.newWalkIn')}
                 </Button>
               </div>
@@ -1449,7 +1449,7 @@ export default function FrontDeskDashboard() {
             </Select>
 
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('frontdesk:tasks.newTask')}
             </Button>
           </div>
@@ -1604,7 +1604,7 @@ export default function FrontDeskDashboard() {
                         className="w-full justify-start"
                         onClick={action.action}
                       >
-                        <Icon className="h-4 w-4 mr-2" />
+                        <Icon className="h-4 w-4 me-2" />
                         {action.label}
                       </Button>
                     );
@@ -1810,7 +1810,7 @@ export default function FrontDeskDashboard() {
             </p>
           </div>
           <Button>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {t('frontdesk:trials.newTrialLesson')}
           </Button>
         </div>
@@ -2007,11 +2007,11 @@ export default function FrontDeskDashboard() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 me-2" />
               {t('frontdesk:views.exportReport')}
             </Button>
             <Button variant="outline">
-              <Printer className="h-4 w-4 mr-2" />
+              <Printer className="h-4 w-4 me-2" />
               {t('frontdesk:views.print')}
             </Button>
           </div>

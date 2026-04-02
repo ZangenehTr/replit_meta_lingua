@@ -719,12 +719,12 @@ export default function RoadmapPage() {
                   >
                     {calculatePlanMutation.isPending ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2" />
                         Calculating Study Plan...
                       </>
                     ) : (
                       <>
-                        <BarChart3 className="h-4 w-4 mr-2" />
+                        <BarChart3 className="h-4 w-4 me-2" />
                         Calculate Study Plan
                       </>
                     )}
@@ -821,12 +821,12 @@ export default function RoadmapPage() {
               >
                 {generateSessionsMutation.isPending ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2" />
                     Generating Learning Sessions...
                   </>
                 ) : (
                   <>
-                    <Zap className="h-4 w-4 mr-2" />
+                    <Zap className="h-4 w-4 me-2" />
                     Generate Learning Sessions
                   </>
                 )}
@@ -886,7 +886,7 @@ export default function RoadmapPage() {
                             {session.sessionType.replace('_', ' ')}
                           </Badge>
                           <Badge variant="outline">
-                            <IconComponent className="h-3 w-3 mr-1" />
+                            <IconComponent className="h-3 w-3 me-1" />
                             {session.primarySkill}
                           </Badge>
                           <Badge variant="outline">
@@ -978,7 +978,7 @@ export default function RoadmapPage() {
                               }}
                               data-testid={`button-callern-${session.id}`}
                             >
-                              <Mic className="h-4 w-4 mr-1" />
+                              <Mic className="h-4 w-4 me-1" />
                               Practice with CallerN
                             </Button>
                           )}
@@ -993,7 +993,7 @@ export default function RoadmapPage() {
                           >
                             {session.completed ? (
                               <>
-                                <Check className="h-4 w-4 mr-1" />
+                                <Check className="h-4 w-4 me-1" />
                                 Completed
                               </>
                             ) : (
@@ -1022,7 +1022,7 @@ export default function RoadmapPage() {
                   onClick={() => setLocation('/student/dashboard')}
                   data-testid="button-go-to-dashboard"
                 >
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="h-4 w-4 me-2" />
                   Go to Dashboard
                 </Button>
               </div>

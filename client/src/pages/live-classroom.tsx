@@ -297,7 +297,7 @@ export default function LiveClassroom() {
             <Badge variant="secondary">{activeClassroom.teacher}</Badge>
             {isRecording && (
               <Badge variant="destructive" className="animate-pulse">
-                <RecordingIcon className="h-3 w-3 mr-1" />
+                <RecordingIcon className="h-3 w-3 me-1" />
                 Recording
               </Badge>
             )}
@@ -306,7 +306,7 @@ export default function LiveClassroom() {
           <div className="flex items-center space-x-2">
             <span className="text-sm">{activeClassroom.participants.length} participants</span>
             <Button variant="destructive" size="sm" onClick={handleLeaveClass}>
-              <PhoneOff className="h-4 w-4 mr-2" />
+              <PhoneOff className="h-4 w-4 me-2" />
               Leave
             </Button>
           </div>
@@ -323,12 +323,12 @@ export default function LiveClassroom() {
                   alt="Teacher"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded">
+                <div className="absolute bottom-4 start-4 bg-black/70 text-white px-3 py-1 rounded">
                   {activeClassroom.teacher}
                 </div>
                 {isScreenSharing && (
-                  <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded">
-                    <Monitor className="h-4 w-4 inline mr-2" />
+                  <div className="absolute top-4 start-4 bg-blue-600 text-white px-3 py-1 rounded">
+                    <Monitor className="h-4 w-4 inline me-2" />
                     Screen Sharing
                   </div>
                 )}
@@ -336,7 +336,7 @@ export default function LiveClassroom() {
             </div>
 
             {/* Student Videos Grid */}
-            <div className="absolute bottom-4 right-4 grid grid-cols-2 gap-2">
+            <div className="absolute bottom-4 end-4 grid grid-cols-2 gap-2">
               {activeClassroom.participants.filter(p => p.role === 'student').slice(0, 4).map((participant) => (
                 <div key={participant.id} className="relative w-32 h-24 bg-gray-700 rounded overflow-hidden">
                   {participant.isVideoOn ? (
@@ -350,16 +350,16 @@ export default function LiveClassroom() {
                       <VideoOff className="h-6 w-6 text-gray-400" />
                     </div>
                   )}
-                  <div className="absolute bottom-1 left-1 text-xs text-white bg-black/70 px-1 rounded">
+                  <div className="absolute bottom-1 start-1 text-xs text-white bg-black/70 px-1 rounded">
                     {participant.name.split(' ')[0]}
                   </div>
                   {participant.isMuted && (
-                    <div className="absolute top-1 right-1">
+                    <div className="absolute top-1 end-1">
                       <MicOff className="h-3 w-3 text-red-500" />
                     </div>
                   )}
                   {participant.isHandRaised && (
-                    <div className="absolute top-1 left-1">
+                    <div className="absolute top-1 start-1">
                       <Hand className="h-3 w-3 text-yellow-500" />
                     </div>
                   )}
@@ -368,7 +368,7 @@ export default function LiveClassroom() {
             </div>
 
             {/* Controls Bar */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-900/90 rounded-full px-6 py-3 flex items-center space-x-4">
+            <div className="absolute bottom-4 inset-x-0 mx-auto w-fit bg-gray-900/90 rounded-full px-6 py-3 flex items-center space-x-4">
               <Button
                 variant={isMuted ? "destructive" : "outline"}
                 size="sm"
@@ -531,7 +531,7 @@ export default function LiveClassroom() {
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
-                  <Video className="h-4 w-4 mr-2" />
+                  <Video className="h-4 w-4 me-2" />
                   ایجاد کلاس / Create Class
                 </Button>
               </DialogTrigger>
@@ -662,19 +662,19 @@ export default function LiveClassroom() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                      <Calendar className="h-4 w-4 me-2 text-gray-400" />
                       <span>{formatDateTime(session.scheduledFor)}</span>
                     </div>
                     <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                      <Clock className="h-4 w-4 me-2 text-gray-400" />
                       <span>{formatTime(session.duration)}</span>
                     </div>
                     <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-2 text-gray-400" />
+                      <Users className="h-4 w-4 me-2 text-gray-400" />
                       <span>{session.currentParticipants}/{session.maxParticipants}</span>
                     </div>
                     <div className="flex items-center">
-                      <Settings className="h-4 w-4 mr-2 text-gray-400" />
+                      <Settings className="h-4 w-4 me-2 text-gray-400" />
                       <span>{session.features.length} features</span>
                     </div>
                   </div>
@@ -694,19 +694,19 @@ export default function LiveClassroom() {
                         className="w-full"
                         disabled={joinClassroom.isPending}
                       >
-                        <Video className="h-4 w-4 mr-2" />
+                        <Video className="h-4 w-4 me-2" />
                         {joinClassroom.isPending ? "در حال اتصال... / Joining..." : "ورود به کلاس / Join Class"}
                       </Button>
                     )}
                     {session.status === 'scheduled' && (
                       <Button variant="outline" className="w-full" disabled>
-                        <Calendar className="h-4 w-4 mr-2" />
+                        <Calendar className="h-4 w-4 me-2" />
                         برنامه‌ریزی شده / Scheduled
                       </Button>
                     )}
                     {session.status === 'completed' && (
                       <Button variant="outline" className="w-full">
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-4 w-4 me-2" />
                         مشاهده ضبط / View Recording
                       </Button>
                     )}

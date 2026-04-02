@@ -106,18 +106,18 @@ function ConsultationSup() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={t('callcenter:stages.consultation_sup.search_placeholder', 'جستجو در متقاضیان مشاوره سوپروایزر...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <Shield className="h-4 w-4 mr-2" />
+            <Shield className="h-4 w-4 me-2" />
             {filteredLeads.length} {t('callcenter:stages.consultation_sup.count', 'مورد')}
           </Badge>
         </div>
@@ -157,7 +157,7 @@ function ConsultationSup() {
                           {lead.firstName} {lead.lastName}
                         </h3>
                         <Badge className="bg-amber-100 text-amber-800">
-                          <Shield className="h-3 w-3 mr-1" />
+                          <Shield className="h-3 w-3 me-1" />
                           {t('callcenter:stages.consultation_sup.badge', 'مشاوره سوپروایزر')}
                         </Badge>
                       </div>
@@ -196,7 +196,7 @@ function ConsultationSup() {
                               setDialogOpen(true);
                             }}
                           >
-                            <Shield className="h-4 w-4 mr-2" />
+                            <Shield className="h-4 w-4 me-2" />
                             {t('callcenter:stages.consultation_sup.review', 'بررسی سوپروایزر')}
                           </Button>
                         </DialogTrigger>
@@ -211,13 +211,13 @@ function ConsultationSup() {
                             <div>
                               <Label>{t('callcenter:stages.consultation_sup.tuition', 'مبلغ شهریه (تومان)')}</Label>
                               <div className="relative">
-                                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <DollarSign className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
                                   type="number"
                                   placeholder={t('callcenter:stages.consultation_sup.tuition_placeholder', 'مبلغ شهریه')}
                                   value={tuitionAmount}
                                   onChange={(e) => setTuitionAmount(e.target.value)}
-                                  className="pl-10"
+                                  className="ps-10"
                                 />
                               </div>
                             </div>
@@ -225,7 +225,7 @@ function ConsultationSup() {
                             <div>
                               <Label>{t('callcenter:stages.consultation_sup.discount', 'درصد تخفیف')}</Label>
                               <div className="relative">
-                                <Percent className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <Percent className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
                                   type="number"
                                   min="0"
@@ -233,7 +233,7 @@ function ConsultationSup() {
                                   placeholder={t('callcenter:stages.consultation_sup.discount_placeholder', 'درصد تخفیف')}
                                   value={discountPercent}
                                   onChange={(e) => setDiscountPercent(e.target.value)}
-                                  className="pl-10"
+                                  className="ps-10"
                                 />
                               </div>
                             </div>
@@ -251,7 +251,7 @@ function ConsultationSup() {
 
                             {tuitionAmount && (
                               <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded text-green-800 dark:text-green-200 text-sm">
-                                <DollarSign className="h-4 w-4 inline mr-1" />
+                                <DollarSign className="h-4 w-4 inline me-1" />
                                 {t('callcenter:stages.consultation_sup.final_amount', 'مبلغ نهایی:')} {calculateFinalAmount().toLocaleString()} {t('callcenter:stages.consultation_sup.currency', 'تومان')}
                               </div>
                             )}
@@ -290,7 +290,7 @@ function ConsultationSup() {
                                 })}
                                 disabled={transitionMutation.isPending}
                               >
-                                <FileCheck className="h-4 w-4 mr-2" />
+                                <FileCheck className="h-4 w-4 me-2" />
                                 {t('callcenter:stages.consultation_sup.approve', 'تأیید و ارسال به پیش‌ثبت‌نام')}
                               </Button>
                               <Button
@@ -303,7 +303,7 @@ function ConsultationSup() {
                                 })}
                                 disabled={transitionMutation.isPending}
                               >
-                                <XCircle className="h-4 w-4 mr-2" />
+                                <XCircle className="h-4 w-4 me-2" />
                                 {t('callcenter:stages.consultation_sup.withdraw', 'انصراف')}
                               </Button>
                             </div>

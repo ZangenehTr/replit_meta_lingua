@@ -265,12 +265,12 @@ function NoResponse() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در متقاضیان پاسخ ندهنده..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
               data-testid="input-search-no-response"
             />
           </div>
@@ -290,12 +290,12 @@ function NoResponse() {
           </Select>
           
           <Badge variant="outline" className="px-3 py-1">
-            <Clock className="h-4 w-4 mr-2" />
+            <Clock className="h-4 w-4 me-2" />
             {filteredLeads.length} مورد
           </Badge>
           
           <Badge variant="outline" className="px-3 py-1">
-            <CheckCircle className="h-4 w-4 mr-2" />
+            <CheckCircle className="h-4 w-4 me-2" />
             {filteredLeads.filter(lead => getRetryStatus(lead) === 'due').length} آماده تماس
           </Badge>
         </div>
@@ -345,13 +345,13 @@ function NoResponse() {
                         <Badge className={getRetryStatusColor(getRetryStatus(lead))}>
                           {getRetryStatus(lead) === 'due' && (
                             <>
-                              <CheckCircle className="h-3 w-3 mr-1" />
+                              <CheckCircle className="h-3 w-3 me-1" />
                               آماده تماس
                             </>
                           )}
                           {getRetryStatus(lead) === 'waiting' && (
                             <>
-                              <Timer className="h-3 w-3 mr-1" />
+                              <Timer className="h-3 w-3 me-1" />
                               در انتظار
                             </>
                           )}
@@ -409,7 +409,7 @@ function NoResponse() {
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-2 ml-4">
+                    <div className="flex flex-col gap-2 ms-4">
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
@@ -425,12 +425,12 @@ function NoResponse() {
                           >
                             {!canMakeCall(lead) ? (
                               <>
-                                <Timer className="h-4 w-4 mr-2" />
+                                <Timer className="h-4 w-4 me-2" />
                                 منتظر تماس
                               </>
                             ) : (
                               <>
-                                <PhoneCall className="h-4 w-4 mr-2" />
+                                <PhoneCall className="h-4 w-4 me-2" />
                                 تماس
                               </>
                             )}
@@ -447,14 +447,14 @@ function NoResponse() {
                           <div className="space-y-4">
                             {selectedLead && (selectedLead.callCount || 0) >= 5 && (
                               <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded text-orange-800 dark:text-orange-200 text-sm">
-                                <AlertTriangle className="h-4 w-4 inline mr-1" />
+                                <AlertTriangle className="h-4 w-4 inline me-1" />
                                 هشدار: این متقاضی {selectedLead.callCount} بار تماس گرفته است. آیا باید به بخش انصراف منتقل شود؟
                               </div>
                             )}
                             
                             {selectedLead && !canMakeCall(selectedLead) && !forceCallOverride && (
                               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-800 dark:text-blue-200 text-sm">
-                                <Timer className="h-4 w-4 inline mr-1" />
+                                <Timer className="h-4 w-4 inline me-1" />
                                 زمان تماس بعدی: {selectedLead.nextRetryAt ? getTimeUntilRetry(selectedLead) : "نامشخص"}
                                 <br />
                                 <label className="flex items-center gap-2 mt-2">
@@ -499,7 +499,7 @@ function NoResponse() {
                                   className="flex-1"
                                   data-testid="button-mark-lost"
                                 >
-                                  <XCircle className="h-4 w-4 mr-1" />
+                                  <XCircle className="h-4 w-4 me-1" />
                                   عدم پاسخگویی
                                 </Button>
                                 <Button
@@ -517,7 +517,7 @@ function NoResponse() {
                                   className="flex-1"
                                   data-testid="button-mark-responsive"
                                 >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  <CheckCircle className="h-4 w-4 me-1" />
                                   پاسخگو شد
                                 </Button>
                               </div>
@@ -558,7 +558,7 @@ function NoResponse() {
                         disabled={markResponsiveMutation.isPending}
                         data-testid={`button-responsive-${lead.id}`}
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
+                        <CheckCircle className="h-4 w-4 me-2" />
                         پاسخگو
                       </Button>
                       
@@ -570,7 +570,7 @@ function NoResponse() {
                         className="text-red-600 hover:text-red-700"
                         data-testid={`button-lost-${lead.id}`}
                       >
-                        <XCircle className="h-4 w-4 mr-2" />
+                        <XCircle className="h-4 w-4 me-2" />
                         انصراف
                       </Button>
                     </div>
@@ -594,15 +594,15 @@ function NoResponse() {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" size="sm">
-                <MessageSquare className="h-4 w-4 mr-2" />
+                <MessageSquare className="h-4 w-4 me-2" />
                 ارسال پیامک گروهی
               </Button>
               <Button variant="outline" size="sm">
-                <Phone className="h-4 w-4 mr-2" />
+                <Phone className="h-4 w-4 me-2" />
                 فهرست تماس امروز
               </Button>
               <Button variant="outline" size="sm">
-                <AlertCircle className="h-4 w-4 mr-2" />
+                <AlertCircle className="h-4 w-4 me-2" />
                 گزارش عدم پاسخگویی
               </Button>
             </div>

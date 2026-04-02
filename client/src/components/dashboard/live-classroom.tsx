@@ -222,7 +222,7 @@ export function LiveClassroom() {
                 playsInline
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+              <div className="absolute bottom-2 start-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
                 You
               </div>
               {!videoState.isVideoEnabled && (
@@ -239,7 +239,7 @@ export function LiveClassroom() {
                 playsInline
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+              <div className="absolute bottom-2 start-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
                 Dr. Sara Hosseini (Tutor)
               </div>
             </div>
@@ -285,7 +285,7 @@ export function LiveClassroom() {
             
             <Button variant="outline" size="sm">
               <Users className="h-4 w-4" />
-              <span className="ml-1">{videoState.participants}</span>
+              <span className="ms-1">{videoState.participants}</span>
             </Button>
             
             <Button variant="destructive" size="sm" onClick={endCall}>
@@ -362,12 +362,12 @@ export function LiveClassroom() {
                         "Joining..."
                       ) : session.status === "live" ? (
                         <>
-                          <Video className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <Video className="h-3 w-3 sm:h-4 sm:w-4 me-1" />
                           Join Live
                         </>
                       ) : (
                         <>
-                          <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <Phone className="h-3 w-3 sm:h-4 sm:w-4 me-1" />
                           <span className="hidden sm:inline">Join at </span>
                           {new Date(session.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </>

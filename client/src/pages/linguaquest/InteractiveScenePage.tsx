@@ -83,7 +83,7 @@ export function InteractiveScenePage() {
           <div className="flex items-center space-x-3">
             <Link href="/linguaquest/scenes">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" />
+                <ArrowLeft className="w-4 h-4 me-1" />
                 {t("navigation.back", "Back")}
               </Button>
             </Link>
@@ -94,11 +94,11 @@ export function InteractiveScenePage() {
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">{scene.cefrLevel}</Badge>
                 <Badge variant="outline" className="text-emerald-600">
-                  <Star className="w-3 h-3 mr-1" />
+                  <Star className="w-3 h-3 me-1" />
                   {scene.xpReward} XP
                 </Badge>
                 <Badge variant="outline" className="text-blue-600">
-                  <Clock className="w-3 h-3 mr-1" />
+                  <Clock className="w-3 h-3 me-1" />
                   {scene.estimatedDurationMinutes} min
                 </Badge>
               </div>

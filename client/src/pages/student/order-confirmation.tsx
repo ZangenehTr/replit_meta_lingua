@@ -136,13 +136,13 @@ export default function StudentOrderConfirmation() {
             <div className="flex gap-4 justify-center">
               <Link href="/student/order-history">
                 <Button variant="outline" data-testid="button-view-orders">
-                  <Package className="w-4 h-4 mr-2" />
+                  <Package className="w-4 h-4 me-2" />
                   {t('student:orderConfirmation.viewOrders')}
                 </Button>
               </Link>
               <Link href="/student/virtual-mall">
                 <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  <ShoppingCart className="w-4 h-4 me-2" />
                   {t('student:orderConfirmation.continueShopping')}
                 </Button>
               </Link>
@@ -162,14 +162,14 @@ export default function StudentOrderConfirmation() {
             <div className="flex items-center gap-4">
               <Link href="/student/dashboard">
                 <Button variant="ghost" size="sm" data-testid="button-back-home">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 me-2" />
                   {t('student:orderConfirmation.backToDashboard')}
                 </Button>
               </Link>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={shareOrder} data-testid="button-share-order">
-                <Share2 className="w-4 h-4 mr-2" />
+                <Share2 className="w-4 h-4 me-2" />
                 {t('student:orderConfirmation.share')}
               </Button>
             </div>
@@ -234,7 +234,7 @@ export default function StudentOrderConfirmation() {
                         {t('student:orderConfirmation.orderStatus')}
                       </Label>
                       <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" data-testid="order-status">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        <CheckCircle2 className="w-3 h-3 me-1" />
                         {t('student:orderConfirmation.confirmed')}
                       </Badge>
                     </div>
@@ -405,27 +405,27 @@ export default function StudentOrderConfirmation() {
                       className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                       data-testid="button-download-receipt"
                     >
-                      <Download className="w-4 h-4 mr-2" />
+                      <Download className="w-4 h-4 me-2" />
                       {t('student:orderConfirmation.downloadReceipt')}
                     </Button>
 
                     <Link href="/student/order-history">
                       <Button variant="outline" className="w-full" data-testid="button-view-all-orders">
-                        <Package className="w-4 h-4 mr-2" />
+                        <Package className="w-4 h-4 me-2" />
                         {t('student:orderConfirmation.viewAllOrders')}
                       </Button>
                     </Link>
 
                     <Link href="/student/virtual-mall">
                       <Button variant="outline" className="w-full" data-testid="button-continue-shopping">
-                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        <ShoppingCart className="w-4 h-4 me-2" />
                         {t('student:orderConfirmation.continueShopping')}
                       </Button>
                     </Link>
 
                     <Link href="/student/dashboard">
                       <Button variant="ghost" className="w-full" data-testid="button-back-to-dashboard">
-                        <Home className="w-4 h-4 mr-2" />
+                        <Home className="w-4 h-4 me-2" />
                         {t('student:orderConfirmation.backToDashboard')}
                       </Button>
                     </Link>

@@ -269,7 +269,7 @@ export default function ClassTypeAttendanceFlow({ sessionId, onAttendanceUpdate 
                         type="checkbox"
                         checked={selectedStudents.includes(record.studentId)}
                         onChange={() => toggleStudentSelection(record.studentId)}
-                        className="ml-2"
+                        className="ms-2"
                         data-testid={`checkbox-student-${record.studentId}`}
                       />
                     )}

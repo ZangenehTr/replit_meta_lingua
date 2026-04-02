@@ -102,7 +102,7 @@ export function OnlineTeachersShowcase({
           <Button asChild variant="outline" data-testid="button-view-schedule">
             <Link href="/callern">
               <a>
-                <Clock className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                <Clock className={cn("h-4 w-4", "me-2")} />
                 {t('student:onlineTeachers.viewSchedule', 'View Teacher Schedule')}
               </a>
             </Link>
@@ -171,7 +171,7 @@ export function OnlineTeachersShowcase({
                     )}
                   </Avatar>
                   {/* Online Indicator */}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" />
+                  <div className="absolute -bottom-0.5 -end-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-semibold truncate">{teacher.name || 'Expert Teacher'}</h4>
@@ -225,7 +225,7 @@ export function OnlineTeachersShowcase({
                 onClick={() => onTeacherSelect?.(teacher.id)}
                 data-testid={`button-connect-${teacher.id}`}
               >
-                <Video className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                <Video className={cn("h-4 w-4", "me-2")} />
                 {t('student:onlineTeachers.connectNow', 'Connect Now')}
               </Button>
 

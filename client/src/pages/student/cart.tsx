@@ -157,7 +157,7 @@ export default function StudentCart() {
             <div className="flex items-center gap-4">
               <Link href="/student/virtual-mall">
                 <Button variant="ghost" size="sm" data-testid="button-back-to-mall">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 me-2" />
                   {t('student:cart.backToMall')}
                 </Button>
               </Link>
@@ -204,7 +204,7 @@ export default function StudentCart() {
             </p>
             <Link href="/student/virtual-mall">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" data-testid="button-browse-books">
-                <BookOpen className="w-4 h-4 mr-2" />
+                <BookOpen className="w-4 h-4 me-2" />
                 {t('student:cart.browseCourses')}
               </Button>
             </Link>
@@ -363,14 +363,14 @@ export default function StudentCart() {
                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-lg py-6"
                         data-testid="button-proceed-to-checkout"
                       >
-                        <CreditCard className="w-5 h-5 mr-2" />
+                        <CreditCard className="w-5 h-5 me-2" />
                         {t('student:cart.proceedToCheckout')}
                       </Button>
                     </Link>
 
                     <Link href="/student/virtual-mall">
                       <Button variant="outline" className="w-full" data-testid="button-continue-shopping">
-                        <BookOpen className="w-4 h-4 mr-2" />
+                        <BookOpen className="w-4 h-4 me-2" />
                         {t('student:cart.continueShopping')}
                       </Button>
                     </Link>

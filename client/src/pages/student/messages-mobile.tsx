@@ -260,10 +260,10 @@ export default function StudentMessagesMobile() {
                         </AvatarFallback>
                       </Avatar>
                       {conversation.online && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                        <div className="absolute bottom-0 end-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
                       )}
                       {conversation.type !== 'individual' && (
-                        <div className="absolute -bottom-1 -right-1 p-1 bg-white/20 rounded-full">
+                        <div className="absolute -bottom-1 -end-1 p-1 bg-white/20 rounded-full">
                           {getConversationIcon(conversation.type)}
                         </div>
                       )}
@@ -303,7 +303,7 @@ export default function StudentMessagesMobile() {
 
           {/* Floating Action Button */}
           <motion.button
-            className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg flex items-center justify-center"
+            className="fixed bottom-24 end-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg flex items-center justify-center"
             whileTap={{ scale: 0.9 }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}

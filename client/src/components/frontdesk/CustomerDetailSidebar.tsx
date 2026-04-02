@@ -284,13 +284,13 @@ export function CustomerDetailSidebar({
                   <div className="flex items-center space-x-4 text-sm">
                     {latestInteraction?.customerPhone && (
                       <span className="flex items-center">
-                        <Phone className="h-3 w-3 mr-1" />
+                        <Phone className="h-3 w-3 me-1" />
                         {latestInteraction.customerPhone}
                       </span>
                     )}
                     {latestInteraction?.customerEmail && (
                       <span className="flex items-center">
-                        <Mail className="h-3 w-3 mr-1" />
+                        <Mail className="h-3 w-3 me-1" />
                         {latestInteraction.customerEmail}
                       </span>
                     )}
@@ -302,7 +302,7 @@ export function CustomerDetailSidebar({
             <div className="flex items-center space-x-2">
               {conversions > 0 && (
                 <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  <Target className="h-3 w-3 mr-1" />
+                  <Target className="h-3 w-3 me-1" />
                   Converted
                 </Badge>
               )}
@@ -367,7 +367,7 @@ export function CustomerDetailSidebar({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center">
-                    <User className="h-4 w-4 mr-2" />
+                    <User className="h-4 w-4 me-2" />
                     Customer Information
                   </CardTitle>
                 </CardHeader>
@@ -404,7 +404,7 @@ export function CustomerDetailSidebar({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center">
-                    <Activity className="h-4 w-4 mr-2" />
+                    <Activity className="h-4 w-4 me-2" />
                     Interaction Types
                   </CardTitle>
                 </CardHeader>
@@ -439,7 +439,7 @@ export function CustomerDetailSidebar({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center">
-                    <History className="h-4 w-4 mr-2" />
+                    <History className="h-4 w-4 me-2" />
                     Recent Activity
                   </CardTitle>
                 </CardHeader>
@@ -490,7 +490,7 @@ export function CustomerDetailSidebar({
                             
                             {interaction.convertedToLead || interaction.convertedToStudent ? (
                               <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                <Target className="h-2 w-2 mr-1" />
+                                <Target className="h-2 w-2 me-1" />
                                 Converted
                               </Badge>
                             ) : null}
@@ -518,29 +518,29 @@ export function CustomerDetailSidebar({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center">
-                    <Zap className="h-4 w-4 mr-2" />
+                    <Zap className="h-4 w-4 me-2" />
                     Quick Actions
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant="outline" size="sm" className="justify-start">
-                      <Phone className="h-4 w-4 mr-2" />
+                      <Phone className="h-4 w-4 me-2" />
                       Call
                     </Button>
                     
                     <Button variant="outline" size="sm" className="justify-start">
-                      <Mail className="h-4 w-4 mr-2" />
+                      <Mail className="h-4 w-4 me-2" />
                       Email
                     </Button>
                     
                     <Button variant="outline" size="sm" className="justify-start">
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <MessageSquare className="h-4 w-4 me-2" />
                       SMS
                     </Button>
                     
                     <Button variant="outline" size="sm" className="justify-start">
-                      <Calendar className="h-4 w-4 mr-2" />
+                      <Calendar className="h-4 w-4 me-2" />
                       Schedule
                     </Button>
                   </div>
@@ -575,7 +575,7 @@ export function CustomerDetailSidebar({
                             <h4 className="font-medium text-sm capitalize">
                               {interaction.type.replace('_', ' ')}
                               {interaction.callType && (
-                                <span className="ml-2 inline-flex items-center">
+                                <span className="ms-2 inline-flex items-center">
                                   {getCallTypeIcon(interaction.callType)}
                                 </span>
                               )}
@@ -611,7 +611,7 @@ export function CustomerDetailSidebar({
                             
                             {(interaction.convertedToLead || interaction.convertedToStudent) && (
                               <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                <Target className="h-2 w-2 mr-1" />
+                                <Target className="h-2 w-2 me-1" />
                                 Converted
                               </Badge>
                             )}
@@ -628,7 +628,7 @@ export function CustomerDetailSidebar({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2" />
+                    <TrendingUp className="h-4 w-4 me-2" />
                     Performance Metrics
                   </CardTitle>
                 </CardHeader>
@@ -685,7 +685,7 @@ export function CustomerDetailSidebar({
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center">
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <MessageSquare className="h-4 w-4 me-2" />
                       Customer Notes
                     </CardTitle>
                     
@@ -696,7 +696,7 @@ export function CustomerDetailSidebar({
                         onClick={() => setIsEditingNotes(true)}
                         data-testid="edit-notes-button"
                       >
-                        <Edit className="h-4 w-4 mr-2" />
+                        <Edit className="h-4 w-4 me-2" />
                         Edit
                       </Button>
                     ) : (
@@ -719,9 +719,9 @@ export function CustomerDetailSidebar({
                           data-testid="save-notes-button"
                         >
                           {updateNotesMutation.isPending ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
                           ) : (
-                            <Save className="h-4 w-4 mr-2" />
+                            <Save className="h-4 w-4 me-2" />
                           )}
                           Save
                         </Button>
@@ -760,7 +760,7 @@ export function CustomerDetailSidebar({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center">
-                    <Tag className="h-4 w-4 mr-2" />
+                    <Tag className="h-4 w-4 me-2" />
                     Tags
                   </CardTitle>
                 </CardHeader>

@@ -173,7 +173,7 @@ export default function HREmployeesPage() {
           <Link href="/admin/hr/leave"><Button variant="outline">Leave</Button></Link>
           <Link href="/admin/hr/payroll"><Button variant="outline">Payroll</Button></Link>
           <Link href="/admin/hr/performance"><Button variant="outline">Performance</Button></Link>
-          {isAdmin && <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" /> Add Employee</Button>}
+          {isAdmin && <Button onClick={openCreate}><Plus className="h-4 w-4 me-2" /> Add Employee</Button>}
         </div>
       </div>
 

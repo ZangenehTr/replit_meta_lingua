@@ -111,7 +111,7 @@ export function PWAInstallPrompt() {
 
   if (showIOS) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-96">
+      <div className="fixed bottom-4 start-4 end-4 z-50 md:start-auto md:end-4 md:w-96">
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-white to-purple-50 dark:from-gray-900 dark:to-purple-950 shadow-xl">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -123,7 +123,7 @@ export function PWAInstallPrompt() {
                   {t('pwa.iosInstallTitle', 'نصب اپلیکیشن')}
                 </CardTitle>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDismiss}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDismiss} aria-label="Dismiss">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -143,7 +143,7 @@ export function PWAInstallPrompt() {
   if (!deferredPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-96">
+    <div className="fixed bottom-4 start-4 end-4 z-50 md:start-auto md:end-4 md:w-96">
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-white to-purple-50 dark:from-gray-900 dark:to-purple-950 shadow-xl">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -155,7 +155,7 @@ export function PWAInstallPrompt() {
                 {t('pwa.installTitle', 'نصب متالینگوآ')}
               </CardTitle>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDismiss}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDismiss} aria-label="Dismiss">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -166,7 +166,7 @@ export function PWAInstallPrompt() {
           </CardDescription>
           <div className="flex gap-2">
             <Button onClick={handleInstall} className="flex-1 bg-gradient-to-r from-primary to-purple-600">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 me-2" />
               {t('pwa.installButton', 'نصب اپلیکیشن')}
             </Button>
             <Button variant="outline" onClick={handleDismiss}>

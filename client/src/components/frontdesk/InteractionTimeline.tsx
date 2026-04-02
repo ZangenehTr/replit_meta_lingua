@@ -376,7 +376,7 @@ export function InteractionTimeline({
                 {/* Timeline Items */}
                 <div className="relative">
                   {/* Timeline Line */}
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
+                  <div className="absolute start-6 top-0 bottom-0 w-0.5 bg-border" />
 
                   <div className="space-y-4">
                     {groupInteractions.map((interaction, index) => (
@@ -464,7 +464,7 @@ export function InteractionTimeline({
                                         variant="secondary"
                                         className="text-xs"
                                       >
-                                        <Tag className="h-3 w-3 mr-1" />
+                                        <Tag className="h-3 w-3 me-1" />
                                         {tag}
                                       </Badge>
                                     ))}

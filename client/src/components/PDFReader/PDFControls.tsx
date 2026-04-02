@@ -128,7 +128,7 @@ export default function PDFControls({
   const zoomPercentage = Math.round(settings.zoom * 100);
 
   return (
-    <div className={`fixed top-0 left-0 right-0 z-30 transition-opacity duration-300 ${className}`}>
+    <div className={`fixed top-0 start-0 end-0 z-30 transition-opacity duration-300 ${className}`}>
       <Card className="mx-4 mt-4 border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center justify-between p-3">
           {/* Left Controls - Navigation */}
@@ -239,7 +239,7 @@ export default function PDFControls({
                 >
                   <BookOpen className="w-4 h-4" />
                   {bookmarks.length > 0 && (
-                    <Badge variant="destructive" className="ml-1 h-4 w-4 text-[10px] p-0">
+                    <Badge variant="destructive" className="ms-1 h-4 w-4 text-[10px] p-0">
                       {bookmarks.length}
                     </Badge>
                   )}

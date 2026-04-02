@@ -153,12 +153,12 @@ function PrivateStudentsPage() {
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
           placeholder="جستجو بر اساس نام دانش‌آموز..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="pl-10"
+          className="ps-10"
         />
       </div>
 
@@ -235,7 +235,7 @@ function PrivateStudentsPage() {
                         />
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 ml-4">
+                    <div className="flex flex-col gap-2 ms-4">
                       <Dialog
                         open={logDialog.open && logDialog.packageId === student.id}
                         onOpenChange={open => setLogDialog({ open, packageId: open ? student.id : null })}
@@ -245,7 +245,7 @@ function PrivateStudentsPage() {
                             size="sm"
                             disabled={student.status !== 'active' || student.remainingSessions <= 0}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
+                            <CheckCircle className="h-4 w-4 me-1" />
                             ثبت جلسه
                           </Button>
                         </DialogTrigger>

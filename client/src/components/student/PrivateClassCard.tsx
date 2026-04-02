@@ -159,7 +159,7 @@ export function PrivateClassCard() {
 
         {data.isLowSession && (
           <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 rounded-md p-3 text-sm text-orange-700 dark:text-orange-300">
-            <AlertTriangle className="h-4 w-4 inline mr-1" />
+            <AlertTriangle className="h-4 w-4 inline me-1" />
             جلسات شما رو به اتمام است. برای تمدید با پشتیبانی تماس بگیرید.
           </div>
         )}

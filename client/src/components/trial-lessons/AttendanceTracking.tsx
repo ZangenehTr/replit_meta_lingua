@@ -416,7 +416,7 @@ export function AttendanceTracking({ className }: AttendanceTrackingProps) {
                           className="bg-green-600 hover:bg-green-700"
                           data-testid={`btn-checkin-${lesson.id}`}
                         >
-                          <CheckCircle className="h-4 w-4 mr-1" />
+                          <CheckCircle className="h-4 w-4 me-1" />
                           Check In
                         </Button>
                         <Button
@@ -425,7 +425,7 @@ export function AttendanceTracking({ className }: AttendanceTrackingProps) {
                           onClick={() => handleMarkNoShow(lesson.id)}
                           data-testid={`btn-noshow-${lesson.id}`}
                         >
-                          <XCircle className="h-4 w-4 mr-1" />
+                          <XCircle className="h-4 w-4 me-1" />
                           No Show
                         </Button>
                       </div>
@@ -481,7 +481,7 @@ export function AttendanceTracking({ className }: AttendanceTrackingProps) {
                             className="bg-blue-600 hover:bg-blue-700"
                             data-testid={`btn-outcome-${lesson.id}`}
                           >
-                            <FileText className="h-4 w-4 mr-1" />
+                            <FileText className="h-4 w-4 me-1" />
                             Record Outcome
                           </Button>
                         )}
@@ -543,7 +543,7 @@ export function AttendanceTracking({ className }: AttendanceTrackingProps) {
                           className="border-red-300 text-red-700"
                           data-testid={`btn-reschedule-${lesson.id}`}
                         >
-                          <Calendar className="h-4 w-4 mr-1" />
+                          <Calendar className="h-4 w-4 me-1" />
                           Reschedule
                         </Button>
                       </div>
@@ -586,7 +586,7 @@ export function AttendanceTracking({ className }: AttendanceTrackingProps) {
                           </Badge>
                           {lesson.outcome?.convertedToEnrollment && (
                             <Badge className="bg-green-500 text-white">
-                              <Target className="h-3 w-3 mr-1" />
+                              <Target className="h-3 w-3 me-1" />
                               Converted
                             </Badge>
                           )}
@@ -605,7 +605,7 @@ export function AttendanceTracking({ className }: AttendanceTrackingProps) {
                           variant="outline"
                           data-testid={`btn-view-outcome-${lesson.id}`}
                         >
-                          <FileText className="h-4 w-4 mr-1" />
+                          <FileText className="h-4 w-4 me-1" />
                           View Outcome
                         </Button>
                       </div>

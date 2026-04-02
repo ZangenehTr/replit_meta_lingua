@@ -259,10 +259,10 @@ export function ComprehensiveQuickActionsBar({
   const getPositionClasses = () => {
     const base = "fixed z-50";
     const positions = {
-      'bottom-right': "bottom-4 right-4",
-      'bottom-left': "bottom-4 left-4", 
-      'right': "right-4 top-1/2 -translate-y-1/2",
-      'left': "left-4 top-1/2 -translate-y-1/2"
+      'bottom-right': "bottom-4 end-4",
+      'bottom-left': "bottom-4 start-4", 
+      'right': "end-4 top-1/2 -translate-y-1/2",
+      'left': "start-4 top-1/2 -translate-y-1/2"
     };
     return `${base} ${positions[position]}`;
   };
@@ -347,7 +347,7 @@ export function ComprehensiveQuickActionsBar({
                           
                           {hasNotification && !isLoading && !hasError && !requiresAuth && (
                             <Badge 
-                              className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center bg-red-500 text-white text-xs font-bold animate-pulse"
+                              className="absolute -top-2 -end-2 h-5 min-w-5 flex items-center justify-center bg-red-500 text-white text-xs font-bold animate-pulse"
                               data-testid={`badge-${action.id}`}
                             >
                               {action.badge}
@@ -356,7 +356,7 @@ export function ComprehensiveQuickActionsBar({
                           
                           {hasError && (
                             <Badge 
-                              className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center bg-red-600 text-white text-xs font-bold"
+                              className="absolute -top-2 -end-2 h-4 w-4 flex items-center justify-center bg-red-600 text-white text-xs font-bold"
                               data-testid={`error-badge-${action.id}`}
                             >
                               !
@@ -384,7 +384,7 @@ export function ComprehensiveQuickActionsBar({
                     >
                       <div className="relative">
                         <User className="h-5 w-5" />
-                        <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center bg-blue-500 text-white text-xs font-bold">
+                        <Badge className="absolute -top-2 -end-2 h-5 min-w-5 flex items-center justify-center bg-blue-500 text-white text-xs font-bold">
                           +{hiddenActionsCount}
                         </Badge>
                       </div>
@@ -448,7 +448,7 @@ export function ComprehensiveQuickActionsBar({
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white"
+              className="absolute -top-1 -end-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white"
               data-testid="global-notification-indicator"
             />
           )}
@@ -458,7 +458,7 @@ export function ComprehensiveQuickActionsBar({
             <motion.div
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
-              className="absolute -top-1 -right-1 h-4 w-4 bg-gray-500 rounded-full border-2 border-white flex items-center justify-center"
+              className="absolute -top-1 -end-1 h-4 w-4 bg-gray-500 rounded-full border-2 border-white flex items-center justify-center"
               data-testid="auth-required-indicator"
             >
               <LogIn className="h-2 w-2 text-white" />

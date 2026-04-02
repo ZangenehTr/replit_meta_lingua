@@ -112,7 +112,7 @@ export function CollapsibleSection({
           disabled={disabled}
           data-testid="collapsible-trigger"
         >
-          <div className="flex items-center gap-2 flex-1 text-left">
+          <div className="flex items-center gap-2 flex-1 text-start">
             {Icon && (
               <Icon className={cn(styles.iconSize, "shrink-0")} />
             )}
@@ -120,7 +120,7 @@ export function CollapsibleSection({
               {title}
             </span>
             {badge && (
-              <div className="ml-auto mr-2">
+              <div className="ms-auto me-2">
                 {badge}
               </div>
             )}

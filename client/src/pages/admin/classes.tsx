@@ -273,7 +273,7 @@ export default function AdminClassesPage() {
                     <DialogHeader>
                       <DialogTitle>{t('common:classScheduling.scheduleNewClass')}</DialogTitle>
                     </DialogHeader>
-                    <ScrollArea className="max-h-[calc(90vh-100px)] pr-4">
+                    <ScrollArea className="max-h-[calc(90vh-100px)] pe-4">
                       <ClassScheduleForm 
                         teachers={teachers}
                         rooms={rooms}
@@ -369,7 +369,7 @@ export default function AdminClassesPage() {
                 <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 dark:text-gray-400 mb-4">No classes found</p>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   Create First Class
                 </Button>
               </div>
@@ -440,13 +440,13 @@ export default function AdminClassesPage() {
                         )}
                       </div>
                       
-                      <div className="flex flex-col gap-2 ml-4">
+                      <div className="flex flex-col gap-2 ms-4">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => setSelectedSession(classSession)}
                         >
-                          <Users className="h-4 w-4 mr-1" />
+                          <Users className="h-4 w-4 me-1" />
                           Manage Enrollment
                         </Button>
                         <Button 
@@ -456,7 +456,7 @@ export default function AdminClassesPage() {
                             // Handle edit
                           }}
                         >
-                          <Edit className="h-4 w-4 mr-1" />
+                          <Edit className="h-4 w-4 me-1" />
                           Edit
                         </Button>
                         <Button 
@@ -469,7 +469,7 @@ export default function AdminClassesPage() {
                             }
                           }}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
+                          <Trash2 className="h-4 w-4 me-1" />
                           Delete
                         </Button>
                       </div>
@@ -589,7 +589,7 @@ function WeekDayView({
         <div className="mt-4">
           {hours.map((hour) => (
             <div key={hour} className="grid grid-cols-[80px_1fr] gap-2 border-t">
-              <div className="text-sm text-muted-foreground py-4 text-right pr-2">
+              <div className="text-sm text-muted-foreground py-4 text-right pe-2">
                 {format(new Date().setHours(hour, 0), 'h:mm a')}
               </div>
               <div className={`grid ${viewMode === 'week' ? 'grid-cols-7' : 'grid-cols-1'} gap-2`}>
@@ -986,7 +986,7 @@ function ClassScheduleForm({
           <Label htmlFor="teacher">
             {t('classScheduling.availableTeachers')} 
             {availableTeachers.length < teachers.length && 
-              <span className="text-sm text-muted-foreground ml-2">
+              <span className="text-sm text-muted-foreground ms-2">
                 ({availableTeachers.length} of {teachers.length} available)
               </span>
             }
@@ -1008,7 +1008,7 @@ function ClassScheduleForm({
                   <SelectItem key={teacher.id} value={teacher.id.toString()}>
                     {teacher.name || `${teacher.firstName} ${teacher.lastName}`}
                     {teacher.availabilityPeriods && teacher.availabilityPeriods.length > 0 && 
-                      <span className="text-xs text-muted-foreground ml-2">
+                      <span className="text-xs text-muted-foreground ms-2">
                         ({teacher.availabilityPeriods.length} slots)
                       </span>
                     }

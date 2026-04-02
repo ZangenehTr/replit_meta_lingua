@@ -79,7 +79,7 @@ export function LinguaQuestLeaderboard({ sessionToken }: LeaderboardProps) {
       <Tabs defaultValue="global" className="w-full" data-testid="leaderboard-tabs">
         <TabsList className="grid grid-cols-7 w-full">
           <TabsTrigger value="global" data-testid="tab-global">
-            <Users className="w-4 h-4 mr-2" />
+            <Users className="w-4 h-4 me-2" />
             Global
           </TabsTrigger>
           {levels.map(level => (

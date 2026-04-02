@@ -172,7 +172,7 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
       <motion.div
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="absolute top-4 left-4 right-4 pointer-events-auto"
+        className="absolute top-4 start-4 end-4 pointer-events-auto"
       >
         <div className="flex gap-4">
           {/* Live Scoring */}
@@ -246,7 +246,7 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 100, opacity: 0 }}
-            className="absolute top-24 right-4 pointer-events-auto"
+            className="absolute top-24 end-4 pointer-events-auto"
             style={{ top: `${96 + index * 72}px` }}
           >
             <div className={cn(
@@ -285,7 +285,7 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
         <motion.div
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-auto"
+          className="absolute start-4 top-1/2 -translate-y-1/2 pointer-events-auto"
         >
           <div className="bg-black/20 backdrop-blur-lg rounded-2xl p-4 border border-white/10 shadow-2xl max-w-xs">
             <div className="flex items-center justify-between mb-3">
@@ -422,7 +422,7 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
         <motion.div
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="absolute left-4 bottom-24 pointer-events-auto"
+          className="absolute start-4 bottom-24 pointer-events-auto"
         >
           <div className="bg-black/20 backdrop-blur-lg rounded-2xl p-4 border border-white/10 shadow-2xl max-w-xs">
             <div className="flex items-center gap-2 mb-3">
@@ -460,7 +460,7 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="absolute bottom-32 right-4 pointer-events-auto"
+            className="absolute bottom-32 end-4 pointer-events-auto"
           >
             <div className="bg-black/30 backdrop-blur-lg rounded-xl p-4 border border-green-500/30 shadow-2xl max-w-sm">
               <div className="flex items-center gap-2 mb-2">
@@ -481,7 +481,7 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="absolute bottom-48 left-1/2 -translate-x-1/2 pointer-events-auto"
+            className="absolute bottom-48 inset-x-0 mx-auto w-fit pointer-events-auto"
           >
             <div className="bg-black/30 backdrop-blur-lg rounded-xl p-4 border border-purple-500/30 shadow-2xl">
               <div className="flex items-center gap-2 mb-2">
@@ -507,7 +507,7 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="absolute bottom-4 right-4 pointer-events-auto"
+        className="absolute bottom-4 end-4 pointer-events-auto"
       >
         <button
           onClick={onClose}

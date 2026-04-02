@@ -121,7 +121,7 @@ export function TeacherBriefing({
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Phone className="w-8 h-8 text-green-400 animate-pulse" />
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping" />
+                    <span className="absolute -top-1 -end-1 w-3 h-3 bg-green-400 rounded-full animate-ping" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-white">Incoming Callern Request</h2>
@@ -296,7 +296,7 @@ export function TeacherBriefing({
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   size="lg"
                 >
-                  <Phone className="w-5 h-5 mr-2" />
+                  <Phone className="w-5 h-5 me-2" />
                   Accept Call ({timeToDecide}s)
                 </Button>
                 <Button
@@ -305,7 +305,7 @@ export function TeacherBriefing({
                   className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10"
                   size="lg"
                 >
-                  <PhoneOff className="w-5 h-5 mr-2" />
+                  <PhoneOff className="w-5 h-5 me-2" />
                   Decline
                 </Button>
               </div>

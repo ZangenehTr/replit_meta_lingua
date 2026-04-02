@@ -195,7 +195,7 @@ export function LessonKitGenerator() {
                 </CardDescription>
               </div>
               <Button onClick={() => downloadKit(selectedKit)} size="sm">
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 me-2" />
                 Download
               </Button>
             </div>

@@ -439,7 +439,7 @@ export function CallernManagement() {
                 }
               }}
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CheckCircle className="w-4 h-4 me-2" />
               Test AI Connection (No Auth)
             </Button>
             
@@ -464,7 +464,7 @@ export function CallernManagement() {
               }}
               className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
             >
-              <BookOpen className="w-4 h-4 mr-2" />
+              <BookOpen className="w-4 h-4 me-2" />
               Test AI Word Helper
             </Button>
             
@@ -488,7 +488,7 @@ export function CallernManagement() {
               }}
               className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CheckCircle className="w-4 h-4 me-2" />
               Test Grammar Check
             </Button>
             
@@ -513,7 +513,7 @@ export function CallernManagement() {
               }}
               className="bg-gradient-to-r from-orange-600 to-red-600 text-white hover:from-orange-700 hover:to-red-700"
             >
-              <Languages className="w-4 h-4 mr-2" />
+              <Languages className="w-4 h-4 me-2" />
               Test Translation
             </Button>
             
@@ -537,7 +537,7 @@ export function CallernManagement() {
               }}
               className="bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-700 hover:to-purple-700"
             >
-              <Mic className="w-4 h-4 mr-2" />
+              <Mic className="w-4 h-4 me-2" />
               Test Pronunciation
             </Button>
           </div>
@@ -908,7 +908,7 @@ export function CallernManagement() {
                       </div>
                       {index === 0 && (
                         <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                          <TrendingUp className="h-3 w-3 mr-1" />
+                          <TrendingUp className="h-3 w-3 me-1" />
                           پرطرفدار
                         </Badge>
                       )}

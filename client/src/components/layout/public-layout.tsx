@@ -162,7 +162,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                     className="cursor-pointer" 
                     data-testid="link-all-courses"
                   >
-                    <BookOpen className="h-4 w-4 mr-2" />
+                    <BookOpen className="h-4 w-4 me-2" />
                     {t('nav.allCourses', 'All Courses')}
                   </DropdownMenuItem>
                   <div className="my-1 border-t" />
@@ -205,8 +205,8 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           {/* Right Side - Language, Theme & Auth */}
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-4 items-center">
             <LanguageSelector />
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9" data-testid="button-theme-toggle">
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9" data-testid="button-theme-toggle" aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}>
+              {isDark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
             </Button>
             <Button asChild variant="outline" size="sm" data-testid="button-login">
               <Link href="/auth" className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                           <GraduationCap className="h-5 w-5" />
                           {t('nav.curriculum', 'Curriculum')}
                         </Link>
-                        <div className="ml-8 mt-1 flex flex-col gap-1">
+                        <div className="ms-8 mt-1 flex flex-col gap-1">
                           {curriculumCategories.map((category: any) => (
                             <Link 
                               key={category.id} 

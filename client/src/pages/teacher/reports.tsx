@@ -96,7 +96,7 @@ export default function TeacherReportsPage() {
               </SelectContent>
             </Select>
             <Button>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4 me-2" />
               {t('exportReport')}
             </Button>
           </div>

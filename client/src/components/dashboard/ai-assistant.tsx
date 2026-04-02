@@ -54,7 +54,7 @@ export function AIAssistant() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Bot className="mr-2 h-5 w-5 text-primary" />
+          <Bot className="me-2 h-5 w-5 text-primary" />
           AI Study Assistant
         </CardTitle>
       </CardHeader>

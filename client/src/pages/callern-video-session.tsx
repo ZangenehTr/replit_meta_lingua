@@ -142,7 +142,7 @@ export default function CallernVideoSession() {
             onClick={() => setLocation('/dashboard')}
             className="mb-4"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 me-2" />
             {t('common:back')}
           </Button>
           
@@ -219,7 +219,7 @@ export default function CallernVideoSession() {
                               <div>
                                 <h3 className="font-semibold">{teacher.firstName} {teacher.lastName}</h3>
                                 <Badge variant="outline" className="mt-1">
-                                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                                  <span className="w-2 h-2 bg-green-500 rounded-full me-1 animate-pulse"></span>
                                   {t('callern:online')}
                                 </Badge>
                               </div>
@@ -245,7 +245,7 @@ export default function CallernVideoSession() {
                             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                             onClick={() => handleStartCall(teacher)}
                           >
-                            <Phone className="w-4 h-4 mr-2" />
+                            <Phone className="w-4 h-4 me-2" />
                             {t('callern:startVideoCall')}
                           </Button>
                         </CardContent>
@@ -347,13 +347,13 @@ export default function CallernVideoSession() {
                               <div className="flex gap-2 mt-2">
                                 {call.recordingUrl && (
                                   <Button size="sm" variant="outline" onClick={() => window.open(call.recordingUrl, '_blank')}>
-                                    <PlayCircle className="w-3 h-3 mr-1" />
+                                    <PlayCircle className="w-3 h-3 me-1" />
                                     {t('callern:viewRecording')}
                                   </Button>
                                 )}
                                 {call.transcriptUrl && (
                                   <Button size="sm" variant="outline" onClick={() => window.open(call.transcriptUrl, '_blank')}>
-                                    <FileText className="w-3 h-3 mr-1" />
+                                    <FileText className="w-3 h-3 me-1" />
                                     {t('callern:transcript')}
                                   </Button>
                                 )}

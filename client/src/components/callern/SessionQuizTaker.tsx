@@ -272,7 +272,7 @@ export function SessionQuizTaker({ sessionId, onComplete }: SessionQuizTakerProp
                           <XCircle className="w-5 h-5 text-red-500" />
                         )}
                         <span className="font-medium">Question {idx + 1}</span>
-                        <Badge className={cn("ml-2", getDifficultyColor(question.difficulty))}>
+                        <Badge className={cn("ms-2", getDifficultyColor(question.difficulty))}>
                           {question.difficulty}
                         </Badge>
                       </div>
@@ -430,7 +430,7 @@ export function SessionQuizTaker({ sessionId, onComplete }: SessionQuizTakerProp
             onClick={handlePrevious}
             disabled={currentQuestionIndex === 0}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 me-2" />
             Previous
           </Button>
           <Button
@@ -440,12 +440,12 @@ export function SessionQuizTaker({ sessionId, onComplete }: SessionQuizTakerProp
             {isLastQuestion ? (
               <>
                 Submit Quiz
-                <Sparkles className="w-4 h-4 ml-2" />
+                <Sparkles className="w-4 h-4 ms-2" />
               </>
             ) : (
               <>
                 Next
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-4 h-4 ms-2" />
               </>
             )}
           </Button>

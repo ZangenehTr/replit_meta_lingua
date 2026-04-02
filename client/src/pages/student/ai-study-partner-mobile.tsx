@@ -454,7 +454,7 @@ export default function StudentAIStudyPartnerMobile() {
     >
       {/* Floating Settings Button - positioned to avoid browser UI */}
       <motion.button
-        className="fixed top-16 right-4 p-3 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-gray-200 hover:bg-white transition-all touch-none"
+        className="fixed top-16 end-4 p-3 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-gray-200 hover:bg-white transition-all touch-none"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -636,7 +636,7 @@ export default function StudentAIStudyPartnerMobile() {
             </motion.div>
             
             {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-6" style={{ paddingBottom: 'max(7rem, env(safe-area-inset-bottom, 6rem))' }}>
+            <div className="absolute bottom-0 start-0 end-0 flex items-center justify-center gap-6" style={{ paddingBottom: 'max(7rem, env(safe-area-inset-bottom, 6rem))' }}>
               {/* Mic Button */}
               <motion.button
                 className={`
@@ -811,7 +811,7 @@ export default function StudentAIStudyPartnerMobile() {
             </div>
             {roadmapProgress.upcomingSession && (
               <Badge variant="outline" className="text-white border-white/30">
-                <Clock className="w-3 h-3 mr-1" />
+                <Clock className="w-3 h-3 me-1" />
                 {roadmapProgress.upcomingSession}
               </Badge>
             )}
@@ -968,7 +968,7 @@ export default function StudentAIStudyPartnerMobile() {
           
           {/* Continuous mode indicator on mic */}
           {continuousMode && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-white" />
+            <div className="absolute -top-1 -end-1 w-3 h-3 bg-green-400 rounded-full border border-white" />
           )}
         </div>
         

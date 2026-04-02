@@ -84,7 +84,7 @@ export function PullToRefresh({
     <div ref={containerRef} className={cn("relative overflow-hidden", className)}>
       {/* Pull-to-refresh indicator */}
       <motion.div
-        className="absolute top-0 left-0 right-0 z-10 flex items-center justify-center bg-background/95 backdrop-blur-sm border-b"
+        className="absolute top-0 start-0 end-0 z-10 flex items-center justify-center bg-background/95 backdrop-blur-sm border-b"
         animate={{
           height: pullDistance > 0 ? Math.min(pullDistance, 60) : 0,
           opacity: pullDistance > 0 ? 1 : 0,

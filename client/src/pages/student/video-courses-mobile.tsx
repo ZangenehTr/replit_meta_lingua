@@ -202,7 +202,7 @@ export default function StudentVideoCoursesMobile() {
             tap-scale
           `}
         >
-          <Bookmark className="w-4 h-4 inline mr-1" />
+          <Bookmark className="w-4 h-4 inline me-1" />
           {t('student:myCourses')}
         </button>
         {['all', 'beginner', 'intermediate', 'advanced'].map((level) => (
@@ -257,7 +257,7 @@ export default function StudentVideoCoursesMobile() {
               >
                 {/* Bookmark Icon */}
                 <button
-                  className="absolute top-3 right-3 z-10"
+                  className="absolute top-3 end-3 z-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleBookmark.mutate(course.id);
@@ -438,7 +438,7 @@ export default function StudentVideoCoursesMobile() {
               {/* Action Buttons */}
               {selectedCourse.isPurchased ? (
                 <Button className="w-full">
-                  <PlayCircle className="w-4 h-4 mr-2" />
+                  <PlayCircle className="w-4 h-4 me-2" />
                   {t('student:continueLearning')}
                 </Button>
               ) : (

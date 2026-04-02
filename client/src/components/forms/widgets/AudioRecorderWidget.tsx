@@ -194,7 +194,7 @@ export function AudioRecorderWidget({ field, value, onChange, error, disabled, l
               <>
                 <div className="relative">
                   <Mic className="w-12 h-12 text-red-500 animate-pulse" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                  <span className="absolute -top-1 -end-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
                 </div>
                 <p className="text-lg font-medium">{formatDuration(duration)}</p>
                 <p className="text-sm text-gray-500">
@@ -207,7 +207,7 @@ export function AudioRecorderWidget({ field, value, onChange, error, disabled, l
                   variant="destructive"
                   size="lg"
                 >
-                  <Square className="w-5 h-5 mr-2" />
+                  <Square className="w-5 h-5 me-2" />
                   Stop Recording
                 </Button>
               </>
@@ -220,7 +220,7 @@ export function AudioRecorderWidget({ field, value, onChange, error, disabled, l
                   disabled={disabled || uploading}
                   size="lg"
                 >
-                  <Mic className="w-5 h-5 mr-2" />
+                  <Mic className="w-5 h-5 me-2" />
                   Start Recording
                 </Button>
                 <p className="text-xs text-gray-500">
@@ -252,9 +252,9 @@ export function AudioRecorderWidget({ field, value, onChange, error, disabled, l
                   disabled={disabled}
                 >
                   {playing ? (
-                    <Pause className="w-4 h-4 mr-2" />
+                    <Pause className="w-4 h-4 me-2" />
                   ) : (
-                    <Play className="w-4 h-4 mr-2" />
+                    <Play className="w-4 h-4 me-2" />
                   )}
                   {playing ? 'Pause' : 'Play'}
                 </Button>

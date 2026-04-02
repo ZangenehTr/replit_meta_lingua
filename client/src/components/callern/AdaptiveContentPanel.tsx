@@ -305,7 +305,7 @@ export function AdaptiveContentPanel({
               onClick={() => generateContentMutation.mutate('exercise')}
               disabled={generateContentMutation.isPending}
             >
-              <Target className="h-3 w-3 mr-1" />
+              <Target className="h-3 w-3 me-1" />
               Exercise
             </Button>
             <Button
@@ -314,7 +314,7 @@ export function AdaptiveContentPanel({
               onClick={() => generateContentMutation.mutate('question')}
               disabled={generateContentMutation.isPending}
             >
-              <MessageSquare className="h-3 w-3 mr-1" />
+              <MessageSquare className="h-3 w-3 me-1" />
               Question
             </Button>
             <Button
@@ -323,7 +323,7 @@ export function AdaptiveContentPanel({
               onClick={() => generateContentMutation.mutate('explanation')}
               disabled={generateContentMutation.isPending}
             >
-              <HelpCircle className="h-3 w-3 mr-1" />
+              <HelpCircle className="h-3 w-3 me-1" />
               Explain
             </Button>
             <Button
@@ -332,7 +332,7 @@ export function AdaptiveContentPanel({
               onClick={() => generateContentMutation.mutate('challenge')}
               disabled={generateContentMutation.isPending}
             >
-              <TrendingUp className="h-3 w-3 mr-1" />
+              <TrendingUp className="h-3 w-3 me-1" />
               Challenge
             </Button>
           </div>
@@ -352,7 +352,7 @@ export function AdaptiveContentPanel({
                 {getDifficultyBadge(currentContent.difficulty)}
                 {timeRemaining > 0 && !showFeedback && (
                   <Badge variant="outline">
-                    <Clock className="h-3 w-3 mr-1" />
+                    <Clock className="h-3 w-3 me-1" />
                     {timeRemaining}s
                   </Badge>
                 )}
@@ -469,7 +469,7 @@ export function AdaptiveContentPanel({
                 onClick={() => generateContentMutation.mutate(currentContent.type)}
                 disabled={generateContentMutation.isPending}
               >
-                <RefreshCw className="h-3 w-3 mr-1" />
+                <RefreshCw className="h-3 w-3 me-1" />
                 New {currentContent.type}
               </Button>
 
@@ -480,7 +480,7 @@ export function AdaptiveContentPanel({
                   disabled={submitAnswerMutation.isPending || !selectedAnswer}
                 >
                   Submit
-                  <ChevronRight className="h-3 w-3 ml-1" />
+                  <ChevronRight className="h-3 w-3 ms-1" />
                 </Button>
               )}
 
@@ -491,7 +491,7 @@ export function AdaptiveContentPanel({
                   disabled={generateContentMutation.isPending}
                 >
                   Next Exercise
-                  <ChevronRight className="h-3 w-3 ml-1" />
+                  <ChevronRight className="h-3 w-3 ms-1" />
                 </Button>
               )}
             </div>
@@ -533,7 +533,7 @@ export function AdaptiveContentPanel({
               onClick={() => generateContentMutation.mutate('exercise')}
               disabled={generateContentMutation.isPending}
             >
-              <Sparkles className="h-4 w-4 mr-2" />
+              <Sparkles className="h-4 w-4 me-2" />
               Start Adaptive Learning
             </Button>
           </CardContent>

@@ -220,12 +220,12 @@ export function VideoSessionCard({
           <div className="flex flex-col gap-2 items-end">
             {session.type === 'group' ? (
               <Badge className="bg-white/20 text-white border-white/30">
-                <Users className="w-3 h-3 mr-1" />
+                <Users className="w-3 h-3 me-1" />
                 {t('student:group', 'Group')}
               </Badge>
             ) : (
               <Badge className="bg-white/20 text-white border-white/30">
-                <User className="w-3 h-3 mr-1" />
+                <User className="w-3 h-3 me-1" />
                 {t('student:individual', '1-on-1')}
               </Badge>
             )}

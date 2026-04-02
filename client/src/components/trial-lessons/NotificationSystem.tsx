@@ -320,7 +320,7 @@ export function NotificationSystem({ className }: NotificationSystemProps) {
             }}
             data-testid="create-template"
           >
-            <MessageSquare className="h-4 w-4 mr-2" />
+            <MessageSquare className="h-4 w-4 me-2" />
             New Template
           </Button>
           
@@ -329,7 +329,7 @@ export function NotificationSystem({ className }: NotificationSystemProps) {
             onClick={() => setSettingsDialogOpen(true)}
             data-testid="notification-settings"
           >
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="h-4 w-4 me-2" />
             Settings
           </Button>
         </div>

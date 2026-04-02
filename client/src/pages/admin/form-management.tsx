@@ -294,11 +294,11 @@ export default function FormManagement() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200"><Clock className="w-3 h-3 me-1" /> Pending</Badge>;
       case 'approved':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3 me-1" /> Approved</Badge>;
       case 'rejected':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 me-1" /> Rejected</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -323,7 +323,7 @@ export default function FormManagement() {
           <p className="text-gray-600 mt-1">Create and manage dynamic forms for your platform</p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-create-form">
-          <Plus className="w-4 h-4 mr-2" /> Create Form
+          <Plus className="w-4 h-4 me-2" /> Create Form
         </Button>
       </div>
 
@@ -334,7 +334,7 @@ export default function FormManagement() {
             <h3 className="text-lg font-semibold mb-2">No forms yet</h3>
             <p className="text-gray-500 mb-4">Create your first dynamic form to get started</p>
             <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-create-first-form">
-              <Plus className="w-4 h-4 mr-2" /> Create Your First Form
+              <Plus className="w-4 h-4 me-2" /> Create Your First Form
             </Button>
           </CardContent>
         </Card>
@@ -380,7 +380,7 @@ export default function FormManagement() {
                     }}
                     data-testid={`button-preview-${formItem.id}`}
                   >
-                    <Eye className="w-4 h-4 mr-1" /> Preview
+                    <Eye className="w-4 h-4 me-1" /> Preview
                   </Button>
                   <Button
                     size="sm"
@@ -392,7 +392,7 @@ export default function FormManagement() {
                     }}
                     data-testid={`button-submissions-${formItem.id}`}
                   >
-                    <Users className="w-4 h-4 mr-1" /> Submissions
+                    <Users className="w-4 h-4 me-1" /> Submissions
                   </Button>
                 </div>
 
@@ -722,10 +722,10 @@ export default function FormManagement() {
 
           <div className="flex gap-2 mb-4">
             <Button size="sm" variant="outline" onClick={() => exportSubmissions('json')} data-testid="button-export-json">
-              <Download className="w-4 h-4 mr-1" /> Export JSON
+              <Download className="w-4 h-4 me-1" /> Export JSON
             </Button>
             <Button size="sm" variant="outline" onClick={() => exportSubmissions('csv')} data-testid="button-export-csv">
-              <Download className="w-4 h-4 mr-1" /> Export CSV
+              <Download className="w-4 h-4 me-1" /> Export CSV
             </Button>
           </div>
 

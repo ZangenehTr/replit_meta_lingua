@@ -504,7 +504,7 @@ export default function TeacherAssignmentsPage() {
               <CardContent className="p-8 text-center">
                 <p className="text-red-600">Assignment not found</p>
                 <Button onClick={handleBackToList} className="mt-4">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 me-2" />
                   Back to Assignments
                 </Button>
               </CardContent>
@@ -520,7 +520,7 @@ export default function TeacherAssignmentsPage() {
           {/* Assignment Detail Header */}
           <div className="flex items-center justify-between mb-6">
             <Button variant="outline" onClick={handleBackToList}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 me-2" />
               Back to Assignments
             </Button>
             <Badge variant={
@@ -577,7 +577,7 @@ export default function TeacherAssignmentsPage() {
                       setFeedbackDialogOpen(true);
                     }}
                   >
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="w-4 h-4 me-2" />
                     Provide Feedback
                   </Button>
                 </div>
@@ -603,7 +603,7 @@ export default function TeacherAssignmentsPage() {
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="mt-4 lg:mt-0">
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 me-2" />
                 Create Assignment
               </Button>
             </DialogTrigger>
@@ -830,7 +830,7 @@ export default function TeacherAssignmentsPage() {
                               className="flex-1"
                               data-testid="button-start-recording"
                             >
-                              <Mic className="h-4 w-4 mr-2" />
+                              <Mic className="h-4 w-4 me-2" />
                               Start Recording
                             </Button>
                           ) : (
@@ -841,7 +841,7 @@ export default function TeacherAssignmentsPage() {
                               className="flex-1"
                               data-testid="button-stop-recording"
                             >
-                              <Square className="h-4 w-4 mr-2" />
+                              <Square className="h-4 w-4 me-2" />
                               Stop & Save Recording
                             </Button>
                           )}
@@ -965,14 +965,14 @@ export default function TeacherAssignmentsPage() {
                                 <Button
                                   type="button"
                                   variant="outline"
-                                  className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                                  className={`w-full ps-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
                                 >
                                   {field.value ? (
                                     format(field.value, "PPP")
                                   ) : (
                                     <span>Pick a date</span>
                                   )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
@@ -1059,7 +1059,7 @@ export default function TeacherAssignmentsPage() {
                 <h3 className="text-lg font-semibold mb-2">No assignments yet</h3>
                 <p className="text-gray-600 mb-4">Create your first assignment to get started</p>
                 <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 me-2" />
                   Create Assignment
                 </Button>
               </CardContent>
@@ -1081,15 +1081,15 @@ export default function TeacherAssignmentsPage() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
                         <div className="flex items-center">
-                          <User className="w-4 h-4 mr-2" />
+                          <User className="w-4 h-4 me-2" />
                           <span>Student: {assignment.studentName}</span>
                         </div>
                         <div className="flex items-center">
-                          <FileText className="w-4 h-4 mr-2" />
+                          <FileText className="w-4 h-4 me-2" />
                           <span>Course: {assignment.courseName}</span>
                         </div>
                         <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-2" />
+                          <Clock className="w-4 h-4 me-2" />
                           <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
                         </div>
                       </div>
@@ -1108,7 +1108,7 @@ export default function TeacherAssignmentsPage() {
                       )}
                     </div>
 
-                    <div className="flex space-x-2 mt-4 lg:mt-0 lg:ml-6">
+                    <div className="flex space-x-2 mt-4 lg:mt-0 lg:ms-6">
                       <Button 
                         size="sm" 
                         variant="outline"
@@ -1120,7 +1120,7 @@ export default function TeacherAssignmentsPage() {
                           setLocation(`/teacher/assignments?view=${assignment.id}`);
                         }}
                       >
-                        <Eye className="w-3 h-3 mr-1" />
+                        <Eye className="w-3 h-3 me-1" />
                         View
                       </Button>
                       {(assignment.status === 'submitted' || assignment.status === 'assigned') && !assignment.feedback && (
@@ -1131,7 +1131,7 @@ export default function TeacherAssignmentsPage() {
                             setFeedbackDialogOpen(true);
                           }}
                         >
-                          <Edit className="w-3 h-3 mr-1" />
+                          <Edit className="w-3 h-3 me-1" />
                           {assignment.status === 'submitted' ? 'Grade' : 'Provide Feedback'}
                         </Button>
                       )}

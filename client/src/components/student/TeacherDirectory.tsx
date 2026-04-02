@@ -87,12 +87,12 @@ export function TeacherDirectory({ teachers }: Props) {
           <div className="flex flex-col gap-4">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder={t('student:searchTeachers')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="ps-10"
                 data-testid="input-search-teachers"
               />
             </div>
@@ -223,7 +223,7 @@ export function TeacherDirectory({ teachers }: Props) {
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                     data-testid={`button-book-trial-${teacher.id}`}
                   >
-                    <Video className="h-4 w-4 mr-2" />
+                    <Video className="h-4 w-4 me-2" />
                     {t('student:bookTrialLesson')}
                   </Button>
                   
@@ -233,7 +233,7 @@ export function TeacherDirectory({ teachers }: Props) {
                       size="sm"
                       data-testid={`button-view-profile-${teacher.id}`}
                     >
-                      <Users className="h-4 w-4 mr-1" />
+                      <Users className="h-4 w-4 me-1" />
                       {t('student:viewProfile')}
                     </Button>
                     <Button 
@@ -241,7 +241,7 @@ export function TeacherDirectory({ teachers }: Props) {
                       size="sm"
                       data-testid={`button-contact-teacher-${teacher.id}`}
                     >
-                      <MessageCircle className="h-4 w-4 mr-1" />
+                      <MessageCircle className="h-4 w-4 me-1" />
                       {t('student:contact')}
                     </Button>
                   </div>

@@ -91,12 +91,12 @@ export function CourseCatalog({ courses }: Props) {
           <div className="space-y-4">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder={t('student:searchCourses')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="ps-10"
                 data-testid="input-search-courses"
               />
             </div>
@@ -160,7 +160,7 @@ export function CourseCatalog({ courses }: Props) {
                 }}
                 data-testid="button-clear-filters"
               >
-                <Filter className="h-4 w-4 mr-2" />
+                <Filter className="h-4 w-4 me-2" />
                 {t('student:clearFilters')}
               </Button>
             </div>
@@ -204,7 +204,7 @@ export function CourseCatalog({ courses }: Props) {
                   )}
                   
                   {/* Price Badge */}
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 end-3">
                     <Badge className="bg-white text-gray-900 font-bold">
                       {course.price === 0 
                         ? t('student:free')
@@ -214,7 +214,7 @@ export function CourseCatalog({ courses }: Props) {
                   </div>
                   
                   {/* Level Badge */}
-                  <div className="absolute top-3 left-3">
+                  <div className="absolute top-3 start-3">
                     <Badge 
                       className={`font-bold ${
                         course.level === 'beginner' ? 'bg-green-500' :
@@ -242,7 +242,7 @@ export function CourseCatalog({ courses }: Props) {
                     <span className="text-xs text-gray-500">
                       {t('student:newCourse')}
                     </span>
-                    <div className="flex items-center gap-1 ml-auto">
+                    <div className="flex items-center gap-1 ms-auto">
                       {course.deliveryMode === 'online' ? (
                         <Video className="h-4 w-4 text-blue-600" />
                       ) : (
@@ -309,7 +309,7 @@ export function CourseCatalog({ courses }: Props) {
                     data-testid={`button-enroll-${course.id}`}
                   >
                     {course.price === 0 ? t('student:enrollFree') : t('student:enrollNow')}
-                    <ChevronRight className="h-4 w-4 ml-2" />
+                    <ChevronRight className="h-4 w-4 ms-2" />
                   </Button>
                   
                   <div className="grid grid-cols-2 gap-2">
@@ -376,7 +376,7 @@ export function CourseCatalog({ courses }: Props) {
             className="bg-white text-purple-600 hover:bg-gray-50"
             data-testid="button-free-consultation"
           >
-            <Trophy className="h-5 w-5 mr-2" />
+            <Trophy className="h-5 w-5 me-2" />
             {t('student:freeConsultation')}
           </Button>
         </CardContent>

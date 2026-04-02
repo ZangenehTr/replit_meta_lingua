@@ -214,7 +214,7 @@ export const PreSessionReviewModal: React.FC<PreSessionReviewModalProps> = ({
                       onClick={() => setShowGrammar(true)}
                       className="flex-1"
                     >
-                      <BookOpen className="w-4 h-4 mr-2" />
+                      <BookOpen className="w-4 h-4 me-2" />
                       {t('callern:review.grammar')}
                     </Button>
                     <Button
@@ -223,7 +223,7 @@ export const PreSessionReviewModal: React.FC<PreSessionReviewModalProps> = ({
                       onClick={() => setShowGrammar(false)}
                       className="flex-1"
                     >
-                      <Lightbulb className="w-4 h-4 mr-2" />
+                      <Lightbulb className="w-4 h-4 me-2" />
                       {t('callern:review.vocabulary')} ({reviewData.vocab.length})
                     </Button>
                   </div>
@@ -367,7 +367,7 @@ export const PreSessionReviewModal: React.FC<PreSessionReviewModalProps> = ({
                         : 'bg-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <Play className="w-4 h-4 mr-2" />
+                    <Play className="w-4 h-4 me-2" />
                     {isCountdownComplete 
                       ? reviewData.next_button_label_after_countdown 
                       : t('callern:review.wait')}

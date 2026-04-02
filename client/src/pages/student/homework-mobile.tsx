@@ -397,7 +397,7 @@ export default function StudentHomeworkMobile() {
                 <Zap className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
               </div>
               {stats?.totalXpEarned && stats.totalXpEarned > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-xs text-white font-bold">+</span>
                 </div>
               )}
@@ -434,7 +434,7 @@ export default function StudentHomeworkMobile() {
               </div>
               {/* Achievement Badge */}
               {stats?.averageGrade && stats.averageGrade >= 80 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gold-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -end-1 w-4 h-4 bg-gold-500 rounded-full flex items-center justify-center">
                   <Star className="w-2 h-2 text-white fill-current" />
                 </div>
               )}
@@ -479,7 +479,7 @@ export default function StudentHomeworkMobile() {
               </div>
               {/* Urgent Indicator */}
               {stats?.upcomingDeadlines && stats.upcomingDeadlines.length > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse" />
+                <div className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 rounded-full animate-pulse" />
               )}
             </div>
             <motion.p 
@@ -650,11 +650,11 @@ export default function StudentHomeworkMobile() {
                   data-testid={`homework-card-${item.id}`}
                 >
                   {/* Enhanced Status Bar with Gradient */}
-                  <div className={`absolute top-0 left-0 w-1.5 h-full ${getStatusColor(item.status)} shadow-lg`} />
+                  <div className={`absolute top-0 start-0 w-1.5 h-full ${getStatusColor(item.status)} shadow-lg`} />
                   {/* Background Gradient Overlay */}
                   <div className={`absolute inset-0 opacity-5 ${getStatusColor(item.status)} rounded-2xl`} />
                   
-                  <div className="pl-4">
+                  <div className="ps-4">
                     {/* Header with Icon */}
                     <div className="flex items-start gap-3 mb-3">
                       <div className={cn(
@@ -782,7 +782,7 @@ export default function StudentHomeworkMobile() {
                           </div>
                           {item.feedback && (
                             <Badge className="bg-green-100 text-green-700 border-0 shadow-sm hover:shadow-md transition-shadow">
-                              <MessageSquare className="w-3 h-3 mr-1" />
+                              <MessageSquare className="w-3 h-3 me-1" />
                               {t('student:feedbackAvailable')}
                             </Badge>
                           )}
@@ -799,9 +799,9 @@ export default function StudentHomeworkMobile() {
                         }}
                         data-testid={`button-start-homework-${item.id}`}
                       >
-                        <Upload className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
+                        <Upload className="w-4 h-4 me-2 group-hover:rotate-12 transition-transform" />
                         {t('student:startHomework')}
-                        <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-4 h-4 ms-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     )}
 
@@ -814,9 +814,9 @@ export default function StudentHomeworkMobile() {
                         }}
                         data-testid={`button-continue-homework-${item.id}`}
                       >
-                        <Send className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
+                        <Send className="w-4 h-4 me-2 group-hover:translate-x-1 transition-transform" />
                         {t('student:continueHomework')}
-                        <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-4 h-4 ms-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     )}
 
@@ -908,7 +908,7 @@ export default function StudentHomeworkMobile() {
                 <div className="flex gap-2">
                   <Badge className={cn(getStatusBadgeStyle(selectedHomework.status))}>
                     {getStatusIcon(selectedHomework.status)}
-                    <span className="ml-1">{t(`student:status.${selectedHomework.status}`)}</span>
+                    <span className="ms-1">{t(`student:status.${selectedHomework.status}`)}</span>
                   </Badge>
                   <Badge className={cn(getDifficultyColor(selectedHomework.difficulty))}>
                     {t(`student:difficulty.${selectedHomework.difficulty}`)}
@@ -1079,7 +1079,7 @@ export default function StudentHomeworkMobile() {
                       disabled={submitHomework.isPending}
                       data-testid="button-submit-homework"
                     >
-                      <Send className="w-4 h-4 mr-2" />
+                      <Send className="w-4 h-4 me-2" />
                       {submitHomework.isPending ? t('student:submitting') : t('student:submitHomework')}
                     </Button>
                   </div>

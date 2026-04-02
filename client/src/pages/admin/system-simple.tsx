@@ -130,7 +130,7 @@ export function AdminSystem() {
                   className="w-full"
                   onClick={handleCreateBackup}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Create Backup Now
                 </Button>
               </CardContent>
@@ -156,7 +156,7 @@ export function AdminSystem() {
                   variant="outline"
                   onClick={handleExportConfig}
                 >
-                  <FileText className="mr-2 h-4 w-4" />
+                  <FileText className="me-2 h-4 w-4" />
                   Export Configuration
                 </Button>
               </CardContent>
@@ -177,7 +177,7 @@ export function AdminSystem() {
                 <div className="flex items-center justify-between">
                   <span>Database Connection</span>
                   <Badge variant="outline" className="text-green-600 border-green-600">
-                    <CheckCircle className="mr-1 h-3 w-3" />
+                    <CheckCircle className="me-1 h-3 w-3" />
                     Healthy
                   </Badge>
                 </div>
@@ -185,7 +185,7 @@ export function AdminSystem() {
                 <div className="flex items-center justify-between">
                   <span>API Services</span>
                   <Badge variant="outline" className="text-green-600 border-green-600">
-                    <CheckCircle className="mr-1 h-3 w-3" />
+                    <CheckCircle className="me-1 h-3 w-3" />
                     Operational
                   </Badge>
                 </div>
@@ -193,7 +193,7 @@ export function AdminSystem() {
                 <div className="flex items-center justify-between">
                   <span>File System</span>
                   <Badge variant="outline" className="text-green-600 border-green-600">
-                    <CheckCircle className="mr-1 h-3 w-3" />
+                    <CheckCircle className="me-1 h-3 w-3" />
                     Available
                   </Badge>
                 </div>

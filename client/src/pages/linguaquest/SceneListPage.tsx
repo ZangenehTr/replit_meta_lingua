@@ -63,7 +63,7 @@ export function SceneListPage() {
             <div className="flex items-center space-x-3">
               <Link href="/linguaquest">
                 <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  <ArrowLeft className="w-4 h-4 me-1" />
                   {t("navigation.back", "Back")}
                 </Button>
               </Link>
@@ -83,7 +83,7 @@ export function SceneListPage() {
               {isLoggedIn && (
                 <Link href="/admin/dashboard">
                   <Button variant="ghost" size="sm" className="text-emerald-700 dark:text-emerald-400">
-                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    <ArrowLeft className="w-4 h-4 me-1" />
                     {t("navigation.backToPlatform", "Back to Platform")}
                   </Button>
                 </Link>
@@ -143,12 +143,12 @@ export function SceneListPage() {
               >
                 <div className="h-40 bg-gradient-to-br from-emerald-400 to-teal-500 dark:from-emerald-700 dark:to-teal-800 relative flex items-center justify-center">
                   <span className="text-6xl opacity-80">{SCENE_ICONS[scene.sceneType] || "🌍"}</span>
-                  <div className="absolute top-3 right-3 flex gap-1">
+                  <div className="absolute top-3 end-3 flex gap-1">
                     <Badge className={CEFR_COLORS[scene.cefrLevel] || "bg-gray-100 text-gray-800"}>
                       {scene.cefrLevel}
                     </Badge>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/30 to-transparent p-3">
+                  <div className="absolute bottom-0 start-0 end-0 bg-gradient-to-t from-black/30 to-transparent p-3">
                     <Sparkles className="w-5 h-5 text-white/80" />
                   </div>
                 </div>
@@ -160,18 +160,18 @@ export function SceneListPage() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3 text-sm text-gray-500">
                       <span className="flex items-center">
-                        <Star className="w-4 h-4 mr-1 text-amber-500" />
+                        <Star className="w-4 h-4 me-1 text-amber-500" />
                         {scene.xpReward} XP
                       </span>
                       <span className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1 text-blue-500" />
+                        <Clock className="w-4 h-4 me-1 text-blue-500" />
                         {scene.estimatedDurationMinutes} min
                       </span>
                     </div>
                   </div>
                   <Link href={`/linguaquest/scene/${scene.id}`}>
                     <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white">
-                      <Play className="w-4 h-4 mr-2" />
+                      <Play className="w-4 h-4 me-2" />
                       {t("scenes.startScene", "Start Scene")}
                     </Button>
                   </Link>

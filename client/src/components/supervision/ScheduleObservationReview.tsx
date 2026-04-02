@@ -404,7 +404,7 @@ export default function ScheduleObservationReview() {
                                 onClick={() => handleClassSelect(classItem)}
                                 className="text-xs"
                               >
-                                <Eye className="h-3 w-3 mr-1" />
+                                <Eye className="h-3 w-3 me-1" />
                                 Schedule
                               </Button>
                             )}
@@ -458,7 +458,7 @@ export default function ScheduleObservationReview() {
                         </Badge>
                         {observation.teacherNotified && (
                           <Badge variant="outline" className="text-green-600">
-                            <CheckCircle className="h-3 w-3 mr-1" />
+                            <CheckCircle className="h-3 w-3 me-1" />
                             Notified
                           </Badge>
                         )}
@@ -516,7 +516,7 @@ export default function ScheduleObservationReview() {
                     <FormLabel>
                       Observation Type
                       {selectedClass?.deliveryMode === 'online' && (
-                        <span className="text-xs text-blue-600 ml-2">
+                        <span className="text-xs text-blue-600 ms-2">
                           (Auto-selected for online class)
                         </span>
                       )}

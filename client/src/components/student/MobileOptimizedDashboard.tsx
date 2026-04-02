@@ -294,15 +294,17 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
                 size="icon"
                 className="touch-target"
                 onClick={() => setShowBottomSheet(true)}
+                aria-label="Notifications"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-5 w-5" aria-hidden="true" />
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon"
                 className="touch-target"
+                aria-label="Settings"
               >
-                <Settings className="h-5 w-5" />
+                <Settings className="h-5 w-5" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -370,7 +372,7 @@ export function MobileOptimizedDashboard({ user, compact = false }: Props) {
           title="Recent Notifications"
           icon={Bell}
           badge={
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ms-2">
               {notificationCount?.unread || 0} new
             </Badge>
           }

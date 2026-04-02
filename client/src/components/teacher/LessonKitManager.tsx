@@ -225,11 +225,11 @@ export function LessonKitManager() {
               e.stopPropagation();
               exportToPDF(kit);
             }}>
-              <Download className="w-4 h-4 mr-1" />
+              <Download className="w-4 h-4 me-1" />
               PDF
             </Button>
             <Button size="sm" variant="ghost">
-              <Eye className="w-4 h-4 mr-1" />
+              <Eye className="w-4 h-4 me-1" />
               Preview
             </Button>
           </div>
@@ -250,15 +250,15 @@ export function LessonKitManager() {
               <span>{selectedKit.topic}</span>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => exportToPDF(selectedKit)}>
-                  <FileDown className="w-4 h-4 mr-1" />
+                  <FileDown className="w-4 h-4 me-1" />
                   Export PDF
                 </Button>
                 <Button size="sm" variant="outline">
-                  <Share2 className="w-4 h-4 mr-1" />
+                  <Share2 className="w-4 h-4 me-1" />
                   Share
                 </Button>
                 <Button size="sm" variant="outline">
-                  <Printer className="w-4 h-4 mr-1" />
+                  <Printer className="w-4 h-4 me-1" />
                   Print
                 </Button>
               </div>
@@ -299,7 +299,7 @@ export function LessonKitManager() {
                     </h3>
                     <ul className="space-y-2">
                       {selectedKit.culturalNotes.map((note, idx) => (
-                        <li key={idx} className="pl-6">• {note}</li>
+                        <li key={idx} className="ps-6">• {note}</li>
                       ))}
                     </ul>
                   </div>
@@ -346,7 +346,7 @@ export function LessonKitManager() {
                           <div className="flex items-center gap-2">
                             <Badge>{exercise.type}</Badge>
                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                              <Clock className="w-4 h-4 inline mr-1" />
+                              <Clock className="w-4 h-4 inline me-1" />
                               {exercise.duration} min
                             </span>
                           </div>
@@ -398,7 +398,7 @@ export function LessonKitManager() {
                         <div className="flex justify-between items-center">
                           <CardTitle className="text-md">{hw.title}</CardTitle>
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            <Clock className="w-4 h-4 inline mr-1" />
+                            <Clock className="w-4 h-4 inline me-1" />
                             {hw.estimatedTime} min
                           </span>
                         </div>
@@ -432,7 +432,7 @@ export function LessonKitManager() {
                           </div>
                         </div>
                         {question.options && (
-                          <ul className="space-y-1 ml-4">
+                          <ul className="space-y-1 ms-4">
                             {question.options.map((option, optIdx) => (
                               <li key={optIdx} className={`text-sm ${
                                 option === question.correctAnswer ? 'font-semibold text-green-600 dark:text-green-400' : ''
@@ -539,12 +539,12 @@ export function LessonKitManager() {
           >
             {generateMutation.isPending ? (
               <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                <RefreshCw className="w-4 h-4 me-2 animate-spin" />
                 Generating...
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 mr-2" />
+                <Sparkles className="w-4 h-4 me-2" />
                 Generate Kit
               </>
             )}
@@ -568,12 +568,12 @@ export function LessonKitManager() {
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex gap-2 flex-1">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder="Search lesson kits..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
           <Select value={levelFilter} onValueChange={setLevelFilter}>
@@ -587,12 +587,12 @@ export function LessonKitManager() {
               <SelectItem value="advanced">Advanced</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4" />
+          <Button variant="outline" size="icon" onClick={() => refetch()} aria-label="Refresh">
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
         <Button onClick={() => setShowGenerateDialog(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4 me-2" />
           Generate New Kit
         </Button>
       </div>

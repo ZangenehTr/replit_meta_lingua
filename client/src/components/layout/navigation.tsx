@@ -320,7 +320,7 @@ export function Navigation() {
                                 <p className={`text-sm font-medium truncate ${getTypeColor(notification.type)}`}>
                                   {notification.title}
                                 </p>
-                                <div className="flex items-center space-x-1 ml-2">
+                                <div className="flex items-center space-x-1 ms-2">
                                   {!notification.isRead && (
                                     <div className="w-2 h-2 bg-blue-500 rounded-full" />
                                   )}
@@ -399,23 +399,23 @@ export function Navigation() {
                 <DropdownMenuSeparator />
                 <Link href="/profile">
                   <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
+                    <User className="me-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/progress">
                   <DropdownMenuItem>
-                    <TrendingUp className="mr-2 h-4 w-4" />
+                    <TrendingUp className="me-2 h-4 w-4" />
                     <span>Progress & Achievements</span>
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem>
-                  <Globe className="mr-2 h-4 w-4" />
+                  <Globe className="me-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="me-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

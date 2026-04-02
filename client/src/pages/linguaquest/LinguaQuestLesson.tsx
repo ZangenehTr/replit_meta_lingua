@@ -326,7 +326,7 @@ export function LinguaQuestLesson() {
               {t('lesson.lessonNotFoundDesc', 'The requested lesson could not be loaded.')}
             </p>
             <Button onClick={handleReturnHome} data-testid="button-return-home">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 me-2" />
               {t('lesson.returnToHome', 'Return to Home')}
             </Button>
           </CardContent>
@@ -348,7 +348,7 @@ export function LinguaQuestLesson() {
                 onClick={handleReturnHome}
                 data-testid="button-back-home"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 me-2" />
                 LinguaQuest
               </Button>
               
@@ -374,7 +374,7 @@ export function LinguaQuestLesson() {
               {isLoggedIn && (
                 <Link href="/admin/dashboard">
                   <Button variant="ghost" size="sm" className="hidden sm:flex text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
-                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    <ArrowLeft className="w-4 h-4 me-1" />
                     {t('navigation.backToPlatform', 'Back to Platform')}
                   </Button>
                 </Link>
@@ -459,7 +459,7 @@ export function LinguaQuestLesson() {
                         <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                       </Button>
                     )}
-                    <div className="hidden lg:block absolute right-2 top-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="hidden lg:block absolute end-2 top-4 text-sm text-gray-500 dark:text-gray-400">
                       {t('lesson.stepOf', { current: currentStepIndex + 1, total: gameSteps.length, defaultValue: 'Step {{current}} of {{total}}' })}
                     </div>
                   </>
@@ -604,7 +604,7 @@ export function LinguaQuestLesson() {
                 
                 {/* Mobile Swipe Indicator */}
                 {isMobile && currentStepIndex > 0 && (
-                  <div className="absolute bottom-24 left-0 right-0 flex justify-center pointer-events-none">
+                  <div className="absolute bottom-24 start-0 end-0 flex justify-center pointer-events-none">
                     <div className="bg-gray-900/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
                       {t('lesson.swipeBack', 'Swipe right to go back')}
                     </div>
@@ -657,7 +657,7 @@ export function LinguaQuestLesson() {
                 {completionData?.newAchievements && completionData.newAchievements.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-semibold text-gray-900 dark:text-white flex items-center">
-                      <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
+                      <Trophy className="w-4 h-4 me-2 text-yellow-500" />
                       {t('lesson.newAchievements', 'New Achievements Unlocked!')}
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -715,7 +715,7 @@ export function LinguaQuestLesson() {
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                     data-testid="button-continue-learning"
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <ArrowLeft className="w-4 h-4 me-2" />
                     {t('lesson.continueLearning', 'Continue Learning')}
                   </Button>
                   <Button 
@@ -723,7 +723,7 @@ export function LinguaQuestLesson() {
                     onClick={handleRetryLesson}
                     data-testid="button-retry-lesson"
                   >
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                    <RotateCcw className="w-4 h-4 me-2" />
                     {t('lesson.retryLesson', 'Retry Lesson')}
                   </Button>
                 </div>
@@ -735,7 +735,7 @@ export function LinguaQuestLesson() {
 
       {/* Mobile Progress Bar */}
       {isMobile && !isCompleted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+        <div className="fixed bottom-0 start-0 end-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {lesson.title}

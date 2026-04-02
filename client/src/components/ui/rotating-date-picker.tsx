@@ -214,9 +214,9 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
       <PopoverTrigger asChild>
         <Button 
           variant="outline" 
-          className={`w-full justify-start text-left font-normal ${className}`}
+          className={`w-full justify-start text-start font-normal ${className}`}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="me-2 h-4 w-4" />
           {selectedDate ? format(selectedDate, "PPP") : placeholder}
         </Button>
       </PopoverTrigger>

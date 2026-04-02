@@ -165,12 +165,12 @@ function Withdrawal() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در متقاضیان منصرف شده..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
               data-testid="input-search-withdrawal"
             />
           </div>
@@ -178,7 +178,7 @@ function Withdrawal() {
         
         <div className="flex gap-2">
           <Badge variant="outline" className="px-3 py-1">
-            <XCircle className="h-4 w-4 mr-2" />
+            <XCircle className="h-4 w-4 me-2" />
             {filteredLeads.length} مورد انصراف
           </Badge>
         </div>
@@ -319,7 +319,7 @@ function Withdrawal() {
                         )}
                       </div>
                       
-                      <div className="flex gap-2 ml-4">
+                      <div className="flex gap-2 ms-4">
                         {!lead.withdrawalReason && (
                           <Dialog>
                             <DialogTrigger asChild>
@@ -329,7 +329,7 @@ function Withdrawal() {
                                 onClick={() => setSelectedLead(lead)}
                                 data-testid={`button-add-reason-${lead.id}`}
                               >
-                                <FileText className="h-4 w-4 mr-2" />
+                                <FileText className="h-4 w-4 me-2" />
                                 ثبت دلیل
                               </Button>
                             </DialogTrigger>
@@ -408,7 +408,7 @@ function Withdrawal() {
                           className="text-green-600 hover:text-green-700"
                           data-testid={`button-reactivate-${lead.id}`}
                         >
-                          <RotateCcw className="h-4 w-4 mr-2" />
+                          <RotateCcw className="h-4 w-4 me-2" />
                           بازگردانی
                         </Button>
                       </div>
@@ -433,15 +433,15 @@ function Withdrawal() {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" size="sm">
-                <FileText className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 me-2" />
                 گزارش دلایل انصراف
               </Button>
               <Button variant="outline" size="sm">
-                <TrendingDown className="h-4 w-4 mr-2" />
+                <TrendingDown className="h-4 w-4 me-2" />
                 تحلیل روند انصراف
               </Button>
               <Button variant="outline" size="sm">
-                <RotateCcw className="h-4 w-4 mr-2" />
+                <RotateCcw className="h-4 w-4 me-2" />
                 کمپین بازگردانی
               </Button>
             </div>

@@ -388,7 +388,7 @@ export function VoiceExercise({
               variant="outline"
               data-testid="button-play-reference"
             >
-              <Volume2 className="w-4 h-4 mr-2" />
+              <Volume2 className="w-4 h-4 me-2" />
               Listen to Reference
             </Button>
 
@@ -399,7 +399,7 @@ export function VoiceExercise({
                 className="bg-red-600 hover:bg-red-700"
                 data-testid="button-start-recording"
               >
-                <Mic className="w-4 h-4 mr-2" />
+                <Mic className="w-4 h-4 me-2" />
                 Start Recording
               </Button>
             ) : (
@@ -408,7 +408,7 @@ export function VoiceExercise({
                 className="bg-red-600 hover:bg-red-700"
                 data-testid="button-stop-recording"
               >
-                <MicOff className="w-4 h-4 mr-2" />
+                <MicOff className="w-4 h-4 me-2" />
                 Stop Recording ({formatDuration(recording.duration)})
               </Button>
             )}
@@ -420,7 +420,7 @@ export function VoiceExercise({
                 variant="outline"
                 data-testid="button-play-recording"
               >
-                <Play className="w-4 h-4 mr-2" />
+                <Play className="w-4 h-4 me-2" />
                 Play My Recording
               </Button>
             )}
@@ -447,12 +447,12 @@ export function VoiceExercise({
               >
                 {isAnalyzing ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
                     Analyzing...
                   </>
                 ) : (
                   <>
-                    <Target className="w-4 h-4 mr-2" />
+                    <Target className="w-4 h-4 me-2" />
                     Analyze Pronunciation
                   </>
                 )}
@@ -469,9 +469,9 @@ export function VoiceExercise({
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center">
                 {analysis.score >= 70 ? (
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                  <CheckCircle className="w-5 h-5 text-green-600 me-2" />
                 ) : (
-                  <XCircle className="w-5 h-5 text-yellow-600 mr-2" />
+                  <XCircle className="w-5 h-5 text-yellow-600 me-2" />
                 )}
                 Pronunciation Analysis
               </CardTitle>
@@ -522,7 +522,7 @@ export function VoiceExercise({
                 <ul className="space-y-1">
                   {analysis.suggestions.map((suggestion, index) => (
                     <li key={index} className="text-sm text-gray-600 dark:text-gray-300 flex items-start">
-                      <span className="text-emerald-500 mr-2">•</span>
+                      <span className="text-emerald-500 me-2">•</span>
                       {suggestion}
                     </li>
                   ))}
@@ -538,14 +538,14 @@ export function VoiceExercise({
                   variant="outline"
                   data-testid="button-try-again"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
+                  <RotateCcw className="w-4 h-4 me-2" />
                   Try Again
                 </Button>
               )}
               
               {(isCompleted || analysis.score >= 70) && (
                 <Badge className="bg-green-100 text-green-800 px-4 py-2">
-                  <Award className="w-4 h-4 mr-2" />
+                  <Award className="w-4 h-4 me-2" />
                   Exercise Completed!
                 </Badge>
               )}

@@ -214,7 +214,7 @@ export function AdminCallernRoadmaps() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-roadmap">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:callernRoadmaps.createRoadmap', 'Create Roadmap')}
             </Button>
           </DialogTrigger>
@@ -401,12 +401,12 @@ export function AdminCallernRoadmaps() {
       {/* Search and Filters */}
       <div className="flex gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t('admin:callernRoadmaps.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="ps-10"
             data-testid="input-search-roadmaps"
           />
         </div>
@@ -470,7 +470,7 @@ export function AdminCallernRoadmaps() {
                   data-testid={`button-view-${roadmap.id}`}
                   onClick={() => handleViewClick(roadmap)}
                 >
-                  <Eye className="h-4 w-4 mr-1" />
+                  <Eye className="h-4 w-4 me-1" />
                   {t('common:view')}
                 </Button>
                 <Button 
@@ -479,7 +479,7 @@ export function AdminCallernRoadmaps() {
                   data-testid={`button-edit-${roadmap.id}`}
                   onClick={() => handleEditClick(roadmap)}
                 >
-                  <Edit className="h-4 w-4 mr-1" />
+                  <Edit className="h-4 w-4 me-1" />
                   {t('common:edit')}
                 </Button>
                 <Button 
@@ -488,7 +488,7 @@ export function AdminCallernRoadmaps() {
                   data-testid={`button-settings-${roadmap.id}`}
                   onClick={() => handleSettingsClick(roadmap)}
                 >
-                  <Settings className="h-4 w-4 mr-1" />
+                  <Settings className="h-4 w-4 me-1" />
                   {t('common:settings')}
                 </Button>
               </div>

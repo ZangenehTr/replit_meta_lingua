@@ -123,7 +123,7 @@ function SessionDetailsSection({ teacherId, period }: { teacherId: number; perio
         ) : (
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {(sessions as TeacherSession[]).map((session, index) => (
-              <div key={index} className={`border-l-4 ${getSessionColor(session.type)} pl-4 py-2`}>
+              <div key={index} className={`border-l-4 ${getSessionColor(session.type)} ps-4 py-2`}>
                 <div className="font-medium">
                   {session.date} - {session.type === '1-on-1' ? t('admin:teacherPayments.oneOnOneSession') : 
                                     session.type === 'group' ? t('admin:teacherPayments.groupClass') : t('admin:teacherPayments.callernSession')}

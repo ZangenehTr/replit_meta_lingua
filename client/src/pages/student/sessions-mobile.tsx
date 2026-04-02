@@ -312,9 +312,9 @@ export default function StudentSessionsMobile() {
                 onClick={() => session.status === 'upcoming' && joinSession.mutate(session.id)}
               >
                 {/* Status Indicator */}
-                <div className={`absolute top-0 left-0 w-1 h-full ${getStatusColor(session.status)}`} />
+                <div className={`absolute top-0 start-0 w-1 h-full ${getStatusColor(session.status)}`} />
                 
-                <div className="pl-4">
+                <div className="ps-4">
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
@@ -327,7 +327,7 @@ export default function StudentSessionsMobile() {
                     </div>
                     {session.type === 'group' && (
                       <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                        <Users className="w-3 h-3 mr-1" />
+                        <Users className="w-3 h-3 me-1" />
                         {session.participants}/{session.maxParticipants}
                       </Badge>
                     )}

@@ -257,13 +257,13 @@ export default function HRLeavePage() {
                         <span className="font-medium capitalize">{b.leaveType.replace("_", " ")} Leave</span>
                         <span className="text-muted-foreground">
                           {b.used} used + {b.pending} pending / {b.entitled} days
-                          {b.entitled > 0 && <span className={`ml-2 font-medium ${b.remaining <= 3 ? "text-red-600" : "text-green-700"}`}>({b.remaining} left)</span>}
+                          {b.entitled > 0 && <span className={`ms-2 font-medium ${b.remaining <= 3 ? "text-red-600" : "text-green-700"}`}>({b.remaining} left)</span>}
                         </span>
                       </div>
                       {b.entitled > 0 && (
                         <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                           <div
-                            className={`absolute left-0 top-0 h-full rounded-full ${LEAVE_COLORS[b.leaveType] ?? "bg-blue-500"}`}
+                            className={`absolute start-0 top-0 h-full rounded-full ${LEAVE_COLORS[b.leaveType] ?? "bg-blue-500"}`}
                             style={{ width: `${Math.min(100, (b.used / b.entitled) * 100)}%` }}
                           />
                           {b.pending > 0 && (

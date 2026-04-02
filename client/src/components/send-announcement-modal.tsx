@@ -192,7 +192,7 @@ export function SendAnnouncementModal({ children }: SendAnnouncementModalProps) 
               Cancel
             </Button>
             <Button type="submit" disabled={sendAnnouncement.isPending}>
-              <Send className="h-4 w-4 mr-2" />
+              <Send className="h-4 w-4 me-2" />
               {sendAnnouncement.isPending ? "Sending..." : "Send Announcement"}
             </Button>
           </div>

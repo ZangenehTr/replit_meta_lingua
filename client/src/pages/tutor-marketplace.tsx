@@ -237,12 +237,12 @@ export default function TutorMarketplace() {
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
             <div className="md:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute start-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder={getLocalizedText('Search tutor or specialization', 'جستجوی مربی یا تخصص', 'البحث عن مدرس أو تخصص')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="ps-10"
                 />
               </div>
             </div>
@@ -302,7 +302,7 @@ export default function TutorMarketplace() {
             </p>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
+                <Filter className="h-4 w-4 me-2" />
                 {getLocalizedText('More Filters', 'فیلترهای بیشتر', 'مزيد من الفلاتر')}
               </Button>
             </div>
@@ -346,19 +346,19 @@ export default function TutorMarketplace() {
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                    <Clock className="h-4 w-4 me-2 text-gray-400" />
                     <span>{tutor.experience}</span>
                   </div>
                   <div className="flex items-center">
-                    <Users className="h-4 w-4 mr-2 text-gray-400" />
+                    <Users className="h-4 w-4 me-2 text-gray-400" />
                     <span>{tutor.completedSessions} {getLocalizedText('sessions', 'جلسه', 'جلسات')}</span>
                   </div>
                   <div className="flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2 text-gray-400" />
+                    <TrendingUp className="h-4 w-4 me-2 text-gray-400" />
                     <span>{tutor.successRate}% {getLocalizedText('success', 'موفقیت', 'نجاح')}</span>
                   </div>
                   <div className="flex items-center">
-                    <MessageCircle className="h-4 w-4 mr-2 text-gray-400" />
+                    <MessageCircle className="h-4 w-4 me-2 text-gray-400" />
                     <span className="text-xs truncate">{tutor.responseTime.split(' ').slice(0, 3).join(' ')}</span>
                   </div>
                 </div>

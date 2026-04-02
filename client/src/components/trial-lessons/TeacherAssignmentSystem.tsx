@@ -322,7 +322,7 @@ export function TeacherAssignmentSystem({ className }: TeacherAssignmentSystemPr
             onClick={() => setRulesDialogOpen(true)}
             data-testid="configure-rules"
           >
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="h-4 w-4 me-2" />
             Configure Rules
           </Button>
         </div>
@@ -448,7 +448,7 @@ export function TeacherAssignmentSystem({ className }: TeacherAssignmentSystemPr
                             className="bg-blue-600 hover:bg-blue-700"
                             data-testid={`auto-assign-${request.id}`}
                           >
-                            <Zap className="h-4 w-4 mr-1" />
+                            <Zap className="h-4 w-4 me-1" />
                             Auto Assign
                           </Button>
                         ) : (
@@ -458,7 +458,7 @@ export function TeacherAssignmentSystem({ className }: TeacherAssignmentSystemPr
                             onClick={() => handleManualAssign(request)}
                             data-testid={`manual-assign-${request.id}`}
                           >
-                            <User className="h-4 w-4 mr-1" />
+                            <User className="h-4 w-4 me-1" />
                             Assign
                           </Button>
                         )}

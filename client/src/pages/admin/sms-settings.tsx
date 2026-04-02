@@ -223,14 +223,14 @@ export default function SMSSettingsPage() {
         </div>
         <div className={`flex ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
           <Button variant="outline" onClick={() => window.location.href = '/admin/sms-test'}>
-            <TestTube className="h-4 w-4 mr-2" />
+            <TestTube className="h-4 w-4 me-2" />
             تست SMS
           </Button>
           <Button 
             onClick={() => saveKavenegarMutation.mutate(kavenegarData)}
             disabled={saveKavenegarMutation.isPending}
           >
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="h-4 w-4 me-2" />
 {saveKavenegarMutation.isPending ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
           </Button>
         </div>
@@ -284,7 +284,7 @@ export default function SMSSettingsPage() {
                 className="mt-2"
                 onClick={() => window.location.href = '/admin/iranian-compliance'}
               >
-                <Settings className="h-4 w-4 mr-2" />
+                <Settings className="h-4 w-4 me-2" />
 {t('admin:smsSettings.configureSenderApi')}
               </Button>
             </div>
@@ -558,7 +558,7 @@ export default function SMSSettingsPage() {
                   <div className="flex space-x-2">
                     <Input placeholder="Test phone number (09xxxxxxxxx)" />
                     <Button>
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       Send Test
                     </Button>
                   </div>
@@ -796,7 +796,7 @@ export default function SMSSettingsPage() {
                           disabled={testSMSTemplate.isPending || !smsAutomationSettings?.kavenegarConfigured}
                           data-testid="button-test-template"
                         >
-                          <TestTube className="h-4 w-4 ml-2" />
+                          <TestTube className="h-4 w-4 ms-2" />
                           {testSMSTemplate.isPending ? "در حال ارسال..." : "ارسال آزمایشی"}
                         </Button>
                       </div>
@@ -809,7 +809,7 @@ export default function SMSSettingsPage() {
                       disabled={updateAutomationSettings.isPending || !smsAutomationSettings?.kavenegarConfigured}
                       data-testid="button-save-settings"
                     >
-                      <Save className="h-4 w-4 ml-2" />
+                      <Save className="h-4 w-4 ms-2" />
                       {updateAutomationSettings.isPending ? "در حال ذخیره..." : "ذخیره تنظیمات"}
                     </Button>
                   </div>

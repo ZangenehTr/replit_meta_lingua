@@ -129,7 +129,7 @@ export default function VideoDetail() {
                 </div>
               )}
               <Button variant="ghost" size="sm" onClick={() => navigator.share?.({ title: video.title, url: window.location.href })} data-testid="button-share">
-                <Share2 className="h-4 w-4 mr-2" />Share
+                <Share2 className="h-4 w-4 me-2" />Share
               </Button>
             </div>
 

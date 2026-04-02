@@ -409,7 +409,7 @@ export default function AdminCommunicationsPage() {
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
               {t('admin:communications.title')}
-              <span className="text-green-600 text-sm ml-2">[CACHE CLEARED ✓]</span>
+              <span className="text-green-600 text-sm ms-2">[CACHE CLEARED ✓]</span>
             </h1>
             <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
               {t('admin:communications.subtitle')}
@@ -417,11 +417,11 @@ export default function AdminCommunicationsPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button onClick={() => setNewTicketDialog(true)} size="sm" className="w-full sm:w-auto">
-              <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <Plus className="h-3 w-3 md:h-4 md:w-4 me-1 md:me-2" />
               <span className="text-xs md:text-sm">{t('admin:communications.newTicket')}</span>
             </Button>
             <Button variant="outline" onClick={() => setNotificationDialog(true)} size="sm" className="w-full sm:w-auto">
-              <Bell className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <Bell className="h-3 w-3 md:h-4 md:w-4 me-1 md:me-2" />
               <span className="text-xs md:text-sm">{t('admin:communications.sendNotification')}</span>
             </Button>
           </div>
@@ -513,8 +513,8 @@ export default function AdminCommunicationsPage() {
           <TabsContent value="tickets" className="space-y-6">
             <div className="flex gap-4 items-center">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input placeholder="Search tickets..." className="pl-10" />
+                <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input placeholder="Search tickets..." className="ps-10" aria-label="Search tickets" />
               </div>
               <Select defaultValue="all">
                 <SelectTrigger className="w-[180px]">
@@ -615,8 +615,8 @@ export default function AdminCommunicationsPage() {
                             {selectedTicket.messages.map((message) => (
                               <div key={message.id} className={`p-3 rounded-lg ${
                                 message.senderType === 'staff' 
-                                  ? 'bg-blue-50 dark:bg-blue-900/20 ml-4' 
-                                  : 'bg-gray-50 dark:bg-gray-800 mr-4'
+                                  ? 'bg-blue-50 dark:bg-blue-900/20 ms-4' 
+                                  : 'bg-gray-50 dark:bg-gray-800 me-4'
                               }`}>
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-sm font-medium">{message.senderName}</span>
@@ -640,7 +640,7 @@ export default function AdminCommunicationsPage() {
                         />
                         <div className="flex flex-col sm:flex-row justify-between gap-3">
                           <Button variant="outline" size="sm" className="w-full sm:w-auto h-10">
-                            <Paperclip className="h-4 w-4 mr-2" />
+                            <Paperclip className="h-4 w-4 me-2" />
                             {t('admin:communications.attachFile')}
                           </Button>
                           <Button 
@@ -656,7 +656,7 @@ export default function AdminCommunicationsPage() {
                             }}
                             disabled={!ticketReply.trim() || sendTicketReplyMutation.isPending}
                           >
-                            <Send className="h-4 w-4 mr-2" />
+                            <Send className="h-4 w-4 me-2" />
                             {sendTicketReplyMutation.isPending ? t('admin:communications.sending') : t('admin:communications.sendReply')}
                           </Button>
                         </div>
@@ -686,10 +686,10 @@ export default function AdminCommunicationsPage() {
                   {/* Search Box */}
                   <div className="mb-4 space-y-2">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input 
                         placeholder="Search users by name or role..." 
-                        className="pl-10"
+                        className="ps-10"
                         value={userSearchQuery}
                         onChange={(e) => setUserSearchQuery(e.target.value)}
                       />
@@ -701,7 +701,7 @@ export default function AdminCommunicationsPage() {
                     )}
                   </div>
                   <ScrollArea className="h-[400px] lg:h-[500px]">
-                    <div className="space-y-2 pr-4">
+                    <div className="space-y-2 pe-4">
                       {/* Show search results if searching */}
                       {userSearchQuery && searchedUsersData.length > 0 && (
                         <div className="mb-4">
@@ -761,7 +761,7 @@ export default function AdminCommunicationsPage() {
                                   </AvatarFallback>
                                 </Avatar>
                                 {conversation.isOnline && (
-                                  <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+                                  <div className="absolute bottom-0 end-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
@@ -942,10 +942,10 @@ export default function AdminCommunicationsPage() {
                       {/* Search Box */}
                       <div className="mb-4 space-y-2">
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                           <Input 
                             placeholder="Search users by name or role..." 
-                            className="pl-10"
+                            className="ps-10"
                             value={userSearchQuery}
                             onChange={(e) => setUserSearchQuery(e.target.value)}
                           />
@@ -957,7 +957,7 @@ export default function AdminCommunicationsPage() {
                         )}
                       </div>
                       <ScrollArea className="h-[500px]">
-                        <div className="space-y-2 pr-4">
+                        <div className="space-y-2 pe-4">
                           {/* Show search results if searching */}
                           {userSearchQuery && searchedUsersData.length > 0 && (
                             <div className="mb-4">
@@ -1020,7 +1020,7 @@ export default function AdminCommunicationsPage() {
                                     </p>
                                   </div>
                                   {conversation.unreadCount > 0 && (
-                                    <Badge variant="default" className="ml-auto">
+                                    <Badge variant="default" className="ms-auto">
                                       {conversation.unreadCount}
                                     </Badge>
                                   )}
@@ -1162,9 +1162,9 @@ export default function AdminCommunicationsPage() {
                                     className="w-full bg-blue-500 hover:bg-blue-600 text-white"
                                   >
                                     {sendNotificationMutation.isPending ? (
-                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent me-2" />
                                     ) : (
-                                      <Bell className="h-4 w-4 mr-2" />
+                                      <Bell className="h-4 w-4 me-2" />
                                     )}
                                     Send Notification Now
                                   </Button>
@@ -1376,11 +1376,11 @@ export default function AdminCommunicationsPage() {
                       }}
                       disabled={!notificationForm.title || !notificationForm.message || sendNotificationMutation.isPending}
                     >
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4 me-2" />
                       {sendNotificationMutation.isPending ? 'Sending...' : 'Send Now'}
                     </Button>
                     <Button variant="outline">
-                      <Clock className="h-4 w-4 mr-2" />
+                      <Clock className="h-4 w-4 me-2" />
                       Schedule
                     </Button>
                   </div>

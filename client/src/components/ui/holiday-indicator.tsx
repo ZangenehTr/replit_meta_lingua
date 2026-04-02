@@ -134,7 +134,7 @@ export function HolidayIndicator({ holidays, compact = false, className }: Holid
             <div className="font-semibold">
               {holidayName}
               {primaryHoliday.isOfficialHoliday && (
-                <span className="ml-2 text-yellow-400">★</span>
+                <span className="ms-2 text-yellow-400">★</span>
               )}
             </div>
             

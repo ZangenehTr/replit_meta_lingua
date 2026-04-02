@@ -266,7 +266,7 @@ export default function CRMDashboard() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">مدیریت دانش‌آموزان</h2>
         <Button>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <UserPlus className="h-4 w-4 me-2" />
           ثبت‌نام دانش‌آموز جدید
         </Button>
       </div>
@@ -274,12 +274,12 @@ export default function CRMDashboard() {
       <div className="flex gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در دانش‌آموزان..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
@@ -357,7 +357,7 @@ export default function CRMDashboard() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">مدیریت اساتید</h2>
         <Button>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <UserPlus className="h-4 w-4 me-2" />
           استخدام استاد جدید
         </Button>
       </div>
@@ -427,11 +427,11 @@ export default function CRMDashboard() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             صدور گزارش
           </Button>
           <Button variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4 me-2" />
             تنظیمات
           </Button>
         </div>

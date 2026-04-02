@@ -325,7 +325,7 @@ export default function StudentTestTakingMobile() {
                 setSelectedAnswer(activeTest.answers[activeTest.questions[activeTest.currentQuestionIndex - 1].id] || '');
               }}
             >
-              <ChevronLeft className="w-4 h-4 mr-1" />
+              <ChevronLeft className="w-4 h-4 me-1" />
               {t('common:previous')}
             </Button>
           )}
@@ -346,7 +346,7 @@ export default function StudentTestTakingMobile() {
             {activeTest.currentQuestionIndex === activeTest.questions.length - 1 
               ? t('student:finishTest')
               : t('common:next')}
-            <ChevronRight className="w-4 h-4 ml-1" />
+            <ChevronRight className="w-4 h-4 ms-1" />
           </Button>
         </div>
 
@@ -450,9 +450,9 @@ export default function StudentTestTakingMobile() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <MobileCard className="relative overflow-hidden">
-                <div className={`absolute top-0 left-0 w-1 h-full ${getTestTypeColor(test.type)}`} />
+                <div className={`absolute top-0 start-0 w-1 h-full ${getTestTypeColor(test.type)}`} />
                 
-                <div className="pl-4">
+                <div className="ps-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <h3 className="text-white font-semibold text-lg">
@@ -508,7 +508,7 @@ export default function StudentTestTakingMobile() {
                       onClick={() => startTest.mutate(test.id)}
                     >
                       {t('student:startTest')}
-                      <ChevronRight className="w-4 h-4 inline ml-1" />
+                      <ChevronRight className="w-4 h-4 inline ms-1" />
                     </motion.button>
                   )}
 

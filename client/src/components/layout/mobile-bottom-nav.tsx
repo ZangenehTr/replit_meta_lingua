@@ -131,7 +131,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
   return (
     <nav
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border",
+        "fixed bottom-0 start-0 end-0 z-40 bg-background border-t border-border",
         "md:hidden",
         className
       )}
@@ -191,7 +191,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
               </span>
               
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" aria-hidden="true" />
+                <div className="absolute top-0 inset-x-0 flex justify-center" aria-hidden="true"><div className="w-8 h-0.5 bg-primary rounded-full" /></div>
               )}
             </button>
           );

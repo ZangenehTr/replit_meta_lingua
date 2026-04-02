@@ -373,7 +373,7 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
           </video>
 
           {/* Video Controls Overlay */}
-          <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+          <div className={`absolute bottom-0 start-0 end-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
             {/* Progress Bar */}
             <div className="mb-4">
               <Slider
@@ -397,8 +397,9 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
                   variant="ghost"
                   className="text-white hover:bg-white/20"
                   onClick={handlePlayPause}
+                  aria-label={isPlaying ? "Pause" : "Play"}
                 >
-                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  {isPlaying ? <Pause className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
                 </Button>
                 
                 <Button
@@ -406,8 +407,9 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
                   variant="ghost"
                   className="text-white hover:bg-white/20"
                   onClick={handleSkipBack}
+                  aria-label="Skip back 10 seconds"
                 >
-                  <SkipBack className="h-4 w-4" />
+                  <SkipBack className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 
                 <Button
@@ -415,8 +417,9 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
                   variant="ghost"
                   className="text-white hover:bg-white/20"
                   onClick={handleSkipForward}
+                  aria-label="Skip forward 10 seconds"
                 >
-                  <SkipForward className="h-4 w-4" />
+                  <SkipForward className="h-4 w-4" aria-hidden="true" />
                 </Button>
 
                 {/* Volume Control */}
@@ -425,8 +428,9 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
                   variant="ghost"
                   className="text-white hover:bg-white/20"
                   onClick={handleMuteToggle}
+                  aria-label={isMuted ? "Unmute" : "Mute"}
                 >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  {isMuted ? <VolumeX className="h-4 w-4" aria-hidden="true" /> : <Volume2 className="h-4 w-4" aria-hidden="true" />}
                 </Button>
                 <div className="w-24">
                   <Slider
@@ -461,8 +465,9 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
                   variant="ghost"
                   className="text-white hover:bg-white/20"
                   onClick={handleFullscreen}
+                  aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                 >
-                  {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                  {isFullscreen ? <Minimize className="h-4 w-4" aria-hidden="true" /> : <Maximize className="h-4 w-4" aria-hidden="true" />}
                 </Button>
               </div>
             </div>
@@ -480,14 +485,14 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
               <div className="flex gap-2">
                 {onPrevious && (
                   <Button variant="outline" size="sm" onClick={onPrevious}>
-                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    <ChevronLeft className="h-4 w-4 me-1" />
                     {t('student:videoPlayer.previous')}
                   </Button>
                 )}
                 {onNext && (
                   <Button variant="outline" size="sm" onClick={onNext}>
                     {t('student:videoPlayer.next')}
-                    <ChevronRight className="h-4 w-4 ml-1" />
+                    <ChevronRight className="h-4 w-4 ms-1" />
                   </Button>
                 )}
               </div>
@@ -517,11 +522,11 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="notes">
-                <FileText className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 me-2" />
                 {t('student:videoPlayer.notes')}
               </TabsTrigger>
               <TabsTrigger value="bookmarks">
-                <BookmarkPlus className="h-4 w-4 mr-2" />
+                <BookmarkPlus className="h-4 w-4 me-2" />
                 {t('student:videoPlayer.bookmarks')}
               </TabsTrigger>
             </TabsList>

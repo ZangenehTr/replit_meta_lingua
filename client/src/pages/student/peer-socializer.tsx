@@ -198,8 +198,8 @@ export default function StudentPeerSocializer() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="mr-4">
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                <Button variant="ghost" size="sm" className="me-4">
+                  <ChevronLeft className="h-4 w-4 me-1" />
                   {t('common:back')}
                 </Button>
               </Link>
@@ -228,7 +228,7 @@ export default function StudentPeerSocializer() {
             onClick={() => setActiveTab('browse')}
             data-testid="tab-browse-groups"
           >
-            <Search className="h-4 w-4 inline mr-2" />
+            <Search className="h-4 w-4 inline me-2" />
             {t('student:peerSocializer.browseGroups')}
           </button>
           <button
@@ -240,7 +240,7 @@ export default function StudentPeerSocializer() {
             onClick={() => setActiveTab('my-groups')}
             data-testid="tab-my-groups"
           >
-            <Users className="h-4 w-4 inline mr-2" />
+            <Users className="h-4 w-4 inline me-2" />
             {t('student:peerSocializer.myGroups')}
           </button>
           <button
@@ -252,7 +252,7 @@ export default function StudentPeerSocializer() {
             onClick={() => setActiveTab('create')}
             data-testid="tab-create-request"
           >
-            <UserPlus className="h-4 w-4 inline mr-2" />
+            <UserPlus className="h-4 w-4 inline me-2" />
             {t('student:peerSocializer.findPartners')}
           </button>
         </div>
@@ -264,7 +264,7 @@ export default function StudentPeerSocializer() {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
-                  <Filter className="h-5 w-5 mr-2" />
+                  <Filter className="h-5 w-5 me-2" />
                   {t('student:peerSocializer.filters')}
                 </CardTitle>
               </CardHeader>
@@ -379,35 +379,35 @@ export default function StudentPeerSocializer() {
                           
                           <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                             <div className="flex items-center">
-                              <Globe className="h-4 w-4 mr-1" />
+                              <Globe className="h-4 w-4 me-1" />
                               {group.language}
                             </div>
                             <div className="flex items-center">
-                              <GraduationCap className="h-4 w-4 mr-1" />
+                              <GraduationCap className="h-4 w-4 me-1" />
                               {group.proficiencyLevel}
                             </div>
                             {group.curriculumLevel && (
                               <div className="flex items-center">
-                                <BookOpen className="h-4 w-4 mr-1" />
+                                <BookOpen className="h-4 w-4 me-1" />
                                 {group.curriculumLevel}
                               </div>
                             )}
                             <div className="flex items-center">
-                              <Users className="h-4 w-4 mr-1" />
+                              <Users className="h-4 w-4 me-1" />
                               {group.currentParticipants}/{group.maxParticipants}
                             </div>
                             <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1" />
+                              <Clock className="h-4 w-4 me-1" />
                               {group.durationMinutes} min
                             </div>
                             <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
+                              <Calendar className="h-4 w-4 me-1" />
                               {formatScheduledTime(group.scheduledAt)}
                             </div>
                           </div>
                         </div>
                         
-                        <div className="ml-4">
+                        <div className="ms-4">
                           <Button 
                             onClick={() => joinGroup.mutate(group.id)}
                             disabled={group.currentParticipants >= group.maxParticipants || joinGroup.isPending}
@@ -454,20 +454,20 @@ export default function StudentPeerSocializer() {
                         
                         <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                           <div className="flex items-center">
-                            <Globe className="h-4 w-4 mr-1" />
+                            <Globe className="h-4 w-4 me-1" />
                             {group.language}
                           </div>
                           <div className="flex items-center">
-                            <GraduationCap className="h-4 w-4 mr-1" />
+                            <GraduationCap className="h-4 w-4 me-1" />
                             {group.proficiencyLevel}
                           </div>
                           <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
+                            <Calendar className="h-4 w-4 me-1" />
                             Joined: {new Date(group.joinedAt).toLocaleDateString()}
                           </div>
                           {group.participationRating && (
                             <div className="flex items-center">
-                              <Target className="h-4 w-4 mr-1" />
+                              <Target className="h-4 w-4 me-1" />
                               Rating: {group.participationRating}/5
                             </div>
                           )}

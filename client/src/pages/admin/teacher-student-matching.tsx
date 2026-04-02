@@ -365,19 +365,19 @@ export default function TeacherStudentMatchingPage() {
         <Card className="mb-8 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg">
             <CardTitle className="flex items-center text-gray-800">
-              <Filter className="h-5 w-5 mr-2 text-blue-600" />
+              <Filter className="h-5 w-5 me-2 text-blue-600" />
 {t('admin:teacherStudentMatching.filters')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder={t('admin:teacherStudentMatching.searchStudents')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="ps-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               <Select value={filterLevel} onValueChange={setFilterLevel}>
@@ -443,7 +443,7 @@ export default function TeacherStudentMatchingPage() {
                     <Card className="shadow-lg">
                       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
                         <CardTitle className="flex items-center text-blue-900">
-                          <Users className="h-5 w-5 mr-2" />
+                          <Users className="h-5 w-5 me-2" />
                           {t('admin:teacherStudentMatching.oneOnOneTab')} ({oneOnOneStudents.length})
                         </CardTitle>
                         <CardDescription>{t('admin:teacherStudentMatching.studentsNeedingPrivateTeacher', { defaultValue: 'دانشجویان نیازمند تخصیص مدرس خصوصی' })}</CardDescription>
@@ -481,7 +481,7 @@ export default function TeacherStudentMatchingPage() {
                     <Card className="shadow-lg">
                       <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
                         <CardTitle className="flex items-center text-green-900">
-                          <UserPlus className="h-5 w-5 mr-2" />
+                          <UserPlus className="h-5 w-5 me-2" />
                           {t('admin:teacherStudentMatching.availableTeachers')} ({teachers.length})
                         </CardTitle>
                         <CardDescription>{t('admin:teacherStudentMatching.teachersAvailableForOneOnOne', { defaultValue: 'مدرسان در دسترس برای تخصیص فردی' })}</CardDescription>
@@ -524,7 +524,7 @@ export default function TeacherStudentMatchingPage() {
                     <Card className="shadow-lg">
                       <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
                         <CardTitle className="flex items-center text-purple-900">
-                          <Target className="h-5 w-5 mr-2" />
+                          <Target className="h-5 w-5 me-2" />
                           {t('admin:teacherStudentMatching.groupClassesTab')} ({groupClasses.length})
                         </CardTitle>
                         <CardDescription>{t('admin:teacherStudentMatching.groupClassesNeedingTeachers')}</CardDescription>
@@ -568,7 +568,7 @@ export default function TeacherStudentMatchingPage() {
                     <Card className="shadow-lg">
                       <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
                         <CardTitle className="flex items-center text-green-900">
-                          <UserPlus className="h-5 w-5 mr-2" />
+                          <UserPlus className="h-5 w-5 me-2" />
                           Available Teachers ({teachers.length})
                         </CardTitle>
                         <CardDescription>{t('admin:teacherStudentMatching.teachersAvailableForGroupClasses', { defaultValue: 'مدرسان در دسترس برای تخصیص کلاس گروهی' })}</CardDescription>
@@ -637,7 +637,7 @@ export default function TeacherStudentMatchingPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pe-2">
                 {filteredStudents.map((student: Student) => (
                   <Card 
                     key={student.id}
@@ -663,7 +663,7 @@ export default function TeacherStudentMatchingPage() {
                             <p className="text-sm text-gray-600 mb-3">{student.email}</p>
                             <div className="flex flex-wrap gap-2">
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                <BookOpen className="h-3 w-3 mr-1" />
+                                <BookOpen className="h-3 w-3 me-1" />
                                 {student.level}
                               </Badge>
                               <Badge variant="outline" className="border-green-200 text-green-700">
@@ -673,7 +673,7 @@ export default function TeacherStudentMatchingPage() {
                                 {student.preferredClassType}
                               </Badge>
                               <Badge variant="outline" className="border-purple-200 text-purple-700">
-                                {student.preferredMode === 'online' ? <Video className="h-3 w-3 mr-1" /> : <Home className="h-3 w-3 mr-1" />}
+                                {student.preferredMode === 'online' ? <Video className="h-3 w-3 me-1" /> : <Home className="h-3 w-3 me-1" />}
                                 {student.preferredMode}
                               </Badge>
                             </div>
@@ -710,7 +710,7 @@ export default function TeacherStudentMatchingPage() {
                   disabled={!selectedTeacher}
                   onClick={() => setMatchDialogOpen(true)}
                 >
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <UserPlus className="h-4 w-4 me-2" />
                   Match Selected
                 </Button>
               )}
@@ -731,7 +731,7 @@ export default function TeacherStudentMatchingPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pe-2">
                 {getCompatibleTeachers(selectedStudent)
                   .sort((a, b) => getMatchPercentage(selectedStudent, b) - getMatchPercentage(selectedStudent, a))
                   .map((teacher: Teacher) => {
@@ -774,7 +774,7 @@ export default function TeacherStudentMatchingPage() {
                                 <p className="text-sm text-gray-600 mb-3">{teacher.email}</p>
                                 <div className="flex items-center gap-4">
                                   <span className="text-sm text-gray-700">
-                                    <Users className="h-3 w-3 inline mr-1" />
+                                    <Users className="h-3 w-3 inline me-1" />
                                     {teacher.currentStudents}/{teacher.maxStudents} students
                                   </span>
                                   <span className="text-sm text-gray-600">
@@ -809,7 +809,7 @@ export default function TeacherStudentMatchingPage() {
                             {matchingSlots.length > 0 && (
                               <div className="p-2 bg-green-50 rounded-lg">
                                 <p className="text-xs text-green-700 font-medium">
-                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  <Clock className="h-3 w-3 inline me-1" />
                                   {matchingSlots.length} matching time slots available
                                 </p>
                               </div>
@@ -996,7 +996,7 @@ export default function TeacherStudentMatchingPage() {
                     onClick={handleMatchSubmit}
                     disabled={selectedSlots.length === 0}
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CheckCircle className="h-4 w-4 me-2" />
                     Confirm Match
                   </Button>
                 </div>

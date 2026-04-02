@@ -46,7 +46,7 @@ export function HomeworkTasks() {
         <CardContent>
           <div className="space-y-4">
             {[1, 2].map((i) => (
-              <div key={i} className="border-l-4 border-muted pl-4 animate-pulse">
+              <div key={i} className="border-l-4 border-muted ps-4 animate-pulse">
                 <div className="h-5 bg-muted rounded w-3/4 mb-2" />
                 <div className="h-4 bg-muted rounded w-1/2 mb-1" />
                 <div className="h-3 bg-muted rounded w-1/3" />
@@ -82,7 +82,7 @@ export function HomeworkTasks() {
               return (
                 <div
                   key={task.id}
-                  className={`border-l-4 pl-4 ${
+                  className={`border-l-4 ps-4 ${
                     dueDateInfo.urgent 
                       ? "border-red-500 bg-red-50 dark:bg-red-900/10" 
                       : "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10"

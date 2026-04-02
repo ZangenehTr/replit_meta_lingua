@@ -389,7 +389,7 @@ export function PDFReader({
 
       {/* Progress bar */}
       {numPages > 0 && (
-        <div className="absolute top-0 left-0 right-0 z-40">
+        <div className="absolute top-0 start-0 end-0 z-40">
           <Progress value={progress} className="h-1 rounded-none" data-testid="progress-bar" />
         </div>
       )}

@@ -988,7 +988,7 @@ export function VideoCall({
                     playsInline
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-4 left-4 px-3 py-1 bg-black/50 rounded-full">
+                  <div className="absolute top-4 start-4 px-3 py-1 bg-black/50 rounded-full">
                     <p className="text-white text-sm flex items-center gap-2">
                       <User className="w-4 h-4" />
                       {role === "student" ? teacherName || "Teacher" : studentName || "Student"}
@@ -1016,7 +1016,7 @@ export function VideoCall({
                     muted
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-4 left-4 px-3 py-1 bg-black/50 rounded-full">
+                  <div className="absolute top-4 start-4 px-3 py-1 bg-black/50 rounded-full">
                     <p className="text-white text-sm">You</p>
                   </div>
                 </>
@@ -1029,7 +1029,7 @@ export function VideoCall({
                     muted
                     className="w-full h-full object-contain bg-black"
                   />
-                  <div className="absolute top-4 left-4 px-3 py-1 bg-green-500/50 rounded-full">
+                  <div className="absolute top-4 start-4 px-3 py-1 bg-green-500/50 rounded-full">
                     <p className="text-white text-sm flex items-center gap-2">
                       <Monitor className="w-4 h-4" />
                       Sharing Screen
@@ -1039,7 +1039,7 @@ export function VideoCall({
               )}
               
               {/* Engagement Meter */}
-              <div className="absolute bottom-4 left-4 right-4">
+              <div className="absolute bottom-4 start-4 end-4">
                 <div className="bg-black/50 backdrop-blur rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-white/60">Engagement Level</span>
@@ -1136,9 +1136,9 @@ export function VideoCall({
               onClick={() => handleEndCall()}
               variant="destructive"
               size="lg"
-              className="rounded-full h-14 w-20 ml-8"
+              className="rounded-full h-14 w-20 ms-8"
             >
-              <PhoneOff className="w-6 h-6 mr-2" />
+              <PhoneOff className="w-6 h-6 me-2" />
               End
             </Button>
           </div>

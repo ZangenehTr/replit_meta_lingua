@@ -155,7 +155,7 @@ export function AIHelper({ isOpen, onClose, targetLanguage = 'fa', studentLevel 
   if (!isOpen) return null;
 
   return (
-    <Card className="absolute top-4 left-4 w-96 max-h-[600px] bg-white shadow-2xl z-50">
+    <Card className="absolute top-4 start-4 w-96 max-h-[600px] bg-white shadow-2xl z-50">
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-semibold text-lg">{t('callern:aiAssistant')}</h3>
         <Button
@@ -203,9 +203,9 @@ export function AIHelper({ isOpen, onClose, targetLanguage = 'fa', studentLevel 
             className="w-full"
           >
             {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Loader2 className="h-4 w-4 animate-spin me-2" />
             ) : (
-              <Languages className="h-4 w-4 mr-2" />
+              <Languages className="h-4 w-4 me-2" />
             )}
             {t('callern:translate')}
           </Button>
@@ -245,9 +245,9 @@ export function AIHelper({ isOpen, onClose, targetLanguage = 'fa', studentLevel 
             className="w-full"
           >
             {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Loader2 className="h-4 w-4 animate-spin me-2" />
             ) : (
-              <BookOpen className="h-4 w-4 mr-2" />
+              <BookOpen className="h-4 w-4 me-2" />
             )}
             {t('callern:getSuggestions')}
           </Button>
@@ -285,9 +285,9 @@ export function AIHelper({ isOpen, onClose, targetLanguage = 'fa', studentLevel 
             className="w-full"
           >
             {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Loader2 className="h-4 w-4 animate-spin me-2" />
             ) : (
-              <CheckCircle className="h-4 w-4 mr-2" />
+              <CheckCircle className="h-4 w-4 me-2" />
             )}
             {t('callern:checkGrammar')}
           </Button>
@@ -328,9 +328,9 @@ export function AIHelper({ isOpen, onClose, targetLanguage = 'fa', studentLevel 
             className="w-full"
           >
             {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Loader2 className="h-4 w-4 animate-spin me-2" />
             ) : (
-              <Volume2 className="h-4 w-4 mr-2" />
+              <Volume2 className="h-4 w-4 me-2" />
             )}
             {t('callern:getPronunciation')}
           </Button>

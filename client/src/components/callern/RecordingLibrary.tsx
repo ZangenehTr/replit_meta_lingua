@@ -225,12 +225,12 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
               <Video className="w-12 h-12 text-gray-400" />
             </div>
           )}
-          <Badge className="absolute bottom-2 right-2 bg-black/70 text-white">
+          <Badge className="absolute bottom-2 end-2 bg-black/70 text-white">
             {formatDuration(recording.duration)}
           </Badge>
           {recording.transcript && (
-            <Badge className="absolute top-2 left-2 bg-green-500/90">
-              <Subtitles className="w-3 h-3 mr-1" />
+            <Badge className="absolute top-2 start-2 bg-green-500/90">
+              <Subtitles className="w-3 h-3 me-1" />
               Transcript
             </Badge>
           )}
@@ -248,7 +248,7 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
             </div>
             {recording.highlights && recording.highlights.length > 0 && (
               <Badge variant="outline">
-                <HighlighterIcon className="w-3 h-3 mr-1" />
+                <HighlighterIcon className="w-3 h-3 me-1" />
                 {recording.highlights.length}
               </Badge>
             )}
@@ -294,7 +294,7 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                 />
                 
                 {/* Custom Controls */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                <div className="absolute bottom-0 start-0 end-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <div className="space-y-2">
                     {/* Progress Bar */}
                     <Slider
@@ -312,8 +312,9 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                           variant="ghost"
                           className="text-white hover:bg-white/20"
                           onClick={handlePlayPause}
+                          aria-label={isPlaying ? "Pause" : "Play"}
                         >
-                          {isPlaying ? <Pause /> : <Play />}
+                          {isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
                         </Button>
                         
                         <span className="text-white text-sm">
@@ -355,8 +356,9 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                           variant="ghost"
                           className="text-white hover:bg-white/20"
                           onClick={() => setShowTranscript(!showTranscript)}
+                          aria-label={showTranscript ? "Hide transcript" : "Show transcript"}
                         >
-                          <Subtitles />
+                          <Subtitles aria-hidden="true" />
                         </Button>
                         
                         <Button
@@ -368,8 +370,9 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                               videoRef.current.requestFullscreen();
                             }
                           }}
+                          aria-label="Fullscreen"
                         >
-                          <Maximize2 />
+                          <Maximize2 aria-hidden="true" />
                         </Button>
                         
                         <Button
@@ -377,8 +380,9 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                           variant="ghost"
                           className="text-white hover:bg-white/20"
                           onClick={() => window.open(selectedRecording.playbackUrl, '_blank')}
+                          aria-label="Download recording"
                         >
-                          <Download />
+                          <Download aria-hidden="true" />
                         </Button>
                       </div>
                     </div>
@@ -405,14 +409,14 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                           alt={highlight.title}
                           className="w-full h-full object-cover rounded"
                         />
-                        <div className="absolute bottom-1 left-1 right-1">
+                        <div className="absolute bottom-1 start-1 end-1">
                           <p className="text-white text-xs truncate">{highlight.title}</p>
                           <p className="text-white/70 text-xs">
                             {formatDuration(highlight.startTime)}
                           </p>
                         </div>
                         <button
-                          className="absolute top-1 right-1 p-1 bg-white/20 rounded hover:bg-white/40"
+                          className="absolute top-1 end-1 p-1 bg-white/20 rounded hover:bg-white/40"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedHighlights(prev => 
@@ -522,19 +526,19 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
           <div className="space-y-4">
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Search by keywords, student name, or topics..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="ps-10"
                 />
               </div>
               
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Calendar className="w-4 h-4" />
+                  <Button variant="outline" size="icon" aria-label="Filter by date">
+                    <Calendar className="w-4 h-4" aria-hidden="true" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -562,6 +566,7 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                 variant="outline"
                 size="icon"
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                aria-label={viewMode === 'grid' ? "Switch to list view" : "Switch to grid view"}
               >
                 {viewMode === 'grid' ? '⊞' : '☰'}
               </Button>
@@ -616,12 +621,12 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                 >
                   {createReelMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
                       Creating...
                     </>
                   ) : (
                     <>
-                      <Scissors className="w-4 h-4 mr-2" />
+                      <Scissors className="w-4 h-4 me-2" />
                       Create Reel
                     </>
                   )}
@@ -678,13 +683,13 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                       <div className="flex items-center gap-2">
                         {recording.transcript && (
                           <Badge className="bg-green-500/10 text-green-600">
-                            <Subtitles className="w-3 h-3 mr-1" />
+                            <Subtitles className="w-3 h-3 me-1" />
                             Transcript
                           </Badge>
                         )}
                         {recording.highlights && recording.highlights.length > 0 && (
                           <Badge variant="outline">
-                            <HighlighterIcon className="w-3 h-3 mr-1" />
+                            <HighlighterIcon className="w-3 h-3 me-1" />
                             {recording.highlights.length}
                           </Badge>
                         )}
@@ -753,8 +758,9 @@ export function RecordingLibrary({ userId, role }: { userId: number; role: strin
                         onClick={() => setSelectedHighlights(prev => 
                           prev.filter(hId => hId !== id)
                         )}
+                        aria-label="Remove highlight"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4" aria-hidden="true" />
                       </Button>
                     </div>
                   );

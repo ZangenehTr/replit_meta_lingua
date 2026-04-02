@@ -281,7 +281,7 @@ export default function AIPersonalization() {
                                     {rec.priority}
                                   </Badge>
                                   <div className="flex items-center text-sm text-gray-500">
-                                    <Clock className="h-3 w-3 mr-1" />
+                                    <Clock className="h-3 w-3 me-1" />
                                     {rec.estimatedTime}m
                                   </div>
                                 </div>
@@ -300,7 +300,7 @@ export default function AIPersonalization() {
                               {rec.culturalContext && (
                                 <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg mb-3">
                                   <div className="flex items-center mb-1">
-                                    <Globe className="h-4 w-4 text-purple-600 mr-2" />
+                                    <Globe className="h-4 w-4 text-purple-600 me-2" />
                                     <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
                                       بینش فرهنگی / Cultural Insight
                                     </span>
@@ -350,7 +350,7 @@ export default function AIPersonalization() {
                       <div className="space-y-1">
                         {["Business Communication", "Cultural Understanding", "Grammar Mastery"].map((goal, index) => (
                           <div key={index} className="flex items-center text-sm">
-                            <CheckCircle className="h-3 w-3 text-green-500 mr-2" />
+                            <CheckCircle className="h-3 w-3 text-green-500 me-2" />
                             {goal}
                           </div>
                         ))}
@@ -408,13 +408,13 @@ export default function AIPersonalization() {
                       
                       <div>
                         <h4 className="font-medium text-green-600 mb-2 flex items-center">
-                          <Trophy className="h-4 w-4 mr-2" />
+                          <Trophy className="h-4 w-4 me-2" />
                           نقاط قوت / Strengths
                         </h4>
                         <ul className="space-y-1">
                           {progressAnalysis?.strengths?.map((strength, index) => (
                             <li key={index} className="flex items-center text-sm">
-                              <CheckCircle className="h-3 w-3 text-green-500 mr-2" />
+                              <CheckCircle className="h-3 w-3 text-green-500 me-2" />
                               {strength}
                             </li>
                           ))}
@@ -423,13 +423,13 @@ export default function AIPersonalization() {
                       
                       <div>
                         <h4 className="font-medium text-orange-600 mb-2 flex items-center">
-                          <AlertCircle className="h-4 w-4 mr-2" />
+                          <AlertCircle className="h-4 w-4 me-2" />
                           نیاز به بهبود / Areas for Improvement
                         </h4>
                         <ul className="space-y-1">
                           {progressAnalysis?.areasForImprovement?.map((area, index) => (
                             <li key={index} className="flex items-center text-sm">
-                              <AlertCircle className="h-3 w-3 text-orange-500 mr-2" />
+                              <AlertCircle className="h-3 w-3 text-orange-500 me-2" />
                               {area}
                             </li>
                           ))}
@@ -454,7 +454,7 @@ export default function AIPersonalization() {
                       <ul className="space-y-2">
                         {progressAnalysis?.nextSteps?.map((step, index) => (
                           <li key={index} className="flex items-start">
-                            <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-1 mr-3 mt-0.5">
+                            <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-1 me-3 mt-0.5">
                               <span className="text-xs font-bold text-blue-600 w-4 h-4 flex items-center justify-center">
                                 {index + 1}
                               </span>
@@ -467,7 +467,7 @@ export default function AIPersonalization() {
                     
                     <div>
                       <h4 className="font-medium mb-2 flex items-center">
-                        <Globe className="h-4 w-4 mr-2 text-purple-600" />
+                        <Globe className="h-4 w-4 me-2 text-purple-600" />
                         بینش‌های فرهنگی / Cultural Insights
                       </h4>
                       <ul className="space-y-1">

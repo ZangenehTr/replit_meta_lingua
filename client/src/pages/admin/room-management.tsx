@@ -246,7 +246,7 @@ export default function RoomManagement() {
             </p>
           </div>
           <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             <span className="hidden sm:inline">Add Room</span>
             <span className="sm:hidden">Add</span>
           </Button>
@@ -358,12 +358,12 @@ export default function RoomManagement() {
                         <Badge variant={room.isActive ? "default" : "secondary"}>
                           {room.isActive ? (
                             <>
-                              <CheckCircle2 className="mr-1 h-3 w-3" />
+                              <CheckCircle2 className="me-1 h-3 w-3" />
                               Active
                             </>
                           ) : (
                             <>
-                              <XCircle className="mr-1 h-3 w-3" />
+                              <XCircle className="me-1 h-3 w-3" />
                               Inactive
                             </>
                           )}

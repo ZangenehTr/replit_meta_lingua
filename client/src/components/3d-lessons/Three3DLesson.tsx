@@ -135,7 +135,7 @@ function VocabularyObject({
       <CardContent className="p-4 text-center relative">
         {/* Completion indicator */}
         {isCompleted && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 end-2">
             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
               <Check className="w-4 h-4 text-white" />
             </div>
@@ -144,7 +144,7 @@ function VocabularyObject({
         
         {/* Sparkle effect for interactive elements */}
         {!isCompleted && (
-          <div className="absolute top-2 left-2">
+          <div className="absolute top-2 start-2">
             <Sparkles className={`w-4 h-4 ${hovered ? 'text-blue-500' : 'text-gray-400'} transition-colors`} />
           </div>
         )}
@@ -305,11 +305,11 @@ export function Three3DLesson({
                         variant={isVoiceMode ? "destructive" : "default"}
                         data-testid="button-voice-practice"
                       >
-                        <Mic className="w-4 h-4 mr-1" />
+                        <Mic className="w-4 h-4 me-1" />
                         {isVoiceMode ? "Stop" : "Practice"}
                       </Button>
                       <Button size="sm" variant="outline" data-testid="button-play-audio">
-                        <Volume2 className="w-4 h-4 mr-1" />
+                        <Volume2 className="w-4 h-4 me-1" />
                         Listen
                       </Button>
                     </div>
@@ -335,7 +335,7 @@ export function Three3DLesson({
                     onClick={resetLesson}
                     data-testid="button-reset-lesson"
                   >
-                    <RotateCcw className="w-4 h-4 mr-1" />
+                    <RotateCcw className="w-4 h-4 me-1" />
                     Reset
                   </Button>
                   
@@ -346,7 +346,7 @@ export function Three3DLesson({
                       onClick={() => onComplete(Math.floor((Date.now() - startTime) / 60000))}
                       data-testid="button-complete-lesson"
                     >
-                      <Check className="w-4 h-4 mr-1" />
+                      <Check className="w-4 h-4 me-1" />
                       Complete
                     </Button>
                   )}
@@ -365,7 +365,7 @@ export function Three3DLesson({
 
       {/* Mobile help overlay */}
       {isMobile && (
-        <div className="absolute top-4 right-4 bg-black bg-opacity-60 text-white p-2 rounded-lg text-xs">
+        <div className="absolute top-4 end-4 bg-black bg-opacity-60 text-white p-2 rounded-lg text-xs">
           📱 Tap cards to practice • Scroll to see more
         </div>
       )}

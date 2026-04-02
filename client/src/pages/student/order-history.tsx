@@ -233,7 +233,7 @@ export default function StudentOrderHistory() {
             <div className="flex items-center gap-4">
               <Link href="/student/dashboard">
                 <Button variant="ghost" size="sm" data-testid="button-back-to-dashboard">
-                  <Package className="w-4 h-4 mr-2" />
+                  <Package className="w-4 h-4 me-2" />
                   {t('student:orders.backToDashboard')}
                 </Button>
               </Link>
@@ -253,7 +253,7 @@ export default function StudentOrderHistory() {
             </div>
             <Link href="/student/virtual-mall">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" data-testid="button-shop-more">
-                <ShoppingCart className="w-4 h-4 mr-2" />
+                <ShoppingCart className="w-4 h-4 me-2" />
                 {t('student:orders.shopMore')}
               </Button>
             </Link>
@@ -275,13 +275,13 @@ export default function StudentOrderHistory() {
               <div>
                 <Label htmlFor="search">{t('student:orders.search')}</Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Search className="absolute start-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="search"
                     placeholder={t('student:orders.searchPlaceholder')}
                     value={filters.search || ''}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
-                    className="pl-10"
+                    className="ps-10"
                     data-testid="input-search"
                   />
                 </div>
@@ -330,7 +330,7 @@ export default function StudentOrderHistory() {
 
             <div className="flex gap-2 mt-4">
               <Button variant="outline" onClick={clearFilters} data-testid="button-clear-filters">
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className="w-4 h-4 me-2" />
                 {t('student:orders.clearFilters')}
               </Button>
             </div>
@@ -356,7 +356,7 @@ export default function StudentOrderHistory() {
             </p>
             <Link href="/student/virtual-mall">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" data-testid="button-start-shopping">
-                <BookOpen className="w-4 h-4 mr-2" />
+                <BookOpen className="w-4 h-4 me-2" />
                 {t('student:orders.startShopping')}
               </Button>
             </Link>
@@ -430,7 +430,7 @@ export default function StudentOrderHistory() {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)} data-testid={`button-view-details-${order.id}`}>
-                            <Eye className="w-4 h-4 mr-2" />
+                            <Eye className="w-4 h-4 me-2" />
                             {t('student:orders.viewDetails')}
                           </Button>
                         </DialogTrigger>
@@ -444,7 +444,7 @@ export default function StudentOrderHistory() {
                           disabled={reorderMutation.isPending}
                           data-testid={`button-reorder-${order.id}`}
                         >
-                          <RotateCcw className="w-4 h-4 mr-2" />
+                          <RotateCcw className="w-4 h-4 me-2" />
                           {t('student:orders.reorder')}
                         </Button>
                       )}
@@ -457,7 +457,7 @@ export default function StudentOrderHistory() {
                           disabled={downloadReceiptMutation.isPending}
                           data-testid={`button-download-receipt-${order.id}`}
                         >
-                          <Download className="w-4 h-4 mr-2" />
+                          <Download className="w-4 h-4 me-2" />
                           {t('student:orders.downloadReceipt')}
                         </Button>
                       )}
@@ -617,7 +617,7 @@ export default function StudentOrderHistory() {
                       className="flex-1"
                       data-testid="modal-button-reorder"
                     >
-                      <RotateCcw className="w-4 h-4 mr-2" />
+                      <RotateCcw className="w-4 h-4 me-2" />
                       {t('student:orders.reorder')}
                     </Button>
                   )}
@@ -633,7 +633,7 @@ export default function StudentOrderHistory() {
                       className="flex-1"
                       data-testid="modal-button-download"
                     >
-                      <Download className="w-4 h-4 mr-2" />
+                      <Download className="w-4 h-4 me-2" />
                       {t('student:orders.downloadReceipt')}
                     </Button>
                   )}

@@ -162,7 +162,7 @@ export default function CourseReviews({ courseId, isEnrolled = false }: CourseRe
 
           {isEnrolled && !showForm && (
             <Button className="mt-4" onClick={() => setShowForm(true)}>
-              <Star className="h-4 w-4 mr-2" />
+              <Star className="h-4 w-4 me-2" />
               {t("ثبت نظر", "Write a Review")}
             </Button>
           )}

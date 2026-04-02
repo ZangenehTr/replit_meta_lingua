@@ -265,7 +265,7 @@ export default function AIPracticePage() {
                       className="text-xs sm:text-sm h-8 sm:h-9"
                     >
                       <RotateCcw className="h-3 sm:h-4 w-3 sm:w-4" />
-                      <span className="hidden sm:inline ml-1">Clear</span>
+                      <span className="hidden sm:inline ms-1">Clear</span>
                     </Button>
                   </div>
                 </div>
@@ -348,7 +348,7 @@ export default function AIPracticePage() {
                       size="sm"
                     >
                       <MessageSquare className="h-3 sm:h-4 w-3 sm:w-4" />
-                      <span className="hidden sm:inline ml-1">Send</span>
+                      <span className="hidden sm:inline ms-1">Send</span>
                     </Button>
                     {settings.voiceEnabled && (
                       <Button
@@ -359,7 +359,7 @@ export default function AIPracticePage() {
                         size="sm"
                       >
                         {isRecording ? <MicOff className="h-3 sm:h-4 w-3 sm:w-4" /> : <Mic className="h-3 sm:h-4 w-3 sm:w-4" />}
-                        <span className="hidden sm:inline ml-1">{isRecording ? 'Stop' : 'Record'}</span>
+                        <span className="hidden sm:inline ms-1">{isRecording ? 'Stop' : 'Record'}</span>
                       </Button>
                     )}
                   </div>
@@ -445,7 +445,7 @@ export default function AIPracticePage() {
                     className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm"
                   >
                     {settings.voiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                    <span className="sm:hidden ml-2">{settings.voiceEnabled ? 'On' : 'Off'}</span>
+                    <span className="sm:hidden ms-2">{settings.voiceEnabled ? 'On' : 'Off'}</span>
                   </Button>
                 </div>
               </CardContent>

@@ -153,7 +153,7 @@ export default function StudentInformationSystem() {
           </p>
         </div>
         <Button>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <UserPlus className="h-4 w-4 me-2" />
           {currentLanguage === 'fa' ? 'ثبت‌نام دانش‌آموز جدید' :
            currentLanguage === 'ar' ? 'تسجيل طالب جديد' :
            'Register New Student'}
@@ -164,12 +164,12 @@ export default function StudentInformationSystem() {
       <div className="flex gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="جستجو در دانش‌آموزان..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
             />
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function StudentInformationSystem() {
           </SelectContent>
         </Select>
         <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-4 w-4 me-2" />
           صدور گزارش
         </Button>
       </div>
@@ -303,15 +303,15 @@ export default function StudentInformationSystem() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 me-2" />
               صدور گواهی
             </Button>
             <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 me-2" />
               صدور گزارش
             </Button>
             <Button>
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4 me-2" />
               ویرایش
             </Button>
           </div>

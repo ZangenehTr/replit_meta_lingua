@@ -230,7 +230,7 @@ export default function VideoCoursDetail() {
                                       ) : (
                                         <>Start</>
                                       )}
-                                      <ChevronRight className="h-4 w-4 ml-1" />
+                                      <ChevronRight className="h-4 w-4 ms-1" />
                                     </Button>
                                   </Link>
                                 </div>
@@ -265,7 +265,7 @@ export default function VideoCoursDetail() {
                         </div>
                       </div>
                       <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-4 w-4 me-2" />
                         Download
                       </Button>
                     </div>

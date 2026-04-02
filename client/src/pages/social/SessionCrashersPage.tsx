@@ -57,7 +57,7 @@ export function SessionCrashersPage() {
           <div className="flex items-center space-x-3">
             <Link href="/admin/dashboard">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" />
+                <ArrowLeft className="w-4 h-4 me-1" />
                 {t("crashers.back", "Back")}
               </Button>
             </Link>
@@ -144,9 +144,9 @@ export function SessionCrashersPage() {
               className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
             >
               {findCrasher.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
               ) : (
-                <Users className="w-4 h-4 mr-2" />
+                <Users className="w-4 h-4 me-2" />
               )}
               {t("crashers.searchNow", "Search Now")}
             </Button>

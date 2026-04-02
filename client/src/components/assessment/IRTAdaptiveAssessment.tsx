@@ -288,13 +288,13 @@ export function IRTAdaptiveAssessment({ studentId, onComplete }: { studentId: nu
           >
             {initSession.isPending ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white me-2"></div>
                 Starting Assessment...
               </>
             ) : (
               <>
                 Start Assessment
-                <ChevronRight className="w-4 h-4 ml-2" />
+                <ChevronRight className="w-4 h-4 ms-2" />
               </>
             )}
           </Button>
@@ -377,7 +377,7 @@ export function IRTAdaptiveAssessment({ studentId, onComplete }: { studentId: nu
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg">
-                {currentItem.type === 'vocabulary' && <BookOpen className="inline w-5 h-5 mr-2" />}
+                {currentItem.type === 'vocabulary' && <BookOpen className="inline w-5 h-5 me-2" />}
                 {currentItem.type} Question
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -453,7 +453,7 @@ export function IRTAdaptiveAssessment({ studentId, onComplete }: { studentId: nu
                 className="w-full"
               >
                 Submit Answer
-                <ChevronRight className="w-4 h-4 ml-2" />
+                <ChevronRight className="w-4 h-4 ms-2" />
               </Button>
             )}
           </CardContent>
@@ -636,7 +636,7 @@ export function IRTAdaptiveAssessment({ studentId, onComplete }: { studentId: nu
           </Button>
           <Button className="flex-1" onClick={() => window.location.href = '/dashboard'}>
             Go to Dashboard
-            <ChevronRight className="w-4 h-4 ml-2" />
+            <ChevronRight className="w-4 h-4 ms-2" />
           </Button>
         </div>
       </motion.div>

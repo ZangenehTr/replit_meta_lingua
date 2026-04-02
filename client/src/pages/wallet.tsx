@@ -14,7 +14,7 @@ export default function WalletPage() {
       <div className="flex flex-col md:flex-row">
         <Sidebar />
         
-        <main className={`flex-1 ${isRTL ? 'mr-0 md:mr-64' : 'ml-0 md:ml-64'} px-4 sm:px-6 lg:px-8 py-4 sm:py-6`}>
+        <main className={`flex-1 ms-0 md:ms-64 px-4 sm:px-6 lg:px-8 py-4 sm:py-6`}>
           <div className="max-w-7xl mx-auto">
             <div className="mb-6 sm:mb-8">
               <div className="flex items-center gap-4 mb-4">

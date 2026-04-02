@@ -83,7 +83,7 @@ export default function CurrencySettings() {
           </p>
         </div>
         <Button variant="outline" data-testid="button-sync-rates">
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 me-2" />
           {t('admin:syncRates', 'Sync Rates')}
         </Button>
       </div>
@@ -135,19 +135,19 @@ export default function CurrencySettings() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="primary" data-testid="tab-primary-currency">
-            <DollarSign className="h-4 w-4 mr-2" />
+            <DollarSign className="h-4 w-4 me-2" />
             {t('admin:primary', 'Primary')}
           </TabsTrigger>
           <TabsTrigger value="supported" data-testid="tab-supported-currencies">
-            <Globe className="h-4 w-4 mr-2" />
+            <Globe className="h-4 w-4 me-2" />
             {t('admin:supported', 'Supported')}
           </TabsTrigger>
           <TabsTrigger value="rates" data-testid="tab-exchange-rates">
-            <TrendingUp className="h-4 w-4 mr-2" />
+            <TrendingUp className="h-4 w-4 me-2" />
             {t('admin:exchangeRates', 'Exchange Rates')}
           </TabsTrigger>
           <TabsTrigger value="automation" data-testid="tab-automation">
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 me-2" />
             {t('admin:automation', 'Automation')}
           </TabsTrigger>
         </TabsList>

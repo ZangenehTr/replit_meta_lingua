@@ -293,15 +293,15 @@ export function PronunciationPractice() {
                 className="flex-1"
               >
                 {isGenerating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="h-4 w-4 animate-spin me-2" />
                 ) : (
-                  <Mic className="h-4 w-4 mr-2" />
+                  <Mic className="h-4 w-4 me-2" />
                 )}
                 {isGenerating ? 'در حال تولید...' : 'تولید تلفظ'}
               </Button>
               
               <Button variant="outline" onClick={resetForm}>
-                <RotateCcw className="h-4 w-4 mr-2" />
+                <RotateCcw className="h-4 w-4 me-2" />
                 پاک کردن
               </Button>
             </div>

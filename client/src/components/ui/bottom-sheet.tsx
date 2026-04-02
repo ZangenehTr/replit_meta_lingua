@@ -128,7 +128,7 @@ export function BottomSheet({
                   duration: isDragging ? 0 : 0.3
                 }}
                 className={cn(
-                  "fixed bottom-0 left-0 right-0 z-50",
+                  "fixed bottom-0 start-0 end-0 z-50",
                   "bg-background border-t border-border rounded-t-lg shadow-lg",
                   "touch-pan-y",
                   className

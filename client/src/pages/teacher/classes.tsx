@@ -109,7 +109,7 @@ export default function TeacherClassesPage() {
                       </div>
                       <div className="flex gap-2 pt-2">
                         <Button size="sm" className="flex-1">
-                          <Video className="h-4 w-4 mr-2" />
+                          <Video className="h-4 w-4 me-2" />
                           Join Class
                         </Button>
                         <Button variant="outline" size="sm">
@@ -137,7 +137,7 @@ export default function TeacherClassesPage() {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">
-                          <FileText className="h-4 w-4 mr-2" />
+                          <FileText className="h-4 w-4 me-2" />
                           View Report
                         </Button>
                       </div>

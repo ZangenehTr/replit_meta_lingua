@@ -269,7 +269,7 @@ export default function StudentCheckout() {
             </p>
             <Link href="/student/virtual-mall">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                <BookOpen className="w-4 h-4 mr-2" />
+                <BookOpen className="w-4 h-4 me-2" />
                 {t('student:checkout.browseCatalog')}
               </Button>
             </Link>
@@ -288,7 +288,7 @@ export default function StudentCheckout() {
             <div className="flex items-center gap-4">
               <Link href="/student/cart">
                 <Button variant="ghost" size="sm" data-testid="button-back-to-cart">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 me-2" />
                   {t('student:checkout.backToCart')}
                 </Button>
               </Link>
@@ -321,13 +321,13 @@ export default function StudentCheckout() {
                   `}>
                     {step.isCompleted ? <Check className="w-5 h-5" /> : index + 1}
                   </div>
-                  <div className="ml-3 hidden sm:block">
+                  <div className="ms-3 hidden sm:block">
                     <p className={`text-sm font-medium ${step.isActive ? 'text-indigo-600' : 'text-gray-600 dark:text-gray-400'}`}>
                       {step.title}
                     </p>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className="flex-1 ml-4 mr-4">
+                    <div className="flex-1 ms-4 me-4">
                       <div className={`h-0.5 ${step.isCompleted ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'}`} />
                     </div>
                   )}
@@ -647,7 +647,7 @@ export default function StudentCheckout() {
                 disabled={currentStep === 0}
                 data-testid="button-previous-step"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 me-2" />
                 {t('student:checkout.previous')}
               </Button>
 
@@ -658,7 +658,7 @@ export default function StudentCheckout() {
                   data-testid="button-next-step"
                 >
                   {t('student:checkout.next')}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-4 h-4 ms-2" />
                 </Button>
               ) : (
                 <Button
@@ -669,12 +669,12 @@ export default function StudentCheckout() {
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
                       {t('student:checkout.processing')}
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      <CheckCircle2 className="w-4 h-4 me-2" />
                       {t('student:checkout.placeOrder')}
                     </>
                   )}
@@ -697,7 +697,7 @@ export default function StudentCheckout() {
                 <div className="space-y-2">
                   {cart.items.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm" data-testid={`summary-item-${item.id}`}>
-                      <span className="truncate mr-2">
+                      <span className="truncate me-2">
                         {item.book.title} × {item.quantity}
                       </span>
                       <span className="font-medium">

@@ -83,7 +83,7 @@ export function TopTeachersWidget({ limit = 5, className = "" }: WidgetProps) {
                 </Avatar>
                 {index < 3 && (
                   <Badge 
-                    className={`absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center ${
+                    className={`absolute -top-1 -end-1 h-5 w-5 p-0 flex items-center justify-center ${
                       index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-600'
                     }`}
                   >
@@ -399,7 +399,7 @@ export function NewClassesWidget({ limit = 5, className = "" }: WidgetProps) {
                   <span>{cls.enrolledCount || 0}/{cls.capacity || '∞'}</span>
                   {cls.startDate && (
                     <>
-                      <Clock className="h-3 w-3 ml-2" />
+                      <Clock className="h-3 w-3 ms-2" />
                       <span>{new Date(cls.startDate).toLocaleDateString(
                         currentLanguage === 'fa' ? 'fa-IR' : 'en-US'
                       )}</span>
@@ -487,7 +487,7 @@ export function BestStudentWidget({ period = 'month', className = "" }: { period
                   {student.firstName?.[0]}{student.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-white rounded-full p-1">
+              <div className="absolute -bottom-2 -end-2 bg-yellow-500 text-white rounded-full p-1">
                 <Trophy className="h-4 w-4" />
               </div>
             </div>

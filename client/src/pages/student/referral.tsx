@@ -185,7 +185,7 @@ export default function StudentReferralPage() {
               ))}
             </div>
             <div className="mt-4 p-3 bg-white/60 dark:bg-black/20 rounded-lg text-sm text-gray-600 dark:text-gray-300">
-              <Star className="inline h-4 w-4 text-yellow-500 mr-1" />
+              <Star className="inline h-4 w-4 text-yellow-500 me-1" />
               {t(
                 `دوستت هم ${settings?.referredPercentage ?? 5}% تخفیف روی اولین دوره‌اش می‌گیره!`,
                 `Your friend also gets ${settings?.referredPercentage ?? 5}% off their first course!`
@@ -228,19 +228,20 @@ export default function StudentReferralPage() {
                   variant="outline"
                   size="icon"
                   onClick={() => copyToClipboard(generalLink.shareUrl, generalLink.id)}
+                  aria-label="کپی لینک"
                 >
-                  {copiedId === generalLink.id ? "✓" : <Copy className="h-4 w-4" />}
+                  {copiedId === generalLink.id ? "✓" : <Copy className="h-4 w-4" aria-hidden="true" />}
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => shareViaWhatsApp(generalLink)}>
-                  <MessageCircle className="h-4 w-4 text-green-500" />
+                <Button variant="outline" size="icon" onClick={() => shareViaWhatsApp(generalLink)} aria-label="اشتراک‌گذاری در واتس‌اپ">
+                  <MessageCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => shareViaSMS(generalLink)}>
-                  <Phone className="h-4 w-4 text-blue-500" />
+                <Button variant="outline" size="icon" onClick={() => shareViaSMS(generalLink)} aria-label="اشتراک‌گذاری از طریق پیامک">
+                  <Phone className="h-4 w-4 text-blue-500" aria-hidden="true" />
                 </Button>
               </div>
             ) : (
               <Button onClick={() => createLinkMutation.mutate(undefined)} disabled={createLinkMutation.isPending}>
-                <Share2 className="h-4 w-4 mr-2" />
+                <Share2 className="h-4 w-4 me-2" />
                 {t("ایجاد لینک دعوت", "Create Referral Link")}
               </Button>
             )}
@@ -266,7 +267,7 @@ export default function StudentReferralPage() {
                       <p className="text-xs text-blue-500 mt-1 truncate font-mono">{courseLink.shareUrl}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 ml-3">
+                  <div className="flex items-center gap-2 ms-3">
                     {courseLink ? (
                       <>
                         <Button
@@ -277,11 +278,12 @@ export default function StudentReferralPage() {
                             setCopiedUrl(courseLink.shareUrl);
                             setTimeout(() => setCopiedUrl(null), 2000);
                           }}
+                          aria-label="کپی لینک دوره"
                         >
-                          {copiedUrl === courseLink.shareUrl ? "✓" : <Copy className="h-4 w-4" />}
+                          {copiedUrl === courseLink.shareUrl ? "✓" : <Copy className="h-4 w-4" aria-hidden="true" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => shareViaWhatsApp(courseLink)}>
-                          <MessageCircle className="h-4 w-4 text-green-500" />
+                        <Button variant="ghost" size="icon" onClick={() => shareViaWhatsApp(courseLink)} aria-label="اشتراک‌گذاری دوره در واتس‌اپ">
+                          <MessageCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
                         </Button>
                       </>
                     ) : (
@@ -291,9 +293,9 @@ export default function StudentReferralPage() {
                         onClick={() => createLinkMutation.mutate(course.id)}
                         disabled={createLinkMutation.isPending}
                       >
-                        <Share2 className="h-3 w-3 mr-1" />
+                        <Share2 className="h-3 w-3 me-1" />
                         {t("ایجاد لینک", "Create Link")}
-                        <ChevronRight className="h-3 w-3 ml-1" />
+                        <ChevronRight className="h-3 w-3 ms-1" />
                       </Button>
                     )}
                   </div>

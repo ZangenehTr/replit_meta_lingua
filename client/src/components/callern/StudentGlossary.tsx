@@ -141,7 +141,7 @@ export function StudentGlossary() {
               {t('callern:studentGlossary.due')} ({dueItems.length})
             </TabsTrigger>
             <TabsTrigger value="stats">
-              <Brain className="h-3 w-3 mr-1" />
+              <Brain className="h-3 w-3 me-1" />
               {t('callern:studentGlossary.stats')}
             </TabsTrigger>
           </TabsList>

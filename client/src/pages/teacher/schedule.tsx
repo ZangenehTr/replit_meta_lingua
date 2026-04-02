@@ -260,17 +260,17 @@ export default function TeacherSchedulePage() {
                       <div className="flex items-center gap-2 mt-1">
                         {session.type === 'online' ? (
                           <Badge variant="secondary">
-                            <Video className="w-3 h-3 mr-1" />
+                            <Video className="w-3 h-3 me-1" />
                             {t('online')}
                           </Badge>
                         ) : (
                           <Badge variant="outline">
-                            <MapPin className="w-3 h-3 mr-1" />
+                            <MapPin className="w-3 h-3 me-1" />
                             {session.room}
                           </Badge>
                         )}
                         <Badge variant="outline">
-                          <Users className="w-3 h-3 mr-1" />
+                          <Users className="w-3 h-3 me-1" />
                           {session.students}/{session.maxStudents}
                         </Badge>
                       </div>

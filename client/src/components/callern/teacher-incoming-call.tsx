@@ -180,7 +180,7 @@ export function TeacherIncomingCall() {
                 <div className="animate-pulse">
                   <Video className="h-16 w-16 text-primary" />
                 </div>
-                <div className="absolute -top-1 -right-1">
+                <div className="absolute -top-1 -end-1">
                   <span className="flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
@@ -192,7 +192,7 @@ export function TeacherIncomingCall() {
             <h3 className="text-lg font-semibold mb-2">
               {t('teacher:incomingCallFrom', 'Incoming call from')}
               {isSilenced && (
-                <span className="ml-2 text-sm text-muted-foreground">
+                <span className="ms-2 text-sm text-muted-foreground">
                   ({t('common:callActions.silenced', 'Silenced')})
                 </span>
               )}

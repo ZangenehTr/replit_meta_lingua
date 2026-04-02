@@ -150,7 +150,7 @@ function ContactDesk({ onNavigateToNewIntake }: ContactDeskProps) {
             onClick={handleClearSelection}
             className="text-muted-foreground"
           >
-            <ArrowLeft className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
+            <ArrowLeft className="h-4 w-4 ltr:me-2 rtl:ms-2" />
             {t("callcenter:backToSearch", "بازگشت به جستجو")}
           </Button>
           <LeadCard
@@ -176,7 +176,7 @@ function ContactDesk({ onNavigateToNewIntake }: ContactDeskProps) {
 
       <div className="flex justify-center">
         <Button size="lg" onClick={onNavigateToNewIntake} data-testid="button-new-contact">
-          <UserPlus className="h-5 w-5 ltr:mr-2 rtl:ml-2" />
+          <UserPlus className="h-5 w-5 ltr:me-2 rtl:ms-2" />
           {t("callcenter:registerNewContact", "ثبت متقاضی جدید")}
         </Button>
       </div>

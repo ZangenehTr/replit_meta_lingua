@@ -58,7 +58,7 @@ const TimePicker = forwardRef<HTMLButtonElement, TimePickerProps>(
             disabled={disabled}
             data-testid={dataTestId}
           >
-            <Clock className="ml-2 h-4 w-4" />
+            <Clock className="ms-2 h-4 w-4" />
             {value ? formatTime(value.hours, value.minutes) : placeholder}
           </Button>
         </PopoverTrigger>

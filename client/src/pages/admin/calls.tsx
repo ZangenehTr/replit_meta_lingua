@@ -160,7 +160,7 @@ export default function AdminCallsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('callcenter:calls.title')}</h1>
         <Button onClick={() => setIsCallModalOpen(true)} data-testid="button-start-call">
-          <Phone className="h-4 w-4 mr-2" />
+          <Phone className="h-4 w-4 me-2" />
           {t('callcenter:calls.makeCall')}
         </Button>
       </div>
@@ -372,7 +372,7 @@ export default function AdminCallsPage() {
               disabled={!phoneNumber.trim()}
               data-testid="button-place-call"
             >
-              <Phone className="h-4 w-4 mr-2" />
+              <Phone className="h-4 w-4 me-2" />
               {t('callcenter:calls.placeCall', 'Place Call')}
             </Button>
           </DialogFooter>

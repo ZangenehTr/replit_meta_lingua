@@ -56,13 +56,13 @@ export default function Dashboard() {
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Mobile Progress Button - Fixed positioning */}
-      <div className="fixed top-20 right-4 z-40 md:hidden">
+      <div className="fixed top-20 end-4 z-40 md:hidden">
         <Link href="/progress">
           <Button 
             size="sm" 
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg text-xs px-3 py-2"
           >
-            <Trophy className="h-4 w-4 mr-1" />
+            <Trophy className="h-4 w-4 me-1" />
             <span>{t('common:navigation.progress')}</span>
           </Button>
         </Link>
@@ -71,7 +71,7 @@ export default function Dashboard() {
       <div className="flex">
         <Sidebar />
         
-        <main className={`flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden ${isRTL ? 'ml-0 md:mr-64' : 'ml-0 md:ml-64'}`}>
+        <main className={`flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden ms-0 md:ms-64`}>
           <div className="max-w-7xl mx-auto w-full">
             <WelcomeSection />
             
@@ -98,7 +98,7 @@ export default function Dashboard() {
                         size="lg" 
                         className="bg-white text-purple-600 hover:bg-gray-50 font-semibold px-6 py-3"
                       >
-                        <Target className="h-5 w-5 mr-2" />
+                        <Target className="h-5 w-5 me-2" />
                         {t('student:dashboard.whatIsMyLevel')}
                       </Button>
                     </Link>
@@ -112,23 +112,23 @@ export default function Dashboard() {
               <Tabs defaultValue="overview" className="w-full">
                 <TabsList className="grid w-full grid-cols-5 mb-3 md:mb-4 h-9 sm:h-10">
                   <TabsTrigger value="overview" className="text-xs sm:text-sm px-2">
-                    <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <Star className="h-3 w-3 sm:h-4 sm:w-4 me-1" />
                     <span className="truncate">{t('student:dashboard.overview')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="proficiency" className="text-xs sm:text-sm px-2">
-                    <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 me-1" />
                     <span className="truncate">{t('student:dashboard.skills')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="ai-practice" className="text-xs sm:text-sm px-2">
-                    <Mic className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <Mic className="h-3 w-3 sm:h-4 sm:w-4 me-1" />
                     <span className="truncate">{t('student:dashboard.aiPractice')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="challenges" className="text-xs sm:text-sm px-2">
-                    <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <Target className="h-3 w-3 sm:h-4 sm:w-4 me-1" />
                     <span className="truncate">{t('common:gamification.challenges')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="leaderboard" className="text-xs sm:text-sm px-2">
-                    <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4 me-1" />
                     <span className="truncate">{t('common:gamification.leaderboard')}</span>
                   </TabsTrigger>
                 </TabsList>

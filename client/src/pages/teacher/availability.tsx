@@ -197,7 +197,7 @@ export default function TeacherAvailabilityPage() {
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="mt-4 lg:mt-0">
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 me-2" />
                 Add Time Slot
               </Button>
             </DialogTrigger>
@@ -282,7 +282,7 @@ export default function TeacherAvailabilityPage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Calendar className="w-5 h-5 mr-2 text-blue-600" />
+                    <Calendar className="w-5 h-5 me-2 text-blue-600" />
                     {dayGroup.label}
                   </div>
                   <Badge variant="outline">

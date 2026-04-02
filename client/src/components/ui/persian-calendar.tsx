@@ -345,8 +345,9 @@ export function PersianCalendar({
             size="icon"
             onClick={() => navigateMonth('prev')}
             data-testid="button-prev-month"
+            aria-label="Previous month"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </Button>
           
           <div className="text-lg font-semibold">
@@ -358,8 +359,9 @@ export function PersianCalendar({
             size="icon"
             onClick={() => navigateMonth('next')}
             data-testid="button-next-month"
+            aria-label="Next month"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </CardHeader>
@@ -424,14 +426,14 @@ export function PersianCalendar({
                         
                         {/* Holiday indicator */}
                         {isHoliday && (
-                          <div className="absolute -top-1 -right-1">
+                          <div className="absolute -top-1 -end-1">
                             <div className="h-2 w-2 bg-red-500 rounded-full" />
                           </div>
                         )}
                         
                         {/* Event indicator */}
                         {'events' in day && (day as CalendarDay).events && (day as CalendarDay).events!.length > 0 && (
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                          <div className="absolute -bottom-1 inset-x-0 flex justify-center">
                             <div className="flex gap-1">
                               {(day as CalendarDay).events!.slice(0, 3).map((event, index) => (
                                 <div

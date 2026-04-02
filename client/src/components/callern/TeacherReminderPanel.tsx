@@ -220,10 +220,10 @@ export function TeacherReminderPanel({
   };
 
   const positionClasses = {
-    'top-right': 'top-4 right-4',
-    'bottom-right': 'bottom-4 right-4',
-    'top-left': 'top-4 left-4',
-    'bottom-left': 'bottom-4 left-4',
+    'top-right': 'top-4 end-4',
+    'bottom-right': 'bottom-4 end-4',
+    'top-left': 'top-4 start-4',
+    'bottom-left': 'bottom-4 start-4',
   };
 
   if (isMinimized) {
@@ -234,8 +234,9 @@ export function TeacherReminderPanel({
           size="icon"
           variant="outline"
           className="bg-white/10 backdrop-blur-lg border-white/20 shadow-lg"
+          aria-label="Open AI coach"
         >
-          <Brain className="h-4 w-4" />
+          <Brain className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
     );
@@ -256,16 +257,18 @@ export function TeacherReminderPanel({
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7"
+                aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
               >
-                {soundEnabled ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />}
+                {soundEnabled ? <Volume2 className="h-3 w-3" aria-hidden="true" /> : <VolumeX className="h-3 w-3" aria-hidden="true" />}
               </Button>
               <Button
                 onClick={() => onMinimize?.(true)}
                 size="icon"
                 variant="ghost"
                 className="h-7 w-7"
+                aria-label="Minimize AI coach"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3 w-3" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -330,7 +333,7 @@ export function TeacherReminderPanel({
                             onClick={() => applyReminder(currentReminder)}
                             className="text-xs"
                           >
-                            <CheckCircle className="h-3 w-3 mr-1" />
+                            <CheckCircle className="h-3 w-3 me-1" />
                             Apply
                           </Button>
                           <Button

@@ -414,15 +414,15 @@ export default function AITrainingDashboard() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="models" data-testid="tab-models">
-            <Bot className="h-4 w-4 mr-2" />
+            <Bot className="h-4 w-4 me-2" />
             {t('admin:models', 'Models')}
           </TabsTrigger>
           <TabsTrigger value="datasets" data-testid="tab-datasets">
-            <Database className="h-4 w-4 mr-2" />
+            <Database className="h-4 w-4 me-2" />
             {t('admin:datasets', 'Datasets')}
           </TabsTrigger>
           <TabsTrigger value="training" data-testid="tab-training">
-            <Activity className="h-4 w-4 mr-2" />
+            <Activity className="h-4 w-4 me-2" />
             {t('admin:trainingJobs', 'Training Jobs')}
           </TabsTrigger>
         </TabsList>
@@ -432,7 +432,7 @@ export default function AITrainingDashboard() {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">{t('admin:aiModels', 'AI Models')}</h2>
             <Button onClick={() => setShowAddModelDialog(true)} data-testid="button-add-model">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:addModel', 'Add Model')}
             </Button>
           </div>
@@ -460,18 +460,18 @@ export default function AITrainingDashboard() {
                           {model.name}
                           {model.isTrained ? (
                             <Badge variant="default" className="bg-green-600" data-testid={`badge-model-trained-${model.id}`}>
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              <CheckCircle2 className="h-3 w-3 me-1" />
                               {t('admin:trained', 'Trained')}
                             </Badge>
                           ) : (
                             <Badge variant="secondary" className="bg-gray-400" data-testid={`badge-model-untrained-${model.id}`}>
-                              <XCircle className="h-3 w-3 mr-1" />
+                              <XCircle className="h-3 w-3 me-1" />
                               {t('admin:untrained', 'Untrained')}
                             </Badge>
                           )}
                           {model.status === 'training' && (
                             <Badge variant="secondary" className="bg-blue-600" data-testid={`badge-model-training-${model.id}`}>
-                              <Activity className="h-3 w-3 mr-1 animate-pulse" />
+                              <Activity className="h-3 w-3 me-1 animate-pulse" />
                               {t('admin:training', 'Training...')}
                             </Badge>
                           )}
@@ -497,19 +497,19 @@ export default function AITrainingDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:type', 'Type')}:</span>
-                        <span className="ml-2 font-medium">{model.modelType}</span>
+                        <span className="ms-2 font-medium">{model.modelType}</span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:version', 'Version')}:</span>
-                        <span className="ml-2 font-medium">{model.version}</span>
+                        <span className="ms-2 font-medium">{model.version}</span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:language', 'Language')}:</span>
-                        <span className="ml-2 font-medium">{model.language}</span>
+                        <span className="ms-2 font-medium">{model.language}</span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:accuracy', 'Accuracy')}:</span>
-                        <span className="ml-2 font-medium">
+                        <span className="ms-2 font-medium">
                           {model.performanceMetrics?.accuracy ? `${model.performanceMetrics.accuracy}%` : 'N/A'}
                         </span>
                       </div>
@@ -526,7 +526,7 @@ export default function AITrainingDashboard() {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">{t('admin:trainingDatasets', 'Training Datasets')}</h2>
             <Button onClick={() => setShowAddDatasetDialog(true)} data-testid="button-add-dataset">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:addDataset', 'Add Dataset')}
             </Button>
           </div>
@@ -567,19 +567,19 @@ export default function AITrainingDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:type', 'Type')}:</span>
-                        <span className="ml-2 font-medium">{dataset.datasetType}</span>
+                        <span className="ms-2 font-medium">{dataset.datasetType}</span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:language', 'Language')}:</span>
-                        <span className="ml-2 font-medium">{dataset.language}</span>
+                        <span className="ms-2 font-medium">{dataset.language}</span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:samples', 'Samples')}:</span>
-                        <span className="ml-2 font-medium">{dataset.totalSamples || 0}</span>
+                        <span className="ms-2 font-medium">{dataset.totalSamples || 0}</span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:status', 'Status')}:</span>
-                        <span className="ml-2 font-medium">{dataset.processingStatus}</span>
+                        <span className="ms-2 font-medium">{dataset.processingStatus}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -598,7 +598,7 @@ export default function AITrainingDashboard() {
               disabled={models.length === 0 || datasets.length === 0}
               data-testid="button-start-training"
             >
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="h-4 w-4 me-2" />
               {t('admin:startTraining', 'Start Training')}
             </Button>
           </div>
@@ -697,19 +697,19 @@ export default function AITrainingDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm pt-3 border-t">
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:started', 'Started')}:</span>
-                        <span className="ml-2 font-medium">
+                        <span className="ms-2 font-medium">
                           {job.startedAt ? new Date(job.startedAt).toLocaleString() : '-'}
                         </span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:remaining', 'Remaining')}:</span>
-                        <span className="ml-2 font-medium">
+                        <span className="ms-2 font-medium">
                           {job.estimatedTimeRemaining ? `${Math.floor(job.estimatedTimeRemaining / 60)}m ${job.estimatedTimeRemaining % 60}s` : '-'}
                         </span>
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">{t('admin:dataset', 'Dataset')}:</span>
-                        <span className="ml-2 font-medium">{job.datasetId || 'N/A'}</span>
+                        <span className="ms-2 font-medium">{job.datasetId || 'N/A'}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -794,12 +794,12 @@ export default function AITrainingDashboard() {
               >
                 {pullModelMutation.isPending ? (
                   <>
-                    <Download className="h-4 w-4 mr-2 animate-pulse" />
+                    <Download className="h-4 w-4 me-2 animate-pulse" />
                     {t('admin:downloading', 'Downloading...')}
                   </>
                 ) : (
                   <>
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 me-2" />
                     {t('admin:download', 'Download')}
                   </>
                 )}
@@ -951,12 +951,12 @@ export default function AITrainingDashboard() {
               >
                 {uploadDatasetMutation.isPending ? (
                   <>
-                    <Upload className="h-4 w-4 mr-2 animate-pulse" />
+                    <Upload className="h-4 w-4 me-2 animate-pulse" />
                     {t('admin:uploading', 'Uploading...')}
                   </>
                 ) : (
                   <>
-                    <Upload className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4 me-2" />
                     {t('admin:upload', 'Upload')}
                   </>
                 )}
@@ -1113,12 +1113,12 @@ export default function AITrainingDashboard() {
               >
                 {startTrainingMutation.isPending ? (
                   <>
-                    <Play className="h-4 w-4 mr-2 animate-pulse" />
+                    <Play className="h-4 w-4 me-2 animate-pulse" />
                     {t('admin:starting', 'Starting...')}
                   </>
                 ) : (
                   <>
-                    <Play className="h-4 w-4 mr-2" />
+                    <Play className="h-4 w-4 me-2" />
                     {t('admin:startTraining', 'Start Training')}
                   </>
                 )}

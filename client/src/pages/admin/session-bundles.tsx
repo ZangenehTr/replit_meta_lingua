@@ -210,7 +210,7 @@ function SessionBundlesPage() {
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) { setForm(emptyForm); setEditingId(null); resetSubLevelState(); } }}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               بسته جدید
             </Button>
           </DialogTrigger>
@@ -404,7 +404,7 @@ function SessionBundlesPage() {
                 </div>
                 <div className="flex gap-2 pt-1">
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(bundle)}>
-                    <Pencil className="h-3 w-3 mr-1" />
+                    <Pencil className="h-3 w-3 me-1" />
                     ویرایش
                   </Button>
                   <Button

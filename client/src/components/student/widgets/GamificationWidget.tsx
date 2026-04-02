@@ -113,7 +113,7 @@ export function GamificationWidget({
               </p>
               {progress >= 80 && (
                 <div className="flex items-center text-xs text-yellow-600">
-                  <Star className="h-3 w-3 mr-1" />
+                  <Star className="h-3 w-3 me-1" />
                   <span>Almost there!</span>
                 </div>
               )}

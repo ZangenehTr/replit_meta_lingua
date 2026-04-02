@@ -135,22 +135,22 @@ function VideoCourseCard({ course, onEdit, onDelete, onTogglePublish, onManageLe
               <DropdownMenuLabel>{t('common:actions')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onManageLessons(course)}>
-                <List className="mr-2 h-4 w-4" />
+                <List className="me-2 h-4 w-4" />
                 {t('admin:videoCourses.manageLessons')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(course)}>
-                <Edit3 className="mr-2 h-4 w-4" />
+                <Edit3 className="me-2 h-4 w-4" />
                 {t('common:edit')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onTogglePublish(course)}>
                 {course.isPublished ? (
                   <>
-                    <Archive className="mr-2 h-4 w-4" />
+                    <Archive className="me-2 h-4 w-4" />
                     {t('admin:videoCourses.unpublish')}
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
+                    <CheckCircle className="me-2 h-4 w-4" />
                     {t('admin:videoCourses.publish')}
                   </>
                 )}
@@ -160,7 +160,7 @@ function VideoCourseCard({ course, onEdit, onDelete, onTogglePublish, onManageLe
                 onClick={() => onDelete(course)}
                 className="text-destructive"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="me-2 h-4 w-4" />
                 {t('common:delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -224,7 +224,7 @@ function VideoCourseCard({ course, onEdit, onDelete, onTogglePublish, onManageLe
                       <p className="text-xs text-muted-foreground">
                         {Math.floor(lesson.duration / 60)} min
                         {lesson.isFree && (
-                          <Badge variant="outline" className="ml-2 text-xs">
+                          <Badge variant="outline" className="ms-2 text-xs">
                             {t('admin:videoCourses.freePreview')}
                           </Badge>
                         )}
@@ -243,7 +243,7 @@ function VideoCourseCard({ course, onEdit, onDelete, onTogglePublish, onManageLe
                   className="mt-2"
                   onClick={() => onManageLessons(course)}
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-4 w-4 me-1" />
                   {t('admin:videoCourses.addFirstLesson')}
                 </Button>
               </div>
@@ -383,7 +383,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-[500px] pr-4">
+          <ScrollArea className="h-[500px] pe-4">
             {/* Add Lesson Form */}
             {isAddingLesson && (
               <Card className="mb-4">
@@ -455,7 +455,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                             <FormItem>
                               <FormLabel>
                                 {t('admin:videoCourses.duration')} 
-                                <span className="text-xs text-muted-foreground ml-1">
+                                <span className="text-xs text-muted-foreground ms-1">
                                   ({t('admin:videoCourses.inSeconds', 'in seconds')})
                                 </span>
                               </FormLabel>
@@ -530,7 +530,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
 
                       <div className="flex gap-2">
                         <Button type="submit">
-                          <Plus className="h-4 w-4 mr-1" />
+                          <Plus className="h-4 w-4 me-1" />
                           {t('admin:videoCourses.addLesson')}
                         </Button>
                         <Button 
@@ -558,7 +558,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                   className="w-full mb-4"
                   variant="outline"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   {t('admin:videoCourses.addNewLesson')}
                 </Button>
               )}
@@ -594,11 +594,11 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setEditingLesson(lesson)}>
-                            <Edit3 className="mr-2 h-4 w-4" />
+                            <Edit3 className="me-2 h-4 w-4" />
                             {t('common:edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDuplicateLesson(lesson)}>
-                            <Copy className="mr-2 h-4 w-4" />
+                            <Copy className="me-2 h-4 w-4" />
                             {t('admin:videoCourses.duplicate')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -606,7 +606,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                             onClick={() => handleDeleteLesson(lesson.id)}
                             className="text-destructive"
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash2 className="me-2 h-4 w-4" />
                             {t('common:delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -785,7 +785,7 @@ export default function AdminVideoCourses() {
           <p className="text-muted-foreground">{t('admin:videoCourses.description')}</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 me-2" />
           {t('admin:videoCourses.createCourse')}
         </Button>
       </div>
@@ -833,12 +833,12 @@ export default function AdminVideoCourses() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t('admin:videoCourses.searchCourses')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="ps-10"
                 />
               </div>
             </div>
@@ -924,7 +924,7 @@ export default function AdminVideoCourses() {
               {t('admin:videoCourses.noCoursesDesc')}
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:videoCourses.createFirstCourse')}
             </Button>
           </CardContent>

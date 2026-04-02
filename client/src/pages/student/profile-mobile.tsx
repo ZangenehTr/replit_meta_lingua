@@ -169,7 +169,7 @@ export default function StudentProfileMobile() {
       >
         {/* Edit Button */}
         <button 
-          className="absolute top-3 right-3 p-1.5 rounded-full glass-button"
+          className="absolute top-3 end-3 p-1.5 rounded-full glass-button"
           onClick={() => setIsEditing(!isEditing)}
           data-testid={isEditing ? "button-save-profile" : "button-edit-profile"}
         >
@@ -199,7 +199,7 @@ export default function StudentProfileMobile() {
                 }}
               />
               <button
-                className="absolute bottom-0 right-0 p-2 bg-purple-500 rounded-full"
+                className="absolute bottom-0 end-0 p-2 bg-purple-500 rounded-full"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={uploadAvatar.isPending}
               >
@@ -420,7 +420,7 @@ export default function StudentProfileMobile() {
             className="flex-1"
             onClick={() => updateProfile.mutate(editedProfile)}
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4 me-2" />
             {t('common:save')}
           </Button>
         </div>

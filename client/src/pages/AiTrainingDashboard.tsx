@@ -183,15 +183,15 @@ export default function AiTrainingDashboard() {
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowCreateModel(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             Add Model
           </Button>
           <Button onClick={() => setShowCreateDataset(true)} variant="outline" size="sm">
-            <Database className="h-4 w-4 mr-2" />
+            <Database className="h-4 w-4 me-2" />
             Create Dataset
           </Button>
           <Button onClick={() => setShowCreateJob(true)} variant="outline" size="sm">
-            <Zap className="h-4 w-4 mr-2" />
+            <Zap className="h-4 w-4 me-2" />
             Start Training
           </Button>
         </div>
@@ -266,7 +266,7 @@ export default function AiTrainingDashboard() {
               </div>
               <div className="text-right">
                 <Badge variant="default" className="bg-green-600">
-                  <CheckCircle className="h-3 w-3 mr-1" />
+                  <CheckCircle className="h-3 w-3 me-1" />
                   Active
                 </Badge>
                 {activeModel.performanceMetrics?.accuracy && (

@@ -246,7 +246,7 @@ export default function TeacherDashboard() {
                     {user?.firstName?.[0]}{user?.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                <div className="absolute -bottom-1 -end-1 bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function TeacherDashboard() {
                 <p className="text-xs text-gray-500">{t('teacher:monthlyEarnings', 'درآمد ماهانه')}</p>
                 <p className="text-sm font-bold text-green-600">
                   {new Intl.NumberFormat(isRTL ? 'fa-IR' : 'en-US').format(stats?.monthlyEarnings || 0)}
-                  <span className="text-xs mr-1">{t('common:currency', 'تومان')}</span>
+                  <span className="text-xs me-1">{t('common:currency', 'تومان')}</span>
                 </p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function TeacherDashboard() {
               </div>
               <p className="text-xs text-gray-600">{t('teacher:completionRate', 'نرخ تکمیل')}</p>
               <Badge variant="secondary" className="mt-2 text-xs">
-                <ThumbsUp className="h-3 w-3 ml-1" />
+                <ThumbsUp className="h-3 w-3 ms-1" />
                 {t('teacher:excellent', 'عالی')}
               </Badge>
             </CardContent>
@@ -407,7 +407,7 @@ export default function TeacherDashboard() {
                   data-testid="btn-view-full-schedule"
                 >
                   {t('teacher:viewFullSchedule', 'مشاهده برنامه کامل')}
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronRight className="h-4 w-4 ms-1" />
                 </ActionButton>
               </Link>
             </CardContent>
@@ -428,7 +428,7 @@ export default function TeacherDashboard() {
                   {t('teacher:performanceTrend', 'روند عملکرد')}
                 </CardTitle>
                 <Badge variant="secondary" className="text-xs">
-                  <TrendingUp className="h-3 w-3 ml-1" />
+                  <TrendingUp className="h-3 w-3 ms-1" />
                   +{earningsGrowth}%
                 </Badge>
               </div>
@@ -578,7 +578,7 @@ export default function TeacherDashboard() {
                 <Link href="/teacher/reviews">
                   <Button variant="ghost" size="sm" className="text-xs">
                     {t('common:viewAll', 'مشاهده همه')}
-                    <ChevronRight className="h-3 w-3 ml-1" />
+                    <ChevronRight className="h-3 w-3 ms-1" />
                   </Button>
                 </Link>
               </div>

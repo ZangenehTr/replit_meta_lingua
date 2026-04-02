@@ -108,9 +108,9 @@ export function ModernDatePicker({ value, onChange, placeholder = "Select date",
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={`w-full justify-start text-left font-normal ${!selectedDate && "text-muted-foreground"} ${className}`}
+          className={`w-full justify-start text-start font-normal ${!selectedDate && "text-muted-foreground"} ${className}`}
         >
-          <CalendarIcon className={`mr-2 h-4 w-4 ${isRTL ? 'ml-2 mr-0' : ''}`} />
+          <CalendarIcon className={`me-2 h-4 w-4 ${isRTL ? 'ms-2 me-0' : ''}`} />
           {selectedDate ? format(selectedDate, "PPP") : placeholder}
         </Button>
       </PopoverTrigger>

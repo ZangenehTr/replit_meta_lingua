@@ -128,12 +128,12 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
     >
       {isCallActive ? (
         <>
-          <PhoneCall className="h-4 w-4 mr-1 animate-pulse text-green-600" />
+          <PhoneCall className="h-4 w-4 me-1 animate-pulse text-green-600" />
           Calling...
         </>
       ) : (
         <>
-          <Phone className="h-4 w-4 mr-1" />
+          <Phone className="h-4 w-4 me-1" />
           Call
         </>
       )}

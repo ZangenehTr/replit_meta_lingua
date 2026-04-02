@@ -8,7 +8,7 @@ export function DebugPanel() {
   };
 
   return (
-    <Card className="fixed bottom-4 right-4 w-64 z-50">
+    <Card className="fixed bottom-4 end-4 w-64 z-50">
       <CardHeader>
         <CardTitle className="text-sm">Debug Panel</CardTitle>
       </CardHeader>

@@ -372,10 +372,10 @@ function MentorDashboard() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => refetchCohort()}
-                className="ml-2"
+                className="ms-2"
                 data-testid="button-retry"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 me-2" />
                 {t('dashboard.retry')}
               </Button>
             </AlertDescription>
@@ -551,12 +551,12 @@ function MentorDashboard() {
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="flex-1 w-full">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder={t('dashboard.searchStudents')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 touch-target"
+                    className="ps-10 touch-target"
                     data-testid="input-student-search"
                   />
                 </div>
@@ -570,7 +570,7 @@ function MentorDashboard() {
                   {cohortAnalytics?.atRiskStudents?.map((student) => (
                     <SelectItem key={student.studentId} value={student.studentId.toString()}>
                       {student.name} {student.riskLevel !== 'minimal' && (
-                        <Badge variant="destructive" className="ml-2 text-xs">
+                        <Badge variant="destructive" className="ms-2 text-xs">
                           {t(`dashboard.riskLevel.${student.riskLevel}`)}
                         </Badge>
                       )}
@@ -782,7 +782,7 @@ function MentorDashboard() {
                   disabled={!selectedStudent}
                   data-testid="button-schedule-session"
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
+                  <Calendar className="h-4 w-4 me-2" />
                   {t('dashboard.scheduleSession')}
                 </Button>
                 
@@ -802,7 +802,7 @@ function MentorDashboard() {
                     }
                   }}
                 >
-                  <Target className="h-4 w-4 mr-2" />
+                  <Target className="h-4 w-4 me-2" />
                   {t('dashboard.createIntervention')}
                 </Button>
                 
@@ -812,7 +812,7 @@ function MentorDashboard() {
                   disabled={!selectedStudent}
                   data-testid="button-send-message"
                 >
-                  <MessageSquare className="h-4 w-4 mr-2" />
+                  <MessageSquare className="h-4 w-4 me-2" />
                   {t('dashboard.sendMessage')}
                 </Button>
                 
@@ -821,7 +821,7 @@ function MentorDashboard() {
                   variant="outline"
                   data-testid="button-view-reports"
                 >
-                  <BarChart3 className="h-4 w-4 mr-2" />
+                  <BarChart3 className="h-4 w-4 me-2" />
                   {t('dashboard.viewReports')}
                 </Button>
               </CardContent>
@@ -1025,12 +1025,12 @@ function MentorDashboard() {
           
           <div className="flex gap-2">
             <Button variant="outline" size="sm" data-testid="button-settings">
-              <Settings className="h-4 w-4 mr-2" />
+              <Settings className="h-4 w-4 me-2" />
               {t('dashboard.settings')}
             </Button>
             
             <Button variant="outline" size="sm" data-testid="button-help">
-              <Lightbulb className="h-4 w-4 mr-2" />
+              <Lightbulb className="h-4 w-4 me-2" />
               {t('dashboard.help')}
             </Button>
           </div>

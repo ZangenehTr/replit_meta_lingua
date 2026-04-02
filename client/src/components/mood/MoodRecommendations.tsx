@@ -297,7 +297,7 @@ export default function MoodRecommendations({
                           </div>
                         </div>
                         
-                        <div className="flex flex-col gap-2 ml-4">
+                        <div className="flex flex-col gap-2 ms-4">
                           {!isAccepted && !isCompleted && (
                             <Button
                               size="sm"

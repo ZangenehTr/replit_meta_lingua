@@ -125,7 +125,7 @@ export function SessionCalendarSidebar({
         
         {/* Session indicators */}
         {sessionsForDay.length > 0 && (
-          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+          <div className="absolute -bottom-1 inset-x-0 flex justify-center gap-0.5">
             {sessionsForDay.slice(0, 3).map((session, index) => (
               <div
                 key={index}
@@ -144,7 +144,7 @@ export function SessionCalendarSidebar({
 
         {/* Holiday indicator */}
         {hasHoliday && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white" />
+          <div className="absolute -top-1 -end-1 w-2 h-2 bg-green-500 rounded-full border border-white" />
         )}
       </div>
     );
@@ -272,7 +272,7 @@ export function SessionCalendarSidebar({
                   onClick={() => onSessionFilter?.(sessions.map(s => s.id))}
                   className="flex-1"
                 >
-                  <Filter className="w-3 h-3 mr-1" />
+                  <Filter className="w-3 h-3 me-1" />
                   {t('student:showAll', 'Show All')}
                 </Button>
               </div>

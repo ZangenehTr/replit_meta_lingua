@@ -263,7 +263,7 @@ export default function GamesPage() {
             }}
             className="w-full"
           >
-            <PlayCircle className="w-4 h-4 mr-2" />
+            <PlayCircle className="w-4 h-4 me-2" />
             Play Game
           </Button>
         </CardContent>
@@ -341,7 +341,7 @@ export default function GamesPage() {
             className="w-full"
             variant="outline"
           >
-            <PlayCircle className="w-4 h-4 mr-2" />
+            <PlayCircle className="w-4 h-4 me-2" />
             Continue Game
           </Button>
         </CardContent>

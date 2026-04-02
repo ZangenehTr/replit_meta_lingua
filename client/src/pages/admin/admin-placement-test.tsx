@@ -130,7 +130,7 @@ export function AdminPlacementTest() {
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-test">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('admin:placementTest.createTest')}
             </Button>
           </DialogTrigger>
@@ -262,7 +262,7 @@ export function AdminPlacementTest() {
                     disabled={createTestMutation.isPending}
                     data-testid="button-submit-create"
                   >
-                    {createTestMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    {createTestMutation.isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
                     {t('common:create')}
                   </Button>
                 </DialogFooter>
@@ -343,12 +343,12 @@ export function AdminPlacementTest() {
           {/* Search and Filters */}
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('admin:placementTest.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="ps-10"
                 data-testid="input-search-tests"
               />
             </div>
@@ -427,11 +427,11 @@ export function AdminPlacementTest() {
 
                     <div className="flex gap-2 mt-4">
                       <Button size="sm" variant="outline" data-testid={`button-preview-${test.id}`}>
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye className="h-4 w-4 me-1" />
                         {t('common:preview')}
                       </Button>
                       <Button size="sm" variant="outline" data-testid={`button-edit-${test.id}`}>
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-4 w-4 me-1" />
                         {t('common:edit')}
                       </Button>
                     </div>

@@ -706,7 +706,7 @@ export function AdminStudents() {
             className="h-8 px-3 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm"
             data-testid="btn-back-admin-students"
           >
-            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:me-1" />
             <span className="hidden sm:inline">{t('admin:students.back')}</span>
           </ActionButton>
           
@@ -774,7 +774,7 @@ export function AdminStudents() {
             data-testid="btn-export-students"
           >
             <Download className="h-3 w-3" />
-            <span className="hidden lg:inline lg:ml-1">Export</span>
+            <span className="hidden lg:inline lg:ms-1">Export</span>
           </ActionButton>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -784,7 +784,7 @@ export function AdminStudents() {
                 data-testid="btn-add-student"
               >
                 <Plus className="h-3 w-3" />
-                <span className="hidden sm:inline sm:ml-1">{t('admin:students.add')}</span>
+                <span className="hidden sm:inline sm:ms-1">{t('admin:students.add')}</span>
               </ActionButton>
             </DialogTrigger>
             <DialogContent className={`max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
@@ -904,7 +904,7 @@ export function AdminStudents() {
                       type="file" 
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      className="file:me-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                     <Upload className="h-4 w-4 text-gray-400" />
                   </div>
@@ -1233,17 +1233,17 @@ export function AdminStudents() {
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder={t('admin:students.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
+            className="ps-10 w-full"
           />
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-full sm:w-48">
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="h-4 w-4 me-2" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1362,7 +1362,7 @@ export function AdminStudents() {
                   title={!student.phone ? "No phone number available" : `Call ${student.firstName} ${student.lastName}`}
                 >
                   <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline sm:ml-1">{t('admin:students.call')}</span>
+                  <span className="hidden sm:inline sm:ms-1">{t('admin:students.call')}</span>
                 </Button>
                 
                 {/* View Button */}
@@ -1374,7 +1374,7 @@ export function AdminStudents() {
                       className="flex-1 h-7 sm:h-8 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm px-2 sm:px-3"
                     >
                       <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline sm:ml-1">{t('admin:students.view')}</span>
+                      <span className="hidden sm:inline sm:ms-1">{t('admin:students.view')}</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-[95vw] sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -1430,7 +1430,7 @@ export function AdminStudents() {
                                 <span>{student.guardianPhone}</span>
                               </div>
                               <Button variant="outline" size="sm" className="w-full">
-                                <MessageCircle className="h-4 w-4 mr-2" />
+                                <MessageCircle className="h-4 w-4 me-2" />
                                 Contact Guardian
                               </Button>
                             </CardContent>
@@ -1480,11 +1480,11 @@ export function AdminStudents() {
                           </CardHeader>
                           <CardContent>
                             <div className="space-y-3">
-                              <div className="border-l-4 border-blue-500 pl-4">
+                              <div className="border-l-4 border-blue-500 ps-4">
                                 <p className="font-medium">Progress meeting scheduled</p>
                                 <p className="text-sm text-gray-600">Jan 20, 2024 - Called guardian to discuss progress</p>
                               </div>
-                              <div className="border-l-4 border-green-500 pl-4">
+                              <div className="border-l-4 border-green-500 ps-4">
                                 <p className="font-medium">Assignment reminder sent</p>
                                 <p className="text-sm text-gray-600">Jan 18, 2024 - SMS reminder about homework</p>
                               </div>
@@ -1506,7 +1506,7 @@ export function AdminStudents() {
                                   <p className="text-sm text-gray-600">Generated on Jan 25, 2024</p>
                                 </div>
                                 <Button variant="outline" size="sm">
-                                  <Download className="h-4 w-4 mr-2" />
+                                  <Download className="h-4 w-4 me-2" />
                                   Download
                                 </Button>
                               </div>
@@ -1530,7 +1530,7 @@ export function AdminStudents() {
                   }}
                 >
                   <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline sm:ml-1">{t('admin:students.edit')}</span>
+                  <span className="hidden sm:inline sm:ms-1">{t('admin:students.edit')}</span>
                 </Button>
                 
                 {/* Contact Button - NOW FUNCTIONAL */}
@@ -1541,7 +1541,7 @@ export function AdminStudents() {
                   onClick={() => handleContact(student)}
                 >
                   <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline sm:ml-1">Contact</span>
+                  <span className="hidden sm:inline sm:ms-1">Contact</span>
                 </Button>
               </div>
             </CardContent>

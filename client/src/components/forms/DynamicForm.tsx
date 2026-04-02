@@ -302,7 +302,7 @@ export default function DynamicForm({
 
             return (
               <div key={field.id} className="space-y-2" data-testid={`field-${field.id}`}>
-                <Label htmlFor={field.id} className={field.validation?.required ? 'after:content-["*"] after:ml-1 after:text-red-500' : ''}>
+                <Label htmlFor={field.id} className={field.validation?.required ? 'after:content-["*"] after:ms-1 after:text-red-500' : ''}>
                   {fieldLabel}
                 </Label>
 
@@ -500,7 +500,7 @@ export default function DynamicForm({
                             disabled={disabled || submitting}
                             data-testid={`date-${field.id}`}
                           >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            <CalendarIcon className="me-2 h-4 w-4" />
                             {controllerField.value ? (
                               format(new Date(controllerField.value), "PPP")
                             ) : (
@@ -559,7 +559,7 @@ export default function DynamicForm({
         >
           {submitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
               Submitting...
             </>
           ) : (

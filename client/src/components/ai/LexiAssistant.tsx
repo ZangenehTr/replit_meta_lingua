@@ -301,13 +301,13 @@ export function LexiAssistant({
   const getPositionClasses = () => {
     switch (position) {
       case 'bottom-left':
-        return 'bottom-4 left-4';
+        return 'bottom-4 start-4';
       case 'side-right':
-        return 'top-1/2 right-4 -translate-y-1/2';
+        return 'top-1/2 end-4 -translate-y-1/2';
       case 'side-left':
-        return 'top-1/2 left-4 -translate-y-1/2';
+        return 'top-1/2 start-4 -translate-y-1/2';
       default:
-        return 'bottom-4 right-4';
+        return 'bottom-4 end-4';
     }
   };
 
@@ -339,7 +339,7 @@ export function LexiAssistant({
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <Brain className="w-5 h-5" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <div className="absolute -top-1 -end-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 </div>
                 {!isMinimized && (
                   <div>
@@ -403,7 +403,7 @@ export function LexiAssistant({
               <div className="p-3 border-b bg-gray-50 dark:bg-gray-800">
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="secondary" className="text-xs">
-                    <Languages className="w-3 h-3 mr-1" />
+                    <Languages className="w-3 h-3 me-1" />
                     {sessionType}
                   </Badge>
                   <Badge variant="outline" className="text-xs">
@@ -414,7 +414,7 @@ export function LexiAssistant({
                   </Badge>
                   {videoId && (
                     <Badge variant="outline" className="text-xs">
-                      <BookOpen className="w-3 h-3 mr-1" />
+                      <BookOpen className="w-3 h-3 me-1" />
                       Video {videoId}
                     </Badge>
                   )}
@@ -457,7 +457,7 @@ export function LexiAssistant({
                             disabled={isPlaying}
                             data-testid="button-play-audio"
                           >
-                            <Volume2 className="w-3 h-3 mr-1" />
+                            <Volume2 className="w-3 h-3 me-1" />
                             Play
                           </Button>
                         )}
@@ -471,10 +471,10 @@ export function LexiAssistant({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleSuggestionClick(suggestion)}
-                                className="text-xs mr-1 mb-1 h-auto py-1"
+                                className="text-xs me-1 mb-1 h-auto py-1"
                                 data-testid={`button-suggestion-${idx}`}
                               >
-                                <Lightbulb className="w-3 h-3 mr-1" />
+                                <Lightbulb className="w-3 h-3 me-1" />
                                 {suggestion}
                               </Button>
                             ))}
@@ -490,7 +490,7 @@ export function LexiAssistant({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleVocabularyClick(vocab.word)}
-                                className="text-xs mr-1 mb-1 h-auto py-1"
+                                className="text-xs me-1 mb-1 h-auto py-1"
                                 data-testid={`button-vocabulary-${idx}`}
                               >
                                 📖 {vocab.word}
@@ -534,7 +534,7 @@ export function LexiAssistant({
                       onKeyPress={handleKeyPress}
                       placeholder={`Ask Lexi anything in ${language}...`}
                       disabled={sendMessageMutation.isPending}
-                      className={`pr-12 ${isRTL ? 'text-right' : 'text-left'}`}
+                      className={`pe-12 ${isRTL ? 'text-right' : 'text-left'}`}
                       dir={isRTL ? 'rtl' : 'ltr'}
                       data-testid="input-message"
                     />
@@ -545,7 +545,7 @@ export function LexiAssistant({
                         variant="ghost"
                         size="sm"
                         onClick={handleVoiceToggle}
-                        className={`absolute ${isRTL ? 'left-1' : 'right-1'} top-1/2 -translate-y-1/2 p-1`}
+                        className={`absolute end-1 top-1/2 -translate-y-1/2 p-1`}
                         disabled={sendMessageMutation.isPending}
                         data-testid="button-voice-input"
                       >
