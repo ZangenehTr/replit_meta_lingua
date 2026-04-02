@@ -1,7 +1,7 @@
 # Meta Lingua Academy — Deployment Guide
 
-**Version:** 1.1.0  
-**Last Updated:** March 29, 2026  
+**Version:** 1.2.0  
+**Last Updated:** April 2, 2026  
 **Audience:** System Administrators, DevOps Engineers
 
 ---
@@ -742,6 +742,46 @@ Run this block against the production database:
 ```bash
 docker compose exec postgres psql -U metalingua metalingua < /opt/metalingua/migrations/0040_marketing_attribution.sql
 ```
+
+### v1.2.0 Migration — Private Classes, Sub-levels & Accessibility
+
+If upgrading from v1.1.0 to v1.2.0, apply the following. All changes are additive (no data loss).
+
+**Private classes and session packages** — new tables and columns:
+
+```sql
+-- Sub-level columns on session_packages (if table exists from v1.1.0)
+ALTER TABLE session_packages
+  ADD COLUMN IF NOT EXISTS min_sub_level_id INTEGER REFERENCES curriculum_levels(id),
+  ADD COLUMN IF NOT EXISTS max_sub_level_id INTEGER REFERENCES curriculum_levels(id);
+
+-- If session_packages doesn't exist yet, apply the full migration:
+-- migrations/0090_sublevel_session_packages_leads.sql
+```
+
+**Curriculum levels unique constraint** (prevents duplicate level codes per language):
+
+```sql
+-- migrations/0100_curriculum_levels_unique_constraint.sql
+-- Safe to apply — uses IF NOT EXISTS
+```
+
+Apply all v1.2.0 migration files in order:
+
+```bash
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0090_sublevel_session_packages_leads.sql
+
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0100_curriculum_levels_unique_constraint.sql
+
+docker compose exec postgres psql -U metalingua metalingua \
+  < /opt/metalingua/migrations/0110_session_packages_sublevel_fk.sql
+```
+
+All migrations use `IF NOT EXISTS` / `EXCEPTION WHEN duplicate_object` guards and are safe to re-run.
+
+**No changes required for the RTL & Accessibility update** — all changes are frontend-only (CSS logical properties, ARIA attributes, focus management). No database migrations needed.
 
 ---
 

@@ -1,7 +1,7 @@
 # Meta Lingua Academy — Platform Overview
 
-**Version:** 1.1.0  
-**Last Updated:** March 29, 2026  
+**Version:** 1.2.0  
+**Last Updated:** April 2, 2026  
 **Status:** Production-Ready
 
 ---
@@ -24,7 +24,8 @@ It combines institute administration, student management, course delivery, live 
 | Multilingual | Full Persian (RTL), English, and Arabic support |
 | 8 User Roles | Admin, Supervisor, Teacher, Student, Front Desk, Mentor, Call Center, Accountant |
 | PWA Ready | Installable as a mobile app on Android and iOS |
-| WCAG Compliant | Accessible design throughout |
+| WCAG Compliant | Full ARIA labels, keyboard navigation, and focus management throughout |
+| Private Classes | Session packages for 1-on-1 private lessons with sub-level targeting |
 
 ---
 
@@ -57,13 +58,19 @@ It combines institute administration, student management, course delivery, live 
 - Post-session mutual ratings (student rates teacher, teacher rates student)
 - Live teacher ratings displayed to students when browsing available tutors
 
-### 5. LinguaQuest Gamification
+### 5. Private Classes
+- Session packages (bundles of private lesson hours) with configurable pricing
+- Per-package min/max student sub-level targeting for smart enrollment eligibility
+- Teacher assignment and booking flow
+- Integrated with the sub-level system for automatic course discovery
+
+### 6. LinguaQuest Gamification
 - XP and leveling system
 - Achievement badges
 - Daily challenges
 - Interactive language learning games (12 game types)
 
-### 6. AI Features
+### 7. AI Features
 - Lexi — AI teaching assistant (Ollama or OpenAI)
 - Adaptive micro-sessions
 - AI lesson generator
@@ -71,38 +78,38 @@ It combines institute administration, student management, course delivery, live 
 - AI HR performance narratives and anomaly detection
 - Telegram AI sales agent
 
-### 7. HR Module
+### 8. HR Module
 - Employee directory and contracts
 - Leave request workflow
 - Monthly payroll records
 - Role-specific KPI performance scoring
 - Automated anomaly detection and alerts
 
-### 8. Testing System
+### 9. Testing System
 - 8 question types (MCQ, fill-in, listening, reading, etc.)
-- Multi-Stage Adaptive Testing (MST) for placement
+- Multi-Stage Adaptive Testing (MST) for placement with IRT-calibrated question bank
 - CEFR level output (A1–C2)
 - Full analytics per student and cohort
 
-### 9. Payment & Finance
+### 10. Payment & Finance
 - Multi-gateway support: Shetab, Zarinpal, IDPay, Zibal, Mellat
 - Wallet top-up and course payment flow
-- Promo code engine (percentage/fixed, single-use-per-user, expiry)
+- Promo code engine (percentage/fixed, single-use-per-user, expiry) with real-time discount preview at checkout
 - Full transaction history and receipts
 
-### 10. Marketing & Growth
+### 11. Marketing & Growth
 - **Course Reviews**: Students submit star ratings and written reviews after course completion. Admin moderation queue with approve/reject/feature controls. Approved reviews display on the public course page.
 - **Referral Program**: Each student receives a unique referral code. Sharing the link rewards both the referrer (wallet credit) and the new student (welcome credit) on their first enrollment. Per-course share links, WhatsApp/SMS one-tap sharing, and a live leaderboard for admins.
 - **UTM Attribution**: Marketing campaign source, medium, and campaign are captured at registration and on every payment transaction, enabling ROI tracking per channel.
 - **SMS Campaign Management**: Bulk SMS to filtered groups of students
 
-### 11. Communication
+### 12. Communication
 - Kavenegar SMS integration
 - SMS campaign management
 - Visitor live chat widget
 - VoIP click-to-call via Issabel PBX (AMI protocol)
 
-### 12. Content Management
+### 13. Content Management
 - Blog with rich text editor
 - Video library with streaming
 - Media file manager
@@ -186,6 +193,14 @@ The application will be available at `http://localhost:5000`.
 ---
 
 ## Changelog
+
+### v1.2.0 — April 2, 2026
+- **Private Class Stack**: Full private lesson system — session packages with per-package pricing, min/max sub-level configuration, teacher assignment, and booking flow end-to-end
+- **Sub-level System**: Curriculum levels now support fine-grained sub-levels (e.g., A1.1, A1.2); smart course discovery filters courses by student's current sub-level
+- **Promo Code Checkout UI**: Students can now enter promo codes directly in the enrollment dialog — real-time discount preview with strikethrough pricing before payment confirmation
+- **RTL & Accessibility**: All 1,000+ physical directional Tailwind classes (ml/mr/pl/pr/left/right) replaced with logical equivalents (ms/me/ps/pe/start/end) for correct RTL layout; removed forced `dir="ltr"` from app layout; full ARIA label coverage for all icon-only buttons, modals, and navigation; keyboard focus management in all dialogs
+- **MST Question Bank**: Multi-Stage Adaptive Test seeded with real IRT-calibrated questions across all CEFR levels and skill domains (listening, reading, grammar, vocabulary)
+- **Post-Merge Automation**: `scripts/post-merge.sh` configured — dependency install and migrations run automatically after every task merge
 
 ### v1.1.0 — March 29, 2026
 - **Course Reviews**: Full review submission, moderation, and public display system

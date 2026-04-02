@@ -1,7 +1,7 @@
 # Meta Lingua Academy — Buyer Manual
 
-**Version:** 1.1.0  
-**Last Updated:** March 29, 2026  
+**Version:** 1.2.0  
+**Last Updated:** April 2, 2026  
 **Audience:** Institute Owners, Administrators, Department Heads
 
 ---
@@ -25,18 +25,19 @@ Congratulations on choosing Meta Lingua Academy. This manual covers everything y
 9. [Call Center ERP](#9-call-center-erp)
 10. [Class Scheduling](#10-class-scheduling)
 11. [CallerN — 24/7 Video Tutoring](#11-callern--247-video-tutoring)
-12. [Course Reviews](#12-course-reviews)
-13. [Referral Program](#13-referral-program)
-14. [LinguaQuest Gamification](#14-linguaquest-gamification)
-15. [Testing & Placement](#15-testing--placement)
-16. [HR Module](#16-hr-module)
-17. [VoIP Integration](#17-voip-integration)
-18. [AI Features](#18-ai-features)
-19. [CMS — Blog & Video Library](#19-cms--blog--video-library)
-20. [SMS Campaigns](#20-sms-campaigns)
-21. [Settings & Configuration](#21-settings--configuration)
-22. [User Roles Reference](#22-user-roles-reference)
-23. [Troubleshooting Common Issues](#23-troubleshooting-common-issues)
+12. [Private Classes & Session Packages](#12-private-classes--session-packages)
+13. [Course Reviews](#13-course-reviews)
+14. [Referral Program](#14-referral-program)
+15. [LinguaQuest Gamification](#15-linguaquest-gamification)
+16. [Testing & Placement](#16-testing--placement)
+17. [HR Module](#17-hr-module)
+18. [VoIP Integration](#18-voip-integration)
+19. [AI Features](#19-ai-features)
+20. [CMS — Blog & Video Library](#20-cms--blog--video-library)
+21. [SMS Campaigns](#21-sms-campaigns)
+22. [Settings & Configuration](#22-settings--configuration)
+23. [User Roles Reference](#23-user-roles-reference)
+24. [Troubleshooting Common Issues](#24-troubleshooting-common-issues)
 
 ---
 
@@ -220,7 +221,7 @@ Go to **Admin → Promo Codes → New Code** and configure:
 | **Applicable Courses** | Leave blank for all courses, or specify certain courses |
 
 ### How Students Use Promo Codes
-At checkout, students enter the code in the promo code field. The discount is applied and shown before payment confirmation.
+When a student clicks **Enroll** on any course, an enrollment confirmation dialog opens. The dialog includes a collapsible **Promo Code** section. Students click it to expand, enter their code, and click **Apply**. The system validates the code instantly — if valid, the original price is shown with strikethrough and the discounted final price is displayed in green. The student then confirms the enrollment with the discounted price already applied. Invalid or expired codes show a clear inline error message.
 
 ### Tracking Usage
 From the promo code detail page you can see:
@@ -379,7 +380,43 @@ Teacher ratings are **aggregated in real time** and displayed to students when b
 
 ---
 
-## 12. Course Reviews
+## 12. Private Classes & Session Packages
+
+Private classes allow students to book dedicated one-on-one lesson hours with a teacher, separate from the group course catalog.
+
+### Session Packages
+A session package is a bundle of private lesson hours sold as a single product. Each package has:
+- **Name** and description
+- **Number of sessions** included
+- **Price** (per package)
+- **Min / Max Sub-level**: Only students whose current sub-level falls within the configured range can purchase the package — this prevents mismatches between teacher and student level
+
+### Creating a Session Package
+**Admin → Private Classes → Session Packages → New Package**:
+1. Enter the package name and number of sessions
+2. Set the price
+3. Configure the sub-level eligibility range (min and max)
+4. Assign available teachers
+5. Publish the package
+
+### Sub-level Eligibility
+The sub-level system divides each CEFR level (A1, A2, B1, etc.) into granular sub-levels (e.g., A1.1, A1.2, A1.3). Each student's current sub-level is determined by their placement test result or manually set by an admin. When a student browses session packages, only packages where their sub-level falls between the package's min and max are shown — ensuring appropriate level matching.
+
+### Student Booking Flow
+1. Student navigates to **Private Classes** in their menu
+2. Eligible session packages are displayed (filtered to their sub-level)
+3. Student purchases a package
+4. They can then book individual sessions from their remaining balance of hours
+
+### Admin View
+**Admin → Private Classes** shows:
+- All session packages with availability and purchase stats
+- Active bookings and upcoming sessions per teacher
+- Per-student session history and remaining hours
+
+---
+
+## 13. Course Reviews
 
 Course reviews let enrolled students publicly rate and comment on courses they have completed, building trust for prospective students.
 
@@ -412,7 +449,7 @@ Logged-in students can mark reviews as "helpful". The helpful count is shown nex
 
 ---
 
-## 13. Referral Program
+## 14. Referral Program
 
 The referral program rewards existing students for bringing new students to the institute. It runs automatically with no manual administration needed day-to-day.
 
@@ -448,7 +485,7 @@ All referral links automatically include UTM parameters. If your marketing team 
 
 ---
 
-## 14. LinguaQuest Gamification
+## 15. LinguaQuest Gamification
 
 LinguaQuest turns language learning into an engaging experience.
 
@@ -479,7 +516,7 @@ Admins can see leaderboards, XP distribution, and which games are most popular f
 
 ---
 
-## 15. Testing & Placement
+## 16. Testing & Placement
 
 ### Placement Test (Guest Flow)
 Prospective students can take a placement test **without creating an account**:
@@ -517,7 +554,7 @@ The testing system supports 8 question formats:
 
 ---
 
-## 16. HR Module
+## 17. HR Module
 
 ### Employee Directory
 **Admin → HR → Employees** lists all staff. Each employee record contains:
@@ -561,7 +598,7 @@ Anomaly detection alerts admins when performance drops significantly. Thresholds
 
 ---
 
-## 17. VoIP Integration
+## 18. VoIP Integration
 
 Meta Lingua integrates with **Issabel PBX** via the AMI (Asterisk Manager Interface).
 
@@ -583,7 +620,7 @@ Meta Lingua integrates with **Issabel PBX** via the AMI (Asterisk Manager Interf
 
 ---
 
-## 18. AI Features
+## 19. AI Features
 
 ### Lexi — AI Teaching Assistant
 Students interact with Lexi, the AI assistant, from their dashboard. Lexi can:
@@ -617,7 +654,7 @@ The placement test uses AI-adaptive questioning (IRT model) to determine student
 
 ---
 
-## 19. CMS — Blog & Video Library
+## 20. CMS — Blog & Video Library
 
 ### Blog
 **Admin → CMS → Blog**:
@@ -637,7 +674,7 @@ The placement test uses AI-adaptive questioning (IRT model) to determine student
 
 ---
 
-## 20. SMS Campaigns
+## 21. SMS Campaigns
 
 ### Creating a Campaign
 **Admin → SMS Campaigns → New Campaign**:
@@ -659,7 +696,7 @@ After sending, the campaign shows:
 
 ---
 
-## 21. Settings & Configuration
+## 22. Settings & Configuration
 
 Go to **Admin → Settings** for all global configuration.
 
@@ -710,7 +747,7 @@ Go to **Admin → Settings** for all global configuration.
 
 ---
 
-## 22. User Roles Reference
+## 23. User Roles Reference
 
 ### Admin
 Full access to everything. Only admins can:
@@ -771,7 +808,7 @@ Full access to everything. Only admins can:
 
 ---
 
-## 23. Troubleshooting Common Issues
+## 24. Troubleshooting Common Issues
 
 ### Student Cannot Receive OTP
 1. Check that the Kavenegar API key is set in Settings
