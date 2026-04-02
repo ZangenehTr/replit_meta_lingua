@@ -346,6 +346,77 @@ docker compose logs app --tail=50
 # Should see: "Server running on port 5000"
 ```
 
+### Step 5 — Validate Environment Configuration
+
+Before going further, verify all required environment variables are present and valid:
+
+```bash
+docker compose exec app npx tsx scripts/validate-env.ts
+```
+
+This script checks every required variable (database, SMS, payment gateway, AI provider, etc.) and exits with a clear error message if anything is missing or misconfigured. Fix any issues in `.env` and restart the app before continuing.
+
+### Step 6 — Seed Initial Data
+
+After the schema is applied, seed the platform with its required starting data. **All seed scripts are idempotent — safe to run multiple times.**
+
+#### 6a — Curriculum Tracks
+
+Populates the default curriculum categories (IELTS Preparation and Conversation tracks). Without this, the course catalog will be empty.
+
+```bash
+docker compose exec app npx tsx scripts/populate-curriculum-data.ts
+```
+
+#### 6b — LinguaQuest Games
+
+Seeds the 12 LinguaQuest game types, their levels, and the achievement badge definitions. Without this, the gamification module will have no games to display.
+
+```bash
+docker compose exec app npx tsx scripts/populate-sample-games.ts
+```
+
+#### 6c — MST Question Bank (Placement Test)
+
+Seeds AI-generated IRT-calibrated questions for the Multi-Stage Adaptive placement test across all CEFR levels (A1–C2) and skill domains (listening, reading, grammar, vocabulary). Without this, the placement test will have no questions.
+
+This requires your AI service (Ollama or OpenAI) to be running, as it generates questions via the configured AI provider.
+
+```bash
+# Standard seed — generates ~5 questions per cell (skill × CEFR level × stage)
+docker compose exec app npm run seed:mst
+
+# Optional: dry run first to preview what will be generated
+docker compose exec app npm run seed:mst:dry
+
+# Optional: seed only a specific skill or level
+docker compose exec app npx tsx server/scripts/seed-mst-question-bank.ts --skill listening --cefr B1
+```
+
+> **Note:** The full seed (all skills × all levels) uses your AI service and may take 10–30 minutes depending on your hardware. For a quick start, seed one level at a time and add more later.
+
+#### 6d — Generate MST Audio Files (Optional)
+
+If you have Microsoft Edge TTS configured, generate audio files for all listening-type placement test questions:
+
+```bash
+docker compose exec app npm run generate:mst-audio
+```
+
+Audio files are saved to the server filesystem and served directly. Skip this step if you don't have TTS configured — listening questions will fall back to text-only mode.
+
+### Step 7 — Create the Admin Account
+
+Set up the first admin user with a secure auto-generated password:
+
+```bash
+docker compose exec app npx tsx scripts/secure-admin-setup.ts
+```
+
+This creates (or updates) the admin account and prints the temporary password to the console. **Copy this password immediately** — it is only shown once. You will be prompted to change it on first login.
+
+---
+
 ### Useful Docker Commands
 
 ```bash
