@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, varchar, date, time, bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, varchar, date, time, bigint, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -9856,3 +9856,75 @@ export const privateSessions = pgTable("private_sessions", {
 
 export type PrivateSession = typeof privateSessions.$inferSelect;
 export type InsertPrivateSession = typeof privateSessions.$inferInsert;
+
+// ============================================================================
+// IRT (Item Response Theory) Tables
+// ============================================================================
+
+export const studentIrtAbility = pgTable("student_irt_ability", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull().unique(),
+  theta: decimal("theta", { precision: 8, scale: 4 }).notNull().default("0"),
+  standardError: decimal("standard_error", { precision: 8, scale: 4 }).notNull().default("1"),
+  totalResponses: integer("total_responses").notNull().default(0),
+  source: varchar("source", { length: 20 }).default("irt"), // 'irt' or 'mst'
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export type StudentIrtAbility = typeof studentIrtAbility.$inferSelect;
+export type InsertStudentIrtAbility = typeof studentIrtAbility.$inferInsert;
+
+export const irtResponses = pgTable("irt_responses", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  sessionId: integer("session_id"),
+  itemId: varchar("item_id", { length: 100 }).notNull(),
+  correct: boolean("correct").notNull(),
+  responseTime: integer("response_time"), // ms
+  theta: decimal("theta", { precision: 8, scale: 4 }),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export type IrtResponse = typeof irtResponses.$inferSelect;
+export type InsertIrtResponse = typeof irtResponses.$inferInsert;
+
+// ============================================================================
+// Adaptive Session Content Table
+// ============================================================================
+
+export const adaptiveSessionContent = pgTable("adaptive_session_content", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  contentType: varchar("content_type", { length: 50 }).notNull(), // warmup, main, practice, review, challenge
+  contentData: jsonb("content_data").notNull(),
+  jobId: varchar("job_id", { length: 100 }),
+  status: varchar("status", { length: 20 }).default("ready"), // pending, ready, failed
+  createdAt: timestamp("created_at").defaultNow().notNull()
+}, (table) => ({
+  sessionContentTypeUniq: unique("uq_adaptive_session_content_session_type").on(table.sessionId, table.contentType),
+}));
+
+export type AdaptiveSessionContent = typeof adaptiveSessionContent.$inferSelect;
+export type InsertAdaptiveSessionContent = typeof adaptiveSessionContent.$inferInsert;
+
+// ============================================================================
+// MST Telemetry Table
+// ============================================================================
+
+export const mstTelemetry = pgTable("mst_telemetry", {
+  id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 100 }).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  skill: varchar("skill", { length: 20 }).notNull(), // listening, reading, speaking, writing
+  stage: varchar("stage", { length: 20 }).notNull(), // core, upper, lower
+  itemId: varchar("item_id", { length: 100 }),
+  p: decimal("p", { precision: 5, scale: 4 }).notNull(),
+  route: varchar("route", { length: 10 }).notNull(), // up, down, stay
+  timeSpentMs: integer("time_spent_ms"),
+  features: jsonb("features"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export type MstTelemetry = typeof mstTelemetry.$inferSelect;
+export type InsertMstTelemetry = typeof mstTelemetry.$inferInsert;

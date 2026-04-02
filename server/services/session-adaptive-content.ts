@@ -6,6 +6,7 @@
 import { OllamaService } from '../ollama-service';
 import { DatabaseStorage } from '../database-storage';
 import { CEFRLevel } from './cefr-tagging-service';
+import { adaptiveContentGenerationQueue } from './queue-service';
 
 export interface StudentPerformanceMetrics {
   studentId: number;
@@ -60,69 +61,84 @@ export class SessionAdaptiveContentService {
   }
 
   /**
-   * Generate adaptive content for a session
+   * Generate adaptive content for a session — returns a job ID immediately.
+   * The actual Ollama calls happen in the cms-adaptive-content worker.
+   * Poll GET /api/sessions/:sessionId/adaptive-content/status for results.
+   * Falls back to synchronous generation if the queue (Redis) is unavailable.
    */
   async generateAdaptiveContent(
     sessionId: number,
     studentId: number,
     sessionType: string,
     targetSkills: string[]
+  ): Promise<{ jobId: string; status: 'queued' }> {
+    // Build a stable job ID tied to this session so retries overwrite stale state
+    const jobId = `adaptive-${sessionId}`;
+
+    // Upsert placeholder rows: reset status to 'pending' and record the current jobId.
+    // ON CONFLICT relies on the UNIQUE constraint on (session_id, content_type).
+    try {
+      const { pool } = await import('../db.js');
+      for (const contentType of ['warmup', 'main', 'practice']) {
+        await pool.query(
+          `INSERT INTO adaptive_session_content (session_id, content_type, content_data, job_id, status, created_at)
+               VALUES ($1, $2, $3, $4, 'pending', NOW())
+           ON CONFLICT (session_id, content_type)
+           DO UPDATE SET status = 'pending', job_id = EXCLUDED.job_id, content_data = EXCLUDED.content_data`,
+          [sessionId, contentType, JSON.stringify({}), jobId]
+        );
+      }
+    } catch (err) {
+      console.warn('[AdaptiveContent] Failed to upsert placeholder rows:', err);
+    }
+
+    // Try to enqueue async generation job on the dedicated adaptive queue
+    try {
+      const job = await adaptiveContentGenerationQueue.add(
+        'adaptive-content',
+        { sessionId, studentId, sessionType, targetSkills, jobId },
+        { jobId }
+      );
+      console.log(`[AdaptiveContent] Enqueued job ${job.id} for session ${sessionId}`);
+      return { jobId: job.id as string, status: 'queued' };
+    } catch (queueErr) {
+      // Queue unavailable — run synchronously as fallback
+      console.warn('[AdaptiveContent] Queue unavailable, falling back to synchronous generation:', (queueErr as Error).message);
+      const fallbackJobId = `adaptive-sync-${sessionId}-${Date.now()}`;
+      this.generateAndStoreContent(sessionId, studentId, sessionType, targetSkills)
+        .catch((err) => console.error('[AdaptiveContent] Synchronous fallback failed:', err));
+      return { jobId: fallbackJobId, status: 'queued' };
+    }
+  }
+
+  /**
+   * Internal: actually generate and store content (called from the worker).
+   */
+  async generateAndStoreContent(
+    sessionId: number,
+    studentId: number,
+    sessionType: string,
+    targetSkills: string[]
   ): Promise<AdaptiveContent[]> {
-    // Get student profile and history
     const studentProfile = await this.getStudentProfile(studentId);
     const performanceHistory = await this.getPerformanceHistory(studentId);
     const currentMood = await this.getCurrentMood(studentId);
-    
-    // Determine adaptation strategy
-    const strategy = this.determineAdaptationStrategy(
-      performanceHistory,
-      currentMood
-    );
-    
-    // Generate content based on strategy
+
+    const strategy = this.determineAdaptationStrategy(performanceHistory, currentMood);
+
     const contents: AdaptiveContent[] = [];
-    
-    // 1. Warmup content
-    contents.push(await this.generateWarmupContent(
-      sessionId,
-      studentProfile,
-      strategy
-    ));
-    
-    // 2. Main learning content
-    contents.push(await this.generateMainContent(
-      sessionId,
-      studentProfile,
-      targetSkills,
-      strategy
-    ));
-    
-    // 3. Practice activities
-    contents.push(await this.generatePracticeContent(
-      sessionId,
-      studentProfile,
-      targetSkills,
-      strategy
-    ));
-    
-    // 4. Adaptive challenge or review
+
+    contents.push(await this.generateWarmupContent(sessionId, studentProfile, strategy));
+    contents.push(await this.generateMainContent(sessionId, studentProfile, targetSkills, strategy));
+    contents.push(await this.generatePracticeContent(sessionId, studentProfile, targetSkills, strategy));
+
     if (strategy.strategy === 'accelerate') {
-      contents.push(await this.generateChallengeContent(
-        sessionId,
-        studentProfile,
-        targetSkills
-      ));
+      contents.push(await this.generateChallengeContent(sessionId, studentProfile, targetSkills));
     } else if (strategy.strategy === 'remediate') {
-      contents.push(await this.generateReviewContent(
-        sessionId,
-        studentProfile,
-        targetSkills
-      ));
+      contents.push(await this.generateReviewContent(sessionId, studentProfile, targetSkills));
     }
-    
-    // Store generated content
+
     await this.storeGeneratedContent(sessionId, contents);
-    
     return contents;
   }
 
@@ -648,13 +664,25 @@ export class SessionAdaptiveContentService {
     sessionId: number,
     contents: AdaptiveContent[]
   ): Promise<void> {
-    for (const content of contents) {
-      await this.storage.query(
-        `INSERT INTO adaptive_session_content 
-         (session_id, content_type, content_data, created_at)
-         VALUES ($1, $2, $3, NOW())`,
-        [sessionId, content.contentType, JSON.stringify(content)]
-      );
+    try {
+      const { pool } = await import('../db.js');
+      for (const content of contents) {
+        await pool.query(
+          `INSERT INTO adaptive_session_content (session_id, content_type, content_data, status, created_at)
+               VALUES ($1, $2, $3, 'ready', NOW())
+           ON CONFLICT DO NOTHING`,
+          [sessionId, content.contentType, JSON.stringify(content)]
+        );
+        // Also update any existing pending placeholder rows for this session+type
+        await pool.query(
+          `UPDATE adaptive_session_content
+              SET content_data = $3, status = 'ready'
+            WHERE session_id = $1 AND content_type = $2 AND status = 'pending'`,
+          [sessionId, content.contentType, JSON.stringify(content)]
+        );
+      }
+    } catch (err) {
+      console.error('[AdaptiveContent] Failed to store generated content:', err);
     }
   }
 }

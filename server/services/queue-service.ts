@@ -54,6 +54,26 @@ export const notificationQueue = new Queue('notifications', {
   },
 });
 
+// Dedicated queue for MST/IRT adaptive content generation (isolated from CallerN content-generation queue)
+export const adaptiveContentGenerationQueue = new Queue('adaptive-content-generation', {
+  connection: redisConnection,
+  defaultJobOptions: {
+    removeOnComplete: {
+      count: 100,
+      age: 24 * 3600,
+    },
+    removeOnFail: {
+      count: 200,
+      age: 7 * 24 * 3600,
+    },
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 2000,
+    },
+  },
+});
+
 // Queue event monitoring
 export const contentGenerationQueueEvents = new QueueEvents('content-generation', {
   connection: redisConnection,
@@ -136,6 +156,7 @@ export interface NotificationJob {
 // Graceful shutdown
 export async function closeQueues() {
   await contentGenerationQueue.close();
+  await adaptiveContentGenerationQueue.close();
   await irtProcessingQueue.close();
   await notificationQueue.close();
   await redisConnection.quit();

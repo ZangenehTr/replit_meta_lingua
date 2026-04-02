@@ -219,12 +219,32 @@ router.post('/callern/start', requireAuth, async (req, res) => {
     // Mark teacher as online and in session
     await callernStorage.updateTeacherStatus(teacherId, 'in_session', session.id);
 
+    // Determine MST core stage seed from student's IRT theta (non-blocking read)
+    let mstCoreStage: string | null = null;
+    try {
+      const irtAbility = await storage.getStudentIRTAbility(studentId);
+      if (irtAbility) {
+        const theta = irtAbility.theta;
+        if (theta < -0.5) {
+          mstCoreStage = 'core_A2';
+        } else if (theta <= 0.5) {
+          mstCoreStage = 'core_B1';
+        } else {
+          mstCoreStage = 'core_B2';
+        }
+        console.log(`🎯 CallerN session ${session.id}: seeding MST core stage ${mstCoreStage} from θ=${theta.toFixed(3)}`);
+      }
+    } catch (irtErr) {
+      console.warn('⚠️ Could not read IRT ability for CallerN session seed:', irtErr);
+    }
+
     res.status(201).json({
       message: 'Session started successfully',
       session_id: session.id,
       started_at: session.startedAt,
       webrtc_config: await callernStorage.getWebRTCConfig(), // TURN servers, etc.
-      ai_supervisor_enabled: true
+      ai_supervisor_enabled: true,
+      mst_core_stage: mstCoreStage // IRT-seeded starting stage for MST adaptive content
     });
   } catch (error) {
     console.error('Error starting session:', error);

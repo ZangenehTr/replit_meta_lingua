@@ -1862,38 +1862,20 @@ export class DatabaseStorage implements IStorage {
     totalResponses: number;
   } | undefined> {
     try {
-      // Calculate real IRT ability from student test/assessment responses
-      const assessmentResults = await db.select({
-        correct: skillAssessments.passedLevel,
-        difficulty: skillAssessments.level,
-        count: sql<number>`COUNT(*)`
-      })
-      .from(skillAssessments)
-      .where(eq(skillAssessments.studentId, studentId))
-      .groupBy(skillAssessments.passedLevel, skillAssessments.level);
-      
-      if (assessmentResults.length === 0) {
-        return undefined; // No data available for this student
-      }
-      
-      // Calculate theta (ability) using simple IRT approximation
-      const correctCount = assessmentResults.filter(r => r.correct).reduce((sum, r) => sum + (r.count || 0), 0);
-      const totalCount = assessmentResults.reduce((sum, r) => sum + (r.count || 0), 0);
-      const rawAccuracy = totalCount > 0 ? correctCount / totalCount : 0.5;
-      
-      // Clamp accuracy to safe range [0.01, 0.99] to prevent -Infinity/+Infinity
-      // This preserves sign: low ability → negative theta, high ability → positive theta
-      const accuracy = Math.max(0.01, Math.min(0.99, rawAccuracy));
-      
-      // Convert accuracy to theta using logit transformation (simplified IRT)
-      // theta ≈ -2.2 for 10% accuracy, 0 for 50%, +2.2 for 90%
-      const theta = Math.log(accuracy / (1 - accuracy));
-      const standardError = 1 / Math.sqrt(totalCount || 1); // SE decreases with more responses
-      
+      const { pool } = await import('./db.js');
+      const result = await pool.query(
+        `SELECT theta, standard_error AS "standardError", total_responses AS "totalResponses"
+           FROM student_irt_ability
+          WHERE student_id = $1
+          LIMIT 1`,
+        [studentId]
+      );
+      if (result.rows.length === 0) return undefined;
+      const row = result.rows[0];
       return {
-        theta, // Always finite due to clamping
-        standardError,
-        totalResponses: totalCount
+        theta: parseFloat(row.theta),
+        standardError: parseFloat(row.standardError),
+        totalResponses: parseInt(row.totalResponses),
       };
     } catch (error) {
       console.error('Error getting student IRT ability:', error);
@@ -1908,9 +1890,17 @@ export class DatabaseStorage implements IStorage {
     lastUpdated: Date;
   }): Promise<void> {
     try {
-      // Store IRT ability in user profile or dedicated IRT table
-      console.log('Updating IRT ability for student:', studentId, ability);
-      // Implementation will be added when IRT table is created
+      const { pool } = await import('./db.js');
+      await pool.query(
+        `INSERT INTO student_irt_ability (student_id, theta, standard_error, total_responses, last_updated, created_at)
+              VALUES ($1, $2, $3, $4, $5, NOW())
+         ON CONFLICT (student_id) DO UPDATE
+              SET theta = EXCLUDED.theta,
+                  standard_error = EXCLUDED.standard_error,
+                  total_responses = EXCLUDED.total_responses,
+                  last_updated = EXCLUDED.last_updated`,
+        [studentId, ability.theta, ability.standardError, ability.totalResponses, ability.lastUpdated]
+      );
     } catch (error) {
       console.error('Error updating student IRT ability:', error);
     }
@@ -1925,10 +1915,15 @@ export class DatabaseStorage implements IStorage {
     theta: number;
   }): Promise<any> {
     try {
-      // Store IRT response data
-      console.log('Creating IRT response:', response);
+      const { pool } = await import('./db.js');
+      const result = await pool.query(
+        `INSERT INTO irt_responses (student_id, session_id, item_id, correct, response_time, theta, created_at)
+              VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         RETURNING id`,
+        [response.studentId, response.sessionId, response.itemId, response.correct, response.responseTime, response.theta]
+      );
       return {
-        id: Math.floor(Math.random() * 10000),
+        id: result.rows[0]?.id ?? Math.floor(Math.random() * 10000),
         ...response,
         createdAt: new Date()
       };

@@ -691,6 +691,16 @@ server.listen({
       console.error('⚠️  Failed to initialize SMS Reminder Worker:', error);
     }
   })();
+
+  // Non-blocking: Start CMS Adaptive Content Worker (adaptive-content-generation queue)
+  (async () => {
+    try {
+      await import('./workers/cms-adaptive-content.worker.js');
+      console.log('✅ CMS Adaptive Content Worker initialized (adaptive-content-generation queue)');
+    } catch (error) {
+      console.error('⚠️  Failed to initialize CMS Adaptive Content Worker:', error);
+    }
+  })();
 })().catch((error) => {
   console.error('❌ Background initialization error:', error);
   // Don't exit - background services are optional

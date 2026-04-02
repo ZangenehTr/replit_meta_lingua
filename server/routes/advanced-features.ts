@@ -338,18 +338,74 @@ export function createAdvancedFeaturesRouter(storage: DatabaseStorage): Router {
     try {
       const { sessionId, sessionType, targetSkills } = req.body;
       const studentId = req.user?.id;
-      
-      const contents = await adaptiveContent.generateAdaptiveContent(
+
+      // Returns immediately with a job ID — content generation is async
+      const result = await adaptiveContent.generateAdaptiveContent(
         sessionId,
         studentId,
         sessionType,
         targetSkills
       );
-      
-      res.json({ success: true, contents });
+
+      res.json({ success: true, ...result });
     } catch (error) {
       console.error('Adaptive content error:', error);
-      res.status(500).json({ error: 'Failed to generate content' });
+      res.status(500).json({ error: 'Failed to enqueue content generation' });
+    }
+  });
+
+  /**
+   * Poll adaptive content generation status
+   * GET /api/advanced/sessions/:sessionId/adaptive-content/status
+   * Requires session ownership (or staff role) — prevents IDOR.
+   */
+  router.get('/sessions/:sessionId/adaptive-content/status', requireAuth, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ success: false, error: 'Invalid session id' });
+      }
+      const { pool } = await import('../db.js');
+
+      // Authorization: non-staff must own the session
+      const userRole: string = (req.user?.role || '').toLowerCase();
+      const isStaff = ['admin', 'supervisor', 'teacher', 'manager'].includes(userRole);
+      if (!isStaff) {
+        const sessionRow = await pool.query(
+          `SELECT student_id, tutor_id FROM sessions WHERE id = $1`,
+          [sessionId]
+        );
+        if (sessionRow.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Session not found' });
+        }
+        const session = sessionRow.rows[0];
+        const userId = req.user?.id || req.user?.userId;
+        if (session.student_id !== userId && session.tutor_id !== userId) {
+          return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+      }
+
+      const result = await pool.query(
+        `SELECT content_type, status, content_data FROM adaptive_session_content WHERE session_id = $1`,
+        [sessionId]
+      );
+      const rows = result.rows;
+      const allReady = rows.length > 0 && rows.every((r: any) => r.status === 'ready');
+      const anyFailed = rows.some((r: any) => r.status === 'failed');
+
+      res.json({
+        success: true,
+        sessionId,
+        status: anyFailed ? 'failed' : allReady ? 'ready' : 'pending',
+        items: rows.map((r: any) => ({
+          contentType: r.content_type,
+          status: r.status,
+          content: r.status === 'ready' ? r.content_data : null
+        }))
+      });
+    } catch (error) {
+      console.error('Adaptive content status error:', error);
+      res.status(500).json({ error: 'Failed to get content status' });
     }
   });
 

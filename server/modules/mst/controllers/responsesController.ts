@@ -10,6 +10,7 @@ import { scoreReading } from '../scorers/readingQuickscore';
 import { scoreSpeaking } from '../scorers/speakingQuickscore';
 import { scoreWriting } from '../scorers/writingQuickscore';
 import { route } from '../routing/router';
+import { pool } from '../../../db';
 
 export class MstResponsesController {
   private telemetryLogs: TelemetryLog[] = [];
@@ -139,18 +140,66 @@ export class MstResponsesController {
   }
 
   /**
-   * Log telemetry data
+   * Log telemetry data — in-memory hot cache + fire-and-forget DB write
    */
   private logTelemetry(log: TelemetryLog): void {
     this.telemetryLogs.push(log);
-    
+
     // Log to console for debugging
     console.log(`📊 MST Telemetry: ${log.skill}/${log.stage} - p=${log.p.toFixed(3)}, route=${log.route}, time=${log.timeSpentMs}ms`);
-    
+
     // Keep only last 1000 logs to prevent memory leaks
     if (this.telemetryLogs.length > 1000) {
       this.telemetryLogs = this.telemetryLogs.slice(-1000);
     }
+
+    // Persist to DB non-blocking (fire-and-forget)
+    pool.query(
+      `INSERT INTO mst_telemetry (session_id, user_id, skill, stage, item_id, p, route, time_spent_ms, features, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+      [
+        log.sessionId,
+        log.userId,
+        log.skill,
+        log.stage,
+        log.itemId,
+        log.p,
+        log.route,
+        log.timeSpentMs,
+        log.features ? JSON.stringify(log.features) : null
+      ]
+    ).catch((err: Error) => {
+      console.error('[MST Telemetry] DB write failed (non-blocking):', err.message);
+    });
+  }
+
+  /**
+   * Public entry point: log telemetry for a client-scored fast-path response.
+   * Called from mstRoutes when processResponse() is bypassed.
+   */
+  logFastPathTelemetry(
+    sessionId: string,
+    userId: number,
+    skill: Skill,
+    stage: 'core' | 'upper' | 'lower',
+    itemId: string,
+    p: number,
+    routeDecision: 'up' | 'down' | 'stay',
+    timeSpentMs: number,
+    features?: Record<string, any>
+  ): void {
+    this.logTelemetry({
+      sessionId,
+      userId,
+      skill,
+      stage,
+      itemId,
+      p,
+      route: routeDecision,
+      timeSpentMs,
+      timestamp: new Date(),
+      features
+    });
   }
 
   /**

@@ -26639,6 +26639,84 @@ Meta Lingua Academy`;
   app.use('/api/mst', mstRoutes);
   console.log('✅ MST Module routes registered (DB-backed item bank with IRT parameters)');
 
+  // Canonical route: GET /api/sessions/:id/adaptive-content/status
+  // Polls adaptive_session_content table for content generation job results.
+  // Access: session owner (student), or teacher/admin assigned to the session.
+  app.get('/api/sessions/:id/adaptive-content/status', authenticateToken, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ success: false, error: 'Invalid session id' });
+      }
+      const { pool } = await import('./db.js');
+
+      // Authorization: verify user has access to this session (owns it or is staff)
+      const userRole: string = (req.user?.role || '').toLowerCase();
+      const isStaff = ['admin', 'supervisor', 'teacher', 'manager'].includes(userRole);
+      if (!isStaff) {
+        const sessionRow = await pool.query(
+          `SELECT student_id, tutor_id FROM sessions WHERE id = $1`,
+          [sessionId]
+        );
+        if (sessionRow.rows.length === 0) {
+          return res.status(404).json({ success: false, error: 'Session not found' });
+        }
+        const session = sessionRow.rows[0];
+        const userId = req.user?.id || req.user?.userId;
+        if (session.student_id !== userId && session.tutor_id !== userId) {
+          return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+      }
+
+      const result = await pool.query(
+        `SELECT content_type, status, content_data FROM adaptive_session_content WHERE session_id = $1`,
+        [sessionId]
+      );
+      const rows = result.rows;
+      const allReady = rows.length > 0 && rows.every((r: any) => r.status === 'ready');
+      const anyFailed = rows.some((r: any) => r.status === 'failed');
+      res.json({
+        success: true,
+        sessionId,
+        status: anyFailed ? 'failed' : allReady ? 'ready' : 'pending',
+        items: rows.map((r: any) => ({
+          contentType: r.content_type,
+          status: r.status,
+          content: r.status === 'ready' ? r.content_data : null
+        }))
+      });
+    } catch (error) {
+      console.error('❌ Error fetching adaptive content status:', error);
+      res.status(500).json({ success: false, error: 'Failed to get content status' });
+    }
+  });
+
+  // Canonical route: GET /api/admin/mst/telemetry
+  // Admin-only endpoint querying mst_telemetry table with optional filters
+  app.get('/api/admin/mst/telemetry', authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { userId, skill, dateFrom, dateTo, limit = '100' } = req.query as Record<string, string>;
+      const conditions: string[] = [];
+      const params: any[] = [];
+      if (userId) { params.push(parseInt(userId)); conditions.push(`user_id = $${params.length}`); }
+      if (skill) { params.push(skill); conditions.push(`skill = $${params.length}`); }
+      if (dateFrom) { params.push(new Date(dateFrom)); conditions.push(`created_at >= $${params.length}`); }
+      if (dateTo) { params.push(new Date(dateTo)); conditions.push(`created_at <= $${params.length}`); }
+      const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+      params.push(Math.min(parseInt(limit) || 100, 1000));
+      const { pool } = await import('./db.js');
+      const result = await pool.query(
+        `SELECT id, session_id, user_id, skill, stage, item_id, p, route, time_spent_ms, features, created_at
+           FROM mst_telemetry ${where} ORDER BY created_at DESC LIMIT $${params.length}`,
+        params
+      );
+      res.json({ success: true, count: result.rows.length, rows: result.rows });
+    } catch (error) {
+      console.error('❌ Error fetching admin MST telemetry:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch telemetry' });
+    }
+  });
+
   // Direct endpoint for IELTS quality comparison
   app.get('/ielts_quality_comparison.html', (req, res) => {
     try {

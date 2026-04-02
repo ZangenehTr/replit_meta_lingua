@@ -370,6 +370,19 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req: 
         serverValidated: false,
         loadReduced: true
       };
+
+      // Persist telemetry even though processResponse() was bypassed
+      responsesController.logFastPathTelemetry(
+        sessionId,
+        req.user!.id,
+        parsedSkill,
+        parsedStage,
+        item.id,
+        clientScore.p,
+        serverRoute,
+        timeSpentMs,
+        clientScore.features
+      );
     } else if (useClientScore && clientScore && shouldValidateServerSide) {
       // VALIDATION PATH: Compare client score with server score
       console.log(`🔬 Validation path: Comparing client vs server ${parsedSkill} score`);
@@ -628,6 +641,22 @@ router.post('/finalize', authenticateToken, async (req: AuthRequest, res) => {
       console.error('⚠️ Failed to persist sub-level (non-blocking):', subErr);
     }
 
+    // Map CEFR result → IRT theta and write to student_irt_ability (non-blocking)
+    const cefrThetaMap: Record<string, number> = {
+      'A1': -2.0, 'A2': -1.0, 'B1': 0.0, 'B2': 1.0, 'C1': 2.0, 'C2': 3.0
+    };
+    const baseLevel = result.overallBand.replace(/[+-]$/, '');
+    const theta = cefrThetaMap[baseLevel] ?? 0.0;
+    storage.updateStudentIRTAbility(req.user!.id, {
+      theta,
+      standardError: 0.5,
+      totalResponses: skillResults.length,
+      lastUpdated: new Date()
+    }).catch((err: Error) => {
+      console.error('⚠️ Failed to write IRT theta from MST result (non-blocking):', err.message);
+    });
+    console.log(`🧠 MST→IRT: mapped ${result.overallBand} → θ=${theta} for user ${req.user!.id}`);
+
     res.json({
       success: true,
       result: {
@@ -704,7 +733,7 @@ router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
 
 /**
  * GET /mst/telemetry
- * Get performance telemetry (admin endpoint)
+ * Get performance telemetry (in-memory, any authenticated user)
  */
 router.get('/telemetry', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -722,6 +751,63 @@ router.get('/telemetry', authenticateToken, async (req: AuthRequest, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to get telemetry'
+    });
+  }
+});
+
+/**
+ * GET /mst/admin/telemetry
+ * Admin-only endpoint — queries mst_telemetry table with optional filters.
+ * Query params: userId, skill, dateFrom, dateTo, limit (default 100)
+ */
+router.get('/admin/telemetry', authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: AuthRequest, res) => {
+  try {
+    const { userId, skill, dateFrom, dateTo, limit = '100' } = req.query as Record<string, string>;
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (userId) {
+      params.push(parseInt(userId));
+      conditions.push(`user_id = $${params.length}`);
+    }
+    if (skill) {
+      params.push(skill);
+      conditions.push(`skill = $${params.length}`);
+    }
+    if (dateFrom) {
+      params.push(new Date(dateFrom));
+      conditions.push(`created_at >= $${params.length}`);
+    }
+    if (dateTo) {
+      params.push(new Date(dateTo));
+      conditions.push(`created_at <= $${params.length}`);
+    }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    params.push(Math.min(parseInt(limit) || 100, 1000));
+    const limitClause = `LIMIT $${params.length}`;
+
+    const { pool } = await import('../../../db.js');
+    const result = await pool.query(
+      `SELECT id, session_id, user_id, skill, stage, item_id, p, route, time_spent_ms, features, created_at
+         FROM mst_telemetry
+         ${where}
+         ORDER BY created_at DESC
+         ${limitClause}`,
+      params
+    );
+
+    res.json({
+      success: true,
+      count: result.rows.length,
+      rows: result.rows
+    });
+  } catch (error) {
+    console.error('❌ Error fetching admin MST telemetry:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch telemetry'
     });
   }
 });
