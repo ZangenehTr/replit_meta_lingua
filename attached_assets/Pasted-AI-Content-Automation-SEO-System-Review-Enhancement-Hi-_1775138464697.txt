@@ -1,0 +1,104 @@
+AI Content Automation & SEO System — Review & Enhancement
+Hi — I’d like you to review and enhance the current (or potential) AI-powered content generation and publishing system.
+Before making any changes, please thoroughly analyze the existing codebase (including services, content modules, admin panels, and integrations) to:
+Avoid duplicating existing functionality
+Reuse current patterns and utilities
+Ensure compatibility with the current architecture
+Resources which add up using this
+If any of the features below already exist, feel free to refine or extend them rather than rebuilding.
+
+Objective
+Build or improve a scalable AI-driven content pipeline that:
+Uses scraped or discovered data as input
+Generates high-quality content via a self-hosted LLM (Ollama)
+Allows admin-controlled publishing
+Improves SEO and discoverability (including AI search systems)
+
+Suggested Features & Enhancements
+1. Content Input Pipeline
+Integrate with scraper outputs to collect:
+Trending topics
+FAQs
+Competitor content insights
+Normalize and structure inputs before sending to the LLM
+
+2. AI Content Generation (Ollama Integration)
+Use Ollama (self-hosted LLM) for:
+Blog articles
+Landing pages
+Q&A-style content
+Implement reusable prompt templates for different content types
+Allow control over:
+Tone
+Length
+Format
+
+3. SEO Optimization Layer
+Automatically generate:
+Meta titles and descriptions
+Headings (H1–H3 structure)
+Keyword placement
+Optional:
+Internal linking suggestions
+Structured data (schema markup)
+
+4. Admin Review & Approval Workflow
+Create a draft queue system
+Enable:
+Approve / edit / reject content
+Implement role-based access control (RBAC):
+Admin can define which roles can publish, edit, or approve
+
+5. Publishing System
+Support publishing to:
+Blog/CMS pages
+SEO landing pages
+Allow:
+Scheduled publishing
+Manual publishing after approval
+
+6. Content Quality Controls
+Add checks for:
+Duplicate content
+Structural consistency
+Optional:
+Basic validation or scoring before approval
+
+7. Storage & Versioning
+Store:
+Generated drafts
+Edited versions
+Published content
+Maintain version history for traceability
+
+8. Automation & Scaling
+Queue-based processing for:
+Content generation
+Post-processing (SEO formatting, linking)
+Ensure system can handle high-volume content generation without blocking
+
+9. Observability & Monitoring
+Track:
+Content generation success/failure
+Processing time
+Publishing activity
+Add logs for debugging and performance insights
+
+Implementation Notes
+Prefer modular and reusable components
+Keep Ollama integration abstracted (service layer)
+Avoid blocking operations — use background workers where possible
+Maintain consistency with existing naming conventions and structure
+
+Output Expectation
+After review, please:
+Identify which features already exist
+Highlight gaps or incomplete implementations
+Suggest or implement improvements
+Clearly explain any additions or modifications
+
+Goal
+Create a high-quality, scalable AI content engine that supports:
+SEO growth
+Automated publishing workflows
+Future integration with other systems (e.g., CRM, adaptive learning, etc.)
