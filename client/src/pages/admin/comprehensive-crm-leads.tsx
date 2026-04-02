@@ -6,7 +6,8 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { 
   UserPlus, Phone, Mail, Target, Clock, CheckCircle, XCircle, AlertCircle,
   Filter, Search, Download, Calendar, MessageSquare, User, ChevronDown,
-  Edit, Trash2, Eye, PhoneCall, Send, FileText, TrendingUp, Users, DollarSign
+  Edit, Trash2, Eye, PhoneCall, Send, FileText, TrendingUp, Users, DollarSign,
+  ArrowUpCircle, X as XIcon, Database
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -120,6 +121,11 @@ export default function ComprehensiveCRMLeads() {
   const [bulkSelected, setBulkSelected] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState('all-leads');
 
+  // Scraped leads state
+  const [scrapedStatusFilter, setScrapedStatusFilter] = useState('new');
+  const [scrapedPlatformFilter, setScrapedPlatformFilter] = useState('all');
+  const [scrapedBulkSelected, setScrapedBulkSelected] = useState<number[]>([]);
+
   // Form data states
   const [newLeadData, setNewLeadData] = useState({
     firstName: '',
@@ -174,6 +180,64 @@ export default function ComprehensiveCRMLeads() {
   const { data: communicationFormDefinition, isLoading: communicationFormLoading } = useQuery<FormDefinition>({
     queryKey: ['/api/forms', 7],
     enabled: showCommunicationForm,
+  });
+
+  // Fetch scraped leads
+  const buildScrapedParams = () => {
+    const params = new URLSearchParams();
+    if (scrapedStatusFilter !== 'all') params.append('status', scrapedStatusFilter);
+    if (scrapedPlatformFilter !== 'all') params.append('platform', scrapedPlatformFilter);
+    return params.toString();
+  };
+
+  const { data: scrapedLeads = [], isLoading: scrapedLoading, refetch: refetchScraped } = useQuery({
+    queryKey: ['/api/admin/scraped-leads', scrapedStatusFilter, scrapedPlatformFilter],
+    queryFn: async () => {
+      const params = buildScrapedParams();
+      return apiRequest(`/api/admin/scraped-leads${params ? '?' + params : ''}`);
+    },
+    enabled: activeTab === 'scraped-leads'
+  });
+
+  // Promote scraped lead mutation
+  const promoteLeadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/admin/scraped-leads/${id}/promote`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scraped-leads'] });
+      toast({ title: 'موفقیت', description: 'سرنخ با موفقیت به CRM منتقل شد' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'خطا', description: err.message || 'خطا در انتقال سرنخ', variant: 'destructive' });
+    }
+  });
+
+  // Dismiss scraped lead mutation
+  const dismissLeadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/admin/scraped-leads/${id}/dismiss`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scraped-leads'] });
+      toast({ title: 'موفقیت', description: 'سرنخ رد شد' });
+    }
+  });
+
+  // Bulk promote scraped leads mutation
+  const bulkPromoteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      return apiRequest('/api/admin/scraped-leads/bulk-promote', {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scraped-leads'] });
+      setScrapedBulkSelected([]);
+      toast({ title: 'موفقیت', description: `${data.promoted} سرنخ از ${data.total} به CRM منتقل شد` });
+    }
   });
 
   // Create lead mutation
@@ -610,6 +674,21 @@ export default function ComprehensiveCRMLeads() {
         </Card>
       </div>
 
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all-leads">
+            <Users className="h-4 w-4 me-2" />
+            همه سرنخ‌ها
+          </TabsTrigger>
+          <TabsTrigger value="scraped-leads">
+            <Database className="h-4 w-4 me-2" />
+            سرنخ‌های اسکرپ‌شده
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all-leads" className="space-y-4">
+
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -885,6 +964,195 @@ export default function ComprehensiveCRMLeads() {
           )}
         </DialogContent>
       </Dialog>
+
+        </TabsContent>
+
+        {/* ===== SCRAPED LEADS TAB ===== */}
+        <TabsContent value="scraped-leads" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  سرنخ‌های اسکرپ‌شده
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {scrapedBulkSelected.length > 0 && (
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => bulkPromoteMutation.mutate(scrapedBulkSelected)}
+                      disabled={bulkPromoteMutation.isPending}
+                    >
+                      <ArrowUpCircle className="h-4 w-4 me-2" />
+                      انتقال {scrapedBulkSelected.length} سرنخ به CRM
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => refetchScraped()}>
+                    تازه‌سازی
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Filters */}
+              <div className="flex gap-4 mb-4">
+                <div>
+                  <Label className="text-xs">وضعیت</Label>
+                  <Select value={scrapedStatusFilter} onValueChange={setScrapedStatusFilter}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">همه</SelectItem>
+                      <SelectItem value="new">جدید</SelectItem>
+                      <SelectItem value="promoted">منتقل‌شده</SelectItem>
+                      <SelectItem value="dismissed">رد‌شده</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">پلتفرم</Label>
+                  <Select value={scrapedPlatformFilter} onValueChange={setScrapedPlatformFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">همه پلتفرم‌ها</SelectItem>
+                      <SelectItem value="instagram">اینستاگرام</SelectItem>
+                      <SelectItem value="telegram">تلگرام</SelectItem>
+                      <SelectItem value="linkedin">لینکدین</SelectItem>
+                      <SelectItem value="website">وبسایت</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {scrapedLoading ? (
+                <div className="text-center py-8">در حال بارگذاری...</div>
+              ) : (Array.isArray(scrapedLeads) && scrapedLeads.length === 0) ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Database className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>هیچ سرنخ اسکرپ‌شده‌ای یافت نشد</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={Array.isArray(scrapedLeads) && scrapedBulkSelected.length === scrapedLeads.filter((l: any) => l.status === 'new').length && scrapedLeads.filter((l: any) => l.status === 'new').length > 0}
+                            onCheckedChange={(checked) => {
+                              if (checked && Array.isArray(scrapedLeads)) {
+                                setScrapedBulkSelected(scrapedLeads.filter((l: any) => l.status === 'new').map((l: any) => l.id));
+                              } else {
+                                setScrapedBulkSelected([]);
+                              }
+                            }}
+                          />
+                        </TableHead>
+                        <TableHead>نام</TableHead>
+                        <TableHead>تلفن</TableHead>
+                        <TableHead>ایمیل</TableHead>
+                        <TableHead>پلتفرم</TableHead>
+                        <TableHead>امتیاز</TableHead>
+                        <TableHead>وضعیت</TableHead>
+                        <TableHead>تاریخ</TableHead>
+                        <TableHead>عملیات</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.isArray(scrapedLeads) && scrapedLeads.map((lead: any) => (
+                        <TableRow key={lead.id}>
+                          <TableCell>
+                            {lead.status === 'new' && (
+                              <Checkbox
+                                checked={scrapedBulkSelected.includes(lead.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setScrapedBulkSelected([...scrapedBulkSelected, lead.id]);
+                                  } else {
+                                    setScrapedBulkSelected(scrapedBulkSelected.filter(id => id !== lead.id));
+                                  }
+                                }}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{lead.name || '—'}</div>
+                            {lead.company && <div className="text-xs text-muted-foreground">{lead.company}</div>}
+                          </TableCell>
+                          <TableCell dir="ltr" className="text-sm">{lead.phone || '—'}</TableCell>
+                          <TableCell className="text-sm">{lead.email || '—'}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {lead.source === 'instagram' ? 'اینستاگرام' :
+                               lead.source === 'telegram' ? 'تلگرام' :
+                               lead.source === 'linkedin' ? 'لینکدین' :
+                               lead.source || '—'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                (lead.qualificationScore ?? 0) >= 80 ? 'bg-green-100 text-green-800 border-green-300' :
+                                (lead.qualificationScore ?? 0) >= 60 ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                                'bg-red-100 text-red-800 border-red-300'
+                              }
+                              variant="outline"
+                            >
+                              {lead.qualificationScore ?? 0}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={lead.status === 'promoted' ? 'default' : lead.status === 'dismissed' ? 'destructive' : 'secondary'}
+                            >
+                              {lead.status === 'new' ? 'جدید' :
+                               lead.status === 'promoted' ? 'منتقل‌شده' :
+                               lead.status === 'dismissed' ? 'رد‌شده' : lead.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {lead.scrapedAt ? new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(lead.scrapedAt)) : '—'}
+                          </TableCell>
+                          <TableCell>
+                            {lead.status === 'new' && (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 text-white h-7 px-2 text-xs"
+                                  onClick={() => promoteLeadMutation.mutate(lead.id)}
+                                  disabled={promoteLeadMutation.isPending}
+                                >
+                                  <ArrowUpCircle className="h-3 w-3 me-1" />
+                                  انتقال
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs text-red-600 border-red-300 hover:bg-red-50"
+                                  onClick={() => dismissLeadMutation.mutate(lead.id)}
+                                  disabled={dismissLeadMutation.isPending}
+                                >
+                                  <XIcon className="h-3 w-3 me-1" />
+                                  رد
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+      </Tabs>
     </div>
   );
 }

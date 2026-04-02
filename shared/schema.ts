@@ -393,6 +393,8 @@ export const adminSettings = pgTable("admin_settings", {
   hrImprovementThreshold: decimal("hr_improvement_threshold", { precision: 5, scale: 2 }).default("60"), // absolute score below which improvement plan is generated
   // Certificate template configuration — JSON string containing institue name, logo URL, signature title, etc.
   certificateTemplate: text("certificate_template"),
+  // Scraper → CRM bridge: auto-promotion score threshold (default 60)
+  scraperAutoPromotionThreshold: integer("scraper_auto_promotion_threshold").default(60),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -1425,7 +1427,9 @@ export const leads = pgTable("leads", {
   teacherId: integer("teacher_id").references(() => users.id),
   enrolledCourseId: integer("enrolled_course_id"),
   subLevelCode: varchar("sub_level_code", { length: 20 }),
-  subLevelId: integer("sub_level_id")
+  subLevelId: integer("sub_level_id"),
+  scrapeSourceRef: varchar("scrape_source_ref", { length: 255 }),
+  scrapeQualificationScore: integer("scrape_qualification_score")
 });
 
 export const leadActivityLog = pgTable("lead_activity_log", {

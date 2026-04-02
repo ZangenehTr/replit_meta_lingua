@@ -551,7 +551,32 @@ const requireRole = (roles: string[]) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
+  // ── Scraper-CRM bridge: ensure columns exist (idempotent, fire-and-forget, retries) ──
+  (async () => {
+    const { pool } = await import('./db');
+    const SQL = `
+      ALTER TABLE leads
+        ADD COLUMN IF NOT EXISTS scrape_source_ref VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS scrape_qualification_score INTEGER;
+      ALTER TABLE admin_settings
+        ADD COLUMN IF NOT EXISTS scraper_auto_promotion_threshold INTEGER DEFAULT 60;
+    `;
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      try {
+        await pool.query(SQL);
+        console.log('[ScraperBridge] Schema columns verified/added');
+        break;
+      } catch (err: any) {
+        if (attempt < 5) {
+          await new Promise(r => setTimeout(r, attempt * 3000));
+        } else {
+          console.warn('[ScraperBridge] Column migration could not complete after retries:', err.message);
+        }
+      }
+    }
+  })().catch(() => {});
+
   // Health check endpoint is now handled by the comprehensive health monitoring service
   // Previously defined here, now handled by healthRouter at /api/health
 
@@ -1775,6 +1800,17 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       console.error('Error cleaning up expired OTPs:', error);
     }
   }, 30 * 60 * 1000);
+
+  // Scraper → CRM auto-promotion: run every 15 minutes (non-blocking fire-and-forget)
+  setInterval(() => {
+    import('./services/scraper-crm-bridge').then(({ runAutoPromotion }) => {
+      runAutoPromotion().catch((err: any) =>
+        console.error('[ScraperBridge] Auto-promotion interval error:', err.message)
+      );
+    }).catch((err: any) =>
+      console.error('[ScraperBridge] Failed to import bridge module:', err.message)
+    );
+  }, 15 * 60 * 1000);
 
   // Request OTP endpoint - supports both email and phone
   app.post("/api/auth/request-otp", otpRequestRateLimit, async (req, res) => {
@@ -25852,6 +25888,98 @@ Meta Lingua Academy`;
       res.status(500).json({ message: "Failed to fetch leads" });
     }
   });
+
+  // ===== ADMIN SCRAPED LEADS BRIDGE =====
+
+  // GET /api/admin/scraped-leads — list scraped leads with optional filters
+  app.get("/api/admin/scraped-leads", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { status, platform, minScore, maxScore } = req.query as Record<string, string | undefined>;
+
+      let query = db.select().from(scrapedLeads).$dynamic();
+
+      const conditions: any[] = [];
+      if (status && status !== 'all') {
+        conditions.push(eq(scrapedLeads.status, status));
+      }
+      if (platform && platform !== 'all') {
+        conditions.push(eq(scrapedLeads.source, platform));
+      }
+      if (minScore) {
+        conditions.push(sql`${scrapedLeads.qualificationScore} >= ${parseInt(minScore, 10)}`);
+      }
+      if (maxScore) {
+        conditions.push(sql`${scrapedLeads.qualificationScore} <= ${parseInt(maxScore, 10)}`);
+      }
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      const rows = await query.orderBy(desc(scrapedLeads.scrapedAt));
+      res.json(rows);
+    } catch (error: any) {
+      console.error('Error fetching scraped leads:', error);
+      res.status(500).json({ message: "Failed to fetch scraped leads" });
+    }
+  });
+
+  // POST /api/admin/scraped-leads/:id/promote — promote a single scraped lead
+  app.post("/api/admin/scraped-leads/:id/promote", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+      const { promoteScrapedLead } = await import('./services/scraper-crm-bridge');
+      const result = await promoteScrapedLead(id);
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.error });
+      }
+      res.json({ success: true, crmLeadId: result.crmLeadId, duplicate: result.duplicate });
+    } catch (error: any) {
+      console.error('Error promoting scraped lead:', error);
+      res.status(500).json({ message: "Failed to promote scraped lead" });
+    }
+  });
+
+  // POST /api/admin/scraped-leads/:id/dismiss — dismiss a scraped lead
+  app.post("/api/admin/scraped-leads/:id/dismiss", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+      await db.update(scrapedLeads).set({ status: 'dismissed' }).where(eq(scrapedLeads.id, id));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error dismissing scraped lead:', error);
+      res.status(500).json({ message: "Failed to dismiss scraped lead" });
+    }
+  });
+
+  // POST /api/admin/scraped-leads/bulk-promote — promote multiple scraped leads
+  app.post("/api/admin/scraped-leads/bulk-promote", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { ids } = req.body as { ids: number[] };
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "ids array is required" });
+      }
+
+      const { promoteScrapedLead } = await import('./services/scraper-crm-bridge');
+      const results: Array<{ id: number; success: boolean; crmLeadId?: number; error?: string }> = [];
+
+      for (const id of ids) {
+        const r = await promoteScrapedLead(id);
+        results.push({ id, success: r.success, crmLeadId: r.crmLeadId, error: r.error });
+      }
+
+      const succeeded = results.filter(r => r.success).length;
+      res.json({ success: true, promoted: succeeded, total: ids.length, results });
+    } catch (error: any) {
+      console.error('Error bulk-promoting scraped leads:', error);
+      res.status(500).json({ message: "Failed to bulk-promote scraped leads" });
+    }
+  });
+
   // TTS (Text-to-Speech) API Routes for pronunciation practice
   
   // Generate speech from text
