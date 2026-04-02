@@ -386,29 +386,40 @@ server/
 ├── index.ts              ← Entry point: starts the server, boots all services
 ├── auth.ts               ← JWT token creation/verification, RBAC middleware
 ├── db.ts                 ← Database connection (Drizzle ORM + pg pool)
-├── storage.ts            ← All database queries (being split into modules)
-├── routes.ts             ← Main route registration (being extracted)
 │
-├── routes/               ← Domain-specific route files (40+ files)
-│   ├── cms-routes.ts     ← Blog, pages, media
-│   ├── hr-routes.ts      ← Employee, leave, payroll
-│   ├── callern-flow-routes.ts  ← Live tutoring sessions
-│   ├── placement-test-routes.ts ← MST placement test
-│   └── ...
+├── routes.ts             ← Main route registration (~400 lines — thin wiring only)
+├── routes/               ← 64 domain-specific route files (one file per feature)
+│   ├── cms-routes.ts              ← Blog, pages, media
+│   ├── hr-routes.ts               ← Employee, leave, payroll
+│   ├── callern-flow-routes.ts     ← Live tutoring sessions
+│   ├── placement-test-routes.ts   ← MST placement test
+│   ├── shetab-payment-routes.ts   ← Shetab gateway callbacks
+│   ├── gamification-routes.ts     ← XP, levels, badges
+│   ├── ai-sales-agent-routes.ts   ← Telegram bot integration
+│   └── ... (58 more)
+│
+├── storage.ts            ← Storage composition layer (~40 lines — wires modules)
+├── storage/              ← 8 domain storage modules (database query logic)
+│   ├── user-storage.ts            ← Users, profiles, roles
+│   ├── course-storage.ts          ← Courses, enrollments, sessions
+│   ├── lead-storage.ts            ← CRM leads, pipeline, activity log
+│   ├── callern-storage.ts         ← CallerN sessions, presence, followers
+│   ├── misc-storage.ts            ← Miscellaneous shared queries
+│   ├── mem-storage.ts             ← In-memory fallback storage
+│   ├── unified-testing-impl.ts    ← MST/placement test storage
+│   └── storage-types.ts           ← Shared storage interface types
 │
 ├── services/             ← Business logic (one class per concern)
-│   ├── ollama-service.ts        ← Talks to the local AI (Ollama LLM)
-│   ├── irt-service.ts           ← Adaptive scoring math (IRT/CAT)
-│   ├── ai-cms-content-service.ts ← AI blog/landing page generation
-│   ├── scraper-crm-bridge.ts    ← Converts scraped leads to CRM leads
-│   ├── gamification-service.ts  ← XP, levels, achievements
-│   ├── otp-service.ts           ← SMS OTP via Kavenegar
+│   ├── ollama-service.ts          ← Talks to the local AI (Ollama LLM)
+│   ├── irt-service.ts             ← Adaptive scoring math (IRT 3PL/CAT)
+│   ├── ai-cms-content-service.ts  ← AI blog/landing page generation
+│   ├── scraper-crm-bridge.ts      ← Converts scraped leads to CRM leads
+│   ├── gamification-service.ts    ← XP, levels, achievements
+│   ├── otp-service.ts             ← SMS OTP via Kavenegar
 │   └── ...
 │
 ├── workers/              ← Background jobs (run async, not during HTTP request)
-│   ├── irt-processing.worker.ts    ← Updates student ability estimates
-│   ├── cms-content.worker.ts       ← Generates AI blog posts
-│   ├── sms-reminder.worker.ts      ← Sends scheduled SMS reminders
+│   ├── sms-reminder.worker.ts     ← Sends scheduled SMS reminders
 │   └── ...
 │
 ├── modules/              ← Self-contained feature modules
@@ -430,12 +441,32 @@ server/
 
 ```
 shared/
-├── schema.ts             ← Database table definitions (Drizzle ORM)
-│                           Being split into shared/schema/ domain files
-├── constants/            ← Values used everywhere (user roles, limits)
+├── schema.ts             ← Compatibility barrel: re-exports everything from
+│                           shared/schema/* so all existing imports keep working
+│                           (1 line — do not delete this file)
+│
+├── schema/               ← 15 domain schema files (Drizzle ORM table definitions)
+│   ├── users.ts          ← Users, profiles, roles, OTP
+│   ├── courses.ts        ← Courses, enrollments, schedules
+│   ├── cms.ts            ← Blog posts, landing pages, media
+│   ├── hr.ts             ← Employees, contracts, leave, payroll
+│   ├── mst.ts            ← MST placement test, IRT parameters
+│   ├── gamification.ts   ← XP, levels, achievements, daily challenges
+│   ├── leads.ts          ← CRM leads, pipeline, activity log
+│   ├── callern.ts        ← CallerN sessions, presence, followers, packages
+│   ├── payments.ts       ← Wallet, transactions, gateways, promo codes
+│   ├── marketing.ts      ← Roadmaps, 3D content, social posts
+│   ├── teaching.ts       ← Books, lesson content
+│   ├── features.ts       ← Dynamic forms, public features, fonts
+│   ├── curriculum-ext.ts ← Sub-levels, orders, shipping
+│   ├── social.ts         ← SMS logs, social media integration
+│   └── schema-helpers.ts ← buildInsertSchema() typed helper (avoids as-any)
+│
+├── constants/            ← Values used everywhere (user roles, limits, enums)
 ├── types/                ← TypeScript types shared by client + server
-└── *.ts                  ← Domain-specific schemas and engines
-                            (placement-test-schema, roadmap-schema, etc.)
+└── *.ts                  ← Domain engines shared across both sides
+                            (placement-test-schema, roadmap-schema,
+                             evaluation-engine, mentoring-analytics-engine, etc.)
 ```
 
 ---
@@ -756,4 +787,4 @@ All data stays in Iran. Only SMS goes through Kavenegar's Iranian servers.
 
 ---
 
-*Last updated: April 2026 — v1.2.0*
+*Last updated: April 2, 2026 — v1.3.0*

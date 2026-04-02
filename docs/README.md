@@ -1,6 +1,6 @@
 # Meta Lingua Academy — Platform Overview
 
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Last Updated:** April 2, 2026  
 **Status:** Production-Ready
 
@@ -158,11 +158,14 @@ meta-lingua/
 │   │   ├── hooks/        # Custom React hooks
 │   │   └── lib/          # API client, utilities
 ├── server/               # Express backend
-│   ├── routes/           # Feature-specific route files
-│   ├── services/         # Business logic services
-│   └── routes.ts         # Main route registration
+│   ├── routes/           # 64 domain-specific route files
+│   ├── routes.ts         # Main route registration (~400 lines)
+│   ├── storage/          # 8 domain storage modules
+│   ├── storage.ts        # Storage composition layer (~40 lines)
+│   └── services/         # Business logic services
 ├── shared/               # Shared types and DB schema
-│   └── schema.ts         # Drizzle ORM schema (single source of truth)
+│   ├── schema/           # 15 domain schema files (users, courses, hr, etc.)
+│   └── schema.ts         # Barrel re-export shim (all @shared/schema imports work unchanged)
 ├── migrations/           # SQL migration files (idempotent)
 ├── docs/                 # This documentation folder
 ├── docker-compose.yml    # Production container stack
@@ -193,6 +196,13 @@ The application will be available at `http://localhost:5000`.
 ---
 
 ## Changelog
+
+### v1.3.0 — April 2, 2026
+- **AI Content & SEO Pipeline**: Admin can generate blog posts, landing pages, and social media content from Ollama via async BullMQ jobs. Prompt template library, approval workflow (draft → review → publish), scheduled publisher, auto-filled SEO fields, and live sitemap.xml updates.
+- **MST/IRT Reliability**: IRT 3PL model corrected; CEFR theta thresholds fixed (A1=−2.0 through C2=+3.0); per-skill quickscoring with IRT fallback; full response telemetry stored per test session.
+- **Scraper → CRM Bridge**: Scraped leads auto-promoted to CRM based on qualification score threshold; 15-minute scheduled batch promotion; admin UI with per-row promote/dismiss and bulk actions.
+- **Backend Code Structure Refactor**: `server/routes.ts` reduced from 29,586 → 403 lines; `server/storage.ts` from 9,043 → 40 lines; `shared/schema.ts` (10,015 lines) converted to a barrel re-export. All domain logic split into 64 route files, 8 storage modules, and 15 schema domain files. TypeScript: zero errors.
+- **Frontend Component Decomposition**: All 12 monolithic admin/teacher/frontdesk pages reduced to under 400 lines each. 8 data-fetching hooks extracted. Reusable components organized into `components/admin/`, `components/frontdesk/`, `components/supervisor/`, `components/teacher/`.
 
 ### v1.2.0 — April 2, 2026
 - **Private Class Stack**: Full private lesson system — session packages with per-package pricing, min/max sub-level configuration, teacher assignment, and booking flow end-to-end
