@@ -1,5 +1,5 @@
 import { pgTable, serial, integer, text, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
+import { buildInsertSchema } from './schema/schema-helpers';
 import { z } from 'zod';
 
 // Mood tracking table
@@ -52,17 +52,17 @@ export const learningAdaptations = pgTable('learning_adaptations', {
 });
 
 // Zod schemas for validation
-export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
+export const insertMoodEntrySchema = buildInsertSchema(moodEntries, {
   id: true,
   createdAt: true,
 });
 
-export const insertMoodRecommendationSchema = createInsertSchema(moodRecommendations).omit({
+export const insertMoodRecommendationSchema = buildInsertSchema(moodRecommendations, {
   id: true,
   createdAt: true,
 });
 
-export const insertLearningAdaptationSchema = createInsertSchema(learningAdaptations).omit({
+export const insertLearningAdaptationSchema = buildInsertSchema(learningAdaptations, {
   id: true,
   lastUpdated: true,
 });
