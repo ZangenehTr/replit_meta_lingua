@@ -2180,7 +2180,7 @@ export async function setupAdminAndMiscRoutes(app: Express, context: RouteContex
   console.log('✅ HR Module routes registered (Employees, Contracts, Leave, Payroll, Performance)');
 
   // HR Scheduler — monthly performance review auto-generation (non-blocking, BullMQ with setInterval fallback)
-  import('./services/hr-scheduler').then(({ startHrScheduler }) => startHrScheduler()).catch((err) => {
+  import('../services/hr-scheduler').then(({ startHrScheduler }) => startHrScheduler()).catch((err) => {
     console.warn('[HR Scheduler] Failed to start:', err.message);
   });
 
