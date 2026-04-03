@@ -772,7 +772,7 @@ export class CallerNDbStorage extends FinancialDbStorage {
         scheduledAt: startTime,
         duration: duration || 60, // Default to 60 minutes if calculation fails
         status: 'scheduled',
-        sessionUrl: data.mode === 'online' ? `https://meet.metalingua.com/session-${Date.now()}` : null,
+        sessionUrl: data.mode === 'online' ? `https://meet.metalingo.com/session-${Date.now()}` : null,
         notes: data.notes || ''
       };
     });

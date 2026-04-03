@@ -58,7 +58,7 @@ export default function CurriculumHub() {
   return (
     <PublicLayout>
       <SEOHead
-        title={t('curriculum.seoTitle', 'Our Courses - Meta Lingua Academy')}
+        title={t('curriculum.seoTitle', 'Our Courses - MetaLingo Academy')}
         description={t('curriculum.seoDescription', 'Explore our comprehensive language learning programs including test preparation, conversation courses, business English, and specialized programs for all levels.')}
         keywords="language courses, English courses, test preparation, IELTS, TOEFL, business English, conversation English"
       />

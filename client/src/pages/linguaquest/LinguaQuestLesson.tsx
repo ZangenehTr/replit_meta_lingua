@@ -244,7 +244,7 @@ export function LinguaQuestLesson() {
     
     toast({
       title: `🚀 ${t('lesson.readyForMore', 'Ready for More?')}`,
-      description: t('upgrade.ctaDescription', 'Unlock advanced lessons and personalized tutoring with Meta Lingua Pro!'),
+      description: t('upgrade.ctaDescription', 'Unlock advanced lessons and personalized tutoring with MetaLingo Pro!'),
       duration: 8000,
       action: (
         <Button 
@@ -692,7 +692,7 @@ export function LinguaQuestLesson() {
                         <div>
                           <strong className="text-purple-800">{t('lesson.readyForAdvanced', 'Ready for Advanced Learning?')}</strong>
                           <p className="text-purple-700 text-sm mt-1">
-                            {t('lesson.upgradeDescription', 'Upgrade to Meta Lingua Pro for personalized lessons and expert tutoring.')}
+                            {t('lesson.upgradeDescription', 'Upgrade to MetaLingo Pro for personalized lessons and expert tutoring.')}
                           </p>
                         </div>
                         <Button 

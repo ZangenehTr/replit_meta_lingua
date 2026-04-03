@@ -128,14 +128,14 @@ export default function StudentReferralPage() {
   const shareViaWhatsApp = (link: ReferralLink) => {
     const msg = currentLanguage === "fa"
       ? `سلام! با این لینک در متالینگوا ثبت‌نام کن و ${settings?.referredPercentage ?? 5}% تخفیف بگیر:\n${link.shareUrl}`
-      : `Join Meta Lingua and get ${settings?.referredPercentage ?? 5}% off your first course:\n${link.shareUrl}`;
+      : `Join MetaLingo and get ${settings?.referredPercentage ?? 5}% off your first course:\n${link.shareUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
   };
 
   const shareViaSMS = (link: ReferralLink) => {
     const msg = currentLanguage === "fa"
       ? `سلام! با این لینک در متالینگوا ثبت‌نام کن و تخفیف بگیر: ${link.shareUrl}`
-      : `Join Meta Lingua and get a discount: ${link.shareUrl}`;
+      : `Join MetaLingo and get a discount: ${link.shareUrl}`;
     window.open(`sms:?body=${encodeURIComponent(msg)}`);
   };
 

@@ -197,7 +197,7 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
             .values({
               sessionId: session.id,
               senderType: 'ai',
-              senderName: 'Meta Lingua AI',
+              senderName: 'MetaLingo AI',
               message: agentResponse.message,
               messageType: 'text',
               isRead: false,

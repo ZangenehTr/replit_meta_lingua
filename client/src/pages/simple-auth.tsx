@@ -110,7 +110,7 @@ export default function SimpleAuth() {
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            {t('auth:appName', 'Meta Lingua')}
+            {t('auth:appName', 'MetaLingo')}
           </h1>
           <p className="text-white/90 text-sm sm:text-base flex items-center justify-center gap-2">
             <Languages className="w-4 h-4" />
@@ -309,7 +309,7 @@ export default function SimpleAuth() {
           className="flex-shrink-0 pb-6 text-center"
         >
           <p className="text-white/60 text-xs">
-            © 2025 Meta Lingua • {t('auth:allRightsReserved', 'All rights reserved')}
+            © 2025 MetaLingo • {t('auth:allRightsReserved', 'All rights reserved')}
           </p>
         </motion.div>
       </motion.div>

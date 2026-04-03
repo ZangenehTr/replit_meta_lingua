@@ -132,9 +132,9 @@ export default function CurriculumCategory() {
   return (
     <PublicLayout>
       <SEOHead
-        title={`${category.name} - Meta Lingua Academy`}
+        title={`${category.name} - MetaLingo Academy`}
         description={category.description || `Explore our ${category.name} courses and programs`}
-        keywords={`${category.name}, language courses, language learning, Meta Lingua`}
+        keywords={`${category.name}, language courses, language learning, MetaLingo`}
       />
 
       {/* Hero Section */}
@@ -297,7 +297,7 @@ export default function CurriculumCategory() {
             {t('curriculum.readyToStart', 'Ready to Start Learning?')}
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            {t('curriculum.readyToStartDesc', 'Join thousands of students already learning with Meta Lingua Academy')}
+            {t('curriculum.readyToStartDesc', 'Join thousands of students already learning with MetaLingo Academy')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="gap-2" data-testid="button-enroll">

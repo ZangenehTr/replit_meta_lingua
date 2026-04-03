@@ -1,4 +1,4 @@
-// Multilingual support for Meta Lingua platform
+// Multilingual support for MetaLingo platform
 import { useState, useEffect } from 'react';
 
 export type Language = 'en' | 'fa' | 'ar';

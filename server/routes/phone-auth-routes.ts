@@ -304,7 +304,7 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
 
     // Create new user with NORMALIZED phone number (+98 format)
     const newUser = await storage.createUser({
-      email: signupData.email || `${formattedPhone.replace('+', '')}@metalingua.local`,
+      email: signupData.email || `${formattedPhone.replace('+', '')}@metalingo.local`,
       firstName: signupData.firstName,
       lastName: signupData.lastName,
       role: signupData.role || 'Student',
@@ -377,10 +377,10 @@ router.post('/phone/verify-otp-signup', async (req: Request, res: Response) => {
     res.status(201).json({
       success: true,
       message: locale === 'fa'
-        ? 'ثبت‌نام موفقیت‌آمیز بود. به Meta Lingua خوش آمدید!'
+        ? 'ثبت‌نام موفقیت‌آمیز بود. به MetaLingo خوش آمدید!'
         : locale === 'ar'
-        ? 'تم التسجيل بنجاح. مرحباً بك في Meta Lingua!'
-        : 'Registration successful. Welcome to Meta Lingua!',
+        ? 'تم التسجيل بنجاح. مرحباً بك في MetaLingo!'
+        : 'Registration successful. Welcome to MetaLingo!',
       user: {
         id: newUser.id,
         email: newUser.email,

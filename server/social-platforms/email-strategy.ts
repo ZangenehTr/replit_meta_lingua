@@ -25,8 +25,8 @@ export class EmailStrategy extends PlatformStrategy {
 
   async publishPost(postData: ScheduledPostData): Promise<PlatformPostResult> {
     try {
-      const fromEmail = this.credentials.additionalData?.fromEmail || 'noreply@metalingua.com';
-      const fromName = this.credentials.additionalData?.fromName || 'Meta Lingua';
+      const fromEmail = this.credentials.additionalData?.fromEmail || 'noreply@metalingo.com';
+      const fromName = this.credentials.additionalData?.fromName || 'MetaLingo';
       const recipientList = this.credentials.additionalData?.recipientList || [];
 
       if (!Array.isArray(recipientList) || recipientList.length === 0) {
@@ -36,7 +36,7 @@ export class EmailStrategy extends PlatformStrategy {
       const emailData = {
         personalizations: recipientList.map((email: string) => ({
           to: [{ email }],
-          subject: this.credentials.additionalData?.subject || 'Newsletter from Meta Lingua',
+          subject: this.credentials.additionalData?.subject || 'Newsletter from MetaLingo',
         })),
         from: {
           email: fromEmail,

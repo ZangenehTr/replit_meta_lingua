@@ -2024,7 +2024,7 @@ export function setupCurriculumAndClassesRoutes(app: Express, context: RouteCont
       // Proxy to real implementation (maintains frontend compatibility)
       const configuration = {
         branding: {
-          instituteName: "Meta Lingua Academy",
+          instituteName: "MetaLingo Academy",
           logo: "/assets/logo.png",
           primaryColor: "#00D084",
           secondaryColor: "#FF6B6B"

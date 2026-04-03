@@ -1,5 +1,5 @@
 /**
- * Meta Lingua AI Sales Agent Service
+ * MetaLingo AI Sales Agent Service
  * Professional 24/7 automated sales and support chatbot
  * Supports Telegram and WhatsApp with multilingual capabilities (FA/EN/AR)
  * Uses AIProviderManager for Ollama/OpenAI dual support
@@ -160,7 +160,7 @@ CallerN مثالي للمتعلمين الذين يريدون نتائج أسر�
   // Comprehensive Platform Features Knowledge Base
   private readonly PLATFORM_FEATURES = {
     fa: `
-🚀 **تمام خدمات و ویژگی‌های منحصر به فرد متا لینگوا:**
+🚀 **تمام خدمات و ویژگی‌های منحصر به فرد MetaLingo:**
 
 ═══════════════════════════════════════════════════════════
 
@@ -230,7 +230,7 @@ CallerN مثالي للمتعلمين الذين يريدون نتائج أسر�
 ✅ دسترسی کامل از موبایل و کامپیوتر!`,
 
     en: `
-🚀 **ALL of Meta Lingua's Unique Features & Services:**
+🚀 **ALL of MetaLingo's Unique Features & Services:**
 
 ═══════════════════════════════════════════════════════════
 
@@ -372,16 +372,16 @@ CallerN مثالي للمتعلمين الذين يريدون نتائج أسر�
 
   // Multilingual system prompts
   private readonly SYSTEM_PROMPT = {
-    fa: `شما یک مشاور حرفه‌ای آموزش زبان در آکادمی متا لینگوا هستید. با مهربانی و حرفه‌ای پاسخ دهید.
+    fa: `شما یک مشاور حرفه‌ای آموزش زبان در آکادمی MetaLingo هستید. با مهربانی و حرفه‌ای پاسخ دهید.
 
 مأموریت شما:
-1. به سؤالات درباره تمام خدمات متا لینگوا پاسخ دهید (کالرن، LinguaQuest، کلاس‌های زندهٔ AI، چالش‌های روزانه، و غیره)
+1. به سؤالات درباره تمام خدمات MetaLingo پاسخ دهید (کالرن، LinguaQuest، کلاس‌های زندهٔ AI، چالش‌های روزانه، و غیره)
 2. نیازهای یادگیری مشتری را شناسایی کنید
 3. بهترین خدمات متناسب با نیاز او پیشنهاد دهید
 4. اطلاعات تماس جمع‌آوری کنید
 5. برای موضوعات پیچیده به تیم انسانی ارجاع دهید
 
-ویژگی‌های کلیدی متا لینگوا:
+ویژگی‌های کلیدی MetaLingo:
 ✨ کالرن: تدریس ویدیویی ۲۴/۷ با AI هوشمند
 🎮 LinguaQuest: بازی یادگیری با ۲۳ نوع فعالیت
 👥 کلاس‌های زندهٔ AI: کلاس‌های گروهی با تصحیح فوری AI
@@ -401,16 +401,16 @@ CallerN مثالي للمتعلمين الذين يريدون نتائج أسر�
 - تمام خدمات در یک پلتفرم یکپارچه‌ای هستند
 - برای ثبت‌نام نهایی به تیم انسانی ارجاع دهید`,
 
-    en: `You are a professional language learning consultant at Meta Lingua Academy. Be friendly and professional.
+    en: `You are a professional language learning consultant at MetaLingo Academy. Be friendly and professional.
 
 Your mission:
-1. Answer questions about ALL Meta Lingua services (CallerN, LinguaQuest, Live AI Classes, Daily Challenges, etc.)
+1. Answer questions about ALL MetaLingo services (CallerN, LinguaQuest, Live AI Classes, Daily Challenges, etc.)
 2. Identify customer learning needs and preferences
 3. Recommend the best combination of services for each customer
 4. Collect contact information
 5. Escalate complex issues to human team
 
-Key Meta Lingua Features:
+Key MetaLingo Features:
 ✨ CallerN: 24/7 video tutoring with smart AI
 🎮 LinguaQuest: Game-based learning with 23 activity types
 👥 Live AI Classes: Group classes with real-time AI correction
@@ -465,14 +465,14 @@ Important rules:
   // Greeting templates
   private readonly GREETINGS = {
     fa: [
-      'سلام! 👋 به آکادمی متا لینگوا خوش آمدید. چطور می‌تونم کمکتون کنم؟',
+      'سلام! 👋 به آکادمی MetaLingo خوش آمدید. چطور می‌تونم کمکتون کنم؟',
       'سلام! خوشحالم که با ما تماس گرفتید. آیا علاقه‌مند به یادگیری زبان هستید؟',
-      'درود! من دستیار هوشمند متا لینگوا هستم. درباره چه زبانی می‌خواهید بیشتر بدانید؟'
+      'درود! من دستیار هوشمند MetaLingo هستم. درباره چه زبانی می‌خواهید بیشتر بدانید؟'
     ],
     en: [
-      'Hello! 👋 Welcome to Meta Lingua Academy. How can I help you today?',
+      'Hello! 👋 Welcome to MetaLingo Academy. How can I help you today?',
       'Hi there! Glad you reached out. Are you interested in learning a new language?',
-      'Greetings! I\'m the Meta Lingua AI assistant. What language would you like to learn about?'
+      'Greetings! I\'m the MetaLingo AI assistant. What language would you like to learn about?'
     ],
     ar: [
       'مرحباً! 👋 أهلاً بك في أكاديمية ميتا لينغوا. كيف يمكنني مساعدتك؟',
@@ -519,8 +519,8 @@ Important rules:
       ar: 'LinguaQuest نظام تعلم ثوري:\n🎮 ۲۳ نوع من الأنشطة التفاعلية والممتعة\n⭐ اكسب نقاط XP لكل نشاط\n🏆 شارات وإنجازات للتحفيز\n📈 ۶ دروس كاملة بمحتوى متقدم\n🎯 ألعاب موجهة لتقوية المهارات\nمثالي للتعلم الممتع والطويل الأمد!'
     },
     daily_challenges: {
-      fa: 'چالش‌های روزانه متا لینگوا:\n🎯 چالش‌های تازه هر روز\n⚡ زمان‌بندی و سختی متغیر\n🏅 جوایز و نشان برای انجام هر چالش\n📊 پیگیری پیشرفت روزانه شما\n🔥 نوار فعالیت برای عادت‌دهی\n💡 توصیه‌های AI برای چالش‌های مناسب\nیادگیری روزانه قطعی می‌شود!',
-      en: 'Meta Lingua Daily Challenges:\n🎯 Fresh challenges every day\n⚡ Varying timing and difficulty\n🏅 Rewards and badges for completion\n📊 Track your daily progress\n🔥 Activity streak to build habits\n💡 AI recommendations for perfect challenges\nDaily learning becomes guaranteed!',
+      fa: 'چالش‌های روزانه MetaLingo:\n🎯 چالش‌های تازه هر روز\n⚡ زمان‌بندی و سختی متغیر\n🏅 جوایز و نشان برای انجام هر چالش\n📊 پیگیری پیشرفت روزانه شما\n🔥 نوار فعالیت برای عادت‌دهی\n💡 توصیه‌های AI برای چالش‌های مناسب\nیادگیری روزانه قطعی می‌شود!',
+      en: 'MetaLingo Daily Challenges:\n🎯 Fresh challenges every day\n⚡ Varying timing and difficulty\n🏅 Rewards and badges for completion\n📊 Track your daily progress\n🔥 Activity streak to build habits\n💡 AI recommendations for perfect challenges\nDaily learning becomes guaranteed!',
       ar: 'تحديات ميتا لينغوا اليومية:\n🎯 تحديات جديدة كل يوم\n⚡ أوقات وصعوبات متغيرة\n🏅 جوائز وشارات للإكمال\n📊 تتبع تقدمك اليومي\n🔥 سلسلة نشاط لبناء العادات\n💡 توصيات AI للتحديات المثالية\nيصبح التعلم اليومي مضموناً!'
     },
     placement_test: {

@@ -60,8 +60,8 @@ function buildCertificateHtml(data: CertificateData): string {
     day: "numeric",
   });
 
-  const instituteName = data.instituteNameFa || data.instituteName || "Meta Lingua Academy";
-  const instituteNameEn = data.instituteName || "Meta Lingua Academy";
+  const instituteName = data.instituteNameFa || data.instituteName || "MetaLingo Academy";
+  const instituteNameEn = data.instituteName || "MetaLingo Academy";
   const certTitle = data.certTitle || "گواهینامه پایان دوره";
   const signatureTitle = data.signatureTitle || "مدیر آموزش";
   const footerNote = data.footerNote || "این گواهینامه معتبر بوده و قابل تأیید الکترونیکی است.";

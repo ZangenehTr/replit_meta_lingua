@@ -549,7 +549,7 @@ export async function setupAdminAndMiscRoutes(app: Express, context: RouteContex
         const teacher = await storage.getUser(teacherId);
         if (teacher?.phoneNumber) {
           const { kavenegarService } = await import('../kavenegar-service');
-          const message = `Dear ${teacher.firstName}, your observation response has been submitted successfully. Your supervisor will review it shortly. Thank you for your engagement. Meta Lingua Academy`;
+          const message = `Dear ${teacher.firstName}, your observation response has been submitted successfully. Your supervisor will review it shortly. Thank you for your engagement. MetaLingo Academy`;
           await kavenegarService.sendSimpleSMS(teacher.phoneNumber, message);
           console.log(`SMS response confirmation sent to teacher ${teacher.firstName}`);
         }

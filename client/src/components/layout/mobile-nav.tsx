@@ -61,7 +61,7 @@ export function MobileNav() {
                   <span className="text-white font-bold text-sm">ML</span>
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold">Meta Lingua</h1>
+                  <h1 className="text-lg font-bold">MetaLingo</h1>
                   <p className="text-xs text-muted-foreground">Language Learning</p>
                 </div>
               </div>

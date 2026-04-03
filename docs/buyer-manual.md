@@ -1,4 +1,4 @@
-# Meta Lingua Academy — Buyer Manual
+# MetaLingo Academy — Buyer Manual
 
 **Version:** 1.3.0  
 **Last Updated:** April 2, 2026  
@@ -8,7 +8,7 @@
 
 ## Welcome
 
-Congratulations on choosing Meta Lingua Academy. This manual covers everything you need to know to operate the platform — from daily administration to advanced configuration. Read it from start to finish on your first setup, then use it as a reference later.
+Congratulations on choosing MetaLingo Academy. This manual covers everything you need to know to operate the platform — from daily administration to advanced configuration. Read it from start to finish on your first setup, then use it as a reference later.
 
 ---
 
@@ -44,7 +44,7 @@ Congratulations on choosing Meta Lingua Academy. This manual covers everything y
 
 ## 1. Understanding User Roles
 
-Meta Lingua uses **8 distinct roles**, each with its own dashboard, navigation, and permissions. A user can only hold one role at a time.
+MetaLingo uses **8 distinct roles**, each with its own dashboard, navigation, and permissions. A user can only hold one role at a time.
 
 | Role | Who Uses It | Key Access |
 |---|---|---|
@@ -601,7 +601,7 @@ Anomaly detection alerts admins when performance drops significantly. Thresholds
 
 ## 18. VoIP Integration
 
-Meta Lingua integrates with **Issabel PBX** via the AMI (Asterisk Manager Interface).
+MetaLingo integrates with **Issabel PBX** via the AMI (Asterisk Manager Interface).
 
 ### What You Can Do
 - **Click-to-call** a lead or student directly from their profile

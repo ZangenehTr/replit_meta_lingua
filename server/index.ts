@@ -378,7 +378,7 @@ server.listen({
   app.get("/api/admin/branding", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     res.json({ 
       id: 1, 
-      name: "Meta Lingua Academy", 
+      name: "MetaLingo Academy", 
       logo: "/logo.png", 
       primaryColor: "#0079F2",
       secondaryColor: "#00C851",
@@ -389,7 +389,7 @@ server.listen({
       loginBackgroundImage: "/login-bg.jpg",
       fontFamily: "Inter, sans-serif",
       borderRadius: "0.5rem",
-      instituteName: "Meta Lingua Academy",
+      instituteName: "MetaLingo Academy",
       description: "AI-enhanced multilingual language learning platform",
       updatedAt: new Date().toISOString()
     });
@@ -399,7 +399,7 @@ server.listen({
   app.get("/api/branding", async (req: any, res) => {
     res.json({ 
       id: 1, 
-      name: "Meta Lingua Academy", 
+      name: "MetaLingo Academy", 
       logo: "/logo.png", 
       primaryColor: "#0079F2",
       secondaryColor: "#00C851",
@@ -410,7 +410,7 @@ server.listen({
       loginBackgroundImage: "/login-bg.jpg",
       fontFamily: "Inter, sans-serif",
       borderRadius: "0.5rem",
-      instituteName: "Meta Lingua Academy",
+      instituteName: "MetaLingo Academy",
       description: "AI-enhanced multilingual language learning platform",
       updatedAt: new Date().toISOString()
     });

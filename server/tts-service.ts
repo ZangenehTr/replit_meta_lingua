@@ -12,7 +12,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Language mapping for Meta Lingua platform
+// Language mapping for MetaLingo platform
 const LANGUAGE_CODES = {
   'persian': 'fa',
   'farsi': 'fa', 

@@ -179,13 +179,13 @@ export class AISalesAgent {
         contactInfo: 'تلفن: 021-12345678',
       },
       en: {
-        name: 'Meta Lingua Academy',
+        name: 'MetaLingo Academy',
         description: 'Leading language institute in Iran with over 10 years of experience',
         specialties: 'IELTS, TOEFL, General & Business English training',
         contactInfo: 'Phone: 021-12345678',
       },
       ar: {
-        name: 'أكاديمية ميتا لينجوا',
+        name: 'أكاديمية MetaLingo',
         description: 'معهد اللغة الرائد في إيران مع أكثر من 10 سنوات من الخبرة',
         specialties: 'تدريب IELTS و TOEFL والإنجليزية العامة والتجارية',
         contactInfo: 'الهاتف: 021-12345678',
@@ -300,7 +300,7 @@ Generate your response now (${language} language only):`;
     try {
       const language = inquiry.language || this.detectLanguage(inquiry.message);
       
-      const prompt = `You are following up with a potential customer for Meta Lingua Academy.
+      const prompt = `You are following up with a potential customer for MetaLingo Academy.
 
 Previous inquiry: "${inquiry.message}"
 Your previous response: "${previousResponse}"

@@ -1,4 +1,4 @@
-// Role-based access control system for Meta Lingua Institute
+// Role-based access control system for MetaLingo Institute
 export type UserRole = 'admin' | 'teacher' | 'student' | 'mentor' | 'supervisor' | 'call_center' | 'accountant' | 'manager' | 'front_desk_clerk';
 
 interface Permission {

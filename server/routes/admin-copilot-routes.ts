@@ -81,7 +81,7 @@ function buildOllamaSystemPrompt(): string {
     return `Tool: ${tool.name}\nDescription: ${tool.description}\nParameters:\n${params}`;
   }).join('\n\n');
 
-  return `You are an AI Copilot assistant for the Meta Lingua admin panel. You help administrators manage the language learning platform.
+  return `You are an AI Copilot assistant for the MetaLingo admin panel. You help administrators manage the language learning platform.
 
 When you need to call a tool, respond with ONLY a valid JSON object in this exact format:
 {"tool": "tool_name_here", "params": {"param1": "value1", "param2": "value2"}}
@@ -269,7 +269,7 @@ export function createAdminCopilotRoutes(storage: IStorage) {
           | { role: 'tool'; tool_call_id: string; content: string };
 
         const resumeMessages: ApiMsg[] = [
-          { role: 'system', content: `You are an AI Copilot for the Meta Lingua admin panel. Help administrators manage the language learning platform efficiently. You may call multiple tools in sequence to complete complex admin tasks. Always respond in the same language the user writes in (Persian or English). Be concise and professional.` },
+          { role: 'system', content: `You are an AI Copilot for the MetaLingo admin panel. Help administrators manage the language learning platform efficiently. You may call multiple tools in sequence to complete complex admin tasks. Always respond in the same language the user writes in (Persian or English). Be concise and professional.` },
           ...postConfirmHistory.slice(-15).map(m => ({
             role: m.role === 'user' ? 'user' as const : 'assistant' as const,
             content: m.content
@@ -366,7 +366,7 @@ export function createAdminCopilotRoutes(storage: IStorage) {
         const apiMessages: ApiMessage[] = [
           {
             role: 'system',
-            content: `You are an AI Copilot for the Meta Lingua admin panel. Help administrators manage the language learning platform efficiently. You may call multiple tools in sequence to complete complex admin tasks. Always respond in the same language the user writes in (Persian or English). Be concise and professional.`
+            content: `You are an AI Copilot for the MetaLingo admin panel. Help administrators manage the language learning platform efficiently. You may call multiple tools in sequence to complete complex admin tasks. Always respond in the same language the user writes in (Persian or English). Be concise and professional.`
           },
           ...history.map(m => ({
             role: m.role === 'user' ? 'user' as const : 'assistant' as const,

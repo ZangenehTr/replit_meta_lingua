@@ -1,5 +1,5 @@
 /**
- * Test User Seeding Script for Meta Lingua Platform
+ * Test User Seeding Script for MetaLingo Platform
  * Creates clean test users for development and production environments
  * 
  * Creates:
@@ -31,11 +31,11 @@ export async function seedTestUsers() {
       "ali.mohammadi@example.com",
       "maryam.karimi@example.com",
       "reza.ahmadi@example.com",
-      "admin@metalingua.com",
-      "accountant@metalingua.com",
-      "callcenter@metalingua.com",
-      "frontdesk@metalingua.com",
-      "mentor@metalingua.com"
+      "admin@metalingo.com",
+      "accountant@metalingo.com",
+      "callcenter@metalingo.com",
+      "frontdesk@metalingo.com",
+      "mentor@metalingo.com"
     ];
     
     const existingTestUsers = await db.select().from(users).where(
@@ -144,7 +144,7 @@ export async function seedTestUsers() {
     console.log('👤 Creating Admin Users...');
     
     const admin = await db.insert(users).values({
-      email: "admin@metalingua.com",
+      email: "admin@metalingo.com",
       password: HASHED_PASSWORD,
       firstName: "Admin",
       lastName: "User",
@@ -156,7 +156,7 @@ export async function seedTestUsers() {
     } as any).returning();
 
     const accountant = await db.insert(users).values({
-      email: "accountant@metalingua.com",
+      email: "accountant@metalingo.com",
       password: HASHED_PASSWORD,
       firstName: "Sara",
       lastName: "Accountant",
@@ -169,7 +169,7 @@ export async function seedTestUsers() {
     } as any).returning();
 
     const callCenter = await db.insert(users).values({
-      email: "callcenter@metalingua.com",
+      email: "callcenter@metalingo.com",
       password: HASHED_PASSWORD,
       firstName: "Ali",
       lastName: "CallCenter",
@@ -182,7 +182,7 @@ export async function seedTestUsers() {
     } as any).returning();
 
     const frontDesk = await db.insert(users).values({
-      email: "frontdesk@metalingua.com",
+      email: "frontdesk@metalingo.com",
       password: HASHED_PASSWORD,
       firstName: "Maryam",
       lastName: "FrontDesk",
@@ -195,7 +195,7 @@ export async function seedTestUsers() {
     } as any).returning();
 
     const mentor = await db.insert(users).values({
-      email: "mentor@metalingua.com",
+      email: "mentor@metalingo.com",
       password: HASHED_PASSWORD,
       firstName: "Reza",
       lastName: "Mentor",

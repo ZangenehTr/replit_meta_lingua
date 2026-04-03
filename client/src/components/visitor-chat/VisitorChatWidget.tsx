@@ -173,7 +173,7 @@ export function VisitorChatWidget() {
       setMessages(prev => [...prev, {
         id: 0,
         senderType: 'ai',
-        senderName: 'Meta Lingua AI',
+        senderName: 'MetaLingo AI',
         message: t('visitorChat.welcomeMessage', 'Welcome! How can I help you today?'),
         createdAt: new Date().toISOString()
       }]);
@@ -551,7 +551,7 @@ export function VisitorChatWidget() {
                   </Button>
                 </div>
                 <p className="text-[10px] text-gray-300 mt-1 text-center">
-                  Meta Lingua
+                  MetaLingo
                 </p>
               </div>
             </>

@@ -36,7 +36,7 @@ export function useSystemMutations(
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `meta-lingua-config-${new Date().toISOString().split("T")[0]}.json`;
+      a.href = url; a.download = `metalingo-config-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
       toast({ title: t("common:toast.configurationExported") });
     },

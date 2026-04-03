@@ -38,7 +38,7 @@ interface LessonPreview {
 
 /**
  * LinguaQuest Home Page - Free Learning Platform
- * Distinct branding from Meta Lingua with gamified interface
+ * Distinct branding from MetaLingo with gamified interface
  */
 export function LinguaQuestHome() {
   const { t } = useTranslation('linguaquest');
@@ -86,7 +86,7 @@ export function LinguaQuestHome() {
   const handleUpgradeClick = () => {
     guestProgress.recordUpgradePrompt('hero_banner', 'home_page');
     guestProgress.trackEvent('consideration', 'upgrade_clicked', { source: 'hero_banner' });
-    // Navigate to Meta Lingua signup with progress transfer
+    // Navigate to MetaLingo signup with progress transfer
     window.location.href = '/signup?source=linguaquest&transfer=true';
   };
 
@@ -424,7 +424,7 @@ export function LinguaQuestHome() {
                     <p className="text-gray-600 dark:text-gray-300 mb-4">
                       {t('home.upgradeDescription', {
                         count: progress.completedLessons.length,
-                        defaultValue: "You've completed {{count}} lessons! Unlock personalized tutoring, advanced grammar, and certification with Meta Lingua Pro."
+                        defaultValue: "You've completed {{count}} lessons! Unlock personalized tutoring, advanced grammar, and certification with MetaLingo Pro."
                       })}
                     </p>
                     <div className="flex items-center space-x-4">

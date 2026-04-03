@@ -1,4 +1,4 @@
-// Mobile-First Design System for Meta Lingua Platform
+// Mobile-First Design System for MetaLingo Platform
 // Optimized for Persian Language Institute with Iranian Market Compliance
 
 export const MOBILE_DESIGN_TOKENS = {

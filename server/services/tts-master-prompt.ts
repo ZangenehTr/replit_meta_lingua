@@ -1,7 +1,7 @@
 /**
- * Master TTS Prompt for Meta Lingua Platform
+ * Master TTS Prompt for MetaLingo Platform
  * This prompt ensures consistent, high-quality language learning audio generation
- * across all AI components connected to Meta Lingua.
+ * across all AI components connected to MetaLingo.
  */
 
 export interface TTSExamType {

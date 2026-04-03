@@ -1,5 +1,5 @@
 /**
- * Telegram Bot Handler for Meta Lingua AI Sales Agent
+ * Telegram Bot Handler for MetaLingo AI Sales Agent
  * Self-hosted Telegram bot for 24/7 automated sales and support
  * No external dependencies - uses Telegram Bot API directly
  */
@@ -361,7 +361,7 @@ export class TelegramBotService {
     const messages = {
       fa: `سلام ${firstName}! 👋
 
-به <b>آکادمی متا لینگوا</b> خوش آمدید!
+به <b>آکادمی MetaLingo</b> خوش آمدید!
 
 من دستیار هوشمند آکادمی هستم و ۲۴ ساعته آماده پاسخگویی به سؤالات شما هستم.
 
@@ -371,7 +371,7 @@ export class TelegramBotService {
 
       en: `Hello ${firstName}! 👋
 
-Welcome to <b>Meta Lingua Academy</b>!
+Welcome to <b>MetaLingo Academy</b>!
 
 I'm the academy's AI assistant, available 24/7 to answer your questions.
 

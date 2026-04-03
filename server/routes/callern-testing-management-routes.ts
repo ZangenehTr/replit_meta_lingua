@@ -2260,7 +2260,7 @@ You have received a new observation report from ${supervisorName}.
 Please log in to review your complete evaluation report and feedback.
 
 Best regards,
-Meta Lingua Academy`;
+MetaLingo Academy`;
 
           const smsResult = await kavenegarService.sendSimpleSMS(teacher.phoneNumber, smsMessage);
           
@@ -2369,7 +2369,7 @@ A supervisor has scheduled an observation for your class:
 Please ensure your class is ready for quality assessment.
 
 Supervisor: ${supervisorName}
-Meta Lingua Academy`;
+MetaLingo Academy`;
 
           const smsResult = await kavenegarService.sendSimpleSMS(teacher.phoneNumber, smsMessage);
           
@@ -2530,7 +2530,7 @@ Classes: ${classNames}
 Please prepare these classes for quality assessment. You will receive individual notifications before each observation.
 
 Best regards,
-Meta Lingua Academy`;
+MetaLingo Academy`;
 
           const smsResult = await kavenegarService.sendSimpleSMS(teacher.phoneNumber, smsMessage);
           

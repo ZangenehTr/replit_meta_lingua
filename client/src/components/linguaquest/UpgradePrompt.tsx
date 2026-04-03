@@ -68,7 +68,7 @@ const FEATURES = [
 ];
 
 /**
- * LinguaQuest to Meta Lingua Upgrade Prompt Component
+ * LinguaQuest to MetaLingo Upgrade Prompt Component
  * Strategic conversion modal with progress transfer
  */
 export function UpgradePrompt({
@@ -95,7 +95,7 @@ export function UpgradePrompt({
     // Record prompt interaction
     await guestProgress.recordUpgradePrompt(promptType, promptPosition);
 
-    // Navigate to Meta Lingua signup with progress transfer
+    // Navigate to MetaLingo signup with progress transfer
     const params = new URLSearchParams({
       source: 'linguaquest',
       transfer: 'true',
@@ -126,7 +126,7 @@ export function UpgradePrompt({
       case 'feature_preview':
         return "✨ Unlock Your Full Potential";
       default:
-        return "🌟 Upgrade to Meta Lingua Pro";
+        return "🌟 Upgrade to MetaLingo Pro";
     }
   };
 
@@ -137,7 +137,7 @@ export function UpgradePrompt({
       case 'progress_barrier':
         return "You're making excellent progress! Unlock unlimited lessons, expert tutoring, and official certificates to accelerate your language journey.";
       case 'feature_preview':
-        return "Experience the full power of language learning with Meta Lingua Pro's advanced features and personalized curriculum.";
+        return "Experience the full power of language learning with MetaLingo Pro's advanced features and personalized curriculum.";
       default:
         return "Transform your language learning experience with premium features designed for serious learners.";
     }
@@ -197,7 +197,7 @@ export function UpgradePrompt({
               <div className="mt-4 text-center">
                 <Badge className="bg-green-100 text-green-800 px-3 py-1">
                   <CheckCircle className="w-4 h-4 me-1" />
-                  All progress will transfer to Meta Lingua Pro!
+                  All progress will transfer to MetaLingo Pro!
                 </Badge>
               </div>
             </div>
@@ -205,7 +205,7 @@ export function UpgradePrompt({
             {/* Features Grid */}
             <div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 text-center">
-                What You'll Unlock with Meta Lingua Pro
+                What You'll Unlock with MetaLingo Pro
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -258,7 +258,7 @@ export function UpgradePrompt({
                   data-testid="button-upgrade-to-pro"
                 >
                   <Crown className="w-5 h-5 me-2" />
-                  Upgrade to Meta Lingua Pro
+                  Upgrade to MetaLingo Pro
                   <ArrowRight className={`w-4 h-4 ms-2 transition-transform duration-200 ${isHovered ? 'translate-x-1' : ''}`} />
                 </Button>
                 
@@ -291,7 +291,7 @@ export function UpgradePrompt({
                 </span>
               </div>
               <p className="text-sm text-gray-500">
-                "Meta Lingua helped me become fluent in 6 months!" - Sarah M.
+                "MetaLingo helped me become fluent in 6 months!" - Sarah M.
               </p>
             </div>
           </CardContent>

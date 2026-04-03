@@ -114,7 +114,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                  Meta Lingua
+                  MetaLingo
                 </span>
                 <span className="text-[10px] text-muted-foreground leading-none">
                   {t('tagline', 'Learn Languages Globally')}
@@ -238,7 +238,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                       <Sparkles className="h-6 w-6 text-white" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-lg">Meta Lingua</span>
+                      <span className="font-bold text-lg">MetaLingo</span>
                       <span className="text-xs text-muted-foreground">
                         {t('tagline', 'Learn Languages Globally')}
                       </span>
@@ -390,7 +390,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                    Meta Lingua
+                    MetaLingo
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {t('tagline', 'Learn Languages Globally')}
@@ -457,7 +457,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
           <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Meta Lingua. {t('footer.rights', 'All rights reserved.')}
+              © {new Date().getFullYear()} MetaLingo. {t('footer.rights', 'All rights reserved.')}
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Globe className="h-4 w-4" />

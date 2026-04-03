@@ -37,7 +37,7 @@ export default function SMSTestPage() {
   const { toast } = useToast();
   const [testData, setTestData] = useState({
     phoneNumber: '',
-    message: 'Hello! This is a test message from Meta Lingua platform.'
+    message: 'Hello! This is a test message from MetaLingo platform.'
   });
   const [verificationData, setVerificationData] = useState({
     phoneNumber: '',

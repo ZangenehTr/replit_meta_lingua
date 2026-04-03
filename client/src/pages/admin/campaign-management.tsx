@@ -28,8 +28,8 @@ interface Campaign {
 const SOCIAL_PLATFORMS = [
   { platform: "Instagram", handle: "@metalingua_persian", followers: "2,340", engagement: "4.2%", lastPost: "2 hours ago", status: "active", icon: Instagram },
   { platform: "Telegram", handle: "@metalingua_channel", followers: "5,234", engagement: "8.1%", lastPost: "4 hours ago", status: "active", icon: Phone },
-  { platform: "YouTube", handle: "Meta Lingua Persian", followers: "892", engagement: "6.7%", lastPost: "1 day ago", status: "active", icon: Youtube },
-  { platform: "LinkedIn", handle: "Meta Lingua Institute", followers: "567", engagement: "3.4%", lastPost: "3 days ago", status: "pending", icon: Linkedin },
+  { platform: "YouTube", handle: "MetaLingo Persian", followers: "892", engagement: "6.7%", lastPost: "1 day ago", status: "active", icon: Youtube },
+  { platform: "LinkedIn", handle: "MetaLingo Institute", followers: "567", engagement: "3.4%", lastPost: "3 days ago", status: "pending", icon: Linkedin },
 ];
 
 const MARKETING_TOOLS = [

@@ -321,7 +321,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                 </motion.div>
                 <div>
                   <h1 className="text-gray-900 font-bold text-xl lg:text-2xl">
-                    {branding?.name || 'Meta Lingua Academy'}
+                    {branding?.name || 'MetaLingo Academy'}
                   </h1>
                   <p className="text-purple-600 text-sm font-medium">
                     {branding?.tagline || 'Master Languages, Master Life'}
@@ -395,7 +395,7 @@ export function ExplorerDashboard({ enrollmentStatus, user }: Props) {
                   >
                     <h2 className="text-3xl lg:text-5xl font-bold mb-6 leading-tight">
                       {t('student:heroTitle', { 
-                        institute: branding?.name || 'Meta Lingua Academy' 
+                        institute: branding?.name || 'MetaLingo Academy' 
                       })}
                     </h2>
                     <p className="text-white/90 text-lg lg:text-xl mb-8 leading-relaxed">

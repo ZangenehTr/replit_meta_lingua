@@ -640,7 +640,7 @@ export function IranianComplianceSettings() {
               <Label htmlFor="institute-name-english">{t('admin:iranianCompliance.instituteNameEnglish')}</Label>
               <Input
                 id="institute-name-english"
-                placeholder="Meta Lingua Language Institute"
+                placeholder="MetaLingo Language Institute"
                 defaultValue={settings?.instituteNameEnglish || ""}
               />
             </div>

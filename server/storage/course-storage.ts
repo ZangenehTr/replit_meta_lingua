@@ -1249,7 +1249,7 @@ export class MemStorageCourse extends MemStorageUser {
     // Return mock admin settings for in-memory storage
     return {
       id: 1,
-      instituteName: "Meta Lingua",
+      instituteName: "MetaLingo",
       timezone: "Asia/Tehran",
       emailEnabled: false,
       emailSmtpHost: "",

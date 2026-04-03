@@ -1,4 +1,4 @@
-# Meta Lingua — Project Structure & Architecture Guide
+# MetaLingo — Project Structure & Architecture Guide
 
 **Version:** 1.3.0  
 **Last Updated:** April 2, 2026  
@@ -10,7 +10,7 @@
 
 ## Table of Contents
 
-1. [What is Meta Lingua?](#what-is-meta-lingua)
+1. [What is MetaLingo?](#what-is-metalingo)
 2. [The Big Picture — System Map](#the-big-picture--system-map)
 3. [How a Request Flows Through the App](#how-a-request-flows-through-the-app)
 4. [Every Folder, Explained](#every-folder-explained)
@@ -26,9 +26,9 @@
 
 ---
 
-## What is Meta Lingua?
+## What is MetaLingo?
 
-Meta Lingua is a **complete institute management platform** built for Iranian language schools. It replaces every tool an institute needs — from student registration and course management, to live tutoring sessions, AI-powered placement tests, payments, CRM, HR management, and content marketing — all in one self-hosted system with no dependency on foreign cloud services.
+MetaLingo is a **complete institute management platform** built for Iranian language schools. It replaces every tool an institute needs — from student registration and course management, to live tutoring sessions, AI-powered placement tests, payments, CRM, HR management, and content marketing — all in one self-hosted system with no dependency on foreign cloud services.
 
 **8 user roles:** Admin, Supervisor, Teacher/Tutor, Front Desk, Student, Call Center Agent, Mentor, HR Manager
 

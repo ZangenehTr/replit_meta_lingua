@@ -47,7 +47,7 @@ export default function Contact() {
     <PublicLayout>
       <SEOHead
         title={t('contact.seoTitle', 'Contact Us')}
-        description={t('contact.seoDescription', 'Get in touch with Meta Lingua. We\'re here to answer your questions and help you start your language learning journey.')}
+        description={t('contact.seoDescription', 'Get in touch with MetaLingo. We\'re here to answer your questions and help you start your language learning journey.')}
         keywords="contact, support, language learning help"
       />
       

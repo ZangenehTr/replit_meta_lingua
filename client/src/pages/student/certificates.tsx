@@ -134,7 +134,7 @@ export default function StudentCertificatesPage() {
 <div class="cert">
   <div class="seal">🏅</div>
   <div class="logo">متالینگوآ</div>
-  <div class="subtitle">Meta Lingua Academy</div>
+  <div class="subtitle">MetaLingo Academy</div>
   <div class="heading">گواهی می‌شود که</div>
   <div class="details">
     <p>دانشجوی عزیز دوره زیر را با موفقیت به پایان رسانده است:</p>

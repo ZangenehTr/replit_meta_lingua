@@ -336,7 +336,7 @@ export class ProspectLifecycleService {
           const welcomeMessage = `سلام ${lead.firstName} عزیز،
 حساب کاربری شما در موسسه زبان ایجاد شد.
 برای ورود از شماره تلفن ${lead.phoneNumber} و کد تایید پیامکی استفاده کنید.
-موسسه زبان متا لینگوا`;
+موسسه زبان MetaLingo`;
           
           // SMS sending would happen here via Kavenegar integration
           // For now, we'll just log it

@@ -39,7 +39,7 @@ export default function VideoGallery() {
     <PublicLayout>
       <SEOHead
         title={t('videos.seoTitle', 'Video Library')}
-        description={t('videos.seoDescription', 'Watch our video tutorials and courses to improve your language skills with Meta Lingua Academy.')}
+        description={t('videos.seoDescription', 'Watch our video tutorials and courses to improve your language skills with MetaLingo Academy.')}
         keywords="language learning videos, tutorial videos, language courses"
       />
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b">

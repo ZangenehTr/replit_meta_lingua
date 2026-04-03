@@ -185,7 +185,7 @@ export default function CallernLanding() {
   return (
     <PublicLayout>
       <SEOHead
-        title={t('callern:landing.seoTitle', 'CallerN - 24/7 Live Video Tutoring | Meta Lingua')}
+        title={t('callern:landing.seoTitle', 'CallerN - 24/7 Live Video Tutoring | MetaLingo')}
         description={t('callern:landing.seoDescription', 'Connect with native English teachers anytime via live video calls. AI-powered, instant sessions, certified teachers. Start speaking confidently today!')}
         keywords="online English tutoring, live video lessons, native English teachers, instant language practice, video call English, speaking practice"
       />

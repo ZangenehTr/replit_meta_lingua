@@ -23,9 +23,9 @@ import { SystemSecurityTab } from "@/components/admin/SystemSecurityTab";
 import { SystemMaintenanceTab } from "@/components/admin/SystemMaintenanceTab";
 
 const brandingSettings = {
-  instituteName: "Meta Lingua Institute",
+  instituteName: "MetaLingo Institute",
   primaryColor: "#2563eb", secondaryColor: "#7c3aed", accentColor: "#059669",
-  customDomain: "metalingua.education", footerText: "© 2024 Meta Lingua Institute. All rights reserved.",
+  customDomain: "metalingua.education", footerText: "© 2024 MetaLingo Institute. All rights reserved.",
   supportEmail: "support@metalingua.education",
 };
 

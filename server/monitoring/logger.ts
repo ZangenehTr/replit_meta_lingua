@@ -15,7 +15,7 @@ interface LogEntry {
 
 class StructuredLogger {
   private logDir = path.join(process.cwd(), 'logs');
-  private service = 'metalingua';
+  private service = 'metalingo';
   private instance = process.env.SERVER_INSTANCE_ID || 'default';
   private logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || 'info';
 

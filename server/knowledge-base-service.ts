@@ -91,7 +91,7 @@ export class KnowledgeBaseService {
         tags: ['دوره', 'انگلیسی', 'آیلتس', 'تافل', 'مکالمه', 'کودکان'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -126,7 +126,7 @@ export class KnowledgeBaseService {
         tags: ['قیمت', 'تخفیف', 'پرداخت', 'اقساط', 'پکیج'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -170,7 +170,7 @@ export class KnowledgeBaseService {
         tags: ['CEFR', 'سطح', 'مبتدی', 'متوسط', 'پیشرفته'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -209,7 +209,7 @@ export class KnowledgeBaseService {
         tags: ['Callern', 'ویدیو', 'آنلاین', 'هوش مصنوعی', '24/7'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -255,7 +255,7 @@ export class KnowledgeBaseService {
         tags: ['ثبت‌نام', 'مشاوره', 'آزمون', 'مدارک'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -296,7 +296,7 @@ export class KnowledgeBaseService {
         tags: ['روش', 'آموزش', 'ارتباطی', 'تکنولوژی'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -334,7 +334,7 @@ export class KnowledgeBaseService {
         tags: ['سوال', 'پاسخ', 'راهنما'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -346,7 +346,7 @@ export class KnowledgeBaseService {
       {
         id: 'courses-general-en',
         title: 'Language Courses',
-        content: `Meta Lingua Academy offers diverse language learning courses:
+        content: `MetaLingo Academy offers diverse language learning courses:
         
         English Courses:
         - General English: Suitable for all levels from beginner to advanced
@@ -368,7 +368,7 @@ export class KnowledgeBaseService {
         tags: ['course', 'english', 'ielts', 'toefl', 'conversation', 'kids'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -407,7 +407,7 @@ export class KnowledgeBaseService {
         tags: ['callern', 'video', 'online', 'ai', '24/7'],
         metadata: {
           source: 'internal',
-          author: 'Meta Lingua Academy',
+          author: 'MetaLingo Academy',
           createdAt: new Date(),
           updatedAt: new Date()
         }

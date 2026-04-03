@@ -848,7 +848,7 @@ Return JSON format:
       // Enhanced branding data for conversion-optimized Explorer Dashboard
       const branding = {
         id: 1,
-        name: "Meta Lingua Academy",
+        name: "MetaLingo Academy",
         tagline: "Master Languages, Master Life",
         logo: "/api/branding/logo.png",
         description: "Leading language learning institute with innovative teaching methods and proven results.",
@@ -876,9 +876,9 @@ Return JSON format:
         // Contact and location info
         contact: {
           phone: "+98 21 1234 5678",
-          email: "info@metalingua.com",
+          email: "info@metalingo.com",
           address: "Tehran, Iran",
-          website: "https://metalingua.com"
+          website: "https://metalingo.com"
         },
         
         // Feature highlights for conversion
@@ -1448,7 +1448,7 @@ Return JSON format:
       // Simulate token usage data - in production this would come from a database
       const tokenUsage = [
         {
-          user: "admin@metalingua.com",
+          user: "admin@metalingo.com",
           model: "llama3.2:1b",
           tokensUsed: 15420,
           requestCount: 45,

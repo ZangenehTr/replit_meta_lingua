@@ -75,7 +75,7 @@ export default function CertificatesPage() {
   const [templateForm, setTemplateForm] = useState({
     certTitle: "گواهینامه پایان دوره",
     instituteNameFa: "آکادمی متالینگوآ",
-    instituteNameEn: "Meta Lingua Academy",
+    instituteNameEn: "MetaLingo Academy",
     logoUrl: "",
     signatureTitle: "مدیر آموزش",
     footerNote: "",
@@ -257,7 +257,7 @@ export default function CertificatesPage() {
                 id="inst-name-en"
                 value={templateForm.instituteNameEn}
                 onChange={(e) => setTemplateForm({ ...templateForm, instituteNameEn: e.target.value })}
-                placeholder="Meta Lingua Academy"
+                placeholder="MetaLingo Academy"
                 dir="ltr"
               />
             </div>

@@ -62,7 +62,7 @@ export default function VerifyCertificatePage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold">تأیید گواهینامه</h1>
-          <p className="text-muted-foreground mt-1">متالینگوآ — Meta Lingua Academy</p>
+          <p className="text-muted-foreground mt-1">متالینگوآ — MetaLingo Academy</p>
         </div>
 
         {/* Search */}

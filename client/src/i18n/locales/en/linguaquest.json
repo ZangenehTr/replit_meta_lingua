@@ -14,7 +14,7 @@
       "totalXP": "Total XP"
     },
     "readyForAdvanced": "Ready for Advanced Learning?",
-    "upgradeDescription": "Upgrade to Meta Lingua Pro for personalized lessons, expert tutoring, and official certificates.",
+    "upgradeDescription": "Upgrade to MetaLingo Pro for personalized lessons, expert tutoring, and official certificates.",
     "transferProgress": "Transfer your progress",
     "personalizedCurriculum": "Personalized curriculum",
     "officialCertificates": "Official certificates",
@@ -75,10 +75,10 @@
   },
   "upgrade": {
     "buttonText": "Upgrade to Pro",
-    "bannerMessage": "Great progress! Unlock advanced features with Meta Lingua Pro",
+    "bannerMessage": "Great progress! Unlock advanced features with MetaLingo Pro",
     "learnMore": "Learn More",
     "ctaTitle": "Unlock Advanced Features",
-    "ctaDescription": "Unlock advanced lessons and personalized tutoring with Meta Lingua Pro!",
+    "ctaDescription": "Unlock advanced lessons and personalized tutoring with MetaLingo Pro!",
     "upgradeNow": "Upgrade Now"
   },
   "lessons": {
@@ -206,7 +206,7 @@
     "newAchievements": "New Achievements Unlocked!",
     "readyForAdvanced": "Ready for Advanced Learning?",
     "readyForMore": "Ready for More?",
-    "upgradeDescription": "Upgrade to Meta Lingua Pro for personalized lessons and expert tutoring.",
+    "upgradeDescription": "Upgrade to MetaLingo Pro for personalized lessons and expert tutoring.",
     "upgrade": "Upgrade",
     "continueLearning": "Continue Learning",
     "retryLesson": "Retry Lesson",

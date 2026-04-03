@@ -31,7 +31,7 @@ export function AdminSystem() {
 
   const handleExportConfig = () => {
     const config = {
-      system: "Meta Lingua",
+      system: "MetaLingo",
       version: "1.0.0",
       timestamp: new Date().toISOString()
     };

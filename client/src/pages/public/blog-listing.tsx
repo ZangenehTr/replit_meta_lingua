@@ -60,7 +60,7 @@ export default function BlogListing() {
     <PublicLayout>
       <SEOHead
         title={t('blog.seoTitle', 'Blog - Latest Articles')}
-        description={t('blog.seoDescription', 'Explore our latest articles, tips, and insights about language learning from Meta Lingua Academy.')}
+        description={t('blog.seoDescription', 'Explore our latest articles, tips, and insights about language learning from MetaLingo Academy.')}
         keywords="language learning blog, learning tips, language articles"
       />
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b">

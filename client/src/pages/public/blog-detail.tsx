@@ -65,7 +65,7 @@ export default function BlogDetail() {
     <PublicLayout>
       <SEOHead
         title={post?.title || 'Blog Post'}
-        description={post?.metaDescription || post?.excerpt || 'Read this article on Meta Lingua Academy'}
+        description={post?.metaDescription || post?.excerpt || 'Read this article on MetaLingo Academy'}
         keywords={post?.metaKeywords || post?.tags?.join(', ') || 'language learning'}
         ogImage={post?.featuredImage || undefined}
         ogType="article"

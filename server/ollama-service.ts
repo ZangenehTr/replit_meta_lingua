@@ -202,7 +202,7 @@ export class OllamaService extends EventEmitter {
    * Summarize a call transcript for CRM integration
    */
   async summarizeCallTranscript(transcript: string): Promise<CallSummaryResult> {
-    const systemPrompt = `You are a call-center summarizer for MetaLingua. Output strict JSON with fields:
+    const systemPrompt = `You are a call-center summarizer for MetaLingo. Output strict JSON with fields:
 intent (string), summary_bullets (array of strings), sentiment (positive|neutral|negative),
 entities {name?, phone?, email?, course?, budget?, city?},
 next_actions [{type, when?, channel?, to?}],

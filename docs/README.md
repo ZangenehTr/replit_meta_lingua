@@ -1,4 +1,4 @@
-# Meta Lingua Academy — Platform Overview
+# MetaLingo Academy — Platform Overview
 
 **Version:** 1.3.0  
 **Last Updated:** April 2, 2026  
@@ -6,9 +6,9 @@
 
 ---
 
-## What is Meta Lingua?
+## What is MetaLingo?
 
-Meta Lingua is a comprehensive, AI-enhanced multilingual language institute management platform built for Iranian and regional language schools. It is designed for **complete self-hosting** with zero dependency on foreign cloud services, making it ideal for institutes that require data sovereignty, speed, and full ownership of their infrastructure.
+MetaLingo is a comprehensive, AI-enhanced multilingual language institute management platform built for Iranian and regional language schools. It is designed for **complete self-hosting** with zero dependency on foreign cloud services, making it ideal for institutes that require data sovereignty, speed, and full ownership of their infrastructure.
 
 It combines institute administration, student management, course delivery, live tutoring, gamification, CRM, HR management, payment processing, marketing tools, and AI-powered teaching tools into a single integrated system.
 
@@ -151,7 +151,7 @@ It combines institute administration, student management, course delivery, live 
 ## Repository Structure
 
 ```
-meta-lingua/
+metalingo/
 ├── client/               # React frontend (Vite)
 │   ├── src/
 │   │   ├── pages/        # All page components (by role)

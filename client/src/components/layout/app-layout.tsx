@@ -140,7 +140,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Home className="h-4 w-4 text-white" aria-hidden="true" />
               </div>
               <div className="hidden sm:flex flex-col items-start">
-                <span className="font-bold text-sm leading-none">Meta Lingua</span>
+                <span className="font-bold text-sm leading-none">MetaLingo</span>
                 <span className="text-xs text-muted-foreground leading-none">
                   {user.role === 'Teacher/Tutor' ? 'Teacher' : user.role}
                 </span>

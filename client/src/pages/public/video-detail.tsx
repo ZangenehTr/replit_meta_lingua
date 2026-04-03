@@ -76,7 +76,7 @@ export default function VideoDetail() {
     <PublicLayout>
       <SEOHead
         title={video?.title || 'Video'}
-        description={video?.description || 'Watch this video on Meta Lingua Academy'}
+        description={video?.description || 'Watch this video on MetaLingo Academy'}
         keywords={video?.category || 'language learning video'}
         ogImage={video?.thumbnail || undefined}
         ogType="video.other"

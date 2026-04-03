@@ -115,7 +115,7 @@ export default function StudentWelcomePage() {
           خوش آمدید، {user?.firstName}!
         </h1>
         <p className="text-white/85 text-lg max-w-xl mx-auto">
-          به Meta Lingua خوش آمدید. برای شروع یادگیری، یک دوره انتخاب کنید یا مستقیماً با یک مدرس آنلاین ارتباط برقرار کنید.
+          به MetaLingo خوش آمدید. برای شروع یادگیری، یک دوره انتخاب کنید یا مستقیماً با یک مدرس آنلاین ارتباط برقرار کنید.
         </p>
       </div>
 
@@ -350,7 +350,7 @@ export default function StudentWelcomePage() {
             <p className="text-amber-700 text-sm mb-4">
               این گواهینامه برای اتمام دوره زبان‌آموزی در
             </p>
-            <p className="text-2xl font-bold text-primary mb-4">Meta Lingua Academy</p>
+            <p className="text-2xl font-bold text-primary mb-4">MetaLingo Academy</p>
             <div className="flex justify-center gap-1 mt-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />

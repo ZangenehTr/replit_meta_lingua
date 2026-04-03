@@ -1,4 +1,4 @@
-// WebRTC Configuration for Meta Lingua Platform
+// WebRTC Configuration for MetaLingo Platform
 // Supports both free public STUN servers and self-hosted TURN servers
 
 export interface WebRTCConfig {
@@ -72,7 +72,7 @@ export const TURN_SERVER_SETUP_GUIDE = `
 # Self-Hosted TURN Server Setup (Optional)
 
 ## Option 1: Use Free Public Servers (Recommended for Start)
-- Already configured in Meta Lingua
+- Already configured in MetaLingo
 - Works for most deployments
 - No additional setup required
 
@@ -88,8 +88,8 @@ listening-port=3478
 tls-listening-port=5349
 relay-ip=YOUR_SERVER_IP
 external-ip=YOUR_PUBLIC_IP
-realm=metalingua.com
-server-name=metalingua.com
+realm=metalingo.com
+server-name=metalingo.com
 fingerprint
 use-auth-secret
 static-auth-secret=YOUR_SHARED_SECRET
@@ -100,7 +100,7 @@ pkey=/path/to/ssl/private.key
 
 ### Environment Variables:
 TURN_SERVER_URL=turn:your-server.com:3478
-TURN_USERNAME=metalingua
+TURN_USERNAME=metalingo
 TURN_PASSWORD=your-secure-password
 
 ### Firewall Rules:

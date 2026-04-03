@@ -448,9 +448,9 @@ export class OtpService {
       }
 
       const messages: Record<string, string> = {
-        fa: `کد تأیید Meta Lingua: ${code}\nاین کد تا 10 دقیقه معتبر است.`,
-        en: `Meta Lingua verification code: ${code}\nValid for 10 minutes.`,
-        ar: `رمز التحقق Meta Lingua: ${code}\nهذا الرمز صالح لمدة 10 دقائق.`
+        fa: `کد تأیید MetaLingo: ${code}\nاین کد تا 10 دقیقه معتبر است.`,
+        en: `MetaLingo verification code: ${code}\nValid for 10 minutes.`,
+        ar: `رمز التحقق MetaLingo: ${code}\nهذا الرمز صالح لمدة 10 دقائق.`
       };
       const message = messages[locale] || messages['en'];
 
@@ -479,15 +479,15 @@ export class OtpService {
   private static async sendEmailOtp(email: string, code: string, locale: string = 'fa'): Promise<void> {
     try {
       const subjects = {
-        fa: 'کد تأیید Meta Lingua',
-        en: 'Meta Lingua Verification Code',
-        ar: 'رمز التحقق Meta Lingua'
+        fa: 'کد تأیید MetaLingo',
+        en: 'MetaLingo Verification Code',
+        ar: 'رمز التحقق MetaLingo'
       };
       
       const messages = {
-        fa: `سلام!\n\nکد تأیید شما: ${code}\n\nاین کد تا 10 دقیقه معتبر است.\n\nاگر این درخواست را انجام ندادید، این ایمیل را نادیده بگیرید.\n\nتیم Meta Lingua`,
-        en: `Hello!\n\nYour verification code: ${code}\n\nThis code is valid for 10 minutes.\n\nIf you didn't request this, please ignore this email.\n\nMeta Lingua Team`,
-        ar: `مرحبا!\n\nرمز التحقق الخاص بك: ${code}\n\nهذا الرمز صالح لمدة 10 دقائق.\n\nإذا لم تطلب هذا، يرجى تجاهل هذا البريد الإلكتروني.\n\nفريق Meta Lingua`
+        fa: `سلام!\n\nکد تأیید شما: ${code}\n\nاین کد تا 10 دقیقه معتبر است.\n\nاگر این درخواست را انجام ندادید، این ایمیل را نادیده بگیرید.\n\nتیم MetaLingo`,
+        en: `Hello!\n\nYour verification code: ${code}\n\nThis code is valid for 10 minutes.\n\nIf you didn't request this, please ignore this email.\n\nMetaLingo Team`,
+        ar: `مرحبا!\n\nرمز التحقق الخاص بك: ${code}\n\nهذا الرمز صالح لمدة 10 دقائق.\n\nإذا لم تطلب هذا، يرجى تجاهل هذا البريد الإلكتروني.\n\nفريق MetaLingo`
       };
 
       const subject = subjects[locale] || subjects['en'];
@@ -547,7 +547,7 @@ export class OtpService {
 <body>
   <div class="container">
     <div class="header">
-      <h2>${locale === 'fa' ? 'Meta Lingua' : locale === 'ar' ? 'ميتا لينجوا' : 'Meta Lingua'}</h2>
+      <h2>${locale === 'fa' ? 'MetaLingo' : locale === 'ar' ? 'MetaLingo' : 'MetaLingo'}</h2>
     </div>
     <div class="content">
       <p>${message.split('\n').join('<br>')}</p>
@@ -561,7 +561,7 @@ export class OtpService {
       </p>
     </div>
     <div class="footer">
-      <p>© 2025 Meta Lingua Academy. ${locale === 'fa' ? 'تمام حقوق محفوظ است.' : locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</p>
+      <p>© 2025 MetaLingo Academy. ${locale === 'fa' ? 'تمام حقوق محفوظ است.' : locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</p>
     </div>
   </div>
 </body>

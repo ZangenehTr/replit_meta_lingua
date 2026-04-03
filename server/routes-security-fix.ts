@@ -156,11 +156,11 @@ export async function registerRoutes(app: express.Express) {
     try {
       res.json({
         id: 1,
-        name: "Meta Lingua Academy",
+        name: "MetaLingo Academy",
         logo: "",
         primaryColor: "#0079F2",
         secondaryColor: "#00C851",
-        instituteName: "Meta Lingua Academy",
+        instituteName: "MetaLingo Academy",
         description: "AI-enhanced multilingual language learning platform"
       });
     } catch (error) {

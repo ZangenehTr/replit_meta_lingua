@@ -1760,7 +1760,7 @@ export class FinancialDbStorage extends UserDbStorage {
     // If no branding exists, create default branding
     if (!branding) {
       const defaultBranding = {
-        name: "Meta Lingua Academy",
+        name: "MetaLingo Academy",
         logo: "",
         primaryColor: "#3B82F6",
         secondaryColor: "#1E40AF", 

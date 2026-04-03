@@ -19,7 +19,7 @@ export default function About() {
     <PublicLayout>
       <SEOHead
         title={t('about.seoTitle', 'About Us')}
-        description={t('about.seoDescription', 'Meta Lingua is a comprehensive language learning platform designed to make language education accessible, effective, and enjoyable for everyone.')}
+        description={t('about.seoDescription', 'MetaLingo is a comprehensive language learning platform designed to make language education accessible, effective, and enjoyable for everyone.')}
         keywords="language learning, online education, AI tutoring, language courses"
       />
       
@@ -28,7 +28,7 @@ export default function About() {
           <Badge className="mb-4" data-testid="badge-about">{t('about.badge', 'About Us')}</Badge>
           <h1 className="text-4xl font-bold mb-4" data-testid="heading-about">{t('about.title', 'Empowering Language Learners Globally')}</h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto" data-testid="text-about-subtitle">
-            {t('about.subtitle', 'Meta Lingua is a comprehensive language learning platform designed to make language education accessible, effective, and enjoyable for everyone.')}
+            {t('about.subtitle', 'MetaLingo is a comprehensive language learning platform designed to make language education accessible, effective, and enjoyable for everyone.')}
           </p>
         </div>
       </section>
@@ -72,7 +72,7 @@ export default function About() {
 
       <section className="py-16 bg-accent/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12" data-testid="heading-why-choose">{t('about.whyChoose', 'Why Choose Meta Lingua?')}</h2>
+          <h2 className="text-3xl font-bold text-center mb-12" data-testid="heading-why-choose">{t('about.whyChoose', 'Why Choose MetaLingo?')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center" data-testid="stat-languages">
               <div className="text-4xl font-bold text-primary mb-2">15+</div>

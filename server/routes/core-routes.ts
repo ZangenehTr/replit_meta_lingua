@@ -1517,7 +1517,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         const settings = await storage.getAdminSettings();
         if (user.phoneNumber) {
           const smsTemplate = settings?.passwordResetSmsTemplate || 
-            `Password Reset for Meta Lingua:\n\n` +
+            `Password Reset for MetaLingo:\n\n` +
             `Click this link to reset your password: ${resetLink}\n\n` +
             `This link will expire in 1 hour.\n` +
             `If you did not request this, please ignore this message.`;
@@ -1898,7 +1898,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>Meta Lingua Certificate</title>
+          <title>MetaLingo Certificate</title>
           <style>
             body { font-family: 'Times New Roman', serif; margin: 40px; text-align: center; line-height: 1.6; }
             .certificate { max-width: 800px; margin: 0 auto; border: 3px solid #2563eb; padding: 40px; }
@@ -1913,7 +1913,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         <body>
           <div class="certificate">
             <div class="header">CERTIFICATE OF COMPLETION</div>
-            <div class="subtitle">Meta Lingua Language Learning Platform</div>
+            <div class="subtitle">MetaLingo Language Learning Platform</div>
             
             <p style="font-size: 18px; margin: 30px 0;">This certifies that</p>
             <div class="student-name">${certificateData.studentName}</div>
@@ -1930,7 +1930,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
             
             <div class="footer">
               <p>Certificate ID: ${certificateData.certificateId}</p>
-              <p>Meta Lingua - Excellence in Language Education</p>
+              <p>MetaLingo - Excellence in Language Education</p>
             </div>
           </div>
         </body>
@@ -1938,7 +1938,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
       `;
 
       res.setHeader('Content-Type', 'text/html');
-      res.setHeader('Content-Disposition', `attachment; filename="MetaLingua-Certificate-${certificateData.studentName.replace(/\s+/g, '-')}.html"`);
+      res.setHeader('Content-Disposition', `attachment; filename="MetaLingo-Certificate-${certificateData.studentName.replace(/\s+/g, '-')}.html"`);
       res.send(certificateHTML);
 
     } catch (error) {
@@ -2682,7 +2682,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
     try {
       const configuration = {
         branding: {
-          instituteName: "Meta Lingua Academy",
+          instituteName: "MetaLingo Academy",
           logo: "/assets/logo.png",
           primaryColor: "#00D084",
           secondaryColor: "#FF6B6B"
@@ -2817,7 +2817,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         netAmount: netAmount,
         paymentDate: new Date().toISOString(),
         payslipId: payslipId,
-        instituteName: 'Meta Lingua Academy',
+        instituteName: 'MetaLingo Academy',
         instituteAddress: 'Tehran, Iran'
       };
       
@@ -2857,7 +2857,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
         completionDate: new Date().toISOString(),
         grade: 'A',
         certificateId: `CERT-${Date.now()}`,
-        instructorName: 'Meta Lingua Academy'
+        instructorName: 'MetaLingo Academy'
       };
       
       // Generate PDF

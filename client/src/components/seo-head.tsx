@@ -11,7 +11,7 @@ interface SEOHeadProps {
 
 export function SEOHead({ title, description, keywords, ogImage, ogType = 'website', canonicalUrl }: SEOHeadProps) {
   useEffect(() => {
-    document.title = `${title} | Meta Lingua`;
+    document.title = `${title} | MetaLingo`;
     
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {

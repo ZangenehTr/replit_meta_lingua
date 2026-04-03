@@ -171,8 +171,8 @@ export async function generatePayslipPDF(data: PayslipData): Promise<Buffer> {
       </head>
       <body>
         <div class="header">
-          <h1>${data.instituteName || 'Meta Lingua Academy'}</h1>
-          <p>${data.instituteAddress || 'موسسه آموزش زبان متا لینگوا'}</p>
+          <h1>${data.instituteName || 'MetaLingo Academy'}</h1>
+          <p>${data.instituteAddress || 'موسسه آموزش زبان MetaLingo'}</p>
           <p>فیش حقوقی مدرس</p>
         </div>
         
@@ -251,7 +251,7 @@ export async function generatePayslipPDF(data: PayslipData): Promise<Buffer> {
         
         <div class="footer">
           <p>این فیش حقوقی به صورت خودکار تولید شده است.</p>
-          <p>${new Date().toLocaleDateString('fa-IR')} - ${data.instituteName || 'Meta Lingua Academy'}</p>
+          <p>${new Date().toLocaleDateString('fa-IR')} - ${data.instituteName || 'MetaLingo Academy'}</p>
         </div>
       </body>
       </html>
@@ -759,7 +759,7 @@ export async function generateTestResultsPDF(data: TestResultsPDFData): Promise<
         ` : ''}
         
         <div class="footer">
-          <p>This report was generated automatically by Meta Lingua Academy's MST System.</p>
+          <p>This report was generated automatically by MetaLingo Academy's MST System.</p>
           <p>For questions about your results, please contact your instructor or academic advisor.</p>
           <p class="report-id">Report ID: ${data.reportId}</p>
           <p>Generated on: ${new Date().toLocaleString()}</p>
@@ -788,7 +788,7 @@ export async function generateTestResultsPDF(data: TestResultsPDFData): Promise<
       `,
       footerTemplate: `
         <div style="font-size: 10px; color: #6b7280; text-align: center; width: 100%;">
-          Page <span class="pageNumber"></span> of <span class="totalPages"></span> - Meta Lingua Academy
+          Page <span class="pageNumber"></span> of <span class="totalPages"></span> - MetaLingo Academy
         </div>
       `
     });
@@ -951,7 +951,7 @@ export async function generateCertificatePDF(data: {
       <body>
         <div class="certificate">
           <div class="header">
-            <div class="logo">Meta Lingua Academy</div>
+            <div class="logo">MetaLingo Academy</div>
           </div>
           
           <div class="title">Certificate of Completion</div>

@@ -1,7 +1,7 @@
-# Meta Lingua Platform
+# MetaLingo Platform
 
 ## Overview
-Meta Lingua is an AI-enhanced, multilingual language learning and institute management platform designed for self-hosting by language institutes. It offers comprehensive administration, student management, course enrollment, VoIP integration, and a wallet-based payment system. The platform aims to provide a powerful, customizable, and independent solution, particularly for regions prioritizing data sovereignty and local infrastructure, empowering institutes with a robust, self-managed digital learning ecosystem.
+MetaLingo is an AI-enhanced, multilingual language learning and institute management platform designed for self-hosting by language institutes. It offers comprehensive administration, student management, course enrollment, VoIP integration, and a wallet-based payment system. The platform aims to provide a powerful, customizable, and independent solution, particularly for regions prioritizing data sovereignty and local infrastructure, empowering institutes with a robust, self-managed digital learning ecosystem.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

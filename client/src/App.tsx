@@ -129,7 +129,7 @@ import LevelAssessment from "@/pages/level-assessment";
 import MSTPage from "@/pages/mst";
 import GamesPage from "@/pages/games";
 import GamePlayer from "@/pages/game-player";
-import MetaLinguaComplete from "@/pages/meta-lingua-complete";
+import MetaLingoComplete from "@/pages/metalingo-complete";
 
 // Teacher pages
 import TeacherClassesPage from "@/pages/teacher/classes";
@@ -269,8 +269,8 @@ function Router() {
       <Route path="/social/crashers" component={SessionCrashersPage} />
       <Route path="/social/diaspora" component={DiasporaBridgePage} />
       
-      {/* Meta Lingua Complete Implementation Testing */}
-      <Route path="/meta-lingua-complete" component={MetaLinguaComplete} />
+      {/* MetaLingo Complete Implementation Testing */}
+      <Route path="/metalingo-complete" component={MetaLingoComplete} />
       
       <Route path="/auth" component={Auth} />
       <Route path="/login" component={Auth} />

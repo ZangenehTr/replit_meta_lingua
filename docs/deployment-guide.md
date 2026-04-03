@@ -1,4 +1,4 @@
-# Meta Lingua Academy — Deployment Guide
+# MetaLingo Academy — Deployment Guide
 
 **Version:** 1.3.0  
 **Last Updated:** April 2, 2026  
@@ -8,7 +8,7 @@
 
 ## Overview
 
-This guide covers deploying Meta Lingua Academy to a self-hosted Linux server in a production environment. The setup is Docker-based and includes PostgreSQL, Redis, Nginx, and the application itself. No external cloud services are required.
+This guide covers deploying MetaLingo Academy to a self-hosted Linux server in a production environment. The setup is Docker-based and includes PostgreSQL, Redis, Nginx, and the application itself. No external cloud services are required.
 
 **Estimated setup time:** 2–4 hours for a fresh server.
 
@@ -88,7 +88,7 @@ Before you start, have these ready:
 - [ ] Kavenegar account with API key and verified sender line
 - [ ] Payment gateway account with API credentials
 - [ ] SSH key pair for the server
-- [ ] The Meta Lingua source code package (zip or git repo)
+- [ ] The MetaLingo source code package (zip or git repo)
 
 ---
 
@@ -131,13 +131,13 @@ docker compose version
 
 ```bash
 # Create application directory
-sudo mkdir -p /opt/metalingua
-sudo chown $USER:$USER /opt/metalingua
-cd /opt/metalingua
+sudo mkdir -p /opt/metalingo
+sudo chown $USER:$USER /opt/metalingo
+cd /opt/metalingo
 
 # Extract or clone the source
 # If you received a zip file:
-unzip meta-lingua-source.zip -d .
+unzip metalingo-source.zip -d .
 
 # Create uploads directory (for logos, teacher photos, etc.)
 mkdir -p uploads/logos uploads/teacher-photos uploads/videos uploads/media
@@ -151,7 +151,7 @@ nano .env   # Edit with your actual values (see Section 6)
 
 ## 6. Environment Variables Reference
 
-Edit `/opt/metalingua/.env` with your actual values:
+Edit `/opt/metalingo/.env` with your actual values:
 
 ### Core Application
 
@@ -174,11 +174,11 @@ NODE_ENV=production
 ### Database
 
 ```env
-DATABASE_URL=postgresql://metalingua:yourpassword@postgres:5432/metalingua
+DATABASE_URL=postgresql://metalingo:yourpassword@postgres:5432/metalingo
 PGHOST=postgres
 PGPORT=5432
-PGDATABASE=metalingua
-PGUSER=metalingua
+PGDATABASE=metalingo
+PGUSER=metalingo
 PGPASSWORD=yourpassword
 ```
 
@@ -273,7 +273,7 @@ pg_dump "postgresql://user:pass@neon-host/dbname" \
 
 # Restore to production
 docker compose exec postgres psql \
-  -U metalingua -d metalingua < backup_dev.sql
+  -U metalingo -d metalingo < backup_dev.sql
 ```
 
 ---
@@ -283,7 +283,7 @@ docker compose exec postgres psql \
 ### Step 1 — Build the Application Image
 
 ```bash
-cd /opt/metalingua
+cd /opt/metalingo
 docker compose build
 ```
 
@@ -296,7 +296,7 @@ docker compose up -d
 ```
 
 This starts:
-- `app` — the Meta Lingua Node.js server on port 5000
+- `app` — the MetaLingo Node.js server on port 5000
 - `postgres` — PostgreSQL 14 database
 - `redis` — Redis 7 for queue management
 
@@ -326,14 +326,14 @@ files.forEach(f => {
 Or apply manually per file:
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0000_nostalgic_blue_blade.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0000_nostalgic_blue_blade.sql
 
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0020_payment_gateway_configs.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0020_payment_gateway_configs.sql
 
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0030_promo_codes_certificates.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0030_promo_codes_certificates.sql
 ```
 
 ### Step 4 — Check Everything Is Running
@@ -446,7 +446,7 @@ sudo apt install -y nginx
 Create the site configuration:
 
 ```bash
-sudo nano /etc/nginx/sites-available/metalingua
+sudo nano /etc/nginx/sites-available/metalingo
 ```
 
 Paste this configuration:
@@ -478,7 +478,7 @@ server {
 
     # Serve static uploads directly from host
     location /uploads/ {
-        alias /opt/metalingua/uploads/;
+        alias /opt/metalingo/uploads/;
         expires 7d;
         add_header Cache-Control "public, immutable";
     }
@@ -509,7 +509,7 @@ server {
 Enable and test:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/metalingua /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/metalingo /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -533,8 +533,8 @@ Certbot automatically sets up a cron job to renew the certificate before it expi
 
 ### If You Already Have a Certificate (from a local CA)
 Place the certificate files at:
-- `/etc/ssl/metalingua/fullchain.pem`
-- `/etc/ssl/metalingua/privkey.pem`
+- `/etc/ssl/metalingo/fullchain.pem`
+- `/etc/ssl/metalingo/privkey.pem`
 
 And update the Nginx `ssl_certificate` and `ssl_certificate_key` paths accordingly.
 
@@ -658,7 +658,7 @@ telnet YOUR_ISSABEL_IP 5038
 ```env
 VOIP_AMI_HOST=192.168.1.100
 VOIP_AMI_PORT=5038
-VOIP_AMI_USERNAME=metalingua_ami
+VOIP_AMI_USERNAME=metalingo_ami
 VOIP_AMI_SECRET=yoursecret
 VOIP_DEFAULT_TRUNK=SIP/your-sip-trunk
 ```
@@ -709,15 +709,15 @@ Each new release may include SQL migration files in the `migrations/` folder. Ap
 ### Check Which Migrations Have Been Applied
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua \
+docker compose exec postgres psql -U metalingo metalingo \
   -c "SELECT tablename FROM information_schema.tables WHERE table_schema='public' ORDER BY tablename;"
 ```
 
 ### Apply a Specific Migration
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0030_promo_codes_certificates.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0030_promo_codes_certificates.sql
 ```
 
 All migration files use `IF NOT EXISTS` and `EXCEPTION WHEN duplicate_column` handling, so they are **safe to re-run** if you are unsure whether they were applied.
@@ -811,7 +811,7 @@ ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100);
 Run this block against the production database:
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua < /opt/metalingua/migrations/0040_marketing_attribution.sql
+docker compose exec postgres psql -U metalingo metalingo < /opt/metalingo/migrations/0040_marketing_attribution.sql
 ```
 
 ### v1.1.1 Migration — CallerN Teacher Followers & Private Class Stack
@@ -819,17 +819,17 @@ docker compose exec postgres psql -U metalingua metalingua < /opt/metalingua/mig
 If upgrading from v1.1.0, apply these additional migration files before moving to v1.2.0:
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0050_callern_teacher_followers.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0050_callern_teacher_followers.sql
 
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0060_private_class_operational_stack.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0060_private_class_operational_stack.sql
 
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0070_mst_question_bank_indexes.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0070_mst_question_bank_indexes.sql
 
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0080_sublevel_system.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0080_sublevel_system.sql
 ```
 
 - `0050` — adds CallerN teacher follower tracking tables
@@ -863,14 +863,14 @@ ALTER TABLE session_packages
 Apply all v1.2.0 migration files in order:
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0090_sublevel_session_packages_leads.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0090_sublevel_session_packages_leads.sql
 
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0100_curriculum_levels_unique_constraint.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0100_curriculum_levels_unique_constraint.sql
 
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0110_session_packages_sublevel_fk.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0110_session_packages_sublevel_fk.sql
 ```
 
 All migrations use `IF NOT EXISTS` / `EXCEPTION WHEN duplicate_object` guards and are safe to re-run.
@@ -884,15 +884,15 @@ If upgrading from v1.2.0 to v1.3.0, apply the following. All changes are additiv
 **IRT/MST reliability tables** — stores per-session response telemetry and IRT scoring history:
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/0120_irt_mst_reliability_tables.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0120_irt_mst_reliability_tables.sql
 ```
 
 **Social media content tables** — required for the AI Content & SEO Pipeline social media post type:
 
 ```bash
-docker compose exec postgres psql -U metalingua metalingua \
-  < /opt/metalingua/migrations/manual_social_media_tables.sql
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/manual_social_media_tables.sql
 ```
 
 - `0120` — adds IRT response telemetry tables and IRT scoring history per test session; fixes CEFR theta thresholds
@@ -908,12 +908,12 @@ Add this to your crontab (`crontab -e`):
 
 ```bash
 # Daily database backup at 2:00 AM
-0 2 * * * docker exec metalingua-postgres-1 pg_dump \
-  -U metalingua metalingua | gzip \
-  > /opt/backups/metalingua_$(date +\%Y\%m\%d).sql.gz
+0 2 * * * docker exec metalingo-postgres-1 pg_dump \
+  -U metalingo metalingo | gzip \
+  > /opt/backups/metalingo_$(date +\%Y\%m\%d).sql.gz
 
 # Keep only last 30 days
-0 3 * * * find /opt/backups -name "metalingua_*.sql.gz" -mtime +30 -delete
+0 3 * * * find /opt/backups -name "metalingo_*.sql.gz" -mtime +30 -delete
 ```
 
 Create the backup directory:
@@ -929,8 +929,8 @@ sudo chown $USER:$USER /opt/backups
 docker compose stop app
 
 # Restore the dump
-gunzip -c /opt/backups/metalingua_20260329.sql.gz | \
-  docker exec -i metalingua-postgres-1 psql -U metalingua metalingua
+gunzip -c /opt/backups/metalingo_20260329.sql.gz | \
+  docker exec -i metalingo-postgres-1 psql -U metalingo metalingo
 
 # Restart
 docker compose start app
@@ -938,25 +938,25 @@ docker compose start app
 
 ### Uploads Backup
 
-Video files, logos, and teacher photos are stored in `/opt/metalingua/uploads/`. Back these up separately:
+Video files, logos, and teacher photos are stored in `/opt/metalingo/uploads/`. Back these up separately:
 
 ```bash
 tar -czf /opt/backups/uploads_$(date +%Y%m%d).tar.gz \
-  /opt/metalingua/uploads/
+  /opt/metalingo/uploads/
 ```
 
 ---
 
 ## 17. Updating the Platform
 
-When a new version of Meta Lingua is released:
+When a new version of MetaLingo is released:
 
 ```bash
-cd /opt/metalingua
+cd /opt/metalingo
 
 # 1. Back up current database
-docker exec metalingua-postgres-1 pg_dump \
-  -U metalingua metalingua > /opt/backups/pre_update_$(date +%Y%m%d).sql
+docker exec metalingo-postgres-1 pg_dump \
+  -U metalingo metalingo > /opt/backups/pre_update_$(date +%Y%m%d).sql
 
 # 2. Pull new source code (or extract updated zip)
 # git pull   # or: unzip new-version.zip -d .
@@ -1149,11 +1149,11 @@ sudo systemctl reload nginx
 
 | File | Location |
 |---|---|
-| Environment config | `/opt/metalingua/.env` |
-| Docker Compose | `/opt/metalingua/docker-compose.yml` |
-| Nginx site config | `/etc/nginx/sites-available/metalingua` |
+| Environment config | `/opt/metalingo/.env` |
+| Docker Compose | `/opt/metalingo/docker-compose.yml` |
+| Nginx site config | `/etc/nginx/sites-available/metalingo` |
 | coturn config | `/etc/turnserver.conf` |
-| Uploads directory | `/opt/metalingua/uploads/` |
+| Uploads directory | `/opt/metalingo/uploads/` |
 | Database backups | `/opt/backups/` |
 | Application logs | `docker compose logs app` |
 
@@ -1176,7 +1176,7 @@ docker compose logs -f app
 docker compose exec app npm run db:push
 
 # Open database shell
-docker compose exec postgres psql -U metalingua metalingua
+docker compose exec postgres psql -U metalingo metalingo
 
 # Open Redis shell
 docker compose exec redis redis-cli

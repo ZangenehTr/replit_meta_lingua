@@ -453,7 +453,7 @@ export default function TestResultsPage() {
     ogDescription.setAttribute('content', 'Comprehensive language proficiency test analytics and progress tracking for MST assessments.');
 
     return () => {
-      document.title = 'Meta Lingua Academy';
+      document.title = 'MetaLingo Academy';
     };
   }, []);
   const [searchTerm, setSearchTerm] = useState('');

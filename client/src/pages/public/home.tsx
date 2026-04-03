@@ -100,7 +100,7 @@ export default function PublicHome() {
   return (
     <PublicLayout>
       <SEOHead
-        title={t('home.seoTitle', 'Meta Lingua - AI-Powered Language Learning')}
+        title={t('home.seoTitle', 'MetaLingo - AI-Powered Language Learning')}
         description={t('home.seoDescription', 'Learn languages with AI-powered tutoring, interactive courses, and a supportive global community. Start your language learning journey today!')}
         keywords="language learning, AI tutoring, online courses, language academy"
       />
@@ -182,7 +182,7 @@ export default function PublicHome() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
-              {t('features.heading', 'Why Choose Meta Lingua?')}
+              {t('features.heading', 'Why Choose MetaLingo?')}
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
               {t('features.subheading', 'Experience the next generation of language learning with cutting-edge technology and proven methodologies.')}

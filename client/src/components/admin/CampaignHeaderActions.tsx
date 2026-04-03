@@ -37,7 +37,7 @@ export function CampaignHeaderActions({ onNewCampaign }: Props) {
           <div className="space-y-4">
             <div><Label>{t("admin:campaigns.emailContent")}</Label><Textarea placeholder={t("admin:campaigns.emailPlaceholder")} value={emailContent} onChange={(e) => setEmailContent(e.target.value)} rows={5} /></div>
             <div className="flex gap-2">
-              <Button onClick={() => sendEmailMutation.mutate({ recipients: ["all_students"], subject: "Important Update from Meta Lingua", content: emailContent })} disabled={sendEmailMutation.isPending}><Send className="h-4 w-4 me-2" />{sendEmailMutation.isPending ? t("admin:campaigns.sending") : t("admin:campaigns.sendEmail")}</Button>
+              <Button onClick={() => sendEmailMutation.mutate({ recipients: ["all_students"], subject: "Important Update from MetaLingo", content: emailContent })} disabled={sendEmailMutation.isPending}><Send className="h-4 w-4 me-2" />{sendEmailMutation.isPending ? t("admin:campaigns.sending") : t("admin:campaigns.sendEmail")}</Button>
               <Button variant="outline" onClick={() => setShowEmailDialog(false)}>{t("admin:campaigns.cancel")}</Button>
             </div>
           </div>

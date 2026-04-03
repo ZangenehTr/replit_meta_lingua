@@ -1615,7 +1615,7 @@ export class MemStorageUser {
     if (result.length === 0) {
       // Create default branding if none exists
       const defaultBranding = {
-        name: "Meta Lingua Academy",
+        name: "MetaLingo Academy",
         logo: "",
         primaryColor: "#3B82F6",
         secondaryColor: "#1E40AF",

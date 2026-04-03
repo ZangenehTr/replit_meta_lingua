@@ -1266,7 +1266,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
       // Default templates for various events
       const templates = {
         studentCreation: settings?.studentCreationSmsTemplate || 
-          `Welcome to Meta Lingua Academy!\n\n` +
+          `Welcome to MetaLingo Academy!\n\n` +
           `Your student account has been created.\n` +
           `Login Information:\n` +
           `Username: {email}\n` +
@@ -1497,7 +1497,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
           id: 1,
           event: "enrollment",
           recipient: "student",
-          template: "Welcome to Meta Lingua! You have been successfully enrolled in {courseName}. Your learning journey begins now!",
+          template: "Welcome to MetaLingo! You have been successfully enrolled in {courseName}. Your learning journey begins now!",
           variables: ["courseName"],
           isActive: true,
           language: "english"
@@ -1506,7 +1506,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
           id: 2,
           event: "enrollment",
           recipient: "student",
-          template: "به متا لینگوا خوش آمدید! شما با موفقیت در دوره {courseName} ثبت نام کردید. سفر یادگیری شما از اکنون آغاز می‌شود!",
+          template: "به MetaLingo خوش آمدید! شما با موفقیت در دوره {courseName} ثبت نام کردید. سفر یادگیری شما از اکنون آغاز می‌شود!",
           variables: ["courseName"],
           isActive: true,
           language: "persian"
@@ -1533,7 +1533,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
           id: 5,
           event: "payment_confirmation",
           recipient: "student",
-          template: "Payment confirmed! {amount} IRR received for {courseName}. Thank you for choosing Meta Lingua.",
+          template: "Payment confirmed! {amount} IRR received for {courseName}. Thank you for choosing MetaLingo.",
           variables: ["amount", "courseName"],
           isActive: true,
           language: "english"
@@ -1542,7 +1542,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
           id: 6,
           event: "payment_confirmation",
           recipient: "student",
-          template: "پرداخت تأیید شد! {amount} ریال برای {courseName} دریافت شد. از انتخاب متا لینگوا متشکریم.",
+          template: "پرداخت تأیید شد! {amount} ریال برای {courseName} دریافت شد. از انتخاب MetaLingo متشکریم.",
           variables: ["amount", "courseName"],
           isActive: true,
           language: "persian"
@@ -1551,7 +1551,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
           id: 7,
           event: "verification",
           recipient: "student",
-          template: "Your Meta Lingua verification code is: {code}",
+          template: "Your MetaLingo verification code is: {code}",
           variables: ["code"],
           isActive: true,
           language: "english"
@@ -1560,7 +1560,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
           id: 8,
           event: "verification",
           recipient: "student",
-          template: "کد تأیید متا لینگوا شما: {code}",
+          template: "کد تأیید MetaLingo شما: {code}",
           variables: ["code"],
           isActive: true,
           language: "persian"
@@ -1629,7 +1629,7 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
         placementSmsDaysAfterTest: settings?.placementSmsDaysAfterTest ?? 1,
         placementSmsQuietHoursStart: settings?.placementSmsQuietHoursStart ?? "22:00",
         placementSmsQuietHoursEnd: settings?.placementSmsQuietHoursEnd ?? "08:00",
-        placementSmsTemplate: settings?.placementSmsTemplate ?? "سلام {studentName} عزیز!\n\n{daysAgo} تست تعیین سطح خود را در سطح {placementLevel} با موفقیت تکمیل کردید. 🎉\n\nبرای شروع مسیر یادگیری و بهره‌مندی از کلاس‌های تخصصی، زمان ثبت‌نام در دوره‌های آموزشی فرا رسیده است.\n\n📞 جهت مشاوره و ثبت‌نام: 021-1234\n🌐 Meta Lingua - همراه شما در مسیر یادگیری",
+        placementSmsTemplate: settings?.placementSmsTemplate ?? "سلام {studentName} عزیز!\n\n{daysAgo} تست تعیین سطح خود را در سطح {placementLevel} با موفقیت تکمیل کردید. 🎉\n\nبرای شروع مسیر یادگیری و بهره‌مندی از کلاس‌های تخصصی، زمان ثبت‌نام در دوره‌های آموزشی فرا رسیده است.\n\n📞 جهت مشاوره و ثبت‌نام: 021-1234\n🌐 MetaLingo - همراه شما در مسیر یادگیری",
         kavenegarEnabled: settings?.kavenegarEnabled ?? false,
         kavenegarConfigured: !!(settings?.kavenegarApiKey && settings?.kavenegarEnabled)
       };

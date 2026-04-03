@@ -299,7 +299,7 @@ class EmailService {
       const smtpPort = process.env.SMTP_PORT;
       const smtpUser = process.env.SMTP_USER;
       const smtpPass = process.env.SMTP_PASSWORD;
-      const smtpFrom = process.env.SMTP_FROM || 'noreply@metalingua.ir';
+      const smtpFrom = process.env.SMTP_FROM || 'noreply@metalingo.ir';
       
       if (!smtpHost || !smtpUser || !smtpPass) {
         console.warn('⚠️ SMTP not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASSWORD environment variables for production email delivery.');
