@@ -11,3 +11,4 @@ export * from './curriculum-ext';
 export * from './callern';
 export * from './cms';
 export * from './features';
+export * from './copilot';

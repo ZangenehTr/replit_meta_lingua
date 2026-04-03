@@ -26,6 +26,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from 'react-i18next';
 import { getNavigationForRole } from "@/lib/role-based-navigation";
 import { SkipToContent } from "@/components/accessibility/SkipToContent";
+import AdminCopilot from "@/components/admin/AdminCopilot";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -296,6 +297,9 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Admin AI Copilot — Admin role only, floating bottom-right */}
+      <AdminCopilot />
 
     </div>
   );

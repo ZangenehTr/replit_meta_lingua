@@ -82,6 +82,13 @@ services:
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
 
+      # ArvanCloud AI (Optional — Iranian hosted models with OpenAI-compatible API)
+      # Priority chain: ArvanCloud (if key set) → OpenAI (if key set) → Ollama (local fallback)
+      # Get your API key from https://panel.arvancloud.ir
+      # ARVANCLOUD_API_KEY: ${ARVANCLOUD_API_KEY:-}
+      # ARVANCLOUD_BASE_URL: ${ARVANCLOUD_BASE_URL:-https://api.arvancloud.ir/aiapi/v1}
+      # ARVANCLOUD_MODEL: ${ARVANCLOUD_MODEL:-qwen2.5}
+
       # Iranian SMS
       KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY}
 

@@ -1,92 +1,70 @@
-// AI Provider Manager - Configurable AI Provider (Ollama or OpenAI)
-// Supports both Ollama (for Iranian self-hosting) and OpenAI (for international deployments)
 import { BaseAIProvider, ChatCompletionRequest, ChatCompletionResponse } from './base-provider';
 import { OllamaProvider } from './ollama-provider';
 import { OpenAIProvider } from './openai-provider';
+import { ArvanCloudProvider } from './arvancloud-provider';
 
 export class AIProviderManager {
   private providers: BaseAIProvider[] = [];
   private primaryProvider: BaseAIProvider;
-  private fallbackProvider?: BaseAIProvider;
+  private fallbackProviders: BaseAIProvider[] = [];
 
   constructor() {
-    // Read AI_PROVIDER environment variable ('ollama' | 'openai')
-    // Default to 'ollama' for backward compatibility (Iranian self-hosting)
-    const aiProvider = (process.env.AI_PROVIDER || 'ollama').toLowerCase();
-    const fallbackProviderType = process.env.AI_FALLBACK_PROVIDER?.toLowerCase();
+    const arvanCloud = new ArvanCloudProvider();
+    const openAI = new OpenAIProvider();
+    const ollama = new OllamaProvider();
 
-    // Initialize primary provider
-    if (aiProvider === 'openai') {
-      // Use OpenAI as primary provider (for international deployments)
-      this.primaryProvider = new OpenAIProvider();
-      console.log('🌍 AI Primary Provider: OpenAI (international mode)');
+    if (arvanCloud.isEnabled) {
+      this.primaryProvider = arvanCloud;
+      this.fallbackProviders = [openAI, ollama];
+      console.log('☁️  AI Primary Provider: ArvanCloud (priority chain: ArvanCloud → OpenAI → Ollama)');
+    } else if (openAI.isEnabled) {
+      this.primaryProvider = openAI;
+      this.fallbackProviders = [ollama];
+      console.log('🌍 AI Primary Provider: OpenAI (priority chain: OpenAI → Ollama)');
     } else {
-      // Use Ollama as primary provider (for Iranian self-hosting)
-      this.primaryProvider = new OllamaProvider();
+      this.primaryProvider = ollama;
+      this.fallbackProviders = [];
       console.log('🇮🇷 AI Primary Provider: Ollama (Iranian self-hosting mode)');
     }
 
-    this.providers.push(this.primaryProvider);
-
-    // Initialize optional fallback provider
-    if (fallbackProviderType && fallbackProviderType !== aiProvider) {
-      if (fallbackProviderType === 'openai') {
-        this.fallbackProvider = new OpenAIProvider();
-        console.log('🔄 AI Fallback Provider: OpenAI enabled');
-      } else if (fallbackProviderType === 'ollama') {
-        this.fallbackProvider = new OllamaProvider();
-        console.log('🔄 AI Fallback Provider: Ollama enabled');
-      }
-
-      if (this.fallbackProvider) {
-        this.providers.push(this.fallbackProvider);
-      }
-    }
+    this.providers = [this.primaryProvider, ...this.fallbackProviders];
   }
 
   async initialize(): Promise<void> {
     console.log(`🚀 Initializing AI Provider Manager with primary: ${this.primaryProvider.name}`);
-    if (this.fallbackProvider) {
-      console.log(`   Fallback provider: ${this.fallbackProvider.name}`);
-    }
-    
-    // Initialize primary provider (gracefully handle failure during build)
+
     try {
       await this.primaryProvider.initialize();
       console.log(`✅ Primary AI provider (${this.primaryProvider.name}) ready`);
     } catch (error) {
       console.error(`❌ Primary AI provider (${this.primaryProvider.name}) failed:`, error);
-      
-      // Graceful degradation messaging based on provider type
+
       if (this.primaryProvider.name === 'Ollama') {
         console.warn('⚠️  Ollama unavailable during initialization (expected in Replit dev environment)');
         console.warn('⚠️  App will connect to Ollama when running on production server');
       } else {
         console.warn(`⚠️  ${this.primaryProvider.name} unavailable - check API key and connectivity`);
       }
-      
-      // DO NOT throw error - allow app to start even if AI provider is unreachable
-      // This is expected during development; provider will be available in production
     }
 
-    // Initialize fallback provider if configured
-    if (this.fallbackProvider) {
+    for (const provider of this.fallbackProviders) {
       try {
-        await this.fallbackProvider.initialize();
-        console.log(`✅ Fallback AI provider (${this.fallbackProvider.name}) ready`);
+        await provider.initialize();
+        console.log(`✅ Fallback AI provider (${provider.name}) ready`);
       } catch (error) {
-        console.error(`❌ Fallback AI provider (${this.fallbackProvider.name}) failed:`, error);
-        console.warn(`⚠️  Fallback provider unavailable - primary provider will be used exclusively`);
+        console.error(`❌ Fallback AI provider (${provider.name}) failed:`, error);
+        console.warn(`⚠️  Fallback provider ${provider.name} unavailable`);
       }
     }
 
-    // Health status report
     await this.getHealthStatus();
   }
 
   async getHealthStatus(): Promise<{ primary: boolean; fallback: boolean; hasHealthyProvider: boolean }> {
     const primaryHealthy = await this.primaryProvider.isHealthy();
-    const fallbackHealthy = this.fallbackProvider ? await this.fallbackProvider.isHealthy() : false;
+    const fallbackHealthy = this.fallbackProviders.length > 0
+      ? (await Promise.all(this.fallbackProviders.map(p => p.isHealthy()))).some(Boolean)
+      : false;
 
     const status = {
       primary: primaryHealthy,
@@ -98,8 +76,9 @@ export class AIProviderManager {
       [`${this.primaryProvider.name} (Primary)`]: primaryHealthy ? '✅ Healthy' : '❌ Unhealthy'
     };
 
-    if (this.fallbackProvider) {
-      healthReport[`${this.fallbackProvider.name} (Fallback)`] = fallbackHealthy ? '✅ Healthy' : '❌ Unhealthy';
+    for (const provider of this.fallbackProviders) {
+      const healthy = await provider.isHealthy();
+      healthReport[`${provider.name} (Fallback)`] = healthy ? '✅ Healthy' : '❌ Unhealthy';
     }
 
     console.log('🏥 AI Provider Health Status:', healthReport);
@@ -108,51 +87,53 @@ export class AIProviderManager {
   }
 
   async createChatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
-    // Try primary provider first
-    if (this.primaryProvider.isEnabled) {
+    const allProviders = [this.primaryProvider, ...this.fallbackProviders];
+
+    for (const provider of allProviders) {
+      if (!provider.isEnabled) continue;
+
       try {
-        console.log(`🎯 Using primary AI provider: ${this.primaryProvider.name}`);
-        return await this.primaryProvider.createChatCompletion(request);
+        console.log(`🎯 Using AI provider: ${provider.name}`);
+        return await provider.createChatCompletion(request);
       } catch (error) {
-        console.error(`❌ Primary AI provider (${this.primaryProvider.name}) failed:`, error);
-        
-        // Try fallback if configured
-        if (this.fallbackProvider?.isEnabled) {
-          console.log(`🔄 Attempting fallback to ${this.fallbackProvider.name}...`);
-          try {
-            const response = await this.fallbackProvider.createChatCompletion(request);
-            console.log(`✅ Fallback successful using ${this.fallbackProvider.name}`);
-            return response;
-          } catch (fallbackError) {
-            console.error(`❌ Fallback provider (${this.fallbackProvider.name}) also failed:`, fallbackError);
-            throw new Error(`AI service unavailable: both primary and fallback providers failed`);
-          }
+        console.error(`❌ AI provider (${provider.name}) failed:`, error);
+        const nextProvider = allProviders[allProviders.indexOf(provider) + 1];
+        if (nextProvider) {
+          console.log(`🔄 Attempting fallback to ${nextProvider.name}...`);
         }
-        
-        // No fallback available
-        throw new Error(`AI service unavailable: ${error.message}`);
       }
     }
 
-    // Primary disabled, try fallback if available
-    if (this.fallbackProvider?.isEnabled) {
-      console.log(`⚠️  Primary provider disabled, using fallback: ${this.fallbackProvider.name}`);
-      try {
-        return await this.fallbackProvider.createChatCompletion(request);
-      } catch (error) {
-        console.error(`❌ Fallback provider (${this.fallbackProvider.name}) failed:`, error);
-        throw new Error(`AI service unavailable: ${error.message}`);
-      }
-    }
+    throw new Error('AI service unavailable: all providers failed');
+  }
 
-    // No providers available
-    throw new Error('AI service unavailable: no providers enabled');
+  getPrimaryProvider(): BaseAIProvider {
+    return this.primaryProvider;
   }
 
   getActiveProviders(): { primary: string | undefined; fallback: string | undefined } {
     return {
       primary: this.primaryProvider.isEnabled ? this.primaryProvider.name : undefined,
-      fallback: this.fallbackProvider?.isEnabled ? this.fallbackProvider.name : undefined
+      fallback: this.fallbackProviders.find(p => p.isEnabled)?.name
     };
+  }
+
+  isUsingOpenAICompatibleProvider(): boolean {
+    return this.primaryProvider.name === 'ArvanCloud' || this.primaryProvider.name === 'OpenAI';
+  }
+
+  getOpenAICompatibleProvider(): (ArvanCloudProvider | OpenAIProvider) | null {
+    for (const provider of [this.primaryProvider, ...this.fallbackProviders]) {
+      if ((provider.name === 'ArvanCloud' || provider.name === 'OpenAI') && provider.isEnabled) {
+        return provider as ArvanCloudProvider | OpenAIProvider;
+      }
+    }
+    return null;
+  }
+
+  getAllOpenAICompatibleProviders(): (ArvanCloudProvider | OpenAIProvider)[] {
+    return [this.primaryProvider, ...this.fallbackProviders].filter(
+      p => (p.name === 'ArvanCloud' || p.name === 'OpenAI') && p.isEnabled
+    ) as (ArvanCloudProvider | OpenAIProvider)[];
   }
 }

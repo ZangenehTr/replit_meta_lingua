@@ -5,11 +5,12 @@ import { BaseAIProvider, ChatCompletionRequest, ChatCompletionResponse } from '.
 export class OpenAIProvider extends BaseAIProvider {
   name = 'OpenAI';
   isEnabled: boolean;
-  private client?: OpenAI;
+  protected client?: OpenAI;
+  protected model: string;
 
   constructor() {
     super();
-    // TEMPORARILY ENABLED for development until Ollama is set up
+    this.model = 'gpt-4o-mini';
     this.isEnabled = process.env.OPENAI_API_KEY ? true : false;
     
     if (this.isEnabled && process.env.OPENAI_API_KEY) {
@@ -32,7 +33,6 @@ export class OpenAIProvider extends BaseAIProvider {
     }
 
     try {
-      // Test OpenAI API connection
       if (this.client) {
         await this.client.models.list();
         console.log('🔄 OpenAI fallback provider initialized (use only when Ollama fails)');
@@ -62,46 +62,54 @@ export class OpenAIProvider extends BaseAIProvider {
       throw new Error('OpenAI provider is disabled or not initialized');
     }
 
-    try {
-      // Prepare messages with system prompt if provided
-      let messages = [...request.messages];
-      
-      // If a custom system prompt is provided, prepend it or replace existing system message
-      if (request.systemPrompt) {
-        // Remove any existing system messages
-        messages = messages.filter(msg => msg.role !== 'system');
-        // Add the custom system prompt at the beginning
-        messages.unshift({
-          role: 'system',
-          content: request.systemPrompt
-        });
-      }
-
-      const completion = await this.client.chat.completions.create({
-        model: request.model || 'gpt-4o-mini',
-        messages,
-        max_tokens: request.maxTokens || 500,
-        temperature: request.temperature || 0.7,
+    let messages = [...request.messages];
+    if (request.systemPrompt) {
+      messages = messages.filter(msg => msg.role !== 'system');
+      messages.unshift({
+        role: 'system',
+        content: request.systemPrompt
       });
-
-      const choice = completion.choices[0];
-      if (!choice?.message?.content) {
-        throw new Error('No valid response from OpenAI');
-      }
-
-      return {
-        content: choice.message.content,
-        tokensUsed: {
-          prompt: completion.usage?.prompt_tokens || 0,
-          completion: completion.usage?.completion_tokens || 0,
-          total: completion.usage?.total_tokens || 0
-        },
-        model: completion.model,
-        finishReason: choice.finish_reason || 'unknown'
-      };
-    } catch (error) {
-      console.error('OpenAI chat completion error:', error);
-      throw new Error(`OpenAI provider failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+
+    const completion = await this.client.chat.completions.create({
+      model: request.model || this.model,
+      messages,
+      max_tokens: request.maxTokens || 500,
+      temperature: request.temperature || 0.7,
+    });
+
+    const choice = completion.choices[0];
+    if (!choice?.message?.content) {
+      throw new Error('No valid response from OpenAI');
+    }
+
+    return {
+      content: choice.message.content,
+      tokensUsed: {
+        prompt: completion.usage?.prompt_tokens || 0,
+        completion: completion.usage?.completion_tokens || 0,
+        total: completion.usage?.total_tokens || 0
+      },
+      model: completion.model,
+      finishReason: choice.finish_reason || 'unknown'
+    };
+  }
+
+  async createChatCompletionWithTools(
+    messages: OpenAI.Chat.ChatCompletionMessageParam[],
+    tools: OpenAI.Chat.ChatCompletionTool[],
+    toolChoice: OpenAI.Chat.ChatCompletionToolChoiceOption = 'auto'
+  ): Promise<OpenAI.Chat.ChatCompletion> {
+    if (!this.isEnabled || !this.client) {
+      throw new Error('OpenAI provider is disabled or not initialized');
+    }
+    return this.client.chat.completions.create({
+      model: this.model,
+      messages,
+      tools,
+      tool_choice: toolChoice,
+      max_tokens: 2000,
+      temperature: 0.3,
+    });
   }
 }
