@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 import { 
   Loader2, 
-  GraduationCap, 
   Phone, 
   ChevronRight,
-  Sparkles,
   Languages,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -25,7 +23,6 @@ export default function Auth() {
   const { t } = useTranslation(['auth', 'common']);
   const { isRTL } = useLanguage();
   const [, setLocation] = useLocation();
-  // Capture UTM params and referral code from URL on mount
   const utmParams = (() => {
     const p = new URLSearchParams(window.location.search);
     return {
@@ -61,28 +58,22 @@ export default function Auth() {
   
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      phoneNumber: "",
-      otp: "",
-    },
+    defaultValues: { phoneNumber: "", otp: "" },
   });
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      phoneNumber: "",
-      firstName: "",
-      lastName: "",
-      otp: "",
-    },
+    defaultValues: { phoneNumber: "", firstName: "", lastName: "", otp: "" },
   });
+
+  const loginPhone = loginForm.watch("phoneNumber");
+  const registerPhone = registerForm.watch("phoneNumber");
 
   useEffect(() => {
     if (otpResendCooldown <= 0) {
       setOtpCountdownDisplay("");
       return;
     }
-
     const timer = setInterval(() => {
       setOtpResendCooldown(prev => {
         const newVal = prev - 1;
@@ -94,7 +85,6 @@ export default function Auth() {
         return newVal;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [otpResendCooldown]);
 
@@ -104,25 +94,20 @@ export default function Auth() {
       setAuthError("لطفاً شماره تلفن معتبر وارد کنید");
       return;
     }
-
     if (otpResendCooldown > 0) {
       setAuthError(`⏱️ لطفاً ${otpResendCooldown} ثانیه صبر کنید`);
       return;
     }
-
     setOtpLoading(true);
     setOtpMessage("");
     setAuthError("");
-    
     try {
       const response = await fetch("/api/auth/phone/request-otp-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber, locale: 'fa' }),
       });
-      
       const result = await response.json();
-      
       if (response.ok) {
         setOtpSent(true);
         setOtpMessage(result.message || "✅ کد تأیید به شماره تلفن شما ارسال شد");
@@ -131,7 +116,7 @@ export default function Auth() {
       } else {
         setAuthError(result.message || "خطا در ارسال کد تأیید");
       }
-    } catch (error) {
+    } catch {
       setAuthError("خطا در ارسال کد. لطفاً دوباره تلاش کنید.");
     } finally {
       setOtpLoading(false);
@@ -142,46 +127,32 @@ export default function Auth() {
     const phoneNumber = registerForm.getValues("phoneNumber");
     const firstName = registerForm.getValues("firstName");
     const lastName = registerForm.getValues("lastName");
-    
     if (!phoneNumber || phoneNumber.length < 10) {
       setAuthError("لطفاً شماره تلفن معتبر وارد کنید");
       return;
     }
-    
     if (!firstName || firstName.length < 2) {
       setAuthError("لطفاً نام خود را وارد کنید");
       return;
     }
-    
     if (!lastName || lastName.length < 2) {
       setAuthError("لطفاً نام خانوادگی خود را وارد کنید");
       return;
     }
-
     if (otpResendCooldown > 0) {
       setAuthError(`⏱️ لطفاً ${otpResendCooldown} ثانیه صبر کنید`);
       return;
     }
-
     setOtpLoading(true);
     setOtpMessage("");
     setAuthError("");
-    
     try {
       const response = await fetch("/api/auth/phone/request-otp-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          phoneNumber, 
-          firstName,
-          lastName,
-          role: 'Student',
-          locale: 'fa' 
-        }),
+        body: JSON.stringify({ phoneNumber, firstName, lastName, role: 'Student', locale: 'fa' }),
       });
-      
       const result = await response.json();
-      
       if (response.ok) {
         setOtpSent(true);
         setOtpMessage(result.message || "✅ کد تأیید به شماره تلفن شما ارسال شد");
@@ -190,7 +161,7 @@ export default function Auth() {
       } else {
         setAuthError(result.message || "خطا در ارسال کد تأیید");
       }
-    } catch (error) {
+    } catch {
       setAuthError("خطا در ارسال کد. لطفاً دوباره تلاش کنید.");
     } finally {
       setOtpLoading(false);
@@ -202,35 +173,20 @@ export default function Auth() {
       setAuthError("لطفاً کد تأیید ۶ رقمی را وارد کنید");
       return;
     }
-
     setAuthError("");
     setIsSubmitting(true);
-    
     try {
       const response = await fetch("/api/auth/phone/verify-otp-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phoneNumber: data.phoneNumber,
-          code: data.otp,
-          purpose: 'login',
-          locale: 'fa'
-        }),
+        body: JSON.stringify({ phoneNumber: data.phoneNumber, code: data.otp, purpose: 'login', locale: 'fa' }),
       });
-
       const result = await response.json();
-      
       if (response.ok) {
-        // Handle tokens - backend returns them in result.tokens object
         const accessToken = result.tokens?.accessToken || result.accessToken;
         const refreshToken = result.tokens?.refreshToken || result.refreshToken;
-        
-        if (accessToken) {
-          localStorage.setItem("auth_token", accessToken);
-        }
-        if (refreshToken) {
-          localStorage.setItem("refresh_token", refreshToken);
-        }
+        if (accessToken) localStorage.setItem("auth_token", accessToken);
+        if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
         window.location.href = "/dashboard";
       } else {
         setAuthError(result.message || "کد تأیید نادرست است");
@@ -247,10 +203,8 @@ export default function Auth() {
       setAuthError("لطفاً کد تأیید ۶ رقمی را وارد کنید");
       return;
     }
-
     setAuthError("");
     setIsSubmitting(true);
-    
     try {
       const response = await fetch("/api/auth/phone/verify-otp-signup", {
         method: "POST",
@@ -266,21 +220,12 @@ export default function Auth() {
           ...utmParams,
         }),
       });
-
       const result = await response.json();
-      
       if (response.ok) {
-        // Handle tokens - backend returns them in result.tokens object
         const accessToken = result.tokens?.accessToken || result.accessToken;
         const refreshToken = result.tokens?.refreshToken || result.refreshToken;
-        
-        if (accessToken) {
-          localStorage.setItem("auth_token", accessToken);
-        }
-        if (refreshToken) {
-          localStorage.setItem("refresh_token", refreshToken);
-        }
-        // New students go to the onboarding welcome page
+        if (accessToken) localStorage.setItem("auth_token", accessToken);
+        if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
         window.location.href = "/welcome";
       } else {
         setAuthError(result.message || "خطا در ثبت‌نام");
@@ -300,11 +245,11 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" dir="rtl">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500" dir="rtl">
       <div className="absolute inset-0">
-        <div className="absolute top-20 start-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-40 end-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 start-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 start-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob"></div>
+        <div className="absolute top-40 end-10 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 start-20 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob animation-delay-4000"></div>
       </div>
 
       <motion.div 
@@ -322,23 +267,15 @@ export default function Auth() {
             <motion.div 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative"
             >
-              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white/20 backdrop-blur-lg rounded-3xl flex items-center justify-center shadow-2xl border border-white/30">
-                <GraduationCap className="w-12 h-12 sm:w-14 sm:h-14 text-white" />
+              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl flex items-center justify-center shadow-2xl border border-white/20">
+                <span className="text-white font-black text-4xl sm:text-5xl tracking-tight select-none">ML</span>
               </div>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-2"
-              >
-                <Sparkles className="w-6 h-6 text-yellow-300 absolute top-0 end-0" />
-              </motion.div>
             </motion.div>
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            متالینگوآ
+            MetaLingo
           </h1>
           <p className="text-white/90 text-sm sm:text-base flex items-center justify-center gap-2">
             <Languages className="w-4 h-4" />
@@ -358,9 +295,23 @@ export default function Auth() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 bg-red-500/20 backdrop-blur-sm rounded-2xl border border-red-500/30"
+                  className="mb-6 p-4 bg-red-500/30 backdrop-blur-sm rounded-2xl border border-red-400/50"
                 >
-                  <p className="text-white text-sm">{authError}</p>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-200 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-white text-sm font-medium">{authError}</p>
+                      <p className="text-white/70 text-xs mt-1.5">
+                        نیاز به کمک دارید؟{" "}
+                        <a
+                          href="tel:02145328"
+                          className="text-cyan-300 underline underline-offset-2 font-medium"
+                        >
+                          ۰۲۱-۴۵۳۲۸
+                        </a>
+                      </p>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -379,12 +330,14 @@ export default function Auth() {
                     <div className="space-y-2">
                       <Label htmlFor="login-phone" className="text-white/90 text-sm font-medium">شماره تلفن</Label>
                       <div className="relative">
-                        <Phone className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                        {!loginPhone && (
+                          <Phone className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none" />
+                        )}
                         <Input
                           id="login-phone"
                           type="tel"
                           placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                          className="pe-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
+                          className={`${!loginPhone ? "pe-10" : ""} bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left`}
                           dir="ltr"
                           {...loginForm.register("phoneNumber")}
                         />
@@ -418,24 +371,21 @@ export default function Auth() {
                       {!otpSent ? (
                         <Button
                           type="button"
-                          className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]"
+                          className="w-full h-12 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200 transform hover:scale-[1.02]"
                           onClick={requestOtpForLogin}
                           disabled={otpLoading}
                         >
                           {otpLoading ? (
                             <Loader2 className="ms-2 h-5 w-5 animate-spin" />
                           ) : (
-                            <>
-                              <Phone className="ms-2 h-5 w-5" />
-                              ارسال کد تأیید
-                            </>
+                            "ارسال کد تأیید"
                           )}
                         </Button>
                       ) : (
                         <>
                           <Button 
                             type="submit" 
-                            className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]" 
+                            className="w-full h-12 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200 transform hover:scale-[1.02]" 
                             disabled={isSubmitting}
                           >
                             {isSubmitting ? (
@@ -507,12 +457,14 @@ export default function Auth() {
                     <div className="space-y-2">
                       <Label htmlFor="register-phone" className="text-white/90 text-sm font-medium">شماره تلفن</Label>
                       <div className="relative">
-                        <Phone className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                        {!registerPhone && (
+                          <Phone className="absolute end-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none" />
+                        )}
                         <Input
                           id="register-phone"
                           type="tel"
                           placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                          className="pe-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left"
+                          className={`${!registerPhone ? "pe-10" : ""} bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30 text-left`}
                           dir="ltr"
                           {...registerForm.register("phoneNumber")}
                         />
@@ -546,24 +498,21 @@ export default function Auth() {
                       {!otpSent ? (
                         <Button
                           type="button"
-                          className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]"
+                          className="w-full h-12 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200 transform hover:scale-[1.02]"
                           onClick={requestOtpForSignup}
                           disabled={otpLoading}
                         >
                           {otpLoading ? (
                             <Loader2 className="ms-2 h-5 w-5 animate-spin" />
                           ) : (
-                            <>
-                              <Phone className="ms-2 h-5 w-5" />
-                              ارسال کد تأیید
-                            </>
+                            "ارسال کد تأیید"
                           )}
                         </Button>
                       ) : (
                         <>
                           <Button 
                             type="submit" 
-                            className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 transition-all duration-200 transform hover:scale-[1.02]" 
+                            className="w-full h-12 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200 transform hover:scale-[1.02]" 
                             disabled={isSubmitting}
                           >
                             {isSubmitting ? (

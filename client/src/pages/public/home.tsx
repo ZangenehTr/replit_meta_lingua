@@ -1,153 +1,141 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
-import { useTranslation } from 'react-i18next';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { SEOHead } from '@/components/seo-head';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Sparkles,
-  Globe,
   Zap,
   Users,
   BookOpen,
   Video,
-  ArrowRight,
+  ArrowLeft,
   Star,
-  TrendingUp,
   Award,
   Play,
-  Calendar,
   CheckCircle,
-  Clock,
   Target,
   Trophy,
   Gamepad2,
+  MessageSquare,
+  Brain,
+  Clock,
+  Calendar,
+  ChevronLeft,
 } from 'lucide-react';
-import type { CmsBlogPost, CmsVideo } from '@shared/schema';
+import type { CmsBlogPost } from '@shared/schema';
+
+interface PublicStats {
+  students: number;
+  teachers: number;
+  courses: number;
+}
 
 export default function PublicHome() {
-  // Stock image paths (served from public directory)
   const testPrepImage1 = '/images/ielts_toefl_test_pre_2db77567.jpg';
-  const testPrepImage2 = '/images/ielts_toefl_test_pre_c9bb05c9.jpg';
-  const kidsImage1 = '/images/happy_children_kids__c945fe9f.jpg';
-  const kidsImage2 = '/images/happy_children_kids__7b136f07.jpg';
   const callernImage1 = '/images/online_video_call_tu_7afdda6b.jpg';
   const callernImage2 = '/images/online_video_call_tu_4ad299e6.jpg';
-  const { t } = useTranslation(['common']);
 
-  // Fetch latest 3 published blog posts
   const { data: blogPosts = [] } = useQuery<CmsBlogPost[]>({
     queryKey: ['/api/cms/blog/posts', 'published'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append('status', 'published');
-      
-      const response = await fetch(`/api/cms/blog/posts?${params.toString()}`);
-      const data = await response.json();
-      return data.slice(0, 3); // Latest 3 posts
+      const res = await fetch(`/api/cms/blog/posts?status=published`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.slice(0, 3) : [];
     }
   });
 
-  // Fetch latest 3 active videos
-  const { data: videos = [] } = useQuery<CmsVideo[]>({
-    queryKey: ['/api/cms/videos', 'active'],
+  const { data: stats } = useQuery<PublicStats>({
+    queryKey: ['/api/public/stats'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append('isActive', 'true');
-      
-      const response = await fetch(`/api/cms/videos?${params.toString()}`);
-      const data = await response.json();
-      return data.slice(0, 3); // Latest 3 videos
+      const res = await fetch('/api/public/stats');
+      return res.json();
     }
   });
 
-  const features = [
+  const pillars = [
     {
-      icon: Globe,
-      title: t('features.multilingual.title', 'Multilingual Platform'),
-      description: t('features.multilingual.desc', 'Learn in English, Persian, or Arabic with full RTL support'),
+      icon: Brain,
+      title: 'یادگیری هوشمند با AI',
+      desc: 'Lexi، دستیار هوش مصنوعی تو، برنامه‌درسی شخصی‌سازی‌شده بر اساس سطح و هدفت می‌سازه.',
       color: 'from-blue-500 to-cyan-500',
     },
     {
-      icon: Zap,
-      title: t('features.ai.title', 'AI-Powered Learning'),
-      description: t('features.ai.desc', 'Personalized lessons adapted to your learning style and pace'),
-      color: 'from-purple-500 to-pink-500',
-    },
-    {
-      icon: Users,
-      title: t('features.community.title', 'Global Community'),
-      description: t('features.community.desc', 'Connect with learners and native speakers worldwide'),
-      color: 'from-orange-500 to-red-500',
+      icon: Video,
+      title: 'تدریس زنده با CallerN',
+      desc: 'هر ساعت از شبانه‌روز، با یه استاد واقعی تماس بگیر. بدون رزرو، بدون انتظار.',
+      color: 'from-cyan-500 to-teal-500',
     },
     {
       icon: Award,
-      title: t('features.certified.title', 'Certified Courses'),
-      description: t('features.certified.desc', 'Earn recognized certificates upon course completion'),
-      color: 'from-green-500 to-emerald-500',
+      title: 'دوره‌های تخصصی آزمون',
+      desc: 'IELTS، TOEFL، GRE، PTE — با مسیر آموزشی ساختارمند و گواهینامه معتبر.',
+      color: 'from-teal-500 to-green-500',
     },
   ];
 
-  const stats = [
-    { label: t('stats.students', 'Active Students'), value: '10,000+', icon: Users },
-    { label: t('stats.courses', 'Courses'), value: '50+', icon: BookOpen },
-    { label: t('stats.satisfaction', 'Satisfaction'), value: '98%', icon: Star },
-    { label: t('stats.languages', 'Languages'), value: '15+', icon: Globe },
+  const callerNFeatures = [
+    { icon: Clock, text: 'جلسه ۱۰ تا ۱۵ دقیقه‌ای — بدون اتلاف وقت' },
+    { icon: Brain, text: 'AI supervisor کنارته — تلفظ، گرامر، لهجه رو آنالیز می‌کنه' },
+    { icon: Calendar, text: 'هر ساعت از شبانه‌روز — حتی ساعت ۲ نصفه‌شب' },
+    { icon: Users, text: 'استادهای تأییدشده با تجربه تدریس بین‌المللی' },
+  ];
+
+  const lexiFeatures = [
+    { icon: MessageSquare, text: 'مکالمه طبیعی به زبان انگلیسی با AI' },
+    { icon: Zap, text: 'بازخورد فوری روی تلفظ و گرامر' },
+    { icon: Trophy, text: 'XP جمع کن، لول بالا برو، با LinguaQuest بازی کن' },
+    { icon: Target, text: 'چالش روزانه — فقط ۵ دقیقه، هر روز' },
   ];
 
   return (
     <PublicLayout>
       <SEOHead
-        title={t('home.seoTitle', 'MetaLingo - AI-Powered Language Learning')}
-        description={t('home.seoDescription', 'Learn languages with AI-powered tutoring, interactive courses, and a supportive global community. Start your language learning journey today!')}
-        keywords="language learning, AI tutoring, online courses, language academy"
+        title="MetaLingo — یادگیری هوشمند زبان"
+        description="با MetaLingo زبان انگلیسی رو هوشمند یاد بگیر. IELTS، TOEFL، GRE، PTE و گفتگوی روان. تدریس زنده با CallerN، هوش مصنوعی با Lexi، آزمون رایگان Placement."
+        keywords="یادگیری زبان انگلیسی، آموزش آیلتس، تدریس آنلاین، متالینگو، IELTS، TOEFL"
       />
-      {/* Hero Section - Clean Light Background */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-        <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
+
+      {/* ——— HERO ——— */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50" dir="rtl">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
+          <div className="absolute bottom-10 left-10 w-64 h-64 bg-cyan-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-28 lg:px-8">
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-blue-100 border border-blue-200 mb-4 sm:mb-6" data-testid="badge-new-feature">
-              <Sparkles className="h-4 w-4 text-blue-600 animate-pulse" />
-              <span className="text-xs sm:text-sm font-medium text-blue-700">
-                {t('hero.badge', 'New: AI Study Partner Now Available')}
-              </span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 border border-blue-200 mb-6">
+              <Zap className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700">هوش مصنوعی + تدریس زنده + گیمیفیکیشن</span>
             </div>
-            
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-7xl mb-4 sm:mb-6">
-              <span className="block">{t('hero.title1', 'Learn Languages')}</span>
+
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-gray-900 mb-6 leading-tight">
+              <span className="block">زبان انگلیسی رو</span>
               <span className="block bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                {t('hero.title2', 'The Smart Way')}
+                هوشمند یاد بگیر
               </span>
             </h1>
-            
-            <p className="mx-auto max-w-2xl text-base sm:text-lg text-gray-600 mb-8 sm:mb-10 px-2">
-              {t('hero.description', 'Master any language with AI-powered lessons, interactive exercises, and personalized feedback. Join thousands of learners worldwide.')}
+
+            <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 mb-10 leading-relaxed">
+              برای IELTS، TOEFL، GRE یا گفتگوی روان — MetaLingo با AI، تدریس زنده، و گیمیفیکیشن کنارته.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
+              <Button
                 asChild
-                size="lg" 
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-lg px-8"
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-lg px-8 h-14 shadow-lg shadow-blue-500/30"
               >
-                <Link href="/auth?tab=register" data-testid="button-start-learning" className="flex items-center gap-2">
-                  {t('cta.startLearning', 'Start Learning Free')}
-                  <ArrowRight className="h-5 w-5" />
+                <Link href="/auth?tab=register" className="flex items-center gap-2">
+                  همین حالا شروع کن
+                  <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
-              
-              <Button 
-                asChild
-                variant="outline" 
-                size="lg" 
-                className="text-lg px-8"
-              >
-                <Link href="/linguaquest" data-testid="button-browse-courses" className="flex items-center gap-2">
-                  <Play className="h-5 w-5" />
-                  {t('cta.browseCourses', 'Browse Free Courses')}
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 h-14">
+                <Link href="/take-test" className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  آزمون رایگان سطح‌سنجی
                 </Link>
               </Button>
             </div>
@@ -155,53 +143,93 @@ export default function PublicHome() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="border-y bg-background/50 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="text-center" data-testid={`stat-${index}`}>
-                  <div className="flex justify-center mb-2">
-                    <div className="p-2 sm:p-3 rounded-full bg-primary/10">
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                    </div>
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
-                </div>
-              );
-            })}
+      {/* ——— STATS BAR ——— */}
+      <section className="border-y bg-white" dir="rtl">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-3xl sm:text-4xl font-black text-blue-600 mb-1">
+                {stats ? `${stats.students.toLocaleString('fa-IR')}+` : '۱۰۰۰+'}
+              </div>
+              <div className="text-sm text-gray-500">زبان‌آموز فعال</div>
+            </div>
+            <div>
+              <div className="text-3xl sm:text-4xl font-black text-cyan-600 mb-1">
+                {stats ? `${stats.teachers.toLocaleString('fa-IR')}+` : '۵۰+'}
+              </div>
+              <div className="text-sm text-gray-500">استاد متخصص</div>
+            </div>
+            <div>
+              <div className="text-3xl sm:text-4xl font-black text-teal-600 mb-1">
+                {stats ? `${stats.courses.toLocaleString('fa-IR')}+` : '۲۰+'}
+              </div>
+              <div className="text-sm text-gray-500">دوره فعال</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 sm:py-24">
+      {/* ——— PLACEMENT STRIP ——— */}
+      <section className="bg-gradient-to-l from-blue-700 to-cyan-600 py-12" dir="rtl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
-              {t('features.heading', 'Why Choose MetaLingo?')}
-            </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-              {t('features.subheading', 'Experience the next generation of language learning with cutting-edge technology and proven methodologies.')}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="text-center lg:text-right text-white">
+              <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
+                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-2xl">
+                  <span className="text-white font-black text-lg select-none">ML</span>
+                </div>
+                <Badge className="bg-white/20 text-white border-white/30 text-sm px-3 py-1">
+                  رایگان
+                </Badge>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black mb-2">
+                نمی‌دونی از کجا شروع کنی؟
+              </h2>
+              <p className="text-white/90 text-base sm:text-lg font-medium mb-1">
+                The shortest and the most intelligent way
+              </p>
+              <p className="text-white/75 text-sm">
+                هوشمندترین و سریع‌ترین راه برای سنجش سطح زبانت — فقط ۱۰ دقیقه
+              </p>
+            </div>
+            <div className="shrink-0">
+              <Button
+                asChild
+                size="lg"
+                className="bg-white text-blue-700 hover:bg-gray-50 text-lg px-10 h-14 font-bold shadow-lg"
+              >
+                <Link href="/take-test" className="flex items-center gap-2">
+                  آزمون رایگان Placement
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ——— WHY METALINGO (3 PILLARS) ——— */}
+      <section className="py-16 sm:py-24 bg-white" dir="rtl">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">چرا MetaLingo؟</h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              سه مزیت که MetaLingo رو از همه جدا می‌کنه
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {pillars.map((p, i) => {
+              const Icon = p.icon;
               return (
-                <Card key={index} className="border-2 hover:border-primary/50 transition-colors" data-testid={`feature-${index}`}>
+                <Card key={i} className="border-2 hover:border-blue-200 transition-all hover:shadow-lg">
                   <CardHeader>
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
-                      <Icon className="h-6 w-6 text-white" />
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${p.color} flex items-center justify-center mb-4 shadow-md`}>
+                      <Icon className="h-7 w-7 text-white" />
                     </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardTitle className="text-xl text-gray-900">{p.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{feature.description}</p>
+                    <p className="text-gray-500 leading-relaxed">{p.desc}</p>
                   </CardContent>
                 </Card>
               );
@@ -210,497 +238,278 @@ export default function PublicHome() {
         </div>
       </section>
 
-      {/* Test Prep Excellence Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 py-12 sm:py-24">
-        <div className="absolute inset-0 bg-grid-white/5" />
+      {/* ——— CALLERN SPOTLIGHT ——— */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-600 py-16 sm:py-24" dir="rtl">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-400/20 via-transparent to-transparent" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div className="text-white">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/20 backdrop-blur-sm mb-4 sm:mb-6">
-                <Target className="h-4 w-4" />
-                <span className="text-xs sm:text-sm font-medium">{t('testPrep.badge', 'Free Placement Test')}</span>
-              </div>
-              
-              <h2 className="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 text-white">
-                {t('testPrep.heading', 'Excel in Your International Tests')}
-              </h2>
-              <p className="text-base sm:text-lg text-white mb-4 sm:mb-6">
-                {t('testPrep.subheading', 'IELTS • TOEFL • GRE • PTE')}
-              </p>
-              
-              <p className="text-base sm:text-xl text-white mb-6 sm:mb-8">
-                {t('testPrep.description', 'Assess your CEFR level with our adaptive placement test. Get personalized study plans and track your progress to test success.')}
-              </p>
-              
-              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                {[
-                  { icon: CheckCircle, text: t('testPrep.feature1', 'Multi-Stage Adaptive Test (MST)') },
-                  { icon: CheckCircle, text: t('testPrep.feature2', 'Instant CEFR results with skill breakdown') },
-                  { icon: CheckCircle, text: t('testPrep.feature3', 'Personalized study plans for your test') },
-                  { icon: CheckCircle, text: t('testPrep.feature4', 'Progress tracking with detailed analytics') },
-                ].map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <li key={index} className="flex items-start gap-3">
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-green-300 shrink-0 mt-0.5" />
-                      <span className="text-base sm:text-lg text-white">{item.text}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  asChild
-                  size="lg" 
-                  className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 w-full sm:w-auto"
-                >
-                  <Link href="/take-test" data-testid="button-take-free-test" className="flex items-center gap-2 justify-center">
-                    {t('testPrep.cta.takeFreeTest', 'Take Free Placement Test')}
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
-                
-                <Button 
-                  asChild
-                  variant="outline" 
-                  size="lg" 
-                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 w-full sm:w-auto"
-                >
-                  <Link href="/curriculum?category=test-prep" data-testid="button-explore-test-prep" className="flex items-center gap-2 justify-center">
-                    <BookOpen className="h-5 w-5" />
-                    {t('testPrep.cta.exploreTestPrep', 'Explore Test Prep Courses')}
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Content - Image Collage with Stats */}
-            <div className="relative space-y-4">
-              {/* Main Hero Image */}
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-video sm:aspect-[4/3]">
-                <img 
-                  src={testPrepImage1} 
-                  alt="Students preparing for IELTS and TOEFL tests with study materials" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent" />
-                
-                {/* Stat Badge Overlay */}
-                <div className="absolute bottom-3 end-3 sm:bottom-4 sm:end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Award className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
-                    <div>
-                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{t('testPrep.stat3Value', '94%')}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">{t('testPrep.stat3Label', 'Success Rate')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Supporting Image with Stat - hidden on small mobile */}
-              <div className="hidden sm:block relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
-                <img 
-                  src={testPrepImage2} 
-                  alt="International test preparation classroom environment" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-transparent to-teal-900/40" />
-                
-                {/* Additional Stats */}
-                <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">{t('testPrep.stat2Value', '2 Bands')}</div>
-                      <div className="text-xs text-gray-600">{t('testPrep.stat2Label', 'Avg Improvement')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Kids & Young Learners Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-pink-600 to-rose-600 py-12 sm:py-24">
-        <div className="absolute inset-0 bg-grid-white/5" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Content */}
-            <div className="text-white">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/20 backdrop-blur-sm mb-4 sm:mb-6">
-                <Gamepad2 className="h-4 w-4" />
-                <span className="text-xs sm:text-sm font-medium">{t('kids.badge', 'Gamified Learning')}</span>
-              </div>
-              
-              <h2 className="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4 text-white">
-                {t('kids.heading', 'Kids Love Learning Here')}
-              </h2>
-              <p className="text-base sm:text-lg text-white mb-4 sm:mb-6">
-                {t('kids.subheading', 'Fun, Interactive & Engaging')}
-              </p>
-              
-              <p className="text-base sm:text-xl text-white mb-6 sm:mb-8">
-                {t('kids.description', "Turn language learning into an adventure! With LinguaQuest, kids earn XP, unlock achievements, and compete on leaderboards while mastering new skills.")}
-              </p>
-              
-              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                {[
-                  { icon: Gamepad2, text: t('kids.feature1', '19 game types & interactive activities') },
-                  { icon: Trophy, text: t('kids.feature2', 'XP, levels & achievement badges') },
-                  { icon: Star, text: t('kids.feature3', 'Daily challenges & leaderboards') },
-                  { icon: Zap, text: t('kids.feature4', 'Audio practice with instant feedback') },
-                ].map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <li key={index} className="flex items-start gap-3">
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-300 shrink-0 mt-0.5" />
-                      <span className="text-base sm:text-lg text-white">{item.text}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  asChild
-                  size="lg" 
-                  className="bg-white text-purple-600 hover:bg-gray-100 text-lg px-8 w-full sm:w-auto"
-                >
-                  <Link href="/dashboard" data-testid="button-explore-linguaquest" className="flex items-center gap-2 justify-center">
-                    {t('kids.cta.exploreLinguaQuest', 'Explore LinguaQuest')}
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
-                
-                <Button 
-                  asChild
-                  variant="outline" 
-                  size="lg" 
-                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 w-full sm:w-auto"
-                >
-                  <Link href="/auth?tab=register" data-testid="button-start-playing" className="flex items-center gap-2 justify-center">
-                    <Sparkles className="h-5 w-5" />
-                    {t('kids.cta.startPlaying', 'Start Playing Free')}
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Content - Image Collage with Stats */}
-            <div className="relative space-y-4">
-              {/* Main Hero Image */}
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-video sm:aspect-[4/3]">
-                <img 
-                  src={kidsImage1} 
-                  alt="Happy children learning English in a colorful, interactive classroom environment" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 via-transparent to-transparent" />
-                
-                {/* Stat Badge Overlay */}
-                <div className="absolute bottom-3 end-3 sm:bottom-4 sm:end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Star className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
-                    <div>
-                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{t('kids.stat3Value', '4.9/5')}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">{t('kids.stat3Label', 'Fun Score')}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Floating Badge - hidden on small mobile to avoid overflow */}
-                <div className="hidden sm:block absolute -top-4 -end-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
-                  {t('kids.freeDemoBadge', 'Try Free Demo')}
-                </div>
-              </div>
-
-              {/* Supporting Image with Stat - hidden on small mobile */}
-              <div className="hidden sm:block relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
-                <img 
-                  src={kidsImage2} 
-                  alt="Kids enjoying gamified English learning activities" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-900/40 via-transparent to-rose-900/40" />
-                
-                {/* Additional Stats */}
-                <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
-                  <div className="flex items-center gap-2">
-                    <Gamepad2 className="h-6 w-6 text-pink-600" />
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">{t('kids.stat1Value', '19+')}</div>
-                      <div className="text-xs text-gray-600">{t('kids.stat1Label', 'Game Types')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CallerN Promotion Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 py-12 sm:py-24">
-        <div className="absolute inset-0 bg-grid-white/5" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left Content */}
-            <div className="text-white">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/20 backdrop-blur-sm mb-4 sm:mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm mb-6">
                 <Video className="h-4 w-4" />
-                <span className="text-xs sm:text-sm font-medium">{t('callern.badge', '24/7 Live Tutoring')}</span>
+                <span className="text-sm font-medium">تدریس زنده ۲۴ ساعته</span>
               </div>
-              
-              <h2 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 text-white">
-                {t('callern.heading', 'Practice Speaking with')} <br />
-                <span className="text-yellow-300">{t('callern.headingHighlight', 'Native English Teachers')}</span>
+              <h2 className="text-3xl sm:text-4xl font-black mb-4 leading-tight">
+                یه استاد همیشه آماده‌ست،<br />
+                <span className="text-cyan-300">هر ساعت از شبانه‌روز</span>
               </h2>
-              
-              <p className="text-base sm:text-xl text-white mb-6 sm:mb-8">
-                {t('callern.description', 'Connect instantly with certified teachers via live video. Perfect your accent, boost your confidence, and speak English like a native.')}
+              <p className="text-white/85 text-lg mb-8 leading-relaxed">
+                CallerN رو ساختیم تا هر وقت خواستی با یه استاد واقعی تمرین کنی. بدون رزرو قبلی، بدون صبر کردن.
               </p>
-              
-              <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                {[
-                  { icon: CheckCircle, text: t('callern.feature1', 'Available 24/7 - Learn on your schedule') },
-                  { icon: CheckCircle, text: t('callern.feature2', 'Certified native speakers') },
-                  { icon: CheckCircle, text: t('callern.feature3', 'AI-powered feedback & suggestions') },
-                  { icon: CheckCircle, text: t('callern.feature4', 'Instant sessions - no scheduling needed') },
-                ].map((item, index) => {
-                  const Icon = item.icon;
+              <ul className="space-y-4 mb-8">
+                {callerNFeatures.map((f, i) => {
+                  const Icon = f.icon;
                   return (
-                    <li key={index} className="flex items-start gap-3">
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-green-300 shrink-0 mt-0.5" />
-                      <span className="text-base sm:text-lg text-white">{item.text}</span>
+                    <li key={i} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                        <Icon className="h-4 w-4 text-cyan-200" />
+                      </div>
+                      <span className="text-white/90">{f.text}</span>
                     </li>
                   );
                 })}
               </ul>
-              
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
+                <Button
                   asChild
-                  size="lg" 
-                  className="bg-white text-indigo-600 hover:bg-gray-100 text-lg px-8 w-full sm:w-auto"
+                  size="lg"
+                  className="bg-white text-blue-700 hover:bg-gray-50 font-bold px-8 h-13"
                 >
-                  <Link href="/services/callern" data-testid="button-callern-learn-more" className="flex items-center gap-2 justify-center">
-                    {t('callern.cta.learnMore', 'Learn More')}
-                    <ArrowRight className="h-5 w-5" />
+                  <Link href="/services/callern" className="flex items-center gap-2">
+                    با یه استاد تماس بگیر
+                    <ArrowLeft className="h-5 w-5" />
                   </Link>
                 </Button>
-                
-                <Button 
+                <Button
                   asChild
-                  variant="outline" 
-                  size="lg" 
-                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 w-full sm:w-auto"
+                  variant="outline"
+                  size="lg"
+                  className="border-white/50 text-white hover:bg-white/10 px-8"
                 >
-                  <Link href="/auth?tab=register" data-testid="button-callern-start-now" className="flex items-center gap-2 justify-center">
-                    <Sparkles className="h-5 w-5" />
-                    {t('callern.cta.startNow', 'Start Now')}
+                  <Link href="/auth?tab=register">
+                    ثبت‌نام رایگان
                   </Link>
                 </Button>
               </div>
             </div>
-
-            {/* Right Content - Image Collage with Stats */}
-            <div className="relative space-y-4">
-              {/* Main Hero Image */}
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-video sm:aspect-[4/3]">
-                <img 
-                  src={callernImage1} 
-                  alt="Professional online English tutoring session with native speaker via video call" 
+            <div className="space-y-4">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-video">
+                <img
+                  src={callernImage1}
+                  alt="تدریس زنده آنلاین با استاد در MetaLingo CallerN"
                   className="w-full h-full object-cover"
                   loading="lazy"
-                  decoding="async"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/60 via-transparent to-transparent" />
-                
-                {/* Stat Badge Overlay */}
-                <div className="absolute bottom-3 end-3 sm:bottom-4 sm:end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 shadow-lg">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Star className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
-                    <div>
-                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{t('callern.stat3Value', '4.9/5')}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">{t('callern.stat3', 'Student Rating')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Supporting Image with Stat - hidden on small mobile */}
-              <div className="hidden sm:block relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl aspect-video lg:aspect-[4/3]">
-                <img 
-                  src={callernImage2} 
-                  alt="Student practicing English conversation in online tutoring session" 
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-transparent to-pink-900/40" />
-                
-                {/* Additional Stats */}
-                <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-md">
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/70 via-transparent to-transparent" />
+                <div className="absolute bottom-4 end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-6 w-6 text-purple-600" />
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">{t('callern.stat2Value', '24/7')}</div>
-                      <div className="text-xs text-gray-600">{t('callern.stat2', 'Available')}</div>
-                    </div>
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-sm font-bold text-gray-800">۱۲ استاد آنلاین</span>
                   </div>
                 </div>
               </div>
-              
-              {/* Floating Badge - hidden on small mobile to avoid overflow */}
-              <div className="hidden sm:block absolute -top-4 -end-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full font-bold text-sm shadow-xl rotate-6 hover:rotate-0 transition-transform">
-                {t('callern.badge2', 'Try Free Session!')}
+              <div className="hidden sm:block relative rounded-3xl overflow-hidden shadow-xl aspect-video">
+                <img
+                  src={callernImage2}
+                  alt="جلسه تدریس ویدیویی آنلاین"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-transparent to-transparent" />
+                <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm font-bold text-gray-800">۴.۹ امتیاز از زبان‌آموزان</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Latest Blog Posts */}
-      {blogPosts.length > 0 && (
-        <section className="py-12 sm:py-24 bg-accent/30">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 sm:mb-12">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-                  {t('blog.heading', 'Latest Articles')}
-                </h2>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  {t('blog.subheading', 'Tips, insights, and stories from our community')}
-                </p>
-              </div>
-              <Button asChild variant="outline" size="sm" className="w-fit">
-                <Link href="/blog" data-testid="button-view-all-blog" className="flex items-center gap-2">
-                  {t('cta.viewAll', 'View All')}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
-              {blogPosts.map((post) => (
-                <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`blog-post-${post.id}`}>
-                  {post.featuredImage && (
-                    <div className="aspect-video overflow-hidden">
-                      <img
-                        src={post.featuredImage}
-                        alt={post.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  <CardHeader>
-                    <div className="flex gap-2 mb-2">
-                      <Badge variant="secondary">{post.locale}</Badge>
-                      {post.categoryId && <Badge>{t('category')}</Badge>}
-                    </div>
-                    <CardTitle className="line-clamp-2">
-                      <Link href={`/blog/${post.slug}`} className="hover:text-primary transition-colors">
-                        {post.title}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {post.excerpt || post.metaDescription}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+      {/* ——— LEXI + LINGUAQUEST TEASER ——— */}
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 to-blue-50" dir="rtl">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+              یادگیری که انگیزه می‌ده
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Lexi، AI‌یی که مثل یه دوست باهات انگلیسی تمرین می‌کنه — و LinguaQuest که یادگیری رو به بازی تبدیل می‌کنه
+            </p>
           </div>
-        </section>
-      )}
-
-      {/* Latest Videos */}
-      {videos.length > 0 && (
-        <section className="py-12 sm:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 sm:mb-12">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-                  {t('videos.heading', 'Featured Videos')}
-                </h2>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  {t('videos.subheading', 'Learn from our expert instructors')}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Lexi Card */}
+            <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-white overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-3 shadow-md">
+                  <Brain className="h-7 w-7 text-white" />
+                </div>
+                <CardTitle className="text-2xl text-gray-900">Lexi — دستیار AI تو</CardTitle>
+                <p className="text-gray-500 leading-relaxed">
+                  یه مکالمه‌زا هوشمند که تلفظ، گرامر و روانی کلامت رو بهتر می‌کنه. درست مثل داشتن یه دوست نیتیو.
                 </p>
-              </div>
-              <Button asChild variant="outline" size="sm" className="w-fit">
-                <Link href="/videos" data-testid="button-view-all-videos" className="flex items-center gap-2">
-                  {t('cta.viewAll', 'View All')}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
-              {videos.map((video) => (
-                <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`video-${video.id}`}>
-                  <div className="aspect-video overflow-hidden relative group">
-                    {video.thumbnail ? (
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                        <Video className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                        <Play className="h-8 w-8 text-primary" />
-                      </div>
-                    </div>
-                  </div>
-                  <CardHeader>
-                    <div className="flex gap-2 mb-2">
-                      <Badge variant="secondary">{video.locale}</Badge>
-                      {video.category && <Badge>{video.category}</Badge>}
-                    </div>
-                    <CardTitle className="line-clamp-2">
-                      <Link href={`/videos/${video.id}`} className="hover:text-primary transition-colors">
-                        {video.title}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {video.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Play className="h-4 w-4" />
-                        {video.duration ? `${Math.floor(video.duration / 60)}min` : 'N/A'}
-                      </div>
-                      {video.viewCount && (
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="h-4 w-4" />
-                          {video.viewCount} {t('views')}
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 mb-6">
+                  {lexiFeatures.map((f, i) => {
+                    const Icon = f.icon;
+                    return (
+                      <li key={i} className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                          <Icon className="h-4 w-4 text-blue-600" />
                         </div>
-                      )}
+                        <span className="text-gray-700 text-sm">{f.text}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <Button
+                  asChild
+                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                >
+                  <Link href="/auth?tab=register" className="flex items-center justify-center gap-2">
+                    با Lexi شروع کن
+                    <ArrowLeft className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* LinguaQuest Card */}
+            <Card className="border-2 border-teal-100 bg-gradient-to-br from-teal-50 to-white overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-green-500 flex items-center justify-center mb-3 shadow-md">
+                  <Gamepad2 className="h-7 w-7 text-white" />
+                </div>
+                <CardTitle className="text-2xl text-gray-900">LinguaQuest — یادگیری بازی‌گونه</CardTitle>
+                <p className="text-gray-500 leading-relaxed">
+                  XP جمع کن، به رتبه‌بندی برس، چالش روزانه انجام بده. یادگیری که حس یه بازی رو داره.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {[
+                    { value: '۱۹+', label: 'نوع بازی' },
+                    { value: 'روزانه', label: 'چالش' },
+                    { value: 'XP', label: 'سیستم امتیاز' },
+                    { value: '🏆', label: 'لیدربورد' },
+                  ].map((s, i) => (
+                    <div key={i} className="bg-teal-50 rounded-xl p-3 text-center">
+                      <div className="text-xl font-black text-teal-700">{s.value}</div>
+                      <div className="text-xs text-teal-600">{s.label}</div>
                     </div>
+                  ))}
+                </div>
+                <Button
+                  asChild
+                  className="w-full bg-gradient-to-r from-teal-600 to-green-500 hover:from-teal-700 hover:to-green-600"
+                >
+                  <Link href="/auth?tab=register" className="flex items-center justify-center gap-2">
+                    شروع بازی
+                    <Play className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* ——— TEST PREP SECTION ——— */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-teal-700 to-blue-700 py-16 sm:py-24" dir="rtl">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            <div className="text-white">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 mb-6">
+                <Award className="h-4 w-4" />
+                <span className="text-sm font-medium">آمادگی آزمون‌های بین‌المللی</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black mb-4">
+                IELTS، TOEFL، GRE، PTE<br />
+                <span className="text-cyan-300">با مسیر درست یاد بگیر</span>
+              </h2>
+              <p className="text-white/85 text-lg mb-6 leading-relaxed">
+                دوره‌های تخصصی برای هر آزمون، با استادهای مجرب و مسیر آموزشی دقیق. از سطح‌سنجی تا قبولی.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {[
+                  'محتوای بروز بر اساس فرمت جدید آزمون‌ها',
+                  'جلسات تمرین Speaking با استادهای CallerN',
+                  'آزمون‌های تمرینی با نمره‌دهی هوشمند',
+                  'گواهینامه دوره پس از اتمام',
+                ].map((t, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-cyan-300 shrink-0 mt-0.5" />
+                    <span className="text-white/90">{t}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg" className="bg-white text-teal-700 hover:bg-gray-50 font-bold px-8">
+                  <Link href="/curriculum" className="flex items-center gap-2">
+                    مشاهده دوره‌ها
+                    <ArrowLeft className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="border-white/50 text-white hover:bg-white/10 px-8">
+                  <Link href="/take-test">
+                    تست سطح رایگان
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]">
+              <img
+                src={testPrepImage1}
+                alt="آمادگی برای آزمون IELTS و TOEFL در MetaLingo"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-teal-900/60 via-transparent to-transparent" />
+              <div className="absolute bottom-4 end-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <Award className="h-8 w-8 text-teal-600" />
+                  <div>
+                    <div className="text-2xl font-black text-gray-900">۹۴٪</div>
+                    <div className="text-sm text-gray-600">نرخ موفقیت زبان‌آموزان</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ——— BLOG TEASER ——— */}
+      {blogPosts.length > 0 && (
+        <section className="py-16 sm:py-24 bg-white" dir="rtl">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">آخرین مقالات</h2>
+                <p className="text-gray-500">نکات و راهکارهای یادگیری زبان</p>
+              </div>
+              <Button asChild variant="outline">
+                <Link href="/blog" className="flex items-center gap-2">
+                  همه مقالات
+                  <ChevronLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.map((post: any) => (
+                <Card key={post.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="pt-6">
+                    <div className="text-xs text-gray-400 mb-2">
+                      {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('fa-IR') : ''}
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2 leading-snug line-clamp-2">{post.title}</h3>
+                    <p className="text-sm text-gray-500 line-clamp-3 mb-4">{post.excerpt || post.metaDescription}</p>
+                    <Link href={`/blog/${post.slug}`} className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                      بیشتر بخوانید
+                      <ChevronLeft className="h-4 w-4" />
+                    </Link>
                   </CardContent>
                 </Card>
               ))}
@@ -709,43 +518,25 @@ export default function PublicHome() {
         </section>
       )}
 
-      {/* CTA Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary to-purple-600 text-white">
-        <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:py-24 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/10 border border-white/20 mb-4 sm:mb-6">
-            <Sparkles className="h-4 w-4 animate-pulse" />
-            <span className="text-xs sm:text-sm font-medium">{t('limitedTimeOffer')}</span>
-          </div>
-          
-          <h2 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">
-            {t('cta.final.title', 'Ready to Transform Your Language Skills?')}
+      {/* ——— FINAL CTA ——— */}
+      <section className="bg-gradient-to-r from-blue-600 to-cyan-500 py-16" dir="rtl">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
+            آماده‌ای شروع کنی؟
           </h2>
-          <p className="text-base sm:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl mx-auto px-2">
-            {t('cta.final.description', 'Join thousands of successful learners. Start your free trial today and experience the future of language learning.')}
+          <p className="text-white/90 text-lg mb-8">
+            اول سطحت رو بسنج، بعد مسیرت رو انتخاب کن. همه چیز رایگان.
           </p>
-          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              asChild
-              size="lg" 
-              variant="secondary" 
-              className="text-lg px-8"
-            >
-              <Link href="/auth?tab=register" data-testid="button-cta-start-free" className="flex items-center gap-2">
-                {t('cta.startFree', 'Start Free Trial')}
-                <ArrowRight className="h-5 w-5" />
+            <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-gray-50 font-bold text-lg px-10 h-14">
+              <Link href="/take-test" className="flex items-center gap-2">
+                آزمون رایگان Placement
+                <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>
-            
-            <Button 
-              asChild
-              size="lg" 
-              variant="outline" 
-              className="text-lg px-8 bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              <Link href="/about" data-testid="button-cta-learn-more">
-                {t('cta.learnMore', 'Learn More')}
+            <Button asChild variant="outline" size="lg" className="border-white/60 text-white hover:bg-white/10 text-lg px-10 h-14">
+              <Link href="/auth?tab=register">
+                ثبت‌نام رایگان
               </Link>
             </Button>
           </div>

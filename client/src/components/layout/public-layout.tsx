@@ -31,7 +31,6 @@ import {
   Info,
   Mail,
   LogIn,
-  Sparkles,
   Globe,
   Facebook,
   Twitter,
@@ -109,8 +108,8 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           {/* Logo */}
           <div className="flex lg:flex-1">
             <Link href="/" className="flex items-center gap-2 -m-1.5 p-1.5" data-testid="link-home-logo">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500 rounded-xl shadow-lg">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl shadow-lg">
+                <span className="text-white font-black text-lg tracking-tight select-none">ML</span>
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
@@ -234,8 +233,8 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <SheetContent side="right" className="w-72">
                 <div className="flex flex-col gap-6 mt-6">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500 rounded-xl">
-                      <Sparkles className="h-6 w-6 text-white" />
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl">
+                      <span className="text-white font-black text-lg tracking-tight select-none">ML</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="font-bold text-lg">MetaLingo</span>
@@ -385,8 +384,8 @@ export function PublicLayout({ children }: PublicLayoutProps) {
             {/* Brand Column */}
             <div className="col-span-1 sm:col-span-2 md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500 rounded-xl">
-                  <Sparkles className="h-6 w-6 text-white" />
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl">
+                  <span className="text-white font-black text-lg tracking-tight select-none">ML</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">

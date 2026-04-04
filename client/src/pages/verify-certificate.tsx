@@ -62,7 +62,7 @@ export default function VerifyCertificatePage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold">تأیید گواهینامه</h1>
-          <p className="text-muted-foreground mt-1">متالینگوآ — MetaLingo Academy</p>
+          <p className="text-muted-foreground mt-1">MetaLingo Academy</p>
         </div>
 
         {/* Search */}
@@ -194,7 +194,7 @@ export default function VerifyCertificatePage() {
         )}
 
         <p className="text-center text-xs text-muted-foreground">
-          این صفحه برای تأیید اعتبار گواهینامه‌های صادر شده توسط آکادمی متالینگوآ است.
+          این صفحه برای تأیید اعتبار گواهینامه‌های صادر شده توسط آکادمی MetaLingo است.
         </p>
       </div>
     </div>

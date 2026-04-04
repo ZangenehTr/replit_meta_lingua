@@ -2067,6 +2067,25 @@ export async function setupAdminAndMiscRoutes(app: Express, context: RouteContex
     }
   });
 
+  // Public stats endpoint — returns live counts for the homepage
+  app.get("/api/public/stats", async (_req, res) => {
+    try {
+      const [studentsResult, teachersResult, coursesResult] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.role, 'Student')),
+        db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.role, 'Teacher')),
+        db.select({ count: sql<number>`count(*)` }).from(courses).where(eq(courses.status, 'active')),
+      ]);
+      res.json({
+        students: Number(studentsResult[0]?.count ?? 0),
+        teachers: Number(teachersResult[0]?.count ?? 0),
+        courses: Number(coursesResult[0]?.count ?? 0),
+      });
+    } catch (error) {
+      console.error('Error fetching public stats:', error);
+      res.status(500).json({ students: 0, teachers: 0, courses: 0 });
+    }
+  });
+
   // Seed test users endpoint (for development and initial production setup)
   app.post("/api/seed-test-users", async (req, res) => {
     try {
