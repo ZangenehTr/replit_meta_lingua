@@ -474,6 +474,18 @@ function Router() {
           <WebsiteBuilderPage />
         </RoleProtectedRoute>
       </Route>
+      <Route path="/admin/landing-pages">
+        {() => {
+          const AdminLandingPages = lazy(() => import("@/pages/admin/landing-pages"));
+          return (
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+                <AdminLandingPages />
+              </Suspense>
+            </RoleProtectedRoute>
+          );
+        }}
+      </Route>
       <Route path="/admin/review-moderation">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <ReviewModerationPage />
@@ -720,12 +732,20 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/courses">
-        <ProtectedRoute>
-          <Courses />
-        </ProtectedRoute>
+        {() => {
+          const CoursesIndex = lazy(() => import("@/pages/public/courses-index"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CoursesIndex /></Suspense>;
+        }}
       </Route>
-      <Route path="/courses/:courseId">
-        <CoursePublicDetail />
+      <Route path="/courses/:slug">
+        {({ slug }: { slug: string }) => {
+          const knownSlugs = ['ielts', 'toefl', 'gre', 'pte', 'conversation'];
+          if (knownSlugs.includes(slug)) {
+            const CourseLandingPage = lazy(() => import("@/pages/public/course-landing-page"));
+            return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CourseLandingPage /></Suspense>;
+          }
+          return <CoursePublicDetail />;
+        }}
       </Route>
       <Route path="/student/courses">
         <ProtectedRoute>

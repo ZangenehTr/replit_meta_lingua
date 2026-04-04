@@ -376,3 +376,36 @@ export type InsertCmsContentPromptTemplate = z.infer<typeof insertCmsContentProm
 export type CmsContentGenerationLog = typeof cmsContentGenerationLogs.$inferSelect;
 export type InsertCmsContentGenerationLog = z.infer<typeof insertCmsContentGenerationLogSchema>;
 
+// ============================================================================
+// SITE LANDING PAGES — per-program CMS-editable content (IELTS/TOEFL/GRE/PTE/Conversation)
+
+export const siteLandingPages = pgTable("site_landing_pages", {
+  id: serial("id").primaryKey(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  programName: varchar("program_name", { length: 255 }).notNull(),
+  heroTitle: text("hero_title").notNull(),
+  heroSubtitle: text("hero_subtitle"),
+  heroCtaPrimary: varchar("hero_cta_primary", { length: 255 }),
+  heroCtaSecondary: varchar("hero_cta_secondary", { length: 255 }),
+  targetAudienceBullets: jsonb("target_audience_bullets").$type<string[]>().default([]),
+  examTipsHtml: text("exam_tips_html"),
+  testimonials: jsonb("testimonials").$type<Array<{quote: string; studentName: string; score: string; examType: string}>>().default([]),
+  faqItems: jsonb("faq_items").$type<Array<{q: string; a: string}>>().default([]),
+  seoTitle: varchar("seo_title", { length: 255 }),
+  seoDescription: text("seo_description"),
+  seoKeywords: text("seo_keywords").array().default([]),
+  featureBullets: jsonb("feature_bullets").$type<string[]>().default([]),
+  isPublished: boolean("is_published").default(true).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const insertSiteLandingPageSchema = buildInsertSchema(siteLandingPages, {
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type SiteLandingPage = typeof siteLandingPages.$inferSelect;
+export type InsertSiteLandingPage = z.infer<typeof insertSiteLandingPageSchema>;
+

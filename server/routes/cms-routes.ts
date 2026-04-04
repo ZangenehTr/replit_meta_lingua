@@ -9,7 +9,10 @@ import { insertCmsPageSchema, insertCmsPageSectionSchema, insertCmsBlogCategoryS
          insertCmsBlogTagSchema, insertCmsBlogPostSchema, insertCmsBlogCommentSchema,
          insertCmsVideoSchema, insertCmsMediaAssetSchema, insertCmsPageAnalyticsSchema,
          insertCurriculumCategorySchema, insertGuestLeadSchema, insertCustomFontSchema,
-         cmsBlogPosts, cmsContentVersions, cmsContentPromptTemplates, cmsContentGenerationLogs } from '@shared/schema';
+         cmsBlogPosts, cmsContentVersions, cmsContentPromptTemplates, cmsContentGenerationLogs,
+         siteLandingPages } from '@shared/schema';
+import { courses, users, curriculumCategories } from '@shared/schema';
+import { courseEnrollments } from '@shared/schema/curriculum-ext';
 import { DatabaseStorage } from '../database-storage.js';
 import { db } from '../db.js';
 import { eq, and, lte, desc, sql, or } from 'drizzle-orm';
@@ -664,12 +667,33 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
       const pages = await storage.getCmsPages({ status: 'published' });
       const posts = await storage.getBlogPosts({ status: 'published' });
       const videos = await storage.getVideos({ isActive: true });
+      const landingPages = await db.select({
+        slug: siteLandingPages.slug,
+        updatedAt: siteLandingPages.updatedAt
+      }).from(siteLandingPages).where(eq(siteLandingPages.isPublished, true));
       
       const baseUrl = req.protocol + '://' + req.get('host');
       
       let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
       sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
       
+      // Add course index and landing pages
+      sitemap += '  <url>\n';
+      sitemap += `    <loc>${baseUrl}/courses</loc>\n`;
+      sitemap += `    <lastmod>${new Date().toISOString()}</lastmod>\n`;
+      sitemap += '    <changefreq>weekly</changefreq>\n';
+      sitemap += '    <priority>0.9</priority>\n';
+      sitemap += '  </url>\n';
+
+      landingPages.forEach((lp) => {
+        sitemap += '  <url>\n';
+        sitemap += `    <loc>${baseUrl}/courses/${lp.slug}</loc>\n`;
+        sitemap += `    <lastmod>${lp.updatedAt.toISOString()}</lastmod>\n`;
+        sitemap += '    <changefreq>weekly</changefreq>\n';
+        sitemap += '    <priority>0.9</priority>\n';
+        sitemap += '  </url>\n';
+      });
+
       // Add pages
       pages.forEach((page: any) => {
         sitemap += '  <url>\n';
@@ -1595,6 +1619,214 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
     } catch (error: unknown) {
       console.error('Error fetching sources:', error);
       res.status(500).json({ message: 'Failed to fetch sources' });
+    }
+  });
+
+  // ============================================================================
+  // LANDING PAGES ENDPOINTS (Course program pages: IELTS, TOEFL, GRE, PTE, Conversation)
+  // ============================================================================
+
+  // Public: Get published landing page by slug
+  app.get('/api/public/landing-pages/:slug', async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const [page] = await db.select().from(siteLandingPages).where(
+        and(eq(siteLandingPages.slug, slug), eq(siteLandingPages.isPublished, true))
+      ).limit(1);
+      if (!page) {
+        return res.status(404).json({ message: 'Landing page not found' });
+      }
+      res.json(page);
+    } catch (error) {
+      console.error('Error fetching landing page:', error);
+      res.status(500).json({ message: 'Failed to fetch landing page' });
+    }
+  });
+
+  // Admin: List all landing pages
+  app.get('/api/admin/landing-pages', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const pages = await db.select().from(siteLandingPages).orderBy(siteLandingPages.slug);
+      res.json(pages);
+    } catch (error) {
+      console.error('Error fetching admin landing pages:', error);
+      res.status(500).json({ message: 'Failed to fetch landing pages' });
+    }
+  });
+
+  // Admin: Update landing page by slug
+  app.put('/api/admin/landing-pages/:slug', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      const updates = { ...req.body, updatedAt: new Date() };
+      delete updates.id;
+      delete updates.slug;
+      delete updates.createdAt;
+
+      const [updated] = await db.update(siteLandingPages)
+        .set(updates)
+        .where(eq(siteLandingPages.slug, slug))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: 'Landing page not found' });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating landing page:', error);
+      res.status(500).json({ message: 'Failed to update landing page' });
+    }
+  });
+
+  // Public: Upcoming group classes for a given exam slug (group-only, with remaining spots)
+  app.get('/api/public/upcoming-classes/:examSlug', async (req: Request, res: Response) => {
+    try {
+      const { examSlug } = req.params;
+      const now = new Date();
+
+      // Map slug to exam category keywords for course matching
+      const examKeywords: Record<string, string[]> = {
+        ielts: ['ielts', 'آیلتس', 'IELTS'],
+        toefl: ['toefl', 'تافل', 'TOEFL'],
+        gre: ['gre', 'GRE', 'جی آر ای'],
+        pte: ['pte', 'PTE'],
+        conversation: ['conversation', 'مکالمه', 'speaking', 'general']
+      };
+
+      const keywords = examKeywords[examSlug.toLowerCase()] || [];
+
+      // Fetch only group-type active courses
+      const allCourses = await db.select({
+        id: courses.id,
+        title: courses.title,
+        classType: courses.classType,
+        deliveryMode: courses.deliveryMode,
+        maxStudents: courses.maxStudents,
+        price: courses.price,
+        firstSessionDate: courses.firstSessionDate,
+        startTime: courses.startTime,
+        isActive: courses.isActive,
+        category: courses.category
+      }).from(courses).where(
+        and(
+          eq(courses.isActive, true),
+          eq(courses.classType, 'group')
+        )
+      );
+
+      // Filter by keyword match and future first session date
+      const matching = allCourses.filter(c => {
+        if (!c.firstSessionDate) return false;
+        const sessionDate = new Date(c.firstSessionDate);
+        if (sessionDate <= now) return false;
+        const titleLower = (c.title || '').toLowerCase();
+        const catLower = (c.category || '').toLowerCase();
+        return keywords.some(k => titleLower.includes(k.toLowerCase()) || catLower.includes(k.toLowerCase()));
+      });
+
+      matching.sort((a, b) => {
+        const da = new Date(a.firstSessionDate!).getTime();
+        const db2 = new Date(b.firstSessionDate!).getTime();
+        return da - db2;
+      });
+
+      const top2 = matching.slice(0, 2);
+
+      // Compute remaining spots by counting active enrollments for each course
+      const result = await Promise.all(top2.map(async (c) => {
+        const enrollCount = await db.select({ count: sql<number>`count(*)::int` })
+          .from(courseEnrollments)
+          .where(and(
+            eq(courseEnrollments.courseId, c.id),
+            eq(courseEnrollments.status, 'active')
+          ));
+        const enrolled = enrollCount[0]?.count ?? 0;
+        const remainingSpots = c.maxStudents !== null ? Math.max(0, c.maxStudents - enrolled) : null;
+        return { ...c, enrolledCount: enrolled, remainingSpots };
+      }));
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching upcoming classes:', error);
+      res.status(500).json({ message: 'Failed to fetch upcoming classes' });
+    }
+  });
+
+  // Public: Teachers for a given exam slug (by subject tag match)
+  app.get('/api/public/exam-teachers/:examSlug', async (req: Request, res: Response) => {
+    try {
+      const { examSlug } = req.params;
+      const examKeywords: Record<string, string[]> = {
+        ielts: ['ielts', 'آیلتس'],
+        toefl: ['toefl', 'تافل'],
+        gre: ['gre', 'جی آر ای'],
+        pte: ['pte'],
+        conversation: ['conversation', 'مکالمه', 'speaking', 'general']
+      };
+      const keywords = examKeywords[examSlug.toLowerCase()] || [];
+
+      const teachers = await db.select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImage: users.profileImage,
+        teacherBio: users.teacherBio,
+        role: users.role
+      }).from(users).where(eq(users.role, 'Teacher/Tutor')).limit(20);
+
+      const matching = teachers.filter(t => {
+        const bioStr = (t.teacherBio || '').toLowerCase();
+        return keywords.some(k => bioStr.includes(k.toLowerCase()));
+      });
+
+      // Return up to 3 teachers, or first 3 teachers if no bio match
+      const result = matching.length > 0 ? matching.slice(0, 3) : teachers.slice(0, 3);
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching exam teachers:', error);
+      res.status(500).json({ message: 'Failed to fetch teachers' });
+    }
+  });
+
+  // Public: Course format cards for an exam slug (group/private/video)
+  app.get('/api/public/exam-courses/:examSlug', async (req: Request, res: Response) => {
+    try {
+      const { examSlug } = req.params;
+      const examKeywords: Record<string, string[]> = {
+        ielts: ['ielts', 'آیلتس'],
+        toefl: ['toefl', 'تافل'],
+        gre: ['gre', 'جی آر ای'],
+        pte: ['pte'],
+        conversation: ['conversation', 'مکالمه', 'speaking', 'general']
+      };
+      const keywords = examKeywords[examSlug.toLowerCase()] || [];
+
+      const allCourses = await db.select({
+        id: courses.id,
+        title: courses.title,
+        description: courses.description,
+        classType: courses.classType,
+        deliveryMode: courses.deliveryMode,
+        price: courses.price,
+        firstSessionDate: courses.firstSessionDate,
+        startTime: courses.startTime,
+        maxStudents: courses.maxStudents,
+        totalSessions: courses.totalSessions,
+        isActive: courses.isActive,
+        category: courses.category
+      }).from(courses).where(eq(courses.isActive, true));
+
+      const matching = allCourses.filter(c => {
+        const titleLower = (c.title || '').toLowerCase();
+        const catLower = (c.category || '').toLowerCase();
+        return keywords.some(k => titleLower.includes(k.toLowerCase()) || catLower.includes(k.toLowerCase()));
+      });
+
+      res.json(matching.slice(0, 9));
+    } catch (error) {
+      console.error('Error fetching exam courses:', error);
+      res.status(500).json({ message: 'Failed to fetch exam courses' });
     }
   });
 }

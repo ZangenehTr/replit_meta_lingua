@@ -93,6 +93,7 @@ export const SUBSYSTEM_TREE: SubsystemPermission[] = [
       { id: "sms_management", name: "مدیریت SMS", nameEn: "SMS Management", icon: "Send" },
       { id: "campaign_management", name: "مدیریت کمپین", nameEn: "Campaign Management", icon: "Megaphone" },
       { id: "website_builder", name: "ساخت وب‌سایت", nameEn: "Website Builder", icon: "Globe" },
+      { id: "landing_pages", name: "صفحات دوره‌ها", nameEn: "Course Landing Pages", icon: "FileText" },
       
       // Missing subsystems found in backend routes
       { id: "mst_test_builder", name: "سازنده آزمون MST", nameEn: "MST Test Builder", icon: "FileText" },
@@ -315,7 +316,7 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       "staff_management", "financial_management", "reports_analytics", "iranian_compliance",
       "ai_services", "ai_training", "communication_center", "quality_assurance", 
       "schedule_review", "teacher_payment_management", "white_label", "sms_management",
-      "campaign_management", "website_builder",
+      "campaign_management", "website_builder", "landing_pages",
       "unified_workflow", "call_logs", "prospects", "call_campaigns",
       "mentor_dashboard", "mentee_management", "mentoring_sessions", "mentoring_progress",
       // Front Desk subsystems
@@ -449,6 +450,7 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "sms_management": "/admin/sms-settings",
   "campaign_management": "/admin/campaign-management",
   "website_builder": "/admin/website-builder",
+  "landing_pages": "/admin/landing-pages",
 
   // New Missing Subsystems
   "mst_test_builder": "/admin/mst-test-builder",
@@ -618,6 +620,7 @@ export const INSTITUTE_SECTION_MAP: Record<string, { fa: string; en: string }> =
   teacher_payment_management: { fa: "مالی", en: "Financial" },
 
   website_builder: { fa: "وبسایت و محتوا", en: "Website & Content" },
+  landing_pages: { fa: "وبسایت و محتوا", en: "Website & Content" },
   white_label: { fa: "وبسایت و محتوا", en: "Website & Content" },
   social_media_scraper: { fa: "وبسایت و محتوا", en: "Website & Content" },
   review_moderation: { fa: "وبسایت و محتوا", en: "Website & Content" },
