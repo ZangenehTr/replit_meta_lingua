@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,8 @@ import {
   EyeOff,
   Brain,
   Video,
-  Cpu
+  Cpu,
+  Home
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/ui/back-button";
@@ -108,7 +109,46 @@ interface AdminSettings {
   whisperServiceEnabled: boolean;
   
   updatedAt: string;
+  homepageContent?: HomepageContent;
 }
+
+interface HomepageContent {
+  heroHeadline?: string;
+  heroSubheadline?: string;
+  ctaPrimary?: string;
+  ctaSecondary?: string;
+  callerNTitle?: string;
+  callerNDescription?: string;
+  callerNFeature1?: string;
+  callerNFeature2?: string;
+  callerNFeature3?: string;
+  callerNFeature4?: string;
+  pillar1Title?: string;
+  pillar1Desc?: string;
+  pillar2Title?: string;
+  pillar2Desc?: string;
+  pillar3Title?: string;
+  pillar3Desc?: string;
+}
+
+const defaultHomepageContent: HomepageContent = {
+  heroHeadline: 'زبان انگلیسی رو هوشمند یاد بگیر',
+  heroSubheadline: 'برای IELTS، TOEFL، GRE یا گفتگوی روان — MetaLingo با AI، تدریس زنده، و گیمیفیکیشن کنارته.',
+  ctaPrimary: 'همین حالا شروع کن',
+  ctaSecondary: 'تدریس‌ها را ببین',
+  callerNTitle: 'یه استاد همیشه آماده‌ست، هر ساعت از شبانه‌روز',
+  callerNDescription: 'CallerN رو ساختیم تا هر وقت خواستی با یه استاد واقعی تمرین کنی. بدون رزرو قبلی، بدون صبر کردن.',
+  callerNFeature1: 'جلسه ۱۰ تا ۱۵ دقیقه‌ای — بدون اتلاف وقت',
+  callerNFeature2: 'AI supervisor کنارته — تلفظ، گرامر، لهجه رو آنالیز می‌کنه',
+  callerNFeature3: 'هر ساعت از شبانه‌روز — حتی ساعت ۲ نصفه‌شب',
+  callerNFeature4: 'استادهای تأییدشده با تجربه تدریس بین‌المللی',
+  pillar1Title: 'یادگیری هوشمند با AI',
+  pillar1Desc: 'Lexi، دستیار هوش مصنوعی تو، برنامه‌درسی شخصی‌سازی‌شده بر اساس سطح و هدفت می‌سازه.',
+  pillar2Title: 'تدریس زنده با CallerN',
+  pillar2Desc: 'هر ساعت از شبانه‌روز، با یه استاد واقعی تماس بگیر. بدون رزرو، بدون انتظار.',
+  pillar3Title: 'دوره‌های تخصصی آزمون',
+  pillar3Desc: 'IELTS، TOEFL، GRE، PTE — با مسیر آموزشی ساختارمند و گواهینامه معتبر.',
+};
 
 export default function AdminSettings() {
   const { t } = useTranslation(['admin', 'common']);
@@ -117,12 +157,20 @@ export default function AdminSettings() {
   const { language, isRTL } = useLanguage();
   const [activeTab, setActiveTab] = useState("payment");
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [homepageContent, setHomepageContent] = useState<HomepageContent>(defaultHomepageContent);
 
   // Fetch current settings
   const { data: settings, isLoading } = useQuery<AdminSettings>({
     queryKey: ["/api/admin/settings"],
     retry: false
   });
+
+  // Sync homepageContent from loaded settings
+  useEffect(() => {
+    if (settings && settings.homepageContent) {
+      setHomepageContent({ ...defaultHomepageContent, ...settings.homepageContent });
+    }
+  }, [settings]);
 
   // Update settings mutation
   const updateSettingsMutation = useMutation({
@@ -149,6 +197,10 @@ export default function AdminSettings() {
       });
     }
   });
+
+  const saveHomepageContent = () => {
+    updateSettingsMutation.mutate({ homepageContent });
+  };
 
   // Test connection mutations
   const testShetabMutation = useMutation({
@@ -239,7 +291,11 @@ export default function AdminSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="homepage" className="flex items-center gap-2">
+            <Home className="h-4 w-4" />
+            Homepage
+          </TabsTrigger>
           <TabsTrigger value="payment" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             Payment
@@ -269,6 +325,148 @@ export default function AdminSettings() {
             Third Party
           </TabsTrigger>
         </TabsList>
+
+        {/* Homepage Content Settings */}
+        <TabsContent value="homepage">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Home className="h-5 w-5" />
+                  محتوای صفحه اصلی
+                </CardTitle>
+                <CardDescription>
+                  متن‌های صفحه اصلی را ویرایش کنید. این تغییرات بلافاصله روی سایت نمایش داده می‌شوند.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8" dir="rtl">
+
+                {/* Hero Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">بخش Hero</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="hero-headline">عنوان اصلی</Label>
+                    <Textarea
+                      id="hero-headline"
+                      rows={2}
+                      value={homepageContent.heroHeadline || ''}
+                      onChange={(e) => setHomepageContent(prev => ({ ...prev, heroHeadline: e.target.value }))}
+                      placeholder="زبان انگلیسی رو هوشمند یاد بگیر"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hero-subheadline">زیرعنوان</Label>
+                    <Textarea
+                      id="hero-subheadline"
+                      rows={3}
+                      value={homepageContent.heroSubheadline || ''}
+                      onChange={(e) => setHomepageContent(prev => ({ ...prev, heroSubheadline: e.target.value }))}
+                      placeholder="برای IELTS، TOEFL، GRE یا گفتگوی روان..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cta-primary">دکمه اصلی (CTA اول)</Label>
+                      <Input
+                        id="cta-primary"
+                        value={homepageContent.ctaPrimary || ''}
+                        onChange={(e) => setHomepageContent(prev => ({ ...prev, ctaPrimary: e.target.value }))}
+                        placeholder="همین حالا شروع کن"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cta-secondary">دکمه دوم (CTA دوم)</Label>
+                      <Input
+                        id="cta-secondary"
+                        value={homepageContent.ctaSecondary || ''}
+                        onChange={(e) => setHomepageContent(prev => ({ ...prev, ctaSecondary: e.target.value }))}
+                        placeholder="آزمون رایگان سطح‌سنجی"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pillars Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">بخش «چرا MetaLingo؟» (سه رکن)</h3>
+                  {(
+                    [
+                      { titleKey: 'pillar1Title' as keyof HomepageContent, descKey: 'pillar1Desc' as keyof HomepageContent, label: 'رکن ۱ — هوش مصنوعی' },
+                      { titleKey: 'pillar2Title' as keyof HomepageContent, descKey: 'pillar2Desc' as keyof HomepageContent, label: 'رکن ۲ — CallerN' },
+                      { titleKey: 'pillar3Title' as keyof HomepageContent, descKey: 'pillar3Desc' as keyof HomepageContent, label: 'رکن ۳ — دوره‌ها' },
+                    ]
+                  ).map((pillar) => (
+                    <div key={pillar.titleKey} className="p-4 border rounded-lg space-y-3">
+                      <p className="text-sm font-medium text-muted-foreground">{pillar.label}</p>
+                      <Input
+                        value={homepageContent[pillar.titleKey] || ''}
+                        onChange={(e) => setHomepageContent(prev => ({ ...prev, [pillar.titleKey]: e.target.value }))}
+                        placeholder="عنوان رکن"
+                      />
+                      <Textarea
+                        rows={2}
+                        value={homepageContent[pillar.descKey] || ''}
+                        onChange={(e) => setHomepageContent(prev => ({ ...prev, [pillar.descKey]: e.target.value }))}
+                        placeholder="توضیح رکن"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* CallerN Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold border-b pb-2">بخش CallerN Spotlight</h3>
+                  <div className="space-y-2">
+                    <Label>عنوان CallerN</Label>
+                    <Input
+                      value={homepageContent.callerNTitle || ''}
+                      onChange={(e) => setHomepageContent(prev => ({ ...prev, callerNTitle: e.target.value }))}
+                      placeholder="یه استاد همیشه آماده‌ست، هر ساعت از شبانه‌روز"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>توضیح CallerN</Label>
+                    <Textarea
+                      rows={3}
+                      value={homepageContent.callerNDescription || ''}
+                      onChange={(e) => setHomepageContent(prev => ({ ...prev, callerNDescription: e.target.value }))}
+                      placeholder="CallerN رو ساختیم تا..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ویژگی‌های CallerN</Label>
+                    {(
+                      [
+                        { key: 'callerNFeature1' as keyof HomepageContent, placeholder: 'جلسه ۱۰ تا ۱۵ دقیقه‌ای — بدون اتلاف وقت' },
+                        { key: 'callerNFeature2' as keyof HomepageContent, placeholder: 'AI supervisor کنارته...' },
+                        { key: 'callerNFeature3' as keyof HomepageContent, placeholder: 'هر ساعت از شبانه‌روز...' },
+                        { key: 'callerNFeature4' as keyof HomepageContent, placeholder: 'استادهای تأییدشده...' },
+                      ]
+                    ).map((feature) => (
+                      <Input
+                        key={feature.key}
+                        value={homepageContent[feature.key] || ''}
+                        onChange={(e) => setHomepageContent(prev => ({ ...prev, [feature.key]: e.target.value }))}
+                        placeholder={feature.placeholder}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-start">
+                  <Button
+                    onClick={saveHomepageContent}
+                    disabled={updateSettingsMutation.isPending}
+                    className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                  >
+                    <Save className="h-4 w-4 me-2" />
+                    {updateSettingsMutation.isPending ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* Payment Gateway Settings */}
         <TabsContent value="payment">

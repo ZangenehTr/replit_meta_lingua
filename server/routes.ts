@@ -300,6 +300,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ADD COLUMN IF NOT EXISTS scrape_qualification_score INTEGER;
       ALTER TABLE admin_settings
         ADD COLUMN IF NOT EXISTS scraper_auto_promotion_threshold INTEGER DEFAULT 60;
+      ALTER TABLE admin_settings
+        ADD COLUMN IF NOT EXISTS homepage_content JSONB;
     `;
     for (let attempt = 1; attempt <= 5; attempt++) {
       try {

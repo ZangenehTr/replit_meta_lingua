@@ -2086,6 +2086,18 @@ export async function setupAdminAndMiscRoutes(app: Express, context: RouteContex
     }
   });
 
+  // Public homepage content endpoint — returns editable copy for the homepage (no auth required)
+  app.get("/api/public/homepage-content", async (_req, res) => {
+    try {
+      const settings: Record<string, unknown> = await storage.getAdminSettings() ?? {};
+      const content = settings.homepageContent ?? null;
+      res.json(content);
+    } catch (error) {
+      console.error('Error fetching homepage content:', error);
+      res.json(null);
+    }
+  });
+
   // Seed test users endpoint (for development and initial production setup)
   app.post("/api/seed-test-users", async (req, res) => {
     try {

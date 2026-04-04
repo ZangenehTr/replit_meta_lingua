@@ -273,6 +273,8 @@ export const adminSettings = pgTable("admin_settings", {
   certificateTemplate: text("certificate_template"),
   // Scraper → CRM bridge: auto-promotion score threshold (default 60)
   scraperAutoPromotionThreshold: integer("scraper_auto_promotion_threshold").default(60),
+  // Homepage content — editable hero, CallerN feature copy, CTA labels (JSON)
+  homepageContent: jsonb("homepage_content"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

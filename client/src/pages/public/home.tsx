@@ -32,6 +32,25 @@ interface PublicStats {
   courses: number;
 }
 
+interface HomepageContent {
+  heroHeadline?: string;
+  heroSubheadline?: string;
+  ctaPrimary?: string;
+  ctaSecondary?: string;
+  callerNTitle?: string;
+  callerNDescription?: string;
+  callerNFeature1?: string;
+  callerNFeature2?: string;
+  callerNFeature3?: string;
+  callerNFeature4?: string;
+  pillar1Title?: string;
+  pillar1Desc?: string;
+  pillar2Title?: string;
+  pillar2Desc?: string;
+  pillar3Title?: string;
+  pillar3Desc?: string;
+}
+
 export default function PublicHome() {
   const testPrepImage1 = '/images/ielts_toefl_test_pre_2db77567.jpg';
   const callernImage1 = '/images/online_video_call_tu_7afdda6b.jpg';
@@ -54,32 +73,43 @@ export default function PublicHome() {
     }
   });
 
+  const { data: homepageContent } = useQuery<HomepageContent | null>({
+    queryKey: ['/api/public/homepage-content'],
+    queryFn: async () => {
+      const res = await fetch('/api/public/homepage-content');
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const hc = homepageContent || {};
+
   const pillars = [
     {
       icon: Brain,
-      title: 'یادگیری هوشمند با AI',
-      desc: 'Lexi، دستیار هوش مصنوعی تو، برنامه‌درسی شخصی‌سازی‌شده بر اساس سطح و هدفت می‌سازه.',
+      title: hc.pillar1Title || 'یادگیری هوشمند با AI',
+      desc: hc.pillar1Desc || 'Lexi، دستیار هوش مصنوعی تو، برنامه‌درسی شخصی‌سازی‌شده بر اساس سطح و هدفت می‌سازه.',
       color: 'from-blue-500 to-cyan-500',
     },
     {
       icon: Video,
-      title: 'تدریس زنده با CallerN',
-      desc: 'هر ساعت از شبانه‌روز، با یه استاد واقعی تماس بگیر. بدون رزرو، بدون انتظار.',
+      title: hc.pillar2Title || 'تدریس زنده با CallerN',
+      desc: hc.pillar2Desc || 'هر ساعت از شبانه‌روز، با یه استاد واقعی تماس بگیر. بدون رزرو، بدون انتظار.',
       color: 'from-cyan-500 to-teal-500',
     },
     {
       icon: Award,
-      title: 'دوره‌های تخصصی آزمون',
-      desc: 'IELTS، TOEFL، GRE، PTE — با مسیر آموزشی ساختارمند و گواهینامه معتبر.',
+      title: hc.pillar3Title || 'دوره‌های تخصصی آزمون',
+      desc: hc.pillar3Desc || 'IELTS، TOEFL، GRE، PTE — با مسیر آموزشی ساختارمند و گواهینامه معتبر.',
       color: 'from-teal-500 to-green-500',
     },
   ];
 
   const callerNFeatures = [
-    { icon: Clock, text: 'جلسه ۱۰ تا ۱۵ دقیقه‌ای — بدون اتلاف وقت' },
-    { icon: Brain, text: 'AI supervisor کنارته — تلفظ، گرامر، لهجه رو آنالیز می‌کنه' },
-    { icon: Calendar, text: 'هر ساعت از شبانه‌روز — حتی ساعت ۲ نصفه‌شب' },
-    { icon: Users, text: 'استادهای تأییدشده با تجربه تدریس بین‌المللی' },
+    { icon: Clock, text: hc.callerNFeature1 || 'جلسه ۱۰ تا ۱۵ دقیقه‌ای — بدون اتلاف وقت' },
+    { icon: Brain, text: hc.callerNFeature2 || 'AI supervisor کنارته — تلفظ، گرامر، لهجه رو آنالیز می‌کنه' },
+    { icon: Calendar, text: hc.callerNFeature3 || 'هر ساعت از شبانه‌روز — حتی ساعت ۲ نصفه‌شب' },
+    { icon: Users, text: hc.callerNFeature4 || 'استادهای تأییدشده با تجربه تدریس بین‌المللی' },
   ];
 
   const lexiFeatures = [
@@ -111,14 +141,13 @@ export default function PublicHome() {
             </div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-gray-900 mb-6 leading-tight">
-              <span className="block">زبان انگلیسی رو</span>
               <span className="block bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                هوشمند یاد بگیر
+                {hc.heroHeadline || 'زبان انگلیسی رو هوشمند یاد بگیر'}
               </span>
             </h1>
 
             <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 mb-10 leading-relaxed">
-              برای IELTS، TOEFL، GRE یا گفتگوی روان — MetaLingo با AI، تدریس زنده، و گیمیفیکیشن کنارته.
+              {hc.heroSubheadline || 'برای IELTS، TOEFL، GRE یا گفتگوی روان — MetaLingo با AI، تدریس زنده، و گیمیفیکیشن کنارته.'}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -128,14 +157,14 @@ export default function PublicHome() {
                 className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-lg px-8 h-14 shadow-lg shadow-blue-500/30"
               >
                 <Link href="/auth?tab=register" className="flex items-center gap-2">
-                  همین حالا شروع کن
+                  {hc.ctaPrimary || 'همین حالا شروع کن'}
                   <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-8 h-14">
-                <Link href="/take-test" className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  آزمون رایگان سطح‌سنجی
+                <Link href="/courses" className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  {hc.ctaSecondary || 'تدریس‌ها را ببین'}
                 </Link>
               </Button>
             </div>
@@ -249,11 +278,12 @@ export default function PublicHome() {
                 <span className="text-sm font-medium">تدریس زنده ۲۴ ساعته</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-black mb-4 leading-tight">
-                یه استاد همیشه آماده‌ست،<br />
-                <span className="text-cyan-300">هر ساعت از شبانه‌روز</span>
+                <span className="text-cyan-300">
+                  {hc.callerNTitle || 'یه استاد همیشه آماده‌ست، هر ساعت از شبانه‌روز'}
+                </span>
               </h2>
               <p className="text-white/85 text-lg mb-8 leading-relaxed">
-                CallerN رو ساختیم تا هر وقت خواستی با یه استاد واقعی تمرین کنی. بدون رزرو قبلی، بدون صبر کردن.
+                {hc.callerNDescription || 'CallerN رو ساختیم تا هر وقت خواستی با یه استاد واقعی تمرین کنی. بدون رزرو قبلی، بدون صبر کردن.'}
               </p>
               <ul className="space-y-4 mb-8">
                 {callerNFeatures.map((f, i) => {
@@ -274,7 +304,7 @@ export default function PublicHome() {
                   size="lg"
                   className="bg-white text-blue-700 hover:bg-gray-50 font-bold px-8 h-13"
                 >
-                  <Link href="/services/callern" className="flex items-center gap-2">
+                  <Link href="/callern" className="flex items-center gap-2">
                     با یه استاد تماس بگیر
                     <ArrowLeft className="h-5 w-5" />
                   </Link>
