@@ -1,7 +1,7 @@
 # MetaLingo Academy — Deployment Guide
 
-**Version:** 1.3.0  
-**Last Updated:** April 2, 2026  
+**Version:** 1.4.0  
+**Last Updated:** April 4, 2026  
 **Audience:** System Administrators, DevOps Engineers
 
 ---
@@ -228,6 +228,20 @@ OLLAMA_MODEL=llama3.2:3b
 # OpenAI settings (if AI_PROVIDER=openai, or as fallback)
 OPENAI_API_KEY=sk-...
 ```
+
+### Admin AI Copilot (ArvanCloud)
+
+The Admin AI Copilot uses ArvanCloud's OpenAI-compatible API. Register at [ArvanCloud](https://arvancloud.ir) and obtain an API key.
+
+```env
+# ArvanCloud (for the Admin AI Copilot)
+ARVANCLOUD_API_KEY=your-arvancloud-api-key
+ARVANCLOUD_BASE_URL=https://openai.inference.ir/v1
+```
+
+Available models: `Qwen3-30B-A3B` (default, best quality) and `Xerxes-1`.
+
+If `ARVANCLOUD_API_KEY` is not set, the copilot falls back to OpenAI (`OPENAI_API_KEY`). If neither is set, the copilot endpoint returns a configuration error.
 
 ### VoIP (Issabel PBX)
 
@@ -892,11 +906,35 @@ docker compose exec postgres psql -U metalingo metalingo \
 
 ```bash
 docker compose exec postgres psql -U metalingo metalingo \
-  < /opt/metalingo/migrations/manual_social_media_tables.sql
+  < /opt/metalingo/migrations/0130_social_media_tables.sql
 ```
 
 - `0120` — adds IRT response telemetry tables and IRT scoring history per test session; fixes CEFR theta thresholds
-- `manual_social_media_tables` — adds social media post tables used by the AI content generation pipeline
+- `0130` — adds social media post tables used by the AI content generation pipeline
+
+### v1.4.0 Migration — Admin AI Copilot & Homepage Content Editor
+
+If upgrading from v1.3.0 to v1.4.0, apply the following. All changes are additive (no data loss).
+
+**Homepage content editor** — adds a `homepage_content` JSON column to `admin_settings`:
+
+```bash
+docker compose exec postgres psql -U metalingo metalingo \
+  < /opt/metalingo/migrations/0140_homepage_content_admin_settings.sql
+```
+
+- `0140` — adds `homepage_content` column to `admin_settings` table; allows the admin to manage homepage hero text, stats, and feature cards without code changes
+
+**No database migration needed for the Admin AI Copilot** — the copilot creates its `admin_copilot_messages` table automatically at startup via an idempotent `CREATE TABLE IF NOT EXISTS` statement.
+
+**New environment variables required for v1.4.0:**
+
+```env
+ARVANCLOUD_API_KEY=your-arvancloud-api-key
+ARVANCLOUD_BASE_URL=https://openai.inference.ir/v1
+```
+
+These are optional but required for the Admin AI Copilot to function. Without them, the copilot falls back to OpenAI (`OPENAI_API_KEY`).
 
 ---
 

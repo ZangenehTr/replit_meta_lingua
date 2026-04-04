@@ -1,7 +1,7 @@
 # MetaLingo Academy — Platform Overview
 
-**Version:** 1.3.0  
-**Last Updated:** April 2, 2026  
+**Version:** 1.4.0  
+**Last Updated:** April 4, 2026  
 **Status:** Production-Ready
 
 ---
@@ -77,6 +77,7 @@ It combines institute administration, student management, course delivery, live 
 - Guest placement test (CEFR-aligned, IRT scoring)
 - AI HR performance narratives and anomaly detection
 - Telegram AI sales agent
+- **Admin AI Copilot** — conversational AI assistant built into the admin panel (ArvanCloud Qwen3-30B-A3B or OpenAI), with streaming responses, full conversation history, and deep platform context
 
 ### 8. HR Module
 - Employee directory and contracts
@@ -102,6 +103,8 @@ It combines institute administration, student management, course delivery, live 
 - **Referral Program**: Each student receives a unique referral code. Sharing the link rewards both the referrer (wallet credit) and the new student (welcome credit) on their first enrollment. Per-course share links, WhatsApp/SMS one-tap sharing, and a live leaderboard for admins.
 - **UTM Attribution**: Marketing campaign source, medium, and campaign are captured at registration and on every payment transaction, enabling ROI tracking per channel.
 - **SMS Campaign Management**: Bulk SMS to filtered groups of students
+- **SEO Course Landing Pages**: Five Farsi-optimized public landing pages (`/courses/ielts`, `/courses/toefl`, `/courses/gre`, `/courses/pte`, `/courses/conversation`) with JSON-LD structured data, pricing, testimonials, FAQ, and CallerN feature sections. Admin landing page editor at `/admin/landing-pages`.
+- **Homepage Content Editor**: Admin editor at `/admin/homepage-content` for managing hero text, statistics, feature highlights, and marketing copy — no code changes required.
 
 ### 12. Communication
 - Kavenegar SMS integration
@@ -127,6 +130,7 @@ It combines institute administration, student management, course delivery, live 
 | Auth | JWT + refresh tokens, OTP via Kavenegar |
 | AI (local) | Ollama with llama3.2 |
 | AI (cloud fallback) | OpenAI API |
+| AI (admin copilot) | ArvanCloud (Qwen3-30B-A3B / Xerxes-1) |
 | Queue | BullMQ + Redis 7 |
 | Video | WebRTC + coturn (STUN/TURN) |
 | TTS | Microsoft Edge TTS (self-hosted) |
@@ -197,6 +201,13 @@ The application will be available at `http://localhost:5000`.
 ---
 
 ## Changelog
+
+### v1.4.0 — April 4, 2026
+- **Admin AI Copilot**: Full conversational AI assistant embedded in the admin panel. Uses ArvanCloud (Qwen3-30B-A3B) as the primary provider with OpenAI as fallback. Supports streaming responses, persistent conversation history, and deep context about the platform's configuration, students, and operations.
+- **SEO Course Landing Pages**: Five Farsi-language public landing pages (`/courses/ielts`, `/courses/toefl`, `/courses/gre`, `/courses/pte`, `/courses/conversation`) targeting Iranian students, complete with JSON-LD structured data, testimonials, FAQ, pricing sections, and CallerN feature highlights. Admin landing page editor at `/admin/landing-pages`.
+- **Homepage Content Editor**: Admin UI at `/admin/homepage-content` backed by the `homepage_content` column in `admin_settings`. Lets admins update hero headline, sub-headline, statistics, feature cards, and CTA text without touching code.
+- **Bug fix — Public Homepage**: Removed a hard `window.location.href = '/auth'` redirect from the API client interceptor that was forcing users with any expired session token to the login page instead of the public homepage. React routing now handles all auth-state navigation correctly.
+- **PWA Icons**: All PWA manifest icons regenerated as proper PNG assets via ImageMagick (previously placeholder SVG stubs that caused install warnings on Android).
 
 ### v1.3.0 — April 2, 2026
 - **AI Content & SEO Pipeline**: Admin can generate blog posts, landing pages, and social media content from Ollama via async BullMQ jobs. Prompt template library, approval workflow (draft → review → publish), scheduled publisher, auto-filled SEO fields, and live sitemap.xml updates.

@@ -1,7 +1,7 @@
 # MetaLingo — Project Structure & Architecture Guide
 
-**Version:** 1.3.0  
-**Last Updated:** April 2, 2026  
+**Version:** 1.4.0  
+**Last Updated:** April 4, 2026  
 **Audience:** Developers, Technical Leads, DevOps Engineers
 
 > **Who this is for:** Junior developers joining the project, or anyone who needs to understand how the system is built — including explaining it to a technical lead or CTO.
@@ -354,7 +354,8 @@ migrations/
 ├── 0100_curriculum_levels_unique_constraint.sql ← Unique constraint on level codes
 ├── 0110_session_packages_sublevel_fk.sql  ← Foreign key constraints for sub-level ranges
 ├── 0120_irt_mst_reliability_tables.sql    ← IRT telemetry and per-session scoring history
-└── manual_social_media_tables.sql         ← Social media content tables (AI pipeline)
+├── 0130_social_media_tables.sql           ← Social media content tables (AI pipeline)
+└── 0140_homepage_content_admin_settings.sql ← homepage_content column in admin_settings
 ```
 
 ---
@@ -454,11 +455,12 @@ server/
 │   ├── telemetry-routes.ts                ← Per-session IRT response telemetry
 │   │
 │   │   — AI Features —
+│   ├── admin-copilot-routes.ts            ← Admin AI Copilot (ArvanCloud / OpenAI, streaming)
 │   ├── ai-sales-agent-routes.ts           ← Telegram bot, AI sales agent
 │   ├── ai-sales-context-routes.ts         ← Sales context data for AI
 │   ├── ai-study-partner-routes.ts         ← Lexi AI teaching assistant
 │   ├── ai-training-dashboard-routes.ts    ← AI-generated training dashboards
-│   ├── ai-health-routes.ts                ← Ollama/OpenAI connectivity checks
+│   ├── ai-health-routes.ts                ← Ollama/OpenAI/ArvanCloud connectivity checks
 │   ├── global-lexi-routes.ts              ← Global Lexi chat endpoint
 │   ├── 3d-content-tools-routes.ts         ← 3D/interactive content generation
 │   ├── interactive-scenes-routes.ts       ← Interactive lesson scenes

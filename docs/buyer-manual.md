@@ -1,7 +1,7 @@
 # MetaLingo Academy — Buyer Manual
 
-**Version:** 1.3.0  
-**Last Updated:** April 2, 2026  
+**Version:** 1.4.0  
+**Last Updated:** April 4, 2026  
 **Audience:** Institute Owners, Administrators, Department Heads
 
 ---
@@ -34,11 +34,14 @@ Congratulations on choosing MetaLingo Academy. This manual covers everything you
 18. [VoIP Integration](#18-voip-integration)
 19. [AI Features](#19-ai-features)
 20. [AI Content & SEO Pipeline](#20-ai-content--seo-pipeline)
-21. [CMS — Blog & Video Library](#21-cms--blog--video-library)
-22. [SMS Campaigns](#22-sms-campaigns)
-23. [Settings & Configuration](#23-settings--configuration)
-24. [User Roles Reference](#24-user-roles-reference)
-25. [Troubleshooting Common Issues](#25-troubleshooting-common-issues)
+21. [Admin AI Copilot](#21-admin-ai-copilot)
+22. [CMS — Blog & Video Library](#22-cms--blog--video-library)
+23. [Course Landing Pages](#23-course-landing-pages)
+24. [Homepage Content Editor](#24-homepage-content-editor)
+25. [SMS Campaigns](#25-sms-campaigns)
+26. [Settings & Configuration](#26-settings--configuration)
+27. [User Roles Reference](#27-user-roles-reference)
+28. [Troubleshooting Common Issues](#28-troubleshooting-common-issues)
 
 ---
 
@@ -720,7 +723,37 @@ The sitemap is served at `https://yourdomain.com/sitemap.xml`.
 
 ---
 
-## 21. CMS — Blog & Video Library
+## 21. Admin AI Copilot
+
+The Admin AI Copilot is a conversational AI assistant built directly into the admin panel. It understands the MetaLingo platform and can answer questions, analyze data, and help you take action — all in plain language (Persian or English).
+
+### Accessing the Copilot
+Navigate to **Admin → AI Copilot** in the admin sidebar. The copilot opens as a chat interface.
+
+### What It Can Do
+- Answer questions about students, courses, payments, and leads ("How many students enrolled this month?", "What is the status of lead #452?")
+- Explain platform features and how to use them
+- Help you draft SMS campaigns or announcement texts
+- Analyze performance trends ("Which courses have the most drop-offs?")
+- Guide you through configuration tasks step by step
+
+### How to Use It
+Type your question or request in the chat box and press Enter or click Send. The AI responds immediately with a streaming reply — you see the answer appear word by word, just like a chat conversation.
+
+### Conversation History
+Your conversations are saved. Click the **New Conversation** button to start a fresh topic, or scroll up to review previous exchanges. Each conversation is stored under your admin account and visible only to you.
+
+### AI Provider
+The copilot uses ArvanCloud (Qwen3-30B-A3B model) as its primary AI provider. If ArvanCloud is unavailable, it falls back to OpenAI. Your DevOps team configures the API keys during deployment.
+
+### Tips for Best Results
+- Be specific: "Show me students who haven't completed their first lesson" gets better results than "show me students"
+- You can ask follow-up questions — the copilot remembers your conversation context
+- Use Persian or English — both work equally well
+
+---
+
+## 22. CMS — Blog & Video Library
 
 ### Blog
 **Admin → CMS → Blog**:
@@ -740,7 +773,66 @@ The sitemap is served at `https://yourdomain.com/sitemap.xml`.
 
 ---
 
-## 22. SMS Campaigns
+## 23. Course Landing Pages
+
+MetaLingo includes five pre-built Farsi-language SEO landing pages, one for each core program. These are public pages designed to rank in Iranian search engines and convert visitors into enrolled students.
+
+### The Five Landing Pages
+
+| URL | Program |
+|---|---|
+| `/courses/ielts` | IELTS Preparation |
+| `/courses/toefl` | TOEFL Preparation |
+| `/courses/gre` | GRE Test Preparation |
+| `/courses/pte` | PTE Academic |
+| `/courses/conversation` | English Conversation |
+
+Each page includes:
+- **Hero section**: Program name, tagline, and registration CTA
+- **Features**: What the student gets from the program
+- **CallerN highlight**: How on-demand tutoring helps them prepare
+- **Pricing**: Displayed tier cards
+- **Testimonials**: Student reviews
+- **FAQ**: Common questions about the program
+- **Structured data**: JSON-LD markup for search engine rich results (Google, Bing)
+
+### Editing Landing Pages
+Go to **Admin → Landing Pages** to view and edit all five landing pages. You can update the content of each page directly from the admin panel — no code changes needed.
+
+Fields you can edit:
+- Hero title and subtitle
+- Feature list items
+- Pricing tiers and prices
+- Testimonials (name, quote, result)
+- FAQ questions and answers
+
+Changes are published immediately after saving.
+
+---
+
+## 24. Homepage Content Editor
+
+The homepage is the first thing visitors see. The Homepage Content Editor lets you customize the key marketing copy without touching the codebase.
+
+### Accessing the Editor
+Go to **Admin → Homepage Content**.
+
+### What You Can Edit
+- **Hero Headline**: The large title at the top of the homepage
+- **Hero Subtitle**: The supporting line below the headline
+- **Statistics**: The numbers shown in the "why MetaLingo" bar (e.g., "12,000+ students", "98% pass rate")
+- **Feature Cards**: The three or four highlight cards below the hero
+- **Call-to-Action Text**: The main CTA button label
+
+### How It Works
+1. Open **Admin → Homepage Content**
+2. Edit the fields you want to change
+3. Click **Save**
+4. The homepage reflects your changes immediately — no rebuild or restart required
+
+---
+
+## 25. SMS Campaigns
 
 ### Creating a Campaign
 **Admin → SMS Campaigns → New Campaign**:
@@ -762,7 +854,7 @@ After sending, the campaign shows:
 
 ---
 
-## 23. Settings & Configuration
+## 26. Settings & Configuration
 
 Go to **Admin → Settings** for all global configuration.
 
@@ -813,7 +905,7 @@ Go to **Admin → Settings** for all global configuration.
 
 ---
 
-## 24. User Roles Reference
+## 27. User Roles Reference
 
 ### Admin
 Full access to everything. Only admins can:
@@ -874,7 +966,7 @@ Full access to everything. Only admins can:
 
 ---
 
-## 25. Troubleshooting Common Issues
+## 28. Troubleshooting Common Issues
 
 ### Student Cannot Receive OTP
 1. Check that the Kavenegar API key is set in Settings
