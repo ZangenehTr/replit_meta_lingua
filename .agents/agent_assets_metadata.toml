@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "4vu4PDWM3QyiOCr6DvwUJ"
+uri = "file://client/public/pwa-192x192.png"
+type = "image"
+title = "ML lettermark blue cyan gradient icon 192"
+
+[[generated]]
+id = "-_6Ts1X3t4Eqejk_EVXR9"
+uri = "file://client/public/pwa-512x512.png"
+type = "image"
+title = "ML lettermark blue cyan gradient icon 512"

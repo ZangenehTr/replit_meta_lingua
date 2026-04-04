@@ -114,10 +114,10 @@ export default function Auth() {
         setOtpResendCooldown(90);
         setOtpCountdownDisplay("90s");
       } else {
-        setAuthError(result.message || "خطا در ارسال کد تأیید");
+        setAuthError("ارسال کد ناموفق بود");
       }
     } catch {
-      setAuthError("خطا در ارسال کد. لطفاً دوباره تلاش کنید.");
+      setAuthError("ارسال کد ناموفق بود");
     } finally {
       setOtpLoading(false);
     }
@@ -159,10 +159,10 @@ export default function Auth() {
         setOtpResendCooldown(90);
         setOtpCountdownDisplay("90s");
       } else {
-        setAuthError(result.message || "خطا در ارسال کد تأیید");
+        setAuthError("ارسال کد ناموفق بود");
       }
     } catch {
-      setAuthError("خطا در ارسال کد. لطفاً دوباره تلاش کنید.");
+      setAuthError("ارسال کد ناموفق بود");
     } finally {
       setOtpLoading(false);
     }
@@ -245,7 +245,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-500" dir="rtl">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600" dir="rtl">
       <div className="absolute inset-0">
         <div className="absolute top-20 start-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob"></div>
         <div className="absolute top-40 end-10 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob animation-delay-2000"></div>
@@ -269,13 +269,16 @@ export default function Auth() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-3xl flex items-center justify-center shadow-2xl border border-white/20">
-                <span className="text-white font-black text-4xl sm:text-5xl tracking-tight select-none">ML</span>
+                <span className="text-white font-black tracking-tight select-none flex items-baseline gap-0.5">
+                  <span className="text-5xl sm:text-6xl">M</span>
+                  <span className="text-3xl sm:text-4xl">L</span>
+                </span>
               </div>
             </motion.div>
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            MetaLingo
+            {t('auth:metaLingua')}
           </h1>
           <p className="text-white/90 text-sm sm:text-base flex items-center justify-center gap-2">
             <Languages className="w-4 h-4" />
@@ -300,16 +303,30 @@ export default function Auth() {
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-red-200 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-white text-sm font-medium">{authError}</p>
-                      <p className="text-white/70 text-xs mt-1.5">
-                        نیاز به کمک دارید؟{" "}
-                        <a
-                          href="tel:02145328"
-                          className="text-cyan-300 underline underline-offset-2 font-medium"
-                        >
-                          ۰۲۱-۴۵۳۲۸
-                        </a>
-                      </p>
+                      {authError === "ارسال کد ناموفق بود" ? (
+                        <p className="text-white text-sm font-medium">
+                          ارسال کد ناموفق بود. لطفاً با پشتیبانی ما تماس بگیرید:{" "}
+                          <a
+                            href="tel:02145328"
+                            className="underline font-bold"
+                          >
+                            021-45328
+                          </a>
+                        </p>
+                      ) : (
+                        <>
+                          <p className="text-white text-sm font-medium">{authError}</p>
+                          <p className="text-white/70 text-xs mt-1.5">
+                            نیاز به کمک دارید؟{" "}
+                            <a
+                              href="tel:02145328"
+                              className="text-cyan-300 underline underline-offset-2 font-medium"
+                            >
+                              ۰۲۱-۴۵۳۲۸
+                            </a>
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                 </motion.div>
