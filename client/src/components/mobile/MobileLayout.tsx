@@ -12,7 +12,7 @@ interface MobileLayoutProps {
   showBack?: boolean;
   showNotifications?: boolean;
   showSettings?: boolean;
-  gradient?: 'primary' | 'secondary' | 'success' | 'warm' | 'cool' | 'dark';
+  gradient?: 'primary' | 'secondary' | 'success' | 'warm' | 'cool' | 'dark' | 'study' | 'focus';
   className?: string;
 }
 
@@ -29,17 +29,19 @@ export function MobileLayout({
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar' || i18n.language === 'fa';
 
-  const gradientClasses = {
+  const gradientClasses: Record<string, string> = {
     primary: 'mobile-gradient-primary',
     secondary: 'mobile-gradient-secondary',
     success: 'mobile-gradient-success',
     warm: 'mobile-gradient-warm',
     cool: 'mobile-gradient-cool',
-    dark: 'mobile-gradient-dark'
+    dark: 'mobile-gradient-dark',
+    study: 'mobile-gradient-study',
+    focus: 'mobile-gradient-focus',
   };
 
   return (
-    <div className={cn(gradientClasses[gradient], 'min-h-screen flex flex-col', className)}>
+    <div className={cn(gradientClasses[gradient] ?? 'mobile-gradient-primary', 'min-h-screen flex flex-col', className)}>
       {/* Mobile Header */}
       <motion.header
         initial={{ y: -100 }}
@@ -53,7 +55,7 @@ export function MobileLayout({
                 onClick={() => window.history.back()}
                 className="tap-scale p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
-                <ArrowLeft className={cn("h-5 w-5", isRTL && "rotate-180")} />
+                <ArrowLeft className={cn("h-5 w-5 text-gray-700", isRTL && "rotate-180")} />
               </button>
             )}
             {title && (

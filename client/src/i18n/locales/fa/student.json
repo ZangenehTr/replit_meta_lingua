@@ -973,7 +973,10 @@
   },
   "tests": {
     "title": "آزمون‌های من",
-    "subtitle": "آزمون بدهید و نتایج خود را مشاهده کنید"
+    "subtitle": "آزمون بدهید و نتایج خود را مشاهده کنید",
+    "all": "همه",
+    "upcoming": "پیش رو",
+    "completed": "تکمیل شده"
   },
   "proficiency": {
     "readingAboveAverage": "مهارت خواندن شما بالاتر از میانگین سطحتان است",
@@ -984,5 +987,8 @@
   "noSessionsToday": "جلسه‌ای برای امروز برنامه‌ریزی نشده است",
   "bookSession": "رزرو جلسه",
   "placementTestRequired": "آزمون تعیین سطح خود را تکمیل کنید",
-  "viewAllCourses": "مشاهده همه دوره‌ها"
+  "viewAllCourses": "مشاهده همه دوره‌ها",
+  "pending": "در انتظار",
+  "avgScore": "میانگین نمره",
+  "flagQuestion": "علامت‌گذاری سوال"
 }

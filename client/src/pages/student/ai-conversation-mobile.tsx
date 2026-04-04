@@ -224,7 +224,7 @@ export default function StudentAIConversationMobile() {
                     className={`
                       px-3 py-1 rounded-lg text-sm transition-all
                       ${settings.language === lang 
-                        ? 'bg-purple-500 text-white' 
+                        ? 'bg-blue-500 text-white' 
                         : 'bg-white/10 text-white/70'}
                     `}
                     data-testid={`button-language-${lang}`}
@@ -246,7 +246,7 @@ export default function StudentAIConversationMobile() {
                     className={`
                       px-3 py-1 rounded-lg text-sm transition-all flex-1
                       ${settings.level === level 
-                        ? 'bg-purple-500 text-white' 
+                        ? 'bg-blue-500 text-white' 
                         : 'bg-white/10 text-white/70'}
                     `}
                     data-testid={`button-level-${level}`}
@@ -270,7 +270,7 @@ export default function StudentAIConversationMobile() {
                       className={`
                         p-2 rounded-lg text-sm transition-all flex items-center gap-2
                         ${settings.topic === topic.id 
-                          ? 'bg-purple-500 text-white' 
+                          ? 'bg-blue-500 text-white' 
                           : 'bg-white/10 text-white/70'}
                       `}
                       data-testid={`button-topic-${topic.id}`}
@@ -328,7 +328,7 @@ export default function StudentAIConversationMobile() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+            <Sparkles className="w-16 h-16 text-blue-400 mx-auto mb-4" />
             <h3 className="text-white text-lg font-semibold mb-2">
               {t('student:aiWelcome')}
             </h3>
@@ -363,7 +363,7 @@ export default function StudentAIConversationMobile() {
               <div className={`max-w-[80%] ${message.role === 'user' ? 'items-end' : 'items-start'} flex gap-2`}>
                 {message.role === 'assistant' && (
                   <Avatar className="w-8 h-8 flex-shrink-0">
-                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500">
                       <Bot className="w-5 h-5 text-white" />
                     </AvatarFallback>
                   </Avatar>
@@ -373,7 +373,7 @@ export default function StudentAIConversationMobile() {
                   <div className={`
                     px-4 py-2 rounded-2xl
                     ${message.role === 'user' 
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
                       : 'glass-card text-white'}
                   `}>
                     <p className="text-sm">{message.content}</p>
@@ -435,7 +435,7 @@ export default function StudentAIConversationMobile() {
         
         {inputText.trim() ? (
           <motion.button
-            className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+            className="p-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"
             whileTap={{ scale: 0.9 }}
             onClick={handleSend}
             data-testid="button-send"
