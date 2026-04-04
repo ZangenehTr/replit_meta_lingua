@@ -45,13 +45,12 @@ apiClient.interceptors.response.use(
         
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, clear tokens and redirect
+        // Refresh failed — clear tokens and reject.
+        // Do NOT hard-redirect here; React routing (ProtectedRoute) handles
+        // unauthenticated states. A hard redirect bypasses the public homepage
+        // and forces all users with expired tokens to the auth page.
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
-        
-        // Clear any cached data would be handled by redirect
-        
-        window.location.href = '/auth';
         return Promise.reject(refreshError);
       }
     }
