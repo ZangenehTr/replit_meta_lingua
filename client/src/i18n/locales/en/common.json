@@ -1159,7 +1159,8 @@
   "pwa": {
     "offline": "You are offline",
     "offlineTitle": "Ready for Offline",
-    "offlineDescription": "App is ready to work offline. You can learn even without internet!"
+    "offlineDescription": "App is ready to work offline. You can learn even without internet!",
+    "reconnected": "Connection restored"
   },
   "discard": "Discard Changes",
   "saveChanges": "Save Changes",

@@ -70,8 +70,11 @@ import faLinguaquest from './locales/fa/linguaquest.json';
 import arLinguaquest from './locales/ar/linguaquest.json';
 
 // Language detection options
+// Order: localStorage (user's saved preference) → htmlTag (<html lang="fa">) → fallback 'fa'
+// Navigator is intentionally excluded so the app defaults to Farsi for Iranian users
+// rather than the browser's OS/region language setting.
 const detectionOptions = {
-  order: ['localStorage', 'navigator', 'htmlTag'],
+  order: ['localStorage', 'htmlTag'],
   lookupLocalStorage: 'i18nextLng',
   caches: ['localStorage'],
   excludeCacheFor: ['cimode'],
