@@ -3351,12 +3351,13 @@ export class AcademicDbStorage extends AdminDbStorage {
   async createPlacementTestSession(data: any): Promise<any> {
     try {
       const [session] = await db.insert(placementTestSessions).values({
-        userId: data.userId,
+        userId: data.userId ?? null,
         targetLanguage: data.targetLanguage,
         learningGoal: data.learningGoal || 'general',
         status: data.status || 'in_progress',
         currentSkill: data.currentSkill || 'speaking',
-        currentQuestionIndex: data.currentQuestionIndex || 0
+        currentQuestionIndex: data.currentQuestionIndex || 0,
+        startedAt: data.startedAt || new Date(),
       }).returning();
       return session;
     } catch (error) {

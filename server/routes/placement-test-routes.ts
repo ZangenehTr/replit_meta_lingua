@@ -35,7 +35,7 @@ const router = express.Router();
 
 // Request schemas
 const startTestSchema = z.object({
-  targetLanguage: z.string().min(1),
+  targetLanguage: z.string().min(1).default('English'),
   learningGoal: z.string().optional(),
   timeAvailability: z.number().min(1).max(40).default(6)
 });
@@ -471,11 +471,8 @@ const roadmapGenerator = new AIRoadmapGenerator(ollamaService, storage);
     try {
       const data = startTestSchema.parse(req.body);
       
-      // Use userId = -1 for guest sessions
-      const GUEST_USER_ID = -1;
-
       const session = await placementService.startPlacementTest(
-        GUEST_USER_ID,
+        null,
         data.targetLanguage,
         data.learningGoal
       );
@@ -505,7 +502,7 @@ const roadmapGenerator = new AIRoadmapGenerator(ollamaService, storage);
       const sessionId = parseInt(req.params.sessionId);
 
       const session = await storage.getPlacementTestSession(sessionId);
-      if (!session || session.userId !== -1) {
+      if (!session || session.userId !== null) {
         return res.status(404).json({
           success: false,
           error: 'Session not found'
@@ -591,7 +588,7 @@ const roadmapGenerator = new AIRoadmapGenerator(ollamaService, storage);
       }
 
       const session = await storage.getPlacementTestSession(sessionId);
-      if (!session || session.userId !== -1) {
+      if (!session || session.userId !== null) {
         return res.status(404).json({
           success: false,
           error: 'Session not found'
@@ -630,7 +627,7 @@ const roadmapGenerator = new AIRoadmapGenerator(ollamaService, storage);
       const sessionId = parseInt(req.params.sessionId);
 
       const session = await storage.getPlacementTestSession(sessionId);
-      if (!session || session.userId !== -1) {
+      if (!session || session.userId !== null) {
         return res.status(404).json({
           success: false,
           error: 'Session not found'

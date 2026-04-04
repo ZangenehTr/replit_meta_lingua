@@ -33,6 +33,8 @@ import {
   chatConversations, chatMessages, aiStudyPartners,
   // MST tables
   mstSessions, mstSkillStates, mstResponses,
+  // Placement test tables (public guest placement flow)
+  placementTestSessions, placementTestQuestions, placementTestResponses,
   // Book e-commerce tables
   book_categories, books, book_assets, dictionary_lookups, book_orders, carts, cart_items,
   orders, order_items, user_addresses, shipping_orders, courier_tracking,
@@ -344,89 +346,89 @@ export class MemStorageUser {
   }
 
   async createPlacementTestSession(data: any): Promise<any> {
-    const result = await this.db.insert(mstSessions).values(data).returning();
+    const result = await this.db.insert(placementTestSessions).values({
+      ...data,
+      startedAt: data.startedAt || new Date(),
+    }).returning();
     return result[0];
   }
 
   async getPlacementTestSession(id: number): Promise<any | undefined> {
-    const result = await this.db.select().from(mstSessions).where(eq(mstSessions.id, id));
+    const result = await this.db.select().from(placementTestSessions).where(eq(placementTestSessions.id, id));
     return result[0];
   }
 
   async updatePlacementTestSession(id: number, updates: any): Promise<any | undefined> {
-    const result = await this.db.update(mstSessions)
+    const result = await this.db.update(placementTestSessions)
       .set({ ...updates, updatedAt: new Date() })
-      .where(eq(mstSessions.id, id))
+      .where(eq(placementTestSessions.id, id))
       .returning();
     return result[0];
   }
 
   async getUserPlacementTestSessions(userId: number): Promise<any[]> {
-    return await this.db.select().from(mstSessions).where(eq(mstSessions.userId, userId));
+    return await this.db.select().from(placementTestSessions).where(eq(placementTestSessions.userId, userId));
   }
 
   async getUserPlacementTestSessionsThisWeek(userId: number): Promise<any[]> {
-    // Get start of current week (Sunday)
     const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
-    
-    // Get end of current week (Saturday)
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
-  
-    return await this.db.select().from(mstSessions).where(
+
+    return await this.db.select().from(placementTestSessions).where(
       and(
-        eq(mstSessions.userId, userId),
-        gte(mstSessions.startedAt, startOfWeek),
-        lte(mstSessions.startedAt, endOfWeek)
+        eq(placementTestSessions.userId, userId),
+        gte(placementTestSessions.startedAt, startOfWeek),
+        lte(placementTestSessions.startedAt, endOfWeek)
       )
     );
   }
 
   async getPlacementTestSessionsPaginated(page: number, limit: number): Promise<{ sessions: any[], total: number }> {
     const offset = (page - 1) * limit;
-    const sessions = await this.db.select().from(mstSessions).limit(limit).offset(offset);
-    const totalResult = await this.db.select().from(mstSessions);
+    const sessions = await this.db.select().from(placementTestSessions).limit(limit).offset(offset);
+    const totalResult = await this.db.select({ id: placementTestSessions.id }).from(placementTestSessions);
     return { sessions, total: totalResult.length };
   }
 
   async getPlacementTestSessionsCount(): Promise<number> {
-    const result = await this.db.select().from(mstSessions);
+    const result = await this.db.select({ id: placementTestSessions.id }).from(placementTestSessions);
     return result.length;
   }
 
   async createPlacementTestQuestion(data: any): Promise<any> {
-    const result = await this.db.insert(mstSkillStates).values(data).returning();
+    const result = await this.db.insert(placementTestQuestions).values(data).returning();
     return result[0];
   }
 
   async getPlacementTestQuestion(id: number): Promise<any | undefined> {
-    const result = await this.db.select().from(mstSkillStates).where(eq(mstSkillStates.id, id));
+    const result = await this.db.select().from(placementTestQuestions).where(eq(placementTestQuestions.id, id));
     return result[0];
   }
 
   async getPlacementTestQuestions(filters?: any): Promise<any[]> {
-    return await this.db.select().from(mstSkillStates);
+    return await this.db.select().from(placementTestQuestions);
   }
 
   async createPlacementTestResponse(data: any): Promise<any> {
-    const result = await this.db.insert(mstResponses).values(data).returning();
+    const result = await this.db.insert(placementTestResponses).values(data).returning();
     return result[0];
   }
 
   async updatePlacementTestResponse(id: number, updates: any): Promise<any | undefined> {
-    const result = await this.db.update(mstResponses)
+    const result = await this.db.update(placementTestResponses)
       .set(updates)
-      .where(eq(mstResponses.id, id))
+      .where(eq(placementTestResponses.id, id))
       .returning();
     return result[0];
   }
 
   async getPlacementTestResponses(sessionId: number): Promise<any[]> {
-    return await this.db.select().from(mstResponses).where(eq(mstResponses.sessionId, sessionId));
+    return await this.db.select().from(placementTestResponses).where(eq(placementTestResponses.sessionId, sessionId));
   }
 
   async createUserRoadmapEnrollment(data: any): Promise<any> {

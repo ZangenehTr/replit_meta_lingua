@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Brain, Mic, PenTool, Headphones, BookOpen, ArrowRight, CheckCircle2, Square, Play, Trash2 } from 'lucide-react';
+import { Clock, Brain, Mic, PenTool, Headphones, BookOpen, ArrowRight, CheckCircle2, Square, Play, Trash2, Sparkles, ShieldCheck, Timer, BarChart3, Trophy, Zap } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -398,63 +398,135 @@ export default function TakeTestPage() {
 
   // Intro Screen
   if (testStep === 'intro') {
+    const skillDetails = [
+      { skill: 'speaking', icon: Mic, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-950', border: 'border-blue-200 dark:border-blue-800', label: 'Speaking' },
+      { skill: 'listening', icon: Headphones, color: 'from-cyan-500 to-cyan-600', bg: 'bg-cyan-50 dark:bg-cyan-950', border: 'border-cyan-200 dark:border-cyan-800', label: 'Listening' },
+      { skill: 'reading', icon: BookOpen, color: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950', border: 'border-indigo-200 dark:border-indigo-800', label: 'Reading' },
+      { skill: 'writing', icon: PenTool, color: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-950', border: 'border-violet-200 dark:border-violet-800', label: 'Writing' },
+    ];
+    const benefits = [
+      { icon: BarChart3, text: 'CEFR level (A1–C2) with per-skill breakdown', color: 'text-blue-600' },
+      { icon: Sparkles, text: 'AI-powered analysis & personalized roadmap', color: 'text-cyan-600' },
+      { icon: Trophy, text: 'Course recommendations matched to your level', color: 'text-indigo-600' },
+      { icon: ShieldCheck, text: 'No registration required to start', color: 'text-green-600' },
+    ];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <Card className="shadow-xl border-2">
-            <CardHeader className="text-center space-y-4">
-              <div className="flex justify-center">
-                <Brain className="h-16 w-16 text-primary" />
-              </div>
-              <CardTitle className="text-3xl font-bold">Free English Placement Test</CardTitle>
-              <CardDescription className="text-lg">
-                Discover your English proficiency level in just 10 minutes
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Alert>
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>What you'll get:</strong>
-                  <ul className="mt-2 space-y-1 list-disc list-inside">
-                    <li>CEFR level assessment (A1-C2)</li>
-                    <li>Personalized curriculum recommendations</li>
-                    <li>Detailed skill breakdown (Speaking, Listening, Reading, Writing)</li>
-                    <li>No registration required to start!</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+        {/* Background decorative blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-3xl" />
+        </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(skillIcons).map(([skill, Icon]) => (
-                  <Card key={skill} className="text-center p-4">
-                    <Icon className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium capitalize">{skill}</p>
-                  </Card>
-                ))}
+        <div className="relative z-10 w-full max-w-2xl">
+          {/* Header badge */}
+          <div className="flex justify-center mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-sm font-medium backdrop-blur-sm">
+              <Zap className="h-4 w-4 text-yellow-400" />
+              AI-Powered Adaptive Assessment
+            </span>
+          </div>
+
+          {/* Main card */}
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+            {/* Gradient top banner */}
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-8 text-white text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
+                  <Brain className="h-12 w-12 text-white" />
+                </div>
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight">Free English Placement</h1>
+              <p className="mt-2 text-blue-100 text-base">
+                The shortest and the most intelligent way to know your English level
+              </p>
+              <div className="flex items-center justify-center gap-2 mt-4 text-sm text-white/80">
+                <Timer className="h-4 w-4" />
+                <span>10-minute adaptive test · Instant CEFR results</span>
+              </div>
+            </div>
+
+            <div className="p-8 space-y-8">
+              {/* Skill cards */}
+              <div>
+                <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-3">Skills tested</p>
+                <div className="grid grid-cols-4 gap-3">
+                  {skillDetails.map(({ skill, icon: Icon, color, label }) => (
+                    <div key={skill} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                      <div className={`p-2 rounded-xl bg-gradient-to-br ${color} shadow-lg`}>
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="text-white/80 text-xs font-medium">{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Estimated time: 10 minutes</span>
+              {/* Benefits */}
+              <div>
+                <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-3">What you'll get</p>
+                <div className="space-y-2.5">
+                  {benefits.map(({ icon: Icon, text, color }, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                      <div className="flex-shrink-0 p-1.5 rounded-lg bg-white/10">
+                        <Icon className={`h-4 w-4 ${color}`} />
+                      </div>
+                      <span className="text-white/80 text-sm">{text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <Button 
-                size="lg" 
-                className="w-full"
+              {/* How it works */}
+              <div className="flex items-center justify-between">
+                {[
+                  { step: '1', label: 'Answer questions', sub: '~10 min' },
+                  { step: '→', label: '', sub: '' },
+                  { step: '2', label: 'Get CEFR level', sub: 'Instant' },
+                  { step: '→', label: '', sub: '' },
+                  { step: '3', label: 'See your roadmap', sub: 'AI-generated' },
+                ].map((item, i) =>
+                  item.label ? (
+                    <div key={i} className="flex flex-col items-center gap-1 flex-1">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                        {item.step}
+                      </div>
+                      <span className="text-white/70 text-xs font-medium text-center">{item.label}</span>
+                      <span className="text-white/40 text-xs">{item.sub}</span>
+                    </div>
+                  ) : (
+                    <div key={i} className="text-white/30 text-lg font-bold flex-shrink-0">→</div>
+                  )
+                )}
+              </div>
+
+              {/* Start button */}
+              <Button
+                size="lg"
+                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-[1.02]"
                 onClick={() => startTestMutation.mutate()}
                 disabled={startTestMutation.isPending}
                 data-testid="button-start-test"
               >
-                {startTestMutation.isPending ? 'Starting...' : 'Start Free Test'}
-                <ArrowRight className="ms-2 h-5 w-5" />
+                {startTestMutation.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-5 w-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                    Starting your test…
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Start Free Test
+                    <ArrowRight className="h-5 w-5" />
+                  </span>
+                )}
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
-                By starting this test, you agree to provide your contact information at the end to receive your results.
+              <p className="text-xs text-center text-white/40">
+                By starting this test, you agree to share your contact information at the end to receive your results.
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     );

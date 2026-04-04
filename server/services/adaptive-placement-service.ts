@@ -63,7 +63,7 @@ export class AdaptivePlacementService {
    * Start a new adaptive placement test session
    */
   async startPlacementTest(
-    userId: number, 
+    userId: number | null, 
     targetLanguage: string, 
     learningGoal?: string
   ): Promise<PlacementTestSession> {

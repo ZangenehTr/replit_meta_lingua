@@ -41,6 +41,11 @@ import {
   GraduationCap,
   Moon,
   Sun,
+  Award,
+  MessageSquare,
+  TrendingUp,
+  FileCheck,
+  Star,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -137,6 +142,46 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <Home className="h-4 w-4" />
               {t('nav.home')}
             </Link>
+
+            {/* Programs Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                    location.startsWith('/courses')
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid="button-nav-programs"
+                >
+                  <Award className="h-4 w-4" />
+                  {t('nav.programs', 'Programs')}
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuItem onSelect={() => setLocation('/courses/ielts')} className="cursor-pointer" data-testid="link-program-ielts">
+                  <Star className="h-4 w-4 me-2 text-blue-500" />
+                  IELTS Preparation
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setLocation('/courses/toefl')} className="cursor-pointer" data-testid="link-program-toefl">
+                  <TrendingUp className="h-4 w-4 me-2 text-cyan-500" />
+                  TOEFL iBT
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setLocation('/courses/gre')} className="cursor-pointer" data-testid="link-program-gre">
+                  <FileCheck className="h-4 w-4 me-2 text-indigo-500" />
+                  GRE Preparation
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setLocation('/courses/pte')} className="cursor-pointer" data-testid="link-program-pte">
+                  <BookOpen className="h-4 w-4 me-2 text-violet-500" />
+                  PTE Academic
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setLocation('/courses/conversation')} className="cursor-pointer" data-testid="link-program-conversation">
+                  <MessageSquare className="h-4 w-4 me-2 text-green-500" />
+                  General Conversation
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Curriculum Dropdown */}
             {curriculumCategories.length > 0 && (
@@ -259,6 +304,36 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                       <Home className="h-5 w-5" />
                       {t('nav.home')}
                     </Link>
+
+                    {/* Programs Section */}
+                    <div>
+                      <p className="px-4 pt-2 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {t('nav.programs', 'Programs')}
+                      </p>
+                      <div className="flex flex-col gap-1">
+                        {[
+                          { href: '/courses/ielts', label: 'IELTS Preparation', icon: Star },
+                          { href: '/courses/toefl', label: 'TOEFL iBT', icon: TrendingUp },
+                          { href: '/courses/gre', label: 'GRE Preparation', icon: FileCheck },
+                          { href: '/courses/pte', label: 'PTE Academic', icon: BookOpen },
+                          { href: '/courses/conversation', label: 'General Conversation', icon: MessageSquare },
+                        ].map(({ href, label, icon: Icon }) => (
+                          <Link
+                            key={href}
+                            href={href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+                              location === href
+                                ? 'bg-primary/10 text-primary font-semibold'
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            }`}
+                          >
+                            <Icon className="h-4 w-4" />
+                            {label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
 
                     {/* Curriculum Section */}
                     {curriculumCategories.length > 0 && (
