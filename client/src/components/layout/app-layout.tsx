@@ -21,18 +21,22 @@ import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
 import MobileBottomNav from "./mobile-bottom-nav";
 import { UniversalSearchBar } from "@/components/search/UniversalSearchBar";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from 'react-i18next';
 import { getNavigationForRole } from "@/lib/role-based-navigation";
 import { SkipToContent } from "@/components/accessibility/SkipToContent";
 import AdminCopilot from "@/components/admin/AdminCopilot";
 
+const AppLayoutContext = createContext(false);
+
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const alreadyInsideAppLayout = useContext(AppLayoutContext);
+
   const { user, logout } = useAuth();
   const { t } = useTranslation(['common']);
   const [location, setLocation] = useLocation();
@@ -41,8 +45,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  
-  // Sidebar collapse state for tablets/desktop
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('sidebar-collapsed');
@@ -51,7 +54,6 @@ export function AppLayout({ children }: AppLayoutProps) {
     return false;
   });
 
-  // Persist sidebar state
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', String(sidebarCollapsed));
   }, [sidebarCollapsed]);
@@ -60,14 +62,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
-
   const handleLogout = () => {
-    // Clear authentication data
     localStorage.removeItem("auth_token");
     localStorage.removeItem("refresh_token");
-    // Navigate to auth page
     setLocation("/auth");
-    // Force a page refresh to clear all state
     setTimeout(() => window.location.reload(), 100);
   };
 
@@ -93,214 +91,196 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   };
 
+  if (alreadyInsideAppLayout) {
+    return <>{children}</>;
+  }
+
   if (!user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-background" dir={direction}>
-      <SkipToContent />
-      {/* Mobile-First Global Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top" role="banner">
-        <div className="flex h-16 items-center justify-between px-3 md:px-6">
-          {/* Mobile Menu Button & Brand */}
-          <div className="flex items-center space-x-3">
-            {/* Only show mobile menu for non-student roles */}
-            {user?.role?.toLowerCase() !== 'student' && (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="sm:hidden touch-target"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setMobileMenuOpen(true);
-                }}
-                data-testid="mobile-menu-button"
-                aria-label={t('common:navigation.openMenu', 'باز کردن منو')}
-                aria-expanded={mobileMenuOpen}
-                aria-controls="mobile-sidebar"
-              >
-                <Menu className="h-6 w-6" aria-hidden="true" />
-              </Button>
-            )}
-            
-            {/* Enhanced Logo and Brand */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => {
-                // All roles go to unified dashboard
-                setLocation("/dashboard");
-              }}
-              className="flex items-center gap-2 touch-target"
-              aria-label={t('common:navigation.goToDashboard', 'رفتن به داشبورد')}
-            >
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg" aria-hidden="true">
-                <Home className="h-4 w-4 text-white" aria-hidden="true" />
-              </div>
-              <div className="hidden sm:flex flex-col items-start">
-                <span className="font-bold text-sm leading-none">MetaLingo</span>
-                <span className="text-xs text-muted-foreground leading-none">
-                  {user.role === 'Teacher/Tutor' ? 'Teacher' : user.role}
-                </span>
-              </div>
-            </Button>
-          </div>
-
-          {/* Global Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-4">
-            <UniversalSearchBar
-              variant="compact"
-              placeholder={t('common:search.placeholder')}
-              className="w-full"
-              data-testid="global-search-bar"
-            />
-          </div>
-
-          {/* Mobile-Optimized User Actions */}
-          <div className="flex items-center space-x-2">
-            {/* Search Button - Mobile Only */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setLocation('/search')}
-              data-testid="mobile-search-button"
-              aria-label={t('common:search.openSearch', 'باز کردن جستجو')}
-            >
-              <Search className="h-5 w-5" aria-hidden="true" />
-            </Button>
-            
-            {/* Language Selector - Always Visible */}
-            <LanguageSelector />
-            
-            {/* User Menu - Enhanced for Mobile */}
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full" aria-label={t('common:navigation.userMenu', 'منوی کاربر')}>
-                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                  <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
-                  <AvatarFallback className="text-xs sm:text-sm">
-                    {getUserInitials(user.firstName, user.lastName)}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
-                  </p>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </span>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setLocation("/profile")}>
-                <User className="me-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation("/settings")}>
-                <Settings className="me-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem onClick={handleSwitchAccount}>
-                <User className="me-2 h-4 w-4" />
-                <span>Switch Account</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="me-2 h-4 w-4" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Layout with Sidebar - Fixed to LTR layout */}
-      <div className="flex min-h-[calc(100vh-4rem)]" dir="ltr">
-        {/* Desktop Sidebar - hidden on mobile/tablet */}
-        {user?.role?.toLowerCase() !== 'student' && (
-          <>
-            {/* Mobile Sheet Sidebar */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetContent 
-                id="mobile-sidebar"
-                side="left" 
-                className="w-72 p-0 max-w-[75vw] z-[100] md:hidden"
-                aria-label={t('common:navigation.sidebarMenu', 'منوی ناوبری')}
-                onPointerDownOutside={() => setMobileMenuOpen(false)}
-                onEscapeKeyDown={() => setMobileMenuOpen(false)}
-              >
-                <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
-              </SheetContent>
-            </Sheet>
-
-            {/* Tablet/Desktop Sidebar - Collapsible */}
-            <aside className={`hidden md:block flex-shrink-0 order-first transition-all duration-300 ${
-              sidebarCollapsed ? 'md:w-16' : 'md:w-64'
-            }`}>
-              <div className={`fixed top-16 start-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 ${
-                sidebarCollapsed ? 'w-16' : 'w-64'
-              }`}>
-                <Sidebar collapsed={sidebarCollapsed} />
-                
-                {/* Toggle Button */}
+    <AppLayoutContext.Provider value={true}>
+      <div className="min-h-screen bg-background" dir={direction}>
+        <SkipToContent />
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top" role="banner">
+          <div className="flex h-16 items-center justify-between px-3 md:px-6">
+            <div className="flex items-center space-x-3">
+              {user?.role?.toLowerCase() !== 'student' && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute bottom-4 end-2 h-8 w-8 rounded-full border bg-background shadow-sm hover:shadow-md transition-all"
-                  onClick={toggleSidebar}
-                  aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                  data-testid="button-toggle-sidebar"
+                  className="sm:hidden touch-target"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMobileMenuOpen(true);
+                  }}
+                  data-testid="mobile-menu-button"
+                  aria-label={t('common:navigation.openMenu', 'باز کردن منو')}
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="mobile-sidebar"
                 >
-                  {sidebarCollapsed ? (
-                    <ChevronRight className="h-4 w-4" />
-                  ) : (
-                    <ChevronLeft className="h-4 w-4" />
-                  )}
+                  <Menu className="h-6 w-6" aria-hidden="true" />
                 </Button>
-              </div>
-            </aside>
-          </>
-        )}
-        
-        {/* Main Content - Dynamic margin based on sidebar state */}
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 transition-all duration-300 outline-none ${
-            user?.role?.toLowerCase() !== 'student' 
-              ? (sidebarCollapsed ? 'md:ms-16' : 'md:ms-64')  // Tablet/Desktop: dynamic sidebar margin
-              : ''
-          }`}
-          dir="ltr"
-          aria-label={t('common:navigation.mainContent', 'محتوای اصلی')}
-        >
-          <div className="min-h-full">
-            {/* Universal Container System */}
-            <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-              {children}
+              )}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLocation("/dashboard")}
+                className="flex items-center gap-2 touch-target"
+                aria-label={t('common:navigation.goToDashboard', 'رفتن به داشبورد')}
+              >
+                <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg" aria-hidden="true">
+                  <Home className="h-4 w-4 text-white" aria-hidden="true" />
+                </div>
+                <div className="hidden sm:flex flex-col items-start">
+                  <span className="font-bold text-sm leading-none">MetaLingo</span>
+                  <span className="text-xs text-muted-foreground leading-none">
+                    {user.role === 'Teacher/Tutor' ? 'Teacher' : user.role}
+                  </span>
+                </div>
+              </Button>
+            </div>
+
+            <div className="hidden md:flex flex-1 max-w-2xl mx-4">
+              <UniversalSearchBar
+                variant="compact"
+                placeholder={t('common:search.placeholder')}
+                className="w-full"
+                data-testid="global-search-bar"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setLocation('/search')}
+                data-testid="mobile-search-button"
+                aria-label={t('common:search.openSearch', 'باز کردن جستجو')}
+              >
+                <Search className="h-5 w-5" aria-hidden="true" />
+              </Button>
+
+              <LanguageSelector />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full" aria-label={t('common:navigation.userMenu', 'منوی کاربر')}>
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                      <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarFallback className="text-xs sm:text-sm">
+                        {getUserInitials(user.firstName, user.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      </span>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLocation("/profile")}>
+                    <User className="me-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocation("/settings")}>
+                    <Settings className="me-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSwitchAccount}>
+                    <User className="me-2 h-4 w-4" />
+                    <span>Switch Account</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="me-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-        </main>
+        </header>
+
+        <div className="flex min-h-[calc(100vh-4rem)]" dir="ltr">
+          {user?.role?.toLowerCase() !== 'student' && (
+            <>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetContent
+                  id="mobile-sidebar"
+                  side="left"
+                  className="w-72 p-0 max-w-[75vw] z-[100] md:hidden"
+                  aria-label={t('common:navigation.sidebarMenu', 'منوی ناوبری')}
+                  onPointerDownOutside={() => setMobileMenuOpen(false)}
+                  onEscapeKeyDown={() => setMobileMenuOpen(false)}
+                >
+                  <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
+                </SheetContent>
+              </Sheet>
+
+              <aside className={`hidden md:block flex-shrink-0 order-first transition-all duration-300 ${
+                sidebarCollapsed ? 'md:w-16' : 'md:w-64'
+              }`}>
+                <div className={`fixed top-16 start-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 ${
+                  sidebarCollapsed ? 'w-16' : 'w-64'
+                }`}>
+                  <Sidebar collapsed={sidebarCollapsed} />
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute bottom-4 end-2 h-8 w-8 rounded-full border bg-background shadow-sm hover:shadow-md transition-all"
+                    onClick={toggleSidebar}
+                    aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    data-testid="button-toggle-sidebar"
+                  >
+                    {sidebarCollapsed ? (
+                      <ChevronRight className="h-4 w-4" />
+                    ) : (
+                      <ChevronLeft className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </aside>
+            </>
+          )}
+
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 transition-all duration-300 outline-none ${
+              user?.role?.toLowerCase() !== 'student'
+                ? (sidebarCollapsed ? 'md:ms-16' : 'md:ms-64')
+                : ''
+            }`}
+            dir="ltr"
+            aria-label={t('common:navigation.mainContent', 'محتوای اصلی')}
+          >
+            <div className="min-h-full">
+              <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+                {children}
+              </div>
+            </div>
+          </main>
+        </div>
+
+        <MobileBottomNav />
+        <AdminCopilot />
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
-
-      {/* Admin AI Copilot — Admin role only, floating bottom-right */}
-      <AdminCopilot />
-
-    </div>
+    </AppLayoutContext.Provider>
   );
 }
