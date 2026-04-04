@@ -246,13 +246,6 @@ export class MemStorageUser {
     return result[0];
   }
 
-  async updateUserPreferences(id: number, preferences: any): Promise<User | undefined> {
-    const result = await this.db.update(users)
-      .set({ preferences })
-      .where(eq(users.id, id))
-      .returning();
-    return result[0];
-  }
 
   async deleteUser(id: number): Promise<void> {
     await this.db.delete(users).where(eq(users.id, id));
@@ -348,12 +341,6 @@ export class MemStorageUser {
   async enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment> {
     const result = await this.db.insert(enrollments).values(enrollment).returning();
     return result[0];
-  }
-
-  async unenrollFromCourse(userId: number, courseId: number): Promise<void> {
-    await this.db.delete(enrollments).where(
-      and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId))
-    );
   }
 
   async createPlacementTestSession(data: any): Promise<any> {
@@ -559,42 +546,6 @@ export class MemStorageUser {
     return result[0];
   }
 
-  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
-    const result = await this.db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
-    return result[0];
-  }
-
-  async markPasswordResetTokenAsUsed(token: string): Promise<void> {
-    await this.db.update(passwordResetTokens)
-      .set({ used: true })
-      .where(eq(passwordResetTokens.token, token));
-  }
-
-  async updateUserPassword(userId: number, hashedPassword: string): Promise<void> {
-    await this.db.update(users)
-      .set({ password: hashedPassword })
-      .where(eq(users.id, userId));
-  }
-
-  async checkUserPermission(role: string, resource: string, action: string): Promise<boolean> {
-    const result = await this.db.select().from(rolePermissions)
-      .where(and(
-        eq(rolePermissions.role, role),
-        eq(rolePermissions.resource, resource),
-        eq(rolePermissions.action, action),
-        eq(rolePermissions.allowed, true)
-      ));
-    return result.length > 0;
-  }
-
-  async getRolePermissions(role: string): Promise<RolePermission[]> {
-    return await this.db.select().from(rolePermissions).where(eq(rolePermissions.role, role));
-  }
-
-  async createRolePermission(permission: InsertRolePermission): Promise<RolePermission> {
-    const result = await this.db.insert(rolePermissions).values(permission).returning();
-    return result[0];
-  }
 
   async getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]> {
     const result = await this.db.select({
@@ -769,29 +720,6 @@ export class MemStorageUser {
     const result = await this.db.update(payments)
       .set({ status, updatedAt: new Date() })
       .where(eq(payments.id, id))
-      .returning();
-    return result[0];
-  }
-
-  async getUserNotifications(userId: number): Promise<Notification[]> {
-    return await this.db.select().from(notifications).where(eq(notifications.userId, userId));
-  }
-
-  async getUnreadNotifications(userId: number): Promise<Notification[]> {
-    return await this.db.select().from(notifications).where(
-      and(eq(notifications.userId, userId), eq(notifications.isRead, false))
-    );
-  }
-
-  async createNotification(notification: InsertNotification): Promise<Notification> {
-    const result = await this.db.insert(notifications).values(notification).returning();
-    return result[0];
-  }
-
-  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
-    const result = await this.db.update(notifications)
-      .set({ isRead: true })
-      .where(eq(notifications.id, id))
       .returning();
     return result[0];
   }
@@ -1502,10 +1430,6 @@ export class MemStorageUser {
     return await this.db.select().from(users);
   }
 
-  async getTeachers(): Promise<(User & { role: string })[]> {
-    return await this.db.select().from(users).where(eq(users.role, "teacher"));
-  }
-
   async getStudents(): Promise<(User & { role: string })[]> {
     return await this.db.select().from(users).where(eq(users.role, "student"));
   }
@@ -1787,38 +1711,8 @@ export class MemStorageUser {
     }
   }
 
-  async createPasswordResetToken(tokenData: InsertPasswordResetToken): Promise<PasswordResetToken> {
-    const id = this.currentId++;
-    const passwordResetToken: PasswordResetToken = {
-      id,
-      userId: tokenData.userId,
-      token: tokenData.token,
-      expiresAt: tokenData.expiresAt,
-      used: tokenData.used || false,
-      createdAt: new Date()
-    };
-    
-    // Store the token (we'll use a Map for in-memory storage)
-    if (!this.passwordResetTokens) {
-      this.passwordResetTokens = new Map();
-    }
-    try {
-      await this.db.insert(passwordResetTokens).values({
-        token: tokenData.token,
-        userId: tokenData.userId,
-        expiresAt: tokenData.expiresAt
-      });
-    } catch (error) {
-      console.error('Error storing password reset token:', error);
-    }
-    
-    return passwordResetToken;
-  }
 
   async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
-    if (!this.passwordResetTokens) {
-      return undefined;
-    }
     try {
       const result = await this.db.select().from(passwordResetTokens)
         .where(and(

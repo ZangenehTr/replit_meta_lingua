@@ -278,7 +278,6 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
         missedShifts: availability[0]?.missedShifts || 0,
         missedCalls: availability[0]?.missedCalls || 0,
         hourlyRate: hourlyRate,
-        monthlyEarnings: monthlyEarnings,
         leaderboardRank: rank || null,
         totalTeachers: allTeacherStats.length,
         weeklyStats: {

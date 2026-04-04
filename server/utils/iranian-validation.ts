@@ -180,8 +180,7 @@ function getMobileCarrier(phone: string): string {
     '999': 'Hamrah-e Avval',
     '920': 'Rightel',
     '921': 'Rightel',
-    '922': 'MTCE',
-    '934': 'TKC'
+    '922': 'MTCE'
   };
   
   return carriers[prefix] || 'Unknown';

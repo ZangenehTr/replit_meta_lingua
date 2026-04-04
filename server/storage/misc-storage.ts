@@ -264,17 +264,6 @@ export class MemStorageMisc extends MemStorageLead {
     };
   }
 
-  async getAiModels(): Promise<any[]> {
-    // Return stored AI models information from database
-    const models = [
-      { name: "llama3.2:1b", description: "Lightweight model for basic tasks", size: "1.3GB", isInstalled: true },
-      { name: "llama3.2:3b", description: "Balanced performance and efficiency", size: "2.0GB", isInstalled: true },
-      { name: "persian-llm:3b", description: "Persian language specialized", size: "2.1GB", isInstalled: false }
-    ];
-    
-    return models;
-  }
-
   async getSystemRoles(): Promise<any[]> {
     // Get real user counts for each role
     const users = await this.getUsers();

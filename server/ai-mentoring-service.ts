@@ -1103,14 +1103,22 @@ Be specific and actionable in your recommendations.
   }
   
   /**
-   * Get basic service status (for backward compatibility)
+   * Get service status including circuit breaker state, cache stats and uptime
    */
-  getServiceStatus(): any {
+  getServiceStatus(): {
+    isOllamaAvailable: boolean;
+    isOpenaiAvailable: boolean;
+    requestCount: number;
+    averageResponseTime: number;
+    uptime: number;
+    cacheStats: { guidance: number; progressReports: number; analytics: number };
+  } {
     return {
       isOllamaAvailable: this.isOllamaAvailable && !this.isOllamaCircuitBroken(),
       isOpenaiAvailable: !this.isOpenaiCircuitBroken(),
       requestCount: this.requestCount,
       averageResponseTime: this.averageResponseTime,
+      uptime: process.uptime(),
       cacheStats: {
         guidance: this.guidanceCache.size,
         progressReports: this.progressReportCache.size,
@@ -1354,24 +1362,6 @@ Focus on: ${type.replace('_', ' ')} guidance with practical, implementable advic
   private updateMetrics(responseTime: number): void {
     this.requestCount++;
     this.averageResponseTime = ((this.averageResponseTime * (this.requestCount - 1)) + responseTime) / this.requestCount;
-  }
-  
-  // ========================================================================
-  // PUBLIC STATUS AND UTILITY METHODS
-  // ========================================================================
-  
-  public getServiceStatus(): {
-    isOllamaAvailable: boolean;
-    requestCount: number;
-    averageResponseTime: number;
-    uptime: number;
-  } {
-    return {
-      isOllamaAvailable: this.isOllamaAvailable,
-      requestCount: this.requestCount,
-      averageResponseTime: this.averageResponseTime,
-      uptime: process.uptime()
-    };
   }
   
   public async refreshOllamaConnection(): Promise<boolean> {

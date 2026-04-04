@@ -2148,11 +2148,6 @@ export class CallerNDbStorage extends FinancialDbStorage {
       .orderBy(videoBookmarks.timestamp);
   }
   
-  // Alias for getUserVideoBookmarks (used in routes)
-  async getVideoBookmarks(studentId: number, videoId: number): Promise<VideoBookmark[]> {
-    return this.getUserVideoBookmarks(studentId, videoId);
-  }
-
   // Additional video methods for teacher/student interfaces
   async getTeacherVideoLessons(teacherId: number): Promise<VideoLesson[]> {
     return await db.select().from(videoLessons)
