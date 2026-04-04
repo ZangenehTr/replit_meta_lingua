@@ -364,7 +364,7 @@ export default function StudentTestTakingMobile() {
   // Test list interface
   return (
     <MobileLayout
-      title={t('student:tests')}
+      title={t('student:tests.title')}
       showBack={false}
       gradient="study"
     >
