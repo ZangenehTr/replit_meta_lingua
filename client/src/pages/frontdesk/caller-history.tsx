@@ -440,15 +440,15 @@ export default function CallerHistoryDashboard() {
               <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
                 <TabsList>
                   <TabsTrigger value="list" data-testid="view-list">
-                    <BarChart3 className={cn("h-4 w-4", me-2)} />
+                    <BarChart3 className={cn("h-4 w-4", "me-2")} />
                     {t('common:list')}
                   </TabsTrigger>
                   <TabsTrigger value="timeline" data-testid="view-timeline">
-                    <History className={cn("h-4 w-4", me-2)} />
+                    <History className={cn("h-4 w-4", "me-2")} />
                     {t('common:timeline')}
                   </TabsTrigger>
                   <TabsTrigger value="analytics" data-testid="view-analytics">
-                    <PieChart className={cn("h-4 w-4", me-2)} />
+                    <PieChart className={cn("h-4 w-4", "me-2")} />
                     {t('common:analytics')}
                   </TabsTrigger>
                 </TabsList>
@@ -463,7 +463,7 @@ export default function CallerHistoryDashboard() {
                   disabled={exportMutation.isPending}
                   data-testid="export-csv"
                 >
-                  <Download className={cn("h-4 w-4", me-2)} />
+                  <Download className={cn("h-4 w-4", "me-2")} />
                   CSV
                 </Button>
                 <Button
@@ -473,7 +473,7 @@ export default function CallerHistoryDashboard() {
                   disabled={exportMutation.isPending}
                   data-testid="export-pdf"
                 >
-                  <FileText className={cn("h-4 w-4", me-2)} />
+                  <FileText className={cn("h-4 w-4", "me-2")} />
                   PDF
                 </Button>
               </div>
@@ -540,7 +540,7 @@ export default function CallerHistoryDashboard() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" data-testid="date-from">
-                    <CalendarIcon className={cn("h-4 w-4", me-2)} />
+                    <CalendarIcon className={cn("h-4 w-4", "me-2")} />
                     {searchFilters.dateFrom ? format(searchFilters.dateFrom, 'MMM dd') : t('frontdesk:callerHistory.from')}
                   </Button>
                 </PopoverTrigger>
@@ -557,7 +557,7 @@ export default function CallerHistoryDashboard() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" data-testid="date-to">
-                    <CalendarIcon className={cn("h-4 w-4", me-2)} />
+                    <CalendarIcon className={cn("h-4 w-4", "me-2")} />
                     {searchFilters.dateTo ? format(searchFilters.dateTo, 'MMM dd') : t('frontdesk:callerHistory.to')}
                   </Button>
                 </PopoverTrigger>
@@ -579,7 +579,7 @@ export default function CallerHistoryDashboard() {
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               data-testid="toggle-advanced-filters"
             >
-              <Filter className={cn("h-4 w-4", me-2)} />
+              <Filter className={cn("h-4 w-4", "me-2")} />
               {t('frontdesk:callerHistory.filterBy')}
               {(searchFilters.callType.length > 0 || 
                 searchFilters.outcome.length > 0 || 

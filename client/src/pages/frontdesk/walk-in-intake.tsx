@@ -433,7 +433,7 @@ export default function WalkInIntake() {
             <p className="text-gray-600 mt-1">{t('frontdesk:walkIn.intake.pageSubtitle')}</p>
           </div>
           <Button variant="outline" onClick={() => setLocation('/frontdesk')} data-testid="btn-back-dashboard">
-            <ArrowLeft className={cn("h-4 w-4", me-2)} />
+            <ArrowLeft className={cn("h-4 w-4", "me-2")} />
             {t('frontdesk:walkIn.intake.backToDashboard')}
           </Button>
         </div>
@@ -445,19 +445,19 @@ export default function WalkInIntake() {
             <div className="flex items-center gap-2">
               {autoSaveStatus === 'saving' && (
                 <div className="flex items-center text-blue-600">
-                  <Loader2 className={cn("h-3 w-3 animate-spin", me-1)} />
+                  <Loader2 className={cn("h-3 w-3 animate-spin", "me-1")} />
                   {t('frontdesk:walkIn.intake.saving')}
                 </div>
               )}
               {autoSaveStatus === 'saved' && (
                 <div className="flex items-center text-green-600">
-                  <CheckCircle className={cn("h-3 w-3", me-1)} />
+                  <CheckCircle className={cn("h-3 w-3", "me-1")} />
                   {t('frontdesk:walkIn.intake.draftSaved')}
                 </div>
               )}
               {autoSaveStatus === 'error' && (
                 <div className="flex items-center text-red-600">
-                  <AlertCircle className={cn("h-3 w-3", me-1)} />
+                  <AlertCircle className={cn("h-3 w-3", "me-1")} />
                   {t('frontdesk:walkIn.intake.saveFailed')}
                 </div>
               )}
@@ -1074,7 +1074,7 @@ export default function WalkInIntake() {
                   onClick={prevSection}
                   data-testid="btn-previous-section"
                 >
-                  <ArrowLeft className={cn("h-4 w-4", me-2)} />
+                  <ArrowLeft className={cn("h-4 w-4", "me-2")} />
                   {t('frontdesk:walkIn.intake.previous')}
                 </Button>
               )}
@@ -1107,12 +1107,12 @@ export default function WalkInIntake() {
                 >
                   {submitIntakeMutation.isPending ? (
                     <>
-                      <Loader2 className={cn("h-4 w-4 animate-spin", me-2)} />
+                      <Loader2 className={cn("h-4 w-4 animate-spin", "me-2")} />
                       {t('frontdesk:walkIn.intake.submitting')}
                     </>
                   ) : (
                     <>
-                      <Send className={cn("h-4 w-4", me-2)} />
+                      <Send className={cn("h-4 w-4", "me-2")} />
                       {t('frontdesk:walkIn.intake.submitForm')}
                     </>
                   )}
