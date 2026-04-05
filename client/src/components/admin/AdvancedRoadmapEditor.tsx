@@ -86,6 +86,9 @@ interface RoadmapData {
   totalSteps: number;
   estimatedHours: number;
   steps: RoadmapStep[];
+  targetLanguage?: string;
+  targetLevel?: string;
+  audience?: string;
 }
 
 interface AdvancedRoadmapEditorProps {
@@ -586,6 +589,9 @@ const AdvancedRoadmapEditor: React.FC<AdvancedRoadmapEditorProps> = ({
       totalSteps: 0,
       estimatedHours: 0,
       steps: [],
+      targetLanguage: 'en',
+      targetLevel: 'B1',
+      audience: '',
     }
   );
   const [editingStep, setEditingStep] = useState<RoadmapStep | null>(null);
@@ -704,6 +710,54 @@ const AdvancedRoadmapEditor: React.FC<AdvancedRoadmapEditorProps> = ({
                     className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-cyan-400"
                     placeholder="e.g., Complete English Conversation Mastery"
                   />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm text-white/80 mb-2 block">Target Language</label>
+                    <select
+                      value={formData.targetLanguage || 'en'}
+                      onChange={(e) => setFormData({ ...formData, targetLanguage: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white focus:outline-none focus:border-cyan-400"
+                    >
+                      <option value="en">English</option>
+                      <option value="fa">فارسی</option>
+                      <option value="ar">العربية</option>
+                      <option value="de">Deutsch</option>
+                      <option value="fr">Français</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-white/80 mb-2 block">CEFR Level</label>
+                    <select
+                      value={formData.targetLevel || 'B1'}
+                      onChange={(e) => setFormData({ ...formData, targetLevel: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white focus:outline-none focus:border-cyan-400"
+                    >
+                      {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(l => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-white/80 mb-2 block">Audience</label>
+                    <select
+                      value={formData.audience || ''}
+                      onChange={(e) => setFormData({ ...formData, audience: e.target.value })}
+                      className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white focus:outline-none focus:border-cyan-400"
+                    >
+                      <option value="">General</option>
+                      <option value="adults">Adults</option>
+                      <option value="teens">Teens</option>
+                      <option value="business">Business</option>
+                      <option value="ielts">IELTS</option>
+                      <option value="toefl">TOEFL</option>
+                      <option value="gre">GRE</option>
+                      <option value="conversation">Conversation</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

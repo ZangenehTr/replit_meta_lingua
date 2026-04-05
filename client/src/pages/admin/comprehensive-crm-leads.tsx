@@ -598,8 +598,8 @@ export default function ComprehensiveCRMLeads() {
                 <div className="col-span-2">
                   <Label htmlFor="nextFollowUpDate">تاریخ پیگیری بعدی</Label>
                   <DatePicker
-                    date={newLeadData.nextFollowUpDate}
-                    onDateChange={(date) => setNewLeadData({...newLeadData, nextFollowUpDate: date})}
+                    value={newLeadData.nextFollowUpDate}
+                    onChange={(date) => setNewLeadData({...newLeadData, nextFollowUpDate: date})}
                   />
                 </div>
               </div>

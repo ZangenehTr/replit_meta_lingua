@@ -2,10 +2,11 @@ import * as React from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { LocalizedCalendar } from "@/components/ui/localized-calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCalendarSettings } from "@/hooks/useCalendarSettings";
 import { gregorianToPersian } from "@/lib/i18n";
 
 interface DatePickerProps {
@@ -16,8 +17,8 @@ interface DatePickerProps {
   disabled?: boolean;
 }
 
-function formatDateForLocale(date: Date, language: string): string {
-  if (language === 'fa') {
+function formatDateForLocale(date: Date, usePersian: boolean): string {
+  if (usePersian) {
     try {
       const p = gregorianToPersian(date);
       return `${p.year}/${String(p.month).padStart(2, '0')}/${String(p.day).padStart(2, '0')}`;
@@ -36,6 +37,7 @@ export function DatePicker({
   disabled = false,
 }: DatePickerProps) {
   const { language } = useLanguage();
+  const { usePersianCalendar } = useCalendarSettings();
   const defaultPlaceholder = language === 'fa' ? 'انتخاب تاریخ' : 'Pick a date';
 
   return (
@@ -52,13 +54,13 @@ export function DatePicker({
         >
           <CalendarIcon className="me-2 h-4 w-4 flex-shrink-0" />
           {value
-            ? formatDateForLocale(value, language)
+            ? formatDateForLocale(value, usePersianCalendar)
             : <span>{placeholder ?? defaultPlaceholder}</span>
           }
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
+        <LocalizedCalendar
           mode="single"
           selected={value}
           onSelect={onChange}
