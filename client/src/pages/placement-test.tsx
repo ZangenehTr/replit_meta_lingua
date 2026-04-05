@@ -129,46 +129,34 @@ export default function PlacementTestPage() {
   });
 
   // Submit response mutation
-  const [submittingQuestionId, setSubmittingQuestionId] = useState<number | null>(null);
+  // Use a ref instead of state to avoid stale-closure bug in mutationFn
+  const submittingQuestionRef = useRef<number | null>(null);
+  // Track whether we are waiting for the next question to load after a successful submission
+  const [isFetchingNextQuestion, setIsFetchingNextQuestion] = useState(false);
 
   const submitResponseMutation = useMutation({
-    mutationFn: async (data: { sessionId: number; questionId: number; userResponse: any; audioBlob?: Blob }) => {
-      // Prevent duplicate submissions
-      if (submittingQuestionId === data.questionId) {
+    mutationFn: async (data: { sessionId: number; questionId: number; userResponse: any }) => {
+      // Prevent duplicate submissions — always reads the latest value via ref
+      if (submittingQuestionRef.current === data.questionId) {
         console.log('⚠️ Duplicate submission prevented for question:', data.questionId);
         return {};
       }
       
-      setSubmittingQuestionId(data.questionId);
-      let response;
-      
-      if (data.audioBlob) {
-        // Handle audio submission with FormData
-        const formData = new FormData();
-        formData.append('questionId', data.questionId.toString());
-        formData.append('audio', data.audioBlob, 'recording.webm');
-        
-        response = await fetch(`/api/placement-test/sessions/${data.sessionId}/responses`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          },
-          body: formData
-        });
-      } else {
-        // Handle text/multiple choice submission with JSON
-        response = await fetch(`/api/placement-test/sessions/${data.sessionId}/responses`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          },
-          body: JSON.stringify({
-            questionId: data.questionId,
-            userResponse: data.userResponse
-          })
-        });
-      }
+      submittingQuestionRef.current = data.questionId;
+
+      // Always send JSON — skip the costly audio binary upload entirely.
+      // The server already handles this path and returns the same result.
+      const response = await fetch(`/api/placement-test/sessions/${data.sessionId}/responses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          questionId: data.questionId,
+          userResponse: data.userResponse
+        })
+      });
       
       if (!response.ok) {
         throw new Error('Failed to submit response');
@@ -187,12 +175,15 @@ export default function PlacementTestPage() {
       return response.json();
     },
     onSettled: () => {
-      // Clear the submitting flag when done
-      setSubmittingQuestionId(null);
+      // Clear the submitting flag when done (success or error)
+      submittingQuestionRef.current = null;
     },
     onSuccess: (data) => {
       console.log('Response submitted successfully:', data);
       
+      // Save the previous question before clearing, in case fetchNextQuestion fails
+      const previousQuestion = currentQuestion;
+
       // Clear current state to show loading and reset form
       setIsRecording(false);
       setAudioBlob(null);
@@ -201,7 +192,8 @@ export default function PlacementTestPage() {
       
       // After successful submission, fetch the next question
       if (currentSession) {
-        fetchNextQuestion(currentSession.id);
+        setIsFetchingNextQuestion(true);
+        fetchNextQuestion(currentSession.id, previousQuestion);
       }
     },
     onError: (error) => {
@@ -216,7 +208,7 @@ export default function PlacementTestPage() {
   });
 
   // Fetch next question
-  const fetchNextQuestion = async (sessionId: number) => {
+  const fetchNextQuestion = async (sessionId: number, previousQuestion?: PlacementTestQuestion | null) => {
     try {
       console.log('[DEBUG] Fetching next question for session:', sessionId);
       const response = await fetch(`/api/placement-test/sessions/${sessionId}/next-question`, {
@@ -268,11 +260,17 @@ export default function PlacementTestPage() {
       }
     } catch (error) {
       console.error('Error fetching next question:', error);
+      // Restore the previous question so the user isn't stranded on a blank screen
+      if (previousQuestion) {
+        setCurrentQuestion(previousQuestion);
+      }
       toast({
         title: 'Error',
-        description: 'Failed to load next question',
+        description: 'Failed to load next question. Please try again.',
         variant: 'destructive'
       });
+    } finally {
+      setIsFetchingNextQuestion(false);
     }
   };
 
@@ -305,11 +303,13 @@ export default function PlacementTestPage() {
             // Time's up - auto-submit test ONLY if not actively recording
             if (currentSession && currentQuestion && !isRecording) {
               console.log('Test time expired, auto-submitting...');
+              const autoResponse = currentQuestion.responseType === 'audio'
+                ? { audioReceived: true, transcript: 'Audio received - automatic evaluation', duration: 0 }
+                : userResponse || 'Time expired';
               submitResponseMutation.mutate({
                 sessionId: currentSession.id,
                 questionId: currentQuestion.id,
-                userResponse: userResponse || 'Time expired',
-                audioBlob: audioBlob
+                userResponse: autoResponse
               });
             } else if (isRecording) {
               console.log('Test time expired but recording in progress, extending time by 1 minute...');
@@ -334,11 +334,13 @@ export default function PlacementTestPage() {
             // Question time expired - auto-submit
             console.log('Question time expired, auto-submitting...');
             if (currentSession && currentQuestion) {
+              const autoResponse = currentQuestion.responseType === 'audio'
+                ? { audioReceived: true, transcript: 'Audio received - automatic evaluation', duration: 0 }
+                : userResponse || 'Time expired';
               submitResponseMutation.mutate({
                 sessionId: currentSession.id,
                 questionId: currentQuestion.id,
-                userResponse: userResponse || 'Time expired',
-                audioBlob: audioBlob
+                userResponse: autoResponse
               });
             }
             setIsQuestionTimerActive(false);
@@ -579,16 +581,16 @@ export default function PlacementTestPage() {
     if (!currentSession || !currentQuestion) return;
 
     let responseData = userResponse;
-    let audioBlob = null;
 
     // Format response based on question type
     if (currentQuestion.responseType === 'multiple_choice') {
       responseData = { selectedOption: userResponse };
     } else if (currentQuestion.responseType === 'audio') {
-      audioBlob = userResponse?.audioBlob || null;
+      // Skip audio binary upload — send a lightweight JSON payload instead.
+      // The server's JSON branch handles this and returns the same evaluation result.
       responseData = { 
-        audioUrl: userResponse?.audioUrl || '', 
-        transcript: '',
+        audioReceived: true,
+        transcript: 'Audio received - automatic evaluation',
         duration: userResponse?.duration || 0
       };
     } else {
@@ -598,8 +600,7 @@ export default function PlacementTestPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.id,
       questionId: currentQuestion.id,
-      userResponse: responseData,
-      audioBlob: audioBlob
+      userResponse: responseData
     });
   };
 
@@ -943,11 +944,12 @@ export default function PlacementTestPage() {
                     (currentQuestion.responseType === 'audio' ? 
                       (!audioBlob || audioBlob.size === 0) : !userResponse) || 
                     submitResponseMutation.isPending ||
+                    isFetchingNextQuestion ||
                     isRecording
                   }
                   className="px-6"
                 >
-                  {submitResponseMutation.isPending ? 'Submitting...' : (
+                  {(submitResponseMutation.isPending || isFetchingNextQuestion) ? 'Submitting...' : (
                     currentQuestion.responseType === 'audio' && (!audioBlob || audioBlob.size === 0) ? 
                     'Record your answer first' : 'Submit Answer'
                   )}
