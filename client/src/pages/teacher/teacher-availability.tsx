@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// Removed Calendar and Popover imports - now using native HTML5 date inputs
+import { DatePicker } from '@/components/ui/date-picker';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -213,22 +213,14 @@ export default function TeacherAvailabilityPage() {
               <FormItem className="flex flex-col">
                 <FormLabel>Start Date</FormLabel>
                 <FormControl>
-                  <Input
-                    type="date"
-                    value={field.value ? field.value.toISOString().split('T')[0] : ''}
-                    onChange={(e) => {
-                      console.log('=== NATIVE DATE INPUT START ===');
-                      console.log('Input value:', e.target.value);
-                      if (e.target.value) {
-                        const newDate = new Date(e.target.value);
-                        console.log('Parsed date:', newDate);
-                        field.onChange(newDate);
+                  <DatePicker
+                    value={field.value instanceof Date ? field.value : undefined}
+                    onChange={(date) => {
+                      if (date) {
+                        field.onChange(date);
                         form.clearErrors('periodStartDate');
-                        console.log('Form updated successfully');
                       }
                     }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full"
                   />
                 </FormControl>
                 <FormMessage />
@@ -243,22 +235,14 @@ export default function TeacherAvailabilityPage() {
               <FormItem className="flex flex-col">
                 <FormLabel>End Date</FormLabel>
                 <FormControl>
-                  <Input
-                    type="date"
-                    value={field.value ? field.value.toISOString().split('T')[0] : ''}
-                    onChange={(e) => {
-                      console.log('=== NATIVE DATE INPUT END ===');
-                      console.log('Input value:', e.target.value);
-                      if (e.target.value) {
-                        const newDate = new Date(e.target.value);
-                        console.log('Parsed date:', newDate);
-                        field.onChange(newDate);
+                  <DatePicker
+                    value={field.value instanceof Date ? field.value : undefined}
+                    onChange={(date) => {
+                      if (date) {
+                        field.onChange(date);
                         form.clearErrors('periodEndDate');
-                        console.log('Form updated successfully');
                       }
                     }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full"
                   />
                 </FormControl>
                 <FormMessage />

@@ -53,7 +53,7 @@ export default function RoadmapTemplates() {
     title: '',
     targetLanguage: 'en',
     targetLevel: 'B1',
-    audience: '',
+    audience: 'general',
   });
 
   const { data: templates = [], isLoading } = useQuery<RoadmapTemplate[]>({
@@ -310,7 +310,7 @@ export default function RoadmapTemplates() {
                         <SelectValue placeholder={t('admin:selectAudience', 'Select audience')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">{t('admin:general', 'General')}</SelectItem>
+                        <SelectItem value="general">{t('admin:general', 'General')}</SelectItem>
                         {AUDIENCE_OPTIONS.map(a => (
                           <SelectItem key={a} value={a}>{a}</SelectItem>
                         ))}

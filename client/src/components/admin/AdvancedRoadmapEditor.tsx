@@ -679,6 +679,10 @@ const AdvancedRoadmapEditor: React.FC<AdvancedRoadmapEditorProps> = ({
     const dataToSave = {
       ...formData,
       ...totals,
+      title: formData.roadmapName,
+      targetLanguage: formData.targetLanguage || 'en',
+      targetLevel: formData.targetLevel || 'B1',
+      audience: formData.audience || undefined,
     };
     await onSave(dataToSave);
     toast({ title: 'Roadmap saved successfully!' });

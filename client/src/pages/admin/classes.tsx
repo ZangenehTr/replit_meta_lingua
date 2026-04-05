@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -1061,24 +1062,19 @@ function ClassScheduleForm({
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="startDate">{t('common:classScheduling.startDate')}</Label>
-          <Input
-            id="startDate"
-            type="date"
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            required
+          <Label>{t('common:classScheduling.startDate')}</Label>
+          <DatePicker
+            value={formData.startDate ? new Date(formData.startDate) : undefined}
+            onChange={(date) => setFormData({ ...formData, startDate: date ? date.toISOString().split('T')[0] : '' })}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endDate">{t('classScheduling.endDate')}</Label>
-          <Input
-            id="endDate"
-            type="date"
-            value={formData.endDate}
+          <Label>{t('classScheduling.endDate')}</Label>
+          <DatePicker
+            value={formData.endDate ? new Date(formData.endDate) : undefined}
+            onChange={() => {}}
             disabled
-            className="bg-muted"
           />
         </div>
 
