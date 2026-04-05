@@ -32,7 +32,7 @@ export const API_ENDPOINTS = {
     // Gamification
     gamification: '/api/gamification',
     achievements: '/api/gamification/achievements',
-    leaderboards: '/api/gamification/leaderboards',
+    leaderboards: '/api/gamification/leaderboard',
     dailyChallenges: '/api/gamification/daily-challenges',
     
     // Course & Roadmap Management

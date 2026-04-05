@@ -169,8 +169,9 @@ export function createGamificationRouter(storage: DatabaseStorage): Router {
   /**
    * Get leaderboard
    * GET /api/gamification/leaderboard
+   * GET /api/gamification/leaderboards (alias for backwards compatibility)
    */
-  router.get('/leaderboard', requireAuth, async (req: any, res) => {
+  const leaderboardHandler = async (req: any, res: any) => {
     try {
       const { type = 'weekly', ageGroup, limit = 100 } = req.query;
       
@@ -199,7 +200,9 @@ export function createGamificationRouter(storage: DatabaseStorage): Router {
         message: error.message 
       });
     }
-  });
+  };
+  router.get('/leaderboard', requireAuth, leaderboardHandler);
+  router.get('/leaderboards', requireAuth, leaderboardHandler);
 
   /**
    * Get user's leaderboard stats across different periods

@@ -216,7 +216,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </header>
 
-        <div className="flex min-h-[calc(100vh-4rem)]" dir="ltr">
+        <div className="flex min-h-[calc(100vh-4rem)]">
           {user?.role?.toLowerCase() !== 'student' && (
             <>
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -267,7 +267,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                 ? (sidebarCollapsed ? 'md:ms-16' : 'md:ms-64')
                 : ''
             }`}
-            dir="ltr"
             aria-label={t('common:navigation.mainContent', 'محتوای اصلی')}
           >
             <div className="min-h-full">

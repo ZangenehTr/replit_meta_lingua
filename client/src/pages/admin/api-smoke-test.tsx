@@ -165,7 +165,7 @@ const TEST_CATEGORIES: TestCategory[] = [
     icon: <Zap className="h-4 w-4" />,
     endpoints: [
       { name: "دستاوردها", nameEn: "Achievements", endpoint: "/api/gamification/achievements", method: "GET", description: "لیست دستاوردها", descriptionEn: "Achievements list", requiresAuth: true },
-      { name: "تابلوی امتیازات", nameEn: "Leaderboards", endpoint: "/api/gamification/leaderboards", method: "GET", description: "رتبه‌بندی کاربران", descriptionEn: "Users ranking", requiresAuth: true },
+      { name: "تابلوی امتیازات", nameEn: "Leaderboard", endpoint: "/api/gamification/leaderboard", method: "GET", description: "رتبه‌بندی کاربران", descriptionEn: "Users ranking", requiresAuth: true },
       { name: "چالش‌های روزانه", nameEn: "Daily Challenges", endpoint: "/api/gamification/daily-challenges", method: "GET", description: "چالش‌های امروز", descriptionEn: "Today's challenges", requiresAuth: true },
     ]
   },

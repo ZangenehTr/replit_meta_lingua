@@ -1,4 +1,5 @@
-import { useState, useRef, type ElementType } from "react";
+import { useState, useRef } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { useSystemMutations } from "@/hooks/useSystem";
 import {
   Settings, Palette, Shield, Users, Plus, Edit3, Upload, Download,
   Monitor, Database, Globe, Bell, Mail, MessageSquare, Key, Lock,
-  Eye, EyeOff, Activity, Loader2
+  Eye, EyeOff, Activity, Loader2, ExternalLink, CreditCard, Phone, Wifi
 } from "lucide-react";
 import { SystemSecurityTab } from "@/components/admin/SystemSecurityTab";
 import { SystemMaintenanceTab } from "@/components/admin/SystemMaintenanceTab";
@@ -39,32 +40,96 @@ const userRoles = [
   { id: 7, name: "Mentor", description: "Student mentoring", permissions: ["mentees", "progress", "communication"], userCount: 25, color: "teal" },
 ];
 
-const integrations = [
-  { name: "Anthropic API", description: "AI-powered learning assistance", status: "connected", type: "ai" },
-  { name: "Shetab Payment Gateway", description: "Iranian payment processing", status: "connected", type: "payment" },
-  { name: "Kavenegar SMS", description: "SMS notifications and OTP", status: "pending", type: "communication" },
-  { name: "Email Service", description: "Automated email notifications", status: "connected", type: "communication" },
-  { name: "WebRTC Service", description: "Live video classrooms", status: "configured", type: "video" },
-];
-
 const getRoleColor = (color: string) => {
   const colors: Record<string, string> = { red: "bg-red-100 text-red-800", blue: "bg-blue-100 text-blue-800", green: "bg-green-100 text-green-800", purple: "bg-purple-100 text-purple-800", yellow: "bg-yellow-100 text-yellow-800", orange: "bg-orange-100 text-orange-800", teal: "bg-teal-100 text-teal-800" };
   return colors[color] || "bg-gray-100 text-gray-800";
 };
 
-const getIntegrationStatusColor = (status: string) => {
-  switch (status) {
-    case "connected": case "configured": return "bg-green-100 text-green-800";
-    case "pending": return "bg-yellow-100 text-yellow-800";
-    default: return "bg-gray-100 text-gray-800";
-  }
-};
 
-const integrationIcon = (type: string) => {
-  const icons: Record<string, ElementType> = { ai: Settings, payment: Key, communication: MessageSquare, video: Monitor };
-  const Icon = icons[type] || Globe;
-  return <Icon className="h-5 w-5 text-white" />;
-};
+function IntegrationsTab() {
+  const [, navigate] = useLocation();
+
+  const integrationGroups = [
+    {
+      title: "پیامک و اطلاعیه",
+      titleEn: "SMS & Notifications",
+      icon: <Phone className="h-5 w-5 text-white" />,
+      color: "from-green-500 to-emerald-600",
+      description: "پیکربندی کاوه‌نگار، قالب‌های پیامک و اطلاعیه‌ها",
+      descriptionEn: "Configure Kavenegar, SMS templates and notifications",
+      href: "/admin/sms-settings",
+    },
+    {
+      title: "درگاه پرداخت",
+      titleEn: "Payment Gateways",
+      icon: <CreditCard className="h-5 w-5 text-white" />,
+      color: "from-blue-500 to-indigo-600",
+      description: "مدیریت شتاب، زرین‌پال، آیدی‌پی و سایر درگاه‌های پرداخت",
+      descriptionEn: "Manage Shetab, Zarinpal, IDPay and other payment gateways",
+      href: "/admin/payment-gateway-config",
+    },
+    {
+      title: "VoIP و مرکز تماس",
+      titleEn: "VoIP & Call Center",
+      icon: <Wifi className="h-5 w-5 text-white" />,
+      color: "from-orange-500 to-red-600",
+      description: "پیکربندی اتصال AMI به ایزابل PBX و تنظیمات مرکز تماس",
+      descriptionEn: "Configure AMI connection to Issabel PBX and call center settings",
+      href: "/admin/voip-settings",
+    },
+    {
+      title: "تنظیمات سیستم",
+      titleEn: "System Settings",
+      icon: <Settings className="h-5 w-5 text-white" />,
+      color: "from-purple-500 to-violet-600",
+      description: "تنظیمات عمومی سیستم، مطابقت ایرانی و پیکربندی پیشرفته",
+      descriptionEn: "General system settings, Iranian compliance and advanced configuration",
+      href: "/admin/system-settings",
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>یکپارچه‌سازی سرویس‌های خارجی</CardTitle>
+          <CardDescription>
+            برای پیکربندی هر سرویس روی دکمه «پیکربندی» کلیک کنید — تنظیمات واقعی در صفحات اختصاصی مدیریت می‌شوند.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {integrationGroups.map((group) => (
+              <div
+                key={group.href}
+                className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-300 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 bg-gradient-to-br ${group.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                    {group.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-medium">{group.title}</h4>
+                    <p className="text-sm text-gray-500">{group.descriptionEn}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(group.href)}
+                  className="flex-shrink-0 gap-1"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  پیکربندی
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export function AdminSystem() {
   const { t } = useTranslation(["admin", "common"]);
@@ -72,7 +137,6 @@ export function AdminSystem() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [showApiKeys, setShowApiKeys] = useState(false);
   const [isBackupInProgress, setIsBackupInProgress] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -88,15 +152,6 @@ export function AdminSystem() {
       toast({ title: next ? "Maintenance Mode Enabled" : "Maintenance Mode Disabled", description: next ? "System is now in maintenance mode." : "System is now accessible." });
       return next;
     });
-  };
-
-  const handleTestIntegration = async (name: string) => {
-    try {
-      await apiRequest(`/api/admin/integrations/${name}/test`, { method: "POST" });
-      toast({ title: "Connection Test Successful", description: `${name} is working properly.` });
-    } catch {
-      toast({ title: "Connection Test Failed", description: `Failed to connect to ${name}.`, variant: "destructive" });
-    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,46 +320,7 @@ export function AdminSystem() {
 
         {/* Integrations Tab */}
         <TabsContent value="integrations" className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle>External Service Integrations</CardTitle><CardDescription>Manage connections to external APIs and services</CardDescription></CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {integrations.map((integration, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">{integrationIcon(integration.type)}</div>
-                      <div><h4 className="font-medium">{integration.name}</h4><p className="text-sm text-gray-600">{integration.description}</p></div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge className={getIntegrationStatusColor(integration.status)}>{integration.status}</Badge>
-                      <Button variant="outline" size="sm" onClick={() => handleTestIntegration(integration.name)}>Test</Button>
-                      <Button variant="outline" size="sm">Configure</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle>API Configuration</CardTitle><CardDescription>Manage API keys and external service credentials</CardDescription></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">API Keys Visibility</h4>
-                <Button variant="outline" size="sm" onClick={() => setShowApiKeys(!showApiKeys)}>
-                  {showApiKeys ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  {showApiKeys ? " Hide" : " Show"} Keys
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {[["Anthropic API Key", "AI-powered features", "sk-ant-api03-..."], ["Kavenegar SMS Key", "SMS notifications", "kav-123456789..."]].map(([name, desc, key]) => (
-                  <div key={name} className="flex items-center justify-between p-3 border rounded">
-                    <div><span className="font-medium">{name}</span><p className="text-sm text-gray-600">{desc}</p></div>
-                    <div className="text-sm font-mono">{showApiKeys ? key : "••••••••••••••••"}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <IntegrationsTab />
         </TabsContent>
 
         {/* Notifications Tab */}
