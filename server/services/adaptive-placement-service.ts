@@ -130,9 +130,19 @@ export class AdaptivePlacementService {
     // Continue with current skill - make adaptive decision
     const adaptiveDecision = await this.makeAdaptiveDecision(currentSkillState);
     if (!adaptiveDecision.shouldContinueTesting || !adaptiveDecision.nextQuestionLevel) {
-      // Mark current skill as completed and move to next
-      currentSkillState.completed = true;
-      return await this.getNextQuestion(sessionId);
+      // Skill is done — advance directly to the next skill without a recursive call.
+      // A recursive call would re-fetch testState from DB, losing the in-memory
+      // completed=true flag and causing infinite recursion.
+      const nextSkill = await this.getNextSkill(sessionId, testState);
+      if (!nextSkill) {
+        await this.completeTest(sessionId);
+        return null;
+      }
+      await this.storage.updatePlacementTestSession(sessionId, {
+        currentSkill: nextSkill
+      });
+      const nextLevel = this.determineSkillStartingLevel(nextSkill, testState);
+      return await this.getQuestionForLevel(nextSkill, nextLevel);
     }
 
     return await this.getQuestionForLevel(session.currentSkill as Skill, adaptiveDecision.nextQuestionLevel);
