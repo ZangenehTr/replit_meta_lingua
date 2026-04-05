@@ -402,11 +402,6 @@ function Router() {
           <FinancialReportsPage />
         </RoleProtectedRoute>
       </Route>
-      <Route path="/admin/payment-gateway">
-        <RoleProtectedRoute allowedRoles={["admin"]}>
-          <PaymentGatewayConfigPage />
-        </RoleProtectedRoute>
-      </Route>
       <Route path="/admin/payment-gateway-config">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <PaymentGatewayConfigPage />

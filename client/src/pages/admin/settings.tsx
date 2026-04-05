@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +29,9 @@ import {
   Brain,
   Video,
   Cpu,
-  Home
+  Home,
+  ExternalLink,
+  Wifi
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/ui/back-button";
@@ -155,7 +158,8 @@ export default function AdminSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { language, isRTL } = useLanguage();
-  const [activeTab, setActiveTab] = useState("payment");
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState("homepage");
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [homepageContent, setHomepageContent] = useState<HomepageContent>(defaultHomepageContent);
 
@@ -474,118 +478,27 @@ export default function AdminSettings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Shetab Payment Gateway
+                درگاه‌های پرداخت
               </CardTitle>
               <CardDescription>
-                Configure Shetab payment gateway for processing Iranian payments
+                پیکربندی درگاه‌های پرداخت ایرانی در صفحه اختصاصی مدیریت انجام می‌شود.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="shetab-enabled">Enable Shetab Gateway</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Allow payments through Shetab payment network
-                  </p>
-                </div>
-                <Switch
-                  id="shetab-enabled"
-                  checked={settings?.shetabEnabled || false}
-                  onCheckedChange={(checked) => handleSettingUpdate('shetabEnabled', checked)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="merchant-id">Merchant ID</Label>
-                  <Input
-                    id="merchant-id"
-                    placeholder="Enter merchant ID"
-                    value={settings?.shetabMerchantId || ''}
-                    onChange={(e) => handleSettingUpdate('shetabMerchantId', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="terminal-id">Terminal ID</Label>
-                  <Input
-                    id="terminal-id"
-                    placeholder="Enter terminal ID"
-                    value={settings?.shetabTerminalId || ''}
-                    onChange={(e) => handleSettingUpdate('shetabTerminalId', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="api-key">API Key</Label>
-                  <div className="relative">
-                    <Input
-                      id="api-key"
-                      type={showSecrets.shetabApiKey ? "text" : "password"}
-                      placeholder="Enter API key"
-                      value={settings?.shetabApiKey || ''}
-                      onChange={(e) => handleSettingUpdate('shetabApiKey', e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute end-2 top-1/2 -translate-y-1/2"
-                      onClick={() => toggleSecret('shetabApiKey')}
-                    >
-                      {showSecrets.shetabApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-300 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Payment Gateway Config</h4>
+                    <p className="text-sm text-gray-500">Manage Shetab, Zarinpal, IDPay and other payment gateways</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="secret-key">Secret Key</Label>
-                  <div className="relative">
-                    <Input
-                      id="secret-key"
-                      type={showSecrets.shetabSecretKey ? "text" : "password"}
-                      placeholder="Enter secret key"
-                      value={settings?.shetabSecretKey || ''}
-                      onChange={(e) => handleSettingUpdate('shetabSecretKey', e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute end-2 top-1/2 -translate-y-1/2"
-                      onClick={() => toggleSecret('shetabSecretKey')}
-                    >
-                      {showSecrets.shetabSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="environment">Environment</Label>
-                <select
-                  id="environment"
-                  className="w-full p-2 border rounded-md"
-                  value={settings?.shetabEnvironment || 'sandbox'}
-                  onChange={(e) => handleSettingUpdate('shetabEnvironment', e.target.value)}
-                >
-                  <option value="sandbox">Sandbox (Testing)</option>
-                  <option value="production">Production (Live)</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => testShetabMutation.mutate()}
-                  disabled={testShetabMutation.isPending}
-                  variant="outline"
-                >
-                  <TestTube className="h-4 w-4" />
-                  <span>{testShetabMutation.isPending ? "Testing..." : "Test Connection"}</span>
+                <Button variant="outline" size="sm" onClick={() => navigate('/admin/payment-gateway-config')} className="gap-1 flex-shrink-0">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  پیکربندی
                 </Button>
-                <Badge variant={settings?.shetabEnabled ? "default" : "secondary"}>
-                  {settings?.shetabEnabled ? "Enabled" : "Disabled"}
-                </Badge>
               </div>
             </CardContent>
           </Card>
@@ -594,73 +507,33 @@ export default function AdminSettings() {
         {/* Communication Settings */}
         <TabsContent value="communication">
           <div className="space-y-6">
-            {/* SMS Settings */}
+            {/* SMS Settings — redirect to dedicated page */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Phone className="h-5 w-5" />
-                  Kavehnegar SMS Service
+                  سرویس پیامک
                 </CardTitle>
                 <CardDescription>
-                  Configure SMS notifications and verification messages
+                  پیکربندی کاوه‌نگار و قالب‌های پیامک در صفحه اختصاصی مدیریت می‌شود.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="sms-enabled">Enable SMS Service</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Send SMS notifications and verification codes
-                    </p>
-                  </div>
-                  <Switch
-                    id="sms-enabled"
-                    checked={settings?.kavehnegarEnabled || false}
-                    onCheckedChange={(checked) => handleSettingUpdate('kavehnegarEnabled', checked)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="kavehnegar-api">Kavehnegar API Key</Label>
-                    <div className="relative">
-                      <Input
-                        id="kavehnegar-api"
-                        type={showSecrets.kavehnegarApiKey ? "text" : "password"}
-                        placeholder="Enter Kavehnegar API key"
-                        value={settings?.kavehnegarApiKey || ''}
-                        onChange={(e) => handleSettingUpdate('kavehnegarApiKey', e.target.value)}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute end-2 top-1/2 -translate-y-1/2"
-                        onClick={() => toggleSecret('kavehnegarApiKey')}
-                      >
-                        {showSecrets.kavehnegarApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 border rounded-lg hover:border-green-300 hover:shadow-sm transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Phone className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">SMS Settings (Kavenegar)</h4>
+                      <p className="text-sm text-gray-500">API key, sender ID, templates and test</p>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sms-sender">SMS Sender ID</Label>
-                    <Input
-                      id="sms-sender"
-                      placeholder="e.g., MetaLingua"
-                      value={settings?.kavehnegarSender || ''}
-                      onChange={(e) => handleSettingUpdate('kavehnegarSender', e.target.value)}
-                    />
-                  </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/admin/sms-settings')} className="gap-1 flex-shrink-0">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    پیکربندی
+                  </Button>
                 </div>
-
-                <Button
-                  onClick={() => testKavehnegarMutation.mutate()}
-                  disabled={testKavehnegarMutation.isPending}
-                  variant="outline"
-                >
-                  <TestTube className="h-4 w-4" />
-                  <span>{testKavehnegarMutation.isPending ? "Testing..." : "Test SMS Service"}</span>
-                </Button>
               </CardContent>
             </Card>
 

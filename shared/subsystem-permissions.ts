@@ -466,7 +466,7 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
   "enhanced_analytics": "/admin/enhanced-analytics",
   "tts_system": "/admin/tts-system",
   "3d_content_tools": "/admin/3d-content-tools",
-  "third_party_integrations": "/admin/iranian-compliance", 
+  "third_party_integrations": "/admin/system",
   "calendar_settings": "/admin/calendar-settings",
   "currency_settings": "/admin/currency-settings",
   "form_management": "/admin/form-management",

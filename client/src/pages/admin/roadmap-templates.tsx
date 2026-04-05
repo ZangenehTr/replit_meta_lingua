@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   File, 
   Copy, 
@@ -15,84 +17,79 @@ import {
   Edit,
   Trash,
   Settings,
-  Download,
-  Upload,
-  Save
+  Save,
+  Loader2
 } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import { useLanguage } from "@/hooks/useLanguage";
+
+interface RoadmapTemplate {
+  id: number;
+  title: string;
+  targetLanguage: string;
+  targetLevel: string;
+  audience?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'fa', label: 'فارسی' },
+  { value: 'ar', label: 'العربية' },
+];
+const AUDIENCE_OPTIONS = ['adults', 'teens', 'kids', 'business', 'ielts', 'toefl', 'gre', 'pte', 'conversation'];
 
 export default function RoadmapTemplates() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isRTL = language === 'fa';
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [selectedTab, setSelectedTab] = useState("templates");
   const [templateFormData, setTemplateFormData] = useState({
-    templateName: '',
-    templateDescription: ''
+    title: '',
+    targetLanguage: 'en',
+    targetLevel: 'B1',
+    audience: '',
+  });
+
+  const { data: templates = [], isLoading } = useQuery<RoadmapTemplate[]>({
+    queryKey: ['/api/roadmaps/templates'],
   });
 
   const createTemplateMutation = useMutation({
-    mutationFn: async () => {
-      const templates = JSON.parse(localStorage.getItem('roadmapTemplates') || '[]');
-      const newTemplate = {
-        id: Date.now(),
-        name: 'New Template',
-        category: 'General',
-        createdAt: new Date().toISOString()
-      };
-      templates.push(newTemplate);
-      localStorage.setItem('roadmapTemplates', JSON.stringify(templates));
-      return new Promise(resolve => setTimeout(() => resolve(newTemplate), 500));
-    },
+    mutationFn: (data: typeof templateFormData) =>
+      apiRequest('/api/roadmaps/templates', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
-      toast({ 
-        title: t('admin:templateCreated', 'Template created successfully'),
-        description: t('admin:templateCreatedDesc', 'New roadmap template has been added')
-      });
+      toast({ title: t('admin:templateSaved', 'Template saved successfully') });
+      queryClient.invalidateQueries({ queryKey: ['/api/roadmaps/templates'] });
+      setTemplateFormData({ title: '', targetLanguage: 'en', targetLevel: 'B1', audience: '' });
+      setSelectedTab('templates');
     },
     onError: (error: any) => {
-      toast({ 
-        title: t('admin:errorCreating', 'Error creating template'),
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+      toast({ title: t('admin:errorSaving', 'Error saving template'), description: error.message, variant: 'destructive' });
+    },
   });
 
-  const saveTemplateMutation = useMutation({
-    mutationFn: async (data: typeof templateFormData) => {
-      if (!data.templateName.trim()) {
-        throw new Error('Template name is required');
-      }
-      const templates = JSON.parse(localStorage.getItem('roadmapTemplates') || '[]');
-      const newTemplate = {
-        id: Date.now(),
-        name: data.templateName,
-        description: data.templateDescription,
-        createdAt: new Date().toISOString()
-      };
-      templates.push(newTemplate);
-      localStorage.setItem('roadmapTemplates', JSON.stringify(templates));
-      return new Promise(resolve => setTimeout(() => resolve(newTemplate), 500));
-    },
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest(`/api/roadmaps/templates/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
-      toast({ 
-        title: t('admin:templateSaved', 'Template saved successfully'),
-        description: t('admin:templateSavedDesc', 'Roadmap template has been saved')
-      });
-      setTemplateFormData({ templateName: '', templateDescription: '' });
+      toast({ title: t('admin:templateDeleted', 'Template deleted') });
+      queryClient.invalidateQueries({ queryKey: ['/api/roadmaps/templates'] });
     },
-    onError: (error: any) => {
-      toast({ 
-        title: t('admin:errorSaving', 'Error saving template'),
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+    onError: () => {
+      toast({ title: t('admin:errorDeleting', 'Failed to delete template'), variant: 'destructive' });
+    },
   });
+
+  const activeCount = templates.filter(t => t.isActive).length;
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -106,20 +103,10 @@ export default function RoadmapTemplates() {
             {t('admin:roadmapTemplatesDescription', 'Create and manage reusable learning roadmap templates')}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" data-testid="button-import-template">
-            <Upload className="h-4 w-4 me-2" />
-            {t('admin:importTemplate', 'Import')}
-          </Button>
-          <Button 
-            onClick={() => createTemplateMutation.mutate()}
-            disabled={createTemplateMutation.isPending}
-            data-testid="button-create-template"
-          >
-            <Plus className="h-4 w-4 me-2" />
-            {createTemplateMutation.isPending ? t('admin:creating', 'Creating...') : t('admin:createTemplate', 'Create Template')}
-          </Button>
-        </div>
+        <Button onClick={() => setSelectedTab('builder')} data-testid="button-create-template">
+          <Plus className="h-4 w-4 me-2" />
+          {t('admin:createTemplate', 'Create Template')}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -130,7 +117,9 @@ export default function RoadmapTemplates() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400" data-testid="metric-total-templates-label">
                   {t('admin:totalTemplates', 'Total Templates')}
                 </p>
-                <p className="text-2xl font-bold" data-testid="metric-total-templates-value">12</p>
+                <p className="text-2xl font-bold" data-testid="metric-total-templates-value">
+                  {isLoading ? '—' : templates.length}
+                </p>
               </div>
               <File className="h-8 w-8 text-blue-500" />
             </div>
@@ -144,7 +133,9 @@ export default function RoadmapTemplates() {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400" data-testid="metric-active-templates-label">
                   {t('admin:activeTemplates', 'Active Templates')}
                 </p>
-                <p className="text-2xl font-bold" data-testid="metric-active-templates-value">8</p>
+                <p className="text-2xl font-bold" data-testid="metric-active-templates-value">
+                  {isLoading ? '—' : activeCount}
+                </p>
               </div>
               <Settings className="h-8 w-8 text-green-500" />
             </div>
@@ -155,10 +146,12 @@ export default function RoadmapTemplates() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400" data-testid="metric-template-instances-label">
-                  {t('admin:templateInstances', 'Template Instances')}
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400" data-testid="metric-cefr-levels-label">
+                  {t('admin:cefrLevels', 'CEFR Levels')}
                 </p>
-                <p className="text-2xl font-bold" data-testid="metric-template-instances-value">45</p>
+                <p className="text-2xl font-bold" data-testid="metric-cefr-levels-value">
+                  {isLoading ? '—' : new Set(templates.map(t => t.targetLevel)).size}
+                </p>
               </div>
               <Copy className="h-8 w-8 text-purple-500" />
             </div>
@@ -167,22 +160,14 @@ export default function RoadmapTemplates() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="templates" data-testid="tab-templates">
             <File className="h-4 w-4 me-2" />
             {t('admin:templates', 'Templates')}
           </TabsTrigger>
-          <TabsTrigger value="categories" data-testid="tab-categories">
-            <Settings className="h-4 w-4 me-2" />
-            {t('admin:categories', 'Categories')}
-          </TabsTrigger>
           <TabsTrigger value="builder" data-testid="tab-template-builder">
             <Edit className="h-4 w-4 me-2" />
             {t('admin:templateBuilder', 'Template Builder')}
-          </TabsTrigger>
-          <TabsTrigger value="import-export" data-testid="tab-import-export">
-            <Download className="h-4 w-4 me-2" />
-            {t('admin:importExport', 'Import/Export')}
           </TabsTrigger>
         </TabsList>
 
@@ -197,89 +182,62 @@ export default function RoadmapTemplates() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { name: 'General English', category: 'Language', instances: 12, status: 'Active' },
-                  { name: 'Business English', category: 'Professional', instances: 8, status: 'Active' },
-                  { name: 'IELTS Preparation', category: 'Test Prep', instances: 15, status: 'Active' },
-                  { name: 'Conversation Skills', category: 'Speaking', instances: 6, status: 'Draft' }
-                ].map((template, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-sm" data-testid={`template-name-${index}`}>
-                          {template.name}
-                        </h3>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" data-testid={`button-edit-template-${index}`}>
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="sm" data-testid={`button-copy-template-${index}`}>
-                            <Copy className="h-3 w-3" />
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : templates.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <File className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>{t('admin:noTemplatesYet', 'No templates yet. Create your first roadmap template.')}</p>
+                  <Button className="mt-4" onClick={() => setSelectedTab('builder')}>
+                    <Plus className="h-4 w-4 me-2" />
+                    {t('admin:createTemplate', 'Create Template')}
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {templates.map((template, index) => (
+                    <Card key={template.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-sm" data-testid={`template-name-${index}`}>
+                            {template.title}
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteTemplateMutation.mutate(template.id)}
+                            disabled={deleteTemplateMutation.isPending}
+                            data-testid={`button-delete-template-${index}`}
+                          >
+                            <Trash className="h-3 w-3 text-red-500" />
                           </Button>
                         </div>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-2" data-testid={`template-category-${index}`}>
-                        {template.category}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs" data-testid={`template-instances-${index}`}>
-                          {template.instances} instances
-                        </span>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          <Badge variant="outline" className="text-xs" data-testid={`template-level-${index}`}>
+                            {template.targetLevel}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs" data-testid={`template-lang-${index}`}>
+                            {template.targetLanguage.toUpperCase()}
+                          </Badge>
+                          {template.audience && (
+                            <Badge variant="secondary" className="text-xs" data-testid={`template-audience-${index}`}>
+                              {template.audience}
+                            </Badge>
+                          )}
+                        </div>
                         <Badge 
-                          variant={template.status === 'Active' ? 'default' : 'secondary'}
+                          variant={template.isActive ? 'default' : 'secondary'}
                           data-testid={`template-status-${index}`}
                         >
-                          {template.status}
+                          {template.isActive ? t('common:active', 'Active') : t('common:inactive', 'Inactive')}
                         </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="categories" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle data-testid="card-title-template-categories">
-                {t('admin:templateCategories', 'Template Categories')}
-              </CardTitle>
-              <CardDescription>
-                {t('admin:templateCategoriesDescription', 'Organize templates by subject and skill focus')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { name: 'General Language', templates: 5, color: 'bg-blue-50 border-blue-200' },
-                    { name: 'Professional English', templates: 3, color: 'bg-green-50 border-green-200' },
-                    { name: 'Test Preparation', templates: 2, color: 'bg-yellow-50 border-yellow-200' },
-                    { name: 'Conversation Skills', templates: 2, color: 'bg-purple-50 border-purple-200' }
-                  ].map((category, index) => (
-                    <Card key={index} className={`${category.color}`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold" data-testid={`category-name-${index}`}>
-                              {category.name}
-                            </h3>
-                            <p className="text-sm text-gray-600" data-testid={`category-count-${index}`}>
-                              {category.templates} templates
-                            </p>
-                          </div>
-                          <Button variant="ghost" size="sm" data-testid={`button-edit-category-${index}`}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -291,109 +249,96 @@ export default function RoadmapTemplates() {
                 {t('admin:templateBuilderTool', 'Template Builder Tool')}
               </CardTitle>
               <CardDescription>
-                {t('admin:templateBuilderDescription', 'Create new templates with drag-and-drop interface')}
+                {t('admin:templateBuilderDescription', 'Create new roadmap templates with CEFR level targeting')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="template-name">{t('admin:templateName', 'Template Name')}</Label>
+                  <Label htmlFor="template-title">{t('admin:templateTitle', 'Template Title')}</Label>
                   <Input 
-                    id="template-name" 
-                    placeholder={t('admin:enterTemplateName', 'Enter template name')}
-                    value={templateFormData.templateName}
-                    onChange={(e) => setTemplateFormData(prev => ({ ...prev, templateName: e.target.value }))}
+                    id="template-title" 
+                    placeholder={t('admin:enterTemplateTitle', 'e.g., IELTS Academic Band 7+')}
+                    value={templateFormData.title}
+                    onChange={(e) => setTemplateFormData(prev => ({ ...prev, title: e.target.value }))}
                     data-testid="input-template-name"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="template-description">{t('admin:templateDescription', 'Description')}</Label>
-                  <Input 
-                    id="template-description" 
-                    placeholder={t('admin:enterTemplateDescription', 'Describe the template purpose')}
-                    value={templateFormData.templateDescription}
-                    onChange={(e) => setTemplateFormData(prev => ({ ...prev, templateDescription: e.target.value }))}
-                    data-testid="input-template-description"
-                  />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>{t('admin:targetLanguage', 'Target Language')}</Label>
+                    <Select
+                      value={templateFormData.targetLanguage}
+                      onValueChange={(v) => setTemplateFormData(prev => ({ ...prev, targetLanguage: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map(l => (
+                          <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>{t('admin:targetLevel', 'CEFR Level')}</Label>
+                    <Select
+                      value={templateFormData.targetLevel}
+                      onValueChange={(v) => setTemplateFormData(prev => ({ ...prev, targetLevel: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CEFR_LEVELS.map(l => (
+                          <SelectItem key={l} value={l}>{l}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>{t('admin:audience', 'Audience')}</Label>
+                    <Select
+                      value={templateFormData.audience}
+                      onValueChange={(v) => setTemplateFormData(prev => ({ ...prev, audience: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('admin:selectAudience', 'Select audience')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">{t('admin:general', 'General')}</SelectItem>
+                        {AUDIENCE_OPTIONS.map(a => (
+                          <SelectItem key={a} value={a}>{a}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="text-center text-gray-500 py-8 border-2 border-dashed border-gray-200 rounded-lg" data-testid="template-builder-canvas">
-                  <File className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>{t('admin:templateBuilderReady', 'Template builder canvas - drag components here')}</p>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" data-testid="button-preview-template">
-                    {t('admin:preview', 'Preview')}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setSelectedTab('templates')}>
+                    {t('common:cancel', 'Cancel')}
                   </Button>
                   <Button 
-                    onClick={() => saveTemplateMutation.mutate(templateFormData)}
-                    disabled={saveTemplateMutation.isPending || !templateFormData.templateName.trim()}
+                    onClick={() => createTemplateMutation.mutate(templateFormData)}
+                    disabled={createTemplateMutation.isPending || !templateFormData.title.trim()}
                     data-testid="button-save-template"
                   >
-                    <Save className="h-4 w-4 me-2" />
-                    {saveTemplateMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveTemplate', 'Save Template')}
+                    {createTemplateMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 me-2" />
+                    )}
+                    {createTemplateMutation.isPending ? t('admin:saving', 'Saving...') : t('admin:saveTemplate', 'Save Template')}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="import-export" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle data-testid="card-title-import-templates">
-                  <Upload className="h-5 w-5 me-2 inline" />
-                  {t('admin:importTemplates', 'Import Templates')}
-                </CardTitle>
-                <CardDescription>
-                  {t('admin:importTemplatesDescription', 'Import templates from JSON files')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center" data-testid="import-drop-zone">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p className="text-sm text-gray-600">{t('admin:dropFilesHere', 'Drop JSON files here or click to browse')}</p>
-                  </div>
-                  <Button className="w-full" data-testid="button-import-files">
-                    {t('admin:selectFiles', 'Select Files to Import')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle data-testid="card-title-export-templates">
-                  <Download className="h-5 w-5 me-2 inline" />
-                  {t('admin:exportTemplates', 'Export Templates')}
-                </CardTitle>
-                <CardDescription>
-                  {t('admin:exportTemplatesDescription', 'Export templates as JSON files')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">{t('admin:selectTemplatesToExport', 'Select templates to export:')}</p>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {['General English', 'Business English', 'IELTS Preparation', 'Conversation Skills'].map((template, index) => (
-                        <label key={index} className="flex items-center space-x-2">
-                          <input type="checkbox" defaultChecked data-testid={`checkbox-export-${index}`} />
-                          <span className="text-sm">{template}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <Button className="w-full" data-testid="button-export-selected">
-                    <Download className="h-4 w-4 me-2" />
-                    {t('admin:exportSelected', 'Export Selected')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

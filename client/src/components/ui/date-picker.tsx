@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
+import { gregorianToPersian } from "@/lib/i18n";
 
 interface DatePickerProps {
   value?: Date;
@@ -14,13 +16,28 @@ interface DatePickerProps {
   disabled?: boolean;
 }
 
+function formatDateForLocale(date: Date, language: string): string {
+  if (language === 'fa') {
+    try {
+      const p = gregorianToPersian(date);
+      return `${p.year}/${String(p.month).padStart(2, '0')}/${String(p.day).padStart(2, '0')}`;
+    } catch {
+      return format(date, "yyyy/MM/dd");
+    }
+  }
+  return format(date, "yyyy/MM/dd");
+}
+
 export function DatePicker({
   value,
   onChange,
-  placeholder = "انتخاب تاریخ",
+  placeholder,
   className,
   disabled = false,
 }: DatePickerProps) {
+  const { language } = useLanguage();
+  const defaultPlaceholder = language === 'fa' ? 'انتخاب تاریخ' : 'Pick a date';
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -34,7 +51,10 @@ export function DatePicker({
           disabled={disabled}
         >
           <CalendarIcon className="me-2 h-4 w-4 flex-shrink-0" />
-          {value ? format(value, "yyyy/MM/dd") : <span>{placeholder}</span>}
+          {value
+            ? formatDateForLocale(value, language)
+            : <span>{placeholder ?? defaultPlaceholder}</span>
+          }
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
