@@ -18,6 +18,14 @@ export function useCalendarSettings(): CalendarSettings {
           setUsePersianCalendar(parsed.usePersianCalendar);
           return;
         }
+        if (parsed.dateFormat === 'persian' || parsed.dateFormat === 'jalali') {
+          setUsePersianCalendar(true);
+          return;
+        }
+        if (typeof parsed.dateFormat === 'string' && parsed.dateFormat !== 'persian' && parsed.dateFormat !== 'jalali') {
+          setUsePersianCalendar(false);
+          return;
+        }
       }
     } catch {
     }
