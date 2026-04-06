@@ -355,7 +355,7 @@ export default function PromoCodesPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md" dir={isRTL ? "rtl" : "ltr"}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
           <DialogHeader>
             <DialogTitle>{editingCode ? "ویرایش کد تخفیف" : "ایجاد کد تخفیف جدید"}</DialogTitle>
           </DialogHeader>
@@ -561,7 +561,7 @@ export default function PromoCodesPage() {
 
       {/* Usage Analytics Dialog */}
       <Dialog open={!!usagePromo} onOpenChange={(open) => !open && setUsagePromo(null)}>
-        <DialogContent className="max-w-2xl" dir={isRTL ? "rtl" : "ltr"}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" aria-hidden="true" />

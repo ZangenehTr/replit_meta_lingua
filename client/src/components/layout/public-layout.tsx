@@ -128,11 +128,11 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex lg:gap-x-8 lg:items-center">
+          <div className="hidden lg:flex lg:gap-x-5 lg:items-center">
             {/* Home Link */}
             <Link 
               href="/"
-              className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+              className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                 isActivePath('/')
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
@@ -147,7 +147,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                     location.startsWith('/courses')
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
@@ -188,7 +188,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                    className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                       isActivePath('/curriculum')
                         ? 'text-primary'
                         : 'text-muted-foreground hover:text-foreground'
@@ -232,7 +232,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                 <Link 
                   key={item.name} 
                   href={item.href}
-                  className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
                     isActive
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'

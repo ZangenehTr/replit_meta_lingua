@@ -150,7 +150,7 @@ export default function PublicHome() {
               {hc.heroSubheadline || 'برای IELTS، TOEFL، GRE یا گفتگوی روان — MetaLingo با AI، تدریس زنده، و گیمیفیکیشن کنارته.'}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center items-center">
               <Button
                 asChild
                 size="lg"

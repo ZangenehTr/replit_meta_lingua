@@ -1161,7 +1161,11 @@
     "offline": "You are offline",
     "offlineTitle": "Ready for Offline",
     "offlineDescription": "App is ready to work offline. You can learn even without internet!",
-    "reconnected": "Connection restored"
+    "reconnected": "Connection restored",
+    "installTitle": "Install MetaLingo",
+    "installDescription": "Install the app for faster access, offline learning, and a better experience!",
+    "installButton": "Install App",
+    "notNow": "Not Now"
   },
   "discard": "Discard Changes",
   "saveChanges": "Save Changes",

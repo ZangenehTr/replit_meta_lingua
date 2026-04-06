@@ -963,7 +963,11 @@
     "offline": "أنت غير متصل",
     "offlineTitle": "جاهز للعمل بلا اتصال",
     "offlineDescription": "التطبيق جاهز للعمل بدون إنترنت. يمكنك التعلم حتى بدون اتصال!",
-    "reconnected": "تم استعادة الاتصال"
+    "reconnected": "تم استعادة الاتصال",
+    "installTitle": "تثبيت ميتالينغو",
+    "installDescription": "ثبّت التطبيق للوصول الأسرع والتعلم دون الإنترنت وتجربة أفضل!",
+    "installButton": "تثبيت التطبيق",
+    "notNow": "ليس الآن"
   },
   "home": {
     "seoTitle": "ميتا لينغوا - تعلم اللغات بالذكاء الاصطناعي",
@@ -1190,7 +1194,6 @@
   "currentMonth": "الشهر الحالي",
   "previousMonth": "الشهر السابق",
   "calculating": "جاري الحساب...",
-  "cancel": "إلغاء",
   "customPeriod": "فترة مخصصة",
   "loadingPaymentData": "جاري تحميل بيانات الدفع...",
   "evaluations": "تقييمات حضورية",
