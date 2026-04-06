@@ -53,26 +53,27 @@ export default function BlogListing() {
 
   const getCategoryName = (categoryId: number | null) => {
     if (!categoryId) return null;
-    return categories.find(c => c.id === categoryId)?.name || 'Category';
+    return categories.find(c => c.id === categoryId)?.name || t('category');
   };
 
   return (
     <PublicLayout>
       <SEOHead
-        title={t('blog.seoTitle', 'Blog - Latest Articles')}
-        description={t('blog.seoDescription', 'Explore our latest articles, tips, and insights about language learning from MetaLingo Academy.')}
+        title={t('blog.seoTitle')}
+        description={t('blog.seoDescription')}
         keywords="language learning blog, learning tips, language articles"
       />
+
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
               <BookOpen className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Blog</span>
+              <span className="text-sm font-medium text-primary">{t('blog.badge')}</span>
             </div>
-            <h1 className="text-4xl font-bold mb-4">Latest Articles & Insights</h1>
+            <h1 className="text-4xl font-bold mb-3">{t('blog.heroTitle')}</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Tips, stories, and insights from our language learning community
+              {t('blog.heroSubtitle')}
             </p>
           </div>
         </div>
@@ -85,7 +86,7 @@ export default function BlogListing() {
               <div className="relative">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search articles..."
+                  placeholder={t('blog.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                   className="ps-10"
@@ -96,10 +97,10 @@ export default function BlogListing() {
             <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); setCurrentPage(1); }}>
               <SelectTrigger className="w-full md:w-48" data-testid="select-category">
                 <Folder className="h-4 w-4 me-2" />
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder={t('blog.allCategories')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t('blog.allCategories')}</SelectItem>
                 {categories.map(cat => <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -108,17 +109,19 @@ export default function BlogListing() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Languages</SelectItem>
+                <SelectItem value="all">{t('blog.allLanguages')}</SelectItem>
                 <SelectItem value="en">English</SelectItem>
                 <SelectItem value="fa">فارسی</SelectItem>
                 <SelectItem value="ar">العربية</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <TrendingUp className="h-4 w-4" />
-            <span>Showing {filteredPosts.length} articles</span>
-          </div>
+          {!isLoadingPosts && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <TrendingUp className="h-4 w-4" />
+              <span>{t('blog.showingCount', { count: filteredPosts.length })}</span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -133,9 +136,9 @@ export default function BlogListing() {
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-16">
               <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No articles found</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('blog.noResults')}</h3>
               <Button variant="outline" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }} data-testid="button-clear-filters">
-                Clear Filters
+                {t('blog.clearFilters')}
               </Button>
             </div>
           ) : (
@@ -170,7 +173,7 @@ export default function BlogListing() {
               {totalPages > 1 && (
                 <div className="mt-12 flex justify-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} data-testid="button-prev-page">
-                    <ChevronLeft className="h-4 w-4 me-1" />Previous
+                    <ChevronLeft className="h-4 w-4 me-1" />{t('blog.previous')}
                   </Button>
                   {[...Array(totalPages)].map((_, i) => {
                     const page = i + 1;
@@ -186,7 +189,7 @@ export default function BlogListing() {
                     return null;
                   })}
                   <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} data-testid="button-next-page">
-                    Next<ChevronRight className="h-4 w-4 ms-1" />
+                    {t('blog.next')}<ChevronRight className="h-4 w-4 ms-1" />
                   </Button>
                 </div>
               )}

@@ -7,6 +7,8 @@ import { SEOHead } from '@/components/seo-head';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Video, Play, TrendingUp } from 'lucide-react';
 import type { CmsVideo } from '@shared/schema';
@@ -38,20 +40,21 @@ export default function VideoGallery() {
   return (
     <PublicLayout>
       <SEOHead
-        title={t('videos.seoTitle', 'Video Library')}
-        description={t('videos.seoDescription', 'Watch our video tutorials and courses to improve your language skills with MetaLingo Academy.')}
+        title={t('videos.seoTitle')}
+        description={t('videos.seoDescription')}
         keywords="language learning videos, tutorial videos, language courses"
       />
+
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 border-b">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
               <Video className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Videos</span>
+              <span className="text-sm font-medium text-primary">{t('videos.badge')}</span>
             </div>
-            <h1 className="text-4xl font-bold mb-4">Video Library</h1>
+            <h1 className="text-4xl font-bold mb-3">{t('videos.heroTitle')}</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Learn from expert instructors with our video tutorials and courses
+              {t('videos.heroSubtitle')}
             </p>
           </div>
         </div>
@@ -63,80 +66,117 @@ export default function VideoGallery() {
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search videos..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-10" data-testid="input-search-videos" />
+                <Input
+                  placeholder={t('videos.searchPlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="ps-10"
+                  data-testid="input-search-videos"
+                />
               </div>
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full md:w-48" data-testid="select-category">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder={t('videos.allCategories')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="tutorial">Tutorial</SelectItem>
-                <SelectItem value="lesson">Lesson</SelectItem>
-                <SelectItem value="course">Course</SelectItem>
+                <SelectItem value="all">{t('videos.allCategories')}</SelectItem>
+                <SelectItem value="tutorial">{t('videos.categoryTutorial')}</SelectItem>
+                <SelectItem value="lesson">{t('videos.categoryLesson')}</SelectItem>
+                <SelectItem value="course">{t('videos.categoryCourse')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={selectedLocale} onValueChange={setSelectedLocale}>
               <SelectTrigger className="w-full md:w-40" data-testid="select-language">
-                <SelectValue placeholder="All Languages" />
+                <SelectValue placeholder={t('videos.allLanguages')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Languages</SelectItem>
+                <SelectItem value="all">{t('videos.allLanguages')}</SelectItem>
                 <SelectItem value="en">English</SelectItem>
                 <SelectItem value="fa">فارسی</SelectItem>
                 <SelectItem value="ar">العربية</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <TrendingUp className="h-4 w-4" />
-            <span>Showing {filteredVideos.length} videos</span>
-          </div>
+          {!isLoading && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <TrendingUp className="h-4 w-4" />
+              <span>{t('videos.showingCount', { count: filteredVideos.length })}</span>
+            </div>
+          )}
         </div>
       </section>
 
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredVideos.map(video => (
-              <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow group" data-testid={`video-${video.id}`}>
-                <div className="aspect-video overflow-hidden relative">
-                  {video.thumbnail ? (
-                    <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                      <Video className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
-                      <Play className="h-8 w-8 text-primary" />
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i}>
+                  <Skeleton className="aspect-video w-full" />
+                  <CardHeader>
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : filteredVideos.length === 0 ? (
+            <div className="text-center py-16">
+              <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-4">{t('videos.noResults')}</h3>
+              <Button
+                variant="outline"
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedLocale('all'); }}
+                data-testid="button-clear-filters"
+              >
+                {t('videos.clearFilters')}
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredVideos.map(video => (
+                <Card key={video.id} className="overflow-hidden hover:shadow-lg transition-shadow group" data-testid={`video-${video.id}`}>
+                  <div className="aspect-video overflow-hidden relative">
+                    {video.thumbnail ? (
+                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                        <Video className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                        <Play className="h-8 w-8 text-primary" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <CardHeader>
-                  <div className="flex gap-2 mb-2">
-                    <Badge variant="secondary">{video.locale}</Badge>
-                    {video.category && <Badge>{video.category}</Badge>}
-                  </div>
-                  <CardTitle className="line-clamp-2">
-                    <Link href={`/videos/${video.id}`}><a className="hover:text-primary transition-colors">{video.title}</a></Link>
-                  </CardTitle>
-                  <CardDescription className="line-clamp-2">{video.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Play className="h-4 w-4" />
-                      {video.duration ? `${Math.floor(video.duration / 60)}min` : 'N/A'}
+                  <CardHeader>
+                    <div className="flex gap-2 mb-2">
+                      <Badge variant="secondary">{video.locale}</Badge>
+                      {video.category && <Badge>{video.category}</Badge>}
                     </div>
-                    {video.viewCount && <span>{video.viewCount} views</span>}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <CardTitle className="line-clamp-2">
+                      <Link href={`/videos/${video.id}`}><a className="hover:text-primary transition-colors">{video.title}</a></Link>
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">{video.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Play className="h-4 w-4" />
+                        {video.duration ? `${Math.floor(video.duration / 60)}min` : 'N/A'}
+                      </div>
+                      {video.viewCount && (
+                        <span>{video.viewCount} {t('views')}</span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </PublicLayout>

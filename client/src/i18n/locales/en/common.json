@@ -918,11 +918,34 @@
   },
   "blog": {
     "seoTitle": "Blog - MetaLingo",
-    "seoDescription": "Read the latest articles, tips, and insights about language learning from MetaLingo."
+    "seoDescription": "Read the latest articles, tips, and insights about language learning from MetaLingo.",
+    "badge": "Blog",
+    "heroTitle": "Latest Articles & Insights",
+    "heroSubtitle": "Tips, stories, and insights from our language learning community",
+    "searchPlaceholder": "Search articles...",
+    "allCategories": "All Categories",
+    "allLanguages": "All Languages",
+    "showingCount": "Showing {{count}} articles",
+    "noResults": "No articles found",
+    "clearFilters": "Clear Filters",
+    "previous": "Previous",
+    "next": "Next"
   },
   "videos": {
     "seoTitle": "Video Library - MetaLingo",
-    "seoDescription": "Learn from expert instructors with our video tutorials and language courses"
+    "seoDescription": "Learn from expert instructors with our video tutorials and language courses",
+    "badge": "Videos",
+    "heroTitle": "Video Library",
+    "heroSubtitle": "Learn from expert instructors with our video tutorials and courses",
+    "searchPlaceholder": "Search videos...",
+    "allCategories": "All Categories",
+    "allLanguages": "All Languages",
+    "categoryTutorial": "Tutorial",
+    "categoryLesson": "Lesson",
+    "categoryCourse": "Course",
+    "showingCount": "Showing {{count}} videos",
+    "noResults": "No videos found",
+    "clearFilters": "Clear Filters"
   },
   "cta": {
     "startLearning": "Start Learning Free",

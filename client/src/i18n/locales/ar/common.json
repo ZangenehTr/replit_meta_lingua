@@ -861,11 +861,34 @@
   },
   "blog": {
     "seoTitle": "المدونة - ميتا لينغوا",
-    "seoDescription": "اقرأ أحدث المقالات والنصائح والرؤى حول تعلم اللغات من ميتا لينغوا."
+    "seoDescription": "اقرأ أحدث المقالات والنصائح والرؤى حول تعلم اللغات من ميتا لينغوا.",
+    "badge": "المدونة",
+    "heroTitle": "أحدث المقالات والرؤى",
+    "heroSubtitle": "نصائح وقصص ورؤى من مجتمع تعلم اللغات لدينا",
+    "searchPlaceholder": "البحث في المقالات...",
+    "allCategories": "جميع الفئات",
+    "allLanguages": "جميع اللغات",
+    "showingCount": "عرض {{count}} مقالة",
+    "noResults": "لم يُعثر على مقالات",
+    "clearFilters": "مسح الفلاتر",
+    "previous": "السابق",
+    "next": "التالي"
   },
   "videos": {
     "seoTitle": "مكتبة الفيديو - ميتا لينغوا",
-    "seoDescription": "تعلم من المدرسين الخبراء من خلال دروس الفيديو والدورات اللغوية"
+    "seoDescription": "تعلم من المدرسين الخبراء من خلال دروس الفيديو والدورات اللغوية",
+    "badge": "الفيديوهات",
+    "heroTitle": "مكتبة الفيديو",
+    "heroSubtitle": "تعلم من المدرسين الخبراء من خلال دروسنا التعليمية ودوراتنا",
+    "searchPlaceholder": "البحث في الفيديوهات...",
+    "allCategories": "جميع الفئات",
+    "allLanguages": "جميع اللغات",
+    "categoryTutorial": "درس تعليمي",
+    "categoryLesson": "درس",
+    "categoryCourse": "دورة",
+    "showingCount": "عرض {{count}} فيديو",
+    "noResults": "لم يُعثر على فيديوهات",
+    "clearFilters": "مسح الفلاتر"
   },
   "cta": {
     "startLearning": "ابدأ التعلم مجاناً",

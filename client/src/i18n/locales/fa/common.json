@@ -1110,11 +1110,34 @@
     "heading": "آخرین مقالات",
     "subheading": "نکات، بینش‌ها و داستان‌ها از جامعه ما",
     "seoTitle": "وبلاگ - متالینگوا",
-    "seoDescription": "آخرین مقالات، نکات و بینش‌ها درباره یادگیری زبان از متالینگوا را بخوانید."
+    "seoDescription": "آخرین مقالات، نکات و بینش‌ها درباره یادگیری زبان از متالینگوا را بخوانید.",
+    "badge": "بلاگ",
+    "heroTitle": "آخرین مقالات و بینش‌ها",
+    "heroSubtitle": "نکات، داستان‌ها و بینش‌ها از جامعه یادگیری زبان ما",
+    "searchPlaceholder": "جستجوی مقالات...",
+    "allCategories": "همه دسته‌بندی‌ها",
+    "allLanguages": "همه زبان‌ها",
+    "showingCount": "نمایش {{count}} مقاله",
+    "noResults": "مقاله‌ای یافت نشد",
+    "clearFilters": "پاک کردن فیلترها",
+    "previous": "قبلی",
+    "next": "بعدی"
   },
   "videos": {
     "seoTitle": "کتابخانه ویدیو - MetaLingo",
-    "seoDescription": "از اساتید متخصص با آموزش‌های ویدیویی و دوره‌های زبان بیاموزید"
+    "seoDescription": "از اساتید متخصص با آموزش‌های ویدیویی و دوره‌های زبان بیاموزید",
+    "badge": "ویدیوها",
+    "heroTitle": "کتابخانه ویدیو",
+    "heroSubtitle": "از اساتید متخصص با ویدیوهای آموزشی و دوره‌های ما بیاموزید",
+    "searchPlaceholder": "جستجوی ویدیوها...",
+    "allCategories": "همه دسته‌بندی‌ها",
+    "allLanguages": "همه زبان‌ها",
+    "categoryTutorial": "آموزشی",
+    "categoryLesson": "درس",
+    "categoryCourse": "دوره",
+    "showingCount": "نمایش {{count}} ویدیو",
+    "noResults": "ویدیویی یافت نشد",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "cta": {
     "startLearning": "شروع یادگیری رایگان",
