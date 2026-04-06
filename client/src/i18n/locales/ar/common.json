@@ -659,7 +659,10 @@
     "back": "رجوع",
     "thankYou": "شكراً لك!",
     "ratingThanks": "ملاحظاتك تساعدنا في التحسين.",
-    "poweredBy": "ميتا لينغوا"
+    "poweredBy": "ميتا لينغوا",
+    "notConnected": "غير متصل",
+    "notConnectedDesc": "يرجى الانتظار حتى يتم الاتصال، ثم حاول مجدداً.",
+    "connectionError": "فشل الاتصال. يرجى المحاولة مرة أخرى."
   },
   "search": {
     "universalSearch": "البحث الشامل",

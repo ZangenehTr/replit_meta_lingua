@@ -973,7 +973,10 @@
     "back": "Back",
     "thankYou": "Thank you!",
     "ratingThanks": "Your feedback helps us improve.",
-    "poweredBy": "MetaLingo"
+    "poweredBy": "MetaLingo",
+    "notConnected": "Not connected",
+    "notConnectedDesc": "Please wait while we connect you, then try again.",
+    "connectionError": "Connection failed. Please try again."
   },
   "search": {
     "universalSearch": "Universal Search",

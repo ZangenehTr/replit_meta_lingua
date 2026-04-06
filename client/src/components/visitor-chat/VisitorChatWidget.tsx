@@ -459,17 +459,30 @@ export function VisitorChatWidget() {
                 </div>
                 <Button
                   onClick={submitContact}
-                  disabled={!contactPhone.trim() || isLoading}
+                  disabled={!contactPhone.trim() || isLoading || sessionLoading}
                   className="w-full h-10 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-sm font-medium"
                   data-testid="button-start-chat"
                 >
-                  {isLoading ? t('visitorChat.connecting', 'Connecting...') : t('visitorChat.startChat', 'Start Chat')}
+                  {(isLoading || sessionLoading) ? t('visitorChat.connecting', 'Connecting...') : t('visitorChat.startChat', 'Start Chat')}
                 </Button>
                 <button
-                  onClick={() => { setChatStep('chat'); addWelcomeMessage(); }}
-                  className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => {
+                    if (sessionLoading) return;
+                    if (!session) {
+                      toast({
+                        title: t('visitorChat.notConnected', 'اتصال برقرار نشد'),
+                        description: t('visitorChat.notConnectedDesc', 'لطفاً صبر کنید تا اتصال برقرار شود، سپس دوباره امتحان کنید.'),
+                        variant: 'destructive'
+                      });
+                      return;
+                    }
+                    setChatStep('chat');
+                    addWelcomeMessage();
+                  }}
+                  disabled={sessionLoading}
+                  className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {t('visitorChat.skipContact', 'Skip and chat anonymously')}
+                  {sessionLoading ? t('visitorChat.connecting', 'Connecting...') : t('visitorChat.skipContact', 'Skip and chat anonymously')}
                 </button>
               </div>
               </div>

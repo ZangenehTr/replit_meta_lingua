@@ -198,7 +198,10 @@
     "back": "بازگشت",
     "thankYou": "ممنون!",
     "ratingThanks": "نظر شما به بهبود خدمات ما کمک می‌کند.",
-    "poweredBy": "MetaLingo"
+    "poweredBy": "MetaLingo",
+    "notConnected": "اتصال برقرار نشد",
+    "notConnectedDesc": "لطفاً صبر کنید تا اتصال برقرار شود، سپس دوباره امتحان کنید.",
+    "connectionError": "اتصال ناموفق بود. لطفاً دوباره امتحان کنید."
   },
   "allTypes": "همه انواع",
   "allLevels": "همه سطوح",
