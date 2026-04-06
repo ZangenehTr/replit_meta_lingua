@@ -484,7 +484,7 @@ export default function AdminClassesPage() {
         {/* Session Details Dialog */}
         {selectedSession && (
           <Dialog open={!!selectedSession} onOpenChange={() => setSelectedSession(null)}>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{selectedSession.courseName || `Course ${selectedSession.courseId}`}</DialogTitle>
               </DialogHeader>
