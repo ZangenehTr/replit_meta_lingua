@@ -240,7 +240,7 @@ export default function AdminProspectsPage() {
   ];
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('callcenter:prospects.title')}</h1>
         <Button onClick={() => setIsAddDialogOpen(true)}>

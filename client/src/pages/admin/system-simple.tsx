@@ -53,7 +53,7 @@ export function AdminSystem() {
   };
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div>
         <h1 className="text-3xl font-bold">{t('admin:system.title')}</h1>
         <p className="text-gray-600">{t('admin:system.description')}</p>

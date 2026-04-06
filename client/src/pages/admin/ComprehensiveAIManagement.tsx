@@ -153,7 +153,7 @@ export function ComprehensiveAIManagement() {
   const StatusIndicator = ({ status }: { status: 'running' | 'offline' }) => status === 'running' ? <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span className="text-green-700 font-medium">Running</span></div> : <div className="flex items-center gap-2"><XCircle className="h-5 w-5 text-red-500" /><span className="text-red-700 font-medium">Offline</span></div>;
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div><h1 className="text-3xl font-bold">AI Services Management</h1><p className="text-muted-foreground">Comprehensive AI model management, training, and monitoring</p></div>
         <div className="flex items-center gap-4">

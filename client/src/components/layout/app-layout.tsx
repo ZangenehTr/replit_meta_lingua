@@ -269,7 +269,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             }`}
             aria-label={t('common:navigation.mainContent', 'محتوای اصلی')}
           >
-            <div className="min-h-full p-4 sm:p-6">
+            <div className="min-h-full">
               {children}
             </div>
           </main>

@@ -91,7 +91,7 @@ export function AdminLinguaQuest() {
   ];
 
   return (
-    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       <div className="flex justify-between items-center">
         <div><h1 className="text-3xl font-bold">{t("admin:navigation.linguaQuest")}</h1><p className="text-muted-foreground mt-2">Manage free learning platform content, analytics, and feedback</p></div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>

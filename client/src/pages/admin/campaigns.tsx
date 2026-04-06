@@ -102,7 +102,7 @@ export default function AdminCampaignsPage() {
   // Real data from API - no mock data
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('admin:campaigns.title')}</h1>
         <Button>

@@ -156,7 +156,7 @@ export default function AdminCallsPage() {
   ];
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{t('callcenter:calls.title')}</h1>
         <Button onClick={() => setIsCallModalOpen(true)} data-testid="button-start-call">

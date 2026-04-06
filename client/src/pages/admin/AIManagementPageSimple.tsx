@@ -10,7 +10,7 @@ export function AIManagementPageSimple() {
   console.log("Simple AI Management page loading...");
   
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t('admin:aiServices.title')}</h1>

@@ -118,7 +118,7 @@ export function AdminPlacementTest() {
   const displayTests = Array.isArray(tests) && tests.length > 0 ? tests : [];
 
   return (
-    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
