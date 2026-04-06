@@ -109,6 +109,29 @@ export function VisitorChatWidget() {
 
   useEffect(() => { scrollToBottom(); }, [messages, adminTyping, aiTyping]);
 
+  useEffect(() => {
+    const isMobile = window.innerWidth < 640;
+    if (isOpen && isMobile) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (scrollY) window.scrollTo(0, -parseInt(scrollY));
+    }
+    return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (scrollY) window.scrollTo(0, -parseInt(scrollY));
+    };
+  }, [isOpen]);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -334,6 +357,7 @@ export function VisitorChatWidget() {
           className={`fixed z-50 flex flex-col overflow-hidden bg-white
             bottom-0 start-0 end-0 top-0 sm:bottom-20 sm:top-auto sm:${isRTL ? 'start-4 sm:end-auto' : 'end-4 sm:start-auto'} sm:w-[380px] sm:h-[560px] sm:rounded-2xl sm:shadow-2xl sm:border border-gray-200`}
           dir={isRTL ? 'rtl' : 'ltr'}
+          onWheel={(e) => e.stopPropagation()}
         >
           <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3 min-w-0">
@@ -396,7 +420,8 @@ export function VisitorChatWidget() {
           )}
 
           {chatStep === 'contact' && (
-            <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              <div className="flex flex-col items-center px-6 py-8 min-h-full justify-center">
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-4">
                 <Sparkles className="h-8 w-8 text-blue-600" />
               </div>
@@ -446,6 +471,7 @@ export function VisitorChatWidget() {
                 >
                   {t('visitorChat.skipContact', 'Skip and chat anonymously')}
                 </button>
+              </div>
               </div>
             </div>
           )}
