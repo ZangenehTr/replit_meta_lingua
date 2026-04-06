@@ -144,7 +144,7 @@ export default function StudentReferralPage() {
 
   return (
     <AppLayout>
-      <div className={`p-6 max-w-4xl mx-auto ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
+      <div className="p-6 w-full">
         <div className="flex items-center gap-4 mb-6">
           <BackButton href="/dashboard" />
           <div>

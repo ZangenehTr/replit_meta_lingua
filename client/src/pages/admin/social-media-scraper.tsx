@@ -137,7 +137,7 @@ export default function SocialMediaScraperAdmin() {
   };
 
   return (
-    <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Social Media Scraper Management</h1>
         <Dialog open={newJobOpen} onOpenChange={setNewJobOpen}>

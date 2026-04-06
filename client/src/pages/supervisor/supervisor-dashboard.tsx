@@ -103,7 +103,7 @@ export default function SupervisorDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
         <div className="max-w-7xl mx-auto animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/3" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">{[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-gray-200 rounded-lg" />)}</div>
@@ -113,7 +113,7 @@ export default function SupervisorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-xl p-6 md:p-8 text-white shadow-xl">

@@ -269,6 +269,7 @@ export function Sidebar({ onNavigate, collapsed = false }: SidebarProps = {}) {
       "Reception": "پذیرش",
       "Scheduling": "برنامه‌ریزی",
       "Mentoring": "منتورینگ",
+      "Private Classes": "کلاس خصوصی",
       "Other": "سایر",
     };
     return labels[section] || section;

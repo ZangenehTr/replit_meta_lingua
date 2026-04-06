@@ -142,7 +142,7 @@ export default function TeacherTests() {
 
   if (testsLoading) {
     return (
-      <div className="flex items-center justify-center h-96" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Loading tests...</p>
@@ -152,7 +152,7 @@ export default function TeacherTests() {
   }
 
   return (
-    <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Test Management</h1>

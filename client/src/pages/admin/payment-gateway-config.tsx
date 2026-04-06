@@ -193,7 +193,7 @@ export default function PaymentGatewayConfigPage() {
   const activeGateway = form.activePaymentGateway;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="w-full p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">{t("admin:paymentGateway.title", "Payment Gateway Configuration")}</h1>
         <p className="text-muted-foreground mt-1">

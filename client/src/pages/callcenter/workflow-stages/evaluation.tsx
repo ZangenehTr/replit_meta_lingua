@@ -101,7 +101,7 @@ function Evaluation() {
   const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
   return (
-    <div className="p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="p-6 space-y-6">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">

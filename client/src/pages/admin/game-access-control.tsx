@@ -131,7 +131,7 @@ export function GameAccessControl() {
   });
 
   return (
-    <div className="container mx-auto py-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full py-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">{t('admin:gameAccess.title', 'Game Access Control')}</h1>
         <p className="text-muted-foreground">{t('admin:gameAccess.description', 'Manage which students can access which games')}</p>

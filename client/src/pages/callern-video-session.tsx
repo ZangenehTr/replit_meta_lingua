@@ -133,7 +133,7 @@ export default function CallernVideoSession() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
-      <div className="container mx-auto p-4 max-w-7xl">
+      <div className="w-full p-4 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
           <Button

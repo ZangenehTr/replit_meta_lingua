@@ -435,7 +435,7 @@ export default function TrialLessonScheduling() {
 
   if (trialLessonsError) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">
         <Card className="max-w-md w-full shadow-xl">
           <CardContent className="p-8 text-center">
             <div className="mb-6">

@@ -64,8 +64,8 @@ export default function TeacherClassesPage() {
   const completedClasses = classes?.filter((cls: TeacherClass) => cls.status === 'completed') || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="w-full px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {t('teacher:classes.title')}

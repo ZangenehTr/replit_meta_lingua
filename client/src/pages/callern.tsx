@@ -539,7 +539,7 @@ export default function CallernSystem() {
         <LifeBuoy className="h-5 w-5" />
       </Button>
       
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="w-full py-6 space-y-6">
         {/* Connection Status */}
         <div className="flex justify-end px-4">
           <div className={`flex items-center gap-2 text-sm ${isConnected ? 'text-green-600' : 'text-red-600'}`}>

@@ -501,9 +501,9 @@ export const SUBSYSTEM_ROUTES: Record<string, string> = {
 
   // Call Center
   "unified_workflow": "/callcenter/unified-workflow",
-  "call_logs": "/admin/calls",
-  "prospects": "/admin/prospects", 
-  "call_campaigns": "/admin/campaigns",
+  "call_logs": "/callcenter/calls",
+  "prospects": "/callcenter/prospects",
+  "call_campaigns": "/callcenter/campaigns",
 
   // Mentor Platform
   "mentor_dashboard": "/dashboard",

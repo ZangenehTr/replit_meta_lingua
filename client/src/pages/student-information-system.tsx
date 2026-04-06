@@ -663,7 +663,7 @@ export default function StudentInformationSystem() {
   };
 
   return (
-    <div className={`container mx-auto p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`w-full p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {selectedStudent ? <StudentDetailView /> : <StudentListView />}
     </div>
   );

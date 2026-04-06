@@ -51,7 +51,7 @@ export default function ReferralLeaderboardPage() {
 
   return (
     <AppLayout>
-      <div className={`p-6 max-w-5xl mx-auto ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
+      <div className="p-6 w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-500" />

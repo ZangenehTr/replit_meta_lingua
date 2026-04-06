@@ -244,7 +244,7 @@ export default function StudentCheckout() {
   if (cartLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto p-6">
+        <div className="w-full p-6">
           <div className="text-center py-12" data-testid="checkout-loading">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-indigo-600" />
             <p className="text-gray-600 dark:text-gray-400">{t('student:checkout.loading')}</p>
@@ -258,7 +258,7 @@ export default function StudentCheckout() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto p-6">
+        <div className="w-full p-6">
           <div className="text-center py-16" data-testid="checkout-empty-cart">
             <Package className="w-16 h-16 mx-auto mb-6 text-gray-400" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
@@ -280,10 +280,10 @@ export default function StudentCheckout() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isRTL ? 'rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isRTL ? 'rtl' : ''}`}>
       {/* Header */}
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4">
+        <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/student/cart">
@@ -338,7 +338,7 @@ export default function StudentCheckout() {
         </div>
       </div>
 
-      <div className="container mx-auto p-6">
+      <div className="w-full p-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2">

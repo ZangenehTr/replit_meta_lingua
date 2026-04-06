@@ -159,7 +159,7 @@ export default function StudentCertificatesPage() {
     d ? new Date(d).toLocaleDateString("fa-IR") : "—";
 
   return (
-    <div className="p-6 space-y-8 max-w-4xl mx-auto" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="p-6 space-y-8 max-w-4xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Award className="h-6 w-6 text-yellow-500" aria-hidden="true" />

@@ -263,7 +263,7 @@ export default function TeacherVideoCourses() {
 
   if (coursesLoading) {
     return (
-      <div className="flex items-center justify-center h-64" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p>Loading courses...</p>
@@ -273,7 +273,7 @@ export default function TeacherVideoCourses() {
   }
 
   return (
-    <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full p-6">
       <h1 className="text-3xl font-bold mb-6">Video Course Management</h1>
 
       <Tabs defaultValue="courses" className="space-y-6">

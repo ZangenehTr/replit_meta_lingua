@@ -182,7 +182,7 @@ export default function TutorProfilePage() {
 
   return (
     <MobileLayout>
-      <div className="container mx-auto py-6 space-y-6 max-w-2xl">
+      <div className="w-full py-6 space-y-6 max-w-2xl">
         {/* Back button */}
         <Link href="/callern">
           <Button variant="ghost" size="sm" className="gap-1">

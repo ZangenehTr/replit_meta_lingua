@@ -147,7 +147,7 @@ export default function StudentVideoCourses() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="pb-16 md:pb-0">
-          <div className="container mx-auto px-4 py-4 md:py-8">
+          <div className="w-full px-4 py-4 md:py-8">
             {/* Breadcrumb - Mobile optimized */}
             <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4">
               <Button
@@ -186,7 +186,7 @@ export default function StudentVideoCourses() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="pb-16 md:pb-0">
-          <div className="container mx-auto px-4 py-4 md:py-8">
+          <div className="w-full px-4 py-4 md:py-8">
             {/* Course Header - Mobile optimized */}
             <div className="mb-3 sm:mb-6">
               <Button
@@ -329,7 +329,7 @@ export default function StudentVideoCourses() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="pb-16 md:pb-0">
-        <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="w-full px-4 py-4 md:py-8">
           {/* Page Header - Mobile optimized */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{t('student:videoCourses.title')}</h1>

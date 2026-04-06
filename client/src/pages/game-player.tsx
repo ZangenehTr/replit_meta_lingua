@@ -217,7 +217,7 @@ export default function GamePlayer() {
 
   if (gameLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -228,7 +228,7 @@ export default function GamePlayer() {
 
   if (!game) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <Card>
           <CardContent className="text-center py-8">
             <h2 className="text-2xl font-bold mb-4">Game Not Found</h2>
@@ -249,7 +249,7 @@ export default function GamePlayer() {
     const accuracy = questions.length > 0 ? Math.round((score / (questions.length * (game.xpReward || 10))) * 100) : 0;
     
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader className="text-center">
             <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -297,7 +297,7 @@ export default function GamePlayer() {
 
   if (!isPlaying) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <Link href="/games">
@@ -362,7 +362,7 @@ export default function GamePlayer() {
 
   if (questionsLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="animate-pulse">
             <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
@@ -377,7 +377,7 @@ export default function GamePlayer() {
   const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="max-w-2xl mx-auto">
         {/* Game Header */}
         <div className="flex items-center justify-between mb-6">

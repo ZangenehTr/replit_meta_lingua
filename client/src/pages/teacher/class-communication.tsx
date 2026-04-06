@@ -178,7 +178,7 @@ export default function ClassCommunication() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="h-[calc(100vh-8rem)] flex flex-col">
       {/* Class Header */}
       <Card className="mb-4">
         <CardHeader>

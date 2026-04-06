@@ -374,7 +374,7 @@ export default function EnhancedTeacherCallernSystem() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
       {/* Incoming Call Handler */}
       <TeacherIncomingCall />
       

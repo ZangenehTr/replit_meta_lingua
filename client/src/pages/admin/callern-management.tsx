@@ -105,7 +105,7 @@ export function CallernManagement() {
   const normalizedRole = user?.role?.toLowerCase();
   if (user && !["admin", "supervisor"].includes(normalizedRole)) {
     return (
-      <div className="min-h-screen flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md text-center"><CardHeader><CardTitle className="text-red-600">{t("admin:callernManagement.accessDenied")}</CardTitle><CardDescription>{t("admin:callernManagement.adminSupervisorOnly")}</CardDescription></CardHeader>
           <CardContent><Button variant="outline" className="mt-4" onClick={() => (window.location.href = "/login")}>{t("admin:callernManagement.switchAccount")}</Button></CardContent>
         </Card>
@@ -136,7 +136,7 @@ export function CallernManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div><h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t("admin:callernManagement.title")}</h1><p className="text-muted-foreground mt-2">{t("admin:callernManagement.subtitle")}</p></div>
         <div className="flex flex-wrap items-center gap-2">

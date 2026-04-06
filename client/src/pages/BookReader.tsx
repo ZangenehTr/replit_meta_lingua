@@ -195,7 +195,7 @@ export default function BookReader() {
   if (authLoading || bookLoading || orderLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Skeleton className="h-6 sm:h-8 w-24 sm:w-32 mb-3 sm:mb-4" />
           <Card>
             <CardContent className="p-4 sm:p-6 md:p-8">
@@ -219,7 +219,7 @@ export default function BookReader() {
   if (bookError) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
@@ -243,7 +243,7 @@ export default function BookReader() {
   if (!book) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
@@ -268,7 +268,7 @@ export default function BookReader() {
   if (!hasAccess()) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
@@ -314,7 +314,7 @@ export default function BookReader() {
   if (error) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
@@ -361,7 +361,7 @@ export default function BookReader() {
   if (downloadMutation.isPending || !pdfUrl) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <Button
             variant="ghost"
             onClick={handleBackNavigation}
@@ -403,7 +403,7 @@ export default function BookReader() {
     <div className="min-h-screen bg-background flex flex-col" data-testid="book-reader">
       {/* Header - only show on non-fullscreen */}
       <div className="border-b bg-background/95 backdrop-blur flex-shrink-0">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 md:py-5">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 md:py-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <Button

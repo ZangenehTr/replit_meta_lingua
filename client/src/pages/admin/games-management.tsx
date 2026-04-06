@@ -489,7 +489,7 @@ export default function EnhancedGamesManagement() {
   };
 
   return (
-    <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Games Management</h1>

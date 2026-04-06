@@ -258,7 +258,7 @@ export default function TestQuestions() {
   };
 
   return (
-    <div className="container mx-auto p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full p-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Test Questions</h1>

@@ -229,14 +229,14 @@ export default function TeacherDashboard() {
     ((stats.performanceData[2].earnings - stats.performanceData[0].earnings) / stats.performanceData[0].earnings * 100).toFixed(1) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Professional Mobile Header */}
       <motion.header 
         className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-blue-100 shadow-sm"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="w-full px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -281,7 +281,7 @@ export default function TeacherDashboard() {
       </motion.header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-4 pb-20 space-y-4">
+      <div className="w-full px-4 py-4 pb-20 space-y-4">
         {/* Key Performance Metrics */}
         <motion.div 
           className="grid grid-cols-2 md:grid-cols-4 gap-3"

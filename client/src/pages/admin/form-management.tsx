@@ -306,7 +306,7 @@ export default function FormManagement() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading forms...</p>
@@ -316,7 +316,7 @@ export default function FormManagement() {
   }
 
   return (
-    <div className="p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'} data-testid="form-management-page">
+    <div className="p-6 space-y-6" data-testid="form-management-page">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Form Management</h1>

@@ -259,7 +259,7 @@ export default function MetaLinguaComplete() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6" data-testid="meta-lingua-complete">
+    <div className="w-full p-6 space-y-6" data-testid="meta-lingua-complete">
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           MetaLingo Implementation Complete

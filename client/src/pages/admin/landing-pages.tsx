@@ -158,7 +158,7 @@ export default function AdminLandingPages() {
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-7xl mx-auto" dir="ltr">
+      <div className="p-6 w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Globe className="h-6 w-6 text-primary" />

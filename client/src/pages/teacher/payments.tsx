@@ -141,14 +141,14 @@ export default function TeacherPayments() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-64" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex items-center justify-center min-h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{t('teacher.payments')}</h1>

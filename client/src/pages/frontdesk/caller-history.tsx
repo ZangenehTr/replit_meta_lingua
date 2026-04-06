@@ -420,7 +420,7 @@ export default function CallerHistoryDashboard() {
   };
 
   return (
-    <div className={cn("flex h-screen bg-gray-50 dark:bg-gray-900", isRTL && "rtl")} data-testid="caller-history-dashboard" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={cn("flex h-screen bg-gray-50 dark:bg-gray-900")} data-testid="caller-history-dashboard">
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}

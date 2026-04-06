@@ -413,7 +413,7 @@ export default function ComprehensiveCRMLeads() {
   };
 
   return (
-    <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

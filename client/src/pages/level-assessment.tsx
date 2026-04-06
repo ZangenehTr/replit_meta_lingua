@@ -148,7 +148,7 @@ export default function LevelAssessment() {
   if (isCompleted) {
     return (
       <AppLayout>
-        <div className="max-w-2xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="w-full space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <Card className="text-center">
             <CardHeader>
               <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -207,7 +207,7 @@ export default function LevelAssessment() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="w-full space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

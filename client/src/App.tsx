@@ -59,10 +59,6 @@ import ApiSmokeTestPage from '@/pages/admin/api-smoke-test';
 import CampaignManagementPage from "@/pages/admin/campaign-management";
 import WebsiteBuilderPage from "@/pages/admin/website-builder";
 import ReviewModerationPage from "@/pages/admin/review-moderation";
-import AdminLeadsPage from "@/pages/admin/leads";
-import AdminCampaignsPage from "@/pages/admin/campaigns";
-import AdminProspectsPage from "@/pages/admin/prospects";
-import AdminCallsPage from "@/pages/admin/calls";
 import SocialMediaScraperAdmin from "@/pages/admin/social-media-scraper";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
@@ -160,6 +156,7 @@ import MentorProgressPage from "@/pages/mentor/progress";
 
 // Call Center pages
 import CallLogsPage from "@/pages/callcenter/calls";
+import LeadsPage from "@/pages/callcenter/leads";
 import ProspectsPage from "@/pages/callcenter/prospects";
 import CampaignsPage from "@/pages/callcenter/campaigns";
 
@@ -368,14 +365,10 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/leads">
-        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
-          <AdminLeadsPage />
-        </RoleProtectedRoute>
+        <Redirect to="/callcenter/leads" />
       </Route>
       <Route path="/admin/campaigns">
-        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
-          <AdminCampaignsPage />
-        </RoleProtectedRoute>
+        <Redirect to="/callcenter/campaigns" />
       </Route>
       <Route path="/admin/social-media-scraper">
         <RoleProtectedRoute allowedRoles={["admin"]}>
@@ -383,14 +376,10 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/prospects">
-        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
-          <AdminProspectsPage />
-        </RoleProtectedRoute>
+        <Redirect to="/callcenter/prospects" />
       </Route>
       <Route path="/admin/calls">
-        <RoleProtectedRoute allowedRoles={["admin", "call_center"]}>
-          <AdminCallsPage />
-        </RoleProtectedRoute>
+        <Redirect to="/callcenter/calls" />
       </Route>
       <Route path="/admin/settings">
         <RoleProtectedRoute allowedRoles={["admin"]}>
@@ -1141,6 +1130,11 @@ function Router() {
       <Route path="/callcenter/campaigns">
         <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
           <CampaignsPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/callcenter/leads">
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
+          <LeadsPage />
         </RoleProtectedRoute>
       </Route>
 

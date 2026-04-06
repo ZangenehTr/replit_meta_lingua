@@ -192,7 +192,7 @@ export default function StudentOrderHistory() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto p-6">
+        <div className="w-full p-6">
           <div className="text-center py-12" data-testid="orders-loading">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-indigo-600" />
             <p className="text-gray-600 dark:text-gray-400">{t('student:orders.loading')}</p>
@@ -206,7 +206,7 @@ export default function StudentOrderHistory() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto p-6">
+        <div className="w-full p-6">
           <div className="text-center py-12" data-testid="orders-error">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -225,10 +225,10 @@ export default function StudentOrderHistory() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isRTL ? 'rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isRTL ? 'rtl' : ''}`}>
       {/* Header */}
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4">
+        <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/student/dashboard">
@@ -261,7 +261,7 @@ export default function StudentOrderHistory() {
         </div>
       </div>
 
-      <div className="container mx-auto p-6">
+      <div className="w-full p-6">
         {/* Filters */}
         <Card className="shadow-lg border-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm mb-6">
           <CardHeader>

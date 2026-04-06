@@ -1459,7 +1459,7 @@ export default function MSTPage() {
   // ---------- Render
   if (testPhase === "intro") {
     return (
-      <div className="container mx-auto p-4 sm:p-6 max-w-4xl" style={mstStyle}>
+      <div className="w-full p-4 sm:p-6 max-w-4xl" style={mstStyle}>
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4 font-medium transition-colors"
@@ -1499,7 +1499,7 @@ export default function MSTPage() {
     if (!testResults) {
       return (
         <div
-          className="container mx-auto p-4 sm:p-6 max-w-4xl"
+          className="w-full p-4 sm:p-6 max-w-4xl"
           style={mstStyle}
         >
           <Card>
@@ -1690,7 +1690,7 @@ export default function MSTPage() {
     };
 
     return (
-      <div className="container mx-auto p-4 sm:p-6 max-w-4xl" style={mstStyle}>
+      <div className="w-full p-4 sm:p-6 max-w-4xl" style={mstStyle}>
         <Card className="border-0 shadow-lg">
           <CardHeader className="text-center pb-4">
             <div className="flex justify-center mb-4">
@@ -1810,7 +1810,7 @@ export default function MSTPage() {
   return (
     <div
       key={`mst-${currentItem?.skill}-${currentStage}-${currentItem?.id}`}
-      className="container mx-auto p-4 sm:p-6 max-w-4xl"
+      className="w-full p-4 sm:p-6 max-w-4xl"
       style={mstStyle}
     >
       {isProcessingSubmission && (

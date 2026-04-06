@@ -307,7 +307,7 @@ export default function UnifiedCallCenterWorkflow() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>

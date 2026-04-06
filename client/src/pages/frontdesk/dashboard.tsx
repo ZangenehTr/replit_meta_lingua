@@ -102,7 +102,7 @@ export default function FrontDeskDashboard() {
   const analyticsInteractions = [...(Array.isArray(operations) ? operations.map((op: FrontDeskOperation) => ({ id: op.id, type: "walk_in" as const, customerName: op.visitorName, interactionTime: op.visitedAt, status: op.status, outcome: op.status, urgencyLevel: op.priority || "medium", convertedToLead: op.convertedToLead, convertedToStudent: op.convertedToStudent })) : []), ...(Array.isArray(calls) ? calls.map((c: PhoneCallLog) => ({ id: c.id, type: "phone_call" as const, customerName: c.callerName, interactionTime: c.callTime, status: c.callResult, outcome: c.callResult, urgencyLevel: c.urgencyLevel, convertedToLead: false, convertedToStudent: false })) : [])];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? 'rtl' : 'ltr'} data-testid="front-desk-dashboard">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" data-testid="front-desk-dashboard">
       {/* Sticky Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8">

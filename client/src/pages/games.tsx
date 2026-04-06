@@ -464,7 +464,7 @@ export default function GamesPage() {
   };
 
   return (
-    <div className={`container mx-auto px-4 py-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`w-full px-4 py-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">{t('student:games.title')}</h1>
         <p className="text-gray-600">

@@ -193,7 +193,7 @@ export default function AIServicesManagement() {
   const isOllamaReady = ollamaStatus?.isInstalled && ollamaStatus?.isRunning;
 
   return (
-    <div className="p-4 sm:p-6 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Ollama Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

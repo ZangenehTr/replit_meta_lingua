@@ -110,7 +110,7 @@ export default function StudentOrderConfirmation() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto p-6">
+        <div className="w-full p-6">
           <div className="text-center py-12" data-testid="confirmation-loading">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-green-600" />
             <p className="text-gray-600 dark:text-gray-400">{t('student:orderConfirmation.loading')}</p>
@@ -124,7 +124,7 @@ export default function StudentOrderConfirmation() {
   if (error || !order) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto p-6">
+        <div className="w-full p-6">
           <div className="text-center py-12" data-testid="confirmation-error">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -154,10 +154,10 @@ export default function StudentOrderConfirmation() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isRTL ? 'rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isRTL ? 'rtl' : ''}`}>
       {/* Header */}
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-6 py-4">
+        <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/student/dashboard">
@@ -177,7 +177,7 @@ export default function StudentOrderConfirmation() {
         </div>
       </div>
 
-      <div className="container mx-auto p-6">
+      <div className="w-full p-6">
         {/* Success Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

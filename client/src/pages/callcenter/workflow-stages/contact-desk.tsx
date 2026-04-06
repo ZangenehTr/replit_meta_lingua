@@ -118,7 +118,7 @@ function ContactDesk({ onNavigateToNewIntake }: ContactDeskProps) {
   const contactSummaries = normalizeLeadsToSummaries(contacts);
 
   return (
-    <div className="p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="p-6 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

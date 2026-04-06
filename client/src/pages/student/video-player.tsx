@@ -295,7 +295,7 @@ export default function StudentVideoPlayer() {
   
   if (!video) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">Video not found</p>
@@ -309,7 +309,7 @@ export default function StudentVideoPlayer() {
   }
   
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="mb-4">
         <Link href="/courses">
           <Button variant="ghost" size="sm">

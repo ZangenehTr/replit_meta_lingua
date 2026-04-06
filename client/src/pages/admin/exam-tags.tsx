@@ -133,7 +133,7 @@ export default function AdminExamTagsPage() {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="w-full p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
