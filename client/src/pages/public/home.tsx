@@ -130,43 +130,114 @@ export default function PublicHome() {
       {/* ——— HERO ——— */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50" dir="rtl">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 right-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
-          <div className="absolute bottom-10 left-10 w-64 h-64 bg-cyan-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
+          <div className="absolute top-16 right-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
+          <div className="absolute bottom-0 left-10 w-64 h-64 bg-cyan-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
         </div>
-        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-28 lg:px-8">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 border border-blue-200 mb-6">
-              <Zap className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">هوش مصنوعی + تدریس زنده + گیمیفیکیشن</span>
+        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:py-14 lg:py-16 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+
+            {/* ——— Text column (leading side in RTL = right) ——— */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 border border-blue-200 mb-5">
+                <Zap className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-700">هوش مصنوعی + تدریس زنده + گیمیفیکیشن</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-gray-900 mb-5 leading-tight">
+                <span className="block bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
+                  {hc.heroHeadline || 'زبان انگلیسی رو هوشمند یاد بگیر'}
+                </span>
+              </h1>
+
+              <p className="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-xl">
+                {hc.heroSubheadline || 'برای IELTS، TOEFL، GRE یا گفتگوی روان — MetaLingo با AI، تدریس زنده، و گیمیفیکیشن کنارته.'}
+              </p>
+
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-lg px-8 h-14 shadow-lg shadow-blue-500/30"
+                >
+                  <Link href="/auth?tab=register" className="flex items-center gap-2">
+                    {hc.ctaPrimary || 'همین حالا شروع کن'}
+                    <ArrowLeft className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="text-lg px-8 h-14">
+                  <Link href="/courses" className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    {hc.ctaSecondary || 'تدریس‌ها را ببین'}
+                  </Link>
+                </Button>
+              </div>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-gray-900 mb-6 leading-tight">
-              <span className="block bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                {hc.heroHeadline || 'زبان انگلیسی رو هوشمند یاد بگیر'}
-              </span>
-            </h1>
+            {/* ——— Visual illustration (trailing side in RTL = left) ——— */}
+            <div className="hidden lg:block relative h-96" aria-hidden="true">
+              {/* Live session card */}
+              <div className="absolute top-0 left-8 w-64 bg-white rounded-2xl shadow-xl border border-blue-100 p-4 z-10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-base font-bold shrink-0">
+                    س
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 truncate">جلسه زنده با CallerN</p>
+                    <p className="text-[11px] text-gray-500">استاد سارا — آنلاین</p>
+                  </div>
+                  <span className="flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute h-2 w-2 rounded-full bg-green-400 opacity-75" />
+                    <span className="relative h-2 w-2 rounded-full bg-green-500" />
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-blue-600 rounded-lg flex items-center justify-center h-8 text-white text-xs font-medium">
+                    <Video className="h-3 w-3 me-1" />
+                    ورود به جلسه
+                  </div>
+                </div>
+              </div>
 
-            <p className="mx-auto max-w-2xl text-lg sm:text-xl text-gray-600 mb-10 leading-relaxed">
-              {hc.heroSubheadline || 'برای IELTS، TOEFL، GRE یا گفتگوی روان — MetaLingo با AI، تدریس زنده، و گیمیفیکیشن کنارته.'}
-            </p>
+              {/* AI feedback bubble */}
+              <div className="absolute top-32 right-4 w-56 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl shadow-xl p-3 z-20 text-white">
+                <div className="flex items-start gap-2">
+                  <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                    <Brain className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold mb-0.5">Lexi AI</p>
+                    <p className="text-[11px] leading-snug opacity-90">آفرین! تلفظت ۹۲٪ دقیق بود. روی «th» بیشتر تمرین کن.</p>
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center items-center">
-              <Button
-                asChild
-                size="lg"
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-lg px-8 h-14 shadow-lg shadow-blue-500/30"
-              >
-                <Link href="/auth?tab=register" className="flex items-center gap-2">
-                  {hc.ctaPrimary || 'همین حالا شروع کن'}
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 h-14">
-                <Link href="/courses" className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  {hc.ctaSecondary || 'تدریس‌ها را ببین'}
-                </Link>
-              </Button>
+              {/* LinguaQuest XP card */}
+              <div className="absolute bottom-4 left-4 w-60 bg-white rounded-2xl shadow-xl border border-amber-100 p-4 z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  <span className="text-sm font-bold text-gray-900">LinguaQuest</span>
+                  <span className="ms-auto text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">سطح ۷</span>
+                </div>
+                <div className="mb-1.5">
+                  <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                    <span>۱٬۲۵۰ XP</span>
+                    <span>تا سطح بعد: ۲۵۰ XP</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full w-4/5 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full" />
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  {['🔥', '⭐', '🎯', '🏆', '💡'].map((emoji, i) => (
+                    <span key={i} className="text-base">{emoji}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* IELTS badge floating */}
+              <div className="absolute top-6 right-20 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-30">
+                IELTS · TOEFL · GRE
+              </div>
             </div>
           </div>
         </div>

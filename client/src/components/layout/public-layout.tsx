@@ -162,23 +162,23 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <DropdownMenuContent align="start" className="w-56">
                 <DropdownMenuItem onSelect={() => setLocation('/courses/ielts')} className="cursor-pointer" data-testid="link-program-ielts">
                   <Star className="h-4 w-4 me-2 text-blue-500" />
-                  IELTS Preparation
+                  {t('nav.ielts')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setLocation('/courses/toefl')} className="cursor-pointer" data-testid="link-program-toefl">
                   <TrendingUp className="h-4 w-4 me-2 text-cyan-500" />
-                  TOEFL iBT
+                  {t('nav.toefl')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setLocation('/courses/gre')} className="cursor-pointer" data-testid="link-program-gre">
                   <FileCheck className="h-4 w-4 me-2 text-indigo-500" />
-                  GRE Preparation
+                  {t('nav.gre')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setLocation('/courses/pte')} className="cursor-pointer" data-testid="link-program-pte">
                   <BookOpen className="h-4 w-4 me-2 text-violet-500" />
-                  PTE Academic
+                  {t('nav.pte')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setLocation('/courses/conversation')} className="cursor-pointer" data-testid="link-program-conversation">
                   <MessageSquare className="h-4 w-4 me-2 text-green-500" />
-                  General Conversation
+                  {t('nav.conversation')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -312,12 +312,12 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                       </p>
                       <div className="flex flex-col gap-1">
                         {[
-                          { href: '/courses/ielts', label: 'IELTS Preparation', icon: Star },
-                          { href: '/courses/toefl', label: 'TOEFL iBT', icon: TrendingUp },
-                          { href: '/courses/gre', label: 'GRE Preparation', icon: FileCheck },
-                          { href: '/courses/pte', label: 'PTE Academic', icon: BookOpen },
-                          { href: '/courses/conversation', label: 'General Conversation', icon: MessageSquare },
-                        ].map(({ href, label, icon: Icon }) => (
+                          { href: '/courses/ielts', labelKey: 'nav.ielts', icon: Star },
+                          { href: '/courses/toefl', labelKey: 'nav.toefl', icon: TrendingUp },
+                          { href: '/courses/gre', labelKey: 'nav.gre', icon: FileCheck },
+                          { href: '/courses/pte', labelKey: 'nav.pte', icon: BookOpen },
+                          { href: '/courses/conversation', labelKey: 'nav.conversation', icon: MessageSquare },
+                        ].map(({ href, labelKey, icon: Icon }) => (
                           <Link
                             key={href}
                             href={href}
@@ -329,7 +329,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                             }`}
                           >
                             <Icon className="h-4 w-4" />
-                            {label}
+                            {t(labelKey)}
                           </Link>
                         ))}
                       </div>
@@ -410,8 +410,8 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         </nav>
       </header>
 
-      {/* Breadcrumbs */}
-      {breadcrumbs.length > 0 && (
+      {/* Breadcrumbs — hidden on the home page */}
+      {breadcrumbs.length > 0 && location !== '/' && (
         <div className="border-b bg-white/50 backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 py-3 lg:px-8">
             <Breadcrumb>
@@ -478,15 +478,16 @@ export function PublicLayout({ children }: PublicLayoutProps) {
                 {socialLinks.map((social) => {
                   const Icon = social.icon;
                   return (
-                    <a
+                    <button
                       key={social.name}
-                      href={social.href}
+                      type="button"
                       className="p-2 rounded-lg bg-accent hover:bg-primary/10 transition-colors"
                       aria-label={social.name}
+                      title={social.name}
                       data-testid={`link-social-${social.name.toLowerCase()}`}
                     >
                       <Icon className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-                    </a>
+                    </button>
                   );
                 })}
               </div>

@@ -12,7 +12,12 @@
     "blog": "المدونة",
     "videos": "الفيديوهات",
     "about": "عن",
-    "contact": "اتصل"
+    "contact": "اتصل",
+    "ielts": "تحضير آيلتس",
+    "toefl": "توفل iBT",
+    "gre": "تحضير GRE",
+    "pte": "أكاديمية PTE",
+    "conversation": "محادثة عامة"
   },
   "breadcrumb": {
     "home": "الرئيسية",

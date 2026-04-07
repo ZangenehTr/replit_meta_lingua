@@ -9,7 +9,12 @@
     "blog": "Blog",
     "videos": "Videos",
     "about": "About",
-    "contact": "Contact"
+    "contact": "Contact",
+    "ielts": "IELTS Preparation",
+    "toefl": "TOEFL iBT",
+    "gre": "GRE Preparation",
+    "pte": "PTE Academic",
+    "conversation": "General Conversation"
   },
   "breadcrumb": {
     "home": "Home",
