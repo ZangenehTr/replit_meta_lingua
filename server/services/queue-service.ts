@@ -7,10 +7,24 @@ const redisConfig = {
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
+  lazyConnect: true,
+  retryStrategy: (times: number) => {
+    // Exponential backoff: 2s, 4s, 8s … capped at 60s
+    return Math.min(times * 2000, 60000);
+  },
+  reconnectOnError: () => false,
 };
 
-// Create Redis connection
-export const redisConnection = new IORedis(redisConfig);
+// Create Redis connection — suppress per-error console spam; log once per 60s max
+export const redisConnection = new IORedis(redisConfig as any);
+let _lastRedisLog = 0;
+redisConnection.on('error', (err: Error) => {
+  const now = Date.now();
+  if (now - _lastRedisLog > 60_000) {
+    console.warn('[Redis] Not available (queues disabled):', err.message);
+    _lastRedisLog = now;
+  }
+});
 
 // Queue definitions
 export const contentGenerationQueue = new Queue('content-generation', {
