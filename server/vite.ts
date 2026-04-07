@@ -25,9 +25,23 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  // When running behind the Replit proxy, HMR WebSocket must connect via the
+  // public domain on port 443 (WSS).  Without this, the fallback URL becomes
+  // "wss://localhost:undefined" — an invalid URL that throws a SyntaxError in
+  // the browser and causes the white-page / reconnect loop.
+  const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+  const hmrConfig = replitDomain
+    ? {
+        server,
+        host: replitDomain,
+        clientPort: 443,
+        protocol: 'wss' as const,
+      }
+    : { server };
+
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server },
+    hmr: hmrConfig,
     allowedHosts: true as const,
   };
 
@@ -45,23 +59,17 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
-  // Keep Vite HMR WebSocket alive through Replit's 30-second proxy timeout.
-  // Access the underlying ws.Server and send pings every 20 seconds.
-  try {
-    // Vite ≥5 exposes the WS server on vite.hot.clients (internal)
-    const wss = (vite as any)._wss || (vite as any).ws?.wss;
-    if (wss && typeof wss.clients !== 'undefined') {
-      setInterval(() => {
-        wss.clients.forEach((client: any) => {
-          if (client.readyState === 1 /* OPEN */) {
-            client.ping();
-          }
-        });
-      }, 20_000);
+  // Keep Vite HMR WebSocket alive through Replit's 30-second proxy idle timeout.
+  // vite.hot.send() broadcasts a data frame to every connected HMR client —
+  // any data frame resets the proxy idle timer, so we send one every 20 s.
+  // The Vite client in the browser silently ignores the unknown "ping" type.
+  setInterval(() => {
+    try {
+      vite.hot.send({ type: 'custom', event: '__keepalive' });
+    } catch {
+      // non-fatal — safe to ignore if no clients connected
     }
-  } catch {
-    // non-fatal — pings just won't fire on this Vite version
-  }
+  }, 20_000);
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
