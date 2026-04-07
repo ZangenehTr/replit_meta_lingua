@@ -742,12 +742,7 @@ export const translations: Record<Language, Translations> = {
     testResults: "Test Results",
 
     // Admin-specific translations
-    goodMorning: "Good Morning",
-    goodAfternoon: "Good Afternoon",
-    goodEvening: "Good Evening",
-    totalStudents: "Total Students",
     totalTeachers: "Total Teachers",
-    active: "Active",
     total: "Total",
     revenueAnalytics: "Revenue Analytics",
     platformMetrics: "Platform Metrics",
@@ -756,7 +751,6 @@ export const translations: Record<Language, Translations> = {
     teacherPerformance: "Teacher Performance",
     courseDistribution: "Course Distribution",
     healthy: "Healthy",
-    warning: "Warning",
     critical: "Critical",
     database: "Database",
     server: "Server",
@@ -793,8 +787,6 @@ export const translations: Record<Language, Translations> = {
     commissions: "Commissions",
     refunds: "Refunds",
     coursePayments: "Course Payments",
-    teacherPayouts: "Teacher Payouts",
-    platformCommission: "Platform Commission",
     manualTransactions: "Manual Transactions",
     
     // Settings categories
@@ -1130,12 +1122,7 @@ export const translations: Record<Language, Translations> = {
     testResults: "نتایج آزمون",
 
     // Admin-specific translations
-    goodMorning: "صبح بخیر",
-    goodAfternoon: "عصر بخیر",
-    goodEvening: "شب بخیر",
-    totalStudents: "کل دانش‌آموزان",
     totalTeachers: "کل معلمان",
-    active: "فعال",
     total: "کل",
     revenueAnalytics: "تحلیل درآمد",
     platformMetrics: "معیارهای پلتفرم",
@@ -1144,7 +1131,6 @@ export const translations: Record<Language, Translations> = {
     teacherPerformance: "عملکرد معلمان",
     courseDistribution: "توزیع دوره‌ها",
     healthy: "سالم",
-    warning: "هشدار",
     critical: "بحرانی",
     database: "پایگاه داده",
     server: "سرور",
@@ -1181,8 +1167,6 @@ export const translations: Record<Language, Translations> = {
     commissions: "کمیسیون‌ها",
     refunds: "بازپرداخت‌ها",
     coursePayments: "پرداخت‌های دوره",
-    teacherPayouts: "پرداخت‌های معلمان",
-    platformCommission: "کمیسیون پلتفرم",
     manualTransactions: "تراکنش‌های دستی",
     
     // Settings categories
@@ -1483,12 +1467,7 @@ export const translations: Record<Language, Translations> = {
     testResults: "نتائج الاختبار",
 
     // Admin-specific translations
-    goodMorning: "صباح الخير",
-    goodAfternoon: "مساء الخير",
-    goodEvening: "مساء الخير",
-    totalStudents: "إجمالي الطلاب",
     totalTeachers: "إجمالي المعلمين",
-    active: "نشط",
     total: "المجموع",
     revenueAnalytics: "تحليل الإيرادات",
     platformMetrics: "مقاييس المنصة",
@@ -1497,7 +1476,6 @@ export const translations: Record<Language, Translations> = {
     teacherPerformance: "أداء المعلمين",
     courseDistribution: "توزيع الدورات",
     healthy: "صحي",
-    warning: "تحذير",
     critical: "حرج",
     database: "قاعدة البيانات",
     server: "الخادم",
@@ -1534,8 +1512,6 @@ export const translations: Record<Language, Translations> = {
     commissions: "العمولات",
     refunds: "المبالغ المستردة",
     coursePayments: "مدفوعات الدورات",
-    teacherPayouts: "مدفوعات المعلمين",
-    platformCommission: "عمولة المنصة",
     manualTransactions: "المعاملات اليدوية",
     
     // Settings categories

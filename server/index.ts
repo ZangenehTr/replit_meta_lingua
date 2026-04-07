@@ -709,8 +709,15 @@ server.listen({
     }
   })();
 
-  // Non-blocking: Start SMS Reminder Worker
+  // Non-blocking: BullMQ workers — only when Redis is reachable
   (async () => {
+    const { redisAvailable } = await import('./services/queue-service.js');
+    if (!redisAvailable) {
+      console.log('ℹ️  Redis unavailable — BullMQ workers skipped (queues run in no-op mode)');
+      return;
+    }
+
+    // SMS Reminder Worker
     try {
       const { smsReminderWorker } = await import('./workers/sms-reminder.worker.js');
       smsReminderWorker.start();
@@ -718,20 +725,16 @@ server.listen({
     } catch (error) {
       console.error('⚠️  Failed to initialize SMS Reminder Worker:', error);
     }
-  })();
 
-  // Non-blocking: Start CMS Adaptive Content Worker (adaptive-content-generation queue)
-  (async () => {
+    // CMS Adaptive Content Worker
     try {
       await import('./workers/cms-adaptive-content.worker.js');
       console.log('✅ CMS Adaptive Content Worker initialized (adaptive-content-generation queue)');
     } catch (error) {
       console.error('⚠️  Failed to initialize CMS Adaptive Content Worker:', error);
     }
-  })();
 
-  // Non-blocking: Start CMS Content Generation Worker
-  (async () => {
+    // CMS Content Generation Worker
     try {
       await import('./workers/cms-content.worker.js');
       console.log('✅ CMS Content Generation Worker initialized');

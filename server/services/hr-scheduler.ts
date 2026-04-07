@@ -12,7 +12,7 @@ import { eq, and } from "drizzle-orm";
 import { employees, performanceReviews, performanceScores, type InsertPerformanceReview, type InsertPerformanceScore } from "@shared/schema";
 import { computeEmployeeMetrics } from "./hr-performance-aggregator";
 import { generateAiNarrative, type AiNarrativeResult } from "./hr-ai-narratives";
-import { redisConnection } from "./queue-service";
+import { redisConnection, redisAvailable } from "./queue-service";
 
 const QUEUE_NAME = "hr-performance-reviews";
 
@@ -200,6 +200,10 @@ function setupFallbackScheduler(): void {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function startHrScheduler(): Promise<void> {
+  if (!redisAvailable) {
+    setupFallbackScheduler();
+    return;
+  }
   try {
     await setupBullMQScheduler();
   } catch (err: unknown) {

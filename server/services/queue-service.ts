@@ -1,129 +1,121 @@
-import { Queue, Worker, QueueEvents } from 'bullmq';
+import { Queue, QueueEvents } from 'bullmq';
 import IORedis from 'ioredis';
+import net from 'net';
 
-// Redis connection configuration
+const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379');
+
+// ─── TCP probe: is Redis port open? ────────────────────────────────────────
+function probeRedis(host: string, port: number, timeoutMs = 800): Promise<boolean> {
+  return new Promise((resolve) => {
+    const sock = net.createConnection({ host, port });
+    const done = (ok: boolean) => { sock.destroy(); resolve(ok); };
+    sock.setTimeout(timeoutMs);
+    sock.on('connect', () => done(true));
+    sock.on('timeout', () => done(false));
+    sock.on('error', () => done(false));
+  });
+}
+
+export const redisAvailable: boolean = await probeRedis(REDIS_HOST, REDIS_PORT);
+
+if (!redisAvailable) {
+  console.warn('[Queue] Redis not reachable — BullMQ queues and workers are disabled in this environment.');
+}
+
+// ─── Shared IORedis connection (only used when Redis is available) ──────────
 const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+  host: REDIS_HOST,
+  port: REDIS_PORT,
   password: process.env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
   lazyConnect: true,
-  retryStrategy: (times: number) => {
-    // Exponential backoff: 2s, 4s, 8s … capped at 60s
-    return Math.min(times * 2000, 60000);
-  },
-  reconnectOnError: () => false,
+  retryStrategy: (times: number) => Math.min(times * 3000, 60_000),
+  enableOfflineQueue: false,
 };
 
-// Create Redis connection — suppress per-error console spam; log once per 60s max
-export const redisConnection = new IORedis(redisConfig as any);
-let _lastRedisLog = 0;
-redisConnection.on('error', (err: Error) => {
-  const now = Date.now();
-  if (now - _lastRedisLog > 60_000) {
-    console.warn('[Redis] Not available (queues disabled):', err.message);
-    _lastRedisLog = now;
+let _realConnection: IORedis | null = null;
+
+function getConnection(): IORedis {
+  if (!_realConnection) {
+    _realConnection = new IORedis(redisConfig as any);
+    _realConnection.on('error', () => {});
   }
-});
+  return _realConnection;
+}
 
-// Queue definitions
-export const contentGenerationQueue = new Queue('content-generation', {
-  connection: redisConnection,
-  defaultJobOptions: {
-    removeOnComplete: {
-      count: 100, // Keep last 100 completed jobs
-      age: 24 * 3600, // Keep completed jobs for 24 hours
-    },
-    removeOnFail: {
-      count: 500, // Keep last 500 failed jobs
-      age: 7 * 24 * 3600, // Keep failed jobs for 7 days
-    },
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-  },
-});
+export const redisConnection: IORedis = redisAvailable
+  ? getConnection()
+  : (new Proxy({}, { get: () => () => {} }) as any);
 
-export const irtProcessingQueue = new Queue('irt-processing', {
-  connection: redisConnection,
-  defaultJobOptions: {
-    removeOnComplete: true,
-    removeOnFail: false,
-    attempts: 3,
-  },
-});
+// ─── Stub queue: silently drops jobs when Redis is unavailable ─────────────
+function makeStubQueue(name: string) {
+  return {
+    name,
+    add: async () => { console.warn(`[Queue:${name}] Redis unavailable — job dropped`); return undefined; },
+    addBulk: async () => [],
+    getWaitingCount: async () => 0,
+    getActiveCount: async () => 0,
+    getCompletedCount: async () => 0,
+    getFailedCount: async () => 0,
+    close: async () => {},
+    obliterate: async () => {},
+  } as unknown as Queue;
+}
 
-export const notificationQueue = new Queue('notifications', {
-  connection: redisConnection,
-  defaultJobOptions: {
-    removeOnComplete: true,
-    removeOnFail: false,
-    attempts: 5,
-    backoff: {
-      type: 'exponential',
-      delay: 1000,
-    },
-  },
-});
+// ─── Real queues (only when Redis is live) ─────────────────────────────────
+const queueDefaults = {
+  removeOnComplete: { count: 100, age: 24 * 3600 },
+  removeOnFail:    { count: 500, age: 7 * 24 * 3600 },
+  attempts: 3,
+  backoff: { type: 'exponential' as const, delay: 2000 },
+};
 
-// Dedicated queue for MST/IRT adaptive content generation (isolated from CallerN content-generation queue)
-export const adaptiveContentGenerationQueue = new Queue('adaptive-content-generation', {
-  connection: redisConnection,
-  defaultJobOptions: {
-    removeOnComplete: {
-      count: 100,
-      age: 24 * 3600,
-    },
-    removeOnFail: {
-      count: 200,
-      age: 7 * 24 * 3600,
-    },
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-  },
-});
+export const contentGenerationQueue: Queue = redisAvailable
+  ? new Queue('content-generation',          { connection: getConnection(), defaultJobOptions: queueDefaults })
+  : makeStubQueue('content-generation');
 
-// Queue event monitoring
-export const contentGenerationQueueEvents = new QueueEvents('content-generation', {
-  connection: redisConnection,
-});
+export const irtProcessingQueue: Queue = redisAvailable
+  ? new Queue('irt-processing',              { connection: getConnection(), defaultJobOptions: { removeOnComplete: true, removeOnFail: false, attempts: 3 } })
+  : makeStubQueue('irt-processing');
 
-// Health check for Redis and queues
+export const notificationQueue: Queue = redisAvailable
+  ? new Queue('notifications',               { connection: getConnection(), defaultJobOptions: { removeOnComplete: true, removeOnFail: false, attempts: 5, backoff: { type: 'exponential', delay: 1000 } } })
+  : makeStubQueue('notifications');
+
+export const adaptiveContentGenerationQueue: Queue = redisAvailable
+  ? new Queue('adaptive-content-generation', { connection: getConnection(), defaultJobOptions: { ...queueDefaults, removeOnFail: { count: 200, age: 7 * 24 * 3600 } } })
+  : makeStubQueue('adaptive-content-generation');
+
+export const contentGenerationQueueEvents: QueueEvents | null = redisAvailable
+  ? new QueueEvents('content-generation', { connection: getConnection() })
+  : null;
+
+// ─── Health check ──────────────────────────────────────────────────────────
 export async function checkQueueHealth() {
+  if (!redisAvailable) {
+    return { healthy: false, error: 'Redis not available in this environment' };
+  }
   try {
-    await redisConnection.ping();
-    const waiting = await contentGenerationQueue.getWaitingCount();
-    const active = await contentGenerationQueue.getActiveCount();
-    const completed = await contentGenerationQueue.getCompletedCount();
-    const failed = await contentGenerationQueue.getFailedCount();
-    
+    await getConnection().ping();
     return {
       healthy: true,
       redis: 'connected',
       queues: {
         contentGeneration: {
-          waiting,
-          active,
-          completed,
-          failed,
+          waiting:   await contentGenerationQueue.getWaitingCount(),
+          active:    await contentGenerationQueue.getActiveCount(),
+          completed: await contentGenerationQueue.getCompletedCount(),
+          failed:    await contentGenerationQueue.getFailedCount(),
         },
       },
     };
-  } catch (error) {
-    console.error('Queue health check failed:', error);
-    return {
-      healthy: false,
-      error: error.message,
-    };
+  } catch (error: any) {
+    return { healthy: false, error: error.message };
   }
 }
 
-// Job types
+// ─── Job type interfaces ───────────────────────────────────────────────────
 export interface ContentGenerationJob {
   sessionId: number;
   studentId: number;
@@ -167,11 +159,12 @@ export interface NotificationJob {
   templateData?: Record<string, any>;
 }
 
-// Graceful shutdown
+// ─── Graceful shutdown ─────────────────────────────────────────────────────
 export async function closeQueues() {
+  if (!redisAvailable) return;
   await contentGenerationQueue.close();
   await adaptiveContentGenerationQueue.close();
   await irtProcessingQueue.close();
   await notificationQueue.close();
-  await redisConnection.quit();
+  await getConnection().quit();
 }

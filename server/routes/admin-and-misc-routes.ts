@@ -2071,14 +2071,14 @@ export async function setupAdminAndMiscRoutes(app: Express, context: RouteContex
   app.get("/api/public/stats", async (_req, res) => {
     try {
       const [studentsResult, teachersResult, coursesResult] = await Promise.all([
-        db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.role, 'Student')),
-        db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.role, 'Teacher')),
-        db.select({ count: sql<number>`count(*)` }).from(courses).where(eq(courses.status, 'active')),
+        db.execute(sql`SELECT count(*) AS count FROM users WHERE role = 'Student'`),
+        db.execute(sql`SELECT count(*) AS count FROM users WHERE role = 'Teacher'`),
+        db.execute(sql`SELECT count(*) AS count FROM courses WHERE is_active = true`),
       ]);
       res.json({
-        students: Number(studentsResult[0]?.count ?? 0),
-        teachers: Number(teachersResult[0]?.count ?? 0),
-        courses: Number(coursesResult[0]?.count ?? 0),
+        students: Number((studentsResult.rows[0] as any)?.count ?? 0),
+        teachers: Number((teachersResult.rows[0] as any)?.count ?? 0),
+        courses: Number((coursesResult.rows[0] as any)?.count ?? 0),
       });
     } catch (error) {
       console.error('Error fetching public stats:', error);
