@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "predev": "fuser -k 5000/tcp 2>/dev/null || true",
+    "predev": "fuser -k 5000/tcp 2>/dev/null; sleep 1; true",
     "dev": "NODE_ENV=development SKIP_ASSET_GENERATION=false tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && npm run build:cleanup",
     "build:cleanup": "node -e \"const fs = require('fs'); const path = require('path'); const dirs = ['dist', 'node_modules/.cache', '.turbo', '.next']; dirs.forEach(dir => { try { if (fs.existsSync(path.join(process.cwd(), dir))) { const cmd = require('child_process').execSync('find ' + dir + ' -type f -name \\\"*.map\\\" -o -name \\\"*.test.*\\\" 2>/dev/null', {encoding: 'utf8'}); if (cmd) cmd.split('\\n').filter(f => f).forEach(f => { try { fs.unlinkSync(f); } catch(e) {} }); } } catch(e) {} });\"",

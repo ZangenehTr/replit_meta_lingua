@@ -233,28 +233,25 @@ const server = createServer(app);
 // Fall back to 5000 for local development
 const port = parseInt(process.env.PORT || '5000', 10);
 
+// Exit immediately on SIGTERM so the process manager can restart cleanly
+// without leaving port 5000 held by a dying tsx process
+process.on('SIGTERM', () => { process.exit(0); });
+process.on('SIGINT',  () => { process.exit(0); });
+
 // CRITICAL: Open port on app startup - BEFORE any async initialization
 // This must be first to prevent deployment timeout
-server.listen({
-  port,
-  host: "0.0.0.0",
-  reusePort: true,
-}, () => {
-  log(`🚀 Server listening on port ${port} (${process.env.NODE_ENV || 'development'} mode)`);
-});
-
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EADDRINUSE') {
-    log(`⚠️  Port ${port} in use — retrying in 2 s…`);
-    setTimeout(() => {
-      server.close();
-      server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
-        log(`🚀 Server listening on port ${port} (retry)`);
-      });
-    }, 2000);
+    console.error(`❌ Port ${port} is still in use. Exiting so the process manager can restart cleanly.`);
+    process.exit(1);
   } else {
     console.error('Server error:', err);
+    process.exit(1);
   }
+});
+
+server.listen({ port, host: '0.0.0.0' }, () => {
+  log(`🚀 Server listening on port ${port} (${process.env.NODE_ENV || 'development'} mode)`);
 });
 
 // ============================================
