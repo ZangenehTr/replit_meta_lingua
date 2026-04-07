@@ -1262,7 +1262,7 @@ app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async
 
   // Scraper → CRM auto-promotion: run every 15 minutes (non-blocking fire-and-forget)
   setInterval(() => {
-    import('./services/scraper-crm-bridge').then(({ runAutoPromotion }) => {
+    import('../services/scraper-crm-bridge').then(({ runAutoPromotion }) => {
       runAutoPromotion().catch((err: any) =>
         console.error('[ScraperBridge] Auto-promotion interval error:', err.message)
       );

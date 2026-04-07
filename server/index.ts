@@ -243,6 +243,20 @@ server.listen({
   log(`🚀 Server listening on port ${port} (${process.env.NODE_ENV || 'development'} mode)`);
 });
 
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    log(`⚠️  Port ${port} in use — retrying in 2 s…`);
+    setTimeout(() => {
+      server.close();
+      server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
+        log(`🚀 Server listening on port ${port} (retry)`);
+      });
+    }, 2000);
+  } else {
+    console.error('Server error:', err);
+  }
+});
+
 // ============================================
 // BACKGROUND INITIALIZATION (Non-Blocking)
 // ============================================

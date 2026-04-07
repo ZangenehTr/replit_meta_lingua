@@ -45,6 +45,24 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
+  // Keep Vite HMR WebSocket alive through Replit's 30-second proxy timeout.
+  // Access the underlying ws.Server and send pings every 20 seconds.
+  try {
+    // Vite ≥5 exposes the WS server on vite.hot.clients (internal)
+    const wss = (vite as any)._wss || (vite as any).ws?.wss;
+    if (wss && typeof wss.clients !== 'undefined') {
+      setInterval(() => {
+        wss.clients.forEach((client: any) => {
+          if (client.readyState === 1 /* OPEN */) {
+            client.ping();
+          }
+        });
+      }, 20_000);
+    }
+  } catch {
+    // non-fatal — pings just won't fire on this Vite version
+  }
+
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
