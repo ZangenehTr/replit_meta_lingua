@@ -111,7 +111,7 @@ export class AdaptivePlacementService {
     // Check if we should move to next skill
     if (currentSkillState.completed || 
         currentSkillState.questionsAsked >= this.defaultConfig.maxQuestionsPerSkill) {
-      const nextSkill = await this.getNextSkill(sessionId, testState);
+      const nextSkill = this.getNextSkill(session.currentSkill as Skill);
       if (!nextSkill) {
         await this.completeTest(sessionId);
         return null;
@@ -131,9 +131,7 @@ export class AdaptivePlacementService {
     const adaptiveDecision = await this.makeAdaptiveDecision(currentSkillState);
     if (!adaptiveDecision.shouldContinueTesting || !adaptiveDecision.nextQuestionLevel) {
       // Skill is done — advance directly to the next skill without a recursive call.
-      // A recursive call would re-fetch testState from DB, losing the in-memory
-      // completed=true flag and causing infinite recursion.
-      const nextSkill = await this.getNextSkill(sessionId, testState);
+      const nextSkill = this.getNextSkill(session.currentSkill as Skill);
       if (!nextSkill) {
         await this.completeTest(sessionId);
         return null;
@@ -526,16 +524,12 @@ export class AdaptivePlacementService {
   /**
    * Get next skill to test
    */
-  private async getNextSkill(sessionId: number, testState: Map<Skill, SkillTestState>): Promise<Skill | null> {
+  private getNextSkill(currentSkill: Skill): Skill | null {
     const skillOrder: Skill[] = ['speaking', 'listening', 'reading', 'writing'];
-    
-    for (const skill of skillOrder) {
-      const state = testState.get(skill);
-      if (state && !state.completed) {
-        return skill;
-      }
+    const currentIndex = skillOrder.indexOf(currentSkill);
+    if (currentIndex >= 0 && currentIndex < skillOrder.length - 1) {
+      return skillOrder[currentIndex + 1];
     }
-    
     return null; // All skills completed
   }
 
