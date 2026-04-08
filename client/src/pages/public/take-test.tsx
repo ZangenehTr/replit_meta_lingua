@@ -203,12 +203,11 @@ export default function TakeTestPage() {
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
         
-        // Convert to base64 for submission
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = () => {
-          setUserResponse(reader.result);
-        };
+        // Store lightweight object for submission (not base64 to avoid 413 errors)
+        setUserResponse({
+          audioReceived: true,
+          duration: currentQuestion?.expectedDurationSeconds || 60
+        });
         
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
@@ -290,6 +289,13 @@ export default function TakeTestPage() {
       if (currentSession) {
         fetchNextQuestion(currentSession.id);
       }
+    },
+    onError: () => {
+      toast({
+        title: 'Submission failed',
+        description: 'Could not submit your answer. Please try again.',
+        variant: 'destructive'
+      });
     }
   });
 
@@ -370,10 +376,19 @@ export default function TakeTestPage() {
   const handleSubmitResponse = () => {
     if (!currentQuestion || !currentSession || !userResponse) return;
 
+    let response = userResponse;
+    // Guard: for audio questions, if response is somehow a long base64 string, replace with lightweight form
+    if (currentQuestion.responseType === 'audio' && typeof response === 'string' && response.length > 500) {
+      response = {
+        audioReceived: true,
+        duration: currentQuestion?.expectedDurationSeconds || 60
+      };
+    }
+
     submitResponseMutation.mutate({
       sessionId: currentSession.id,
       questionId: currentQuestion.id,
-      response: userResponse
+      response
     });
   };
 

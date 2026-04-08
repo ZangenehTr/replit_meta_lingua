@@ -75,8 +75,8 @@ app.set('env', process.env.NODE_ENV || 'development');
 // Disable ETags to prevent 304 Not Modified responses
 app.set('etag', false);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Add metrics middleware for performance tracking
 app.use(metricsMiddleware);
