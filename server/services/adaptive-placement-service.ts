@@ -931,14 +931,45 @@ export class AdaptivePlacementService {
           timeSpent: userResponse.timeSpent || 0
         }, level);
         
-      case 'listening':
+      case 'listening': {
         // Type guard for listening content
-        const listeningContent = question.content as { audioUrl?: string } || {};
+        const listeningContent = question.content as {
+          questions?: Array<{ options: string[]; answerIndex: number }>;
+          passageText?: string;
+          question?: string;
+          assets?: { transcript?: string };
+        } || {};
+
+        if (listeningContent.questions && listeningContent.questions.length > 0) {
+          // MCQ format — score objectively against the stored correct answer
+          const firstQ = listeningContent.questions[0];
+          const correctOption = firstQ.options[firstQ.answerIndex];
+          const isCorrect = userResponse.selectedOption === correctOption;
+          const score = isCorrect ? 100 : 0;
+          const levelIndex = CEFRLevels.indexOf(level);
+          return {
+            level: isCorrect ? level : (CEFRLevels[Math.max(0, levelIndex - 1)] as CEFRLevel),
+            score,
+            confidence: isCorrect ? 0.85 : 0.60,
+            metCriteria: isCorrect ? [`Demonstrates ${level} listening comprehension`] : [],
+            unmetCriteria: !isCorrect ? [`Below ${level} listening comprehension threshold`] : [],
+            detailedFeedback: isCorrect
+              ? `Correct. The answer was "${correctOption}".`
+              : `Incorrect. The correct answer was "${correctOption}".`,
+            recommendations: !isCorrect
+              ? ['Practice listening to various accents', 'Focus on key word recognition']
+              : ['Engage with more complex audio materials']
+          };
+        }
+
+        // Open-answer format — non-empty text check
+        const answerText = userResponse.text || String(userResponse || '');
         return await this.cefrScoring.evaluateListening({
-          answers: userResponse.answers || {},
-          audioUrl: listeningContent.audioUrl || '',
+          answers: answerText.trim().length > 0 ? { q0: answerText } : {},
+          audioUrl: '',
           timeSpent: userResponse.timeSpent || 0
         }, level);
+      }
         
       default:
         throw new Error(`Unknown skill: ${skill}`);

@@ -384,9 +384,16 @@ export default function TakeTestPage() {
   const handleSubmitResponse = () => {
     if (!currentQuestion || !currentSession || !userResponse) return;
 
-    let response = userResponse;
-    // Guard: for audio questions, if response is somehow a long base64 string, replace with lightweight form
-    if (currentQuestion.responseType === 'audio' && typeof response === 'string' && response.length > 500) {
+    let response: any = userResponse;
+
+    if (currentQuestion.questionType === 'listening_comprehension') {
+      // Shape response based on content format so backend can score correctly
+      const isListeningMcq = Array.isArray(currentQuestion.content?.questions);
+      response = isListeningMcq
+        ? { selectedOption: userResponse }
+        : { text: userResponse };
+    } else if (currentQuestion.responseType === 'audio' && typeof response === 'string' && response.length > 500) {
+      // Guard: replace oversized base64 audio strings with lightweight payload
       response = {
         audioReceived: true,
         duration: currentQuestion?.expectedDurationSeconds || 60
@@ -583,68 +590,108 @@ export default function TakeTestPage() {
               <CardDescription className="whitespace-pre-wrap">{currentQuestion.prompt}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Listening comprehension audio player */}
-              {currentQuestion.questionType === 'listening_comprehension' && (
-                <div className="space-y-4">
-                  <div className="bg-cyan-50 dark:bg-cyan-950 border border-cyan-200 dark:border-cyan-800 rounded-xl p-5 text-center space-y-3">
-                    <Headphones className="h-10 w-10 mx-auto text-cyan-600 dark:text-cyan-400" />
-                    <p className="text-sm text-cyan-800 dark:text-cyan-200 font-medium">
-                      Press Play to listen to the passage, then answer the question.
-                    </p>
-                    <div className="flex justify-center gap-3 flex-wrap">
-                      {!isPlayingAudio ? (
-                        <Button
-                          size="lg"
-                          className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                          onClick={() => {
-                            const text = currentQuestion.content?.passageText;
-                            if (!text || !window.speechSynthesis) return;
-                            const utterance = new SpeechSynthesisUtterance(text);
-                            utterance.lang = 'en-US';
-                            utterance.rate = 0.9;
-                            utterance.onstart = () => setIsPlayingAudio(true);
-                            utterance.onend = () => { setIsPlayingAudio(false); setIsSpeechComplete(true); };
-                            utterance.onerror = () => { setIsPlayingAudio(false); setIsSpeechComplete(true); };
-                            window.speechSynthesis.cancel();
-                            window.speechSynthesis.speak(utterance);
-                          }}
-                        >
-                          <Play className="me-2 h-5 w-5" />
-                          {isSpeechComplete ? 'Play Again' : 'Play Passage'}
-                        </Button>
-                      ) : (
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          className="border-cyan-400 text-cyan-700 dark:text-cyan-300"
-                          onClick={() => { window.speechSynthesis?.cancel(); setIsPlayingAudio(false); setIsSpeechComplete(true); }}
-                        >
-                          <Square className="me-2 h-4 w-4" />
-                          Stop
-                        </Button>
+              {/* Listening comprehension audio player — handles both MCQ and open-answer formats */}
+              {currentQuestion.questionType === 'listening_comprehension' && (() => {
+                const passageText: string =
+                  currentQuestion.content?.passageText ??
+                  currentQuestion.content?.assets?.transcript ?? '';
+                type McqQuestion = { stem: string; options: string[]; answerIndex: number };
+                const mcqQuestions: McqQuestion[] | undefined =
+                  Array.isArray(currentQuestion.content?.questions)
+                    ? (currentQuestion.content.questions as McqQuestion[])
+                    : undefined;
+                const openQuestion: string | undefined = currentQuestion.content?.question;
+                const questionVisible = isSpeechComplete || isPlayingAudio;
+
+                return (
+                  <div className="space-y-4">
+                    {/* Audio player card */}
+                    <div className="bg-cyan-50 dark:bg-cyan-950 border border-cyan-200 dark:border-cyan-800 rounded-xl p-5 text-center space-y-3">
+                      <Headphones className="h-10 w-10 mx-auto text-cyan-600 dark:text-cyan-400" />
+                      <p className="text-sm text-cyan-800 dark:text-cyan-200 font-medium">
+                        Press Play to listen to the passage, then answer the question.
+                      </p>
+                      <div className="flex justify-center gap-3 flex-wrap">
+                        {!isPlayingAudio ? (
+                          <Button
+                            size="lg"
+                            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                            disabled={!passageText}
+                            onClick={() => {
+                              if (!passageText || !window.speechSynthesis) return;
+                              const utterance = new SpeechSynthesisUtterance(passageText);
+                              utterance.lang = 'en-US';
+                              utterance.rate = 0.9;
+                              utterance.onstart = () => setIsPlayingAudio(true);
+                              utterance.onend = () => { setIsPlayingAudio(false); setIsSpeechComplete(true); };
+                              utterance.onerror = () => { setIsPlayingAudio(false); setIsSpeechComplete(true); };
+                              window.speechSynthesis.cancel();
+                              window.speechSynthesis.speak(utterance);
+                            }}
+                          >
+                            <Play className="me-2 h-5 w-5" />
+                            {isSpeechComplete ? 'Play Again' : 'Play Passage'}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            className="border-cyan-400 text-cyan-700 dark:text-cyan-300"
+                            onClick={() => { window.speechSynthesis?.cancel(); setIsPlayingAudio(false); setIsSpeechComplete(true); }}
+                          >
+                            <Square className="me-2 h-4 w-4" />
+                            Stop
+                          </Button>
+                        )}
+                      </div>
+                      {isPlayingAudio && (
+                        <div className="flex items-center justify-center gap-1.5">
+                          {[0, 1, 2, 3, 4].map((i) => (
+                            <div
+                              key={i}
+                              className="w-1 bg-cyan-500 rounded-full animate-pulse"
+                              style={{ height: `${8 + i * 4}px`, animationDelay: `${i * 0.1}s` }}
+                            />
+                          ))}
+                          <span className="text-xs text-cyan-600 dark:text-cyan-400 ms-2">Playing…</span>
+                        </div>
                       )}
                     </div>
-                    {isPlayingAudio && (
-                      <div className="flex items-center justify-center gap-1.5">
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <div
-                            key={i}
-                            className="w-1 bg-cyan-500 rounded-full animate-pulse"
-                            style={{ height: `${8 + i * 4}px`, animationDelay: `${i * 0.1}s` }}
-                          />
-                        ))}
-                        <span className="text-xs text-cyan-600 dark:text-cyan-400 ms-2">Playing…</span>
+
+                    {/* MCQ format — stem + labelled radio buttons */}
+                    {questionVisible && mcqQuestions && mcqQuestions.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="bg-muted/50 rounded-lg p-4 border">
+                          <p className="font-medium text-sm">{mcqQuestions[0].stem}</p>
+                        </div>
+                        <RadioGroup value={userResponse} onValueChange={setUserResponse}>
+                          {mcqQuestions[0].options.map((option, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/40 transition-colors cursor-pointer"
+                            >
+                              <RadioGroupItem value={option} id={`listening-opt-${idx}`} className="mt-0.5 shrink-0" />
+                              <Label htmlFor={`listening-opt-${idx}`} className="cursor-pointer leading-snug">
+                                <span className="font-semibold text-muted-foreground me-2">
+                                  {String.fromCharCode(65 + idx)}.
+                                </span>
+                                {option}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+                    )}
+
+                    {/* Open-answer format — question prompt (textarea rendered below by responseType block) */}
+                    {questionVisible && !mcqQuestions && openQuestion && (
+                      <div className="bg-muted/50 rounded-lg p-4 border">
+                        <p className="font-medium text-sm">{openQuestion}</p>
                       </div>
                     )}
                   </div>
-                  {/* Show question after audio starts/completes */}
-                  {(isSpeechComplete || isPlayingAudio) && currentQuestion.content?.question && (
-                    <div className="bg-muted/50 rounded-lg p-4 border">
-                      <p className="font-medium text-sm">{currentQuestion.content.question}</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                );
+              })()}
 
               {currentQuestion.responseType === 'text' && (
                 <Textarea
