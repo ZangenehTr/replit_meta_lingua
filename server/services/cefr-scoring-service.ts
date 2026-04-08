@@ -326,11 +326,10 @@ export class CEFRScoringService {
    * Evaluate listening comprehension using CEFR criteria
    */
   async evaluateListening(data: ListeningAssessmentData, targetLevel: CEFRLevel): Promise<CEFREvaluationResult> {
-    const correctAnswers = Object.values(data.answers).filter(answer => 
-      answer && answer.trim().length > 0
-    );
+    const allAnswers = Object.values(data.answers);
+    const correctAnswers = allAnswers.filter(answer => answer && answer.trim().length > 0);
     
-    const accuracy = correctAnswers.length / Object.keys(data.answers).length;
+    const accuracy = allAnswers.length > 0 ? correctAnswers.length / allAnswers.length : 0;
     const score = Math.round(accuracy * 100);
     
     let level: CEFRLevel = targetLevel;

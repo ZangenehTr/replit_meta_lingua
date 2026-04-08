@@ -390,7 +390,7 @@ export default function TakeTestPage() {
       // Shape response based on content format so backend can score correctly
       const isListeningMcq = Array.isArray(currentQuestion.content?.questions);
       response = isListeningMcq
-        ? { selectedOption: userResponse }
+        ? { selectedOption: userResponse, questionIndex: 0 }
         : { text: userResponse };
     } else if (currentQuestion.responseType === 'audio' && typeof response === 'string' && response.length > 500) {
       // Guard: replace oversized base64 audio strings with lightweight payload
@@ -693,7 +693,9 @@ export default function TakeTestPage() {
                 );
               })()}
 
-              {currentQuestion.responseType === 'text' && (
+              {currentQuestion.responseType === 'text' &&
+                (currentQuestion.questionType !== 'listening_comprehension' ||
+                  isSpeechComplete || isPlayingAudio) && (
                 <Textarea
                   placeholder="Type your answer here..."
                   value={userResponse}
