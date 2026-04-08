@@ -767,17 +767,42 @@ export class AdaptivePlacementService {
     content: any;
     expectedDurationSeconds: number;
   } {
+    const passages: Record<CEFRLevel, { passage: string; question: string }> = {
+      A1: {
+        passage: "Hi, my name is Sarah. I am from England. I live in London. I have one brother and one sister. My brother's name is Tom. He is ten years old. My sister's name is Lucy. She is eight years old. I go to school every day. My favourite subject is art. After school, I like to watch TV and play with my cat. My cat's name is Mimi. She is black and white.",
+        question: "What is the name of Sarah's cat, and what does Sarah like to do after school?"
+      },
+      A2: {
+        passage: "Last weekend, Maria and her friend went to the city centre. First, they went to a coffee shop and had breakfast. Then they walked to the market and bought some fruit and vegetables. After that, they visited a small art gallery near the park. The paintings were very colourful and interesting. In the evening, they had dinner at an Italian restaurant. Maria had pasta and her friend ordered pizza. They both had a wonderful time.",
+        question: "Where did Maria and her friend go after the coffee shop, and what did Maria order for dinner?"
+      },
+      B1: {
+        passage: "Working from home has become very common in recent years. Many employees say they are more productive when they work from their own space because there are fewer interruptions. However, some people find it difficult to separate their work life from their personal life. They often work longer hours without realising it. Companies are now trying to create better guidelines to help employees maintain a healthy balance. Regular video calls and team meetings online help people feel connected to their colleagues.",
+        question: "According to the passage, what is one advantage and one disadvantage of working from home?"
+      },
+      B2: {
+        passage: "Urban farming is gaining popularity as cities look for innovative ways to address food security. Community gardens on rooftops, vertical farms inside warehouses, and hydroponic systems in basements are transforming how cities think about food production. Supporters argue that local food production reduces transportation costs and carbon emissions while providing fresh produce to urban residents. Critics, however, point out that these initiatives require significant investment and may only serve wealthier neighbourhoods, potentially widening social inequality rather than solving it.",
+        question: "What are the main arguments made both for and against urban farming, as presented in the passage?"
+      },
+      C1: {
+        passage: "The concept of neuroplasticity—the brain's remarkable ability to reorganise itself by forming new neural connections throughout life—has fundamentally challenged earlier assumptions that the adult brain was essentially fixed and unchangeable. Research conducted over the past three decades has demonstrated that experience-dependent plasticity continues well into adulthood, with implications for rehabilitation medicine, cognitive training, and our broader understanding of human potential. Nevertheless, the mechanisms underlying plasticity remain complex and context-dependent, requiring careful interpretation of experimental findings before translating them into clinical or educational practice.",
+        question: "How has the concept of neuroplasticity changed scientific understanding of the adult brain, and what caution does the speaker express about its application?"
+      },
+      C2: {
+        passage: "The epistemological tension between reductionism and holism in contemporary science reflects a deeper philosophical debate about the nature of explanation itself. While reductionist approaches have yielded extraordinary advances—mapping the human genome, unravelling subatomic structure—critics contend that emergent phenomena at higher levels of organisation cannot be adequately captured through analysis of constituent parts alone. Complex adaptive systems, from ecosystems to economies, exhibit properties that are irreducibly systemic. Proponents of holistic frameworks argue that science must develop methodologies capable of grappling with this irreducible complexity, rather than forcing all phenomena into explanatory models designed for simpler, linear systems.",
+        question: "Explain the core philosophical disagreement described between reductionism and holism, and why the speaker suggests that emergent phenomena pose a challenge to reductionist explanation."
+      }
+    };
+
+    const { passage, question } = passages[level] ?? passages['B1'];
+
     return {
       type: 'listening_comprehension',
       title: `Listening Comprehension - ${level} Level`,
-      prompt: 'Listen to the audio and answer the questions that follow.',
+      prompt: 'Press Play to listen to the audio passage, then answer the question below.',
       content: {
-        audioUrl: '/audio/sample-listening.mp3',
-        questions: [
-          'Sample listening question 1',
-          'Sample listening question 2',
-          'Sample listening question 3'
-        ]
+        passageText: passage,
+        question
       },
       expectedDurationSeconds: 240
     };

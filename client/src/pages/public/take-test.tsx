@@ -81,6 +81,10 @@ export default function TakeTestPage() {
   const [recordingTimer, setRecordingTimer] = useState<NodeJS.Timeout | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // Listening TTS state
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isSpeechComplete, setIsSpeechComplete] = useState(false);
   
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -172,6 +176,10 @@ export default function TakeTestPage() {
         setAudioURL(null);
         setIsRecording(false);
         setRecordingTimeLeft(0);
+        // Reset listening TTS state
+        window.speechSynthesis?.cancel();
+        setIsPlayingAudio(false);
+        setIsSpeechComplete(false);
       }
     } catch (error) {
       console.error('Failed to fetch next question:', error);
@@ -575,6 +583,69 @@ export default function TakeTestPage() {
               <CardDescription className="whitespace-pre-wrap">{currentQuestion.prompt}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Listening comprehension audio player */}
+              {currentQuestion.questionType === 'listening_comprehension' && (
+                <div className="space-y-4">
+                  <div className="bg-cyan-50 dark:bg-cyan-950 border border-cyan-200 dark:border-cyan-800 rounded-xl p-5 text-center space-y-3">
+                    <Headphones className="h-10 w-10 mx-auto text-cyan-600 dark:text-cyan-400" />
+                    <p className="text-sm text-cyan-800 dark:text-cyan-200 font-medium">
+                      Press Play to listen to the passage, then answer the question.
+                    </p>
+                    <div className="flex justify-center gap-3 flex-wrap">
+                      {!isPlayingAudio ? (
+                        <Button
+                          size="lg"
+                          className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                          onClick={() => {
+                            const text = currentQuestion.content?.passageText;
+                            if (!text || !window.speechSynthesis) return;
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            utterance.lang = 'en-US';
+                            utterance.rate = 0.9;
+                            utterance.onstart = () => setIsPlayingAudio(true);
+                            utterance.onend = () => { setIsPlayingAudio(false); setIsSpeechComplete(true); };
+                            utterance.onerror = () => { setIsPlayingAudio(false); setIsSpeechComplete(true); };
+                            window.speechSynthesis.cancel();
+                            window.speechSynthesis.speak(utterance);
+                          }}
+                        >
+                          <Play className="me-2 h-5 w-5" />
+                          {isSpeechComplete ? 'Play Again' : 'Play Passage'}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="border-cyan-400 text-cyan-700 dark:text-cyan-300"
+                          onClick={() => { window.speechSynthesis?.cancel(); setIsPlayingAudio(false); setIsSpeechComplete(true); }}
+                        >
+                          <Square className="me-2 h-4 w-4" />
+                          Stop
+                        </Button>
+                      )}
+                    </div>
+                    {isPlayingAudio && (
+                      <div className="flex items-center justify-center gap-1.5">
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <div
+                            key={i}
+                            className="w-1 bg-cyan-500 rounded-full animate-pulse"
+                            style={{ height: `${8 + i * 4}px`, animationDelay: `${i * 0.1}s` }}
+                          />
+                        ))}
+                        <span className="text-xs text-cyan-600 dark:text-cyan-400 ms-2">Playing…</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Show question after audio starts/completes */}
+                  {(isSpeechComplete || isPlayingAudio) && currentQuestion.content?.question && (
+                    <div className="bg-muted/50 rounded-lg p-4 border">
+                      <p className="font-medium text-sm">{currentQuestion.content.question}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {currentQuestion.responseType === 'text' && (
                 <Textarea
                   placeholder="Type your answer here..."
