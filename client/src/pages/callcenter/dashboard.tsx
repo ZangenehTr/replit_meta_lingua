@@ -294,10 +294,10 @@ function CallCenterDashboard() {
         {/* Overview Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-r from-teal-500 to-teal-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-teal-100 text-xs truncate">{t('leads.newLead')}</p>
+                  <p className="text-teal-100 text-xs truncate">{t('callcenter:dashboard.totalLeads')}</p>
                   <p className="text-2xl font-bold">{callCenterStats?.totalLeads || 0}</p>
                 </div>
                 <Users className="w-8 h-8 text-teal-200 flex-shrink-0" />
@@ -306,7 +306,7 @@ function CallCenterDashboard() {
           </Card>
 
           <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-orange-100 text-xs truncate">{t('leads.hotLeads')}</p>
@@ -318,7 +318,7 @@ function CallCenterDashboard() {
           </Card>
 
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-blue-100 text-xs truncate">{t('stats.totalCalls')}</p>
@@ -330,7 +330,7 @@ function CallCenterDashboard() {
           </Card>
 
           <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-green-100 text-xs truncate">{t('callcenter:dashboard.conversionRate')}</p>
