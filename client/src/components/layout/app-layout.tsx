@@ -233,10 +233,10 @@ export function AppLayout({ children }: AppLayoutProps) {
               </Sheet>
 
               <aside className={`hidden md:block flex-shrink-0 order-first transition-all duration-300 ${
-                sidebarCollapsed ? 'md:w-16' : 'md:w-64'
+                sidebarCollapsed ? 'md:w-16' : 'md:w-56'
               }`}>
                 <div className={`fixed top-16 start-0 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 border-r border-border bg-background transition-all duration-300 ${
-                  sidebarCollapsed ? 'w-16' : 'w-64'
+                  sidebarCollapsed ? 'w-16' : 'w-56'
                 }`}>
                   <Sidebar collapsed={sidebarCollapsed} />
 
@@ -264,7 +264,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             tabIndex={-1}
             className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 transition-all duration-300 outline-none ${
               user?.role?.toLowerCase() !== 'student'
-                ? (sidebarCollapsed ? 'md:ms-16' : 'md:ms-64')
+                ? (sidebarCollapsed ? 'md:ms-16' : 'md:ms-56')
                 : ''
             }`}
             aria-label={t('common:navigation.mainContent', 'محتوای اصلی')}
