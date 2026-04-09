@@ -339,7 +339,7 @@ export default function UnifiedCallCenterWorkflow() {
             <Card className={`sticky top-24 max-h-[calc(100vh-128px)] overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-[320px]'}`}>
               <div className="flex items-center justify-between p-3 border-b">
                 {!sidebarCollapsed && (
-                  <CardTitle className="text-sm">{t('callcenter:workflow.stages', 'مراحل کاری')}</CardTitle>
+                  <CardTitle className="text-sm">{t('callcenter:workflow.stagesLabel', 'مراحل کاری')}</CardTitle>
                 )}
                 <button
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}

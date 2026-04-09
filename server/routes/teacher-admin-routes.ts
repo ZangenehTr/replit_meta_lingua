@@ -3,7 +3,7 @@ import express from "express";
 import { storage } from "../storage";
 import { db } from "../db";
 import { sql, eq, and, desc, inArray, gte, lte, isNull, or } from "drizzle-orm";
-import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings, callernTeacherFollowers, liveClassSessions } from "@shared/schema";
+import { users, courses, enrollments, userAchievements, userProfiles, curriculums, curriculumLevels, studentCurriculumProgress, curriculumLevelCourses, teacherTrialAvailability, trialLessons, scrapeJobs, competitorPrices, scrapedLeads, marketTrends, calendarEventsIranian, paymentIdempotency, aiActivitySessions, learningRecommendations, callSessions, coursePayments, walletTransactions, promoCodes, certificates, promoCodeUsages, videoProgress, sessionRatings, callernTeacherFollowers, liveClassSessions, leads, phoneCallLogs } from "@shared/schema";
 import { insertUserSchema, insertUserProfileSchema, insertSessionSchema, insertPaymentSchema, insertMoodEntrySchema, insertMoodRecommendationSchema, insertLearningAdaptationSchema, insertRoomSchema, insertLeadSchema, insertCommunicationLogSchema, insertDepartmentSchema, peerMatchingRequests, insertPeerMatchingRequestSchema, peerSocializerParticipants, insertPeerSocializerParticipantSchema, peerSocializerGroups, insertPeerSocializerGroupSchema, classEnrollments, specialClasses, teacherPaymentRecords, WORKFLOW_STATUS, type InsertMoodEntry, type InsertMoodRecommendation, type InsertLearningAdaptation, type AttendanceRecord, type InsertAttendanceRecord, type UserProfile, type InsertUserProfile, type Room, type InsertRoom, type Lead, type InsertLead, type CommunicationLog, type InsertCommunicationLog, insertFrontDeskOperationSchema, insertPhoneCallLogSchema, insertFrontDeskTaskSchema, type FrontDeskOperation, type InsertFrontDeskOperation, type PhoneCallLog, type InsertPhoneCallLog, type FrontDeskTask, type InsertFrontDeskTask, LEAD_STAGE_TRANSITIONS, LEAD_WORKFLOW_STAGE, type LeadWorkflowStage, leadActivityLog } from "@shared/schema";
 import { filterTeachers, filterActiveTeachers, filterStudents, filterActiveUsers, excludeTestUsers, calculatePercentage, calculateAttendanceRate, calculateGrowthRate, roundCurrency, safeNumber, isActiveUser, ACTIVE_OBSERVATION_STATUSES, isActiveObservation, validateActiveTeacher } from "../business-logic-utils";
 import { ttsService } from "../tts-service";
@@ -204,21 +204,47 @@ export async function setupTeacherAdminRoutes(app: any, context: RouteContext): 
     }
   });
 
-  // Call Center API Endpoints - Missing endpoints that dashboard expects
+  // Call Center API Endpoints - wired to real DB
   app.get("/api/callcenter/stats", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
-      // Return empty stats for new call center agents (no mock data)
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const [allLeads] = await db.select({ count: sql<number>`count(*)::int` }).from(leads);
+      const [hotLeadsRow] = await db.select({ count: sql<number>`count(*)::int` }).from(leads)
+        .where(or(eq(leads.priority, 'high'), eq(leads.priority, 'urgent')));
+      const [enrolledRow] = await db.select({ count: sql<number>`count(*)::int` }).from(leads)
+        .where(eq(leads.status, 'enrolled'));
+      const [todayCallsRow] = await db.select({ count: sql<number>`count(*)::int` }).from(phoneCallLogs)
+        .where(gte(phoneCallLogs.startTime, todayStart));
+      const [completedCallsRow] = await db.select({ count: sql<number>`count(*)::int` }).from(phoneCallLogs)
+        .where(eq(phoneCallLogs.status, 'completed'));
+      const [allCallsRow] = await db.select({ count: sql<number>`count(*)::int` }).from(phoneCallLogs);
+      const [avgDurationRow] = await db.select({ avg: sql<number>`coalesce(avg(duration), 0)::int` }).from(phoneCallLogs)
+        .where(eq(phoneCallLogs.status, 'completed'));
+      // todayActivities = leads updated today (stage changes, call outcomes, etc.)
+      const [todayActivitiesRow] = await db.select({ count: sql<number>`count(*)::int` }).from(leads)
+        .where(gte(leads.updatedAt, todayStart));
+
+      const totalLeads = allLeads?.count ?? 0;
+      const enrolledCount = enrolledRow?.count ?? 0;
+      const conversionRate = totalLeads > 0 ? (enrolledCount / totalLeads) * 100 : 0;
+      const todayCallsCount = todayCallsRow?.count ?? 0;
+
       res.json({
-        totalLeads: 0,
-        hotLeads: 0,
-        todayCalls: 0,
-        conversionRate: 0,
-        averageCallDuration: 0,
+        totalLeads,
+        hotLeads: hotLeadsRow?.count ?? 0,
+        todayCalls: todayCallsCount,
+        totalCalls: allCallsRow?.count ?? 0,
+        todayActivities: todayActivitiesRow?.count ?? 0,
+        conversionRate: Math.round(conversionRate * 10) / 10,
+        averageCallDuration: avgDurationRow?.avg ?? 0,
         responseRate: 0,
-        dailyTargetCalls: 0,
-        completedCalls: 0,
+        dailyTargetCalls: 20,
+        completedCalls: completedCallsRow?.count ?? 0,
         revenueGenerated: 0,
-        customerSatisfaction: 0
+        customerSatisfaction: 0,
+        missedCalls: 0
       });
     } catch (error) {
       console.error('Error fetching call center stats:', error);
@@ -228,8 +254,60 @@ export async function setupTeacherAdminRoutes(app: any, context: RouteContext): 
 
   app.get("/api/callcenter/team-performance", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
-      // Return empty team performance for new agents (no mock data)
-      res.json([]);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const agentStats = await db
+        .select({
+          agentId: leads.assignedAgentId,
+          totalLeads: sql<number>`count(*)::int`,
+          enrolledLeads: sql<number>`count(*) filter (where ${leads.status} = 'enrolled')::int`
+        })
+        .from(leads)
+        .where(sql`${leads.assignedAgentId} is not null`)
+        .groupBy(leads.assignedAgentId);
+
+      const agentIds = agentStats.map(a => a.agentId).filter(Boolean) as number[];
+      const agentUsers = agentIds.length > 0
+        ? await db.select({ id: users.id, firstName: users.firstName, lastName: users.lastName })
+            .from(users)
+            .where(inArray(users.id, agentIds))
+        : [];
+
+      // Get per-agent call counts for today and average duration
+      const agentCallStats = agentIds.length > 0
+        ? await db
+            .select({
+              operatorId: phoneCallLogs.operatorId,
+              callsToday: sql<number>`count(*) filter (where ${phoneCallLogs.startTime} >= ${todayStart})::int`,
+              avgDuration: sql<number>`coalesce(avg(${phoneCallLogs.duration}), 0)::int`
+            })
+            .from(phoneCallLogs)
+            .where(inArray(phoneCallLogs.operatorId, agentIds))
+            .groupBy(phoneCallLogs.operatorId)
+        : [];
+
+      const userMap = new Map(agentUsers.map(u => [u.id, u]));
+      const callStatsMap = new Map(agentCallStats.map(s => [s.operatorId, s]));
+
+      const performance = agentStats.map(stat => {
+        const agent = userMap.get(stat.agentId!);
+        const callStat = callStatsMap.get(stat.agentId!);
+        const total = stat.totalLeads ?? 0;
+        const enrolled = stat.enrolledLeads ?? 0;
+        return {
+          agentId: stat.agentId,
+          agentName: agent ? `${agent.firstName} ${agent.lastName}` : `Agent ${stat.agentId}`,
+          callsToday: callStat?.callsToday ?? 0,
+          conversionsToday: enrolled,
+          averageCallTime: callStat?.avgDuration ?? 0,
+          conversionRate: total > 0 ? enrolled / total : 0,
+          satisfaction: 0,
+          status: 'available'
+        };
+      });
+
+      res.json(performance);
     } catch (error) {
       console.error('Error fetching team performance:', error);
       res.status(500).json({ message: "Failed to fetch team performance" });
@@ -238,8 +316,55 @@ export async function setupTeacherAdminRoutes(app: any, context: RouteContext): 
 
   app.get("/api/call-logs", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
-      // Return empty call logs for new agents (no mock data)
-      res.json([]);
+      const logs = await db
+        .select({
+          id: phoneCallLogs.id,
+          callType: phoneCallLogs.callType,
+          duration: phoneCallLogs.duration,
+          status: phoneCallLogs.status,
+          callNotes: phoneCallLogs.callNotes,
+          startTime: phoneCallLogs.startTime,
+          callerId: phoneCallLogs.callerId,
+          recipientId: phoneCallLogs.recipientId,
+          operatorId: phoneCallLogs.operatorId,
+          operatorFirstName: users.firstName,
+          operatorLastName: users.lastName
+        })
+        .from(phoneCallLogs)
+        .leftJoin(users, eq(phoneCallLogs.operatorId, users.id))
+        .orderBy(desc(phoneCallLogs.startTime))
+        .limit(100);
+
+      const mapped = logs.map(log => {
+        const phone = log.callerId ?? log.recipientId ?? null;
+        const direction = log.callType === 'incoming' ? 'inbound' : log.callType === 'outgoing' ? 'outbound' : log.callType;
+        const agentName = log.operatorFirstName ? `${log.operatorFirstName} ${log.operatorLastName ?? ''}`.trim() : null;
+        return {
+          id: log.id,
+          // Flattened fields for calls.tsx
+          leadName: null,
+          phoneNumber: phone,
+          direction,
+          duration: log.duration,
+          status: log.status,
+          notes: log.callNotes,
+          createdAt: log.startTime,
+          agentName,
+          // Nested fields for dashboard.tsx compatibility
+          leadId: null,
+          agentId: log.operatorId,
+          outcome: null,
+          recordingUrl: null,
+          satisfaction: 0,
+          lead: {
+            firstName: agentName ?? phone ?? '',
+            lastName: '',
+            phoneNumber: phone ?? ''
+          }
+        };
+      });
+
+      res.json(mapped);
     } catch (error) {
       console.error('Error fetching call logs:', error);
       res.status(500).json({ message: "Failed to fetch call logs" });
@@ -248,14 +373,32 @@ export async function setupTeacherAdminRoutes(app: any, context: RouteContext): 
 
   app.get("/api/callcenter/daily-goals", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
-      // Return empty daily goals for new agents (no mock data)
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const [todayLeadsRow] = await db.select({ count: sql<number>`count(*)::int` }).from(leads)
+        .where(gte(leads.createdAt, todayStart));
+      const [todayCallsRow] = await db.select({ count: sql<number>`count(*)::int` }).from(phoneCallLogs)
+        .where(gte(phoneCallLogs.startTime, todayStart));
+      const [todayEnrolledRow] = await db.select({ count: sql<number>`count(*)::int` }).from(leads)
+        .where(and(
+          eq(leads.status, 'enrolled'),
+          gte(leads.updatedAt, todayStart)
+        ));
+
       res.json({
-        callsTarget: 0,
-        callsCompleted: 0,
-        leadsTarget: 0,
-        leadsGenerated: 0,
-        conversionTarget: 0,
-        conversionAchieved: 0
+        targetCalls: 20,
+        targetConversions: 5,
+        targetRevenue: 0,
+        actualCalls: todayCallsRow?.count ?? 0,
+        actualConversions: todayEnrolledRow?.count ?? 0,
+        actualRevenue: 0,
+        callsTarget: 20,
+        callsCompleted: todayCallsRow?.count ?? 0,
+        leadsTarget: 10,
+        leadsGenerated: todayLeadsRow?.count ?? 0,
+        conversionTarget: 5,
+        conversionAchieved: todayEnrolledRow?.count ?? 0
       });
     } catch (error) {
       console.error('Error fetching daily goals:', error);

@@ -60,7 +60,7 @@ export default function CampaignsPage() {
   ];
 
   return (
-    <div className="w-full px-4 py-6 space-y-6">
+    <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {t('callcenter:campaigns.title', 'کمپین‌های بازاریابی')}

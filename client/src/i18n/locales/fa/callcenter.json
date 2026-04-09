@@ -121,9 +121,26 @@
       "calls": "تماس‌ها",
       "performance": "عملکرد"
     },
-    "overview": "نمای کلی",
-    "leads": "سرنخ‌ها",
-    "calls": "تماس‌ها",
+    "overview": {
+      "title": "نمای کلی",
+      "description": "خلاصه عملکرد مرکز تماس",
+      "newLeads": "سرنخ‌های جدید",
+      "hotLeads": "سرنخ‌های داغ",
+      "conversionRate": "نرخ تبدیل"
+    },
+    "leads": {
+      "title": "مدیریت سرنخ‌ها",
+      "description": "پیگیری و مدیریت مشتریان بالقوه"
+    },
+    "calls": {
+      "title": "تاریخچه تماس‌ها",
+      "description": "گزارش تماس‌های امروز"
+    },
+    "performance": {
+      "title": "عملکرد تیم",
+      "description": "آمار عملکرد کارشناسان",
+      "conversionRate": "نرخ تبدیل"
+    },
     "reports": "گزارش‌ها",
     "voip": "مرکز VoIP"
   },
@@ -218,7 +235,13 @@
     "schedule": "زمان‌بندی تماس"
   },
   "calls": {
-    "title": "سیستم تماس",
+    "title": "گزارش تماس‌ها",
+    "subtitle": "تاریخچه و وضعیت تماس‌ها",
+    "total": "کل تماس‌ها",
+    "todayCalls": "تماس‌های امروز",
+    "log": "گزارش تماس",
+    "search": "جستجوی تماس...",
+    "noCalls": "تماسی یافت نشد",
     "makeCall": "برقراری تماس",
     "activeCall": "تماس فعال",
     "endCall": "پایان تماس",
@@ -231,7 +254,8 @@
     "notes": "یادداشت‌ها",
     "callback": "تماس مجدد",
     "completed": "تکمیل شده",
-    "missed": "از دست رفته"
+    "missed": "از دست رفته",
+    "busy": "مشغول"
   },
   "voip": {
     "voipCenter": "مرکز تماس VoIP",
@@ -609,6 +633,19 @@
   },
   "accessDenied": "دسترسی محدود",
   "noPermissionStage": "شما دسترسی به این مرحله ندارید.",
+  "campaigns": {
+    "title": "کمپین‌های بازاریابی",
+    "subtitle": "مدیریت و پایش کمپین‌ها",
+    "total": "کل کمپین‌ها",
+    "active": "فعال",
+    "completed": "تکمیل",
+    "paused": "متوقف",
+    "draft": "پیش‌نویس",
+    "totalReached": "دسترسی",
+    "totalConverted": "تبدیل‌شده",
+    "list": "لیست کمپین‌ها",
+    "noCampaigns": "کمپینی یافت نشد"
+  },
   "stats": {
     "totalCalls": "مجموع تماس‌ها",
     "completedCalls": "تماس‌های تکمیل شده",
