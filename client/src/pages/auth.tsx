@@ -114,10 +114,10 @@ export default function Auth() {
         setOtpResendCooldown(90);
         setOtpCountdownDisplay("90s");
       } else {
-        setAuthError("ارسال کد ناموفق بود");
+        setAuthError(result.message || "ارسال کد ناموفق بود");
       }
     } catch {
-      setAuthError("ارسال کد ناموفق بود");
+      setAuthError("خطا در اتصال به سرور. لطفاً دوباره تلاش کنید.");
     } finally {
       setOtpLoading(false);
     }
@@ -159,10 +159,10 @@ export default function Auth() {
         setOtpResendCooldown(90);
         setOtpCountdownDisplay("90s");
       } else {
-        setAuthError("ارسال کد ناموفق بود");
+        setAuthError(result.message || "ارسال کد ناموفق بود");
       }
     } catch {
-      setAuthError("ارسال کد ناموفق بود");
+      setAuthError("خطا در اتصال به سرور. لطفاً دوباره تلاش کنید.");
     } finally {
       setOtpLoading(false);
     }
@@ -303,30 +303,16 @@ export default function Auth() {
                   <div className="flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-red-200 shrink-0 mt-0.5" />
                     <div>
-                      {authError === "ارسال کد ناموفق بود" ? (
-                        <p className="text-white text-sm font-medium">
-                          ارسال کد ناموفق بود. لطفاً با پشتیبانی ما تماس بگیرید:{" "}
-                          <a
-                            href="tel:02145328"
-                            className="underline font-bold"
-                          >
-                            021-45328
-                          </a>
-                        </p>
-                      ) : (
-                        <>
-                          <p className="text-white text-sm font-medium">{authError}</p>
-                          <p className="text-white/70 text-xs mt-1.5">
-                            نیاز به کمک دارید؟{" "}
-                            <a
-                              href="tel:02145328"
-                              className="text-cyan-300 underline underline-offset-2 font-medium"
-                            >
-                              ۰۲۱-۴۵۳۲۸
-                            </a>
-                          </p>
-                        </>
-                      )}
+                      <p className="text-white text-sm font-medium">{authError}</p>
+                      <p className="text-white/70 text-xs mt-1.5">
+                        نیاز به کمک دارید؟{" "}
+                        <a
+                          href="tel:02145328"
+                          className="text-cyan-300 underline underline-offset-2 font-medium"
+                        >
+                          ۰۲۱-۴۵۳۲۸
+                        </a>
+                      </p>
                     </div>
                   </div>
                 </motion.div>
