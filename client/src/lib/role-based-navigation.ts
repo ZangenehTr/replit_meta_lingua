@@ -98,7 +98,9 @@ export const getNavigationForRole = (role: string, t: any, currentLang: string =
     "accountant": "Accountant",
     "front_desk_clerk": "Front Desk Clerk",
     "frontdesk": "Front Desk Clerk",
-    "front_desk": "Front Desk Clerk"
+    "front_desk": "Front Desk Clerk",
+    "front desk clerk": "Front Desk Clerk",
+    "front desk": "Front Desk Clerk"
   };
 
   const mappedRole = roleMapping[normalizedRole] || "Student";
