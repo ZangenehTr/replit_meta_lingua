@@ -51,7 +51,7 @@ interface SearchResultsProps {
   className?: string;
 }
 
-const CONTENT_TYPE_ICONS = {
+const CONTENT_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   book: Book,
   course: GraduationCap,
   user: Users,
@@ -59,8 +59,14 @@ const CONTENT_TYPE_ICONS = {
   homework: FileText,
   session: MessageSquare,
   roadmap: Calendar,
-  dictionary: BookOpen
+  dictionary: BookOpen,
+  game: BookOpen,
+  default: FileText
 };
+
+function getIcon(type: string): React.ComponentType<{ className?: string }> {
+  return CONTENT_TYPE_ICONS[type] || CONTENT_TYPE_ICONS['default'];
+}
 
 const SORT_OPTIONS = [
   { value: 'relevance' },
@@ -288,7 +294,7 @@ export function SearchResults({
           {Object.entries(groupedResults).map(([type, results]) => (
             <div key={type}>
               <div className="flex items-center gap-2 mb-4">
-                {React.createElement(CONTENT_TYPE_ICONS[type as keyof typeof CONTENT_TYPE_ICONS], {
+                {React.createElement(getIcon(type), {
                   className: "h-5 w-5"
                 })}
                 <h2 className="text-lg font-semibold">
@@ -377,7 +383,7 @@ function generateResultUrl(result: SearchResultItem): string {
 
 function SearchResultCard({ result, query, onClick, viewMode = 'list', 'data-testid': testId }: SearchResultCardProps) {
   const { t } = useTranslation(['common', 'courses']);
-  const Icon = CONTENT_TYPE_ICONS[result.type];
+  const Icon = getIcon(result.type);
 
   const handleClick = () => {
     onClick?.();
