@@ -42,6 +42,7 @@ router.post("/get-or-create", authenticate, async (req: any, res) => {
     if (!data.source) {
       switch (req.user.role) {
         case 'Front Desk':
+        case 'Front Desk Clerk':
           data.source = 'walk-in';
           break;
         case 'Call Center Agent':
@@ -145,7 +146,7 @@ router.post("/convert/:leadId", authenticate, async (req: any, res) => {
     }
     
     // Check permissions for payment processing
-    const canReceivePayment = ['Admin', 'Accountant', 'Front Desk'].includes(req.user.role);
+    const canReceivePayment = ['Admin', 'Accountant', 'Front Desk', 'Front Desk Clerk'].includes(req.user.role);
     if (options.initialPayment && !canReceivePayment) {
       return res.status(403).json({
         success: false,

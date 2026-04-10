@@ -898,7 +898,7 @@ export async function setupStudentGamesRoutes(app: any, context: RouteContext): 
   });
 
   // Get workflow stage counts for dashboard - MUST be before /api/leads/:id route
-  app.get("/api/leads/stage-counts", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+  app.get("/api/leads/stage-counts", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor', 'Front Desk']), async (req: any, res) => {
     try {
       const counts = await db.select({
         stage: leads.workflowStage,

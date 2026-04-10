@@ -1207,7 +1207,7 @@ export async function setupAdminAndMiscRoutes(app: Express, context: RouteContex
     try {
       const users = await storage.getAllUsers();
       const staff = users.filter(user => 
-        ['Admin', 'Teacher/Tutor', 'Supervisor', 'Call Center Agent', 'Front Desk'].includes(user.role)
+        ['Admin', 'Teacher/Tutor', 'Supervisor', 'Call Center Agent', 'Front Desk', 'Front Desk Clerk'].includes(user.role)
       );
       res.json(staff);
     } catch (error) {

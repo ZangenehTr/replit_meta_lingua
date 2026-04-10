@@ -275,6 +275,8 @@ const requireRole = (roles: string[]) => {
       'mentor': ['mentor'],
       'callcenter': ['callcenter', 'call center agent'],
       'call center agent': ['callcenter', 'call center agent'],
+      'front desk': ['front desk', 'front desk clerk'],
+      'front desk clerk': ['front desk', 'front desk clerk'],
       'accountant': ['accountant']
     };
     const userRoleEquivalents = roleMapping[userRole] || [userRole];
