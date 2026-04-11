@@ -167,11 +167,10 @@ export function VisitorChatWidget() {
       }
 
       try {
-        const response = await apiRequest(`/api/visitor-chat/sessions`, {
+        const newSession = await apiRequest(`/api/visitor-chat/sessions`, {
           method: 'POST',
           body: JSON.stringify({ language })
         });
-        const newSession = await response.json();
         setSession(newSession);
         setCollectContactFirst(newSession.collectContactFirst ?? true);
         localStorage.setItem('visitorChatSessionId', newSession.sessionId);
@@ -217,17 +216,24 @@ export function VisitorChatWidget() {
   };
 
   const submitContact = async () => {
-    if (!session || (!contactPhone.trim() && !contactName.trim())) return;
+    if (!contactPhone.trim() && !contactName.trim()) return;
+    if (!session) {
+      toast({
+        title: t('visitorChat.notConnected', 'اتصال برقرار نشد'),
+        description: t('visitorChat.notConnectedDesc', 'لطفاً چند لحظه صبر کنید و دوباره امتحان کنید.'),
+        variant: 'destructive'
+      });
+      return;
+    }
     setIsLoading(true);
     try {
-      const response = await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/contact`, {
+      const data = await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/contact`, {
         method: 'PATCH',
         body: JSON.stringify({
           visitorName: contactName || undefined,
           visitorPhone: contactPhone || undefined
         })
       });
-      const data = await response.json();
       
       if (data.matchedUser) {
         setMatchedUser(data.matchedUser);
@@ -260,7 +266,7 @@ export function VisitorChatWidget() {
     }
     setIsLoading(true);
     try {
-      const response = await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/messages`, {
+      const data = await apiRequest(`/api/visitor-chat/sessions/${session.sessionId}/messages`, {
         method: 'POST',
         body: JSON.stringify({
           message: newMessage,
@@ -269,7 +275,6 @@ export function VisitorChatWidget() {
         })
       });
 
-      const data = await response.json();
       setMessages(prev => [...prev, data.message]);
       setNewMessage('');
 
@@ -459,7 +464,7 @@ export function VisitorChatWidget() {
                 </div>
                 <Button
                   onClick={submitContact}
-                  disabled={!contactPhone.trim() || isLoading || sessionLoading}
+                  disabled={!contactPhone.trim() || isLoading || sessionLoading || (sessionError && !session)}
                   className="w-full h-10 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-sm font-medium"
                   data-testid="button-start-chat"
                 >
