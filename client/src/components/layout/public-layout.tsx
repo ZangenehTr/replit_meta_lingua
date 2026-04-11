@@ -106,7 +106,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950" dir={direction}>
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950 overflow-x-hidden" dir={direction}>
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-950/60">
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
@@ -128,18 +128,17 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex lg:gap-x-5 lg:items-center">
+          <div className="hidden lg:flex lg:gap-x-3 lg:items-center">
             {/* Home Link */}
             <Link 
               href="/"
-              className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+              className={`text-sm font-semibold transition-colors whitespace-nowrap ${
                 isActivePath('/')
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               data-testid="link-nav-home"
             >
-              <Home className="h-4 w-4" />
               {t('nav.home')}
             </Link>
 
@@ -147,14 +146,13 @@ export function PublicLayout({ children }: PublicLayoutProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1 text-sm font-semibold transition-colors whitespace-nowrap ${
                     location.startsWith('/courses')
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid="button-nav-programs"
                 >
-                  <Award className="h-4 w-4" />
                   {t('nav.programs', 'Programs')}
                   <ChevronDown className="h-3 w-3" />
                 </button>
@@ -188,14 +186,13 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                    className={`flex items-center gap-1 text-sm font-semibold transition-colors whitespace-nowrap ${
                       isActivePath('/curriculum')
                         ? 'text-primary'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                     data-testid="button-nav-curriculum"
                   >
-                    <GraduationCap className="h-4 w-4" />
                     {t('nav.curriculum', 'Curriculum')}
                     <ChevronDown className="h-3 w-3" />
                   </button>
@@ -226,20 +223,18 @@ export function PublicLayout({ children }: PublicLayoutProps) {
 
             {/* Other Navigation Items */}
             {navigation.slice(1).map((item) => {
-              const Icon = item.icon;
               const isActive = isActivePath(item.href);
               return (
                 <Link 
                   key={item.name} 
                   href={item.href}
-                  className={`flex items-center gap-2 text-sm font-semibold transition-colors whitespace-nowrap ${
+                  className={`text-sm font-semibold transition-colors whitespace-nowrap ${
                     isActive
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   data-testid={`link-nav-${item.href.slice(1) || 'home'}`}
                 >
-                  <Icon className="h-4 w-4" />
                   {item.name}
                 </Link>
               );
@@ -247,7 +242,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
           </div>
 
           {/* Right Side - Language, Theme & Auth */}
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-4 items-center">
+          <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-2 items-center">
             <LanguageSelector />
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9" data-testid="button-theme-toggle" aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}>
               {isDark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
