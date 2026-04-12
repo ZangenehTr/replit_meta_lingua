@@ -429,30 +429,30 @@ export default function TakeTestPage() {
   // Intro Screen
   if (testStep === 'intro') {
     const skillDetails = [
-      { skill: 'speaking', icon: Mic, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-950', border: 'border-blue-200 dark:border-blue-800', label: 'Speaking' },
-      { skill: 'listening', icon: Headphones, color: 'from-cyan-500 to-cyan-600', bg: 'bg-cyan-50 dark:bg-cyan-950', border: 'border-cyan-200 dark:border-cyan-800', label: 'Listening' },
+      { skill: 'speaking', icon: Mic, color: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950', border: 'border-indigo-200 dark:border-indigo-800', label: 'Speaking' },
+      { skill: 'listening', icon: Headphones, color: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-950', border: 'border-violet-200 dark:border-violet-800', label: 'Listening' },
       { skill: 'reading', icon: BookOpen, color: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950', border: 'border-indigo-200 dark:border-indigo-800', label: 'Reading' },
       { skill: 'writing', icon: PenTool, color: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-950', border: 'border-violet-200 dark:border-violet-800', label: 'Writing' },
     ];
     const benefits = [
-      { icon: BarChart3, text: 'CEFR level (A1–C2) with per-skill breakdown', color: 'text-blue-600' },
-      { icon: Sparkles, text: 'AI-powered analysis & personalized roadmap', color: 'text-cyan-600' },
+      { icon: BarChart3, text: 'CEFR level (A1–C2) with per-skill breakdown', color: 'text-indigo-600' },
+      { icon: Sparkles, text: 'AI-powered analysis & personalized roadmap', color: 'text-violet-600' },
       { icon: Trophy, text: 'Course recommendations matched to your level', color: 'text-indigo-600' },
       { icon: ShieldCheck, text: 'No registration required to start', color: 'text-green-600' },
     ];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center px-4 py-12 relative overflow-hidden">
         {/* Background decorative blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-3xl" />
         </div>
 
         <div className="relative z-10 w-full max-w-2xl">
           {/* Header badge */}
           <div className="flex justify-center mb-6">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-300 text-sm font-medium backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 text-sm font-medium backdrop-blur-sm">
               <Zap className="h-4 w-4 text-yellow-400" />
               AI-Powered Adaptive Assessment
             </span>
@@ -461,14 +461,14 @@ export default function TakeTestPage() {
           {/* Main card */}
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
             {/* Gradient top banner */}
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-8 text-white text-center">
+            <div className="bg-gradient-to-r from-indigo-600 to-violet-500 p-8 text-white text-center">
               <div className="flex justify-center mb-4">
                 <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
                   <Brain className="h-12 w-12 text-white" />
                 </div>
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight">Free English Placement</h1>
-              <p className="mt-2 text-blue-100 text-base">
+              <p className="mt-2 text-indigo-100 text-base">
                 The shortest and the most intelligent way to know your English level
               </p>
               <div className="flex items-center justify-center gap-2 mt-4 text-sm text-white/80">
@@ -519,7 +519,7 @@ export default function TakeTestPage() {
                 ].map((item, i) =>
                   item.label ? (
                     <div key={i} className="flex flex-col items-center gap-1 flex-1">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
                         {item.step}
                       </div>
                       <span className="text-white/70 text-xs font-medium text-center">{item.label}</span>
@@ -534,7 +534,7 @@ export default function TakeTestPage() {
               {/* Start button */}
               <Button
                 size="lg"
-                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 border-0 rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-[1.02]"
+                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 border-0 rounded-2xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.02]"
                 onClick={() => startTestMutation.mutate()}
                 disabled={startTestMutation.isPending}
                 data-testid="button-start-test"
@@ -567,7 +567,7 @@ export default function TakeTestPage() {
     const SkillIcon = skillIcons[currentQuestion.skill as keyof typeof skillIcons] || Brain;
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
         <div className="max-w-3xl mx-auto space-y-6">
           <Card>
             <CardHeader>
@@ -606,16 +606,16 @@ export default function TakeTestPage() {
                 return (
                   <div className="space-y-4">
                     {/* Audio player card */}
-                    <div className="bg-cyan-50 dark:bg-cyan-950 border border-cyan-200 dark:border-cyan-800 rounded-xl p-5 text-center space-y-3">
-                      <Headphones className="h-10 w-10 mx-auto text-cyan-600 dark:text-cyan-400" />
-                      <p className="text-sm text-cyan-800 dark:text-cyan-200 font-medium">
+                    <div className="bg-violet-50 dark:bg-violet-950 border border-violet-200 dark:border-violet-800 rounded-xl p-5 text-center space-y-3">
+                      <Headphones className="h-10 w-10 mx-auto text-violet-600 dark:text-violet-400" />
+                      <p className="text-sm text-violet-800 dark:text-violet-200 font-medium">
                         Press Play to listen to the passage, then answer the question.
                       </p>
                       <div className="flex justify-center gap-3 flex-wrap">
                         {!isPlayingAudio ? (
                           <Button
                             size="lg"
-                            className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                            className="bg-violet-600 hover:bg-violet-700 text-white"
                             disabled={!passageText}
                             onClick={() => {
                               if (!passageText || !window.speechSynthesis) return;
@@ -636,7 +636,7 @@ export default function TakeTestPage() {
                           <Button
                             size="lg"
                             variant="outline"
-                            className="border-cyan-400 text-cyan-700 dark:text-cyan-300"
+                            className="border-violet-400 text-violet-700 dark:text-violet-300"
                             onClick={() => { window.speechSynthesis?.cancel(); setIsPlayingAudio(false); setIsSpeechComplete(true); }}
                           >
                             <Square className="me-2 h-4 w-4" />
@@ -649,11 +649,11 @@ export default function TakeTestPage() {
                           {[0, 1, 2, 3, 4].map((i) => (
                             <div
                               key={i}
-                              className="w-1 bg-cyan-500 rounded-full animate-pulse"
+                              className="w-1 bg-violet-500 rounded-full animate-pulse"
                               style={{ height: `${8 + i * 4}px`, animationDelay: `${i * 0.1}s` }}
                             />
                           ))}
-                          <span className="text-xs text-cyan-600 dark:text-cyan-400 ms-2">Playing…</span>
+                          <span className="text-xs text-violet-600 dark:text-violet-400 ms-2">Playing…</span>
                         </div>
                       )}
                     </div>
@@ -720,8 +720,8 @@ export default function TakeTestPage() {
 
               {currentQuestion.responseType === 'audio' && (
                 <div className="space-y-4">
-                  <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                  <div className="bg-indigo-50 dark:bg-indigo-950 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                    <p className="text-sm text-indigo-800 dark:text-indigo-200 mb-2">
                       <strong>Instructions:</strong> Click the microphone button and speak your answer clearly. 
                       You have up to {currentQuestion.expectedDurationSeconds} seconds.
                     </p>
@@ -878,7 +878,7 @@ export default function TakeTestPage() {
   // Roadmap Generation Loading Screen
   if (testStep === 'roadmap' && isGeneratingRoadmap) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center p-8">
           <Brain className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
           <CardTitle className="text-2xl mb-2">Generating Your Personalized Roadmap</CardTitle>
@@ -894,7 +894,7 @@ export default function TakeTestPage() {
   // Results Screen
   if (testStep === 'results' && testResults) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           <Card className="shadow-xl">
             <CardHeader className="text-center">
