@@ -88,16 +88,16 @@ const EXAM_CONFIG: Record<string, {
   stats: string;
 }> = {
   ielts: {
-    color: 'from-blue-600 to-cyan-500',
-    gradient: 'from-blue-50 via-white to-cyan-50',
+    color: 'from-indigo-600 to-violet-600',
+    gradient: 'from-indigo-50 via-white to-violet-50',
     icon: '🎯',
     callerNText: 'Speaking آیلتست رو تمرین کن — ۱۵ دقیقه با استاد',
     tagline: 'آموزش آیلتس آنلاین | کلاس IELTS خصوصی و گروهی',
     stats: 'بیش از ۵۰۰ دانشجو'
   },
   toefl: {
-    color: 'from-purple-600 to-blue-500',
-    gradient: 'from-purple-50 via-white to-blue-50',
+    color: 'from-purple-600 to-indigo-500',
+    gradient: 'from-purple-50 via-white to-indigo-50',
     icon: '📚',
     callerNText: 'Integrated Writing رو با استاد مسلط بشو',
     tagline: 'آموزش TOEFL آنلاین | کلاس تافل خصوصی و گروهی',
@@ -281,13 +281,13 @@ export default function CourseLandingPage() {
       {/* ─── SECTION 1: HERO ─── */}
       <section className={`relative overflow-hidden bg-gradient-to-br ${config.gradient}`} dir="rtl">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-10 right-10 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
-          <div className="absolute bottom-10 left-10 w-64 h-64 bg-cyan-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
+          <div className="absolute top-10 right-10 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
+          <div className="absolute bottom-10 left-10 w-64 h-64 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:py-24 lg:px-8">
           <div className="text-center">
             <div className="text-5xl mb-4">{config.icon}</div>
-            <Badge className="mb-4 text-sm px-3 py-1 bg-blue-100 text-blue-700 border-blue-200">
+            <Badge className="mb-4 text-sm px-3 py-1 bg-indigo-100 text-indigo-700 border-indigo-200">
               {config.tagline}
             </Badge>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-gray-900 mb-6 leading-tight">
@@ -356,10 +356,10 @@ export default function CourseLandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Group */}
-            <Card className="border-2 hover:border-blue-300 hover:shadow-lg transition-all">
+            <Card className="border-2 hover:border-indigo-300 hover:shadow-lg transition-all">
               <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-3">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mb-3">
+                  <Users className="h-6 w-6 text-indigo-600" />
                 </div>
                 <CardTitle className="text-lg">گروهی آنلاین</CardTitle>
               </CardHeader>
@@ -367,9 +367,9 @@ export default function CourseLandingPage() {
                 {groupCourses.length > 0 ? (
                   <div className="space-y-3">
                     {groupCourses.slice(0, 2).map(c => (
-                      <div key={c.id} className="p-3 bg-blue-50 rounded-lg">
+                      <div key={c.id} className="p-3 bg-indigo-50 rounded-lg">
                         <div className="font-medium text-sm text-gray-800 mb-1">{c.title}</div>
-                        {c.price && <div className="text-blue-600 font-bold text-sm">{formatPrice(c.price)}</div>}
+                        {c.price && <div className="text-indigo-600 font-bold text-sm">{formatPrice(c.price)}</div>}
                         {c.firstSessionDate && (
                           <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
@@ -424,10 +424,10 @@ export default function CourseLandingPage() {
             </Card>
 
             {/* Video */}
-            <Card className="border-2 hover:border-teal-300 hover:shadow-lg transition-all">
+            <Card className="border-2 hover:border-violet-300 hover:shadow-lg transition-all">
               <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center mb-3">
-                  <Video className="h-6 w-6 text-teal-600" />
+                <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mb-3">
+                  <Video className="h-6 w-6 text-violet-600" />
                 </div>
                 <CardTitle className="text-lg">دوره‌های ویدیویی</CardTitle>
               </CardHeader>
@@ -435,9 +435,9 @@ export default function CourseLandingPage() {
                 {videoCourses.length > 0 ? (
                   <div className="space-y-3">
                     {videoCourses.slice(0, 2).map(c => (
-                      <div key={c.id} className="p-3 bg-teal-50 rounded-lg">
+                      <div key={c.id} className="p-3 bg-violet-50 rounded-lg">
                         <div className="font-medium text-sm text-gray-800 mb-1">{c.title}</div>
-                        {c.price && <div className="text-teal-600 font-bold text-sm">{formatPrice(c.price)}</div>}
+                        {c.price && <div className="text-violet-600 font-bold text-sm">{formatPrice(c.price)}</div>}
                       </div>
                     ))}
                     <Button asChild size="sm" className="w-full" variant="outline">
@@ -460,7 +460,7 @@ export default function CourseLandingPage() {
       <CallerNSpotlight headlineText={config.callerNText} />
 
       {/* ─── SECTION 5: PLACEMENT CTA ─── */}
-      <section className="py-14 bg-gradient-to-l from-blue-700 to-cyan-600" dir="rtl">
+      <section className="py-14 bg-gradient-to-l from-indigo-700 to-violet-600" dir="rtl">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="text-center lg:text-right text-white">
@@ -484,7 +484,7 @@ export default function CourseLandingPage() {
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-blue-700 hover:bg-gray-50 text-lg px-10 h-14 font-bold shadow-lg"
+                className="bg-white text-indigo-700 hover:bg-gray-50 text-lg px-10 h-14 font-bold shadow-lg"
               >
                 <Link href="/take-test" className="flex items-center gap-2">
                   همین الان شروع کن
@@ -510,7 +510,7 @@ export default function CourseLandingPage() {
               {teachers.map(teacher => (
                 <Card key={teacher.id} className="border-2 hover:border-primary/30 hover:shadow-lg transition-all text-center">
                   <CardContent className="pt-6">
-                    <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center">
                       {teacher.profileImage ? (
                         <img
                           src={teacher.profileImage}
@@ -518,7 +518,7 @@ export default function CourseLandingPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-2xl font-black text-blue-600">
+                        <span className="text-2xl font-black text-indigo-600">
                           {(teacher.firstName || teacher.email || 'T')[0].toUpperCase()}
                         </span>
                       )}
@@ -568,7 +568,7 @@ export default function CourseLandingPage() {
               {page.testimonials.map((t, i) => (
                 <Card key={i} className="border-2 hover:shadow-lg transition-all bg-white">
                   <CardContent className="pt-6">
-                    <Quote className="h-6 w-6 text-blue-200 mb-3" />
+                    <Quote className="h-6 w-6 text-indigo-200 mb-3" />
                     <p className="text-gray-700 text-sm leading-relaxed mb-4 italic">
                       "{t.quote}"
                     </p>
@@ -600,10 +600,10 @@ export default function CourseLandingPage() {
               <p className="text-gray-500">نکات کلیدی از استادهای MetaLingo</p>
             </div>
             <div
-              className="prose prose-sm max-w-none text-gray-700 bg-blue-50 rounded-2xl p-6 border border-blue-100
+              className="prose prose-sm max-w-none text-gray-700 bg-indigo-50 rounded-2xl p-6 border border-indigo-100
                 [&_ul]:list-none [&_ul]:space-y-3
                 [&_li]:flex [&_li]:gap-3 [&_li]:items-start
-                [&_strong]:text-blue-700 [&_strong]:font-bold"
+                [&_strong]:text-indigo-700 [&_strong]:font-bold"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.examTipsHtml, { ALLOWED_TAGS: ['ul','ol','li','strong','em','p','br','h3','h4'], ALLOWED_ATTR: [] }) }}
             />
           </div>
@@ -636,7 +636,7 @@ export default function CourseLandingPage() {
           {upcomingClasses.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {upcomingClasses.map(cls => (
-                <Card key={cls.id} className="border-2 hover:border-blue-200 hover:shadow-lg transition-all">
+                <Card key={cls.id} className="border-2 hover:border-indigo-200 hover:shadow-lg transition-all">
                   <CardContent className="pt-5">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -670,7 +670,7 @@ export default function CourseLandingPage() {
                       ) : null}
                     </div>
                     {cls.price && (
-                      <div className="text-blue-600 font-bold text-base mb-3">
+                      <div className="text-indigo-600 font-bold text-base mb-3">
                         {formatPrice(cls.price)}
                       </div>
                     )}

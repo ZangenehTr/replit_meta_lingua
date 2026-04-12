@@ -48,7 +48,7 @@ export default function CallernLanding() {
       icon: Clock,
       title: t('callern:landing.features.available247.title', '24/7 Availability'),
       description: t('callern:landing.features.available247.desc', 'Connect with expert teachers anytime, day or night'),
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-indigo-500 to-violet-500',
     },
     {
       icon: Users,
