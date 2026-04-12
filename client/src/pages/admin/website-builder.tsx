@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import type { CmsPage, CmsPageSection, InsertCmsPage } from "@shared/schema";
+import { SectionListManager } from "@/components/cms/SectionListManager";
 import { 
   Globe, 
   Layout, 
@@ -73,6 +74,7 @@ export default function WebsiteBuilderPage() {
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'fa'>('en');
   const [editingPage, setEditingPage] = useState<CmsPage | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('pages');
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',
@@ -241,6 +243,50 @@ export default function WebsiteBuilderPage() {
     deployWebsiteMutation.mutate({ pageId });
   };
 
+  const parseGlobalSettings = (page: CmsPage) => {
+    try { return JSON.parse(page.template || '{}'); } catch { return {}; }
+  };
+
+  const updateGlobalSettingsMutation = useMutation({
+    mutationFn: async ({ id, template }: { id: number; template: string }) => {
+      return apiRequest(`/api/cms/pages/${id}`, { method: 'PUT', body: { template } });
+    },
+    onSuccess: (updatedPage: CmsPage) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cms/pages'] });
+      if (editingPage && updatedPage && editingPage.id === updatedPage.id) {
+        setEditingPage(updatedPage);
+      }
+    },
+  });
+
+  const handleGlobalSettingChange = (page: CmsPage, key: string, value: boolean) => {
+    const current = parseGlobalSettings(page);
+    const updated = { ...current, [key]: value };
+    updateGlobalSettingsMutation.mutate({ id: page.id, template: JSON.stringify(updated) });
+  };
+
+  const openInBuilder = (page: CmsPage) => {
+    setEditingPage(page);
+    setActiveTab('builder');
+  };
+
+  const publishPageMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/cms/pages/${id}/publish`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      toast({ title: 'Page published', description: 'The page is now publicly accessible.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/cms/pages'] });
+    },
+    onError: () => {
+      toast({ title: 'Publish failed', description: 'Failed to publish page.', variant: 'destructive' });
+    }
+  });
+
+  const publishPage = (page: CmsPage) => {
+    publishPageMutation.mutate(page.id);
+  };
+
   return (
     <AppLayout>
       <div className="w-full px-4 py-6 space-y-6">
@@ -348,7 +394,7 @@ export default function WebsiteBuilderPage() {
             </div>
           </div>
 
-          <Tabs defaultValue="pages" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="pages">Pages</TabsTrigger>
               <TabsTrigger value="templates">Templates</TabsTrigger>
@@ -387,26 +433,36 @@ export default function WebsiteBuilderPage() {
                             {page.isHomepage ? 'Homepage' : 'Page'}
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Button 
                             size="sm" 
-                            onClick={() => setEditingPage(page)}
+                            onClick={() => openInBuilder(page)}
                             className="flex-1"
                           >
-                            <Edit2 className="w-4 h-4 me-1" />
-                            Edit
+                            <Layout className="w-4 h-4 me-1" />
+                            Build
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
-                            onClick={() => handleDeployment(page.id)}
-                            disabled={deployWebsiteMutation.isPending}
+                            onClick={() => publishPage(page)}
+                            disabled={page.status === 'published' || publishPageMutation.isPending}
                             className="flex-1"
                           >
                             <Globe className="w-4 h-4 me-1" />
-                            {deployWebsiteMutation.isPending ? 'Deploying...' : 'Deploy'}
+                            {page.status === 'published' ? 'Published' : 'Publish'}
                           </Button>
                         </div>
+                        {page.status === 'published' && (
+                          <a
+                            href={`/p/${page.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline mt-1 block"
+                          >
+                            View: /p/{page.slug}
+                          </a>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -486,90 +542,84 @@ export default function WebsiteBuilderPage() {
                   <div className="lg:col-span-2">
                     <Card>
                       <CardHeader>
-                        <CardTitle>Page Editor</CardTitle>
-                        <CardDescription>Edit your page content and styling</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                            <Layout className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-500">
-                              Page builder interface - drag and drop sections here
-                            </p>
+                        <div className="flex justify-between items-center flex-wrap gap-2">
+                          <div>
+                            <CardTitle>{editingPage.title}</CardTitle>
+                            <CardDescription>/p/{editingPage.slug} — {editingPage.status}</CardDescription>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingPage(null)}
+                            >
+                              ← Back
+                            </Button>
+                            {editingPage.status !== 'published' && (
+                              <Button
+                                size="sm"
+                                onClick={() => publishPage(editingPage)}
+                                disabled={publishPageMutation.isPending}
+                              >
+                                <Globe className="w-3 h-3 me-1" />
+                                Publish
+                              </Button>
+                            )}
+                            {editingPage.status === 'published' && (
+                              <a
+                                href={`/p/${editingPage.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Button size="sm" variant="outline">
+                                  <Eye className="w-3 h-3 me-1" />
+                                  View Page
+                                </Button>
+                              </a>
+                            )}
                           </div>
                         </div>
+                      </CardHeader>
+                      <CardContent>
+                        <SectionListManager pageId={editingPage.id} pageName={editingPage.title} />
                       </CardContent>
                     </Card>
                   </div>
 
-                  <div className="lg:col-span-1">
+                  <div className="lg:col-span-1 space-y-4">
                     <Card>
                       <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <CardTitle>Preview</CardTitle>
-                          <div className="flex gap-1">
-                            <Button 
-                              size="sm" 
-                              variant={previewMode === 'desktop' ? 'default' : 'outline'}
-                              onClick={() => setPreviewMode('desktop')}
-                            >
-                              <Monitor className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant={previewMode === 'tablet' ? 'default' : 'outline'}
-                              onClick={() => setPreviewMode('tablet')}
-                            >
-                              <Tablet className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant={previewMode === 'mobile' ? 'default' : 'outline'}
-                              onClick={() => setPreviewMode('mobile')}
-                            >
-                              <Smartphone className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
+                        <CardTitle className="text-sm">Global Settings</CardTitle>
+                        <CardDescription className="text-xs">Applied to the entire page</CardDescription>
                       </CardHeader>
-                      <CardContent>
-                        <div className={`border rounded-lg overflow-hidden ${
-                          previewMode === 'desktop' ? 'h-96' : 
-                          previewMode === 'tablet' ? 'h-80 max-w-sm mx-auto' : 
-                          'h-64 max-w-xs mx-auto'
-                        }`}>
-                          <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-full flex items-center justify-center text-white">
-                            <div className="text-center">
-                              <h3 className="text-lg font-bold mb-2">Live Preview</h3>
-                              <p className="text-sm opacity-90">
-                                {editingPage.title}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="mt-4">
-                      <CardContent className="pt-6">
-                        <div className="flex gap-2">
-                          <Button 
-                            onClick={() => updatePageMutation.mutate({ id: editingPage.id, data: editingPage })}
-                            disabled={updatePageMutation.isPending}
-                            className="flex-1"
-                          >
-                            <Save className="w-4 h-4 me-2" />
-                            {updatePageMutation.isPending ? 'Saving...' : 'Save'}
-                          </Button>
-                          <Button 
-                            onClick={() => handleDeployment(editingPage.id)}
-                            disabled={deployWebsiteMutation.isPending}
-                            variant="outline"
-                          >
-                            <Globe className="w-4 h-4 me-2" />
-                            Deploy
-                          </Button>
-                        </div>
+                      <CardContent className="space-y-4">
+                        {(() => {
+                          const gs = parseGlobalSettings(editingPage);
+                          return (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <Label className="text-sm">Smooth Scroll</Label>
+                                  <p className="text-xs text-muted-foreground">Desktop only, auto-disabled on mobile</p>
+                                </div>
+                                <Switch
+                                  checked={!!gs.smoothScroll}
+                                  onCheckedChange={(v) => handleGlobalSettingChange(editingPage, 'smoothScroll', v)}
+                                />
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <Label className="text-sm">Progress Bar</Label>
+                                  <p className="text-xs text-muted-foreground">Fixed scroll progress indicator at top</p>
+                                </div>
+                                <Switch
+                                  checked={!!gs.progressBar}
+                                  onCheckedChange={(v) => handleGlobalSettingChange(editingPage, 'progressBar', v)}
+                                />
+                              </div>
+                            </>
+                          );
+                        })()}
                       </CardContent>
                     </Card>
                   </div>
@@ -578,11 +628,14 @@ export default function WebsiteBuilderPage() {
                 <div className="text-center py-12">
                   <Layout className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    Select a page to edit
+                    Select a page to build
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Choose a page from the Pages tab to start editing.
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Go to the Pages tab and click "Build" on any page to start editing sections.
                   </p>
+                  <Button variant="outline" onClick={() => setActiveTab('pages')}>
+                    Go to Pages
+                  </Button>
                 </div>
               )}
             </TabsContent>

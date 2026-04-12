@@ -41,8 +41,8 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   // CMS PAGES ENDPOINTS
   // ============================================================================
   
-  // Get all pages with optional filters
-  app.get('/api/cms/pages', async (req: Request, res: Response) => {
+  // Get all pages with optional filters (admin only — includes drafts)
+  app.get('/api/cms/pages', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const { status, locale, isHomepage } = req.query;
       
@@ -59,8 +59,34 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
     }
   });
   
-  // Get single page by ID
-  app.get('/api/cms/pages/:id', async (req: Request, res: Response) => {
+  // Get page by slug (public — only published pages)
+  // MUST be registered before /:id to avoid route shadowing
+  app.get('/api/cms/pages/slug/:slug', async (req: Request, res: Response) => {
+    try {
+      const page = await storage.getCmsPageBySlug(req.params.slug);
+      
+      if (!page) {
+        return res.status(404).json({ message: 'Page not found' });
+      }
+
+      // Only serve published pages publicly
+      if (page.status !== 'published') {
+        return res.status(404).json({ message: 'Page not found' });
+      }
+      
+      // Get page sections ordered by sortOrder
+      const sections = await storage.getCmsPageSections(page.id);
+      const sortedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
+      
+      res.json({ ...page, sections: sortedSections });
+    } catch (error) {
+      console.error('Error fetching CMS page by slug:', error);
+      res.status(500).json({ message: 'Failed to fetch page' });
+    }
+  });
+
+  // Get single page by ID (admin — all statuses including drafts)
+  app.get('/api/cms/pages/:id', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const pageId = parseInt(req.params.id);
       const page = await storage.getCmsPage(pageId);
@@ -79,27 +105,8 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
     }
   });
   
-  // Get page by slug
-  app.get('/api/cms/pages/slug/:slug', async (req: Request, res: Response) => {
-    try {
-      const page = await storage.getCmsPageBySlug(req.params.slug);
-      
-      if (!page) {
-        return res.status(404).json({ message: 'Page not found' });
-      }
-      
-      // Get page sections
-      const sections = await storage.getCmsPageSections(page.id);
-      
-      res.json({ ...page, sections });
-    } catch (error) {
-      console.error('Error fetching CMS page by slug:', error);
-      res.status(500).json({ message: 'Failed to fetch page' });
-    }
-  });
-  
   // Create new page
-  app.post('/api/cms/pages', async (req: Request, res: Response) => {
+  app.post('/api/cms/pages', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const pageData = insertCmsPageSchema.parse(req.body);
       const page = await storage.createCmsPage(pageData);
@@ -114,7 +121,7 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   });
   
   // Update page
-  app.put('/api/cms/pages/:id', async (req: Request, res: Response) => {
+  app.put('/api/cms/pages/:id', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const pageId = parseInt(req.params.id);
       const updates = req.body;
@@ -133,7 +140,7 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   });
   
   // Publish page
-  app.post('/api/cms/pages/:id/publish', async (req: Request, res: Response) => {
+  app.post('/api/cms/pages/:id/publish', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const pageId = parseInt(req.params.id);
       const page = await storage.publishCmsPage(pageId);
@@ -150,7 +157,7 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   });
   
   // Delete page
-  app.delete('/api/cms/pages/:id', async (req: Request, res: Response) => {
+  app.delete('/api/cms/pages/:id', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const pageId = parseInt(req.params.id);
       await storage.deleteCmsPage(pageId);
@@ -166,7 +173,7 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   // ============================================================================
   
   // Create page section
-  app.post('/api/cms/page-sections', async (req: Request, res: Response) => {
+  app.post('/api/cms/page-sections', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const sectionData = insertCmsPageSectionSchema.parse(req.body);
       const section = await storage.createCmsPageSection(sectionData);
@@ -181,7 +188,7 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   });
   
   // Update page section
-  app.put('/api/cms/page-sections/:id', async (req: Request, res: Response) => {
+  app.put('/api/cms/page-sections/:id', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const sectionId = parseInt(req.params.id);
       const section = await storage.updateCmsPageSection(sectionId, req.body);
@@ -198,7 +205,7 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
   });
   
   // Delete page section
-  app.delete('/api/cms/page-sections/:id', async (req: Request, res: Response) => {
+  app.delete('/api/cms/page-sections/:id', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const sectionId = parseInt(req.params.id);
       await storage.deleteCmsPageSection(sectionId);
@@ -208,7 +215,53 @@ export function registerCmsRoutes(app: Express, authenticateToken?: any, require
       res.status(500).json({ message: 'Failed to delete section' });
     }
   });
-  
+
+  // ============================================================================
+  // CMS SECTIONS ENDPOINTS (canonical paths per task spec — alias for page-sections)
+  // ============================================================================
+
+  // Update section by ID (content + styles)
+  app.put('/api/cms/sections/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const sectionId = parseInt(req.params.id);
+      const section = await storage.updateCmsPageSection(sectionId, req.body);
+      if (!section) return res.status(404).json({ message: 'Section not found' });
+      res.json(section);
+    } catch (error) {
+      console.error('Error updating section:', error);
+      res.status(500).json({ message: 'Failed to update section' });
+    }
+  });
+
+  // Delete section by ID
+  app.delete('/api/cms/sections/:id', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const sectionId = parseInt(req.params.id);
+      await storage.deleteCmsPageSection(sectionId);
+      res.json({ message: 'Section deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting section:', error);
+      res.status(500).json({ message: 'Failed to delete section' });
+    }
+  });
+
+  // PATCH section sort order only
+  app.patch('/api/cms/sections/:id/order', ...requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const sectionId = parseInt(req.params.id);
+      const { sortOrder } = req.body;
+      if (typeof sortOrder !== 'number') {
+        return res.status(400).json({ message: 'sortOrder must be a number' });
+      }
+      const section = await storage.updateCmsPageSection(sectionId, { sortOrder });
+      if (!section) return res.status(404).json({ message: 'Section not found' });
+      res.json(section);
+    } catch (error) {
+      console.error('Error updating section order:', error);
+      res.status(500).json({ message: 'Failed to update section order' });
+    }
+  });
+
   // ============================================================================
   // BLOG CATEGORIES ENDPOINTS
   // ============================================================================
@@ -920,8 +973,8 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
     }
   });
 
-  // Get page sections by page ID
-  app.get('/api/cms/pages/:id/sections', async (req: Request, res: Response) => {
+  // Get page sections by page ID (admin only)
+  app.get('/api/cms/pages/:id/sections', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const pageId = parseInt(req.params.id);
       const sections = await storage.getCmsPageSections(pageId);
@@ -932,8 +985,8 @@ Sitemap: ${baseUrl}/api/seo/sitemap.xml`;
     }
   });
 
-  // Create page section under a page
-  app.post('/api/cms/pages/:id/sections', async (req: Request, res: Response) => {
+  // Create page section under a page (admin only)
+  app.post('/api/cms/pages/:id/sections', ...requireAdmin, async (req: Request, res: Response) => {
     try {
       const pageId = parseInt(req.params.id);
       const sectionData = insertCmsPageSectionSchema.parse({

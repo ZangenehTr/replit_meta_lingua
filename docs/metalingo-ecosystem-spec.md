@@ -134,6 +134,12 @@ Each transition: validated by `LEAD_STAGE_TRANSITIONS` map (illegal jumps reject
 
 **What it does:** Drives organic discovery and supports sales through structured content.
 
+- **CMS Page Builder:** Flexible section-based marketing pages published at `/p/:slug`. Subsystem includes:
+  - 7 section types: hero, features, rich text, CTA, testimonials, stats, spacer
+  - 9 animation capabilities per section via GSAP ScrollTrigger: entrance transitions (fade/slide/scale), sticky pinning, parallax, text reveal (word-by-word/blur/fade-up), scroll snap, blur-on-enter, and section theming
+  - Global page settings: smooth scroll (desktop-only) and progress bar
+  - Content stored in `cms_page_sections.content` (jsonb); animation config in `cms_page_sections.styles` (jsonb)
+  - Note: this replaces the previous `admin_settings.homepageContent` approach for new marketing pages — the existing homepage editor and landing pages editor remain unchanged
 - **Blog:** AI-generated or manually written posts; each auto-gets `metaTitle`, `metaDescription`, `keywords`, `slug`; sitemap.xml auto-regenerated on publish
 - **Video Gallery:** Curated video content; categorised by program (IELTS, TOEFL, etc.)
 - **Course Landing Pages:** Per-program pages (`/courses/ielts`, `/courses/toefl`, etc.) with dynamic content, testimonials, enrollment CTA

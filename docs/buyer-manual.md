@@ -1,7 +1,7 @@
 # MetaLingo Academy — Buyer Manual
 
-**Version:** 1.4.0  
-**Last Updated:** April 4, 2026  
+**Version:** 1.5.0  
+**Last Updated:** April 12, 2026  
 **Audience:** Institute Owners, Administrators, Department Heads
 
 ---
@@ -753,7 +753,58 @@ The copilot uses ArvanCloud (Qwen3-30B-A3B model) as its primary AI provider. If
 
 ---
 
-## 22. CMS — Blog & Video Library
+## 22. Website Page Builder
+
+The Website Page Builder lets you create custom marketing and content pages that are published at `/p/your-slug`. This is ideal for landing pages, program overviews, event announcements, and any standalone content you want to publish publicly.
+
+**Admin → CMS → Website Builder**
+
+### Creating a Page
+1. Click **Create Page** and give it a title and a URL slug (e.g. `ielts-intensive-course`)
+2. Click **Build** on the page card to open the section editor
+3. Add sections, configure each one, and publish when ready
+4. Published pages are live at `/p/your-slug`
+
+### The 7 Section Types
+
+| Type | What It Does |
+|---|---|
+| **Hero** | A full-width banner with a headline, subtext, and up to two call-to-action buttons — great for the top of a page |
+| **Features** | A 2–4 column grid of feature cards, each with an icon, title, and description |
+| **Rich Text** | A block of free-form formatted text (HTML) — use for detailed content, paragraphs, and lists |
+| **Call to Action** | A centered headline with action buttons — designed to prompt a visitor to sign up, buy, or contact you |
+| **Testimonials** | A grid of customer quotes with names, roles, and star ratings |
+| **Stats** | A row of impressive numbers (e.g. "10,000+ Students") with labels |
+| **Spacer** | A blank gap or divider line between sections — keeps the layout breathable |
+
+### The Animation Panel (9 Settings Per Section)
+Each section has an animation panel with 9 settings:
+
+1. **Entrance Transition** — how the section appears when scrolled into view: Fade In, Slide Up, Slide From Left/Right, Scale In, or None
+2. **Duration** — how fast the entrance animation plays (0.3 to 1.5 seconds)
+3. **Sticky Story** — keeps the section pinned to the screen while you scroll past it (great for hero sections and storytelling effects). Choose how long it stays pinned (100vh to 300vh)
+4. **Parallax Effect** — the section scrolls at a different speed than the page, creating depth. Choose Slow, Medium, or Fast
+5. **Text Reveal** — animates the headline: Word by Word (each word appears in sequence), Blur to Sharp (starts blurry and sharpens), or Fade Up
+6. **Scroll Snap** — the page snaps to this section when scrolling — creates a presentation-like full-screen experience
+7. **Blur on Enter** — the section starts blurred and sharpens as it scrolls into view. Adjust the blur intensity (4–20px)
+8. **Section Theme** — sets the color scheme: Light, Dark, Indigo gradient, Violet gradient, or Custom colors
+9. **Custom Colors** — only visible when Theme is set to Custom — lets you pick exact background and text colors
+
+### Global Settings
+In the Builder tab, the right-hand panel has two global toggles that apply to the entire page:
+- **Smooth Scroll** — enables a smooth, cinematic scroll feel on desktop. Automatically disabled on mobile phones (iOS/Android)
+- **Progress Bar** — shows a thin blue progress bar at the top of the page that fills up as the visitor scrolls down
+
+### Publishing
+Click **Publish** on the page card (Pages tab) or the **Publish** button in the Builder. Once published, the page is live at `/p/your-slug`. A "View Page" button will appear to open it directly.
+
+> **Note about the HTML (Rich Text) section:** It accepts raw HTML. This is powerful but requires care — only enter trusted HTML, and avoid pasting content from unknown sources.
+
+> **Note about Smooth Scroll:** This feature is automatically turned off for visitors on mobile phones — it only activates on desktop browsers.
+
+---
+
+## 22.1. CMS — Blog & Video Library
 
 ### Blog
 **Admin → CMS → Blog**:

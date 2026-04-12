@@ -1306,6 +1306,13 @@ function Router() {
         }}
       </Route>
       
+      <Route path="/p/:slug">
+        {() => {
+          const CmsPageRenderer = lazy(() => import("@/pages/public/cms-page-renderer"));
+          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CmsPageRenderer /></Suspense>;
+        }}
+      </Route>
+
       <Route path="/">
         {(() => {
           const { user, isLoading } = useAuth();

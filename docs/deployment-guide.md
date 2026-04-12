@@ -1,7 +1,7 @@
 # MetaLingo Academy — Deployment Guide
 
-**Version:** 1.4.0  
-**Last Updated:** April 4, 2026  
+**Version:** 1.5.0  
+**Last Updated:** April 12, 2026  
 **Audience:** System Administrators, DevOps Engineers
 
 ---
@@ -551,6 +551,28 @@ Place the certificate files at:
 - `/etc/ssl/metalingo/privkey.pem`
 
 And update the Nginx `ssl_certificate` and `ssl_certificate_key` paths accordingly.
+
+---
+
+## 10.5. CMS Page Builder
+
+The CMS Page Builder allows admins to create custom marketing and content pages served at `/p/:slug`.
+
+### How It Works
+- Pages are created in **Admin → CMS → Website Builder**
+- Each page contains ordered sections (hero, features, text, CTA, testimonials, stats, spacer)
+- Published pages are accessible publicly at `/p/your-slug`
+
+### Runtime npm Packages
+The following npm packages are included in the application bundle and require no additional server configuration:
+- **`gsap`** — GreenSock Animation Platform for scroll animations (pure client-side, no server config needed)
+- **`dompurify`** — HTML sanitization for the rich text section (pure client-side, no server config needed)
+
+### Notes
+- GSAP animations require no additional server configuration — they run entirely in the browser
+- The Smooth Scroll feature is **desktop-only** and is automatically disabled on touch devices (iOS/Android)
+- Scroll animations, sticky sections, parallax, and progress bar all run client-side
+- No additional Nginx rules are needed; the `/p/:slug` route is handled by the React SPA
 
 ---
 

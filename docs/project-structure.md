@@ -1,7 +1,7 @@
 # MetaLingo — Project Structure & Architecture Guide
 
-**Version:** 1.4.0  
-**Last Updated:** April 4, 2026  
+**Version:** 1.5.0  
+**Last Updated:** April 12, 2026  
 **Audience:** Developers, Technical Leads, DevOps Engineers
 
 > **Who this is for:** Junior developers joining the project, or anyone who needs to understand how the system is built — including explaining it to a technical lead or CTO.
@@ -243,8 +243,24 @@ client/
     │   ├── callern/         ← Video session components
     │   ├── linguaquest/     ← Game UI components
     │   ├── ui/              ← shadcn/ui base components
+    │   ├── cms/             ← CMS Page Builder components
+    │   │   ├── SectionTypeSelector.tsx  ← Grid of 7 section type cards
+    │   │   ├── SectionContentEditor.tsx ← Per-type content forms
+    │   │   ├── AnimationPanel.tsx       ← 9 animation settings accordion
+    │   │   ├── SectionListManager.tsx   ← Section list with add/edit/reorder/delete
+    │   │   └── SectionRenderer.tsx      ← Public renderer for all 7 section types
     │   └── ...
     ├── hooks/               ← Custom data-fetching hooks
+    │   ├── useScrollAnimations.ts   ← GSAP ScrollTrigger setup for CMS pages
+    │   └── ...
+    ├── pages/
+    │   ├── admin/
+    │   │   ├── website-builder.tsx  ← Now fully functional (section editor + animation panel)
+    │   │   └── ...
+    │   ├── public/
+    │   │   ├── cms-page-renderer.tsx ← Renders published CMS pages at /p/:slug
+    │   │   └── ...
+    │   └── ...
     ├── services/            ← Functions that call the API
     ├── contexts/            ← Global state (auth, language)
     ├── i18n/                ← Translations (Persian/English/Arabic)
