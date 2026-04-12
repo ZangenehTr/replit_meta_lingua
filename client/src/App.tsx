@@ -1313,6 +1313,17 @@ function Router() {
         }}
       </Route>
 
+      <Route path="/home">
+        {() => {
+          const PublicHome = lazy(() => import("@/pages/public/home"));
+          return (
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+              <PublicHome />
+            </Suspense>
+          );
+        }}
+      </Route>
+
       <Route path="/">
         {(() => {
           const { user, isLoading } = useAuth();
