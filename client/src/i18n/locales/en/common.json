@@ -14,7 +14,13 @@
     "toefl": "TOEFL iBT",
     "gre": "GRE Preparation",
     "pte": "PTE Academic",
-    "conversation": "General Conversation"
+    "conversation": "Conversation",
+    "exams": "Exams",
+    "examPrep": "International Exam Preparation",
+    "allPrograms": "View All Programs",
+    "languageSkills": "Language Skills & Conversation",
+    "freePlacement": "Free Placement Test",
+    "teachers": "Teachers"
   },
   "breadcrumb": {
     "home": "Home",
@@ -647,7 +653,8 @@
     "terms": "Terms of Service",
     "cookies": "Cookie Policy",
     "rights": "All rights reserved.",
-    "multilingual": "Available in English, فارسی, العربية"
+    "multilingual": "Available in English, فارسی, العربية",
+    "verifyCert": "Verify Certificate"
   },
   "common": {
     "with": "with",
@@ -953,6 +960,7 @@
     "clearFilters": "Clear Filters"
   },
   "cta": {
+    "freeTest": "Free Test",
     "startLearning": "Start Learning Free",
     "browseCourses": "Browse Free Courses",
     "viewAll": "View All",

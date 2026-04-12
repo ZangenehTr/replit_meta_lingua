@@ -535,36 +535,36 @@ body.rtl p, body.rtl div, body.rtl span {
   --input: 214 32% 91%; /* #E2E8F0 */
   
   /* Modern Blue Primary Colors - More Professional */
-  --primary: 213 94% 50%; /* #2563EB - Vibrant blue primary */
+  --primary: 243 75% 59%; /* #4F46E5 - Indigo-600 primary */
   --primary-foreground: 0 0% 100%; /* #FFFFFF */
   --secondary: 210 40% 96%; /* #F1F5F9 - Light gray secondary */
   --secondary-foreground: 222 84% 5%; /* #0F172A */
   --accent: 210 40% 96%; /* #F1F5F9 - Light accent */
-  --accent-foreground: 213 94% 40%; /* #1D4ED8 - Dark blue */
+  --accent-foreground: 243 75% 40%; /* Indigo dark for accent */
   
   /* Brand Gradient Colors */
-  --conversion-purple: 213 94% 50%; /* #2563EB - Blue */
-  --conversion-blue: 199 89% 48%; /* #0EA5E9 - Cyan */
-  --conversion-gradient-start: 213 94% 50%; /* #2563EB */
-  --conversion-gradient-end: 199 89% 48%; /* #0EA5E9 */
+  --conversion-purple: 243 75% 59%; /* #4F46E5 - Indigo */
+  --conversion-blue: 262 83% 58%; /* #7C3AED - Violet */
+  --conversion-gradient-start: 243 75% 59%; /* #4F46E5 */
+  --conversion-gradient-end: 262 83% 58%; /* #7C3AED */
   
   --destructive: 0 84% 60%; /* #EF4444 */
   --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-  --ring: 213 94% 50%; /* #2563EB - Blue ring */
+  --ring: 243 75% 59%; /* #4F46E5 - Indigo ring */
   --radius: 0.75rem; /* Increased for modern feel */
 
   /* Sidebar colors */
   --sidebar-background: 0 0% 100%; /* #FFFFFF */
   --sidebar-foreground: 222 84% 5%; /* #0F172A */
-  --sidebar-primary: 213 94% 50%; /* #2563EB */
+  --sidebar-primary: 243 75% 59%; /* #4F46E5 - Indigo */
   --sidebar-primary-foreground: 210 40% 98%; /* #F8FAFC */
   --sidebar-accent: 210 40% 96%; /* #F1F5F9 */
   --sidebar-accent-foreground: 222 84% 5%; /* #0F172A */
   --sidebar-border: 214 32% 91%; /* #E2E8F0 */
-  --sidebar-ring: 213 94% 50%; /* #2563EB */
+  --sidebar-ring: 243 75% 59%; /* #4F46E5 - Indigo */
 
   /* Chart colors */
-  --chart-1: 213 94% 50%; /* #2563EB */
+  --chart-1: 243 75% 59%; /* #4F46E5 - Indigo */
   --chart-2: 159 75% 48%; /* #10B981 */
   --chart-3: 45 93% 58%; /* #F59E0B */
   --chart-4: 262 83% 58%; /* #8B5CF6 */
@@ -582,28 +582,28 @@ body.rtl p, body.rtl div, body.rtl span {
   --card-foreground: 210 40% 98%; /* #F8FAFC */
   --border: 217 33% 17%; /* #1E293B */
   --input: 217 33% 17%; /* #1E293B */
-  --primary: 213 94% 68%; /* #3B82F6 */
-  --primary-foreground: 210 40% 98%; /* #F8FAFC */
+  --primary: 239 84% 72%; /* #818CF8 - Indigo-400 for dark mode */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
   --secondary: 217 33% 17%; /* #1E293B */
   --secondary-foreground: 210 40% 98%; /* #F8FAFC */
   --accent: 217 33% 17%; /* #1E293B */
   --accent-foreground: 210 40% 98%; /* #F8FAFC */
   --destructive: 0 63% 31%; /* #991B1B */
   --destructive-foreground: 210 40% 98%; /* #F8FAFC */
-  --ring: 213 94% 68%; /* #3B82F6 */
+  --ring: 239 84% 72%; /* Indigo ring for dark mode */
 
   /* Sidebar colors for dark mode */
   --sidebar-background: 222 84% 5%; /* #0F172A */
   --sidebar-foreground: 210 40% 98%; /* #F8FAFC */
-  --sidebar-primary: 213 94% 68%; /* #3B82F6 */
+  --sidebar-primary: 239 84% 72%; /* Indigo for dark mode */
   --sidebar-primary-foreground: 210 40% 98%; /* #F8FAFC */
   --sidebar-accent: 217 33% 17%; /* #1E293B */
   --sidebar-accent-foreground: 210 40% 98%; /* #F8FAFC */
   --sidebar-border: 217 33% 17%; /* #1E293B */
-  --sidebar-ring: 213 94% 68%; /* #3B82F6 */
+  --sidebar-ring: 239 84% 72%; /* Indigo ring for dark mode */
 
   /* Chart colors for dark mode */
-  --chart-1: 213 94% 68%; /* #3B82F6 */
+  --chart-1: 239 84% 72%; /* Indigo */
   --chart-2: 159 75% 48%; /* #10B981 */
   --chart-3: 45 93% 58%; /* #F59E0B */
   --chart-4: 262 83% 58%; /* #8B5CF6 */
@@ -653,9 +653,9 @@ body.rtl p, body.rtl div, body.rtl span {
     animation: spin 1s linear infinite;
   }
 
-  /* Gradient backgrounds - Clean modern blue */
+  /* Gradient backgrounds - Indigo brand */
   .gradient-bg {
-    background: linear-gradient(135deg, hsl(213 94% 50%) 0%, hsl(199 89% 48%) 100%);
+    background: linear-gradient(135deg, hsl(243 75% 59%) 0%, hsl(262 83% 58%) 100%);
   }
 
   /* Card hover effects */
@@ -724,13 +724,13 @@ body.rtl p, body.rtl div, body.rtl span {
     @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
   }
 
-  /* Conversion-Optimized Gradient Components - Clean Blue Theme */
+  /* Conversion-Optimized Gradient Components - Indigo Theme */
   .conversion-gradient-bg {
-    background: linear-gradient(135deg, hsl(213 94% 50%) 0%, hsl(199 89% 48%) 100%);
+    background: linear-gradient(135deg, hsl(243 75% 59%) 0%, hsl(262 83% 58%) 100%);
   }
 
   .conversion-gradient-text {
-    background: linear-gradient(135deg, hsl(213 94% 50%) 0%, hsl(199 89% 48%) 100%);
+    background: linear-gradient(135deg, hsl(243 75% 59%) 0%, hsl(262 83% 58%) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -755,7 +755,7 @@ body.rtl p, body.rtl div, body.rtl span {
   .card-gradient {
     background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(210 40% 98%) 100%);
     border: 1px solid hsl(var(--border));
-    box-shadow: 0 4px 20px hsl(213 94% 50% / 0.08);
+    box-shadow: 0 4px 20px hsl(243 75% 59% / 0.08);
   }
 
   .card-hover-effect {

@@ -89,19 +89,19 @@ export default function PublicHome() {
       icon: Brain,
       title: hc.pillar1Title || 'یادگیری هوشمند با AI',
       desc: hc.pillar1Desc || 'Lexi، دستیار هوش مصنوعی تو، برنامه‌درسی شخصی‌سازی‌شده بر اساس سطح و هدفت می‌سازه.',
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-indigo-500 to-violet-500',
     },
     {
       icon: Video,
       title: hc.pillar2Title || 'تدریس زنده با CallerN',
       desc: hc.pillar2Desc || 'هر ساعت از شبانه‌روز، با یه استاد واقعی تماس بگیر. بدون رزرو، بدون انتظار.',
-      color: 'from-cyan-500 to-teal-500',
+      color: 'from-violet-500 to-purple-500',
     },
     {
       icon: Award,
       title: hc.pillar3Title || 'دوره‌های تخصصی آزمون',
       desc: hc.pillar3Desc || 'IELTS، TOEFL، GRE، PTE — با مسیر آموزشی ساختارمند و گواهینامه معتبر.',
-      color: 'from-teal-500 to-green-500',
+      color: 'from-purple-500 to-fuchsia-500',
     },
   ];
 
@@ -128,23 +128,23 @@ export default function PublicHome() {
       />
 
       {/* ——— HERO ——— */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50" dir="rtl">
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-violet-50" dir="rtl">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-16 right-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
-          <div className="absolute bottom-0 left-10 w-64 h-64 bg-cyan-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
+          <div className="absolute top-16 right-10 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
+          <div className="absolute bottom-0 left-10 w-64 h-64 bg-violet-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:py-14 lg:py-16 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
             {/* ——— Text column (leading side in RTL = right) ——— */}
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 border border-blue-200 mb-5">
-                <Zap className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-700">هوش مصنوعی + تدریس زنده + گیمیفیکیشن</span>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 border border-indigo-200 mb-5">
+                <Zap className="h-4 w-4 text-indigo-600" />
+                <span className="text-sm font-medium text-indigo-700">هوش مصنوعی + تدریس زنده + گیمیفیکیشن</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-gray-900 mb-5 leading-tight">
-                <span className="block bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-500 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-500 bg-clip-text text-transparent">
                   {hc.heroHeadline || 'زبان انگلیسی رو هوشمند یاد بگیر'}
                 </span>
               </h1>
@@ -157,7 +157,7 @@ export default function PublicHome() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-lg px-8 h-14 shadow-lg shadow-blue-500/30"
+                  className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-lg px-8 h-14 shadow-lg shadow-indigo-500/30"
                 >
                   <Link href="/auth?tab=register" className="flex items-center gap-2">
                     {hc.ctaPrimary || 'همین حالا شروع کن'}
@@ -176,9 +176,9 @@ export default function PublicHome() {
             {/* ——— Visual illustration (trailing side in RTL = left) ——— */}
             <div className="hidden lg:block relative h-96" aria-hidden="true">
               {/* Live session card */}
-              <div className="absolute top-0 left-8 w-64 bg-white rounded-2xl shadow-xl border border-blue-100 p-4 z-10">
+              <div className="absolute top-0 left-8 w-64 bg-white rounded-2xl shadow-xl border border-indigo-100 p-4 z-10">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-base font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-base font-bold shrink-0">
                     س
                   </div>
                   <div className="flex-1 min-w-0">
@@ -191,7 +191,7 @@ export default function PublicHome() {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex-1 bg-blue-600 rounded-lg flex items-center justify-center h-8 text-white text-xs font-medium">
+                  <div className="flex-1 bg-indigo-600 rounded-lg flex items-center justify-center h-8 text-white text-xs font-medium">
                     <Video className="h-3 w-3 me-1" />
                     ورود به جلسه
                   </div>
@@ -199,7 +199,7 @@ export default function PublicHome() {
               </div>
 
               {/* AI feedback bubble */}
-              <div className="absolute top-32 right-4 w-56 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl shadow-xl p-3 z-20 text-white">
+              <div className="absolute top-32 right-4 w-56 bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl shadow-xl p-3 z-20 text-white">
                 <div className="flex items-start gap-2">
                   <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                     <Brain className="h-4 w-4 text-white" />
@@ -235,7 +235,7 @@ export default function PublicHome() {
               </div>
 
               {/* IELTS badge floating */}
-              <div className="absolute top-6 right-20 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-30">
+              <div className="absolute top-6 right-20 bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-30">
                 IELTS · TOEFL · GRE
               </div>
             </div>
@@ -248,19 +248,19 @@ export default function PublicHome() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-3xl sm:text-4xl font-black text-blue-600 mb-1">
+              <div className="text-3xl sm:text-4xl font-black text-indigo-600 mb-1">
                 {stats ? `${stats.students.toLocaleString('fa-IR')}+` : '۱۰۰۰+'}
               </div>
               <div className="text-sm text-gray-500">زبان‌آموز فعال</div>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-black text-cyan-600 mb-1">
+              <div className="text-3xl sm:text-4xl font-black text-violet-600 mb-1">
                 {stats ? `${stats.teachers.toLocaleString('fa-IR')}+` : '۵۰+'}
               </div>
               <div className="text-sm text-gray-500">استاد متخصص</div>
             </div>
             <div>
-              <div className="text-3xl sm:text-4xl font-black text-teal-600 mb-1">
+              <div className="text-3xl sm:text-4xl font-black text-purple-600 mb-1">
                 {stats ? `${stats.courses.toLocaleString('fa-IR')}+` : '۲۰+'}
               </div>
               <div className="text-sm text-gray-500">دوره فعال</div>
@@ -270,7 +270,7 @@ export default function PublicHome() {
       </section>
 
       {/* ——— PLACEMENT STRIP ——— */}
-      <section className="bg-gradient-to-l from-blue-700 to-cyan-600 py-12" dir="rtl">
+      <section className="bg-gradient-to-l from-indigo-700 to-violet-700 py-12" dir="rtl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="text-center lg:text-right text-white">
@@ -296,7 +296,7 @@ export default function PublicHome() {
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-blue-700 hover:bg-gray-50 text-lg px-10 h-14 font-bold shadow-lg"
+                className="bg-white text-indigo-700 hover:bg-gray-50 text-lg px-10 h-14 font-bold shadow-lg"
               >
                 <Link href="/take-test" className="flex items-center gap-2">
                   آزمون رایگان Placement
@@ -321,7 +321,7 @@ export default function PublicHome() {
             {pillars.map((p, i) => {
               const Icon = p.icon;
               return (
-                <Card key={i} className="border-2 hover:border-blue-200 transition-all hover:shadow-lg">
+                <Card key={i} className="border-2 hover:border-indigo-200 transition-all hover:shadow-lg">
                   <CardHeader>
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${p.color} flex items-center justify-center mb-4 shadow-md`}>
                       <Icon className="h-7 w-7 text-white" />
@@ -339,8 +339,8 @@ export default function PublicHome() {
       </section>
 
       {/* ——— CALLERN SPOTLIGHT ——— */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-cyan-600 py-16 sm:py-24" dir="rtl">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-400/20 via-transparent to-transparent" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-600 py-16 sm:py-24" dir="rtl">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-400/20 via-transparent to-transparent" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div className="text-white">
@@ -349,7 +349,7 @@ export default function PublicHome() {
                 <span className="text-sm font-medium">تدریس زنده ۲۴ ساعته</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-black mb-4 leading-tight">
-                <span className="text-cyan-300">
+                <span className="text-violet-200">
                   {hc.callerNTitle || 'یه استاد همیشه آماده‌ست، هر ساعت از شبانه‌روز'}
                 </span>
               </h2>
@@ -362,7 +362,7 @@ export default function PublicHome() {
                   return (
                     <li key={i} className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                        <Icon className="h-4 w-4 text-cyan-200" />
+                        <Icon className="h-4 w-4 text-violet-200" />
                       </div>
                       <span className="text-white/90">{f.text}</span>
                     </li>
@@ -373,7 +373,7 @@ export default function PublicHome() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-white text-blue-700 hover:bg-gray-50 font-bold px-8 h-13"
+                  className="bg-white text-indigo-700 hover:bg-gray-50 font-bold px-8 h-13"
                 >
                   <Link href="/callern" className="flex items-center gap-2">
                     با یه استاد تماس بگیر
@@ -400,7 +400,7 @@ export default function PublicHome() {
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/70 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/70 via-transparent to-transparent" />
                 <div className="absolute bottom-4 end-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -415,7 +415,7 @@ export default function PublicHome() {
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-br from-violet-900/40 via-transparent to-transparent" />
                 <div className="absolute top-4 start-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-md">
                   <div className="flex items-center gap-2">
                     <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -429,7 +429,7 @@ export default function PublicHome() {
       </section>
 
       {/* ——— LEXI + LINGUAQUEST TEASER ——— */}
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 to-blue-50" dir="rtl">
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 to-indigo-50" dir="rtl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
@@ -441,9 +441,9 @@ export default function PublicHome() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Lexi Card */}
-            <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-white overflow-hidden">
+            <Card className="border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 to-white overflow-hidden">
               <CardHeader className="pb-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-3 shadow-md">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center mb-3 shadow-md">
                   <Brain className="h-7 w-7 text-white" />
                 </div>
                 <CardTitle className="text-2xl text-gray-900">Lexi — دستیار AI تو</CardTitle>
@@ -457,8 +457,8 @@ export default function PublicHome() {
                     const Icon = f.icon;
                     return (
                       <li key={i} className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                          <Icon className="h-4 w-4 text-blue-600" />
+                        <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                          <Icon className="h-4 w-4 text-indigo-600" />
                         </div>
                         <span className="text-gray-700 text-sm">{f.text}</span>
                       </li>
@@ -467,7 +467,7 @@ export default function PublicHome() {
                 </ul>
                 <Button
                   asChild
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                  className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
                 >
                   <Link href="/auth?tab=register" className="flex items-center justify-center gap-2">
                     با Lexi شروع کن
@@ -478,9 +478,9 @@ export default function PublicHome() {
             </Card>
 
             {/* LinguaQuest Card */}
-            <Card className="border-2 border-teal-100 bg-gradient-to-br from-teal-50 to-white overflow-hidden">
+            <Card className="border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-white overflow-hidden">
               <CardHeader className="pb-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-green-500 flex items-center justify-center mb-3 shadow-md">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-fuchsia-500 flex items-center justify-center mb-3 shadow-md">
                   <Gamepad2 className="h-7 w-7 text-white" />
                 </div>
                 <CardTitle className="text-2xl text-gray-900">LinguaQuest — یادگیری بازی‌گونه</CardTitle>
@@ -496,15 +496,15 @@ export default function PublicHome() {
                     { value: 'XP', label: 'سیستم امتیاز' },
                     { value: '🏆', label: 'لیدربورد' },
                   ].map((s, i) => (
-                    <div key={i} className="bg-teal-50 rounded-xl p-3 text-center">
-                      <div className="text-xl font-black text-teal-700">{s.value}</div>
-                      <div className="text-xs text-teal-600">{s.label}</div>
+                    <div key={i} className="bg-purple-50 rounded-xl p-3 text-center">
+                      <div className="text-xl font-black text-purple-700">{s.value}</div>
+                      <div className="text-xs text-purple-600">{s.label}</div>
                     </div>
                   ))}
                 </div>
                 <Button
                   asChild
-                  className="w-full bg-gradient-to-r from-teal-600 to-green-500 hover:from-teal-700 hover:to-green-600"
+                  className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600"
                 >
                   <Link href="/auth?tab=register" className="flex items-center justify-center gap-2">
                     شروع بازی
@@ -518,7 +518,7 @@ export default function PublicHome() {
       </section>
 
       {/* ——— TEST PREP SECTION ——— */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-teal-700 to-blue-700 py-16 sm:py-24" dir="rtl">
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-700 to-indigo-700 py-16 sm:py-24" dir="rtl">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div className="text-white">
@@ -528,7 +528,7 @@ export default function PublicHome() {
               </div>
               <h2 className="text-3xl sm:text-4xl font-black mb-4">
                 IELTS، TOEFL، GRE، PTE<br />
-                <span className="text-cyan-300">با مسیر درست یاد بگیر</span>
+                <span className="text-violet-200">با مسیر درست یاد بگیر</span>
               </h2>
               <p className="text-white/85 text-lg mb-6 leading-relaxed">
                 دوره‌های تخصصی برای هر آزمون، با استادهای مجرب و مسیر آموزشی دقیق. از سطح‌سنجی تا قبولی.
@@ -541,13 +541,13 @@ export default function PublicHome() {
                   'گواهینامه دوره پس از اتمام',
                 ].map((t, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-cyan-300 shrink-0 mt-0.5" />
+                    <CheckCircle className="h-5 w-5 text-violet-200 shrink-0 mt-0.5" />
                     <span className="text-white/90">{t}</span>
                   </li>
                 ))}
               </ul>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="bg-white text-teal-700 hover:bg-gray-50 font-bold px-8">
+                <Button asChild size="lg" className="bg-white text-purple-700 hover:bg-gray-50 font-bold px-8">
                   <Link href="/curriculum" className="flex items-center gap-2">
                     مشاهده دوره‌ها
                     <ArrowLeft className="h-5 w-5" />
@@ -567,10 +567,10 @@ export default function PublicHome() {
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-teal-900/60 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 via-transparent to-transparent" />
               <div className="absolute bottom-4 end-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg">
                 <div className="flex items-center gap-3">
-                  <Award className="h-8 w-8 text-teal-600" />
+                  <Award className="h-8 w-8 text-purple-600" />
                   <div>
                     <div className="text-2xl font-black text-gray-900">۹۴٪</div>
                     <div className="text-sm text-gray-600">نرخ موفقیت زبان‌آموزان</div>
@@ -607,7 +607,7 @@ export default function PublicHome() {
                     </div>
                     <h3 className="font-bold text-gray-900 mb-2 leading-snug line-clamp-2">{post.title}</h3>
                     <p className="text-sm text-gray-500 line-clamp-3 mb-4">{post.excerpt || post.metaDescription}</p>
-                    <Link href={`/blog/${post.slug}`} className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                    <Link href={`/blog/${post.slug}`} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
                       بیشتر بخوانید
                       <ChevronLeft className="h-4 w-4" />
                     </Link>
@@ -620,7 +620,7 @@ export default function PublicHome() {
       )}
 
       {/* ——— FINAL CTA ——— */}
-      <section className="bg-gradient-to-r from-blue-600 to-cyan-500 py-16" dir="rtl">
+      <section className="bg-gradient-to-r from-indigo-600 to-violet-600 py-16" dir="rtl">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
             آماده‌ای شروع کنی؟
@@ -629,7 +629,7 @@ export default function PublicHome() {
             اول سطحت رو بسنج، بعد مسیرت رو انتخاب کن. همه چیز رایگان.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-gray-50 font-bold text-lg px-10 h-14">
+            <Button asChild size="lg" className="bg-white text-indigo-700 hover:bg-gray-50 font-bold text-lg px-10 h-14">
               <Link href="/take-test" className="flex items-center gap-2">
                 آزمون رایگان Placement
                 <ArrowLeft className="h-5 w-5" />

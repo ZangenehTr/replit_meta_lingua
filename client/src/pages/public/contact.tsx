@@ -17,6 +17,7 @@ export default function Contact() {
   const { t } = useTranslation(['common']);
   const { toast } = useToast();
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [messageError, setMessageError] = useState('');
 
   const contactMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -40,6 +41,11 @@ export default function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.message.trim().length < 10) {
+      setMessageError(t('contact.messageTooShort', 'پیام شما باید حداقل ۱۰ کاراکتر باشد.'));
+      return;
+    }
+    setMessageError('');
     contactMutation.mutate(formData);
   };
 
@@ -154,11 +160,23 @@ export default function Contact() {
                       <Textarea
                         id="message"
                         value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, message: e.target.value });
+                          if (messageError && e.target.value.trim().length >= 10) {
+                            setMessageError('');
+                          }
+                        }}
                         rows={6}
                         required
                         data-testid="textarea-message"
+                        className={messageError ? 'border-destructive focus-visible:ring-destructive' : ''}
+                        aria-describedby={messageError ? 'message-error' : undefined}
                       />
+                      {messageError && (
+                        <p id="message-error" className="text-sm text-destructive" role="alert" data-testid="error-message-validation">
+                          {messageError}
+                        </p>
+                      )}
                     </div>
 
                     <Button 

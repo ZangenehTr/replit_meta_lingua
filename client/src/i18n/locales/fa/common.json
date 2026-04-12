@@ -14,7 +14,13 @@
     "toefl": "تافل",
     "gre": "جی‌آر‌ای",
     "pte": "پی‌تی‌ای",
-    "conversation": "مکالمه عمومی"
+    "conversation": "مکالمه",
+    "exams": "آزمون‌ها",
+    "examPrep": "آماده‌سازی برای آزمون‌های بین‌المللی",
+    "allPrograms": "مشاهده همه برنامه‌ها",
+    "languageSkills": "مهارت‌های زبانی و مکالمه",
+    "freePlacement": "تست سطح رایگان",
+    "teachers": "معلمان"
   },
   "breadcrumb": {
     "home": "خانه",
@@ -816,7 +822,8 @@
     "terms": "شرایط استفاده",
     "cookies": "سیاست کوکی",
     "rights": "تمامی حقوق محفوظ است.",
-    "multilingual": "در دسترس به زبان‌های English, فارسی, العربية"
+    "multilingual": "در دسترس به زبان‌های English, فارسی, العربية",
+    "verifyCert": "تأیید گواهینامه"
   },
   "common": {
     "save": "ذخیره",
@@ -1145,6 +1152,7 @@
     "clearFilters": "پاک کردن فیلترها"
   },
   "cta": {
+    "freeTest": "تست رایگان",
     "startLearning": "شروع یادگیری رایگان",
     "browseCourses": "مشاهده دوره‌های رایگان",
     "viewAll": "مشاهده همه",
