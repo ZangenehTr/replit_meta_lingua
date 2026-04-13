@@ -282,6 +282,35 @@ function ProfileRedirect() {
   return <UserProfile />;
 }
 
+function HomeRoute() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PublicHome />
+      </Suspense>
+    );
+  }
+
+  if (user.role === 'student' || user.role === 'Student') {
+    return <Redirect to="/student" />;
+  }
+
+  return <Redirect to="/dashboard" />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -1306,39 +1335,7 @@ function Router() {
         {() => <Suspense fallback={<PageLoader />}><PublicHome /></Suspense>}
       </Route>
 
-      <Route path="/">
-        {(() => {
-          const { user, isLoading } = useAuth();
-          
-          if (isLoading) {
-            return (
-              <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p>Loading...</p>
-                </div>
-              </div>
-            );
-          }
-          
-          // If not authenticated, show public homepage
-          if (!user) {
-            return (
-              <Suspense fallback={<PageLoader />}>
-                <PublicHome />
-              </Suspense>
-            );
-          }
-          
-          // Role-based redirects for authenticated users
-          if (user.role === 'student') {
-            return <Redirect to="/student" />;
-          }
-          
-          // All other authenticated users redirect to unified dashboard
-          return <Redirect to="/dashboard" />;
-        })()}
-      </Route>
+      <Route path="/" component={HomeRoute} />
       <Route component={NotFound} />
     </Switch>
   );

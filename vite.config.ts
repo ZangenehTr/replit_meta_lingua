@@ -118,6 +118,17 @@ export default defineConfig({
       "tailwind-merge",
       "socket.io-client",
     ],
+    exclude: [
+      "workbox-window",
+      "workbox-precaching",
+      "workbox-routing",
+      "workbox-strategies",
+      "workbox-background-sync",
+      "workbox-expiration",
+      "workbox-cacheable-response",
+      "workbox-core",
+      "workbox-broadcast-update",
+    ],
     force: false,
   },
   server: {
