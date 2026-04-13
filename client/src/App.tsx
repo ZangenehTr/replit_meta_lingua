@@ -208,6 +208,10 @@ import { ChallengeDuelsPage } from "@/pages/social/ChallengeDuelsPage";
 import { SessionCrashersPage } from "@/pages/social/SessionCrashersPage";
 import { DiasporaBridgePage } from "@/pages/social/DiasporaBridgePage";
 
+// Lazy-loaded public pages (module-level to avoid re-creating on each render)
+const CoursesIndex = lazy(() => import("@/pages/public/courses-index"));
+const CourseLandingPage = lazy(() => import("@/pages/public/course-landing-page"));
+
 // Language provider removed - using useLanguage hook directly
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
@@ -716,16 +720,14 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/courses">
-        {() => {
-          const CoursesIndex = lazy(() => import("@/pages/public/courses-index"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CoursesIndex /></Suspense>;
-        }}
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+          <CoursesIndex />
+        </Suspense>
       </Route>
       <Route path="/courses/:slug">
         {({ slug }: { slug: string }) => {
           const knownSlugs = ['ielts', 'toefl', 'gre', 'pte', 'conversation'];
           if (knownSlugs.includes(slug)) {
-            const CourseLandingPage = lazy(() => import("@/pages/public/course-landing-page"));
             return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CourseLandingPage /></Suspense>;
           }
           return <CoursePublicDetail />;
