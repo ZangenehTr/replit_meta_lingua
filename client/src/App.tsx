@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route, Redirect, useParams } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -309,6 +309,34 @@ function HomeRoute() {
   }
 
   return <Redirect to="/dashboard" />;
+}
+
+function CoursesSlugRoute() {
+  const { slug } = useParams<{ slug: string }>();
+  const knownSlugs = ['ielts', 'toefl', 'gre', 'pte', 'conversation'];
+  if (knownSlugs.includes(slug || '')) {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+        <CourseLandingPage />
+      </Suspense>
+    );
+  }
+  return <CoursePublicDetail />;
+}
+
+function CallernVideoRoute() {
+  const { callId } = useParams<{ callId: string }>();
+  const { user } = useAuth();
+  return (
+    <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher']}>
+      <CallernVideoCall
+        roomId={callId || ''}
+        userId={user?.id || 0}
+        role={(user?.role === 'teacher' ? 'teacher' : 'student') as 'teacher' | 'student'}
+        onCallEnd={() => window.history.back()}
+      />
+    </RoleProtectedRoute>
+  );
 }
 
 function Router() {
@@ -773,15 +801,7 @@ function Router() {
           <CoursesIndex />
         </Suspense>
       </Route>
-      <Route path="/courses/:slug">
-        {({ slug }: { slug: string }) => {
-          const knownSlugs = ['ielts', 'toefl', 'gre', 'pte', 'conversation'];
-          if (knownSlugs.includes(slug)) {
-            return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CourseLandingPage /></Suspense>;
-          }
-          return <CoursePublicDetail />;
-        }}
-      </Route>
+      <Route path="/courses/:slug" component={CoursesSlugRoute} />
       <Route path="/student/courses">
         <ProtectedRoute>
           <Courses />
@@ -1206,26 +1226,7 @@ function Router() {
           <CallernVideoSession />
         </RoleProtectedRoute>
       </Route>
-      <Route path="/callern/video/:callId">
-        {(params: { callId: string }) => {
-          const CallernVideoCallWrapper = () => {
-            const { user } = useAuth();
-            return (
-              <CallernVideoCall
-                roomId={params.callId}
-                userId={user?.id || 0}
-                role={(user?.role === 'teacher' ? 'teacher' : 'student') as 'teacher' | 'student'}
-                onCallEnd={() => window.history.back()}
-              />
-            );
-          };
-          return (
-            <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor', 'teacher']}>
-              <CallernVideoCallWrapper />
-            </RoleProtectedRoute>
-          );
-        }}
-      </Route>
+      <Route path="/callern/video/:callId" component={CallernVideoRoute} />
       <Route path="/admin/room-management">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <RoomManagement />

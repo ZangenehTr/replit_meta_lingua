@@ -117,6 +117,7 @@ export default defineConfig({
       "clsx",
       "tailwind-merge",
       "socket.io-client",
+      "dompurify",
     ],
     exclude: [
       "workbox-window",
