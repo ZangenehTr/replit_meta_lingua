@@ -441,7 +441,7 @@ export default function TakeTestPage() {
       { icon: ShieldCheck, text: 'No registration required to start', color: 'text-green-600' },
     ];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      <div dir="ltr" className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center px-4 py-12 relative overflow-hidden">
         {/* Background decorative blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
@@ -567,7 +567,7 @@ export default function TakeTestPage() {
     const SkillIcon = skillIcons[currentQuestion.skill as keyof typeof skillIcons] || Brain;
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
+      <div dir="ltr" className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
         <div className="max-w-3xl mx-auto space-y-6">
           <Card>
             <CardHeader>
@@ -822,7 +822,7 @@ export default function TakeTestPage() {
   if (showContactModal && testResults) {
     return (
       <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent dir="ltr" className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Great job! You've completed the test</DialogTitle>
             <DialogDescription>
@@ -878,7 +878,7 @@ export default function TakeTestPage() {
   // Roadmap Generation Loading Screen
   if (testStep === 'roadmap' && isGeneratingRoadmap) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
+      <div dir="ltr" className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center p-8">
           <Brain className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
           <CardTitle className="text-2xl mb-2">Generating Your Personalized Roadmap</CardTitle>
@@ -894,7 +894,7 @@ export default function TakeTestPage() {
   // Results Screen
   if (testStep === 'results' && testResults) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
+      <div dir="ltr" className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           <Card className="shadow-xl">
             <CardHeader className="text-center">
