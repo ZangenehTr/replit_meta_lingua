@@ -211,10 +211,35 @@ import { DiasporaBridgePage } from "@/pages/social/DiasporaBridgePage";
 // Lazy-loaded public pages (module-level to avoid re-creating on each render)
 const CoursesIndex = lazy(() => import("@/pages/public/courses-index"));
 const CourseLandingPage = lazy(() => import("@/pages/public/course-landing-page"));
+const BlogDetail = lazy(() => import("@/pages/public/blog-detail"));
+const BlogListing = lazy(() => import("@/pages/public/blog-listing"));
+const VideoDetail = lazy(() => import("@/pages/public/video-detail"));
+const VideoGallery = lazy(() => import("@/pages/public/video-gallery"));
+const About = lazy(() => import("@/pages/public/about"));
+const Contact = lazy(() => import("@/pages/public/contact"));
+const TakeTest = lazy(() => import("@/pages/public/take-test"));
+const ExpertTeachers = lazy(() => import("@/pages/public/expert-teachers"));
+const CurriculumCategory = lazy(() => import("@/pages/public/curriculum-category"));
+const CurriculumHub = lazy(() => import("@/pages/public/curriculum-hub"));
+const CallernLanding = lazy(() => import("@/pages/public/callern-landing"));
+const CmsPageRenderer = lazy(() => import("@/pages/public/cms-page-renderer"));
+const PublicHome = lazy(() => import("@/pages/public/home"));
+const AdminLandingPages = lazy(() => import("@/pages/admin/landing-pages"));
 
 // Language provider removed - using useLanguage hook directly
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-500">در حال بارگذاری...</p>
+      </div>
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading, error } = useAuth();
@@ -463,16 +488,11 @@ function Router() {
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/landing-pages">
-        {() => {
-          const AdminLandingPages = lazy(() => import("@/pages/admin/landing-pages"));
-          return (
-            <RoleProtectedRoute allowedRoles={["admin"]}>
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-                <AdminLandingPages />
-              </Suspense>
-            </RoleProtectedRoute>
-          );
-        }}
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <Suspense fallback={<PageLoader />}>
+            <AdminLandingPages />
+          </Suspense>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/admin/review-moderation">
         <RoleProtectedRoute allowedRoles={["admin"]}>
@@ -1242,88 +1262,48 @@ function Router() {
       
       {/* Public CMS Routes - Must come before authenticated root route */}
       <Route path="/blog/:slug">
-        {() => {
-          const BlogDetail = lazy(() => import("@/pages/public/blog-detail"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><BlogDetail /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><BlogDetail /></Suspense>}
       </Route>
       <Route path="/blog">
-        {() => {
-          const BlogListing = lazy(() => import("@/pages/public/blog-listing"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><BlogListing /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><BlogListing /></Suspense>}
       </Route>
       <Route path="/videos/:id">
-        {() => {
-          const VideoDetail = lazy(() => import("@/pages/public/video-detail"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><VideoDetail /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><VideoDetail /></Suspense>}
       </Route>
       <Route path="/videos">
-        {() => {
-          const VideoGallery = lazy(() => import("@/pages/public/video-gallery"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><VideoGallery /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><VideoGallery /></Suspense>}
       </Route>
       <Route path="/about">
-        {() => {
-          const About = lazy(() => import("@/pages/public/about"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><About /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><About /></Suspense>}
       </Route>
       <Route path="/contact">
-        {() => {
-          const Contact = lazy(() => import("@/pages/public/contact"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><Contact /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><Contact /></Suspense>}
       </Route>
       <Route path="/take-test">
-        {() => {
-          const TakeTest = lazy(() => import("@/pages/public/take-test"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><TakeTest /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><TakeTest /></Suspense>}
+      </Route>
+      <Route path="/teachers">
+        {() => <Suspense fallback={<PageLoader />}><ExpertTeachers /></Suspense>}
       </Route>
       <Route path="/expert-teachers">
-        {() => {
-          const ExpertTeachers = lazy(() => import("@/pages/public/expert-teachers"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><ExpertTeachers /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><ExpertTeachers /></Suspense>}
       </Route>
       <Route path="/curriculum/:slug">
-        {() => {
-          const CurriculumCategory = lazy(() => import("@/pages/public/curriculum-category"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CurriculumCategory /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><CurriculumCategory /></Suspense>}
       </Route>
       <Route path="/curriculum">
-        {() => {
-          const CurriculumHub = lazy(() => import("@/pages/public/curriculum-hub"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CurriculumHub /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><CurriculumHub /></Suspense>}
       </Route>
       <Route path="/services/callern">
-        {() => {
-          const CallernLanding = lazy(() => import("@/pages/public/callern-landing"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CallernLanding /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><CallernLanding /></Suspense>}
       </Route>
-      
+
       <Route path="/p/:slug">
-        {() => {
-          const CmsPageRenderer = lazy(() => import("@/pages/public/cms-page-renderer"));
-          return <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}><CmsPageRenderer /></Suspense>;
-        }}
+        {() => <Suspense fallback={<PageLoader />}><CmsPageRenderer /></Suspense>}
       </Route>
 
       <Route path="/home">
-        {() => {
-          const PublicHome = lazy(() => import("@/pages/public/home"));
-          return (
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-              <PublicHome />
-            </Suspense>
-          );
-        }}
+        {() => <Suspense fallback={<PageLoader />}><PublicHome /></Suspense>}
       </Route>
 
       <Route path="/">
@@ -1343,9 +1323,8 @@ function Router() {
           
           // If not authenticated, show public homepage
           if (!user) {
-            const PublicHome = lazy(() => import("@/pages/public/home"));
             return (
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+              <Suspense fallback={<PageLoader />}>
                 <PublicHome />
               </Suspense>
             );
