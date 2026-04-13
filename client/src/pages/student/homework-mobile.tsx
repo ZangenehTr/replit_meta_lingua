@@ -266,7 +266,7 @@ export default function StudentHomeworkMobile() {
                 <Menu className="h-6 w-6" aria-hidden="true" />
               </Button>
               <div className="flex items-center gap-2">
-                <h1 className="text-white font-bold text-xl">{t('student:homework')}</h1>
+                <h1 className="text-white font-bold text-xl">{t('student:homework.title', 'تکالیف')}</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">

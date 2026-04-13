@@ -130,12 +130,12 @@ export default function StudentSessions() {
   const [showCalendarSidebar, setShowCalendarSidebar] = useState(false);
   const [filteredSessionIds, setFilteredSessionIds] = useState<number[]>([]);
 
-  // Fetch sessions with calendar and video data
+  // Fetch sessions — calendar data only loaded when sidebar is open
   const { data: sessions = [], isLoading } = useQuery<Session[]>({
-    queryKey: ['/api/student/sessions', { includeCalendar: true, includeVideo: true, filter: videoFilter }],
+    queryKey: ['/api/student/sessions', { includeCalendar: showCalendarSidebar, includeVideo: true, filter: videoFilter }],
     queryFn: async () => {
       const params = new URLSearchParams({
-        includeCalendar: 'true',
+        includeCalendar: showCalendarSidebar ? 'true' : 'false',
         includeVideo: 'true',
         ...(videoFilter !== 'all' && { filter: videoFilter })
       });
@@ -146,7 +146,8 @@ export default function StudentSessions() {
       });
       if (!response.ok) return [];
       return response.json();
-    }
+    },
+    refetchOnWindowFocus: false,
   });
 
   // Join session mutation

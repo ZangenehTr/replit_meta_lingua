@@ -98,10 +98,10 @@ export default function HRPayrollPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Banknote className="h-6 w-6" /> Payroll</h1>
-          <p className="text-muted-foreground">Monthly salary calculation and approval</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Banknote className="h-6 w-6" /> حقوق و دستمزد</h1>
+          <p className="text-muted-foreground">محاسبه و تأیید حقوق ماهانه</p>
         </div>
-        <Link href="/admin/hr/employees"><Button variant="outline">← Employees</Button></Link>
+        <Link href="/admin/hr/employees"><Button variant="outline">← کارمندان</Button></Link>
       </div>
 
       <Card>
@@ -125,10 +125,10 @@ export default function HRPayrollPage() {
             </div>
             {isAdmin && (
               <Button onClick={() => calcMutation.mutate()} disabled={calcMutation.isPending} className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />{calcMutation.isPending ? "Calculating..." : "Calculate Payroll"}
+                <Calculator className="h-4 w-4" />{calcMutation.isPending ? "در حال محاسبه..." : "محاسبه حقوق"}
               </Button>
             )}
-            <Button variant="outline" onClick={exportCSV} disabled={records.length === 0}>Export CSV</Button>
+            <Button variant="outline" onClick={exportCSV} disabled={records.length === 0}>خروجی CSV</Button>
           </div>
         </CardHeader>
 
@@ -136,19 +136,19 @@ export default function HRPayrollPage() {
           <div className="px-6 pb-2 grid grid-cols-3 gap-4">
             <Card className="bg-muted/30">
               <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Total Gross Pay</div>
+                <div className="text-sm text-muted-foreground">مجموع حقوق ناخالص</div>
                 <div className="text-xl font-bold">{fmt(totalGross)} ﷼</div>
               </CardContent>
             </Card>
             <Card className="bg-muted/30">
               <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Total Net Pay</div>
+                <div className="text-sm text-muted-foreground">مجموع حقوق خالص</div>
                 <div className="text-xl font-bold">{fmt(totalNet)} ﷼</div>
               </CardContent>
             </Card>
             <Card className="bg-muted/30">
               <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Employees</div>
+                <div className="text-sm text-muted-foreground">کارمندان</div>
                 <div className="text-xl font-bold">{records.length}</div>
               </CardContent>
             </Card>
@@ -157,26 +157,26 @@ export default function HRPayrollPage() {
 
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            <div className="text-center py-8 text-muted-foreground">در حال بارگذاری...</div>
           ) : records.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Banknote className="h-10 w-10 mx-auto mb-2 opacity-40" />
-              <p>No payroll records for this period.</p>
-              <p className="text-sm">Click "Calculate Payroll" to generate records.</p>
+              <p>هیچ رکورد حقوقی برای این دوره وجود ندارد.</p>
+              <p className="text-sm">روی "محاسبه حقوق" کلیک کنید تا رکوردها تولید شوند.</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Dept</TableHead>
-                  <TableHead className="text-right">Base</TableHead>
-                  <TableHead className="text-right">Leave Ded.</TableHead>
-                  <TableHead className="text-right">Gross Pay</TableHead>
-                  <TableHead className="text-right">Net Pay</TableHead>
-                  <TableHead>Days</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead>کارمند</TableHead>
+                  <TableHead>بخش</TableHead>
+                  <TableHead className="text-right">پایه</TableHead>
+                  <TableHead className="text-right">کسر مرخصی</TableHead>
+                  <TableHead className="text-right">ناخالص</TableHead>
+                  <TableHead className="text-right">خالص</TableHead>
+                  <TableHead>روزها</TableHead>
+                  <TableHead>وضعیت</TableHead>
+                  <TableHead>عملیات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

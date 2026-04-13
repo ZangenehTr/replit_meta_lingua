@@ -147,33 +147,33 @@ export default function HRPerformancePage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Bot className="h-6 w-6" /> AI Performance Evaluation</h1>
-          <p className="text-muted-foreground">Monthly AI-generated performance scores, narratives, and improvement plans</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Bot className="h-6 w-6" /> ارزیابی عملکرد با هوش مصنوعی</h1>
+          <p className="text-muted-foreground">نمرات عملکرد ماهانه، روایت‌ها و برنامه‌های بهبود تولید شده توسط هوش مصنوعی</p>
         </div>
-        <Link href="/admin/hr/employees"><Button variant="outline">← Employees</Button></Link>
+        <Link href="/admin/hr/employees"><Button variant="outline">← کارمندان</Button></Link>
       </div>
 
       {isAdmin && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><Settings2 className="h-4 w-4" /> HR Evaluation Thresholds</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2"><Settings2 className="h-4 w-4" /> آستانه‌های ارزیابی منابع انسانی</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-6 items-end">
               <div className="space-y-1">
-                <Label className="text-xs">Anomaly Alert Threshold (score drop, pts)</Label>
+                <Label className="text-xs">آستانه هشدار ناهنجاری (افت نمره)</Label>
                 <Input type="number" min={0} max={100} step={1} className="w-32" value={thresholdForm.anomaly}
                   onChange={e => setThresholdForm(f => ({ ...f, anomaly: e.target.value }))} />
-                <p className="text-xs text-muted-foreground">Drop vs 3-month avg that triggers alert</p>
+                <p className="text-xs text-muted-foreground">افت در مقایسه با میانگین ۳ ماهه که هشدار ایجاد می‌کند</p>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Improvement Plan Threshold (absolute score)</Label>
+                <Label className="text-xs">آستانه برنامه بهبود (نمره مطلق)</Label>
                 <Input type="number" min={0} max={100} step={1} className="w-32" value={thresholdForm.improvement}
                   onChange={e => setThresholdForm(f => ({ ...f, improvement: e.target.value }))} />
-                <p className="text-xs text-muted-foreground">Scores below this trigger a 30-day plan</p>
+                <p className="text-xs text-muted-foreground">نمرات پایین‌تر از این، برنامه ۳۰ روزه ایجاد می‌کند</p>
               </div>
               <Button size="sm" onClick={() => saveThresholdsMutation.mutate()} disabled={saveThresholdsMutation.isPending}>
-                {saveThresholdsMutation.isPending ? "Saving…" : "Save Thresholds"}
+                {saveThresholdsMutation.isPending ? "در حال ذخیره..." : "ذخیره آستانه‌ها"}
               </Button>
             </div>
           </CardContent>
@@ -184,7 +184,7 @@ export default function HRPerformancePage() {
         <Card className="border-orange-200 bg-orange-50">
           <CardHeader>
             <CardTitle className="text-orange-800 flex items-center gap-2 text-base">
-              <AlertTriangle className="h-5 w-5" /> Performance Anomalies Detected
+              <AlertTriangle className="h-5 w-5" /> ناهنجاری‌های عملکرد شناسایی شد
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -194,7 +194,7 @@ export default function HRPerformancePage() {
                   <span className="font-medium">{a.firstName} {a.lastName} ({a.employeeCode})</span>
                   <span className="text-muted-foreground">{MONTHS[a.reviewMonth - 1]} {a.reviewYear}</span>
                   <Badge variant="outline" className="text-orange-700 border-orange-300">{a.anomalyDetails}</Badge>
-                  <Button size="sm" variant="ghost" onClick={() => setSelectedEmployee(a.employeeId)}>View</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedEmployee(a.employeeId)}>مشاهده</Button>
                 </div>
               ))}
             </div>
@@ -206,9 +206,9 @@ export default function HRPerformancePage() {
         <CardHeader>
           <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1 flex-1 min-w-48">
-              <label className="text-sm font-medium">Employee</label>
+              <label className="text-sm font-medium">کارمند</label>
               <Select value={selectedEmployee ? String(selectedEmployee) : ""} onValueChange={v => setSelectedEmployee(Number(v))}>
-                <SelectTrigger><SelectValue placeholder="Select employee..." /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="انتخاب کارمند..." /></SelectTrigger>
                 <SelectContent>
                   {employees.map(e => (
                     <SelectItem key={e.id} value={String(e.id)}>
@@ -219,7 +219,7 @@ export default function HRPerformancePage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Year</label>
+              <label className="text-sm font-medium">سال</label>
               <Select value={String(year)} onValueChange={v => setYear(Number(v))}>
                 <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -228,7 +228,7 @@ export default function HRPerformancePage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Month</label>
+              <label className="text-sm font-medium">ماه</label>
               <Select value={String(month)} onValueChange={v => setMonth(Number(v))}>
                 <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -243,7 +243,7 @@ export default function HRPerformancePage() {
                 className="flex items-center gap-2"
               >
                 <RefreshCw className={`h-4 w-4 ${generateMutation.isPending ? "animate-spin" : ""}`} />
-                {generateMutation.isPending ? "Generating..." : "Generate Review"}
+                {generateMutation.isPending ? "در حال تولید..." : "تولید ارزیابی"}
               </Button>
             )}
           </div>
@@ -253,26 +253,26 @@ export default function HRPerformancePage() {
           {!selectedEmployee ? (
             <div className="text-center py-12 text-muted-foreground">
               <TrendingUp className="h-10 w-10 mx-auto mb-2 opacity-40" />
-              <p>Select an employee to view or generate their performance review.</p>
+              <p>یک کارمند را انتخاب کنید تا ارزیابی عملکرد آن‌ها را مشاهده یا تولید کنید.</p>
             </div>
           ) : reviewsLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading reviews...</div>
+            <div className="text-center py-8 text-muted-foreground">در حال بارگذاری ارزیابی‌ها...</div>
           ) : reviews.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <p>No reviews yet for {selectedEmp?.firstName} {selectedEmp?.lastName}.</p>
-              <p className="text-sm">Select a month and click Generate Review.</p>
+              <p>هنوز ارزیابی‌ای برای {selectedEmp?.firstName} {selectedEmp?.lastName} ثبت نشده.</p>
+              <p className="text-sm">یک ماه را انتخاب کنید و روی "تولید ارزیابی" کلیک کنید.</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>3-Mo Avg</TableHead>
-                  <TableHead>Anomaly</TableHead>
-                  <TableHead>AI Summary</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>دوره</TableHead>
+                  <TableHead>نمره</TableHead>
+                  <TableHead>میانگین ۳ ماهه</TableHead>
+                  <TableHead>ناهنجاری</TableHead>
+                  <TableHead>خلاصه هوش مصنوعی</TableHead>
+                  <TableHead>وضعیت</TableHead>
+                  <TableHead>عملیات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -289,12 +289,12 @@ export default function HRPerformancePage() {
                       <TableCell>
                         {r.anomalyDetected ? (
                           <Badge variant="outline" className="text-orange-700 border-orange-300 flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" /> Drop detected
+                            <AlertTriangle className="h-3 w-3" /> افت شناسایی شد
                           </Badge>
                         ) : "—"}
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <p className="text-sm text-muted-foreground line-clamp-2">{r.aiNarrative ?? "Not generated yet"}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{r.aiNarrative ?? "هنوز تولید نشده"}</p>
                       </TableCell>
                       <TableCell>
                         <Badge variant={r.status === "published" ? "default" : "secondary"}>{r.status}</Badge>
@@ -323,7 +323,7 @@ export default function HRPerformancePage() {
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                Performance Review — {selectedEmp?.firstName} {selectedEmp?.lastName}<br />
+                ارزیابی عملکرد — {selectedEmp?.firstName} {selectedEmp?.lastName}<br />
                 <span className="text-sm font-normal text-muted-foreground">{MONTHS[detailReview.reviewMonth - 1]} {detailReview.reviewYear}</span>
               </DialogTitle>
             </DialogHeader>
@@ -333,14 +333,14 @@ export default function HRPerformancePage() {
                   {Number(detailReview.overallScore ?? 0).toFixed(0)}
                 </div>
                 <div className="text-muted-foreground text-sm">
-                  <div>/ 100 Overall Score</div>
-                  {detailReview.threeMonthAvgScore && <div>3-Month Avg: {Number(detailReview.threeMonthAvgScore).toFixed(1)}</div>}
+                  <div>/ ۱۰۰ نمره کل</div>
+                  {detailReview.threeMonthAvgScore && <div>میانگین ۳ ماهه: {Number(detailReview.threeMonthAvgScore).toFixed(1)}</div>}
                 </div>
               </div>
 
               {detailReview.metricBreakdown && Object.keys(detailReview.metricBreakdown).length > 0 && (
                 <div>
-                  <h4 className="font-semibold mb-3">Metric Breakdown</h4>
+                  <h4 className="font-semibold mb-3">تفکیک معیارها</h4>
                   <div className="space-y-3">
                     {Object.entries(detailReview.metricBreakdown).map(([k, v]) => (
                       <div key={k}>
@@ -359,7 +359,7 @@ export default function HRPerformancePage() {
                 <div className="p-3 bg-orange-50 border border-orange-200 rounded-md flex gap-2">
                   <AlertTriangle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-medium text-orange-800 text-sm">Anomaly Detected</div>
+                    <div className="font-medium text-orange-800 text-sm">ناهنجاری شناسایی شد</div>
                     <div className="text-sm text-orange-700">{detailReview.anomalyDetails}</div>
                   </div>
                 </div>
@@ -367,14 +367,14 @@ export default function HRPerformancePage() {
 
               {detailReview.aiNarrative && (
                 <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2"><Bot className="h-4 w-4" /> AI Performance Narrative</h4>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2"><Bot className="h-4 w-4" /> روایت عملکرد هوش مصنوعی</h4>
                   <p className="text-sm leading-relaxed text-muted-foreground bg-muted/30 p-3 rounded-md">{detailReview.aiNarrative}</p>
                 </div>
               )}
 
               {detailReview.improvementPlan && (
                 <div>
-                  <h4 className="font-semibold mb-2 text-red-700">30-Day Improvement Plan</h4>
+                  <h4 className="font-semibold mb-2 text-red-700">برنامه بهبود ۳۰ روزه</h4>
                   <div className="text-sm leading-relaxed bg-red-50 border border-red-100 p-3 rounded-md whitespace-pre-line">{detailReview.improvementPlan}</div>
                 </div>
               )}

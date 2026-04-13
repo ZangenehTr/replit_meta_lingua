@@ -255,7 +255,7 @@ export default function StudentMessagesMobile() {
                     <div className="relative">
                       <Avatar className="w-12 h-12 border-2 border-white/20">
                         <AvatarImage src={conversation.avatar} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
                           {conversation.name[0]}
                         </AvatarFallback>
                       </Avatar>
@@ -287,7 +287,7 @@ export default function StudentMessagesMobile() {
                     {/* Badges */}
                     <div className="flex flex-col gap-1 items-end">
                       {conversation.unreadCount > 0 && (
-                        <Badge className="bg-blue-500 text-white border-0 px-2 py-0.5 text-xs">
+                        <Badge className="bg-indigo-500 text-white border-0 px-2 py-0.5 text-xs">
                           {conversation.unreadCount}
                         </Badge>
                       )}
@@ -303,7 +303,7 @@ export default function StudentMessagesMobile() {
 
           {/* Floating Action Button */}
           <motion.button
-            className="fixed bottom-24 end-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full shadow-lg flex items-center justify-center"
+            className="fixed bottom-24 end-6 w-14 h-14 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-lg flex items-center justify-center"
             whileTap={{ scale: 0.9 }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -387,7 +387,7 @@ export default function StudentMessagesMobile() {
                       <div className={`
                         px-4 py-2 rounded-2xl
                         ${isOwn 
-                          ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white' 
                           : 'glass-card text-white'}
                       `}>
                         <p className="text-sm">{message.text}</p>
@@ -398,7 +398,7 @@ export default function StudentMessagesMobile() {
                         </span>
                         {isOwn && (
                           message.read ? (
-                            <CheckCheck className="w-3 h-3 text-blue-400" />
+                            <CheckCheck className="w-3 h-3 text-indigo-300" />
                           ) : (
                             <Check className="w-3 h-3 text-white/40" />
                           )
@@ -428,7 +428,7 @@ export default function StudentMessagesMobile() {
               </button>
               
               <button 
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200"
                 data-testid="button-start-audio-call"
               >
                 <Phone className="w-4 h-4" />
@@ -457,7 +457,7 @@ export default function StudentMessagesMobile() {
             <div className="flex-shrink-0">
               {messageText.trim() ? (
                 <motion.button
-                  className="p-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"
+                  className="p-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
                   whileTap={{ scale: 0.9 }}
                   onClick={() => sendMessage.mutate(messageText)}
                 >

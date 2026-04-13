@@ -693,11 +693,11 @@ export default function ThreeDLessonBuilder() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
-    courseId: "",
-    language: "",
-    level: "",
-    templateType: "",
-    isPublished: ""
+    courseId: "all",
+    language: "all",
+    level: "all",
+    templateType: "all",
+    isPublished: "all"
   });
   const [previewLesson, setPreviewLesson] = useState<any>(null);
 
@@ -706,10 +706,10 @@ export default function ThreeDLessonBuilder() {
     queryKey: ['/api/admin/3d-lessons', filters],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters.courseId) params.append('courseId', filters.courseId);
-      if (filters.language) params.append('language', filters.language);
-      if (filters.level) params.append('level', filters.level);
-      if (filters.templateType) params.append('templateType', filters.templateType);
+      if (filters.courseId && filters.courseId !== 'all') params.append('courseId', filters.courseId);
+      if (filters.language && filters.language !== 'all') params.append('language', filters.language);
+      if (filters.level && filters.level !== 'all') params.append('level', filters.level);
+      if (filters.templateType && filters.templateType !== 'all') params.append('templateType', filters.templateType);
       if (searchTerm) params.append('search', searchTerm);
       
       const response = await fetch(`/api/admin/3d-lessons?${params}`, {
@@ -857,7 +857,7 @@ export default function ThreeDLessonBuilder() {
                   <SelectValue placeholder={t('admin:threeDLessons.allCourses')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('admin:threeDLessons.allCourses')}</SelectItem>
+                  <SelectItem value="all">{t('admin:threeDLessons.allCourses')}</SelectItem>
                   {availableCourses.map((course: any) => (
                     <SelectItem key={course.id} value={course.id.toString()}>
                       {course.title}
@@ -874,7 +874,7 @@ export default function ThreeDLessonBuilder() {
                   <SelectValue placeholder={t('admin:threeDLessons.allLanguages')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('admin:threeDLessons.allLanguages')}</SelectItem>
+                  <SelectItem value="all">{t('admin:threeDLessons.allLanguages')}</SelectItem>
                   <SelectItem value="English">English</SelectItem>
                   <SelectItem value="Persian">Persian</SelectItem>
                   <SelectItem value="Arabic">Arabic</SelectItem>
@@ -889,7 +889,7 @@ export default function ThreeDLessonBuilder() {
                   <SelectValue placeholder={t('admin:threeDLessons.allLevels')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('admin:threeDLessons.allLevels')}</SelectItem>
+                  <SelectItem value="all">{t('admin:threeDLessons.allLevels')}</SelectItem>
                   <SelectItem value="beginner">A1 - Beginner</SelectItem>
                   <SelectItem value="elementary">A2 - Elementary</SelectItem>
                   <SelectItem value="intermediate">B1 - Intermediate</SelectItem>
@@ -907,7 +907,7 @@ export default function ThreeDLessonBuilder() {
                   <SelectValue placeholder={t('admin:threeDLessons.allTemplates')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('admin:threeDLessons.allTemplates')}</SelectItem>
+                  <SelectItem value="all">{t('admin:threeDLessons.allTemplates')}</SelectItem>
                   {LESSON_TEMPLATES.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.name}

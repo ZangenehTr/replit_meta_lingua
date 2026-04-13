@@ -126,16 +126,16 @@ export default function HRLeavePage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><CalendarOff className="h-6 w-6" /> Leave Management</h1>
-          <p className="text-muted-foreground">Review leave requests and track employee leave balances</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><CalendarOff className="h-6 w-6" /> مدیریت مرخصی</h1>
+          <p className="text-muted-foreground">بررسی درخواست‌های مرخصی و پیگیری موجودی مرخصی کارمندان</p>
         </div>
-        <Link href="/admin/hr/employees"><Button variant="outline">← Employees</Button></Link>
+        <Link href="/admin/hr/employees"><Button variant="outline">← کارمندان</Button></Link>
       </div>
 
       <Tabs defaultValue="requests">
         <TabsList>
-          <TabsTrigger value="requests">Leave Requests</TabsTrigger>
-          <TabsTrigger value="balance">Leave Balance Tracker</TabsTrigger>
+          <TabsTrigger value="requests">درخواست‌های مرخصی</TabsTrigger>
+          <TabsTrigger value="balance">پیگیری موجودی مرخصی</TabsTrigger>
         </TabsList>
 
         <TabsContent value="requests">
@@ -144,7 +144,7 @@ export default function HRLeavePage() {
               <Card key={s} className={`cursor-pointer transition-all ${filter === s ? "ring-2 ring-primary" : ""}`} onClick={() => setFilter(s)}>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold">{leaveCounts[s]}</div>
-                  <div className="text-sm text-muted-foreground capitalize">{s} Requests</div>
+                  <div className="text-sm text-muted-foreground capitalize">{s === 'all' ? 'همه' : s === 'pending' ? 'در انتظار' : s === 'approved' ? 'تأیید شده' : 'رد شده'} درخواست‌ها</div>
                 </CardContent>
               </Card>
             ))}
@@ -153,24 +153,24 @@ export default function HRLeavePage() {
           <Card>
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                <div className="text-center py-8 text-muted-foreground">در حال بارگذاری...</div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Leave Type</TableHead>
-                      <TableHead>Start</TableHead>
-                      <TableHead>End</TableHead>
-                      <TableHead>Days</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>کارمند</TableHead>
+                      <TableHead>نوع مرخصی</TableHead>
+                      <TableHead>شروع</TableHead>
+                      <TableHead>پایان</TableHead>
+                      <TableHead>روزها</TableHead>
+                      <TableHead>دلیل</TableHead>
+                      <TableHead>وضعیت</TableHead>
+                      <TableHead>عملیات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtered.length === 0 ? (
-                      <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No leave requests found</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">درخواست مرخصی‌ای یافت نشد</TableCell></TableRow>
                     ) : filtered.map(l => {
                       const sb = statusBadge(l.status);
                       const Icon = sb.icon;
@@ -222,7 +222,7 @@ export default function HRLeavePage() {
                 <PieChart className="h-5 w-5 text-muted-foreground" />
                 <div className="space-y-1 flex-1 min-w-48">
                   <Select value={selectedEmployeeId ? String(selectedEmployeeId) : ""} onValueChange={v => setSelectedEmployeeId(Number(v))}>
-                    <SelectTrigger><SelectValue placeholder="Select employee to view balance..." /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="برای مشاهده موجودی، کارمند را انتخاب کنید..." /></SelectTrigger>
                     <SelectContent>
                       {employees.map(e => (
                         <SelectItem key={e.id} value={String(e.id)}>
@@ -244,11 +244,11 @@ export default function HRLeavePage() {
             </CardHeader>
             <CardContent>
               {!selectedEmployeeId ? (
-                <div className="text-center py-10 text-muted-foreground">Select an employee above to view their leave balance.</div>
+                <div className="text-center py-10 text-muted-foreground">یک کارمند را از بالا انتخاب کنید تا موجودی مرخصی آن‌ها را ببینید.</div>
               ) : balanceLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading balance...</div>
+                <div className="text-center py-8 text-muted-foreground">در حال بارگذاری موجودی...</div>
               ) : !balanceData ? (
-                <div className="text-center py-8 text-muted-foreground">No data available.</div>
+                <div className="text-center py-8 text-muted-foreground">داده‌ای موجود نیست.</div>
               ) : (
                 <div className="space-y-4">
                   {balanceData.balance.map(b => (
@@ -256,8 +256,8 @@ export default function HRLeavePage() {
                       <div className="flex justify-between text-sm">
                         <span className="font-medium capitalize">{b.leaveType.replace("_", " ")} Leave</span>
                         <span className="text-muted-foreground">
-                          {b.used} used + {b.pending} pending / {b.entitled} days
-                          {b.entitled > 0 && <span className={`ms-2 font-medium ${b.remaining <= 3 ? "text-red-600" : "text-green-700"}`}>({b.remaining} left)</span>}
+                          {b.used} استفاده شده + {b.pending} در انتظار / {b.entitled} روز
+                          {b.entitled > 0 && <span className={`ms-2 font-medium ${b.remaining <= 3 ? "text-red-600" : "text-green-700"}`}>({b.remaining} باقیمانده)</span>}
                         </span>
                       </div>
                       {b.entitled > 0 && (
@@ -289,20 +289,20 @@ export default function HRLeavePage() {
       <Dialog open={reviewDialog.open} onOpenChange={open => setReviewDialog(d => ({ ...d, open }))}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="capitalize">{reviewDialog.action === "approved" ? "Approve" : "Reject"} Leave Request</DialogTitle>
+            <DialogTitle className="capitalize">{reviewDialog.action === "approved" ? "تأیید" : "رد"} درخواست مرخصی</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <Label>Review Notes (optional)</Label>
-            <Textarea value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} placeholder="Add a note for the employee..." rows={3} />
+            <Label>یادداشت بررسی (اختیاری)</Label>
+            <Textarea value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} placeholder="یک یادداشت برای کارمند اضافه کنید..." rows={3} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewDialog(d => ({ ...d, open: false }))}>Cancel</Button>
+            <Button variant="outline" onClick={() => setReviewDialog(d => ({ ...d, open: false }))}>انصراف</Button>
             <Button
               variant={reviewDialog.action === "approved" ? "default" : "destructive"}
               onClick={() => reviewMutation.mutate({ status: reviewDialog.action, reviewNotes })}
               disabled={reviewMutation.isPending}
             >
-              {reviewMutation.isPending ? "Processing..." : reviewDialog.action === "approved" ? "Approve" : "Reject"}
+              {reviewMutation.isPending ? "در حال پردازش..." : reviewDialog.action === "approved" ? "تأیید" : "رد"}
             </Button>
           </DialogFooter>
         </DialogContent>

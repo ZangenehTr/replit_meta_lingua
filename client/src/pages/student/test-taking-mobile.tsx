@@ -187,7 +187,7 @@ export default function StudentTestTakingMobile() {
 
   const getTestTypeColor = (type: string) => {
     switch (type) {
-      case 'quiz': return 'bg-blue-500';
+      case 'quiz': return 'bg-indigo-500';
       case 'exam': return 'bg-red-500';
       case 'practice': return 'bg-green-500';
       default: return 'bg-gray-500';

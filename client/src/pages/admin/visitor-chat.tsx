@@ -106,7 +106,7 @@ export default function AdminVisitorChatPage() {
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">{t('admin:visitorChat', 'Visitor Chat')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('admin:visitorChat.title', 'Visitor Chat')}</h1>
           <p className="text-sm text-muted-foreground">{t('admin:manageLiveChats', 'Manage live visitor chats and AI settings')}</p>
         </div>
         <div className="flex gap-2">
