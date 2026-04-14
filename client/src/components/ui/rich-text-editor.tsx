@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSocket } from '@/hooks/use-socket';
+import { useAuth } from '@/hooks/use-auth';
 
 interface RichTextEditorProps {
   content?: string;
@@ -70,6 +71,9 @@ export function RichTextEditor({
   const [collaborators, setCollaborators] = useState<string[]>([]);
   
   const { socket, isConnected } = useSocket();
+  const { user: authUser } = useAuth();
+  const currentUserId = authUser?.id?.toString() ?? 'guest';
+  const currentUserName = authUser ? `${authUser.firstName ?? ''} ${authUser.lastName ?? ''}`.trim() || authUser.phone : 'Guest';
 
   const editor = useEditor({
     extensions: [
@@ -102,7 +106,7 @@ export function RichTextEditor({
         socket.emit('editor-change', {
           collaborativeId,
           content: html,
-          userId: 'current-user' // TODO: Get from auth context
+          userId: currentUserId
         });
       }
     },
@@ -128,7 +132,7 @@ export function RichTextEditor({
 
     // Listen for changes from other users
     socket.on('editor-change', (data: { content: string; userId: string }) => {
-      if (data.userId !== 'current-user' && editor) {
+      if (data.userId !== currentUserId && editor) {
         // Update content without triggering onChange
         editor.commands.setContent(data.content, false);
       }
@@ -164,7 +168,7 @@ export function RichTextEditor({
           id: Date.now().toString(),
           content: currentContent,
           timestamp: new Date(),
-          user: 'Current User', // TODO: Get from auth context
+          user: currentUserName,
           changes: 'Content updated'
         };
         setVersions(prev => [newVersion, ...prev.slice(0, 19)]); // Keep last 20 versions

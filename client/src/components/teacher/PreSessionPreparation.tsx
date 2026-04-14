@@ -109,7 +109,7 @@ export function PreSessionPreparation({ sessionId, onStartSession }: PreSessionP
       onStartSession();
     } else {
       // Navigate to video session
-      window.location.href = `/teacher/callern/${sessionId}`;
+      window.location.href = `/teacher/callern?sessionId=${sessionId}`;
     }
   };
 

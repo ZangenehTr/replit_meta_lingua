@@ -101,6 +101,11 @@ export function CallernManagement() {
     onSuccess: () => { toast({ title: t("common:toast.success") }); queryClient.invalidateQueries({ queryKey: ["/api/admin/callern/packages"] }); setPackageToDelete(null); },
     onError: onMutationError,
   });
+  const startVideoCallMutation = useMutation({
+    mutationFn: (teacherId: number) => apiRequest("/api/callern/admin/start-session", { method: "POST", body: { teacherId } }),
+    onSuccess: (data: { sessionId: number }) => { window.location.href = `/callern/video/${data.sessionId}`; },
+    onError: onMutationError,
+  });
 
   const normalizedRole = user?.role?.toLowerCase();
   if (user && !["admin", "supervisor"].includes(normalizedRole)) {
@@ -182,7 +187,7 @@ export function CallernManagement() {
                   {teacher.hourlyRate && <div className="text-sm flex items-center gap-1"><span className="text-gray-500">{t("admin:callernManagement.hourlyRate")}:</span><span className="font-medium">{teacher.hourlyRate} IRR</span></div>}
                   <div className="flex flex-wrap gap-1">{teacher.availableHours?.map((h: string, i: number) => <Badge key={i} variant="secondary" className="text-xs">{h}</Badge>)}</div>
                   <div className="flex gap-2">
-                    {teacher.isOnline && <Button variant="default" size="sm" className="flex-1" onClick={() => (window.location.href = `/callern/video/call-${Date.now()}-${teacher.teacherId}`)}><Video className="h-3 w-3" /><span>{t("admin:callernManagement.startVideoCall")}</span></Button>}
+                    {teacher.isOnline && <Button variant="default" size="sm" className="flex-1" disabled={startVideoCallMutation.isPending} onClick={() => startVideoCallMutation.mutate(teacher.teacherId)}><Video className="h-3 w-3" /><span>{t("admin:callernManagement.startVideoCall")}</span></Button>}
                     <Button variant="outline" size="sm" className={teacher.isOnline ? "flex-1" : "w-full"} onClick={() => { setSelectedTeacher(teacher); setIsConfigDialogOpen(true); }}><Settings className="h-3 w-3" /><span>{t("admin:callernManagement.configure")}</span></Button>
                   </div>
                 </CardContent>

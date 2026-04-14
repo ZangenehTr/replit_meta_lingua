@@ -171,14 +171,6 @@ export default function PaymentGatewayConfigPage() {
   };
 
   const handleSave = () => {
-    if (form.activePaymentGateway === "mellat") {
-      toast({
-        title: t("common.error", "Error"),
-        description: t("admin:paymentGateway.mellatNotReady", "Mellat Bank gateway is not yet fully implemented. Please select another active gateway."),
-        variant: "destructive",
-      });
-      return;
-    }
     saveMutation.mutate(form);
   };
 
@@ -210,23 +202,33 @@ export default function PaymentGatewayConfigPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {(["shetab", "zarinpal", "idpay", "zibal", "mellat"] as GatewayName[]).map(gw => (
-              <button
-                key={gw}
-                type="button"
-                onClick={() => setActive(gw)}
-                className={`p-4 rounded-lg border-2 text-center transition-all font-medium capitalize ${
-                  activeGateway === gw
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50"
-                }`}
-              >
-                {gw}
-                {activeGateway === gw && (
-                  <div className="text-xs mt-1 text-primary">{t("common.selected", "Selected")}</div>
-                )}
-              </button>
-            ))}
+            {(["shetab", "zarinpal", "idpay", "zibal", "mellat"] as GatewayName[]).map(gw => {
+              const isMellat = gw === "mellat";
+              return (
+                <button
+                  key={gw}
+                  type="button"
+                  onClick={() => !isMellat && setActive(gw)}
+                  disabled={isMellat}
+                  title={isMellat ? t("admin:paymentGateway.mellatComingSoon", "Mellat Bank – Coming Soon") : undefined}
+                  className={`p-4 rounded-lg border-2 text-center transition-all font-medium capitalize ${
+                    isMellat
+                      ? "border-border bg-gray-50 text-gray-400 cursor-not-allowed opacity-60"
+                      : activeGateway === gw
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  {gw}
+                  {isMellat && (
+                    <div className="text-xs mt-1 text-orange-500 font-semibold">{t("common.comingSoon", "Coming Soon")}</div>
+                  )}
+                  {!isMellat && activeGateway === gw && (
+                    <div className="text-xs mt-1 text-primary">{t("common.selected", "Selected")}</div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -400,58 +402,39 @@ export default function PaymentGatewayConfigPage() {
         </TabsContent>
 
         <TabsContent value="mellat">
-          <Card>
+          <Card className="opacity-75">
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <CardTitle className="flex items-center gap-2">
                 Mellat Bank (بانک ملت)
-                <GatewayBadge name="mellat" active={activeGateway === "mellat"} />
+                <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
+                  {t("common.comingSoon", "Coming Soon")}
+                </Badge>
               </CardTitle>
               <CardDescription>
-                {t("admin:paymentGateway.mellatNote", "Mellat Bank gateway – credential storage available. Full SOAP integration coming soon.")}
+                {t("admin:paymentGateway.mellatNote", "Mellat Bank gateway – Full SOAP integration is under development and not yet available.")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={form.mellatEnabled}
-                  onCheckedChange={v => setForm(p => ({ ...p, mellatEnabled: v }))}
-                />
-                <Label>{t("admin:paymentGateway.enabled", "Enable this gateway")}</Label>
+              <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
+                {t("admin:paymentGateway.mellatComingSoonDetail", "Mellat Bank integration is not yet available. Please use Shetab, Zarinpal, IDPay, or Zibal for payment processing.")}
               </div>
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={form.mellatSandbox}
-                  onCheckedChange={v => setForm(p => ({ ...p, mellatSandbox: v }))}
-                />
-                <Label>{t("admin:paymentGateway.sandboxMode", "Sandbox / Test Mode")}</Label>
-              </div>
-              <div className="space-y-2">
-                <Label>{t("admin:paymentGateway.terminalId", "Terminal ID")}</Label>
-                <Input
-                  value={form.mellatTerminalId}
-                  onChange={e => setForm(p => ({ ...p, mellatTerminalId: e.target.value }))}
-                  placeholder={config?.gateways.mellat?.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Terminal ID"}
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t("admin:paymentGateway.username", "Username")}</Label>
-                <Input
-                  value={form.mellatUsername}
-                  onChange={e => setForm(p => ({ ...p, mellatUsername: e.target.value }))}
-                  placeholder={config?.gateways.mellat?.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Username"}
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t("admin:paymentGateway.password", "Password")}</Label>
-                <Input
-                  value={form.mellatPassword}
-                  onChange={e => setForm(p => ({ ...p, mellatPassword: e.target.value }))}
-                  type="password"
-                  placeholder={config?.gateways.mellat?.hasCredentials ? t("admin:paymentGateway.leaveBlankToKeep", "Leave blank to keep") : "Password"}
-                  dir="ltr"
-                />
+              <div className="space-y-4 pointer-events-none opacity-50">
+                <div className="flex items-center gap-3">
+                  <Switch checked={false} disabled />
+                  <Label>{t("admin:paymentGateway.enabled", "Enable this gateway")}</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("admin:paymentGateway.terminalId", "Terminal ID")}</Label>
+                  <Input disabled placeholder="Terminal ID" dir="ltr" />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("admin:paymentGateway.username", "Username")}</Label>
+                  <Input disabled placeholder="Username" dir="ltr" />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("admin:paymentGateway.password", "Password")}</Label>
+                  <Input disabled type="password" placeholder="Password" dir="ltr" />
+                </div>
               </div>
             </CardContent>
           </Card>

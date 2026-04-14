@@ -564,4 +564,37 @@ router.post('/callern/session-rating', requireAuth, async (req, res) => {
   }
 });
 
+// ===========================
+// ADMIN-INITIATED SESSION START
+// Creates a monitoring/admin session for a teacher without requiring a student booking
+// ===========================
+
+const adminStartSessionSchema = z.object({
+  teacherId: z.number().int().positive()
+});
+
+router.post('/callern/admin/start-session', requireAuth, async (req, res) => {
+  try {
+    const adminUser = (req as any).user;
+    if (!['Admin', 'Supervisor'].includes(adminUser.role)) {
+      return res.status(403).json({ message: 'Admin or Supervisor access required' });
+    }
+
+    const { teacherId } = adminStartSessionSchema.parse(req.body);
+
+    const session = await callernStorage.createCallSession({
+      studentId: adminUser.id,
+      teacherId,
+      startedAt: new Date(),
+      status: 'active',
+      sessionType: 'admin_monitoring'
+    });
+
+    res.status(201).json({ sessionId: session.id });
+  } catch (error) {
+    console.error('Error starting admin session:', error);
+    res.status(500).json({ message: 'Failed to start session' });
+  }
+});
+
 export { router as callernFlowRoutes };

@@ -483,57 +483,25 @@ export default function WebsiteBuilderPage() {
             </TabsContent>
 
             <TabsContent value="templates" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {websiteTemplates.map((template) => (
-                  <Card key={template.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">
-                            {currentLanguage === 'en' ? template.nameEn : template.nameFa}
-                          </CardTitle>
-                          <CardDescription>{template.category}</CardDescription>
-                        </div>
-                        <div className="flex gap-1">
-                          {template.isResponsive && (
-                            <Badge variant="secondary">
-                              <Smartphone className="w-3 h-3 me-1" />
-                              Responsive
-                            </Badge>
-                          )}
-                          {template.isRtlSupported && (
-                            <Badge variant="secondary">
-                              <AlignRight className="w-3 h-3 me-1" />
-                              RTL
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Eye className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {(currentLanguage === 'en' ? template.featuresEn : template.featuresFa).map((feature, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {feature}
-                            </Badge>
-                          ))}
-                        </div>
-                        <Button 
-                          onClick={() => handleTemplateSelection(template)}
-                          className="w-full"
-                          variant={selectedTemplate?.id === template.id ? 'default' : 'outline'}
-                        >
-                          {selectedTemplate?.id === template.id ? 'Selected' : 'Select Template'}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-4">
+                  <div className="rounded-full bg-orange-100 p-4">
+                    <Layout className="w-8 h-8 text-orange-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-1">
+                      {t('websiteBuilder.templateLibraryComingSoon', 'Template library coming soon')}
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-sm">
+                      {t('websiteBuilder.templateLibraryDescription', 'Use the Sections builder to manage your pages and create custom layouts.')}
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={() => setActiveTab('builder')}>
+                    <Layout className="w-4 h-4 me-2" />
+                    {t('websiteBuilder.goToBuilder', 'Go to Page Builder')}
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="builder" className="space-y-6">

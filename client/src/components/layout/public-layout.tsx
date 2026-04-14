@@ -640,10 +640,10 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               © {new Date().getFullYear()} MetaLingo. {t('footer.rights', 'All rights reserved.')}
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-sm text-muted-foreground hover:text-indigo-600 transition-colors">
+              <a href="/p/privacy-policy" className="text-sm text-muted-foreground hover:text-indigo-600 transition-colors">
                 {t('footer.privacy', 'حریم خصوصی')}
               </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-indigo-600 transition-colors">
+              <a href="/p/terms-of-use" className="text-sm text-muted-foreground hover:text-indigo-600 transition-colors">
                 {t('footer.terms', 'شرایط استفاده')}
               </a>
             </div>

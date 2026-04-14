@@ -658,6 +658,62 @@ server.listen({ port, host: '0.0.0.0' }, () => {
   // These tasks run AFTER port is open
   // ============================================
   
+  // Non-blocking: Seed legal CMS pages (privacy-policy and terms-of-use)
+  (async () => {
+    try {
+      const { db } = await import('./db.js');
+      const { cmsPages } = await import('../shared/schema.js');
+      const { users } = await import('../shared/schema.js');
+      const { eq, or } = await import('drizzle-orm');
+      const [adminUser] = await db.select({ id: users.id }).from(users).where(eq(users.role, 'Admin')).limit(1);
+      const adminId = adminUser?.id ?? 1;
+      const existing = await db.select({ slug: cmsPages.slug }).from(cmsPages)
+        .where(or(eq(cmsPages.slug, 'privacy-policy'), eq(cmsPages.slug, 'terms-of-use')));
+      const existingSlugs = new Set(existing.map(r => r.slug));
+      const now = new Date();
+      if (!existingSlugs.has('privacy-policy')) {
+        await db.insert(cmsPages).values({
+          title: 'Privacy Policy | حریم خصوصی',
+          titleFa: 'حریم خصوصی',
+          titleEn: 'Privacy Policy',
+          slug: 'privacy-policy',
+          status: 'published',
+          locale: 'fa',
+          direction: 'rtl',
+          isHomepage: false,
+          metaTitle: 'Privacy Policy – MetaLingo',
+          metaDescription: 'سیاست حریم خصوصی MetaLingo',
+          createdBy: adminId,
+          publishedAt: now,
+          createdAt: now,
+          updatedAt: now
+        });
+        console.log('✅ Seeded privacy-policy CMS page');
+      }
+      if (!existingSlugs.has('terms-of-use')) {
+        await db.insert(cmsPages).values({
+          title: 'Terms of Use | شرایط استفاده',
+          titleFa: 'شرایط استفاده',
+          titleEn: 'Terms of Use',
+          slug: 'terms-of-use',
+          status: 'published',
+          locale: 'fa',
+          direction: 'rtl',
+          isHomepage: false,
+          metaTitle: 'Terms of Use – MetaLingo',
+          metaDescription: 'شرایط استفاده از خدمات MetaLingo',
+          createdBy: adminId,
+          publishedAt: now,
+          createdAt: now,
+          updatedAt: now
+        });
+        console.log('✅ Seeded terms-of-use CMS page');
+      }
+    } catch (error) {
+      console.error('⚠️  Failed to seed legal CMS pages:', error);
+    }
+  })();
+
   // Non-blocking: Seed LinguaQuest lessons
   (async () => {
     try {
