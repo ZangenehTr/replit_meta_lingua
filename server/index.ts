@@ -662,17 +662,42 @@ server.listen({ port, host: '0.0.0.0' }, () => {
   (async () => {
     try {
       const { db } = await import('./db.js');
-      const { cmsPages } = await import('../shared/schema.js');
+      const { cmsPages, cmsPageSections } = await import('../shared/schema.js');
       const { users } = await import('../shared/schema.js');
       const { eq, or } = await import('drizzle-orm');
       const [adminUser] = await db.select({ id: users.id }).from(users).where(eq(users.role, 'Admin')).limit(1);
       const adminId = adminUser?.id ?? 1;
-      const existing = await db.select({ slug: cmsPages.slug }).from(cmsPages)
+      const existing = await db.select({ id: cmsPages.id, slug: cmsPages.slug }).from(cmsPages)
         .where(or(eq(cmsPages.slug, 'privacy-policy'), eq(cmsPages.slug, 'terms-of-use')));
-      const existingSlugs = new Set(existing.map(r => r.slug));
+      const existingMap = new Map(existing.map(r => [r.slug, r.id]));
       const now = new Date();
-      if (!existingSlugs.has('privacy-policy')) {
-        await db.insert(cmsPages).values({
+
+      // Ensure sections exist for already-seeded pages
+      for (const [slug, pageId] of existingMap.entries()) {
+        const [existingSection] = await db.select({ id: cmsPageSections.id })
+          .from(cmsPageSections).where(eq(cmsPageSections.pageId, pageId)).limit(1);
+        if (!existingSection) {
+          const isPrivacy = slug === 'privacy-policy';
+          await db.insert(cmsPageSections).values({
+            pageId,
+            sectionType: 'text',
+            title: isPrivacy ? 'حریم خصوصی' : 'شرایط استفاده',
+            titleFa: isPrivacy ? 'حریم خصوصی' : 'شرایط استفاده',
+            titleEn: isPrivacy ? 'Privacy Policy' : 'Terms of Use',
+            content: isPrivacy
+              ? { fa: 'متالینگو به حریم خصوصی کاربران خود احترام می‌گذارد. اطلاعات شخصی شما تنها برای ارائه خدمات آموزشی استفاده می‌شود و به هیچ شخص ثالثی منتقل نخواهد شد.', en: 'MetaLingo respects user privacy. Personal information is used solely to deliver educational services and will not be shared with third parties.' }
+              : { fa: 'استفاده از پلتفرم متالینگو به منزله پذیرش شرایط زیر است: (۱) رعایت قوانین مؤسسه؛ (۲) محتوای آموزشی تنها برای استفاده شخصی مجاز است.', en: 'Using MetaLingo constitutes acceptance of these terms: (1) Comply with institute regulations; (2) Educational content is for personal use only.' },
+            sortOrder: 0,
+            isActive: true,
+            createdAt: now,
+            updatedAt: now
+          });
+          console.log(`✅ Added content section to existing ${slug} CMS page`);
+        }
+      }
+
+      if (!existingMap.has('privacy-policy')) {
+        const [page] = await db.insert(cmsPages).values({
           title: 'Privacy Policy | حریم خصوصی',
           titleFa: 'حریم خصوصی',
           titleEn: 'Privacy Policy',
@@ -687,11 +712,27 @@ server.listen({ port, host: '0.0.0.0' }, () => {
           publishedAt: now,
           createdAt: now,
           updatedAt: now
+        }).returning({ id: cmsPages.id });
+        await db.insert(cmsPageSections).values({
+          pageId: page.id,
+          sectionType: 'text',
+          title: 'حریم خصوصی',
+          titleFa: 'حریم خصوصی',
+          titleEn: 'Privacy Policy',
+          content: {
+            fa: 'متالینگو به حریم خصوصی کاربران خود احترام می‌گذارد. اطلاعات شخصی شما تنها برای ارائه خدمات آموزشی استفاده می‌شود و به هیچ شخص ثالثی منتقل نخواهد شد. برای کسب اطلاعات بیشتر با مدیریت مؤسسه تماس بگیرید.',
+            en: 'MetaLingo respects user privacy. Personal information is used solely to deliver educational services and will not be shared with third parties. Contact institute management for further information.'
+          },
+          sortOrder: 0,
+          isActive: true,
+          createdAt: now,
+          updatedAt: now
         });
-        console.log('✅ Seeded privacy-policy CMS page');
+        console.log('✅ Seeded privacy-policy CMS page with content');
       }
-      if (!existingSlugs.has('terms-of-use')) {
-        await db.insert(cmsPages).values({
+
+      if (!existingMap.has('terms-of-use')) {
+        const [page] = await db.insert(cmsPages).values({
           title: 'Terms of Use | شرایط استفاده',
           titleFa: 'شرایط استفاده',
           titleEn: 'Terms of Use',
@@ -706,8 +747,23 @@ server.listen({ port, host: '0.0.0.0' }, () => {
           publishedAt: now,
           createdAt: now,
           updatedAt: now
+        }).returning({ id: cmsPages.id });
+        await db.insert(cmsPageSections).values({
+          pageId: page.id,
+          sectionType: 'text',
+          title: 'شرایط استفاده',
+          titleFa: 'شرایط استفاده',
+          titleEn: 'Terms of Use',
+          content: {
+            fa: 'استفاده از پلتفرم متالینگو به منزله پذیرش شرایط زیر است: (۱) دانشجویان موظف به رعایت قوانین مؤسسه هستند؛ (۲) محتوای آموزشی تنها برای استفاده شخصی مجاز است؛ (۳) متالینگو حق تغییر این شرایط را برای خود محفوظ می‌دارد.',
+            en: 'Using the MetaLingo platform constitutes acceptance of these terms: (1) Students must comply with institute regulations; (2) Educational content is for personal use only; (3) MetaLingo reserves the right to modify these terms.'
+          },
+          sortOrder: 0,
+          isActive: true,
+          createdAt: now,
+          updatedAt: now
         });
-        console.log('✅ Seeded terms-of-use CMS page');
+        console.log('✅ Seeded terms-of-use CMS page with content');
       }
     } catch (error) {
       console.error('⚠️  Failed to seed legal CMS pages:', error);

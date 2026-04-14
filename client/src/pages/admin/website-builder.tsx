@@ -397,7 +397,7 @@ export default function WebsiteBuilderPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="pages">Pages</TabsTrigger>
-              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="templates">Coming Soon</TabsTrigger>
               <TabsTrigger value="builder">Builder</TabsTrigger>
               <TabsTrigger value="deploy">Deploy</TabsTrigger>
             </TabsList>
