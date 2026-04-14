@@ -98,9 +98,15 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [
+      // React core — all three must be in the same pre-bundle chunk so that
+      // every module (including lazy-loaded ones and @tanstack/react-query's
+      // CJS wrapper) shares the EXACT same ReactCurrentDispatcher singleton.
       "react",
       "react-dom",
       "react-dom/client",
+      "react/jsx-dev-runtime",
+      "react/jsx-runtime",
+      // App deps
       "wouter",
       "@tanstack/react-query",
       "framer-motion",
@@ -129,17 +135,25 @@ export default defineConfig({
       "workbox-cacheable-response",
       "workbox-core",
       "workbox-broadcast-update",
+      // Virtual modules from vite-plugin-pwa MUST be excluded — they must
+      // never be pre-bundled because that would give them their own React
+      // copy instead of sharing the pre-bundled singleton.
       "virtual:pwa-register/react",
       "virtual:pwa-register",
     ],
-    force: false,
+    // Force a clean pre-bundle on every dev-server start so stale CJS
+    // wrappers (require_react returning null after HMR) never accumulate.
+    force: true,
   },
   server: {
     warmup: {
       clientFiles: [
         "./src/main.tsx",
         "./src/App.tsx",
-        "./src/pages/public/home.tsx",
+        // NOTE: do NOT include lazy-loaded page files here.
+        // Warmup pre-transforms them at server start, which can put their
+        // module records into Vite's graph in an unexpected state before the
+        // React provider tree is set up, leading to null-dispatcher crashes.
         "./src/hooks/use-auth.ts",
         "./src/lib/queryClient.ts",
       ],
