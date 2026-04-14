@@ -1,7 +1,7 @@
 # MetaLingo Academy — Deployment Guide
 
-**Version:** 1.5.0  
-**Last Updated:** April 12, 2026  
+**Version:** 1.5.1  
+**Last Updated:** April 14, 2026  
 **Audience:** System Administrators, DevOps Engineers
 
 ---
