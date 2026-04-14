@@ -241,6 +241,27 @@ function PageLoader() {
   );
 }
 
+// Module-level route wrappers for all lazy-loaded pages.
+// MUST be defined here (module scope) — never inline inside JSX.
+// Inline `{() => <Suspense>...</Suspense>}` render props create new function
+// references on every parent render, causing React to lose its hook dispatcher
+// when the lazy module resolves, crashing with "Cannot read properties of null".
+const BlogDetailRoute = () => <Suspense fallback={<PageLoader />}><BlogDetail /></Suspense>;
+const BlogListingRoute = () => <Suspense fallback={<PageLoader />}><BlogListing /></Suspense>;
+const VideoDetailRoute = () => <Suspense fallback={<PageLoader />}><VideoDetail /></Suspense>;
+const VideoGalleryRoute = () => <Suspense fallback={<PageLoader />}><VideoGallery /></Suspense>;
+const AboutRoute = () => <Suspense fallback={<PageLoader />}><About /></Suspense>;
+const ContactRoute = () => <Suspense fallback={<PageLoader />}><Contact /></Suspense>;
+const TakeTestRoute = () => <Suspense fallback={<PageLoader />}><TakeTest /></Suspense>;
+const ExpertTeachersRoute = () => <Suspense fallback={<PageLoader />}><ExpertTeachers /></Suspense>;
+const CurriculumCategoryRoute = () => <Suspense fallback={<PageLoader />}><CurriculumCategory /></Suspense>;
+const CurriculumHubRoute = () => <Suspense fallback={<PageLoader />}><CurriculumHub /></Suspense>;
+const CallernLandingRoute = () => <Suspense fallback={<PageLoader />}><CallernLanding /></Suspense>;
+const CmsPageRendererRoute = () => <Suspense fallback={<PageLoader />}><CmsPageRenderer /></Suspense>;
+const CoursesIndexRoute = () => <Suspense fallback={<PageLoader />}><CoursesIndex /></Suspense>;
+const AdminLandingPagesRoute = () => <Suspense fallback={<PageLoader />}><AdminLandingPages /></Suspense>;
+const PublicHomeRoute = () => <Suspense fallback={<PageLoader />}><PublicHome /></Suspense>;
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading, error } = useAuth();
   const { t } = useTranslation(['common', 'courses']);
@@ -546,9 +567,7 @@ function Router() {
       </Route>
       <Route path="/admin/landing-pages">
         <RoleProtectedRoute allowedRoles={["admin"]}>
-          <Suspense fallback={<PageLoader />}>
-            <AdminLandingPages />
-          </Suspense>
+          <AdminLandingPagesRoute />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/review-moderation">
@@ -796,11 +815,7 @@ function Router() {
           <StudentDashboardMobile />
         </ProtectedRoute>
       </Route>
-      <Route path="/courses">
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-          <CoursesIndex />
-        </Suspense>
-      </Route>
+      <Route path="/courses" component={CoursesIndexRoute} />
       <Route path="/courses/:slug" component={CoursesSlugRoute} />
       <Route path="/student/courses">
         <ProtectedRoute>
@@ -1291,50 +1306,21 @@ function Router() {
       </Route>
       
       {/* Public CMS Routes - Must come before authenticated root route */}
-      <Route path="/blog/:slug">
-        {() => <Suspense fallback={<PageLoader />}><BlogDetail /></Suspense>}
-      </Route>
-      <Route path="/blog">
-        {() => <Suspense fallback={<PageLoader />}><BlogListing /></Suspense>}
-      </Route>
-      <Route path="/videos/:id">
-        {() => <Suspense fallback={<PageLoader />}><VideoDetail /></Suspense>}
-      </Route>
-      <Route path="/videos">
-        {() => <Suspense fallback={<PageLoader />}><VideoGallery /></Suspense>}
-      </Route>
-      <Route path="/about">
-        {() => <Suspense fallback={<PageLoader />}><About /></Suspense>}
-      </Route>
-      <Route path="/contact">
-        {() => <Suspense fallback={<PageLoader />}><Contact /></Suspense>}
-      </Route>
-      <Route path="/take-test">
-        {() => <Suspense fallback={<PageLoader />}><TakeTest /></Suspense>}
-      </Route>
-      <Route path="/teachers">
-        {() => <Suspense fallback={<PageLoader />}><ExpertTeachers /></Suspense>}
-      </Route>
-      <Route path="/expert-teachers">
-        {() => <Suspense fallback={<PageLoader />}><ExpertTeachers /></Suspense>}
-      </Route>
-      <Route path="/curriculum/:slug">
-        {() => <Suspense fallback={<PageLoader />}><CurriculumCategory /></Suspense>}
-      </Route>
-      <Route path="/curriculum">
-        {() => <Suspense fallback={<PageLoader />}><CurriculumHub /></Suspense>}
-      </Route>
-      <Route path="/services/callern">
-        {() => <Suspense fallback={<PageLoader />}><CallernLanding /></Suspense>}
-      </Route>
+      <Route path="/blog/:slug" component={BlogDetailRoute} />
+      <Route path="/blog" component={BlogListingRoute} />
+      <Route path="/videos/:id" component={VideoDetailRoute} />
+      <Route path="/videos" component={VideoGalleryRoute} />
+      <Route path="/about" component={AboutRoute} />
+      <Route path="/contact" component={ContactRoute} />
+      <Route path="/take-test" component={TakeTestRoute} />
+      <Route path="/teachers" component={ExpertTeachersRoute} />
+      <Route path="/expert-teachers" component={ExpertTeachersRoute} />
+      <Route path="/curriculum/:slug" component={CurriculumCategoryRoute} />
+      <Route path="/curriculum" component={CurriculumHubRoute} />
+      <Route path="/services/callern" component={CallernLandingRoute} />
+      <Route path="/p/:slug" component={CmsPageRendererRoute} />
 
-      <Route path="/p/:slug">
-        {() => <Suspense fallback={<PageLoader />}><CmsPageRenderer /></Suspense>}
-      </Route>
-
-      <Route path="/home">
-        {() => <Suspense fallback={<PageLoader />}><PublicHome /></Suspense>}
-      </Route>
+      <Route path="/home" component={PublicHomeRoute} />
 
       <Route path="/" component={HomeRoute} />
       <Route component={NotFound} />
