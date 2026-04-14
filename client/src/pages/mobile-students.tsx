@@ -169,7 +169,7 @@ export function MobileStudents() {
           variant="default"
           size="sm"
           leftIcon={<Plus className="h-4 w-4" />}
-          onClick={() => setLocation("/admin/students/create")}
+          onClick={() => setLocation("/admin/students?action=create")}
         >
           Add
         </MobileButton>
@@ -276,7 +276,7 @@ export function MobileStudents() {
             </p>
             <MobileButton
               variant="default"
-              onClick={() => setLocation("/admin/students/create")}
+              onClick={() => setLocation("/admin/students?action=create")}
               leftIcon={<Plus className="h-4 w-4" />}
             >
               Add Student
