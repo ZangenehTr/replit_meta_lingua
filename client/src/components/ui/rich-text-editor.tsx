@@ -153,7 +153,7 @@ export function RichTextEditor({
       socket.off('collaborator-left');
       socket.emit('leave-editor', { collaborativeId });
     };
-  }, [collaborativeId, socket, isConnected, editor]);
+  }, [collaborativeId, socket, isConnected, editor, currentUserId]);
 
   const handleSave = useCallback(async () => {
     if (!editor || !onSave) return;
@@ -182,7 +182,7 @@ export function RichTextEditor({
     } finally {
       setIsSaving(false);
     }
-  }, [editor, onSave, showVersionHistory]);
+  }, [editor, onSave, showVersionHistory, currentUserName]);
 
   const addLink = useCallback(() => {
     const url = window.prompt('Enter the URL');
