@@ -13,7 +13,7 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   lastName: text("last_name"),
   role: text("role").notNull().default("Student"),
-  phoneNumber: text("phone_number"),
+  phoneNumber: text("phone_number").unique(),
   avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
   preferences: jsonb("preferences"),

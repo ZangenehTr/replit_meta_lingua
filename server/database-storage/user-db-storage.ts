@@ -1,5 +1,6 @@
 import { eq, and, asc, desc, sql, gte, lte, lt, inArray, or, isNull, isNotNull, ilike } from "drizzle-orm";
 import { db } from "../db";
+import { normalizePhoneNumber } from "../storage/storage-types";
 import { 
   filterTeachers, 
   filterActiveTeachers, 
@@ -206,6 +207,12 @@ export class UserDbStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    const normalized = normalizePhoneNumber(phoneNumber);
+    const [user] = await db.select().from(users).where(eq(users.phoneNumber, normalized));
     return user;
   }
 

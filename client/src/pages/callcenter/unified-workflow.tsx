@@ -116,6 +116,9 @@ export default function UnifiedCallCenterWorkflow() {
   const [activeStage, setActiveStage] = useState<WorkflowStage>("contact_desk");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialLeadId = searchParams.get('leadId') ? Number(searchParams.get('leadId')) : null;
+
   const { data: user } = useQuery<User>({
     queryKey: ['/api/users/me']
   });
@@ -275,7 +278,7 @@ export default function UnifiedCallCenterWorkflow() {
       );
     }
     switch (activeStage) {
-      case "contact_desk": return <ContactDesk onNavigateToNewIntake={() => setActiveStage("new_intake")} />;
+      case "contact_desk": return <ContactDesk onNavigateToNewIntake={() => setActiveStage("new_intake")} initialLeadId={initialLeadId} />;
       case "new_intake": return <NewIntake />;
       case "no_response": return <NoResponse />;
       case "follow_up": return <FollowUp />;

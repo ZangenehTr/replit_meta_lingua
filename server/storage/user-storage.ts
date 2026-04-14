@@ -189,6 +189,7 @@ import {
 import { db } from "../db";
 import { eq, and, gte, lte, sql, desc, asc, or } from "drizzle-orm";
 import type { IStorage } from "./storage-types";
+import { normalizePhoneNumber } from "./storage-types";
 
 
 export class MemStorageUser {
@@ -205,6 +206,12 @@ export class MemStorageUser {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const result = await this.db.select().from(users).where(eq(users.email, email));
+    return result[0];
+  }
+
+  async getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    const normalized = normalizePhoneNumber(phoneNumber);
+    const result = await this.db.select().from(users).where(eq(users.phoneNumber, normalized));
     return result[0];
   }
 

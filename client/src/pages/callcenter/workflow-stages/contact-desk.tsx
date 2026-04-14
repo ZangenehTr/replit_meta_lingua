@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -19,14 +19,28 @@ import {
 
 interface ContactDeskProps {
   onNavigateToNewIntake?: () => void;
+  initialLeadId?: number | null;
 }
 
-function ContactDesk({ onNavigateToNewIntake }: ContactDeskProps) {
+function ContactDesk({ onNavigateToNewIntake, initialLeadId }: ContactDeskProps) {
   const { t } = useTranslation(["callcenter", "common"]);
   const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [searchPhone, setSearchPhone] = useState("");
   const [selectedContact, setSelectedContact] = useState<LeadSummary | null>(null);
+
+  const { data: initialLead } = useQuery<Lead>({
+    queryKey: ["/api/leads", initialLeadId],
+    queryFn: () => apiRequest(`/api/leads/${initialLeadId}`),
+    enabled: !!initialLeadId && !selectedContact,
+  });
+
+  useEffect(() => {
+    if (initialLead && !selectedContact) {
+      setSelectedContact(normalizeLeadToSummary(initialLead));
+      if (initialLead.phone) setSearchPhone(initialLead.phone);
+    }
+  }, [initialLead, selectedContact]);
 
   const { data: contacts = [] } = useQuery<Lead[]>({
     queryKey: ["/api/leads", { phone: searchPhone }],

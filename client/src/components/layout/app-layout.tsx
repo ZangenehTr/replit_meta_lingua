@@ -222,7 +222,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetContent
                   id="mobile-sidebar"
-                  side="left"
+                  side={direction === 'rtl' ? 'right' : 'left'}
                   className="w-72 p-0 max-w-[75vw] z-[100] md:hidden"
                   aria-label={t('common:navigation.sidebarMenu', 'منوی ناوبری')}
                   onPointerDownOutside={() => setMobileMenuOpen(false)}
@@ -262,6 +262,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <main
             id="main-content"
             tabIndex={-1}
+            dir={direction}
             className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 transition-all duration-300 outline-none ${
               user?.role?.toLowerCase() !== 'student'
                 ? (sidebarCollapsed ? 'md:ms-16' : 'md:ms-56')

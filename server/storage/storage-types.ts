@@ -217,6 +217,7 @@ export interface IStorage {
   // User management
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   getTeachers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;

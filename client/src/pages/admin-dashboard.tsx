@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,7 @@ interface InvoiceSummary {
 export default function AdminDashboard() {
   const { t } = useTranslation(['admin', 'common']);
   const [, setLocation] = useLocation();
+  const { direction } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("overview");
 
@@ -122,7 +124,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8" dir={direction}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -517,7 +519,7 @@ export default function AdminDashboard() {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => setLocation(`/admin/leads?edit=${lead.id}`)}
+                              onClick={() => setLocation(`/callcenter/unified-workflow?leadId=${lead.id}`)}
                               data-testid={`button-edit-lead-${lead.id}`}
                             >
                               <Edit className="h-4 w-4" />
@@ -556,7 +558,7 @@ export default function AdminDashboard() {
                         <Button variant="outline" size="sm" className="flex-1 min-h-[40px]" onClick={() => window.location.href = `mailto:${lead.email}`}>
                           <Mail className="h-4 w-4 me-1" /> {t('admin:dashboard.email')}
                         </Button>
-                        <Button variant="outline" size="sm" className="min-h-[40px]" onClick={() => setLocation(`/admin/leads?edit=${lead.id}`)}>
+                        <Button variant="outline" size="sm" className="min-h-[40px]" onClick={() => setLocation(`/callcenter/unified-workflow?leadId=${lead.id}`)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>

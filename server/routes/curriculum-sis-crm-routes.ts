@@ -172,9 +172,38 @@ export async function setupCurriculumSisCrmRoutes(app: any, context: RouteContex
   app.post("/api/crm/students", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const studentData = req.body;
+
+      // Normalize phone number to canonical +98 format so storage and auth use the same representation
+      if (studentData.phoneNumber) {
+        studentData.phoneNumber = OtpService.formatIranianPhoneNumber(studentData.phoneNumber);
+      }
+
+      // Check for duplicate phone number before creating
+      if (studentData.phoneNumber) {
+        const existingPhone = await storage.getUserByPhoneNumber(studentData.phoneNumber);
+        if (existingPhone) {
+          return res.status(409).json({
+            message: 'Phone number is already registered to another account. Please use a different phone number.'
+          });
+        }
+      }
+
+      // Check for duplicate email before creating
+      if (studentData.email) {
+        const existingEmail = await storage.getUserByEmail(studentData.email);
+        if (existingEmail) {
+          return res.status(409).json({
+            message: 'Email address is already registered. Please use a different email address.'
+          });
+        }
+      }
+
       const student = await storage.createStudent(studentData);
       res.status(201).json(student);
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        return res.status(409).json({ message: 'Phone number or email is already registered.' });
+      }
       res.status(400).json({ message: "Failed to create student" });
     }
   });

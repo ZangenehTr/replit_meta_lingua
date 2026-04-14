@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import type { IStorage } from '../storage';
+import { normalizePhoneNumber } from '../storage/storage-types';
 
 // Create router for admin user management
 export function createAdminUsersRouter(storage: IStorage, authenticate: any, requireRole: any): express.Router {
@@ -68,6 +69,19 @@ export function createAdminUsersRouter(storage: IStorage, authenticate: any, req
         });
       }
 
+      // Normalize phone number to canonical +98 format for consistent storage and lookups
+      const normalizedPhone = validatedData.phoneNumber ? normalizePhoneNumber(validatedData.phoneNumber) : null;
+
+      // Check if phone number already exists
+      if (normalizedPhone) {
+        const existingPhone = await storage.getUserByPhoneNumber(normalizedPhone);
+        if (existingPhone) {
+          return res.status(409).json({
+            message: 'Phone number is already registered. Please use a different phone number.'
+          });
+        }
+      }
+
       // Hash password
       const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
@@ -83,7 +97,7 @@ export function createAdminUsersRouter(storage: IStorage, authenticate: any, req
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         role: validatedData.role,
-        phoneNumber: validatedData.phoneNumber || null,
+        phoneNumber: normalizedPhone,
         isActive: true
       };
 
@@ -109,6 +123,9 @@ export function createAdminUsersRouter(storage: IStorage, authenticate: any, req
           errors: error.errors 
         });
       }
+      if (error?.code === '23505') {
+        return res.status(409).json({ message: 'Phone number or email is already registered.' });
+      }
       console.error('Error creating user:', error);
       res.status(500).json({ message: 'Failed to create user' });
     }
@@ -123,7 +140,13 @@ export function createAdminUsersRouter(storage: IStorage, authenticate: any, req
       }
 
       // Validate request body
-      const validatedData = updateUserSchema.parse(req.body);
+      const parsedData = updateUserSchema.parse(req.body);
+
+      // Normalize phone number to canonical +98 format for consistent storage and lookups
+      const validatedData = {
+        ...parsedData,
+        phoneNumber: parsedData.phoneNumber ? normalizePhoneNumber(parsedData.phoneNumber) : parsedData.phoneNumber
+      };
 
       // Check if user exists
       const existingUser = await storage.getUser(userId);
@@ -137,6 +160,17 @@ export function createAdminUsersRouter(storage: IStorage, authenticate: any, req
         if (emailExists) {
           return res.status(409).json({ 
             message: 'Email already exists. Please use a different email address.' 
+          });
+        }
+      }
+
+      // If phone number is being updated, check for duplicates against normalized value
+      const existingNormalizedPhone = existingUser.phoneNumber ? normalizePhoneNumber(existingUser.phoneNumber) : null;
+      if (validatedData.phoneNumber && validatedData.phoneNumber !== existingNormalizedPhone) {
+        const phoneExists = await storage.getUserByPhoneNumber(validatedData.phoneNumber);
+        if (phoneExists) {
+          return res.status(409).json({
+            message: 'Phone number is already registered. Please use a different phone number.'
           });
         }
       }
@@ -167,6 +201,9 @@ export function createAdminUsersRouter(storage: IStorage, authenticate: any, req
           message: 'Invalid request data',
           errors: error.errors 
         });
+      }
+      if (error?.code === '23505') {
+        return res.status(409).json({ message: 'Phone number or email is already registered.' });
       }
       console.error('Error updating user:', error);
       res.status(500).json({ message: 'Failed to update user' });
