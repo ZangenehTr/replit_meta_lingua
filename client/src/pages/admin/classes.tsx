@@ -1076,6 +1076,7 @@ function ClassScheduleForm({
             onChange={() => {}}
             disabled
           />
+          <p className="text-xs text-muted-foreground">{t('classScheduling.endDateAutoCalculated', 'Auto-calculated from schedule')}</p>
         </div>
 
         <div className="space-y-2">

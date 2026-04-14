@@ -172,14 +172,7 @@ export default function LeadManagement() {
 
   // Handle create lead
   const handleCreateLead = () => {
-    console.log("🔥 handleCreateLead clicked! Form data:", newLeadData);
-    
     if (!newLeadData.firstName || !newLeadData.lastName || !newLeadData.phoneNumber) {
-      console.log("❌ Validation failed - missing fields:", {
-        firstName: newLeadData.firstName,
-        lastName: newLeadData.lastName,
-        phoneNumber: newLeadData.phoneNumber
-      });
       toast({
         title: "Missing Required Fields",
         description: "Please fill in first name, last name, and phone number.",

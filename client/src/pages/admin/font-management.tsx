@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Trash2, Check, X, Type } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import type { CustomFont } from "@shared/schema";
@@ -18,6 +19,7 @@ export default function FontManagementPage() {
   const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fontToDelete, setFontToDelete] = useState<number | null>(null);
   const [uploadForm, setUploadForm] = useState({
     name: '',
     fontFamily: '',
@@ -340,11 +342,7 @@ export default function FontManagementPage() {
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => {
-                          if (window.confirm(t('admin:fontManagement.confirmDelete'))) {
-                            deleteMutation.mutate(font.id);
-                          }
-                        }}
+                        onClick={() => setFontToDelete(font.id)}
                         disabled={deleteMutation.isPending}
                         data-testid={`button-delete-${font.id}`}
                       >
@@ -358,6 +356,28 @@ export default function FontManagementPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={fontToDelete !== null} onOpenChange={(open) => !open && setFontToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('admin:fontManagement.confirmDelete', 'Delete Font')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('admin:fontManagement.confirmDeleteDescription', 'Are you sure you want to delete this font? This action cannot be undone.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFontToDelete(null)}>
+              {t('common:cancel', 'Cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (fontToDelete !== null) { deleteMutation.mutate(fontToDelete); setFontToDelete(null); } }}
+            >
+              {t('common:delete', 'Delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
