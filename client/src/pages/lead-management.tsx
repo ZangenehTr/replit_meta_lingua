@@ -181,7 +181,6 @@ export default function LeadManagement() {
       return;
     }
 
-    console.log("✅ Validation passed, calling mutation...");
     createLeadMutation.mutate(newLeadData);
   };
 
