@@ -76,6 +76,14 @@ body.rtl p, body.rtl div, body.rtl span {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
 
+/* Take-Test Page Override - Force LTR for English placement test */
+.take-test-ltr,
+.take-test-ltr *,
+.take-test-ltr h1, .take-test-ltr h2, .take-test-ltr h3, .take-test-ltr h4, .take-test-ltr h5, .take-test-ltr h6,
+.take-test-ltr p, .take-test-ltr div, .take-test-ltr span, .take-test-ltr label {
+  direction: ltr !important;
+}
+
 /* Admin Override - Force LTR for admin interface regardless of language */
 .admin-ltr,
 .admin-ltr *,

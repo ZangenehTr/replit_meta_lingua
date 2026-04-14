@@ -134,223 +134,181 @@ export function VideoSessionCard({
   const viewingProgress = session.viewingHistory?.completionPercentage || 
                          session.recordingMetadata?.viewingProgress || 0;
 
+  const statusBadge = {
+    upcoming: { label: t('student:upcoming', 'پیش رو'), cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+    ongoing:  { label: t('student:ongoing',  'در جریان'), cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    completed:{ label: t('student:completed','انجام‌شده'), cls: 'bg-gray-100 text-gray-600 border-gray-200' },
+    cancelled:{ label: t('student:cancelled','لغو شده'),  cls: 'bg-red-50 text-red-600 border-red-200' },
+  }[session.status] ?? { label: session.status, cls: 'bg-gray-100 text-gray-500 border-gray-200' };
+
   return (
     <motion.div
-      className="glass-card p-4 cursor-pointer relative overflow-hidden"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-      whileTap={{ scale: 0.98 }}
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm cursor-pointer relative overflow-hidden hover:shadow-md transition-shadow"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      whileTap={{ scale: 0.99 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={() => onSessionClick(session)}
       data-testid={`video-session-card-${session.id}`}
     >
-      {/* Video Thumbnail Background */}
-      {session.hasRecording && session.thumbnailUrl && (
-        <div className="absolute inset-0 z-0 opacity-20">
-          <img
-            src={session.thumbnailUrl}
-            alt={`${session.title} thumbnail`}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              thumbnailLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            onLoad={() => setThumbnailLoaded(true)}
-            onError={() => setThumbnailLoaded(false)}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/80 to-blue-900/60" />
-        </div>
-      )}
+      {/* Status stripe */}
+      <div className={`absolute top-0 start-0 w-1 h-full rounded-s-2xl ${getStatusColor(session.status)}`} />
 
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Header with Video Indicator */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <div className={`w-2 h-2 rounded-full ${getStatusColor(session.status)}`} />
-              <h3 className="text-white font-semibold text-lg">{session.title}</h3>
-              
-              {/* Recording Indicator */}
+      <div className="p-4 ps-5">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          {/* Left: title + course */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+              <h3 className="font-semibold text-gray-900 text-base leading-snug truncate">
+                {session.title}
+              </h3>
               {session.hasRecording && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="flex items-center gap-1"
-                >
+                <span className="inline-flex items-center gap-1">
                   {session.recordingStatus === 'ready' ? (
-                    <Video className="w-4 h-4 text-green-400" />
+                    <Video className="w-3.5 h-3.5 text-violet-500" />
                   ) : session.recordingStatus === 'processing' ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Video className="w-4 h-4 text-yellow-400" />
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
+                      <Video className="w-3.5 h-3.5 text-amber-500" />
                     </motion.div>
-                  ) : (
-                    <Video className="w-4 h-4 text-gray-400" />
-                  )}
-                  
+                  ) : null}
                   {session.recordingQuality && (
-                    <Badge className={`${getQualityBadgeColor(session.recordingQuality)} text-white text-xs px-1 py-0`}>
+                    <Badge className={`${getQualityBadgeColor(session.recordingQuality)} text-white text-[10px] px-1 py-0 h-4`}>
                       {session.recordingQuality}
                     </Badge>
                   )}
-                </motion.div>
+                </span>
               )}
-              
-              {/* Exam Type Indicator */}
-              {session.examType && (
-                <ExamTypeIndicator examType={session.examType} compact={true} />
-              )}
+              {session.examType && <ExamTypeIndicator examType={session.examType} compact />}
             </div>
-            <p className="text-white/60 text-sm">{session.courseName}</p>
-            
-            {/* Holiday Indicator */}
-            {session.holidays && session.holidays.length > 0 && (
-              <div className="mt-2">
-                <HolidayIndicator 
-                  holidays={session.holidays} 
-                  compact={true} 
-                />
-              </div>
-            )}
+            <p className="text-indigo-600 text-xs font-medium truncate">{session.courseName}</p>
           </div>
-          
-          <div className="flex flex-col gap-2 items-end">
-            {session.type === 'group' ? (
-              <Badge className="bg-white/20 text-white border-white/30">
-                <Users className="w-3 h-3 me-1" />
-                {t('student:group', 'Group')}
-              </Badge>
-            ) : (
-              <Badge className="bg-white/20 text-white border-white/30">
-                <User className="w-3 h-3 me-1" />
-                {t('student:individual', '1-on-1')}
-              </Badge>
-            )}
+
+          {/* Right: status + type badges */}
+          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+            <Badge className={`text-[11px] border ${statusBadge.cls}`}>{statusBadge.label}</Badge>
+            <Badge className="bg-gray-50 text-gray-500 border-gray-200 text-[11px]">
+              {session.type === 'group' ? (
+                <><Users className="w-3 h-3 me-1" />{t('student:group', 'گروهی')}</>
+              ) : (
+                <><User className="w-3 h-3 me-1" />{t('student:individual', 'خصوصی')}</>
+              )}
+            </Badge>
           </div>
         </div>
 
-        {/* Session Details */}
-        <div className="flex items-center gap-3 text-white/70 text-sm mb-3">
-          <div className="flex items-center gap-1">
-            <User className="w-4 h-4" />
-            <span>{session.tutorFirstName} {session.tutorLastName}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            <span>{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
-          </div>
+        {/* Tutor + time row */}
+        <div className="flex items-center gap-4 text-gray-500 text-xs mb-3">
+          <span className="flex items-center gap-1.5">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white font-bold text-[9px] flex-shrink-0">
+              {session.tutorFirstName?.[0]}{session.tutorLastName?.[0]}
+            </div>
+            <span className="text-gray-700 font-medium">{session.tutorFirstName} {session.tutorLastName}</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            {formatTime(session.startTime)} – {formatTime(session.endTime)}
+          </span>
+          {session.duration && (
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" />
+              {session.duration} {t('student:minutes', 'دقیقه')}
+            </span>
+          )}
         </div>
 
-        {/* Video Progress Bar */}
+        {/* Holiday + language/level */}
+        {session.holidays && session.holidays.length > 0 && (
+          <div className="mb-3">
+            <HolidayIndicator holidays={session.holidays} compact />
+          </div>
+        )}
+
+        {/* Viewing progress */}
         {session.hasRecording && viewingProgress > 0 && (
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-white/60 text-xs">
-                {t('student:watchProgress', 'Watch Progress')}
-              </span>
-              <span className="text-white/60 text-xs">{Math.round(viewingProgress)}%</span>
+              <span className="text-gray-500 text-xs">{t('student:watchProgress', 'پیشرفت تماشا')}</span>
+              <span className="text-gray-500 text-xs">{Math.round(viewingProgress)}%</span>
             </div>
-            <Progress 
-              value={viewingProgress} 
-              className="h-1 bg-white/20"
-            />
+            <Progress value={viewingProgress} className="h-1.5 bg-gray-100" />
           </div>
         )}
 
-        {/* Video Metadata */}
+        {/* Recording metadata */}
         {session.hasRecording && session.recordingMetadata && (
-          <div className="mb-3 text-white/60 text-xs flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>{formatDuration(session.recordingMetadata.duration)}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Download className="w-3 h-3" />
-              <span>{session.recordingMetadata.fileSize}</span>
-            </div>
+          <div className="mb-3 text-gray-400 text-xs flex items-center gap-3">
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDuration(session.recordingMetadata.duration)}</span>
+            <span className="flex items-center gap-1"><Download className="w-3 h-3" />{session.recordingMetadata.fileSize}</span>
             {session.viewingHistory && session.viewingHistory.bookmarks.length > 0 && (
-              <div className="flex items-center gap-1">
-                <Bookmark className="w-3 h-3" />
-                <span>{session.viewingHistory.bookmarks.length}</span>
-              </div>
+              <span className="flex items-center gap-1"><Bookmark className="w-3 h-3" />{session.viewingHistory.bookmarks.length}</span>
             )}
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
-              {session.language}
-            </Badge>
-            <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
-              {session.level}
-            </Badge>
+        {/* Action footer */}
+        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+          <div className="flex items-center gap-1.5">
+            <Badge className="bg-gray-50 text-gray-400 border-gray-200 text-[11px]">{session.language}</Badge>
+            <Badge className="bg-gray-50 text-gray-400 border-gray-200 text-[11px]">{session.level}</Badge>
           </div>
-          
           <div className="flex items-center gap-2">
-            {/* Video Play Button */}
             {session.hasRecording && session.recordingStatus === 'ready' && (
               <motion.button
-                className="px-3 py-1 bg-purple-500/80 backdrop-blur rounded-lg text-white text-sm font-medium flex items-center gap-1"
+                className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 rounded-xl text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 whileTap={{ scale: 0.95 }}
-                whileHover={{ scale: 1.05 }}
                 onClick={handleVideoPlay}
                 data-testid={`play-video-${session.id}`}
               >
-                <PlayCircle className="w-3 h-3" />
-                {viewingProgress > 0 ? t('student:continue', 'Continue') : t('student:watch', 'Watch')}
+                <PlayCircle className="w-3.5 h-3.5" />
+                {viewingProgress > 0 ? t('student:continue', 'ادامه') : t('student:watch', 'تماشا')}
               </motion.button>
             )}
-            
-            {/* Join Session Button */}
             {session.status === 'ongoing' && session.canJoin && (
               <motion.button
-                className="px-3 py-1 bg-green-500/80 backdrop-blur rounded-lg text-white text-sm font-medium flex items-center gap-1"
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 whileTap={{ scale: 0.95 }}
                 onClick={handleJoinSession}
                 data-testid={`join-session-${session.id}`}
               >
-                <Play className="w-3 h-3" />
-                {t('student:joinNow', 'Join Now')}
+                <Play className="w-3.5 h-3.5" />
+                {t('student:joinNow', 'پیوستن')}
               </motion.button>
             )}
-            
-            {/* No Recording State */}
-            {!session.hasRecording && session.status === 'completed' && (
-              <span className="text-white/40 text-xs italic">
-                {t('student:noRecording', 'No recording available')}
-              </span>
-            )}
-            
-            {/* Upcoming Session Info */}
             {session.status === 'upcoming' && (
-              <span className="text-white/50 text-xs">
-                {t('student:startsIn', 'Starts in')} {session.duration} {t('student:minutes', 'min')}
-              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                onClick={e => { e.stopPropagation(); onSessionClick(session); }}
+              >
+                {t('student:viewDetails', 'جزئیات')}
+              </Button>
+            )}
+            {!session.hasRecording && session.status === 'completed' && (
+              <Eye className="w-4 h-4 text-gray-300" />
             )}
           </div>
         </div>
       </div>
 
-      {/* Hover Video Preview Overlay */}
+      {/* Hover overlay for videos */}
       {session.hasRecording && isHovered && session.thumbnailUrl && (
         <motion.div
-          className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-2xl"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           <motion.button
-            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center"
+            className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleVideoPlay}
           >
-            <Play className="w-8 h-8 text-white fill-white" />
+            <Play className="w-6 h-6 text-violet-600 fill-violet-600" />
           </motion.button>
         </motion.div>
       )}
