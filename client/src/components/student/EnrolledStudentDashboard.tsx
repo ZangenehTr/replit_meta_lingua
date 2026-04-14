@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   BarChart3,
   BookOpen, 
@@ -387,6 +388,31 @@ export function EnrolledStudentDashboard({ enrollmentStatus, user }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMediumScreen = useIsMediumScreen();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isGrammarCheckerOpen, setIsGrammarCheckerOpen] = useState(false);
+  const [grammarText, setGrammarText] = useState("");
+  const [grammarResult, setGrammarResult] = useState<{ correctedText?: string; feedback?: string; errors?: any[] } | null>(null);
+  const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
+
+  const handleCheckGrammar = async () => {
+    if (!grammarText.trim()) {
+      toast({ title: "Please enter some text to check", variant: "destructive" });
+      return;
+    }
+    setIsCheckingGrammar(true);
+    setGrammarResult(null);
+    try {
+      const result = await apiRequest("/api/ai/grammar-check", {
+        method: "POST",
+        body: JSON.stringify({ text: grammarText }),
+      });
+      setGrammarResult(result);
+    } catch {
+      toast({ title: "Grammar check failed. Please try again.", variant: "destructive" });
+    } finally {
+      setIsCheckingGrammar(false);
+    }
+  };
 
   // Define the 9 hubs with their configurations using learner theme (blue-to-indigo)
   const hubs: Hub[] = [
@@ -2284,10 +2310,7 @@ function AIHub(props: any) {
             color: 'from-purple-500 to-pink-500',
             available: true,
             usageCount: 22,
-            onClick: () => {
-              // TODO: Implement grammar checker modal/component
-              console.log('Opening Grammar Checker...');
-            }
+            onClick: () => setIsGrammarCheckerOpen(true)
           },
           {
             id: 'pronunciation-coach',
@@ -3388,6 +3411,62 @@ function ProfileHub({ user, achievements, enrollmentStatus }: any) {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isGrammarCheckerOpen} onOpenChange={(open) => { setIsGrammarCheckerOpen(open); if (!open) { setGrammarText(""); setGrammarResult(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-purple-500" />
+              Grammar Checker
+            </DialogTitle>
+            <DialogDescription>
+              Paste or type your text below and let AI check it for grammar errors.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Textarea
+              placeholder="Enter your text here..."
+              value={grammarText}
+              onChange={(e) => setGrammarText(e.target.value)}
+              rows={5}
+              className="resize-none"
+            />
+            {grammarResult && (
+              <div className="space-y-3">
+                {grammarResult.correctedText && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+                    <p className="text-xs font-semibold text-green-700 mb-1">Corrected Text</p>
+                    <p className="text-sm text-green-900">{grammarResult.correctedText}</p>
+                  </div>
+                )}
+                {grammarResult.feedback && (
+                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+                    <p className="text-xs font-semibold text-blue-700 mb-1">Feedback</p>
+                    <p className="text-sm text-blue-900">{grammarResult.feedback}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGrammarCheckerOpen(false)}>
+              Close
+            </Button>
+            <Button
+              onClick={handleCheckGrammar}
+              disabled={isCheckingGrammar || !grammarText.trim()}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90"
+            >
+              {isCheckingGrammar ? (
+                <>
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                  Checking...
+                </>
+              ) : "Check Grammar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

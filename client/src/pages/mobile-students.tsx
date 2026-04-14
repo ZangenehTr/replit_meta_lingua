@@ -1,10 +1,21 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MobileButton } from "@/components/ui/mobile-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import MobileStudentCard from "@/components/mobile/mobile-student-card";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Search, 
   Filter, 
@@ -36,6 +47,9 @@ export function MobileStudents() {
   const [filterActive, setFilterActive] = useState<boolean | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "activity" | "level">("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [studentToDelete, setStudentToDelete] = useState<number | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch students data
   const { data: students = [], isLoading } = useQuery<Student[]>({
@@ -91,13 +105,31 @@ export function MobileStudents() {
     return result;
   }, [students, searchTerm, filterActive, sortBy, sortOrder]);
 
+  const deleteStudentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/admin/users/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
+      });
+      if (!response.ok) throw new Error("Failed to delete student");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/students"] });
+      toast({ title: "Student deleted successfully" });
+      setStudentToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to delete student", variant: "destructive" });
+      setStudentToDelete(null);
+    },
+  });
+
   const handleStudentEdit = (id: number) => {
-    setLocation(`/admin/students/${id}/edit`);
+    setLocation(`/admin/students?edit=${id}`);
   };
 
   const handleStudentDelete = (id: number) => {
-    // TODO: Implement delete functionality with confirmation dialog
-    console.log("Delete student:", id);
+    setStudentToDelete(id);
   };
 
   const handleStudentContact = (id: number) => {
@@ -297,10 +329,31 @@ export function MobileStudents() {
           variant="default"
           size="fab"
           className="shadow-lg"
-          onClick={() => setLocation("/admin/students/create")}
+          onClick={() => setLocation("/admin/students?action=create")}
           leftIcon={<Plus className="h-6 w-6" />}
         />
       </div>
+
+      <AlertDialog open={studentToDelete !== null} onOpenChange={(open) => { if (!open) setStudentToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Student</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this student? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (studentToDelete !== null) deleteStudentMutation.mutate(studentToDelete); }}
+              disabled={deleteStudentMutation.isPending}
+            >
+              {deleteStudentMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

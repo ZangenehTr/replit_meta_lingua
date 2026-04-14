@@ -52,6 +52,7 @@ interface ClassroomSession {
   status: 'scheduled' | 'live' | 'completed';
   features: string[];
   description?: string;
+  recordingUrl?: string;
 }
 
 interface ActiveClassroom {
@@ -705,7 +706,17 @@ export default function LiveClassroom() {
                       </Button>
                     )}
                     {session.status === 'completed' && (
-                      <Button variant="outline" className="w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          if (session.recordingUrl) {
+                            window.open(session.recordingUrl, '_blank');
+                          } else {
+                            toast({ title: 'ضبط در دسترس نیست / Recording not available yet' });
+                          }
+                        }}
+                      >
                         <Download className="h-4 w-4 me-2" />
                         مشاهده ضبط / View Recording
                       </Button>

@@ -685,6 +685,174 @@ function Create3DLessonDialog({ queryClient }: { queryClient: any }) {
   );
 }
 
+// Edit 3D Lesson Dialog Component
+function Edit3DLessonDialog({ lesson, isOpen, onClose, queryClient }: { lesson: any; isOpen: boolean; onClose: () => void; queryClient: any }) {
+  const { t } = useTranslation(['admin', 'common']);
+
+  const editSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().min(1, "Description is required"),
+    language: z.string().min(1),
+    level: z.string().min(1),
+    estimatedDurationMinutes: z.coerce.number().min(5),
+    xpReward: z.coerce.number().min(10),
+    passingScore: z.coerce.number().min(50),
+    isFree: z.boolean().default(false),
+    isPublished: z.boolean().default(false),
+  });
+
+  const form = useForm<z.infer<typeof editSchema>>({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      title: lesson.title || "",
+      description: lesson.description || "",
+      language: lesson.language || "English",
+      level: lesson.level || "intermediate",
+      estimatedDurationMinutes: lesson.estimatedDurationMinutes || 15,
+      xpReward: lesson.xpReward || 100,
+      passingScore: lesson.passingScore || 80,
+      isFree: lesson.isFree ?? false,
+      isPublished: lesson.isPublished ?? false,
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen && lesson) {
+      form.reset({
+        title: lesson.title || "",
+        description: lesson.description || "",
+        language: lesson.language || "English",
+        level: lesson.level || "intermediate",
+        estimatedDurationMinutes: lesson.estimatedDurationMinutes || 15,
+        xpReward: lesson.xpReward || 100,
+        passingScore: lesson.passingScore || 80,
+        isFree: lesson.isFree ?? false,
+        isPublished: lesson.isPublished ?? false,
+      });
+    }
+  }, [isOpen, lesson]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof editSchema>) => {
+      return await apiRequest(`/api/admin/3d-lessons/${lesson.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: t('admin:threeDLessons.updatedSuccessfully', { defaultValue: 'Lesson updated successfully' }) });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/3d-lessons'] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({ title: t('admin:threeDLessons.failedToUpdate', { defaultValue: 'Failed to update lesson' }), description: error.message, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{t('common:edit')} 3D Lesson</DialogTitle>
+          <DialogDescription>Update the lesson details below.</DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="title" render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>{t('admin:threeDLessons.lessonTitle')}</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>{t('admin:threeDLessons.description')}</FormLabel>
+                  <FormControl><Textarea className="min-h-[80px]" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="language" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('admin:threeDLessons.language')}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="English">English</SelectItem>
+                      <SelectItem value="Persian">Persian</SelectItem>
+                      <SelectItem value="Arabic">Arabic</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="level" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('admin:threeDLessons.level')}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="beginner">A1 - Beginner</SelectItem>
+                      <SelectItem value="elementary">A2 - Elementary</SelectItem>
+                      <SelectItem value="intermediate">B1 - Intermediate</SelectItem>
+                      <SelectItem value="upper_intermediate">B2 - Upper Intermediate</SelectItem>
+                      <SelectItem value="advanced">C1 - Advanced</SelectItem>
+                      <SelectItem value="proficient">C2 - Proficient</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="estimatedDurationMinutes" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('admin:threeDLessons.estimatedDuration')}</FormLabel>
+                  <FormControl><Input type="number" min="5" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="xpReward" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('admin:threeDLessons.xpReward')}</FormLabel>
+                  <FormControl><Input type="number" min="10" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="passingScore" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('admin:threeDLessons.passingScore')}</FormLabel>
+                  <FormControl><Input type="number" min="50" max="100" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <div className="flex items-center gap-6">
+              <FormField control={form.control} name="isFree" render={({ field }) => (
+                <FormItem className="flex items-center gap-2 space-y-0">
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                  <FormLabel>{t('admin:threeDLessons.makeFree')}</FormLabel>
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="isPublished" render={({ field }) => (
+                <FormItem className="flex items-center gap-2 space-y-0">
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                  <FormLabel>{t('admin:threeDLessons.publishImmediately')}</FormLabel>
+                </FormItem>
+              )} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>{t('common:cancel')}</Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? t('common:saving', { defaultValue: 'Saving...' }) : t('common:saveChanges', { defaultValue: 'Save Changes' })}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Main 3D Lesson Builder Component
 export default function ThreeDLessonBuilder() {
   const { t } = useTranslation(['admin', 'common']);
@@ -700,6 +868,8 @@ export default function ThreeDLessonBuilder() {
     isPublished: "all"
   });
   const [previewLesson, setPreviewLesson] = useState<any>(null);
+  const [editingLesson, setEditingLesson] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch 3D lessons
   const { data: threeDLessons = [], isLoading } = useQuery({
@@ -777,8 +947,8 @@ export default function ThreeDLessonBuilder() {
   }, [threeDLessons, searchTerm]);
 
   const handleEdit = (lesson: any) => {
-    // TODO: Implement edit functionality
-    console.log('Edit lesson:', lesson);
+    setEditingLesson(lesson);
+    setIsEditDialogOpen(true);
   };
 
   const handleDelete = (lesson: any) => {
@@ -1054,6 +1224,15 @@ export default function ThreeDLessonBuilder() {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {editingLesson && (
+        <Edit3DLessonDialog
+          lesson={editingLesson}
+          isOpen={isEditDialogOpen}
+          onClose={() => { setIsEditDialogOpen(false); setEditingLesson(null); }}
+          queryClient={queryClient}
+        />
       )}
     </div>
   );

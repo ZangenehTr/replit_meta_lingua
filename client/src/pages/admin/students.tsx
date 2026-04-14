@@ -33,6 +33,7 @@ export function AdminStudents() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<EditableStudent | null>(null);
+  const [pendingEditId, setPendingEditId] = useState<number | null>(null);
   const [newStudentData, setNewStudentData] = useState({
     firstName: "", lastName: "", email: "", phone: "",
     nationalId: "", birthday: null as Date | null, level: "", status: "active",
@@ -42,14 +43,48 @@ export function AdminStudents() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const url = new URL(window.location.href);
     if (urlParams.get("action") === "create") {
       setIsCreateDialogOpen(true);
-      const url = new URL(window.location.href);
       url.searchParams.delete("action");
+      window.history.replaceState({}, "", url.toString());
+    }
+    const editId = urlParams.get("edit");
+    if (editId) {
+      setPendingEditId(Number(editId));
+      url.searchParams.delete("edit");
       window.history.replaceState({}, "", url.toString());
     }
   }, []);
   const { students, coursesList, subLevels } = useStudents(searchTerm, filterStatus);
+
+  const studentList = Array.isArray(students) ? students : [];
+
+  useEffect(() => {
+    if (pendingEditId && studentList.length > 0) {
+      const student = studentList.find((s) => s.id === pendingEditId);
+      if (student) {
+        const selectedCourseIds = student.courses?.map((courseName: string) => {
+          const course = coursesList.find((c: any) =>
+            c.title === courseName || c.title.toLowerCase().includes(courseName.toLowerCase()));
+          return course?.id ?? null;
+        }).filter((id: number | null): id is number => id !== null) ?? [];
+        setEditingStudent({
+          ...student,
+          birthday: student.birthday ? new Date(student.birthday) : null,
+          nationalId: student.nationalId || "",
+          guardianName: student.guardianName || "",
+          guardianPhone: student.guardianPhone || "",
+          notes: student.notes || "",
+          selectedCourses: selectedCourseIds,
+          status: student.status || "active",
+        });
+        setIsEditDialogOpen(true);
+        setPendingEditId(null);
+      }
+    }
+  }, [pendingEditId, studentList, coursesList]);
+
   const { createStudentMutation, editStudentMutation, overrideSubLevelMutation } = useStudentMutations(
     newStudentData.profileImage,
     () => { setIsCreateDialogOpen(false); setNewStudentData({ firstName: "", lastName: "", email: "", phone: "", nationalId: "", birthday: null, level: "", status: "active", guardianName: "", guardianPhone: "", profileImage: null, notes: "", courses: [], selectedCourses: [], totalFee: 0 }); },
@@ -188,7 +223,6 @@ export function AdminStudents() {
     }
   };
 
-  const studentList = Array.isArray(students) ? students : [];
   const filteredAndSortedStudents = studentList.filter((student) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm ||
