@@ -88,18 +88,6 @@ export default function WebsiteBuilderPage() {
     queryKey: ['/api/cms/pages']
   });
 
-  // Stub for websiteTemplates - templates tab will be phased out in favor of section management
-  const websiteTemplates: any[] = [];
-  const selectedTemplate: any = null;
-  const handleTemplateSelection = (template: any) => {
-    // Stub function - templates are being phased out
-    toast({
-      title: "Templates Deprecated",
-      description: "Templates are being replaced with flexible section management. Please use the page builder instead.",
-      variant: "default"
-    });
-  };
-
   // Create new CMS page mutation
   const createPageMutation = useMutation({
     mutationFn: async (pageData: Partial<InsertCmsPage>) => {

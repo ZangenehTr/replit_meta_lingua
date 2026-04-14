@@ -666,7 +666,9 @@ server.listen({ port, host: '0.0.0.0' }, () => {
       const { users } = await import('../shared/schema.js');
       const { eq, or } = await import('drizzle-orm');
       const [adminUser] = await db.select({ id: users.id }).from(users).where(eq(users.role, 'Admin')).limit(1);
-      const adminId = adminUser?.id ?? 1;
+      const [anyUser] = adminUser ? [] : await db.select({ id: users.id }).from(users).limit(1);
+      const adminId = adminUser?.id ?? anyUser?.id;
+      if (!adminId) { console.warn('⚠️  No users found — skipping legal CMS page seed'); return; }
       const existing = await db.select({ id: cmsPages.id, slug: cmsPages.slug }).from(cmsPages)
         .where(or(eq(cmsPages.slug, 'privacy-policy'), eq(cmsPages.slug, 'terms-of-use')));
       const existingMap = new Map(existing.map(r => [r.slug, r.id]));
