@@ -129,6 +129,8 @@ export default defineConfig({
       "workbox-cacheable-response",
       "workbox-core",
       "workbox-broadcast-update",
+      "virtual:pwa-register/react",
+      "virtual:pwa-register",
     ],
     force: false,
   },
