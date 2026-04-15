@@ -1,0 +1,972 @@
+Emergency Class Management & Late-Start Tracking - Implementation Plan
+1. In-Person Class Start Tracking
+A. Student-Initiated Start Confirmation
+
+SMS Link Method:
+
+    15 min before scheduled class → auto-send SMS to first 3 enrolled students
+    Link: meta-lingua.ir/cs/{sessionToken} (mobile-optimized landing page)
+    First student to tap logs actual start time
+    Others get: "کلاس توسط [نام دانشجو] شروع شد / Class started by [Name]"
+    Link remains active 30 min after scheduled start (handles early arrivals)
+
+In-App Button:
+
+    Large green "شروع کلاس / Start Class" button on student's class detail page
+    Visible only in time window: 15 min before → 30 min after scheduled start
+    First tap wins, button disappears for others
+
+Late Detection:
+
+    If actual_start > scheduled_start + 5min → flag teacher as late
+    Real-time notification to supervisor
+    Auto-logged in teacher QC record + performance analytics
+
+2. Emergency Class Cancellation System
+A. Request Initiation (Teacher/Student)
+
+Teacher UI:
+
+    Floating red "Emergency Cancel" button on class detail page (always visible, high z-index)
+    Keyboard shortcut: Shift+E (Emergency) from anywhere in teacher dashboard
+    Modal form:
+        Class auto-selected (if on detail page) or dropdown
+        Reason: Dropdown (sick/emergency/conflict/other) + text area
+        "Request Cancellation" button → creates high-priority ticket
+
+Student UI:
+
+    "Request Cancellation" button in class card → same modal
+    Private classes: Direct request
+    Group classes: Show "X/Y students requested" counter, needs 50% threshold OR admin override
+
+Auto-ticket creation:
+
+    Priority: URGENT
+    Category: Class Cancellation
+    Assigned to: Supervisor (auto-route by department/branch)
+    Tags: emergency, class-cancel, {class-type}
+
+B. Supervisor/Admin Approval Interface
+
+Real-Time Alerts:
+
+    Browser push notification: "⚠️ Emergency: [Teacher Name] requests cancel [Class Name]"
+    SMS to supervisor mobile
+    Telegram bot (if configured)
+    Red pulsing badge on nav icon + browser tab title change
+
+Fast Approval Modal:
+
+    Auto-popup on dashboard (if supervisor is online)
+    Displays:
+        Class details (time, students enrolled, track, teacher)
+        Cancellation reason
+        Requester info
+        Time remaining until class starts
+    One-click actions:
+        ✅ Approve (green button, keyboard: A)
+        ❌ Reject (red button, keyboard: R)
+        📅 Approve + Schedule Makeup (opens scheduler)
+    Decision logged with timestamp + approver ID
+
+Permission:
+
+    class.approve_cancellation → Supervisors, Admins
+    class.force_cancel → Admins only (bypass approval)
+
+C. Automated Notification Cascade
+
+On Approval - Teacher Cancelled:
+
+    SMS to all students:
+        EN: "Class [Name] on [Jalali Date] at [Time] cancelled. Reason: [X]. Makeup: [TBD/Date]"
+        FA: "کلاس [نام] در [تاریخ] ساعت [زمان] لغو شد. دلیل: [X]. جبرانی: [تاریخ]"
+
+    Class chatroom auto-message:
+        System bot message: "🚫 This class has been cancelled. [Reason]. You will be notified about makeup class."
+
+    In-app notification:
+        Red banner on student dashboard
+        Push notification (if enabled)
+
+    Email (optional):
+        Detailed cancellation notice
+
+On Approval - Student(s) Cancelled:
+
+    Notify teacher:
+        SMS + in-app + chatroom message
+        "Student [Name] / [X students] requested cancellation for [Class]. Approved by [Supervisor]."
+
+    Notify other students (if group class)
+
+On Rejection:
+
+    Notify requester only (SMS + in-app)
+    "Your cancellation request for [Class] was rejected. Reason: [X]. Please attend."
+
+3. Database Schema Changes
+
+// class_sessions table - add columns:
+actual_start_time: timestamp | null
+started_by_student_id: integer | null (FK → users.id)
+cancellation_status: 'active' | 'cancel_requested' | 'cancelled'
+cancelled_at: timestamp | null
+cancelled_by: integer | null (FK → users.id)
+cancelled_reason: text | null
+
+// NEW TABLE: class_cancellation_requests
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+requested_by_user_id: integer (FK → users.id)
+requester_role: 'teacher' | 'student' | 'admin'
+reason_category: 'sick' | 'emergency' | 'conflict' | 'weather' | 'other'
+reason_text: text
+student_request_count: integer (for group threshold tracking)
+status: 'pending' | 'approved' | 'rejected'
+reviewed_by_user_id: integer | null
+reviewed_at: timestamp | null
+makeup_session_id: integer | null (FK → class_sessions.id)
+created_at: timestamp
+
+// NEW TABLE: class_start_confirmations
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+student_id: integer (FK → users.id)
+confirmed_at: timestamp (actual start time)
+method: 'sms_link' | 'app_button'
+sms_token: varchar(64) | null (for verification)
+is_late: boolean (calculated: confirmed_at > scheduled + 5min)
+
+4. UI Components to Create
+New Pages:
+
+    /class/start/:token - SMS landing page (mobile-first, huge button)
+    /emergency/cancel - Quick cancellation form (if accessed directly)
+
+New Modals:
+
+    CancellationRequestModal.tsx - Teacher/student request form
+    CancellationApprovalModal.tsx - Supervisor fast approve/reject (auto-popup)
+    ClassStartConfirmationModal.tsx - Student in-app start button
+
+Dashboard Widgets:
+
+    Supervisor Dashboard:
+        "⚠️ Pending Cancellations" card (red pulsing if urgent)
+        Shows: Class, requester, time until class, countdown timer
+        Inline approve/reject buttons
+
+    Teacher Dashboard:
+        "Emergency Cancel Class" floating action button (bottom-right)
+
+Chatroom Integration:
+
+    Auto-post system messages on cancellation approval
+    Disable chatroom when class cancelled (read-only mode)
+
+5. Keyboard Shortcuts
+
+Teacher Dashboard:
+
+    Shift+E → Emergency cancel current/next class
+
+Supervisor Dashboard:
+
+    Shift+A → Approve first pending cancellation
+    Shift+R → Reject first pending cancellation
+    Shift+V → View all pending requests
+
+6. Permission Additions (FACS)
+
+'class.request_cancellation'     // Teachers, Students
+'class.approve_cancellation'     // Supervisors, Admins
+'class.force_cancel'             // Admins only (no approval)
+'class.view_cancellation_log'    // Supervisors, Admins, QC
+'class.confirm_start'            // Students
+
+7. Implementation Phases
+Phase 1: Emergency Cancellation Core (Priority 1)
+
+    Database schema
+    Request modal (teacher + student)
+    Approval interface (supervisor)
+    SMS notifications
+    Chatroom auto-messages
+
+Phase 2: Start Tracking (Priority 2)
+
+    SMS link generation + landing page
+    In-app start button
+    Late-start detection
+    Supervisor alerts for late starts
+
+Phase 3: Analytics & Refinements (Priority 3)
+
+    Cancellation pattern reports
+    Teacher reliability scores
+    Makeup class auto-scheduling
+    Push notifications (browser + mobile)
+
+8. Edge Cases Handled
+
+    Class already started: Disable cancel button, show "Class in progress - contact admin"
+    Duplicate requests: Lock after first approval (optimistic locking)
+    SMS failure: Fallback to in-app + manual supervisor call
+    Race condition (multiple start taps): Database-level first-write-wins (unique constraint)
+    Cancellation <30 min before class: Extra supervisor confirmation required
+    Student no-show vs cancellation: Different tracking (attendance system)
+    Makeup class conflicts: Validate teacher + student availability before linking
+
+Ready for implementation. Awaiting approval to proceed.
+plan solutions. for in-person classes the first student attendance+start class button or sms link to only touch by student (userfriendly). if a class is canceled for any reason this sms or button should not disappear. the system must have emergency class cancellation for in-person/on-line private/group classes and this feature must be at admin and supervisor controls to approve. teacher or student should ticket the supervisor/admin and get approval. it should be noted that UX in such cases of emergency is very important to be easy access and fast and supervisor and admin should be notified fast. when approved by supervisor or admin, students receive sms notifications and also in their class chatroom a message is sent automatically. also when a student/students are requesting for a cancellation, upon supervisor or admin approval, the teacher must be notified.    create the plan and wait.
+Emergency Class Management & Late-Start Tracking - Implementation Plan
+1. In-Person Class Start Tracking
+A. Student-Initiated Start Confirmation
+
+SMS Link Method:
+
+    15 min before scheduled class → auto-send SMS to first 3 enrolled students
+    Link: meta-lingua.ir/cs/{sessionToken} (mobile-optimized landing page)
+    First student to tap logs actual start time
+    Others get: "کلاس توسط [نام دانشجو] شروع شد / Class started by [Name]"
+    Link remains active 30 min after scheduled start (handles early arrivals)
+
+In-App Button:
+
+    Large green "شروع کلاس / Start Class" button on student's class detail page
+    Visible only in time window: 15 min before → 30 min after scheduled start
+    First tap wins, button disappears for others
+
+Late Detection:
+
+    If actual_start > scheduled_start + 5min → flag teacher as late
+    Real-time notification to supervisor
+    Auto-logged in teacher QC record + performance analytics
+
+2. Emergency Class Cancellation System
+A. Request Initiation (Teacher/Student)
+
+Teacher UI:
+
+    Floating red "Emergency Cancel" button on class detail page (always visible, high z-index)
+    Keyboard shortcut: Shift+E (Emergency) from anywhere in teacher dashboard
+    Modal form:
+        Class auto-selected (if on detail page) or dropdown
+        Reason: Dropdown (sick/emergency/conflict/other) + text area
+        "Request Cancellation" button → creates high-priority ticket
+
+Student UI:
+
+    "Request Cancellation" button in class card → same modal
+    Private classes: Direct request
+    Group classes: Show "X/Y students requested" counter, needs 50% threshold OR admin override
+
+Auto-ticket creation:
+
+    Priority: URGENT
+    Category: Class Cancellation
+    Assigned to: Supervisor (auto-route by department/branch)
+    Tags: emergency, class-cancel, {class-type}
+
+B. Supervisor/Admin Approval Interface
+
+Real-Time Alerts:
+
+    Browser push notification: "⚠️ Emergency: [Teacher Name] requests cancel [Class Name]"
+    SMS to supervisor mobile
+    Telegram bot (if configured)
+    Red pulsing badge on nav icon + browser tab title change
+
+Fast Approval Modal:
+
+    Auto-popup on dashboard (if supervisor is online)
+    Displays:
+        Class details (time, students enrolled, track, teacher)
+        Cancellation reason
+        Requester info
+        Time remaining until class starts
+    One-click actions:
+        ✅ Approve (green button, keyboard: A)
+        ❌ Reject (red button, keyboard: R)
+        📅 Approve + Schedule Makeup (opens scheduler)
+    Decision logged with timestamp + approver ID
+
+Permission:
+
+    class.approve_cancellation → Supervisors, Admins
+    class.force_cancel → Admins only (bypass approval)
+
+C. Automated Notification Cascade
+
+On Approval - Teacher Cancelled:
+
+    SMS to all students:
+        EN: "Class [Name] on [Jalali Date] at [Time] cancelled. Reason: [X]. Makeup: [TBD/Date]"
+        FA: "کلاس [نام] در [تاریخ] ساعت [زمان] لغو شد. دلیل: [X]. جبرانی: [تاریخ]"
+
+    Class chatroom auto-message:
+        System bot message: "🚫 This class has been cancelled. [Reason]. You will be notified about makeup class."
+
+    In-app notification:
+        Red banner on student dashboard
+        Push notification (if enabled)
+
+    Email (optional):
+        Detailed cancellation notice
+
+On Approval - Student(s) Cancelled:
+
+    Notify teacher:
+        SMS + in-app + chatroom message
+        "Student [Name] / [X students] requested cancellation for [Class]. Approved by [Supervisor]."
+
+    Notify other students (if group class)
+
+On Rejection:
+
+    Notify requester only (SMS + in-app)
+    "Your cancellation request for [Class] was rejected. Reason: [X]. Please attend."
+
+3. Database Schema Changes
+
+// class_sessions table - add columns:
+actual_start_time: timestamp | null
+started_by_student_id: integer | null (FK → users.id)
+cancellation_status: 'active' | 'cancel_requested' | 'cancelled'
+cancelled_at: timestamp | null
+cancelled_by: integer | null (FK → users.id)
+cancelled_reason: text | null
+
+// NEW TABLE: class_cancellation_requests
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+requested_by_user_id: integer (FK → users.id)
+requester_role: 'teacher' | 'student' | 'admin'
+reason_category: 'sick' | 'emergency' | 'conflict' | 'weather' | 'other'
+reason_text: text
+student_request_count: integer (for group threshold tracking)
+status: 'pending' | 'approved' | 'rejected'
+reviewed_by_user_id: integer | null
+reviewed_at: timestamp | null
+makeup_session_id: integer | null (FK → class_sessions.id)
+created_at: timestamp
+
+// NEW TABLE: class_start_confirmations
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+student_id: integer (FK → users.id)
+confirmed_at: timestamp (actual start time)
+method: 'sms_link' | 'app_button'
+sms_token: varchar(64) | null (for verification)
+is_late: boolean (calculated: confirmed_at > scheduled + 5min)
+
+4. UI Components to Create
+New Pages:
+
+    /class/start/:token - SMS landing page (mobile-first, huge button)
+    /emergency/cancel - Quick cancellation form (if accessed directly)
+
+New Modals:
+
+    CancellationRequestModal.tsx - Teacher/student request form
+    CancellationApprovalModal.tsx - Supervisor fast approve/reject (auto-popup)
+    ClassStartConfirmationModal.tsx - Student in-app start button
+
+Dashboard Widgets:
+
+    Supervisor Dashboard:
+        "⚠️ Pending Cancellations" card (red pulsing if urgent)
+        Shows: Class, requester, time until class, countdown timer
+        Inline approve/reject buttons
+
+    Teacher Dashboard:
+        "Emergency Cancel Class" floating action button (bottom-right)
+
+Chatroom Integration:
+
+    Auto-post system messages on cancellation approval
+    Disable chatroom when class cancelled (read-only mode)
+
+5. Keyboard Shortcuts
+
+Teacher Dashboard:
+
+    Shift+E → Emergency cancel current/next class
+
+Supervisor Dashboard:
+
+    Shift+A → Approve first pending cancellation
+    Shift+R → Reject first pending cancellation
+    Shift+V → View all pending requests
+
+6. Permission Additions (FACS)
+
+'class.request_cancellation'     // Teachers, Students
+'class.approve_cancellation'     // Supervisors, Admins
+'class.force_cancel'             // Admins only (no approval)
+'class.view_cancellation_log'    // Supervisors, Admins, QC
+'class.confirm_start'            // Students
+
+7. Implementation Phases
+Phase 1: Emergency Cancellation Core (Priority 1)
+
+    Database schema
+    Request modal (teacher + student)
+    Approval interface (supervisor)
+    SMS notifications
+    Chatroom auto-messages
+
+Phase 2: Start Tracking (Priority 2)
+
+    SMS link generation + landing page
+    In-app start button
+    Late-start detection
+    Supervisor alerts for late starts
+
+Phase 3: Analytics & Refinements (Priority 3)
+
+    Cancellation pattern reports
+    Teacher reliability scores
+    Makeup class auto-scheduling
+    Push notifications (browser + mobile)
+
+8. Edge Cases Handled
+
+    Class already started: Disable cancel button, show "Class in progress - contact admin"
+    Duplicate requests: Lock after first approval (optimistic locking)
+    SMS failure: Fallback to in-app + manual supervisor call
+    Race condition (multiple start taps): Database-level first-write-wins (unique constraint)
+    Cancellation <30 min before class: Extra supervisor confirmation required
+    Student no-show vs cancellation: Different tracking (attendance system)
+    Makeup class conflicts: Validate teacher + student availability before linking
+
+Ready for implementation. Awaiting approval to proceed.
+
+Yes, partially:
+
+    Voice-only classes: Issabel/FreePBX (SIP/Asterisk) - already integrated
+    Video classes: WebRTC + COTURN server for NAT traversal (self-hosted)
+
+For late-start tracking on WebRTC:
+
+    Monitor signaling server logs (when teacher's client connects/initiates session)
+    Track room join events with timestamps
+    Compare teacher join time vs scheduled start time
+    Same CDR-style analysis as voice, but from WebRTC session logs
+
+COTURN itself doesn't log this - you need signaling server (Janus, Jitsi, custom Node.js) to track session lifecycle events.
+plan solutions. for in-person classes the first student attendance+start class button or sms link to only touch by student (userfriendly). if a class is canceled for any reason this sms or button should not disappear. the system must have emergency class cancellation for in-person/on-line private/group classes and this feature must be at admin and supervisor controls to approve. teacher or student should ticket the supervisor/admin and get approval. it should be noted that UX in such cases of emergency is very important to be easy access and fast and supervisor and admin should be notified fast. when approved by supervisor or admin, students receive sms notifications and also in their class chatroom a message is sent automatically. also when a student/students are requesting for a cancellation, upon supervisor or admin approval, the teacher must be notified.    create the plan and wait.
+Emergency Class Management & Late-Start Tracking - Implementation Plan
+1. In-Person Class Start Tracking
+A. Student-Initiated Start Confirmation
+
+SMS Link Method:
+
+    15 min before scheduled class → auto-send SMS to first 3 enrolled students
+    Link: meta-lingua.ir/cs/{sessionToken} (mobile-optimized landing page)
+    First student to tap logs actual start time
+    Others get: "کلاس توسط [نام دانشجو] شروع شد / Class started by [Name]"
+    Link remains active 30 min after scheduled start (handles early arrivals)
+
+In-App Button:
+
+    Large green "شروع کلاس / Start Class" button on student's class detail page
+    Visible only in time window: 15 min before → 30 min after scheduled start
+    First tap wins, button disappears for others
+
+Late Detection:
+
+    If actual_start > scheduled_start + 5min → flag teacher as late
+    Real-time notification to supervisor
+    Auto-logged in teacher QC record + performance analytics
+
+2. Emergency Class Cancellation System
+A. Request Initiation (Teacher/Student)
+
+Teacher UI:
+
+    Floating red "Emergency Cancel" button on class detail page (always visible, high z-index)
+    Keyboard shortcut: Shift+E (Emergency) from anywhere in teacher dashboard
+    Modal form:
+        Class auto-selected (if on detail page) or dropdown
+        Reason: Dropdown (sick/emergency/conflict/other) + text area
+        "Request Cancellation" button → creates high-priority ticket
+
+Student UI:
+
+    "Request Cancellation" button in class card → same modal
+    Private classes: Direct request
+    Group classes: Show "X/Y students requested" counter, needs 50% threshold OR admin override
+
+Auto-ticket creation:
+
+    Priority: URGENT
+    Category: Class Cancellation
+    Assigned to: Supervisor (auto-route by department/branch)
+    Tags: emergency, class-cancel, {class-type}
+
+B. Supervisor/Admin Approval Interface
+
+Real-Time Alerts:
+
+    Browser push notification: "⚠️ Emergency: [Teacher Name] requests cancel [Class Name]"
+    SMS to supervisor mobile
+    Telegram bot (if configured)
+    Red pulsing badge on nav icon + browser tab title change
+
+Fast Approval Modal:
+
+    Auto-popup on dashboard (if supervisor is online)
+    Displays:
+        Class details (time, students enrolled, track, teacher)
+        Cancellation reason
+        Requester info
+        Time remaining until class starts
+    One-click actions:
+        ✅ Approve (green button, keyboard: A)
+        ❌ Reject (red button, keyboard: R)
+        📅 Approve + Schedule Makeup (opens scheduler)
+    Decision logged with timestamp + approver ID
+
+Permission:
+
+    class.approve_cancellation → Supervisors, Admins
+    class.force_cancel → Admins only (bypass approval)
+
+C. Automated Notification Cascade
+
+On Approval - Teacher Cancelled:
+
+    SMS to all students:
+        EN: "Class [Name] on [Jalali Date] at [Time] cancelled. Reason: [X]. Makeup: [TBD/Date]"
+        FA: "کلاس [نام] در [تاریخ] ساعت [زمان] لغو شد. دلیل: [X]. جبرانی: [تاریخ]"
+
+    Class chatroom auto-message:
+        System bot message: "🚫 This class has been cancelled. [Reason]. You will be notified about makeup class."
+
+    In-app notification:
+        Red banner on student dashboard
+        Push notification (if enabled)
+
+    Email (optional):
+        Detailed cancellation notice
+
+On Approval - Student(s) Cancelled:
+
+    Notify teacher:
+        SMS + in-app + chatroom message
+        "Student [Name] / [X students] requested cancellation for [Class]. Approved by [Supervisor]."
+
+    Notify other students (if group class)
+
+On Rejection:
+
+    Notify requester only (SMS + in-app)
+    "Your cancellation request for [Class] was rejected. Reason: [X]. Please attend."
+
+3. Database Schema Changes
+
+// class_sessions table - add columns:
+actual_start_time: timestamp | null
+started_by_student_id: integer | null (FK → users.id)
+cancellation_status: 'active' | 'cancel_requested' | 'cancelled'
+cancelled_at: timestamp | null
+cancelled_by: integer | null (FK → users.id)
+cancelled_reason: text | null
+
+// NEW TABLE: class_cancellation_requests
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+requested_by_user_id: integer (FK → users.id)
+requester_role: 'teacher' | 'student' | 'admin'
+reason_category: 'sick' | 'emergency' | 'conflict' | 'weather' | 'other'
+reason_text: text
+student_request_count: integer (for group threshold tracking)
+status: 'pending' | 'approved' | 'rejected'
+reviewed_by_user_id: integer | null
+reviewed_at: timestamp | null
+makeup_session_id: integer | null (FK → class_sessions.id)
+created_at: timestamp
+
+// NEW TABLE: class_start_confirmations
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+student_id: integer (FK → users.id)
+confirmed_at: timestamp (actual start time)
+method: 'sms_link' | 'app_button'
+sms_token: varchar(64) | null (for verification)
+is_late: boolean (calculated: confirmed_at > scheduled + 5min)
+
+4. UI Components to Create
+New Pages:
+
+    /class/start/:token - SMS landing page (mobile-first, huge button)
+    /emergency/cancel - Quick cancellation form (if accessed directly)
+
+New Modals:
+
+    CancellationRequestModal.tsx - Teacher/student request form
+    CancellationApprovalModal.tsx - Supervisor fast approve/reject (auto-popup)
+    ClassStartConfirmationModal.tsx - Student in-app start button
+
+Dashboard Widgets:
+
+    Supervisor Dashboard:
+        "⚠️ Pending Cancellations" card (red pulsing if urgent)
+        Shows: Class, requester, time until class, countdown timer
+        Inline approve/reject buttons
+
+    Teacher Dashboard:
+        "Emergency Cancel Class" floating action button (bottom-right)
+
+Chatroom Integration:
+
+    Auto-post system messages on cancellation approval
+    Disable chatroom when class cancelled (read-only mode)
+
+5. Keyboard Shortcuts
+
+Teacher Dashboard:
+
+    Shift+E → Emergency cancel current/next class
+
+Supervisor Dashboard:
+
+    Shift+A → Approve first pending cancellation
+    Shift+R → Reject first pending cancellation
+    Shift+V → View all pending requests
+
+6. Permission Additions (FACS)
+
+'class.request_cancellation'     // Teachers, Students
+'class.approve_cancellation'     // Supervisors, Admins
+'class.force_cancel'             // Admins only (no approval)
+'class.view_cancellation_log'    // Supervisors, Admins, QC
+'class.confirm_start'            // Students
+
+7. Implementation Phases
+Phase 1: Emergency Cancellation Core (Priority 1)
+
+    Database schema
+    Request modal (teacher + student)
+    Approval interface (supervisor)
+    SMS notifications
+    Chatroom auto-messages
+
+Phase 2: Start Tracking (Priority 2)
+
+    SMS link generation + landing page
+    In-app start button
+    Late-start detection
+    Supervisor alerts for late starts
+
+Phase 3: Analytics & Refinements (Priority 3)
+
+    Cancellation pattern reports
+    Teacher reliability scores
+    Makeup class auto-scheduling
+    Push notifications (browser + mobile)
+
+8. Edge Cases Handled
+
+    Class already started: Disable cancel button, show "Class in progress - contact admin"
+    Duplicate requests: Lock after first approval (optimistic locking)
+    SMS failure: Fallback to in-app + manual supervisor call
+    Race condition (multiple start taps): Database-level first-write-wins (unique constraint)
+    Cancellation <30 min before class: Extra supervisor confirmation required
+    Student no-show vs cancellation: Different tracking (attendance system)
+    Makeup class conflicts: Validate teacher + student availability before linking
+
+Ready for implementation. Awaiting approval to proceed.
+how is the system designed to know if in-person and online teachers or students are late to class? just reply
+
+For online classes (CallerN/VoIP):
+
+    System monitors SIP extension login times via Issabel AMI integration (port 5038)
+    Compares actual join time to scheduled class start time from the timetable
+    Automatically flags late joins based on CDR (Call Detail Records)
+
+For in-person classes:
+
+    Attendance check-in system (front desk or teacher marks attendance with timestamp)
+    Compares check-in time to scheduled start time
+    Manual or biometric/card swipe systems would record exact arrival time
+
+Common logic:
+
+    Scheduled start times stored in class/session records
+    Grace period threshold (e.g., 5-10 minutes) before marking as "late"
+    Both tracked in attendance records with status: on-time, late, absent
+    Reports/analytics show patterns (used in QC cards, SPA assessments, teacher performance reviews)
+
+The VoIP integration is passive (read-only CDR consumption) while in-person requires active attendance marking.
+yes sure but the problem is that sometimes teaches start classes (in-person or online/ group or private) late and this causes dissatisfaction from students. what solutions do you have for automatic passive checking
+
+just answer
+
+Online classes (CallerN):
+
+    CDR analysis: Compare teacher's SIP extension login time vs scheduled start time
+    Auto-alert supervisor if teacher joins >5 min late
+    Track "actual start time" = when teacher joins the session
+    Generate weekly reports on late-start patterns
+
+In-person classes:
+
+    RFID/NFC badges: Teachers tap at classroom door → logs entry time
+    Bluetooth beacons: Detect teacher's phone in classroom via proximity
+    Student app "Class Started" button: First student to tap logs actual start time (semi-passive)
+    WiFi presence detection: Track when teacher's device connects to classroom AP
+
+Automatic actions:
+
+    Real-time Telegram/SMS to supervisor when >5min late
+    Flag in QC reports and teacher performance dashboards
+    Deduct from teacher commission for habitual lateness (policy enforcement)
+    Auto-populate "Late Start Log" for accountability
+
+Best combo for Iran context:
+
+    Online: CDR tracking (already have Issabel)
+    In-person: Cheap RFID readers at classroom doors + student app button as backup
+
+All data feeds into the Log Book, QC cards, and teacher performance analytics.
+online sessions are based on webrtc/coturn server . am i right? just reply
+
+Yes, partially:
+
+    Voice-only classes: Issabel/FreePBX (SIP/Asterisk) - already integrated
+    Video classes: WebRTC + COTURN server for NAT traversal (self-hosted)
+
+For late-start tracking on WebRTC:
+
+    Monitor signaling server logs (when teacher's client connects/initiates session)
+    Track room join events with timestamps
+    Compare teacher join time vs scheduled start time
+    Same CDR-style analysis as voice, but from WebRTC session logs
+
+COTURN itself doesn't log this - you need signaling server (Janus, Jitsi, custom Node.js) to track session lifecycle events.
+plan solutions. for in-person classes the first student attendance+start class button or sms link to only touch by student (userfriendly). if a class is canceled for any reason this sms or button should not disappear. the system must have emergency class cancellation for in-person/on-line private/group classes and this feature must be at admin and supervisor controls to approve. teacher or student should ticket the supervisor/admin and get approval. it should be noted that UX in such cases of emergency is very important to be easy access and fast and supervisor and admin should be notified fast. when approved by supervisor or admin, students receive sms notifications and also in their class chatroom a message is sent automatically. also when a student/students are requesting for a cancellation, upon supervisor or admin approval, the teacher must be notified.    create the plan and wait.
+Emergency Class Management & Late-Start Tracking - Implementation Plan
+1. In-Person Class Start Tracking
+A. Student-Initiated Start Confirmation
+
+SMS Link Method:
+
+    15 min before scheduled class → auto-send SMS to first 3 enrolled students
+    Link: meta-lingua.ir/cs/{sessionToken} (mobile-optimized landing page)
+    First student to tap logs actual start time
+    Others get: "کلاس توسط [نام دانشجو] شروع شد / Class started by [Name]"
+    Link remains active 30 min after scheduled start (handles early arrivals)
+
+In-App Button:
+
+    Large green "شروع کلاس / Start Class" button on student's class detail page
+    Visible only in time window: 15 min before → 30 min after scheduled start
+    First tap wins, button disappears for others
+
+Late Detection:
+
+    If actual_start > scheduled_start + 5min → flag teacher as late
+    Real-time notification to supervisor
+    Auto-logged in teacher QC record + performance analytics
+
+2. Emergency Class Cancellation System
+A. Request Initiation (Teacher/Student)
+
+Teacher UI:
+
+    Floating red "Emergency Cancel" button on class detail page (always visible, high z-index)
+    Keyboard shortcut: Shift+E (Emergency) from anywhere in teacher dashboard
+    Modal form:
+        Class auto-selected (if on detail page) or dropdown
+        Reason: Dropdown (sick/emergency/conflict/other) + text area
+        "Request Cancellation" button → creates high-priority ticket
+
+Student UI:
+
+    "Request Cancellation" button in class card → same modal
+    Private classes: Direct request
+    Group classes: Show "X/Y students requested" counter, needs 50% threshold OR admin override
+
+Auto-ticket creation:
+
+    Priority: URGENT
+    Category: Class Cancellation
+    Assigned to: Supervisor (auto-route by department/branch)
+    Tags: emergency, class-cancel, {class-type}
+
+B. Supervisor/Admin Approval Interface
+
+Real-Time Alerts:
+
+    Browser push notification: "⚠️ Emergency: [Teacher Name] requests cancel [Class Name]"
+    SMS to supervisor mobile
+    Telegram bot (if configured)
+    Red pulsing badge on nav icon + browser tab title change
+
+Fast Approval Modal:
+
+    Auto-popup on dashboard (if supervisor is online)
+    Displays:
+        Class details (time, students enrolled, track, teacher)
+        Cancellation reason
+        Requester info
+        Time remaining until class starts
+    One-click actions:
+        ✅ Approve (green button, keyboard: A)
+        ❌ Reject (red button, keyboard: R)
+        📅 Approve + Schedule Makeup (opens scheduler)
+    Decision logged with timestamp + approver ID
+
+Permission:
+
+    class.approve_cancellation → Supervisors, Admins
+    class.force_cancel → Admins only (bypass approval)
+
+C. Automated Notification Cascade
+
+On Approval - Teacher Cancelled:
+
+    SMS to all students:
+        EN: "Class [Name] on [Jalali Date] at [Time] cancelled. Reason: [X]. Makeup: [TBD/Date]"
+        FA: "کلاس [نام] در [تاریخ] ساعت [زمان] لغو شد. دلیل: [X]. جبرانی: [تاریخ]"
+
+    Class chatroom auto-message:
+        System bot message: "🚫 This class has been cancelled. [Reason]. You will be notified about makeup class."
+
+    In-app notification:
+        Red banner on student dashboard
+        Push notification (if enabled)
+
+    Email (optional):
+        Detailed cancellation notice
+
+On Approval - Student(s) Cancelled:
+
+    Notify teacher:
+        SMS + in-app + chatroom message
+        "Student [Name] / [X students] requested cancellation for [Class]. Approved by [Supervisor]."
+
+    Notify other students (if group class)
+
+On Rejection:
+
+    Notify requester only (SMS + in-app)
+    "Your cancellation request for [Class] was rejected. Reason: [X]. Please attend."
+
+3. Database Schema Changes
+
+// class_sessions table - add columns:
+actual_start_time: timestamp | null
+started_by_student_id: integer | null (FK → users.id)
+cancellation_status: 'active' | 'cancel_requested' | 'cancelled'
+cancelled_at: timestamp | null
+cancelled_by: integer | null (FK → users.id)
+cancelled_reason: text | null
+
+// NEW TABLE: class_cancellation_requests
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+requested_by_user_id: integer (FK → users.id)
+requester_role: 'teacher' | 'student' | 'admin'
+reason_category: 'sick' | 'emergency' | 'conflict' | 'weather' | 'other'
+reason_text: text
+student_request_count: integer (for group threshold tracking)
+status: 'pending' | 'approved' | 'rejected'
+reviewed_by_user_id: integer | null
+reviewed_at: timestamp | null
+makeup_session_id: integer | null (FK → class_sessions.id)
+created_at: timestamp
+
+// NEW TABLE: class_start_confirmations
+id: serial PRIMARY KEY
+class_session_id: integer (FK → class_sessions.id)
+student_id: integer (FK → users.id)
+confirmed_at: timestamp (actual start time)
+method: 'sms_link' | 'app_button'
+sms_token: varchar(64) | null (for verification)
+is_late: boolean (calculated: confirmed_at > scheduled + 5min)
+
+4. UI Components to Create
+New Pages:
+
+    /class/start/:token - SMS landing page (mobile-first, huge button)
+    /emergency/cancel - Quick cancellation form (if accessed directly)
+
+New Modals:
+
+    CancellationRequestModal.tsx - Teacher/student request form
+    CancellationApprovalModal.tsx - Supervisor fast approve/reject (auto-popup)
+    ClassStartConfirmationModal.tsx - Student in-app start button
+
+Dashboard Widgets:
+
+    Supervisor Dashboard:
+        "⚠️ Pending Cancellations" card (red pulsing if urgent)
+        Shows: Class, requester, time until class, countdown timer
+        Inline approve/reject buttons
+
+    Teacher Dashboard:
+        "Emergency Cancel Class" floating action button (bottom-right)
+
+Chatroom Integration:
+
+    Auto-post system messages on cancellation approval
+    Disable chatroom when class cancelled (read-only mode)
+
+5. Keyboard Shortcuts
+
+Teacher Dashboard:
+
+    Shift+E → Emergency cancel current/next class
+
+Supervisor Dashboard:
+
+    Shift+A → Approve first pending cancellation
+    Shift+R → Reject first pending cancellation
+    Shift+V → View all pending requests
+
+6. Permission Additions (FACS)
+
+'class.request_cancellation'     // Teachers, Students
+'class.approve_cancellation'     // Supervisors, Admins
+'class.force_cancel'             // Admins only (no approval)
+'class.view_cancellation_log'    // Supervisors, Admins, QC
+'class.confirm_start'            // Students
+
+7. Implementation Phases
+Phase 1: Emergency Cancellation Core (Priority 1)
+
+    Database schema
+    Request modal (teacher + student)
+    Approval interface (supervisor)
+    SMS notifications
+    Chatroom auto-messages
+
+Phase 2: Start Tracking (Priority 2)
+
+    SMS link generation + landing page
+    In-app start button
+    Late-start detection
+    Supervisor alerts for late starts
+
+Phase 3: Analytics & Refinements (Priority 3)
+
+    Cancellation pattern reports
+    Teacher reliability scores
+    Makeup class auto-scheduling
+    Push notifications (browser + mobile)
+
+8. Edge Cases Handled
+
+    Class already started: Disable cancel button, show "Class in progress - contact admin"
+    Duplicate requests: Lock after first approval (optimistic locking)
+    SMS failure: Fallback to in-app + manual supervisor call
+    Race condition (multiple start taps): Database-level first-write-wins (unique constraint)
+    Cancellation <30 min before class: Extra supervisor confirmation required
+    Student no-show vs cancellation: Different tracking (attendance system)
+    Makeup class conflicts: Validate teacher + student availability before linking
+
