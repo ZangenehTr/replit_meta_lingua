@@ -1,7 +1,7 @@
 # MetaLingo — Project Structure & Architecture Guide
 
-**Version:** 1.5.0  
-**Last Updated:** April 12, 2026  
+**Version:** 1.6.0  
+**Last Updated:** April 15, 2026  
 **Audience:** Developers, Technical Leads, DevOps Engineers
 
 > **Who this is for:** Junior developers joining the project, or anyone who needs to understand how the system is built — including explaining it to a technical lead or CTO.
@@ -323,7 +323,7 @@ docker/
 ```
 docs/
 ├── README.md               ← Feature overview and quick-start
-├── buyer-manual.md         ← Institute admin user guide (25 sections)
+├── buyer-manual.md         ← Institute admin user guide (30 sections)
 ├── deployment-guide.md     ← Self-hosting setup for Iran production
 └── project-structure.md    ← This file
 ```
@@ -371,8 +371,15 @@ migrations/
 ├── 0110_session_packages_sublevel_fk.sql  ← Foreign key constraints for sub-level ranges
 ├── 0120_irt_mst_reliability_tables.sql    ← IRT telemetry and per-session scoring history
 ├── 0130_social_media_tables.sql           ← Social media content tables (AI pipeline)
-└── 0140_homepage_content_admin_settings.sql ← homepage_content column in admin_settings
+├── 0140_homepage_content_admin_settings.sql ← homepage_content column in admin_settings
+└── 0150_phone_number_unique_constraint.sql  ← Unique index on users.phone_number (security)
 ```
+
+**Startup-time schema migrations** (applied via `psql` at server boot — not in the numbered migration files):
+- `class_sessions` — one row per physical class occurrence (`status`: scheduled/started/cancelled, `actual_start_time`, `sms_check_in_token`)
+- `class_start_confirmations` — maps one-tap SMS tokens to student and class session
+- `lateness_records` — teacher lateness audit (delay in minutes, detection method, class type)
+- `class_cancellation_requests` — cancellation request + supervisor/admin approval workflow
 
 ---
 
@@ -487,6 +494,10 @@ server/
 │   ├── book-ecommerce-routes.ts           ← Book/resource e-commerce
 │   ├── diaspora-bridge-routes.ts          ← Diaspora community content bridge
 │   │
+│   │   — Class Attendance & Operations —
+│   ├── class-checkin-routes.ts            ← SMS check-in token validation, Start Class button, lateness records
+│   ├── class-cancellation-routes.ts       ← Cancellation request, supervisor approval, notification cascade
+│   │
 │   │   — HR —
 │   ├── hr-routes.ts                       ← Employees, contracts, leave, payroll
 │   │
@@ -539,7 +550,8 @@ server/
 │   └── ...
 │
 ├── workers/              ← Background jobs (run async, not during HTTP request)
-│   ├── sms-reminder.worker.ts     ← Sends scheduled SMS reminders
+│   ├── sms-reminder.worker.ts         ← Sends scheduled SMS reminders and lead follow-ups
+│   ├── class-lateness.worker.ts       ← Every 60s: checks for unstarted classes, sends pre-class SMS, flags late starts, notifies supervisors
 │   └── ...
 │
 ├── modules/              ← Self-contained feature modules

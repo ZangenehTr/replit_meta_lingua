@@ -1,7 +1,7 @@
 # MetaLingo Academy — Buyer Manual
 
-**Version:** 1.5.0  
-**Last Updated:** April 12, 2026  
+**Version:** 1.6.0  
+**Last Updated:** April 15, 2026  
 **Audience:** Institute Owners, Administrators, Department Heads
 
 ---
@@ -41,7 +41,9 @@ Congratulations on choosing MetaLingo Academy. This manual covers everything you
 25. [SMS Campaigns](#25-sms-campaigns)
 26. [Settings & Configuration](#26-settings--configuration)
 27. [User Roles Reference](#27-user-roles-reference)
-28. [Troubleshooting Common Issues](#28-troubleshooting-common-issues)
+28. [Class Lateness Tracking](#28-class-lateness-tracking)
+29. [Emergency Class Cancellation](#29-emergency-class-cancellation)
+30. [Troubleshooting Common Issues](#30-troubleshooting-common-issues)
 
 ---
 
@@ -1017,7 +1019,117 @@ Full access to everything. Only admins can:
 
 ---
 
-## 28. Troubleshooting Common Issues
+## 28. Class Lateness Tracking
+
+MetaLingo automatically monitors whether classes start on time and logs any delays — without requiring teachers to do anything beyond their normal workflow.
+
+### How In-Person Class Start Is Detected
+
+**15 minutes before** each scheduled in-person class, the system automatically sends an SMS to the first 3 enrolled students. The SMS contains a one-tap link (e.g., `yourdomain.ir/cs/TOKEN`). When the first student taps the link on their phone, the class is recorded as started at that moment. The other students who received the SMS get a short follow-up: "Class started by [Name]."
+
+The teacher also has a **"Start Class"** button on their class detail page (visible from 15 minutes before class until 30 minutes after scheduled start). If the teacher presses it first, the student links are deactivated. Whichever happens first — student tap or teacher button — becomes the official start time.
+
+**If no start is confirmed within 5 minutes of the scheduled start time**, the teacher is automatically flagged as late.
+
+### How Online Lateness Is Detected
+
+For CallerN private sessions, the system automatically compares:
+- When the student requested the call (call request time)
+- When the teacher accepted the call (session start time)
+
+If the gap is more than 5 minutes, the session is flagged as a late start with no manual action required.
+
+### What Happens When a Teacher Is Late
+
+1. The lateness event is recorded in the system with the delay in minutes, class type, and detection method.
+2. Supervisors and admins receive an **immediate real-time notification** in the dashboard and an SMS alert.
+3. The lateness event is automatically added to the teacher's **monthly HR performance score** — no manual entry needed.
+
+### Admin Lateness Report
+
+Go to **Admin → Teachers → Lateness** to view:
+- Per-teacher lateness history (date, class, delay in minutes, how it was detected)
+- Monthly summary per teacher
+- Filter by class type (in-person / online) and date range
+
+### Important Notes
+
+- The SMS check-in link and Start Class button **remain visible** even if a class is later cancelled — they show a "Cancelled" badge instead of disappearing.
+- The 5-minute late threshold is configurable from **Admin → Settings**.
+- Links stay active for **30 minutes** after the scheduled start to accommodate early arrivals and network delays.
+
+---
+
+## 29. Emergency Class Cancellation
+
+The emergency cancellation system allows teachers or students to request that a class be cancelled, with supervisor or admin approval required before the cancellation takes effect. The entire flow — from request to notification — is designed to take under 30 seconds.
+
+### Who Can Request a Cancellation
+
+| Role | How |
+|---|---|
+| **Teacher** | Floating red "Emergency Cancel" button on the class detail page, or press **Shift+E** anywhere on the teacher dashboard |
+| **Student (private class)** | "Request Cancellation" button on the class card (under 3 taps) |
+| **Student (group class)** | Same button, but cancellation only escalates when **50% of enrolled students** have requested it |
+| **Admin** | Can force-cancel immediately without waiting for supervisor approval |
+
+### The Request Form
+
+When submitting a cancellation request, the teacher or student selects:
+- **Reason**: Sick / Emergency / Conflict / Weather / Other
+- **Optional note** (free text)
+
+The request is submitted as a high-priority ticket assigned to the relevant supervisor.
+
+### How Supervisors and Admins Are Notified
+
+The moment a cancellation request is submitted:
+- A **real-time notification popup** appears on the supervisor/admin dashboard
+- An **SMS** is sent to all on-duty supervisors
+- A **Telegram message** is sent if Telegram bot is configured
+- The browser tab title changes to "⚠️ Pending Approval" and the navigation icon shows a red pulsing badge
+
+### Approving or Rejecting
+
+The approval modal shows: class name, teacher, enrolled student count, time remaining until class starts, and the cancellation reason. Actions:
+
+- **Approve** (green button or press **A**) — triggers the full notification cascade
+- **Reject** (red button or press **R**) — notifies only the requester; class proceeds as scheduled
+- **Approve + Schedule Makeup** — opens the class scheduler with the session pre-selected to book a makeup class
+
+### What Happens on Approval
+
+**If the teacher requested cancellation:**
+1. All enrolled students receive an SMS in **Farsi and English**: class name, date (Jalali calendar), time, reason, and makeup date (TBD if not yet scheduled)
+2. An automatic system message is posted to the **class chatroom**: "🚫 This class has been cancelled. [Reason]. You will be notified about the makeup class."
+3. The chatroom switches to **read-only** so students can still read the notice
+4. Each student sees a **red notification banner** on their dashboard
+
+**If students requested cancellation:**
+- The teacher also receives an SMS and in-app notification explaining which students requested it and who approved it
+- All other enrolled students receive the standard cancellation SMS
+
+**On rejection:**
+- Only the original requester is notified (SMS + in-app): "Your cancellation request was rejected. Please attend class."
+
+### Cancellation Audit Log
+
+Go to **Admin → Cancellations** to view the full history:
+- Who requested, what reason, who approved/rejected
+- Timestamps for request and decision
+- Number of SMS messages sent and chatroom message status
+- Filter by date range, class type, or teacher
+- Export to CSV
+
+### Important Notes
+
+- If a class has **already started** (Start Class button was pressed or a student confirmed via SMS), the cancel button shows "Class in progress — contact admin directly."
+- Requests submitted **less than 30 minutes** before class show an extra confirmation warning in the approval modal.
+- Admin **force-cancel** bypasses the approval step entirely and triggers the full notification cascade immediately.
+
+---
+
+## 30. Troubleshooting Common Issues
 
 ### Student Cannot Receive OTP
 1. Check that the Kavenegar API key is set in Settings
@@ -1069,6 +1181,29 @@ Full access to everything. Only admins can:
 1. UTM parameters must be appended to the **registration URL** (e.g., `https://yourdomain.com/register?utm_source=instagram`)
 2. They are captured at the moment of account creation — UTM data from later visits is not retroactively applied
 3. To view captured data, query the `users` table: `utm_source`, `utm_medium`, `utm_campaign` columns
+
+### Pre-Class SMS Not Being Sent to Students
+1. Confirm Kavenegar is configured and active in **Admin → Settings**
+2. The class must be in **scheduled** status — check in **Admin → Classes** that it is not already started or cancelled
+3. The class must have at least one enrolled student with a valid phone number
+4. The background lateness worker requires Redis — confirm Redis is running (check **Admin → Infrastructure Status**). If Redis is unavailable, the worker does not start
+5. SMS are only sent in the 15-minute window before the class start time. If the class already passed, no SMS will be sent retroactively
+
+### Start Class Button Not Appearing
+1. The button is only visible from **15 minutes before** scheduled start until **30 minutes after** — check the current time relative to the class schedule
+2. The class must be in **scheduled** status. If it was already started by a student check-in, the button shows a "Started" badge instead
+3. Confirm you are logged in as the **teacher assigned to that class** — unassigned teachers cannot see the button
+
+### Cancellation Request Not Reaching Supervisor
+1. Check that the request was actually submitted — there should be a confirmation toast and a "Pending Approval" badge on the class card
+2. For **group classes**, the system waits for 50% of enrolled students to request cancellation before escalating. If only one student requested it, the supervisor will not be notified until the threshold is met
+3. Confirm at least one supervisor has a valid phone number registered — without this, the SMS notification fails silently (check the server logs for `KavenegarService` errors)
+4. If Telegram notifications are not arriving, confirm the bot token and chat ID are set in **Admin → Settings → Telegram**
+
+### Class Shows "Cancelled" But Students Did Not Receive SMS
+1. Go to **Admin → Cancellations** and check the row for that class — there is a "SMS Sent" column showing the count
+2. If SMS count is 0, check the Kavenegar balance and the server logs at the time of approval
+3. The SMS cascade runs asynchronously — if the server was under load, there may be a delay of up to 2 minutes
 
 ---
 

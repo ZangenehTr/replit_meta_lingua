@@ -1,7 +1,7 @@
 # MetaLingo Academy — Platform Overview
 
-**Version:** 1.4.0  
-**Last Updated:** April 4, 2026  
+**Version:** 1.6.0  
+**Last Updated:** April 15, 2026  
 **Status:** Production-Ready
 
 ---
@@ -112,7 +112,17 @@ It combines institute administration, student management, course delivery, live 
 - Visitor live chat widget
 - VoIP click-to-call via Issabel PBX (AMI protocol)
 
-### 13. Content Management
+### 13. Class Attendance & Operations
+- **Lateness Detection**: SMS sent 15 minutes before each in-person class to the first 3 enrolled students. First student to tap the one-touch link timestamps the actual class start. Teacher has a "Start Class" button as an alternative trigger. First-write-wins at the database level.
+- **Online Lateness**: CallerN private sessions automatically compare the student's call request time vs the teacher's accept time. Gaps over 5 minutes are flagged.
+- **Lateness Records**: Every late-start event is written to `lateness_records` and automatically feeds into the teacher's monthly HR performance score.
+- **Emergency Class Cancellation**: Teachers or students submit a cancellation request in under 3 taps. Supervisors and admins receive an immediate push notification + SMS + Telegram alert with one-tap Approve / Reject (keyboard shortcuts: A / R). Admins can force-cancel without approval.
+- **Notification Cascade**: On approval, all enrolled students receive an SMS in Farsi and English, and an automatic system message is posted to the class chatroom. If students requested the cancellation, the teacher is also notified.
+- **Group Threshold**: Group class cancellation requests require 50% of enrolled students to agree before they escalate to a supervisor.
+- **State Persistence**: Check-in links and Start Class buttons remain visible after cancellation, clearly showing "Cancelled" status rather than disappearing.
+- **Audit Trail**: Full cancellation log at `/admin/cancellations` with filters, timestamps, and CSV export.
+
+### 14. Content Management
 - Blog with rich text editor
 - Video library with streaming
 - Media file manager
@@ -201,6 +211,15 @@ The application will be available at `http://localhost:5000`.
 ---
 
 ## Changelog
+
+### v1.6.0 — April 15, 2026
+- **Class Lateness Detection**: Passive automatic lateness tracking for in-person and online classes. SMS sent 15 minutes before class to the first 3 enrolled students with a one-tap check-in link. Teacher has a "Start Class" button as an alternative. CallerN private sessions automatically compare call-request vs call-accept timestamps. All lateness events feed into teacher HR performance scores. Admin lateness report per teacher.
+- **Emergency Class Cancellation**: Full cancellation request and approval system for all class types (in-person/online, group/private). Teachers and students submit in under 3 taps. Supervisors and admins receive real-time push + SMS + Telegram alerts with one-tap approve/reject (keyboard shortcuts A/R). On approval: SMS to all enrolled students (Farsi + English), automatic chatroom system message, chatroom switches to read-only. Admin force-cancel bypasses approval. Full audit log at `/admin/cancellations`.
+
+### v1.5.0 — April 14, 2026
+- **Bug fixes & UI polish**: Removed all production debug `console.log` calls from lead creation flow. Replaced `window.confirm` on font deletion with a proper confirmation dialog. Added "Auto-calculated from schedule" helper text to the disabled End Date field in class scheduling.
+- **Deployment guide**: Added complete step-by-step server setup guide covering server preparation, Docker installation, upload via SCP/git, environment variable configuration, Nginx + SSL, Ollama, coturn, Issabel VoIP, automated backups, update procedure, and troubleshooting reference.
+- **Codebase cleanup**: Removed 370 MB of development artifacts (SQL backup files, session screenshots, videos, planning documents) from the repository to reduce download size.
 
 ### v1.4.0 — April 4, 2026
 - **Admin AI Copilot**: Full conversational AI assistant embedded in the admin panel. Uses ArvanCloud (Qwen3-30B-A3B) as the primary provider with OpenAI as fallback. Supports streaming responses, persistent conversation history, and deep context about the platform's configuration, students, and operations.
