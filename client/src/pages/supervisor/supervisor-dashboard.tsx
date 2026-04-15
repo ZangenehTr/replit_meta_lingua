@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSupervisorDashboardData, useSupervisorMutations, type ObservationFormValues } from "@/hooks/useSupervisorDashboard";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/ui/action-button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,7 +24,7 @@ import {
   Users, GraduationCap, ClipboardCheck, TrendingUp,
   UserCheck, Calendar, AlertTriangle, CheckCircle, Clock,
   Target, BookOpen, DollarSign, MessageSquare, Eye,
-  UserMinus, AlertCircle
+  UserMinus, AlertCircle, XCircle, ShieldCheck
 } from "lucide-react";
 
 import { ObservationDialog } from "@/components/supervisor/ObservationDialog";
@@ -48,16 +49,92 @@ const observationSchema = z.object({
   followUpRequired: z.boolean().default(false),
 });
 
+const REASON_LABELS: Record<string, string> = {
+  sick: "Sick / Illness",
+  emergency: "Personal Emergency",
+  conflict: "Schedule Conflict",
+  weather: "Weather / Force Majeure",
+  other: "Other",
+};
+
 export default function SupervisorDashboard() {
   const { t } = useTranslation(["supervisor", "common"]);
   const { user } = useAuth();
   const { isRTL } = useLanguage();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
   const [teachersAttentionDialogOpen, setTeachersAttentionDialogOpen] = useState(false);
   const [studentsAttentionDialogOpen, setStudentsAttentionDialogOpen] = useState(false);
+  const [approvalModalRequest, setApprovalModalRequest] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const { data: cancelRequests = [], isLoading: cancelLoading } = useQuery<any[]>({
+    queryKey: ['/api/classes/cancel-requests', { status: 'pending' }],
+    queryFn: async () => {
+      const res = await fetch('/api/classes/cancel-requests?status=pending', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    refetchInterval: 30000,
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      const res = await fetch(`/api/classes/cancel-requests/${requestId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        body: JSON.stringify({})
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Failed'); }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: "Approved", description: `Cancellation approved. ${data.smsCount || 0} SMS sent.` });
+      setApprovalModalRequest(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/classes/cancel-requests'] });
+    },
+    onError: (err: Error) => { toast({ title: "Failed", description: err.message, variant: "destructive" }); }
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      const res = await fetch(`/api/classes/cancel-requests/${requestId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        body: JSON.stringify({})
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Failed'); }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Rejected", description: "Cancellation request rejected. Requester notified." });
+      setApprovalModalRequest(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/classes/cancel-requests'] });
+    },
+    onError: (err: Error) => { toast({ title: "Failed", description: err.message, variant: "destructive" }); }
+  });
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!approvalModalRequest) return;
+    if (e.key === 'a' || e.key === 'A') {
+      e.preventDefault();
+      if (!approveMutation.isPending) approveMutation.mutate(approvalModalRequest.request.id);
+    }
+    if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      if (!rejectMutation.isPending) rejectMutation.mutate(approvalModalRequest.request.id);
+    }
+  }, [approvalModalRequest, approveMutation, rejectMutation]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const { stats, teacherPerformance, allTeachers, pendingObservations, dailyIncome, teachersNeedingAttention, studentsNeedingAttention, upcomingSessions, businessIntelligence, targetFormDefinition, targetFormLoading, isLoading } = useSupervisorDashboardData(targetDialogOpen);
 
@@ -180,10 +257,18 @@ export default function SupervisorDashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">{t("dashboard.overview", { ns: "common" })}</TabsTrigger>
             <TabsTrigger value="teachers">{t("supervisor:evaluations.performance")}</TabsTrigger>
+            <TabsTrigger value="cancellations" className="relative">
+              Cancellations
+              {cancelRequests.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cancelRequests.length > 9 ? '9+' : cancelRequests.length}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -307,7 +392,171 @@ export default function SupervisorDashboard() {
               onScheduleObservation={(id) => { observationForm.setValue("teacherId", id); setObservationDialogOpen(true); }}
             />
           </TabsContent>
+
+          <TabsContent value="cancellations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-700">
+                  <AlertTriangle className="h-5 w-5" />
+                  Pending Cancellation Requests
+                </CardTitle>
+                <CardDescription>
+                  Review and act on emergency class cancellation requests. Use <kbd className="px-1 py-0.5 bg-gray-100 border rounded text-xs">A</kbd> to approve, <kbd className="px-1 py-0.5 bg-gray-100 border rounded text-xs">R</kbd> to reject when a request is open.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {cancelLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : cancelRequests.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <CheckCircle className="h-10 w-10 mx-auto mb-3 text-green-400" />
+                    <p className="font-medium">No pending cancellation requests</p>
+                    <p className="text-sm mt-1">All clear! Classes are proceeding as scheduled.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {cancelRequests.map((item: any) => {
+                      const req = item.request;
+                      const session = item.session;
+                      const requester = item.requester;
+                      const isUrgent = req.isLessThan30Min;
+                      return (
+                        <div
+                          key={req.id}
+                          className={`border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 ${isUrgent ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-gray-900 text-sm">
+                                Session #{req.classSessionId}
+                              </span>
+                              {isUrgent && (
+                                <Badge variant="destructive" className="text-xs">⚡ &lt;30 min</Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs capitalize">{req.requesterRole}</Badge>
+                              {req.studentRequestCount > 1 && (
+                                <Badge className="text-xs bg-orange-100 text-orange-800 border-orange-200">
+                                  {req.studentRequestCount} students
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              <span className="font-medium">{requester?.firstName} {requester?.lastName}</span>
+                              {" — "}{REASON_LABELS[req.reasonCategory] || req.reasonCategory}
+                              {req.reasonText && <span className="text-gray-500"> · {req.reasonText}</span>}
+                            </p>
+                            {session?.sessionDate && (
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                <Clock className="h-3 w-3 inline me-1" />
+                                {new Date(session.sessionDate).toLocaleDateString()} {session.startTime || ''}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-green-300 text-green-700 hover:bg-green-50"
+                              onClick={() => setApprovalModalRequest(item)}
+                            >
+                              Review
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+
+        {/* Cancellation Approval Modal */}
+        <Dialog open={!!approvalModalRequest} onOpenChange={() => setApprovalModalRequest(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-700">
+                <AlertTriangle className="h-5 w-5" />
+                Review Cancellation Request
+              </DialogTitle>
+            </DialogHeader>
+            {approvalModalRequest && (() => {
+              const req = approvalModalRequest.request;
+              const session = approvalModalRequest.session;
+              const requester = approvalModalRequest.requester;
+              return (
+                <div className="space-y-3 py-2">
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Session</span>
+                      <span className="font-medium">#{req.classSessionId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Requested by</span>
+                      <span className="font-medium capitalize">{requester?.firstName} {requester?.lastName} ({req.requesterRole})</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Reason</span>
+                      <span className="font-medium">{REASON_LABELS[req.reasonCategory] || req.reasonCategory}</span>
+                    </div>
+                    {session?.sessionDate && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Session date</span>
+                        <span className="font-medium">{new Date(session.sessionDate).toLocaleDateString()} {session.startTime || ''}</span>
+                      </div>
+                    )}
+                    {req.studentRequestCount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Student requests</span>
+                        <span className="font-medium">{req.studentRequestCount}</span>
+                      </div>
+                    )}
+                    {req.isLessThan30Min && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 flex items-center gap-2 text-red-700">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="text-xs font-medium">Class starts in less than 30 minutes!</span>
+                      </div>
+                    )}
+                    {req.reasonText && (
+                      <div>
+                        <span className="text-gray-500">Details</span>
+                        <p className="mt-1 text-gray-800">{req.reasonText}</p>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Approving will cancel the session, set chatroom to read-only, and send SMS to all enrolled students.
+                  </p>
+                </div>
+              );
+            })()}
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+                onClick={() => approvalModalRequest && rejectMutation.mutate(approvalModalRequest.request.id)}
+                disabled={rejectMutation.isPending || approveMutation.isPending}
+              >
+                <XCircle className="h-4 w-4 me-1" />
+                Reject <kbd className="ms-1 px-1 text-xs bg-gray-100 border rounded opacity-60">R</kbd>
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => approvalModalRequest && approveMutation.mutate(approvalModalRequest.request.id)}
+                disabled={approveMutation.isPending || rejectMutation.isPending}
+              >
+                {approveMutation.isPending ? (
+                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin me-2" />Approving...</>
+                ) : (
+                  <><ShieldCheck className="h-4 w-4 me-1" />Approve <kbd className="ms-1 px-1 text-xs bg-green-500 border border-green-400 rounded opacity-80">A</kbd></>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <ObservationDialog
           open={observationDialogOpen}

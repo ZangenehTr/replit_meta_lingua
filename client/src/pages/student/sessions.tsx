@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, Clock, Video, Users, User, Play, ChevronRight, Search,
   MapPin, Globe, Headphones, BookOpen, X, CheckCircle, AlertCircle,
-  CalendarDays, Eye, EyeOff, Filter, Wifi, WifiOff
+  CalendarDays, Eye, EyeOff, Filter, Wifi, WifiOff, AlertTriangle, XCircle
 } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,14 @@ interface Session {
   viewingHistory?: { lastWatched: string; completionPercentage: number; bookmarks: Array<{ timestamp: number; title: string }>; notes: Array<{ timestamp: number; content: string }> };
 }
 
+const CANCEL_REASONS = [
+  { value: "sick", label: "Sick / Illness" },
+  { value: "emergency", label: "Personal Emergency" },
+  { value: "conflict", label: "Schedule Conflict" },
+  { value: "weather", label: "Weather / Force Majeure" },
+  { value: "other", label: "Other" },
+];
+
 export default function StudentSessions() {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -66,6 +74,37 @@ export default function StudentSessions() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCalendarSidebar, setShowCalendarSidebar] = useState(false);
   const [filteredSessionIds, setFilteredSessionIds] = useState<number[]>([]);
+  const [cancelDialogSessionId, setCancelDialogSessionId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState("sick");
+  const [cancelText, setCancelText] = useState("");
+
+  const cancelMutation = useMutation({
+    mutationFn: async ({ sessionId, reasonCategory, reasonText }: { sessionId: number; reasonCategory: string; reasonText: string }) => {
+      const res = await fetch(`/api/classes/${sessionId}/cancel-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ reasonCategory, reasonText })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: "Cancellation request submitted", description: "Your request has been sent to supervisors for approval." });
+      setCancelDialogSessionId(null);
+      setCancelText("");
+      setCancelReason("sick");
+      queryClient.invalidateQueries({ queryKey: ['/api/student/sessions'] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  });
 
   const { data: sessions = [], isLoading } = useQuery<Session[]>({
     queryKey: ['/api/student/sessions', { includeCalendar: showCalendarSidebar, includeVideo: true, filter: videoFilter }],
@@ -437,13 +476,35 @@ export default function StudentSessions() {
                   </Button>
                 )}
 
-                {selectedSession.status === 'upcoming' && (
-                  <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
-                    <div className="flex items-center gap-2 text-blue-800 mb-1">
-                      <Clock className="w-4 h-4" />
-                      <p className="font-semibold text-sm">{t('student:sessionNotStarted', 'جلسه هنوز شروع نشده')}</p>
+                {selectedSession.status === 'cancelled' && (
+                  <div className="bg-red-50 border border-red-200 p-4 rounded-2xl">
+                    <div className="flex items-center gap-2 text-red-700 mb-1">
+                      <XCircle className="w-4 h-4" />
+                      <p className="font-semibold text-sm">Session Cancelled</p>
                     </div>
-                    <p className="text-blue-600 text-xs">{t('student:sessionWillStart', 'جلسه ساعت')} {formatTime(selectedSession.startTime)} {t('student:willStart', 'شروع می‌شود')}</p>
+                    <p className="text-red-600 text-xs">This class session has been cancelled. Please check with your teacher for rescheduling.</p>
+                  </div>
+                )}
+
+                {selectedSession.status === 'upcoming' && (
+                  <div className="space-y-2">
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
+                      <div className="flex items-center gap-2 text-blue-800 mb-1">
+                        <Clock className="w-4 h-4" />
+                        <p className="font-semibold text-sm">{t('student:sessionNotStarted', 'جلسه هنوز شروع نشده')}</p>
+                      </div>
+                      <p className="text-blue-600 text-xs">{t('student:sessionWillStart', 'جلسه ساعت')} {formatTime(selectedSession.startTime)} {t('student:willStart', 'شروع می‌شود')}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedSession(null);
+                        setCancelDialogSessionId(selectedSession.id);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                      Request Cancellation
+                    </button>
                   </div>
                 )}
 
@@ -456,6 +517,100 @@ export default function StudentSessions() {
                     <p className="text-emerald-600 text-xs">{t('student:sessionEndedAt', 'جلسه ساعت')} {formatTime(selectedSession.endTime)} {t('student:ended', 'پایان یافت')}</p>
                   </div>
                 )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancellation Request Dialog */}
+      <AnimatePresence>
+        {cancelDialogSessionId !== null && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCancelDialogSessionId(null)}
+          >
+            <motion.div
+              className="bg-white rounded-t-3xl w-full max-h-[80vh] overflow-y-auto"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-12 h-1 bg-gray-200 rounded-full" />
+              </div>
+              <div className="px-5 pb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-gray-900">Request Cancellation</h2>
+                    <p className="text-xs text-gray-500">Session #{cancelDialogSessionId}</p>
+                  </div>
+                  <button onClick={() => setCancelDialogSessionId(null)} className="ms-auto w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                    <X className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4 text-xs text-amber-800">
+                  Your request will be reviewed by supervisors. You will be notified of the decision via SMS.
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-1.5">Reason for cancellation</p>
+                    <div className="space-y-2">
+                      {CANCEL_REASONS.map(r => (
+                        <button
+                          key={r.value}
+                          onClick={() => setCancelReason(r.value)}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-colors ${
+                            cancelReason === r.value
+                              ? 'bg-red-50 border-red-300 text-red-700 font-medium'
+                              : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-1.5">Additional details (optional)</p>
+                    <textarea
+                      rows={3}
+                      value={cancelText}
+                      onChange={e => setCancelText(e.target.value)}
+                      placeholder="Provide any additional context..."
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/30 resize-none"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => cancelMutation.mutate({ sessionId: cancelDialogSessionId!, reasonCategory: cancelReason, reasonText: cancelText })}
+                    disabled={cancelMutation.isPending}
+                    className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {cancelMutation.isPending ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-4 h-4" />
+                        Submit Request
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

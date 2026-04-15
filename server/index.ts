@@ -575,6 +575,20 @@ server.listen({ port, host: '0.0.0.0' }, () => {
     }
   })();
   
+  // Run class cancellation migration (adds cancellation columns and table)
+  (async () => {
+    const { runClassCancellationMigration } = await import('./migrations/class-cancellation-migration.js');
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await runClassCancellationMigration();
+        break;
+      } catch (migErr: unknown) {
+        console.error(`⚠️  Class cancellation migration attempt ${attempt} failed:`, migErr instanceof Error ? migErr.message : String(migErr));
+        if (attempt < 3) await new Promise(r => setTimeout(r, 5000 * attempt));
+      }
+    }
+  })();
+
   // Register Placement Test routes (including guest routes)
   const placementTestRouter = (await import('./routes/placement-test-routes.js')).default;
   app.use('/api/placement-test', placementTestRouter);

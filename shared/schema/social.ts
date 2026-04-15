@@ -1928,6 +1928,14 @@ export const liveClassSessions = pgTable("live_class_sessions", {
   isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
   qualityRating: integer("quality_rating"), // 1-10 scale
+  // Emergency cancellation fields
+  cancellationStatus: varchar("cancellation_status", { length: 30 }).default("active"), // active, cancel_requested, cancelled
+  cancelledAt: timestamp("cancelled_at"),
+  cancelledBy: integer("cancelled_by").references(() => users.id),
+  cancelledReason: varchar("cancelled_reason", { length: 50 }), // sick, emergency, conflict, weather, other
+  cancelledReasonText: text("cancelled_reason_text"),
+  isChatroomReadOnly: boolean("is_chatroom_read_only").default(false),
+  actualStartTime: timestamp("actual_start_time"), // set when class physically starts (Task #41)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -2055,6 +2063,7 @@ export const supportTickets = pgTable("support_tickets", {
   tags: text("tags").array().default([]),
   relatedEntityType: varchar("related_entity_type", { length: 50 }), // course, class, payment, user
   relatedEntityId: varchar("related_entity_id", { length: 50 }),
+  classSessionId: integer("class_session_id").references(() => liveClassSessions.id), // FK for cancellation requests
   source: varchar("source", { length: 50 }).default("web"), // web, email, phone, chat, in_person
   lastResponseAt: timestamp("last_response_at"),
   lastResponseBy: integer("last_response_by").references(() => users.id),
@@ -2130,6 +2139,42 @@ export const pushNotifications = pgTable("push_notifications", {
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Class Cancellation Requests table
+export const classCancellationRequests = pgTable("class_cancellation_requests", {
+  id: serial("id").primaryKey(),
+  classSessionId: integer("class_session_id").references(() => liveClassSessions.id).notNull(),
+  requestedByUserId: integer("requested_by_user_id").references(() => users.id).notNull(),
+  requesterRole: varchar("requester_role", { length: 20 }).notNull(), // teacher, student, admin
+  reasonCategory: varchar("reason_category", { length: 30 }).notNull(), // sick, emergency, conflict, weather, other
+  reasonText: text("reason_text"),
+  studentRequestCount: integer("student_request_count").default(0), // for group class threshold
+  status: varchar("status", { length: 20 }).default("pending"), // pending, approved, rejected, force_cancelled
+  reviewedByUserId: integer("reviewed_by_user_id").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  makeupSessionId: integer("makeup_session_id").references(() => liveClassSessions.id),
+  smsDeliveryCount: integer("sms_delivery_count").default(0),
+  chatroomMessageStatus: varchar("chatroom_message_status", { length: 20 }).default("not_sent"), // not_sent, sent, failed
+  supportTicketId: integer("support_ticket_id").references(() => supportTickets.id),
+  isLessThan30Min: boolean("is_less_than_30_min").default(false), // flag for <30min requests
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertClassCancellationRequestSchema = z.object({
+  classSessionId: z.number(),
+  requestedByUserId: z.number(),
+  requesterRole: z.enum(["teacher", "student", "admin"]),
+  reasonCategory: z.enum(["sick", "emergency", "conflict", "weather", "other"]),
+  reasonText: z.string().optional(),
+  studentRequestCount: z.number().default(0),
+  status: z.string().max(20).default("pending"),
+  reviewedByUserId: z.number().optional(),
+  reviewedAt: z.date().optional(),
+  makeupSessionId: z.number().optional(),
+  supportTicketId: z.number().optional(),
+  isLessThan30Min: z.boolean().default(false)
 });
 
 // Notification Delivery Logs table

@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Calendar, Clock, Video, MessageSquare, FileText, Play } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Calendar, Clock, Video, MessageSquare, FileText, AlertTriangle, X, Play } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLocation } from "wouter";
 import { format, isWithinInterval, subMinutes, addMinutes } from "date-fns";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 interface TeacherClass {
@@ -48,8 +52,25 @@ interface ClassSession {
   startMethod: string | null;
 }
 
+interface LiveSession {
+  id: number;
+  sessionDate: string;
+  startTime: string;
+  cancellationStatus: string | null;
+  actualStartTime: string | null;
+}
+
+const REASON_OPTIONS = [
+  { value: "sick", label: "Sick / Illness" },
+  { value: "emergency", label: "Personal Emergency" },
+  { value: "conflict", label: "Schedule Conflict" },
+  { value: "weather", label: "Weather / Force Majeure" },
+  { value: "other", label: "Other" },
+];
+
 function StartClassButton({ classId }: { classId: number }) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: session } = useQuery<ClassSession | null>({
     queryKey: [`/api/teacher/class-sessions/${classId}/upcoming`],
@@ -110,12 +131,82 @@ export default function TeacherClassesPage() {
   const { t } = useTranslation(['teacher', 'common']);
   const { isRTL } = useLanguage();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [selectedTab, setSelectedTab] = useState("active");
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState("");
+  const [reasonCategory, setReasonCategory] = useState("sick");
+  const [reasonText, setReasonText] = useState("");
 
   const { data: classes, isLoading } = useQuery<TeacherClass[]>({
     queryKey: [API_ENDPOINTS.teacher.classes],
     enabled: !!user
   });
+
+  const { data: liveSessions = [] } = useQuery<LiveSession[]>({
+    queryKey: ['/api/teacher/live-sessions/upcoming'],
+    queryFn: async () => {
+      const res = await fetch('/api/teacher/live-sessions/upcoming', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!user && cancelDialogOpen,
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async ({ sessionId, reasonCategory, reasonText }: { sessionId: number; reasonCategory: string; reasonText: string }) => {
+      const res = await fetch(`/api/classes/${sessionId}/cancel-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ reasonCategory, reasonText })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to submit cancellation request');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Cancellation request submitted", description: "Supervisors have been notified. Awaiting approval." });
+      setCancelDialogOpen(false);
+      setSelectedSessionId("");
+      setReasonCategory("sick");
+      setReasonText("");
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to submit", description: err.message, variant: "destructive" });
+    }
+  });
+
+  const handleCancelSubmit = () => {
+    if (!selectedSessionId) {
+      toast({ title: "Please select a session", variant: "destructive" });
+      return;
+    }
+    cancelMutation.mutate({ sessionId: Number(selectedSessionId), reasonCategory, reasonText });
+  };
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.shiftKey && e.key === 'E') {
+      e.preventDefault();
+      setCancelDialogOpen(true);
+    }
+    if (cancelDialogOpen && e.key === 'Escape') {
+      setCancelDialogOpen(false);
+    }
+  }, [cancelDialogOpen]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   if (isLoading) {
     return (
@@ -134,13 +225,26 @@ export default function TeacherClassesPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="w-full px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('teacher:classes.title')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            {t('teacher:classes.subtitle')}
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              {t('teacher:classes.title')}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              {t('teacher:classes.subtitle')}
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="gap-2 shadow-lg"
+            onClick={() => setCancelDialogOpen(true)}
+            title="Emergency Cancel (Shift+E)"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            Emergency Cancel
+            <span className="text-xs opacity-70 hidden sm:inline">(Shift+E)</span>
+          </Button>
         </div>
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
@@ -225,6 +329,105 @@ export default function TeacherClassesPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Emergency Cancellation Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Emergency Class Cancellation
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+              This request will be sent to supervisors for immediate review. Students will be notified via SMS upon approval.
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="session-select">Select Live Session</Label>
+              {liveSessions.length > 0 ? (
+                <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
+                  <SelectTrigger id="session-select">
+                    <SelectValue placeholder="Choose a session..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {liveSessions
+                      .filter(s => !s.actualStartTime && s.cancellationStatus !== 'cancelled')
+                      .map(s => (
+                        <SelectItem key={s.id} value={String(s.id)}>
+                          Session #{s.id} — {s.sessionDate ? format(new Date(s.sessionDate), 'MMM d, yyyy') : ''} {s.startTime || ''}
+                          {s.cancellationStatus === 'cancel_requested' && ' ⚠️ (pending)'}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">No upcoming sessions found. Enter session ID manually:</p>
+                  <input
+                    type="number"
+                    placeholder="Session ID"
+                    value={selectedSessionId}
+                    onChange={e => setSelectedSessionId(e.target.value)}
+                    className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reason-category">Reason</Label>
+              <Select value={reasonCategory} onValueChange={setReasonCategory}>
+                <SelectTrigger id="reason-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {REASON_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reason-text">Additional Details (optional)</Label>
+              <Textarea
+                id="reason-text"
+                placeholder="Provide any additional context..."
+                value={reasonText}
+                onChange={e => setReasonText(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setCancelDialogOpen(false)} disabled={cancelMutation.isPending}>
+              <X className="h-4 w-4 me-1" />
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelSubmit}
+              disabled={cancelMutation.isPending || !selectedSessionId}
+            >
+              {cancelMutation.isPending ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Submitting...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Submit Emergency Request
+                </span>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

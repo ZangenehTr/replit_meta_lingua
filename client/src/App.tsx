@@ -55,6 +55,7 @@ import FontManagementPage from "@/pages/admin/font-management";
 import SupervisionPage from "@/pages/admin/supervision";
 import SMSSettingsPage from "@/pages/admin/sms-settings";
 import SMSTestPage from "@/pages/admin/sms-test";
+import CancellationsAuditPage from "@/pages/admin/cancellations-audit";
 import ApiSmokeTestPage from '@/pages/admin/api-smoke-test';
 import CampaignManagementPage from "@/pages/admin/campaign-management";
 import WebsiteBuilderPage from "@/pages/admin/website-builder";
@@ -548,6 +549,11 @@ function Router() {
       <Route path="/admin/sms-test">
         <RoleProtectedRoute allowedRoles={["admin"]}>
           <SMSTestPage />
+        </RoleProtectedRoute>
+      </Route>
+      <Route path="/admin/cancellations">
+        <RoleProtectedRoute allowedRoles={["admin"]}>
+          <CancellationsAuditPage />
         </RoleProtectedRoute>
       </Route>
       <Route path="/admin/api-smoke-test">

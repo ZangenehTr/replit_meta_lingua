@@ -59,7 +59,8 @@ import {
   Circle,
   BookOpen,
   FileText,
-  Star
+  Star,
+  ShieldAlert
 } from "lucide-react";
 import { Link } from "wouter";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
@@ -717,6 +718,18 @@ export const AdminDashboard = () => {
                   >
                     <MessageSquare className="h-6 w-6 text-indigo-500 mb-1" />
                     <span className="text-xs text-gray-600 text-center">{t('admin:communications', 'ارتباطات')}</span>
+                  </motion.div>
+                </Link>
+
+                <Link href="/admin/cancellations">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    data-testid="quick-action-cancellations"
+                  >
+                    <ShieldAlert className="h-6 w-6 text-red-500 mb-1" />
+                    <span className="text-xs text-gray-600 text-center">Cancellations</span>
                   </motion.div>
                 </Link>
               </div>

@@ -78,6 +78,7 @@ import { PlatformFactory, getPlatformStrategy } from "./social-platforms/platfor
 import { setupCoreRoutes } from "./routes/core-routes";
 import { setupCurriculumAndClassesRoutes } from "./routes/curriculum-and-classes-routes";
 import { setupStudentAndCallerRoutes } from "./routes/student-and-callern-routes";
+import { setupClassCancellationRoutes } from "./routes/class-cancellation-routes";
 import { setupLeadAndRoadmapRoutes } from "./routes/lead-and-roadmap-routes";
 import { setupAdminAndMiscRoutes } from "./routes/admin-and-misc-routes";
 import { uploadVideo, uploadPhoto, uploadStudentPhoto, audioUpload } from "./middleware/uploads";
@@ -400,6 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupStudentAndCallerRoutes(app, routeContext);
   setupLeadAndRoadmapRoutes(app, routeContext);
   await setupAdminAndMiscRoutes(app, routeContext);
+  setupClassCancellationRoutes(app, { authenticateToken, requireRole });
 
   const { setupClassCheckinRoutes } = await import('./routes/class-checkin-routes');
   setupClassCheckinRoutes(app, {

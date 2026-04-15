@@ -1885,4 +1885,38 @@ export class CallernWebSocketServer {
       console.error('Error broadcasting online teachers:', error);
     }
   }
+
+  /**
+   * Broadcast an event to all connected supervisors and admins
+   */
+  public broadcastToSupervisorsAndAdmins(event: string, data: unknown) {
+    try {
+      this.io.emit(`supervisor_admin:${event}`, data);
+    } catch (error) {
+      console.error(`Error broadcasting ${event} to supervisors/admins:`, error);
+    }
+  }
+
+  /**
+   * Broadcast an event to all connected clients
+   */
+  public broadcastToAll(event: string, data: unknown) {
+    try {
+      this.io.emit(event, data);
+    } catch (error) {
+      console.error(`Error broadcasting ${event} to all:`, error);
+    }
+  }
+
+  /**
+   * Broadcast an event to a specific user (by userId)
+   */
+  public broadcastToUser(userId: number, event: string, data: unknown) {
+    try {
+      const userRoom = `user:${userId}`;
+      this.io.to(userRoom).emit(event, data);
+    } catch (error) {
+      console.error(`Error broadcasting ${event} to user ${userId}:`, error);
+    }
+  }
 }
