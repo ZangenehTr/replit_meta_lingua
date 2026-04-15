@@ -1322,6 +1322,8 @@ function Router() {
 
       <Route path="/home" component={PublicHomeRoute} />
 
+      <Route path="/cs/:token" component={lazy(() => import("@/pages/class-checkin"))} />
+
       <Route path="/" component={HomeRoute} />
       <Route component={NotFound} />
     </Switch>

@@ -607,8 +607,10 @@ export const callSessions = pgTable("call_sessions", {
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
   roadmapProgressId: integer("roadmap_progress_id").references(() => studentRoadmapProgress.id),
   roadmapStepId: integer("roadmap_step_id").references(() => callernRoadmapSteps.id),
+  roomId: varchar("room_id", { length: 255 }), // deterministic room identifier for lifecycle binding
   sessionType: varchar("session_type", { length: 50 }).default("callern"),
-  status: varchar("status", { length: 20 }).default("active"), // active, completed, cancelled
+  status: varchar("status", { length: 20 }).default("active"), // pending, active, completed, cancelled
+  pendingAt: timestamp("pending_at"), // when student requested the call
   startedAt: timestamp("started_at").defaultNow().notNull(),
   endedAt: timestamp("ended_at"),
   durationSec: integer("duration_sec"),
@@ -2156,5 +2158,50 @@ export const notificationDeliveryLogs = pgTable("notification_delivery_logs", {
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// ============================================================================
+// CLASS LATENESS DETECTION & CHECK-IN TABLES
+// ============================================================================
+
+// class_sessions: one row per physical occurrence of a recurring class
+export const classSessions = pgTable("class_sessions", {
+  id: serial("id").primaryKey(),
+  classId: integer("class_id").references(() => classes.id).notNull(),
+  scheduledStart: timestamp("scheduled_start").notNull(),
+  actualStartTime: timestamp("actual_start_time"),
+  startedByStudentId: integer("started_by_student_id").references(() => users.id),
+  startMethod: varchar("start_method", { length: 20 }), // sms_link, app_button, auto
+  status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, started, cancelled
+  smsSentAt: timestamp("sms_sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// class_start_confirmations: student SMS tokens for check-in
+export const classStartConfirmations = pgTable("class_start_confirmations", {
+  id: serial("id").primaryKey(),
+  classSessionId: integer("class_session_id").references(() => classSessions.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  smsToken: varchar("sms_token", { length: 64 }).notNull().unique(),
+  isActive: boolean("is_active").default(true),
+  isLate: boolean("is_late").default(false),
+  confirmedAt: timestamp("confirmed_at"),
+  method: varchar("method", { length: 20 }), // sms_link, app_button
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// lateness_records: all detected lateness events
+export const latenessRecords = pgTable("lateness_records", {
+  id: serial("id").primaryKey(),
+  classSessionId: integer("class_session_id").references(() => classSessions.id),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  scheduledStart: timestamp("scheduled_start").notNull(),
+  actualStart: timestamp("actual_start"),
+  delayMinutes: integer("delay_minutes").notNull(),
+  classType: varchar("class_type", { length: 20 }).notNull(), // in_person, online
+  detectionMethod: varchar("detection_method", { length: 30 }).notNull(), // sms_confirmation, teacher_button, callern_auto, monitor_timeout
+  callSessionId: integer("call_session_id").references(() => callSessions.id),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 

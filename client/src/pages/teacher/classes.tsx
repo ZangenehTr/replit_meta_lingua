@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "@/services/endpoints";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Calendar, Clock, Video, MessageSquare, FileText, Settings, Phone } from "lucide-react";
+import { Users, Calendar, Clock, Video, MessageSquare, FileText, Play } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLocation } from "wouter";
-import { format } from "date-fns";
+import { format, isWithinInterval, subMinutes, addMinutes } from "date-fns";
+import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface TeacherClass {
   id: number;
@@ -35,6 +37,72 @@ interface TeacherClass {
     email: string;
     progress: number;
   }>;
+}
+
+interface ClassSession {
+  id: number;
+  classId: number;
+  scheduledStart: string;
+  actualStartTime: string | null;
+  status: string;
+  startMethod: string | null;
+}
+
+function StartClassButton({ classId }: { classId: number }) {
+  const queryClient = useQueryClient();
+
+  const { data: session } = useQuery<ClassSession | null>({
+    queryKey: [`/api/teacher/class-sessions/${classId}/upcoming`],
+    refetchInterval: 30000,
+  });
+
+  const startMutation = useMutation({
+    mutationFn: async (sessionId: number) =>
+      apiRequest(`/api/teacher/class-sessions/${sessionId}/start`, { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: "Class started!", description: "The class has been marked as started." });
+      queryClient.invalidateQueries({ queryKey: [`/api/teacher/class-sessions/${classId}/upcoming`] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message || "Could not start class.", variant: "destructive" });
+    },
+  });
+
+  if (!session) return null;
+
+  if (session.status === "cancelled") {
+    return (
+      <Badge variant="outline" className="text-xs">Cancelled</Badge>
+    );
+  }
+
+  if (session.status === "started" || session.actualStartTime) {
+    return (
+      <Badge className="bg-green-100 text-green-800 text-xs px-2 py-1">
+        Started ✓
+      </Badge>
+    );
+  }
+
+  const scheduled = new Date(session.scheduledStart);
+  const now = new Date();
+  const windowStart = subMinutes(scheduled, 15);
+  const windowEnd = addMinutes(scheduled, 30);
+  const inWindow = isWithinInterval(now, { start: windowStart, end: windowEnd });
+
+  if (!inWindow) return null;
+
+  return (
+    <Button
+      size="sm"
+      className="bg-green-600 hover:bg-green-700 text-white font-semibold"
+      onClick={() => startMutation.mutate(session.id)}
+      disabled={startMutation.isPending}
+    >
+      <Play className="h-3 w-3 me-1" />
+      {startMutation.isPending ? "Starting…" : "Start Class"}
+    </Button>
+  );
 }
 
 export default function TeacherClassesPage() {
@@ -107,7 +175,8 @@ export default function TeacherClassesPage() {
                         <Calendar className="h-4 w-4" />
                         <span>{cls.schedule}</span>
                       </div>
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-2 pt-2 flex-wrap">
+                        <StartClassButton classId={cls.id} />
                         <Button size="sm" className="flex-1">
                           <Video className="h-4 w-4 me-2" />
                           Join Class

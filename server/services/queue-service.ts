@@ -87,9 +87,18 @@ export const adaptiveContentGenerationQueue: Queue = redisAvailable
   ? new Queue('adaptive-content-generation', { connection: getConnection(), defaultJobOptions: { ...queueDefaults, removeOnFail: { count: 200, age: 7 * 24 * 3600 } } })
   : makeStubQueue('adaptive-content-generation');
 
+export const preClassSmsQueue: Queue = redisAvailable
+  ? new Queue('pre-class-sms', { connection: getConnection(), defaultJobOptions: { removeOnComplete: true, removeOnFail: { count: 200, age: 7 * 24 * 3600 }, attempts: 3, backoff: { type: 'exponential', delay: 2000 } } })
+  : makeStubQueue('pre-class-sms');
+
 export const contentGenerationQueueEvents: QueueEvents | null = redisAvailable
   ? new QueueEvents('content-generation', { connection: getConnection() })
   : null;
+
+export interface PreClassSmsJob {
+  classSessionId: number;
+  scheduledStart: string; // ISO string
+}
 
 // ─── Health check ──────────────────────────────────────────────────────────
 export async function checkQueueHealth() {
@@ -166,5 +175,6 @@ export async function closeQueues() {
   await adaptiveContentGenerationQueue.close();
   await irtProcessingQueue.close();
   await notificationQueue.close();
+  await preClassSmsQueue.close();
   await getConnection().quit();
 }

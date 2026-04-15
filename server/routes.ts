@@ -401,6 +401,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupLeadAndRoadmapRoutes(app, routeContext);
   await setupAdminAndMiscRoutes(app, routeContext);
 
+  const { setupClassCheckinRoutes } = await import('./routes/class-checkin-routes');
+  setupClassCheckinRoutes(app, {
+    authenticateToken: routeContext.authenticateToken,
+    requireRole: routeContext.requireRole,
+  });
+
   const { createAdminCopilotRoutes } = await import('./routes/admin-copilot-routes');
   const copilotRouter = createAdminCopilotRoutes(storage);
   app.use(copilotRouter);

@@ -18,7 +18,7 @@ import { eq, and, gte, lte, sql, ne } from "drizzle-orm";
 import {
   users, employees, callernCallHistory, leads,
   supervisionObservations, enrollments, callernScoringEvents,
-  performanceReviews,
+  performanceReviews, latenessRecords,
 } from "@shared/schema";
 
 export interface PerformanceMetrics {
@@ -130,21 +130,42 @@ async function computeTeacherMetrics(
   const sessionCount = Number(sessions?.total ?? 0);
   const attendanceScore = Math.min(100, sessionCount * 5);
 
+  // Lateness penalty: each late event subtracts from the final score
+  const [latenessRow] = await db
+    .select({
+      lateCount: sql<number>`count(*)`,
+      avgDelay: sql<number>`AVG(CAST(${latenessRecords.delayMinutes} AS FLOAT))`,
+    })
+    .from(latenessRecords)
+    .where(
+      and(
+        eq(latenessRecords.teacherId, userId),
+        gte(latenessRecords.scheduledStart, periodStart),
+        lte(latenessRecords.scheduledStart, periodEnd)
+      )
+    );
+  const lateCount = Number(latenessRow?.lateCount ?? 0);
+  const avgDelay = latenessRow?.avgDelay != null ? Number(latenessRow.avgDelay) : 0;
+  // Penalty: 3 pts per incident + 0.5 pt per minute of average delay, capped at 25
+  const latenessPenalty = Math.min(25, lateCount * 3 + avgDelay * 0.5);
+
   const overallScore = Math.round(
     enrollCount > 0
-      ? 30 + avgSessionScore * 0.4 + Math.min(30, attendanceScore * 0.3)
-      : avgSessionScore * 0.5 + attendanceScore * 0.5
+      ? 30 + avgSessionScore * 0.4 + Math.min(30, attendanceScore * 0.3) - latenessPenalty
+      : avgSessionScore * 0.5 + attendanceScore * 0.5 - latenessPenalty
   );
 
   return {
-    overallScore: Math.min(100, overallScore),
+    overallScore: Math.min(100, Math.max(0, overallScore)),
     breakdown: {
       student_outcome_rate: Math.min(100, enrollCount * 10),
       session_quality_score: Math.round(avgSessionScore),
       ai_supervisor_observations: obsCount,
       attendance_reliability: Math.min(100, attendanceScore),
+      lateness_incidents: lateCount,
+      lateness_penalty: Math.round(latenessPenalty),
     },
-    dataPoints: enrollCount + sessionCount + obsCount,
+    dataPoints: enrollCount + sessionCount + obsCount + lateCount,
   };
 }
 

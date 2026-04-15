@@ -1,8 +1,8 @@
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server } from 'http';
 import { db } from './db';
 import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users, teacherOnlineStatus, callernTeacherFollowers, callSessions, liveClassSessions } from '../shared/schema';
-import { eq, and, or, like, sql, inArray, lte, gte, isNull } from 'drizzle-orm';
+import { eq, and, or, like, sql, inArray, lte, gte, isNull, ne, desc } from 'drizzle-orm';
 import { kavenegarService } from './kavenegar-service';
 import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
 
@@ -82,6 +82,14 @@ export class CallernWebSocketServer {
     this.startLiveClassPresenceWatcher();
     
     console.log('Callern WebSocket server with AI Supervisor and memory leak protection initialized');
+
+    // Wire IO into lateness checkin modules so they can broadcast in real-time
+    import('./routes/class-checkin-routes.js').then(({ setClassCheckinIO }) => {
+      setClassCheckinIO(this.io);
+    }).catch(() => {});
+    import('./workers/class-lateness.worker.js').then(({ setLatenessWorkerIO }) => {
+      setLatenessWorkerIO(this.io);
+    }).catch(() => {});
   }
   
   private async clearAllTeachersOnlineStatus() {
@@ -143,6 +151,11 @@ export class CallernWebSocketServer {
           
           // Send confirmation back to student
           socket.emit('authenticated', { success: true, role: 'student' });
+        } else if (roleLower === 'admin' || roleLower === 'supervisor') {
+          // Join supervisors and admins to the lateness-supervisors room
+          socket.join('lateness-supervisors');
+          console.log(`${role} joined lateness-supervisors room (userId: ${userId})`);
+          socket.emit('authenticated', { success: true, role });
         }
       });
 
@@ -625,6 +638,35 @@ export class CallernWebSocketServer {
 
         // Update call status
         await this.updateCallStatus(roomId, 'active');
+
+        // CallerN lateness detection: compare call_sessions.pendingAt vs accepted time
+        try {
+          const { detectCallerNLateness } = await import('./workers/class-lateness.worker.js');
+          // Find the pending call session bound to this exact roomId (deterministic lookup)
+          const [pendingSession] = await db
+            .select()
+            .from(callSessions)
+            .where(
+              and(
+                eq(callSessions.roomId, roomId),
+                eq(callSessions.teacherId, teacherId),
+                eq(callSessions.status, 'pending')
+              )
+            )
+            .limit(1);
+          if (pendingSession) {
+            const pendingAt = pendingSession.pendingAt ?? pendingSession.createdAt;
+            const activeAt = new Date();
+            // Transition call_sessions row to 'active'
+            await db
+              .update(callSessions)
+              .set({ status: 'active', startedAt: activeAt, updatedAt: activeAt })
+              .where(eq(callSessions.id, pendingSession.id));
+            await detectCallerNLateness(teacherId, pendingSession.id, pendingAt, activeAt);
+          }
+        } catch (callerNErr) {
+          console.error('CallerN lateness detection error:', callerNErr);
+        }
       });
 
       // Handle teacher rejecting call
@@ -648,6 +690,14 @@ export class CallernWebSocketServer {
         
         // Update call status
         await this.updateCallStatus(roomId, 'rejected');
+
+        // Cancel the pending call_sessions row bound to this roomId
+        const now = new Date();
+        await db
+          .update(callSessions)
+          .set({ status: 'cancelled', updatedAt: now })
+          .where(and(eq(callSessions.roomId, roomId), eq(callSessions.status, 'pending')))
+          .catch(() => {}); // Non-blocking
         
         // Make teacher available again
         const teacher = this.teacherSockets.get(room.teacherId);
@@ -835,7 +885,7 @@ export class CallernWebSocketServer {
       });
       
       // Visitor sends a message
-      socket.on('visitor-send-message', (data: { sessionId: string, message: any }) => {
+      socket.on('visitor-send-message', (data: { sessionId: string, message: { message: string; [key: string]: unknown } }) => {
         const { sessionId, message } = data;
         
         // Broadcast to everyone in the chat session (including admins)
@@ -855,7 +905,7 @@ export class CallernWebSocketServer {
       });
       
       // Admin sends a message
-      socket.on('admin-send-message', (data: { sessionId: string, message: any }) => {
+      socket.on('admin-send-message', (data: { sessionId: string, message: { message: string; [key: string]: unknown } }) => {
         const { sessionId, message } = data;
         
         // Broadcast to everyone in the chat session (including visitor)
@@ -1048,11 +1098,33 @@ export class CallernWebSocketServer {
 
   private async createCallRecord(roomId: string, studentId: number, teacherId: number, packageId: number) {
     try {
+      const now = new Date();
       await db.insert(callernCallHistory).values({
         studentId,
         teacherId,
         sessionType: 'callern',
         duration: 0 // Will be updated when call ends
+      });
+      // Cancel any stale pending rows for this teacher-student pair before creating a new one
+      await db
+        .update(callSessions)
+        .set({ status: 'cancelled', updatedAt: now })
+        .where(
+          and(
+            eq(callSessions.teacherId, teacherId),
+            eq(callSessions.studentId, studentId),
+            eq(callSessions.status, 'pending')
+          )
+        );
+      // Create a call_sessions record bound to this roomId for deterministic lateness detection
+      await db.insert(callSessions).values({
+        studentId,
+        teacherId,
+        roomId,
+        sessionType: 'callern',
+        status: 'pending',
+        pendingAt: now,
+        startedAt: now,
       });
     } catch (error) {
       console.error('Error creating call record:', error);
@@ -1591,7 +1663,7 @@ export class CallernWebSocketServer {
   /**
    * Register teacher with database persistence
    */
-  private async registerTeacher(socket: any, userId: number, enableCallern: boolean) {
+  private async registerTeacher(socket: Socket, userId: number, enableCallern: boolean) {
     try {
       // Update memory cache
       this.teacherSockets.set(userId, {

@@ -18,14 +18,24 @@ import {
   MessageSquare,
   FileText,
   Image as ImageIcon,
-  Mic
+  Mic,
+  Play,
+  XCircle
 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/hooks/use-auth";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, subMinutes, addMinutes, isWithinInterval } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/hooks/useLanguage";
+
+interface ClassSession {
+  id: number;
+  classId: number;
+  scheduledStart: string;
+  actualStartTime?: string | null;
+  status: string;
+}
 
 interface ClassInfo {
   id: number;
@@ -35,6 +45,72 @@ interface ClassInfo {
   language: string;
   studentsCount: number;
   students: Student[];
+}
+
+function StartClassButton({ classId }: { classId: number }) {
+  const queryClient = useQueryClient();
+
+  const { data: session } = useQuery<ClassSession | null>({
+    queryKey: [`/api/teacher/class-sessions/${classId}/upcoming`],
+    refetchInterval: 30000,
+  });
+
+  const startMutation = useMutation({
+    mutationFn: (sessionId: number) =>
+      apiRequest(`/api/teacher/class-sessions/${sessionId}/start`, { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: "Class started!", description: "The class has been marked as started." });
+      queryClient.invalidateQueries({ queryKey: [`/api/teacher/class-sessions/${classId}/upcoming`] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message || "Could not start class.", variant: "destructive" });
+    },
+  });
+
+  if (!session) return null;
+
+  if (session.status === "cancelled") {
+    return (
+      <Button
+        size="lg"
+        variant="outline"
+        disabled
+        className="border-red-300 text-red-500 font-semibold cursor-not-allowed opacity-70"
+      >
+        <XCircle className="h-4 w-4 me-2" />
+        Class Cancelled
+      </Button>
+    );
+  }
+
+  if (session.status === "started" || session.actualStartTime) {
+    return (
+      <Button size="lg" variant="outline" disabled className="border-green-400 text-green-700 font-semibold opacity-80">
+        <Play className="h-4 w-4 me-2" />
+        Class Started ✓
+      </Button>
+    );
+  }
+
+  const scheduled = new Date(session.scheduledStart);
+  const now = new Date();
+  const windowStart = subMinutes(scheduled, 15);
+  const windowEnd = addMinutes(scheduled, 30);
+  const inWindow = isWithinInterval(now, { start: windowStart, end: windowEnd });
+
+  if (!inWindow) return null;
+
+  return (
+    <Button
+      size="lg"
+      className="bg-green-600 hover:bg-green-700 text-white font-bold text-base px-6 py-3 shadow-md"
+      onClick={() => startMutation.mutate(session.id)}
+      disabled={startMutation.isPending}
+    >
+      <Play className="h-5 w-5 me-2" />
+      {startMutation.isPending ? "Starting…" : "Start Class"}
+    </Button>
+  );
 }
 
 interface Student {
@@ -182,7 +258,7 @@ export default function ClassCommunication() {
       {/* Class Header */}
       <Card className="mb-4">
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start flex-wrap gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -192,7 +268,8 @@ export default function ClassCommunication() {
                 {classInfo?.description}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              {classId && <StartClassButton classId={parseInt(classId)} />}
               <Badge variant="secondary">
                 <Users className="h-3 w-3 me-1" />
                 {classInfo?.studentsCount || 0} {t('teacher.students')}

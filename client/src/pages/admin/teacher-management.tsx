@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTeachersData, useTeacherMutations, type TeacherRecord } from "@/hooks/useTeachers";
@@ -19,11 +19,211 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, Users, GraduationCap, Star, Clock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Search, Filter, Users, GraduationCap, Star, Clock, AlertTriangle } from "lucide-react";
+import { format } from "date-fns";
 
 import { TeacherCard } from "@/components/admin/TeacherCard";
 import { TeacherViewDialog } from "@/components/admin/TeacherViewDialog";
 import { TeacherForm } from "@/components/admin/TeacherForm";
+
+interface LatenessRecord {
+  id: number;
+  teacherId: number;
+  teacherFirstName: string;
+  teacherLastName: string;
+  scheduledStart: string;
+  actualStart: string | null;
+  delayMinutes: number;
+  classType: string;
+  detectionMethod: string;
+  createdAt: string;
+  className: string | null;
+  confirmedBy: string | null;
+}
+
+function LatenessHistoryTab({ teachers }: { teachers: TeacherRecord[] }) {
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("all");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
+  const params = new URLSearchParams();
+  if (selectedTeacherId !== "all") params.set("teacherId", selectedTeacherId);
+  if (fromDate) params.set("from", fromDate);
+  if (toDate) params.set("to", toDate);
+
+  type SummaryEntry = { teacherId: number; teacherName: string; latenessCount: number; avgDelayMinutes: number };
+  type MonthlySummaryEntry = { teacherId: number; teacherName: string; period: string; latenessCount: number; avgDelayMinutes: number };
+  const { data, isLoading } = useQuery<{ records: LatenessRecord[]; summary: SummaryEntry[]; monthlySummary: MonthlySummaryEntry[] }>({
+    queryKey: [`/api/admin/lateness-records?${params.toString()}`],
+  });
+  const records = data?.records ?? [];
+  const summary = data?.summary ?? [];
+  const monthlySummary = data?.monthlySummary ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center">
+        <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All Teachers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Teachers</SelectItem>
+            {teachers.map((t) => (
+              <SelectItem key={t.id} value={String(t.id)}>
+                {t.firstName} {t.lastName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          type="date"
+          className="w-44"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          placeholder="From date"
+        />
+        <Input
+          type="date"
+          className="w-44"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          placeholder="To date"
+        />
+        {(fromDate || toDate || selectedTeacherId !== "all") && (
+          <Button variant="outline" size="sm" onClick={() => { setSelectedTeacherId("all"); setFromDate(""); setToDate(""); }}>
+            Clear
+          </Button>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-12 text-muted-foreground">Loading lateness records…</div>
+      ) : records.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <AlertTriangle className="h-10 w-10 mx-auto mb-3 opacity-40" />
+          <p>No lateness records found for the selected filters.</p>
+        </div>
+      ) : (
+        <>
+          {summary.length > 0 && (
+            <Card className="border-orange-200 bg-orange-50/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold text-orange-800">Per-Teacher Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-orange-100/60">
+                      <tr>
+                        {["Teacher", "Total Incidents", "Avg Delay", "Risk Level"].map((h) => (
+                          <th key={h} className="text-left p-3 font-medium whitespace-nowrap text-orange-900">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.map((s) => (
+                        <tr key={s.teacherId} className="border-b border-orange-100 hover:bg-orange-50">
+                          <td className="p-3 font-medium">{s.teacherName}</td>
+                          <td className="p-3">
+                            <Badge variant={s.latenessCount >= 5 ? "destructive" : s.latenessCount >= 3 ? "outline" : "secondary"}>
+                              {s.latenessCount}×
+                            </Badge>
+                          </td>
+                          <td className="p-3">{s.avgDelayMinutes}m avg</td>
+                          <td className="p-3">
+                            <span className={`text-xs font-medium ${s.latenessCount >= 5 || s.avgDelayMinutes >= 15 ? "text-red-600" : s.latenessCount >= 3 ? "text-yellow-600" : "text-green-600"}`}>
+                              {s.latenessCount >= 5 || s.avgDelayMinutes >= 15 ? "High" : s.latenessCount >= 3 ? "Medium" : "Low"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {monthlySummary.length > 0 && (
+            <Card className="border-blue-200 bg-blue-50/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold text-blue-800">Monthly Lateness Report</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-blue-100/60">
+                      <tr>
+                        {["Month", "Teacher", "Incidents", "Avg Delay", "HR Impact"].map((h) => (
+                          <th key={h} className="text-left p-3 font-medium whitespace-nowrap text-blue-900">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthlySummary.map((m, i) => (
+                        <tr key={`${m.teacherId}-${m.period}-${i}`} className="border-b border-blue-100 hover:bg-blue-50">
+                          <td className="p-3 font-mono text-xs text-blue-700">{m.period}</td>
+                          <td className="p-3 font-medium">{m.teacherName}</td>
+                          <td className="p-3">
+                            <Badge variant={m.latenessCount >= 5 ? "destructive" : m.latenessCount >= 3 ? "outline" : "secondary"}>
+                              {m.latenessCount}×
+                            </Badge>
+                          </td>
+                          <td className="p-3">{m.avgDelayMinutes}m</td>
+                          <td className="p-3">
+                            <span className={`text-xs font-medium ${m.latenessCount >= 3 ? "text-red-600" : m.latenessCount >= 2 ? "text-yellow-600" : "text-green-600"}`}>
+                              {m.latenessCount >= 3 ? "−3 pts" : m.latenessCount >= 2 ? "−1 pt" : "−0.5 pt"} HR
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      {["Teacher", "Class", "Scheduled Start", "Actual Start", "Late (min)", "Class Type", "Confirmed By", "Logged At"].map((h) => (
+                        <th key={h} className="text-left p-3 font-medium whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {records.map((r) => (
+                      <tr key={r.id} className="border-b hover:bg-muted/25">
+                        <td className="p-3 font-medium">{r.teacherFirstName} {r.teacherLastName}</td>
+                        <td className="p-3 text-xs text-muted-foreground">{r.className ?? "—"}</td>
+                        <td className="p-3 whitespace-nowrap">{format(new Date(r.scheduledStart), "MMM d, yyyy HH:mm")}</td>
+                        <td className="p-3 whitespace-nowrap">{r.actualStart ? format(new Date(r.actualStart), "HH:mm") : "—"}</td>
+                        <td className="p-3">
+                          <Badge variant={r.delayMinutes >= 15 ? "destructive" : "outline"}>
+                            {r.delayMinutes}m
+                          </Badge>
+                        </td>
+                        <td className="p-3">{r.classType}</td>
+                        <td className="p-3 text-xs text-muted-foreground">{r.confirmedBy ?? r.detectionMethod?.replace(/_/g, " ") ?? "—"}</td>
+                        <td className="p-3 whitespace-nowrap">{format(new Date(r.createdAt), "MMM d, HH:mm")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
 
 type TeacherFormData = {
   firstName: string;
@@ -150,6 +350,7 @@ export function AdminTeacherManagement() {
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">{t("admin:teacherManagement.title")}</h1>
           <p className="text-muted-foreground mt-2">{t("admin:teacherManagement.description", { defaultValue: "مدیریت کادر آموزشی" })}</p>
         </div>
+        
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex border rounded-lg overflow-hidden border-emerald-200">
             <Button variant={viewMode === "cards" ? "default" : "outline"} size="sm" onClick={() => setViewMode("cards")} className="rounded-none border-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700">
@@ -186,6 +387,20 @@ export function AdminTeacherManagement() {
           </Dialog>
         </div>
       </div>
+
+      <Tabs defaultValue="teachers">
+        <TabsList>
+          <TabsTrigger value="teachers">
+            <GraduationCap className="h-4 w-4 me-2" />
+            Teachers
+          </TabsTrigger>
+          <TabsTrigger value="lateness">
+            <AlertTriangle className="h-4 w-4 me-2" />
+            Lateness History
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="teachers" className="space-y-6 mt-4">
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -304,6 +519,13 @@ export function AdminTeacherManagement() {
           </Card>
         )
       )}
+
+        </TabsContent>
+
+        <TabsContent value="lateness" className="mt-4">
+          <LatenessHistoryTab teachers={Array.isArray(teachers) ? teachers : []} />
+        </TabsContent>
+      </Tabs>
 
       {/* View Dialog */}
       <TeacherViewDialog

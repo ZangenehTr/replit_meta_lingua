@@ -547,6 +547,20 @@ server.listen({ port, host: '0.0.0.0' }, () => {
     }
   })();
 
+  // Run class lateness schema migration (class_sessions, class_start_confirmations, lateness_records, call_sessions.pending_at)
+  (async () => {
+    const { runClassLatenessSchema } = await import('./migrations/class-lateness-schema.js');
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await runClassLatenessSchema();
+        break;
+      } catch (migErr: unknown) {
+        console.error(`⚠️  Class lateness schema migration attempt ${attempt} failed:`, migErr instanceof Error ? migErr.message : String(migErr));
+        if (attempt < 3) await new Promise(r => setTimeout(r, 5000 * attempt));
+      }
+    }
+  })();
+
   // Run landing pages migration (creates site_landing_pages table and seeds default content)
   (async () => {
     const { runLandingPagesMigration } = await import('./migrations/landing-pages-migration.js');
@@ -831,6 +845,17 @@ server.listen({ port, host: '0.0.0.0' }, () => {
       }
     } else {
       console.log('ℹ️  Isabel VoIP not configured - set ISABEL_VOIP_ENABLED=true and ISABEL_VOIP_SERVER to enable');
+    }
+  })();
+
+  // Non-blocking: Class Lateness Worker (no Redis required)
+  (async () => {
+    try {
+      const { startClassLatenessWorker } = await import('./workers/class-lateness.worker.js');
+      startClassLatenessWorker();
+      console.log('✅ Class Lateness Worker started');
+    } catch (error) {
+      console.error('⚠️  Failed to start Class Lateness Worker:', error);
     }
   })();
 

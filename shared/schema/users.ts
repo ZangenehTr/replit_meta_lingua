@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   gender: varchar("gender", { length: 10 }),
   age: integer("age"),
   isAvailableToSocialize: boolean("is_available_to_socialize").default(false),
+  isOnDuty: boolean("is_on_duty").default(false), // For supervisors: marks who is on duty for lateness alerts
   socializerLevel: text("socializer_level"),
   socializerSkills: text("socializer_skills").array(),
   isEmailVerified: boolean("is_email_verified").default(false),
