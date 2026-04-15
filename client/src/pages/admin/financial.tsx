@@ -752,7 +752,7 @@ export function AdminFinancial() {
                     <h4 className="font-medium">Zarinpal / IDPay / Zibal</h4>
                     <p className="text-sm text-gray-600">درگاه‌های پرداخت ایرانی</p>
                   </div>
-                  <a href="/admin/payment-gateway" className="text-sm text-primary underline">
+                  <a href="/admin/payment-gateway-config" className="text-sm text-primary underline">
                     {t('common.configure', 'Configure')}
                   </a>
                 </div>

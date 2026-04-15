@@ -201,7 +201,6 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
 
       // Fallback to Google TTS if Edge TTS fails
       if (!result.success) {
-        console.log('🔄 Edge TTS failed, falling back to Google TTS');
         result = await ttsService.generateSpeech({
           text,
           language,
@@ -240,7 +239,6 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
           language: 'en'
         });
       } catch (whisperError) {
-        console.log('🔄 Local Whisper failed, using OpenAI fallback');
         // For STT, we'll use the existing OpenAI integration until we add Whisper to AI provider
         // This is a specialized use case for audio transcription, not general chat
         throw whisperError; // For now, fail cleanly without OpenAI fallback for STT
@@ -442,9 +440,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         
         // Check if custom system prompt changes the personality
         const isCustomPrompt = studyPartner.systemPrompt && studyPartner.systemPrompt.trim();
-        const promptStyle = isCustomPrompt ? 'custom' : 'default';
-        
-        console.log(`🎯 BASIC MODE ACTIVE (${promptStyle} prompt) - Processing message:`, message);
+
         if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
           if (isCustomPrompt) {
             // For custom prompts, use a more neutral response that can be adapted

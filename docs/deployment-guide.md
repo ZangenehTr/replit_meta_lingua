@@ -1,7 +1,7 @@
 # MetaLingo Academy — Deployment Guide
 
-**Version:** 1.5.1  
-**Last Updated:** April 14, 2026  
+**Version:** 1.6.0  
+**Last Updated:** April 15, 2026  
 **Audience:** System Administrators, DevOps Engineers
 
 ---
@@ -734,7 +734,34 @@ In the admin dashboard, check the **Infrastructure Status** widget:
 - Kavenegar SMS: Reachable
 
 ### Test a Payment Gateway
-Go to **Admin → Settings → Payment Gateways**, select your active gateway, and click **Test Connection**.
+Go to **Admin → Payment Gateway Config**, select your active gateway, and click **Test Connection**.
+
+### Verify Class Lateness Worker
+In the application startup logs, confirm you see:
+```
+Starting Class Lateness Worker...
+Class Lateness Worker started
+✅ Class Lateness Worker started
+```
+If Redis is running, the worker uses BullMQ. If Redis is unavailable, it falls back to `setInterval` automatically — no extra configuration is needed. Either way the worker starts.
+
+### Verify Class Cancellation System
+Confirm the cancellation tables exist:
+```bash
+docker compose exec postgres psql -U metalingo metalingo \
+  -c "\dt class_sessions" \
+  -c "\dt class_cancellation_requests" \
+  -c "\dt class_start_confirmations" \
+  -c "\dt lateness_records"
+```
+All four tables should be listed. They are created automatically on first server startup.
+
+Test the cancellation API is reachable:
+```bash
+curl -s https://yourdomain.com/api/classes/cancel-requests \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" | python3 -m json.tool
+# Expected: {"requests":[...]} or {"requests":[]} if no pending requests
+```
 
 ---
 

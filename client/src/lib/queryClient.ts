@@ -295,12 +295,6 @@ export const apiRequest = async (url: string, options: ApiRequestOptions = {}) =
       throw new Error(`Network error: ${fetchError.message || 'Failed to fetch'}`);
     }
 
-    console.log('Response received:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-
     if (!response.ok) {
       let errorText = 'Unknown error';
       try {
@@ -309,7 +303,6 @@ export const apiRequest = async (url: string, options: ApiRequestOptions = {}) =
         // Handle error response parsing gracefully
         errorText = `HTTP ${response.status} ${response.statusText}`;
       }
-      console.log('Error response text:', errorText);
       throw new Error(`${response.status}: ${errorText}`);
     }
 
@@ -322,7 +315,6 @@ export const apiRequest = async (url: string, options: ApiRequestOptions = {}) =
       return {};
     }
 
-    console.log('Successful response:', result);
     return result;
   } catch (error) {
     // Handle API request error gracefully

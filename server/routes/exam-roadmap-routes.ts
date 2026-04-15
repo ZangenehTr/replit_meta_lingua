@@ -124,21 +124,15 @@ const updateProgressSchema = z.object({
  */
 router.post('/calculate-plan', requireAuth, async (req: AuthRequest, res) => {
   try {
-    console.log('🎯 POST /api/roadmap/calculate-plan - Calculating study plan');
-
     // Validate request body
     const validatedData = calculatePlanSchema.parse(req.body);
     const userId = req.user!.id;
-
-    console.log(`📊 Calculating plan for user ${userId}, exam: ${validatedData.exam}, target: ${validatedData.targetScore}`);
 
     // Calculate comprehensive study plan
     const planResult = await roadmapGenerator.calculatePlan({
       ...validatedData,
       userId
     });
-
-    console.log(`✅ Plan calculated successfully - Plan ID: ${planResult.planId}, ${planResult.totalSessions} sessions over ${planResult.weeksToExam} weeks`);
 
     res.json({
       success: true,
@@ -177,13 +171,9 @@ router.post('/calculate-plan', requireAuth, async (req: AuthRequest, res) => {
  */
 router.post('/generate-sessions', requireAuth, async (req: AuthRequest, res) => {
   try {
-    console.log('🤖 POST /api/roadmap/generate-sessions - Generating AI-powered sessions');
-
     // Validate request body
     const validatedData = generateSessionsSchema.parse(req.body);
     const userId = req.user!.id;
-
-    console.log(`🎓 Generating ${validatedData.totalSessions} sessions for ${validatedData.exam} exam`);
 
     // Verify the plan belongs to the user
     const plan = await storage.getRoadmapPlan(validatedData.planId);
@@ -230,7 +220,6 @@ router.post('/generate-sessions', requireAuth, async (req: AuthRequest, res) => 
     // Check for duplicate session generation (idempotency)
     const existingSessions = await storage.getRoadmapSessions(validatedData.planId);
     if (existingSessions.length > 0) {
-      console.log(`⚠️ Sessions already exist for plan ${validatedData.planId}, returning existing sessions`);
       return res.json({
         success: true,
         data: {

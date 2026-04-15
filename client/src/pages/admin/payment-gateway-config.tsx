@@ -116,7 +116,7 @@ export default function PaymentGatewayConfigPage() {
 
   const { data: config, isLoading } = useQuery<GatewayConfig>({
     queryKey: ["/api/admin/payment-gateway/config"],
-    queryFn: () => apiRequest("GET", "/api/admin/payment-gateway/config").then(r => r.json()),
+    queryFn: () => apiRequest("/api/admin/payment-gateway/config"),
   });
 
   useEffect(() => {
@@ -139,7 +139,7 @@ export default function PaymentGatewayConfigPage() {
 
   const saveMutation = useMutation({
     mutationFn: (data: Partial<GatewayFormState>) =>
-      apiRequest("PUT", "/api/admin/payment-gateway/config", data).then(r => r.json()),
+      apiRequest("/api/admin/payment-gateway/config", { method: "PUT", body: data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/payment-gateway/config"] });
       toast({
@@ -155,8 +155,7 @@ export default function PaymentGatewayConfigPage() {
   const testGateway = async (gateway: GatewayName) => {
     setTestingGateway(gateway);
     try {
-      const resp = await apiRequest("POST", "/api/admin/payment-gateway/test", { gateway });
-      const result = (await resp.json()) as TestResult;
+      const result = await apiRequest("/api/admin/payment-gateway/test", { method: "POST", body: { gateway } }) as TestResult;
       setTestResults(prev => ({ ...prev, [gateway]: result }));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";

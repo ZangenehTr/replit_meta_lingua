@@ -28,14 +28,16 @@ export function TutorMarketplace() {
 
   const bookTutorMutation = useMutation({
     mutationFn: async (tutorId: number) => {
-      const response = await apiRequest("POST", "/api/sessions", {
-        tutorId,
-        title: "Conversation Practice",
-        description: "One-on-one conversation practice session",
-        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-        duration: 60
+      return apiRequest("/api/sessions", {
+        method: "POST",
+        body: {
+          tutorId,
+          title: "Conversation Practice",
+          description: "One-on-one conversation practice session",
+          scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          duration: 60
+        }
       });
-      return response.json();
     },
     onSuccess: () => {
       toast({

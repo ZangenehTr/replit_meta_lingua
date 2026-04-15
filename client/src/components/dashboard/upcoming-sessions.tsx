@@ -25,16 +25,13 @@ export function UpcomingSessions() {
 
   const joinSessionMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      const response = await apiRequest("POST", `/api/sessions/${sessionId}/join`, {});
-      return response.json();
+      return apiRequest(`/api/sessions/${sessionId}/join`, { method: "POST", body: {} });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
         title: t('toast.sessionStarting'),
         description: "Connecting to your live session...",
       });
-      // In a real implementation, this would open the LiveKit session
-      console.log("LiveKit token:", data.token);
     },
     onError: () => {
       toast({
