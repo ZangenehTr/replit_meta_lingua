@@ -243,7 +243,6 @@ router.post('/generate-sessions', requireAuth, async (req: AuthRequest, res) => 
       totalSessions: validatedData.totalSessions
     });
 
-    console.log(`✅ Generated ${sessions.length} AI-powered sessions successfully`);
 
     res.json({
       success: true,
@@ -290,7 +289,6 @@ router.post('/generate-sessions', requireAuth, async (req: AuthRequest, res) => 
  */
 router.get('/plans', requireAuth, async (req: AuthRequest, res) => {
   try {
-    console.log(`📚 GET /api/roadmap/plans - Retrieving plans for user ${req.user!.id}`);
 
     const plans = await storage.getUserRoadmapPlans(req.user!.id);
 
@@ -314,7 +312,6 @@ router.get('/plans', requireAuth, async (req: AuthRequest, res) => {
       })
     );
 
-    console.log(`✅ Retrieved ${enhancedPlans.length} roadmap plans`);
 
     res.json({
       success: true,
@@ -349,7 +346,6 @@ router.get('/:planId', requireAuth, async (req: AuthRequest, res) => {
       });
     }
 
-    console.log(`📖 GET /api/roadmap/${planId} - Retrieving roadmap plan`);
 
     // Get the roadmap plan
     const plan = await storage.getRoadmapPlan(planId);
@@ -376,7 +372,6 @@ router.get('/:planId', requireAuth, async (req: AuthRequest, res) => {
     const completedSessions = sessions.filter(s => s.completed).length;
     const progressPercentage = sessions.length > 0 ? Math.round((completedSessions / sessions.length) * 100) : 0;
 
-    console.log(`✅ Retrieved plan with ${sessions.length} sessions, ${progressPercentage}% complete`);
 
     res.json({
       success: true,
@@ -424,7 +419,6 @@ router.patch('/:planId/progress', requireAuth, async (req: AuthRequest, res) => 
       });
     }
 
-    console.log(`📝 PATCH /api/roadmap/${planId}/progress - Updating progress`);
 
     // Validate request body
     const validatedData = updateProgressSchema.parse(req.body);
@@ -489,7 +483,6 @@ router.patch('/:planId/progress', requireAuth, async (req: AuthRequest, res) => 
 
     const updatedPlan = await storage.updateRoadmapPlan(planId, planUpdates);
 
-    console.log(`✅ Updated session ${validatedData.sessionId}, plan now ${progressPercentage}% complete`);
 
     res.json({
       success: true,
@@ -546,7 +539,6 @@ router.delete('/:planId', requireAuth, async (req: AuthRequest, res) => {
       });
     }
 
-    console.log(`🗑️ DELETE /api/roadmap/${planId} - Deleting roadmap plan`);
 
     // Verify plan ownership
     const plan = await storage.getRoadmapPlan(planId);
@@ -569,7 +561,6 @@ router.delete('/:planId', requireAuth, async (req: AuthRequest, res) => {
     // Delete the plan
     await storage.deleteRoadmapPlan(planId);
 
-    console.log(`✅ Deleted roadmap plan with ${sessionCount} sessions`);
 
     res.json({
       success: true,
